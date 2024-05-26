@@ -461,8 +461,8 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     double maxX_0_360 = -1.0e64;
 
     // Skip factors along azimuth and range
-    const int askip = std::max((int) blockLength / 10, 1);
-    const int rskip = _radarGrid.width() / 10;
+    const auto askip = std::max(static_cast<int>(blockLength / 10), 1);
+    const auto rskip = std::max(static_cast<int>(_radarGrid.width() / 10), 1);
 
     //Construct projection base with DEM's epsg code
     int epsgcode = demRaster.getEPSG();
@@ -549,15 +549,15 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
 
             /*
             If the DEM is in geographic coordinates (EPSG 4326), each point
-            `dem_xyz` will have longitude values ranging from -180 to 180. 
+            `dem_xyz` will have longitude values ranging from -180 to 180.
             The functions min() and max() return the correct longitude
             boundaries as long as there's no longitude "wrapping"
-            due to the antimeridian. 
+            due to the antimeridian.
             If there's wrapping, we use min() and max() from the "unwrapped"
             array using the longitude domain [0, 360] rather than [-180, 180]
 
             The conversion of longitude values from the [-180, 180] domain to
-            the [0, 360] domain is done by adding 360 to negative longitude values. 
+            the [0, 360] domain is done by adding 360 to negative longitude values.
             */
             if (epsgcode != 4326)
                 continue;
@@ -575,7 +575,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     //Convert margin to meters it not LonLat
     double margin = (epsgcode == 4326)? _margin : isce3::core::decimaldeg2meters(_margin);
 
-    /* 
+    /*
     To detect the antimeridian crossing, we check if the difference between
     the maximum and minimum longitude values (in the [-180, 180] domain) is greater
     than 180. This issue will only be applicable if the DEM is in geographic
@@ -849,7 +849,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             slantRangeGrid[i] = targetToSat.norm();
 
             // Compute geocentric elevation grid (not geodedic!)
-            const double cosElevation = (xyzSat.dot(targetToSat) / 
+            const double cosElevation = (xyzSat.dot(targetToSat) /
                 (xyzSat.norm() * targetToSat.norm()));
             elevationAngleGrid[i] = std::acos(cosElevation);
         }
@@ -859,7 +859,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         double maxElevationAngle = elevationAngleGrid[0];
         for (long i = 1; i < gridWidth; ++i) {
             if (maxElevationAngle >= elevationAngleGrid[i]) {
-                maskGrid[i] = isce3::core::SHADOW_VALUE;                          
+                maskGrid[i] = isce3::core::SHADOW_VALUE;
             } else {
                 maxElevationAngle = elevationAngleGrid[i];
             }
@@ -906,7 +906,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         for (int i = 0; i < gridWidth; ++i) {
             if (maskGrid[i]) {
 
-                const long slant_range_index = 
+                const long slant_range_index =
                     lround(std::round(_radarGrid.slantRangeIndex(
                         slantRangeGrid[i])));
 

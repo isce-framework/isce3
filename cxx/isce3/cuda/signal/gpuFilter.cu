@@ -4,7 +4,7 @@
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
-using isce3::cuda::signal::gpuFilter;
+namespace isce3::cuda::signal {
 
 template<class T>
 __global__ void filter_g(thrust::complex<T> *signal, thrust::complex<T> *filter, int n_elements)
@@ -155,3 +155,5 @@ template class gpuFilter<float>;
 
 template __global__ void
 sumSpectrum_g<float>(thrust::complex<float> *spectrum, float *spectrum_sum, int n_rows, int n_cols);
+
+} // namespace isce3::cuda::signal

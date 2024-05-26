@@ -14,6 +14,8 @@
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
+namespace isce3::cuda::signal {
+
 template <typename T>
 __global__ void form_interferogram_g(thrust::complex<T> *ifgram,
         const thrust::complex<T>* __restrict__ refSlcUp,
@@ -117,8 +119,8 @@ __global__ void flatten_g(thrust::complex<T> *ifg,
 
 
 /** Set number of range looks */
-void isce3::cuda::signal::gpuCrossmul::
-rangeLooks(int rngLks) {
+void
+gpuCrossmul::rangeLooks(int rngLks) {
     if (rngLks < 1) {
         std::string error_msg = "ERROR CUDA crossmul range multilook < 1";
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
@@ -132,8 +134,8 @@ rangeLooks(int rngLks) {
 }
 
 /** Set number of azimuth looks */
-void isce3::cuda::signal::gpuCrossmul::
-azimuthLooks(int azLks) {
+void
+gpuCrossmul::azimuthLooks(int azLks) {
     if (azLks < 1) {
         std::string error_msg = "ERROR CUDA crossmul azimuth multilook < 1";
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
@@ -146,9 +148,9 @@ azimuthLooks(int azLks) {
         _multiLookEnabled = false;
 }
 
-void isce3::cuda::signal::gpuCrossmul::
-doppler(isce3::core::LUT1d<double> refDoppler,
-        isce3::core::LUT1d<double> secDoppler)
+void
+gpuCrossmul::doppler(isce3::core::LUT1d<double> refDoppler,
+                     isce3::core::LUT1d<double> secDoppler)
 {
     _refDoppler = refDoppler;
     _secDoppler = secDoppler;
@@ -207,12 +209,12 @@ void lookdownShiftImpact(size_t oversample,
     }
 }
 
-void isce3::cuda::signal::gpuCrossmul::
-crossmul(isce3::io::Raster& refSlcRaster,
-        isce3::io::Raster& secSlcRaster,
-        isce3::io::Raster& ifgRaster,
-        isce3::io::Raster& coherenceRaster,
-        isce3::io::Raster* rngOffsetRaster) const
+void
+gpuCrossmul::crossmul(isce3::io::Raster& refSlcRaster,
+                      isce3::io::Raster& secSlcRaster,
+                      isce3::io::Raster& ifgRaster,
+                      isce3::io::Raster& coherenceRaster,
+                      isce3::io::Raster* rngOffsetRaster) const
 {
     // set flatten flag based range offset raster ptr value
     bool flatten = rngOffsetRaster ? true : false;
@@ -278,8 +280,8 @@ crossmul(isce3::io::Raster& refSlcRaster,
     }
 
     // signal object for upsampling
-    isce3::cuda::signal::gpuSignal<float> signalNoUpsample(CUFFT_C2C);
-    isce3::cuda::signal::gpuSignal<float> signalUpsample(CUFFT_C2C);
+    gpuSignal<float> signalNoUpsample(CUFFT_C2C);
+    gpuSignal<float> signalUpsample(CUFFT_C2C);
 
     // Compute FFT size (power of 2)
     size_t nfft;
@@ -570,3 +572,5 @@ crossmul(isce3::io::Raster& refSlcRaster,
         }
     }
 }
+
+} // namespace isce3::cuda::signal

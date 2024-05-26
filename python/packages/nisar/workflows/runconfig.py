@@ -208,6 +208,7 @@ class RunConfig:
         check geocode config and initialize as needed
         '''
         geocode_dict = self.cfg['processing']['geocode']
+        error_channel = journal.error('RunConfig.prep_geocode_cfg')
 
         # check for user provided EPSG and grab from DEM if none provided
         if geocode_dict['output_epsg'] is None:
@@ -235,14 +236,15 @@ class RunConfig:
             return
         self.cfg['processing']['geocode']['wrapped_igram_geogrids'] = wrapped_igram_geogrids
 
+
     def prep_geocode_metadata(self, group_name, workflow_name,
                               flag_cube=False):
         '''
-        check metadata groups config (radar_grid_cubes, 
-        calibration_information, or processing_information) and 
+        check metadata groups config (radar_grid_cubes,
+        calibration_information, or processing_information) and
         initialize as needed.
 
-        Metadata groups are optional. If not provided, the geocode 
+        Metadata groups are optional. If not provided, the geocode
         group should be used instead, but with coarser X and Y
         spacing defaults
         '''

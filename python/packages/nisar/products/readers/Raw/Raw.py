@@ -1,12 +1,12 @@
 from .DataDecoder import DataDecoder
 import h5py
 import isce3
+from isce3.focus import RadarPoint, RadarBoundingBox
 import logging
 from nisar.products.readers import Base
 import numpy as np
 import pyre
 import journal
-import isce3
 import re
 from warnings import warn
 from scipy.interpolate import interp1d
@@ -667,6 +667,58 @@ class RawBase(Base, family='nisar.productreader.raw'):
                 name = f"validSamplesSubSwath{i+1}"
                 swaths[i, ...] = f[txpath][name][:]
         return swaths
+
+
+    def getSubSwathBboxes(self, frequency, tx=None, epoch=None):
+        """
+        Return the bounding box for each sub-swath.
+
+        Parameters
+        ----------
+        frequency : {"A", "B"}
+            Sub-band identifier.
+        tx : {"H", "V", "L", "R"} | None
+            Transmit polarization. If None, use first available TX polarization.
+        epoch : isce3.core.DateTime
+            Reference epoch for azimuth time tags.
+
+        Returns
+        -------
+        bboxes : list[RadarBoundingBox]
+            Bounding box in radar coordinates for each sub-swath.
+        """
+        if tx is None:
+            tx = self.polarizations[frequency][0][0]
+        times, grid = self.getRadarGrid(frequency, tx, epoch=epoch)
+
+        # If dithered we can reconstruct the entire swath.
+        if self.isDithered(frequency):
+            bbox = RadarBoundingBox(
+                RadarPoint(times[0], grid.slant_ranges[0]),
+                RadarPoint(times[-1], grid.slant_ranges[-1]))
+            return [bbox]
+
+        # Otherwise the TX gaps split the swath into sub-swaths.
+        bboxes = []
+        for swath in self.getSubSwaths(frequency, tx=tx):
+            # Get unique start/stop pairs within the current swath.
+            swath = np.unique(swath, axis=0)
+            if len(swath) > 1:
+                log.warning("Variable raw subswaths detected!  Only "
+                    "the swath bounds at the azimuth midpoint will be used.")
+            # XXX Careful because radar can transition from constant PRF to
+            # XXX dithered PRF, so the pulses in the air at the end will cause
+            # XXX variations in the gap locations at the end.
+            imid = swath.shape[0] // 2
+            r = np.array(grid.slant_ranges)
+            rmin = r[swath[imid, 0]]
+            rmax = r[swath[imid, 1] - 1]
+            bbox = RadarBoundingBox(
+                RadarPoint(times[0], rmin),
+                RadarPoint(times[-1], rmax))
+            bboxes.append(bbox)
+        return bboxes
+
 
     def getProductLevel(self):
         '''

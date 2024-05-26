@@ -10,7 +10,7 @@
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
-using isce3::cuda::signal::gpuSignal;
+namespace isce3::cuda::signal {
 
 /** copy left half columns of lo-res to left most columns of hi-res
 *  copy right half columns of lo-res to right most columns of hi-res
@@ -1024,8 +1024,8 @@ upsample(std::valarray<std::complex<T>> &input,
 *  @param[in] pointer to upsampled data
 */
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         thrust::complex<T> *input,
         thrust::complex<T> *output)
 {
@@ -1061,8 +1061,8 @@ void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
 *  @param[in] pointer to shift impact data
 */
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         thrust::complex<T> *input,
         thrust::complex<T> *output,
         thrust::complex<T> *shiftImpact)
@@ -1101,8 +1101,8 @@ void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
 *  @param[in] valarray containing upsampled data
 */
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output)
 {
@@ -1124,8 +1124,8 @@ void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
 *  @param[in] valarray containing shift impact data
 */
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output,
         std::valarray<std::complex<T>> &shiftImpact)
@@ -1174,31 +1174,33 @@ template class gpuSignal<float>;
 template class gpuSignal<double>;
 
 template void
-upsample<float>(isce3::cuda::signal::gpuSignal<float> &fwd,
-        isce3::cuda::signal::gpuSignal<float> &inv,
+upsample<float>(gpuSignal<float> &fwd,
+        gpuSignal<float> &inv,
         std::valarray<std::complex<float>> &input,
         std::valarray<std::complex<float>> &output);
 
 template void
-upsample<double>(isce3::cuda::signal::gpuSignal<double> &fwd,
-        isce3::cuda::signal::gpuSignal<double> &inv,
+upsample<double>(gpuSignal<double> &fwd,
+        gpuSignal<double> &inv,
         std::valarray<std::complex<double>> &input,
         std::valarray<std::complex<double>> &output);
 
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output);
 
-template void upsample<float>(isce3::cuda::signal::gpuSignal<float> &fwd,
-        isce3::cuda::signal::gpuSignal<float> &inv,
+template void upsample<float>(gpuSignal<float> &fwd,
+        gpuSignal<float> &inv,
         thrust::complex<float> *input,
         thrust::complex<float> *output,
         thrust::complex<float> *shiftImpact);
 
-template void upsample<double>(isce3::cuda::signal::gpuSignal<double> &fwd,
-        isce3::cuda::signal::gpuSignal<double> &inv,
+template void upsample<double>(gpuSignal<double> &fwd,
+        gpuSignal<double> &inv,
         thrust::complex<double> *input,
         thrust::complex<double> *output,
         thrust::complex<double> *shiftImpact);
+
+} // namespace isce3::cuda::signal

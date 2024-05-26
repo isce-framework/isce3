@@ -10,8 +10,7 @@
 
 #define MAX_ORDER 20
 
-using isce3::cuda::core::gpuInterpolator;
-using isce3::cuda::core::gpuSpline2dInterpolator;
+namespace isce3::cuda::core {
 
 template<class T>
 __global__ void gpuInterpolator_g(gpuSpline2dInterpolator<T> interp, double* x,
@@ -160,3 +159,5 @@ template class gpuSpline2dInterpolator<unsigned int>;
 template __global__ void gpuInterpolator_g<double>(
         gpuSpline2dInterpolator<double> interp, double* x, double* y,
         const double* z, double* value, size_t nx, size_t ny);
+
+} // namespace isce3::cuda::core

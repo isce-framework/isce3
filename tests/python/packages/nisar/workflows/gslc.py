@@ -33,6 +33,11 @@ def test_run():
     runconfig = GSLCRunConfig(args)
     runconfig.geocode_common_arg_load()
 
+    # disable generation and application of TEC and SET corrections
+    for corr_type in ["tec", "solid_earth_tides"]:
+        corr_key = f"{corr_type}_enabled"
+        runconfig.cfg["processing"]["correction_luts"][corr_key] = False
+
     # geocode same 2 rasters as C++/pybind geocodeSlc
     for xy in ['x', 'y']:
         # adjust runconfig to match just created raster

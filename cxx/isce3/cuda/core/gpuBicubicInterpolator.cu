@@ -8,8 +8,7 @@
 
 #include "gpuInterpolator.h"
 
-using isce3::cuda::core::gpuBicubicInterpolator;
-using isce3::cuda::core::gpuInterpolator;
+namespace isce3::cuda::core {
 
 template<class T>
 __global__ void gpuInterpolator_g(gpuBicubicInterpolator<T> interp, double* x,
@@ -23,7 +22,7 @@ __global__ void gpuInterpolator_g(gpuBicubicInterpolator<T> interp, double* x,
 }
 
 template<class T>
-__host__ void isce3::cuda::core::gpuBicubicInterpolator<T>::interpolate_h(
+__host__ void gpuBicubicInterpolator<T>::interpolate_h(
         const Matrix<double>& truth, Matrix<T>& m, double start, double delta,
         T* h_z)
 {
@@ -80,7 +79,7 @@ __host__ void isce3::cuda::core::gpuBicubicInterpolator<T>::interpolate_h(
 }
 
 template<class T>
-__device__ T isce3::cuda::core::gpuBicubicInterpolator<T>::interpolate(
+__device__ T gpuBicubicInterpolator<T>::interpolate(
         double x, double y, const T* z, size_t nx, size_t ny = 0)
 {
 
@@ -185,3 +184,5 @@ template class gpuBicubicInterpolator<unsigned int>;
 template __global__ void gpuInterpolator_g<double>(
         gpuBicubicInterpolator<double> interp, double* x, double* y,
         const double* z, double* value, size_t nx, size_t ny);
+
+} // namespace isce3::cuda::core

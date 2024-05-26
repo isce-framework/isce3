@@ -17,8 +17,6 @@
 
 namespace isce3::cuda::image
 {
-   using isce3::cuda::core::gpuSinc2dInterpolator;
-
     // C++ interface for running topo for a block of data on GPU
     // Tile transformation
     void gpuTransformTile(

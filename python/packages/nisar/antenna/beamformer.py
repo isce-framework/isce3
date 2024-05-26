@@ -4,6 +4,7 @@ import warnings
 import numpy as np
 from scipy.interpolate import interp1d
 
+import isce3
 from isce3.antenna import ant2rgdop, ant2geo
 from isce3.core import Linspace, speed_of_light
 from nisar.antenna import CalPath
@@ -41,6 +42,9 @@ class ElevationBeamformer(ABC):
         In case, orbit and attitude have different reference epochs,
         the corresponding class attributes will be adjusted to this reference.
         (Input objects will not be modified.)
+    el_lut : isce3.core.LUT2d, optional
+        LUT2d to be used for range/azimuth to EL lookups.
+        If not provided, EL will be computed on-the-fly using elaz2slantrange.
     norm_weight : bool, default=False
         Whether or not power normalize weights.
     num_pulse_skip: int, default=12
@@ -71,7 +75,7 @@ class ElevationBeamformer(ABC):
     """
 
     def __init__(self, orbit, attitude, dem_interp, el_ant_info, trm_info,
-                 ref_epoch, norm_weight=False,
+                 ref_epoch, *, el_lut=None, norm_weight=False,
                  num_pulse_skip=DEFAULT_NUM_PULSE_SKIP,
                  rg_spacing_min=None):
         # check ref epoch of orbit/attitude
@@ -88,6 +92,7 @@ class ElevationBeamformer(ABC):
         if dem_interp.have_raster and not dem_interp.have_stats:
             dem_interp.compute_min_max_mean_height()
         self.dem_interp = dem_interp
+        self.el_lut = el_lut
         self.el_ant_info = el_ant_info
         self.trm_info = trm_info
         self.ref_epoch = ref_epoch
@@ -363,14 +368,24 @@ class TxBMF(ElevationBeamformer):
             tx_pat_el = np.matmul(
                 self.weights[idx_pulse] * cor_fact, ant_pat_el)
 
-            # Compute the respective slant range for beamformed antenna pattern
-            # Simply calculate slant range for every few pulses where
-            # S/C pos/vel and DEM barely changes. This speeds up the process!
-            if (pp % self.num_pulse_skip == 0):
-                sr_ant = self._elaz2slantrange(tm)
+            if self.el_lut is None:
+                # Old method: compute monotonically increasing elevation angles
+                # at each successive slant range bin
 
-            # form TX BMF pattern at desired slant ranges
-            tx_pat[pp, ::nrgb_skip] = np.interp(sr, sr_ant, tx_pat_el)
+                # Compute the respective slant range for beamformed antenna pattern
+                # Simply calculate slant range for every few pulses where
+                # S/C pos/vel and DEM barely changes. This speeds up the process!
+                if (pp % self.num_pulse_skip == 0):
+                    sr_ant = self._elaz2slantrange(tm)
+
+                # form TX BMF pattern at desired slant ranges
+                tx_pat[pp, ::nrgb_skip] = np.interp(sr, sr_ant, tx_pat_el)
+            else:
+                # New method: interpolate elevation angles at each slant range
+                # bin from precomputed elevation lookup table
+                tx_pat[pp, ::nrgb_skip] = np.interp(self.el_lut.eval(tm, sr),
+                                                    self.el_ant_info.angle,
+                                                    tx_pat_el)
 
             if nrgb_skip > 1:
                 tx_pat[pp] = tx_pat[pp, ::nrgb_skip].repeat(
@@ -470,21 +485,22 @@ class RxDBF(ElevationBeamformer):
     Raises
     ------
     ValueError
-        Reference epoch mismtach between orbit and attitude
+        Reference epoch mismatch between orbit and attitude
         Mismatch between total number of beams and number of channels
 
     """
 
     def __init__(self, orbit, attitude, dem_interp, el_ant_info, trm_info,
-                 ref_epoch, norm_weight=False,
+                 ref_epoch, *, el_lut=None, norm_weight=False,
                  num_pulse_skip=DEFAULT_NUM_PULSE_SKIP,
                  el_ofs_dbf=0.0, rg_spacing_min=None,
                  el_spacing_min=8.72665e-5):
         self.el_ofs_dbf = el_ofs_dbf
         self.el_spacing_min = el_spacing_min
         super().__init__(orbit, attitude, dem_interp, el_ant_info, trm_info,
-                         ref_epoch, norm_weight, num_pulse_skip,
-                         rg_spacing_min)
+                         ref_epoch, el_lut=el_lut, norm_weight=norm_weight,
+                         num_pulse_skip=num_pulse_skip,
+                         rg_spacing_min=rg_spacing_min)
 
         # determine min range spacing if is None based on min EL spacing
         # at mid pulsetime per ref DEM
@@ -604,14 +620,21 @@ class RxDBF(ElevationBeamformer):
             # Simply calculate slant range for every few pulses where
             # S/C pos/vel and DEM barely changes. This speeds up the process!
             if (pp % self.num_pulse_skip == 0):
-                sr_ant = self._elaz2slantrange(tm)
+
                 # form the RX DBF pattern for output slant ranges per pulse
                 # Products of weights and antenna patterns, summed over
                 # channels.
                 x = 0
-                for cc in range(num_active_chanl):
-                    x += np.interp(
-                        sr, sr_ant, ant_pat_el[cc, :]) * rx_wgt[cc, :]
+                if self.el_lut is None:
+                    sr_ant = self._elaz2slantrange(tm)
+                    for cc in range(num_active_chanl):
+                        x += np.interp(
+                            sr, sr_ant, ant_pat_el[cc, :]) * rx_wgt[cc, :]
+                else:
+                    sr_angles = self.el_lut.eval(tm, sr)
+                    for cc in range(num_active_chanl):
+                        x += np.interp(sr_angles, self.el_ant_info.angle,
+                                       ant_pat_el[cc, :]) * rx_wgt[cc, :]
 
                 rx_pat[pp] = x.repeat(nrgb_skip)[:slant_range.size]
 

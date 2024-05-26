@@ -59,8 +59,19 @@ def run(cfg):
         # orbit has not frequency dependency.
         external_orbit = load_orbit_from_xml(orbit_file,
                                              slc.getRadarGrid().ref_epoch)
-        orbit = crop_external_orbit(external_orbit, orbit)
-
+        
+        # Apply 2 mins of padding before / after sensing period when cropping
+        # the external orbit.
+        # 2 mins of margin is based on the number of IMAGEN TEC samples required for 
+        # TEC computation, with few more safety margins for possible needs in the future.
+        #
+        # `7` in the line below is came from the default value for `npad` in
+        # `crop_external_orbit()`. See:
+        #.../isce3/python/isce3/core/crop_external_orbit.py
+        npad = max(int(120.0 / external_orbit.spacing),
+                   7)
+        orbit = crop_external_orbit(external_orbit, orbit,
+                                    npad=npad)
 
     dem_raster = isce3.io.Raster(dem_file)
     epsg = dem_raster.get_epsg()

@@ -1,6 +1,8 @@
 #include <thrust/device_vector.h>
 #include <thrust/pair.h>
 
+namespace isce3::cuda::geocode {
+
 /** Calculate min and max of data vector with mask applied to it.
  *
  * \returns     min_max_pair    Pair of double values where first is minimum
@@ -18,3 +20,5 @@
 thrust::pair<double, double> masked_minmax(
         const thrust::device_vector<double>& data,
         const thrust::device_vector<bool>& mask);
+
+} // namespace isce3::cuda::geocode

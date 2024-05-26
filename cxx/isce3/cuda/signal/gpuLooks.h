@@ -6,8 +6,10 @@
 #include <thrust/complex.h>
 #include <isce3/core/Common.h>
 
+namespace isce3::cuda::signal {
+
 template<class T>
-class isce3::cuda::signal::gpuLooks {
+class gpuLooks {
     public:
         gpuLooks() {};
         ~gpuLooks() {};
@@ -133,3 +135,5 @@ CUDA_GLOBAL void multilooks_power_g(T *lo_res,
         int col_resize,
         size_t sz_lo,
         T blk_sz);
+
+} // namespace isce3::cuda::signal

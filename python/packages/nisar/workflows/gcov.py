@@ -417,10 +417,7 @@ def _run(cfg, raster_scratch_dir):
     proj = isce3.core.make_projection(epsg)
     ellipsoid = proj.ellipsoid
 
-    if flag_fullcovariance:
-        flag_rslc_to_backscatter = False
-    else:
-        flag_rslc_to_backscatter = True
+    flag_rslc_to_backscatter = not flag_fullcovariance
 
     for frequency, input_pol_list in freq_pols.items():
 
@@ -533,7 +530,19 @@ def _run(cfg, raster_scratch_dir):
         if orbit_file is not None:
             external_orbit = load_orbit_from_xml(orbit_file,
                                                  radar_grid.ref_epoch)
-            orbit = crop_external_orbit(external_orbit, orbit)
+
+            # Apply 2 mins of padding before / after sensing period when
+            # cropping the external orbit.
+            # 2 mins of margin is based on the number of IMAGEN TEC samples
+            # required for TEC computation, with few more safety margins for
+            # possible needs in the future.
+            #
+            # `7` in the line below is came from the default value for `npad`
+            # in `crop_external_orbit()`. See:
+            # .../isce3/python/isce3/core/crop_external_orbit.py
+            npad = max(int(120.0 / external_orbit.spacing), 7)
+            orbit = crop_external_orbit(external_orbit, orbit,
+                                        npad=npad)
 
         # get azimuth ionospheric delay LUTs (if applicable)
         center_freq = \

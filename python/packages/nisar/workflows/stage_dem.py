@@ -366,6 +366,10 @@ def download_dem(polys, epsgs, outfile, version):
     vrt_dataset = gdal.BuildVRT(outfile, dem_list)
     vrt_dataset.SetMetadataItem("dem_description", f'{dem_descr}')
 
+    # Add license text to GeoTiff files
+    for dem_file in dem_list:
+        add_dem_license_to_tiff(dem_file)
+
 
 def extract_dem_description(in_readme_path):
     """Extract DEM description from README.txt on nisar-dem
@@ -402,6 +406,30 @@ def extract_dem_description(in_readme_path):
         raise ValueError(err_str)
 
     return dem_descr
+
+
+def add_dem_license_to_tiff(dem_file):
+    '''
+    Add DEM license statement to downloaded DEM files
+
+    Parameters
+    ----------
+    dem_file: str
+        Path to DEM Tiff
+    '''
+    license_text = "This digital elevation model (DEM) was prepared at the Jet Propulsion Laboratory, " \
+                   "California Institute of Technology, under contract with the National Aeronautics and " \
+                   "Space Administration, using the Copernicus DEM 30-m and Copernicus DEM 90-m models " \
+                   "provided by the European Space Agency. The Copernicus DEM 30-m and Copernicus DEM " \
+                   "90-m were produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus " \
+                   "Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and " \
+                   "ESA; all rights reserved. The organizations in charge of the NISAR mission by law or by " \
+                   "delegation do not incur any liability for any use of this DEM. The organisations in charge " \
+                   "of the Copernicus programme by law or by delegation do not incur any liability for any use " \
+                   "of the Copernicus WorldDEM-30."
+
+    ds = gdal.Open(dem_file, gdal.GA_Update)
+    ds.SetMetadataItem("LICENSE", license_text)
 
 
 def transform_polygon_coords(polys, epsgs):

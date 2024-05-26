@@ -167,5 +167,5 @@ runconfig:
                 validate: true
                 qa_reports: true
                 absolute_radiometric_calibration: true
-                noise_estimation: true
+                nes0: true
                 point_target_analyzer: true

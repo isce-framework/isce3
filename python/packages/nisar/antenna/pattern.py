@@ -231,6 +231,9 @@ class AntennaPattern:
         Antenna orbit ephemeris
     attitude: Attitude
         Antenna orientation
+    el_lut : LUT2d, optional
+        LUT2d to be used for range/azimuth to EL lookups.
+        If not provided, EL will be computed on-the-fly using elaz2slantrange.
     el_spacing_min: float, default=8.72665e-5
         Min EL angle spacing in (radians) used to determine min slant range
         spacing over entire swath.
@@ -243,7 +246,9 @@ class AntennaPattern:
 
     def __init__(self, raw: Raw, dem: DEMInterpolator,
                  ant: AntennaParser, ins: InstrumentParser,
-                 orbit: Orbit, attitude: Attitude, norm_weight=True,
+                 orbit: Orbit, attitude: Attitude,
+                 *, el_lut=None,
+                 norm_weight=True,
                  el_spacing_min=8.72665e-5):
 
         self.orbit = orbit.copy()
@@ -251,6 +256,7 @@ class AntennaPattern:
         self.dem = dem
         self.norm_weight = norm_weight
         self.el_spacing_min = el_spacing_min
+        self.el_lut = el_lut
 
         # get linear pols and pol type
         (self.pol_type, self.is_ssp, self.tx_pols, self.rx_pols,
@@ -339,6 +345,7 @@ class AntennaPattern:
                 self.rx_dbf[rx_p] = RxDBF(
                     self.orbit, self.attitude, self.dem, self.el_pat_rx[rx_p],
                     self.rx_trm[rx_p], self.reference_epoch,
+                    el_lut=self.el_lut,
                     norm_weight=self.norm_weight,
                     el_spacing_min=self.el_spacing_min,
                 )
@@ -347,6 +354,7 @@ class AntennaPattern:
                 self.rx_dbf[rx_p] = RxDBF(
                     self.orbit, self.attitude, self.dem, self.el_pat_rx[rx_p],
                     self.rx_trm[rx_p], self.reference_epoch,
+                    el_lut=self.el_lut,
                     norm_weight=self.norm_weight,
                     rg_spacing_min=self.rg_spacing_min,
                 )
@@ -386,7 +394,8 @@ class AntennaPattern:
             # construct TX BMF object
             self.tx_bmf[tx_lp] = TxBMF(
                 self.orbit, self.attitude, self.dem, el_pat_tx, tx_trm,
-                self.reference_epoch, norm_weight=self.norm_weight,
+                self.reference_epoch,
+                el_lut=self.el_lut, norm_weight=self.norm_weight,
                 rg_spacing_min=self.rg_spacing_min)
 
     def form_pattern(self, tseq, slant_range: Linspace,
@@ -459,6 +468,7 @@ class AntennaPattern:
                 self.rx_dbf[p] = RxDBF(
                     self.orbit, self.attitude, self.dem, self.el_pat_rx[p],
                     self.rx_trm[p], self.reference_epoch,
+                    el_lut=self.el_lut,
                     norm_weight=self.rx_dbf[p].norm_weight)
 
                 pat = self.rx_dbf[p].form_pattern(

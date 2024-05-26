@@ -14,9 +14,11 @@
 
 #include "gpuSignal.h"
 
+namespace isce3::cuda::signal {
+
 // Definition of base class
 template<class T>
-class isce3::cuda::signal::gpuFilter {
+class gpuFilter {
     public:
         gpuFilter() {};
         ~gpuFilter();
@@ -43,7 +45,7 @@ class isce3::cuda::signal::gpuFilter {
 
 // Azimuth filter class derived from base class
 template <class T>
-class isce3::cuda::signal::gpuAzimuthFilter : public gpuFilter<T> {
+class gpuAzimuthFilter : public gpuFilter<T> {
     public:
         gpuAzimuthFilter();
         ~gpuAzimuthFilter() {};
@@ -66,7 +68,7 @@ class isce3::cuda::signal::gpuAzimuthFilter : public gpuFilter<T> {
 
 // Range filter class derived from base class
 template <class T>
-class isce3::cuda::signal::gpuRangeFilter : public gpuFilter<T> {
+class gpuRangeFilter : public gpuFilter<T> {
     public:
         gpuRangeFilter();
         ~gpuRangeFilter();
@@ -133,3 +135,5 @@ __global__ void phaseShift_g(thrust::complex<T> *slc, T *range, double pxlSpace,
 
 template<class T>
 __global__ void sumSpectrum_g(thrust::complex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols);
+
+} // namespace isce3::cuda::signal

@@ -473,3 +473,35 @@ def get_ground_track_velocity_product(ref_rslc : SLC,
                              pixel_offsets_radar_grid)
 
     return ground_track_velocity_file
+
+
+def validate_fs_page_size(fs_page_size, chunks, itemsize=8):
+    """
+    Issue a warning if it seems like the page size is poorly chosen.
+
+    Parameters
+    ----------
+    fs_page_size : int
+        HDF5 file space page size in bytes
+    chunks : tuple[int, ...]
+        Chunk dimensions
+    itemsize : int, optional
+        Number of bytes per pixel.  Defaults to 8, which corresponds to the
+        widest type available in a NISAR product.
+    """
+    warn = journal.warning('helpers.validate_fs_page_size').log
+    # Limits gleaned from HDF5 sources (only min is documented).
+    min_size = 512
+    max_size = 1024**3
+    if not (min_size <= fs_page_size <= max_size):
+        warn(f"File space page size not in interval [{min_size}, {max_size}]")
+            
+    # HDF5 docs say powers of two work best for FAPL page size.  Assume same
+    # holds true for FCPL page size.
+    if (fs_page_size <= 0) or (fs_page_size & (fs_page_size - 1) != 0):
+        warn("File space page size is not a positive power of two.")
+    # If we're to retrieve a chunk of data and its metadata in a single read
+    # (e.g., AWS s3 request) the page size must be bigger than the chunk.  Not
+    # sure how much storage is required for HDF5 metadata.
+    if not (fs_page_size > np.prod(chunks) * itemsize):
+        warn("File space page size is not larger than a chunk of data.")

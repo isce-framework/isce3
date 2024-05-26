@@ -5,8 +5,12 @@ from nisar.products.readers.instrument import InstrumentParser
 from nisar.products.readers.Raw import Raw
 from nisar.antenna import TxTrmInfo, RxTrmInfo, TxBMF, RxDBF
 from nisar.antenna.beamformer import get_pulse_index
+from nisar.workflows.focus import make_doppler_lut
+from isce3.focus import make_el_lut
 from isce3.antenna import ant2rgdop
 
+import isce3
+import math
 import numpy as np
 import numpy.testing as npt
 import os
@@ -161,6 +165,20 @@ class TestElevationBeamformer:
     # form DEM interpolator object per ref height
     dem_interp = DEMInterpolator(ref_height)
 
+    fc, dop = make_doppler_lut([os.path.join(iscetest.data, sub_dir, l0b_file)],
+                               0, orbit, attitude, dem_interp)
+
+    wavelength = isce3.core.speed_of_light / fc
+    rdr2geo_params = dict(
+        tol_height = 1e-5,
+        look_min = 0,
+        look_max = math.pi / 2,
+    )
+    el_lut = make_el_lut(orbit, attitude,
+                         _raw.identification.lookDirection,
+                         dop, wavelength, dem_interp,
+                         rdr2geo_params)
+
     # Parse Tx-related Cal stuff used only for Tx BMF test cases
     _tx_chanl = _raw.getListOfTxTRMs(freq_band, txrx_pol[0])
     _corr_tap2 = _raw.getChirpCorrelator(freq_band, txrx_pol[0])[..., 1]
@@ -268,21 +286,24 @@ class TestElevationBeamformer:
             )
 
     def test_rx_dbf(self):
-        # construct RX DBF object
-        rx_dbf = RxDBF(self.orbit, self.attitude, self.dem_interp,
-                       self.el_pat_rx, self.rx_trm, self.ref_epoch,
-                       norm_weight=True, el_spacing_min=self.el_spacing_min)
-        # form RX DBF pattern w/o channel adjustment
-        rx_dbf_pat = rx_dbf.form_pattern(self.pulse_time_out, self.slant_range)
-        # validate slow-time averaged EL pattern as a function of range
-        self._validate_el_pattern(self.ref_ant_rx_dbf, rx_dbf_pat.mean(axis=0),
-                                  err_msg='for RX DBF')
-        if self.plot:
-            plot_el_cut_data_vs_ref(
-                rx_dbf_pat[::self.pulse_time_out.size - 1],
-                self.ref_ant_rx_dbf, self.slant_range, 'RX')
+        for el_lut in (None, self.el_lut):
+            # construct RX DBF object
+            rx_dbf = RxDBF(self.orbit, self.attitude, self.dem_interp,
+                           self.el_pat_rx, self.rx_trm, self.ref_epoch,
+                           el_lut=el_lut,
+                           norm_weight=True, el_spacing_min=self.el_spacing_min)
+            # form RX DBF pattern w/o channel adjustment
+            rx_dbf_pat = rx_dbf.form_pattern(self.pulse_time_out, self.slant_range)
+            # validate slow-time averaged EL pattern as a function of range
+            self._validate_el_pattern(self.ref_ant_rx_dbf, rx_dbf_pat.mean(axis=0),
+                                      err_msg='for RX DBF')
+            if self.plot:
+                plot_el_cut_data_vs_ref(
+                    rx_dbf_pat[::self.pulse_time_out.size - 1],
+                    self.ref_ant_rx_dbf, self.slant_range, 'RX')
 
     def test_rx_dbf_with_elofs_chanladj(self):
+      for el_lut in (None, self.el_lut):
         # Just to test the code and compare with the same ref pattern for now,
         # consider trivial EL offset relative to DBF Coeffs angular resolution
         # to avoid any noticeable changes in pattern per the abs tolerance.
@@ -290,6 +311,7 @@ class TestElevationBeamformer:
         # construct RX DBF object w/ el offset and channel adjustment.
         rx_dbf = RxDBF(self.orbit, self.attitude, self.dem_interp,
                        self.el_pat_rx, self.rx_trm, self.ref_epoch,
+                       el_lut=el_lut,
                        norm_weight=True, el_ofs_dbf=np.deg2rad(el_ofs_deg),
                        rg_spacing_min=self.rg_spacing_min)
         # Total number of RX channels
@@ -305,10 +327,11 @@ class TestElevationBeamformer:
                                   'offset and uniform adjustment of channels')
 
     def test_tx_bmf(self):
+      for el_lut in (None, self.el_lut):
         # construct TX BMF object
         tx_bmf = TxBMF(self.orbit, self.attitude, self.dem_interp,
                        self.el_pat_tx, self.tx_trm,
-                       self.ref_epoch, norm_weight=True,
+                       self.ref_epoch, el_lut=el_lut, norm_weight=True,
                        rg_spacing_min=self.rg_spacing_min)
         # for TX BMF pattern w/o TX channel adjustment weights
         tx_bmf_pat = tx_bmf.form_pattern(self.pulse_time_out, self.slant_range)
@@ -323,26 +346,27 @@ class TestElevationBeamformer:
                 self.ref_ant_tx_bmf, self.slant_range, 'TX')
 
     def test_tx_bmf_with_txphase_chanladj(self):
-        # make a copy of the tx_trm object to be modified
-        tx_trm = deepcopy(self.tx_trm)
-        # set TX-path phases for TxTRMInfo from Raw
-        tx_trm.tx_phase = np.deg2rad(
-            self._raw.getTxPhase(self.freq_band, self.txrx_pol[0]))
-        # construct TX BMF object
-        tx_bmf = TxBMF(self.orbit, self.attitude, self.dem_interp,
-                       self.el_pat_tx, tx_trm,
-                       self.ref_epoch, norm_weight=True,
-                       rg_spacing_min=self.rg_spacing_min)
-        # form TX BMF pattern w/ TX channel adjustment weights
-        # fudge factors for Tx or None
-        _, num_chanl_tx = tx_trm.correlator_tap2.shape
-        tx_chanl_adj = np.ones(num_chanl_tx, dtype=complex)
-        tx_bmf_pat = tx_bmf.form_pattern(self.pulse_time_out, self.slant_range,
-                                         tx_chanl_adj)
-        # validate slow-time averaged EL pattern as a function of range
-        self._validate_el_pattern(self.ref_ant_tx_bmf, tx_bmf_pat.mean(axis=0),
-                                  err_msg='for TX BMF w/ Tx phase data and '
-                                  'uniform adjustment of channels')
+        for el_lut in (None, self.el_lut):
+            # make a copy of the tx_trm object to be modified
+            tx_trm = deepcopy(self.tx_trm)
+            # set TX-path phases for TxTRMInfo from Raw
+            tx_trm.tx_phase = np.deg2rad(
+                self._raw.getTxPhase(self.freq_band, self.txrx_pol[0]))
+            # construct TX BMF object
+            tx_bmf = TxBMF(self.orbit, self.attitude, self.dem_interp,
+                           self.el_pat_tx, tx_trm,
+                           self.ref_epoch, el_lut=el_lut, norm_weight=True,
+                           rg_spacing_min=self.rg_spacing_min)
+            # form TX BMF pattern w/ TX channel adjustment weights
+            # fudge factors for Tx or None
+            _, num_chanl_tx = tx_trm.correlator_tap2.shape
+            tx_chanl_adj = np.ones(num_chanl_tx, dtype=complex)
+            tx_bmf_pat = tx_bmf.form_pattern(self.pulse_time_out, self.slant_range,
+                                             tx_chanl_adj)
+            # validate slow-time averaged EL pattern as a function of range
+            self._validate_el_pattern(self.ref_ant_tx_bmf, tx_bmf_pat.mean(axis=0),
+                                      err_msg='for TX BMF w/ Tx phase data and '
+                                      'uniform adjustment of channels')
 
 
 def test_get_pulse_index():

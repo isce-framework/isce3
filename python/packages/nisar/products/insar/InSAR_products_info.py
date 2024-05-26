@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import isce3
 
 ISCE3_VERSION = isce3.__version__
-PRODUCT_SPECIFICATION_VERSION = "1.1.0"
+PRODUCT_SPECIFICATION_VERSION = "1.1.2"
 
 @dataclass
 class InSARProductsInfo:

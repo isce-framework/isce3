@@ -3,7 +3,7 @@
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
-using isce3::cuda::signal::gpuLooks;
+namespace isce3::cuda::signal {
 
 /**
 input:
@@ -599,3 +599,4 @@ multilooks_power_g<float>(float *lo_res,
         size_t sz_lo,
         float blk_sz);
 
+} // namespace isce3::cuda::signal

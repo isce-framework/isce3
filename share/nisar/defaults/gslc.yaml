@@ -199,21 +199,21 @@ runconfig:
                     y_abs:
                     x_abs:
 
-            calibration_information: 
+            calibration_information:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 output_posting:
-                    x_posting: 
-                    y_posting:                 
+                    x_posting:
+                    y_posting:
 
-            processing_information: 
+            processing_information:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 output_posting:
-                    x_posting: 
-                    y_posting: 
+                    x_posting:
+                    y_posting:
 
             geo2rdr:
                 threshold: 1.0e-8
@@ -224,6 +224,10 @@ runconfig:
                 y: 1000
 
             flatten: True
+
+            correction_luts:
+                # Boolean flag to activate/deactivate model-based solid earth tide corrections
+                solid_earth_tides_enabled: True
 
         qa:
 
@@ -239,6 +243,15 @@ runconfig:
                 # on the input file, etc..
                 # Default: True
                 qa_reports: true
+
+            validation:
+
+                # True to raise an exception if one or more metadata cubes contains
+                # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                # z-dimension height layers in a 3D cube has all non-finite values.
+                # False to quiet the exception (although it will still be logged).
+                # Default: True
+                metadata_cubes_fail_if_all_nan: true
 
             qa_reports:
 
@@ -291,6 +304,14 @@ runconfig:
                     # Default: 0.5
                     gamma: 0.5
 
+                    # Color to plot NaN pixels for the PDF report.
+                    # For transparent, set to None.
+                    # The color should given in a format recognized by matplotlib:
+                    # https://matplotlib.org/stable/users/explain/colors/colors.html
+                    # (Note: Browse image PNG will always plot NaN as transparent.)
+                    # Default: blue
+                    nan_color_in_pdf: blue
+
                     # User-preferred tile shape for processing images by batches.
                     # Actual tile shape may be modified by QA to be an integer
                     # multiple of the number of looks for multilooking, of the
@@ -307,8 +328,8 @@ runconfig:
                     # For example, [2,3] means every 2nd azimuth line and
                     # every 3rd range sample will be used to compute the histograms.
                     # Format: [<azimuth>, <range>]
-                    # Default: (10, 10)
-                    decimation_ratio: [10, 10]
+                    # Default: (8, 8)
+                    decimation_ratio: [8, 8]
 
                     # Range in dB for the backscatter histogram's bin edges. Endpoint will
                     # be included. Format: [<starting value>, <endpoint>]

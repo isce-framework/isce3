@@ -20,7 +20,7 @@ TEST_F(MaskedMinMaxTest, NoMaskedData)
     // copy to device
     thrust::device_vector<bool> d_mask(mask);
 
-    const auto [data_min, data_max] = masked_minmax(d_data, d_mask);
+    const auto [data_min, data_max] = isce3::cuda::geocode::masked_minmax(d_data, d_mask);
 
     ASSERT_EQ(data_min, 1.0);
     ASSERT_EQ(data_max, 5.0);
@@ -35,7 +35,7 @@ TEST_F(MaskedMinMaxTest, SomeMaskedData)
     std::vector<bool> mask = {true, false, false, false, true};
     thrust::device_vector<bool> d_mask(mask);
 
-    const auto [data_min, data_max] = masked_minmax(d_data, d_mask);
+    const auto [data_min, data_max] = isce3::cuda::geocode::masked_minmax(d_data, d_mask);
 
     ASSERT_EQ(data_min, 2.0);
     ASSERT_EQ(data_max, 4.0);
@@ -52,7 +52,7 @@ TEST_F(MaskedMinMaxTest, AllMaskedData)
     // copy to device
     thrust::device_vector<bool> d_mask(mask);
 
-    const auto [data_min, data_max] = masked_minmax(d_data, d_mask);
+    const auto [data_min, data_max] = isce3::cuda::geocode::masked_minmax(d_data, d_mask);
 
     ASSERT_TRUE(isnan(data_min));
     ASSERT_TRUE(isnan(data_max));
