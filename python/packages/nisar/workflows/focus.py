@@ -905,7 +905,7 @@ class BackgroundWriter(isce3.io.BackgroundWriter):
         self.dset.write_direct(self.encode(z), dest_sel=block)
 
 
-def get_dataset_creation_options(cfg: Struct) -> dict:
+def get_dataset_creation_options(cfg: Struct, shape: tuple[int, int]) -> dict:
     """
     Get h5py keyword arguments needed for image dataset creation.
 
@@ -913,6 +913,8 @@ def get_dataset_creation_options(cfg: Struct) -> dict:
     ----------
     cfg : Struct
         RSLC runconfig data. Only reads `cfg.output` group.
+    shape : tuple[int, int]
+        Shape of dataset.  Used to determine upper bounds on chunk sizes.
 
     Returns
     -------
@@ -929,7 +931,7 @@ def get_dataset_creation_options(cfg: Struct) -> dict:
     # default value is not null, we need another non-null sentinel value to
     # indicate this.  Choose [-1, -1], which implies one full-sized chunk.
     if g.chunk_size != [-1, -1]:
-        opts["chunks"] = tuple(g.chunk_size)
+        opts["chunks"] = tuple(min(dims) for dims in zip(g.chunk_size, shape))
     if g.compression_enabled:
         if opts["chunks"] is None:
             raise ValueError("Chunk size cannot be None when "
@@ -1632,7 +1634,10 @@ def focus(runconfig, runconfig_path=""):
 
     product = cfg.primary_executable.product_type
     log.info(f"Creating output {product} product {output_slc_path}")
-    slc = SLC(output_slc_path, mode="w", product=product)
+    helpers.validate_fs_page_size(cfg.output.fs_page_size, cfg.output.chunk_size)
+    slc = SLC(output_slc_path, mode="w", product=product,
+        fs_strategy=cfg.output.fs_strategy,
+        fs_page_size=cfg.output.fs_page_size)
     slc.set_orbit(orbit)
     slc.set_attitude(attitude, orbit)
     og = next(iter(ogrid.values()))
@@ -1731,7 +1736,7 @@ def focus(runconfig, runconfig_path=""):
         frequency, pol = channel_out.freq_id, channel_out.pol
         log.info(f"Processing frequency{channel_out.freq_id} {channel_out.pol}")
         acdata = slc.create_image(frequency, pol, shape=ogrid[frequency].shape,
-            **get_dataset_creation_options(cfg))
+            **get_dataset_creation_options(cfg, ogrid[frequency].shape))
         deramp_ac = get_range_deramp(ogrid[frequency])
         writer = BackgroundWriter(scale * deramp_ac, acdata,
             cfg.output.data_type, mantissa_nbits=cfg.output.mantissa_nbits)

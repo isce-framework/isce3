@@ -456,3 +456,13 @@ output_options:
     # representation of each component (real/imaginary) of each complex
     # sample.  Only relevant when data_type=complex64_zero_mantissa.
     mantissa_nbits: int(min=1, max=23, required=False)
+
+    # HDF5 file space management strategy.  In our tests, the "page" strategy
+    # works well for accessing files stored on the cloud by reducing the number
+    # of high-latency REST API calls needed to read datasets and their metadata.
+    fs_strategy: enum("fsm", "page", "aggregate", "none", required=False)
+
+    # HDF5 file space page size in bytes.  Only relevant when fs_strategy="page".
+    # Ideally at least large enough to hold `chunk_size` amount of uncompressed
+    # data as well as its metadata.
+    fs_page_size: int(min=512, max=1073741824, required=False)
