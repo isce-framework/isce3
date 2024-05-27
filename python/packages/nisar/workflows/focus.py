@@ -1587,6 +1587,11 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
             f"stage is supported (requested {len(factor_sizes)}).")
     factor_size = factor_sizes[0]
 
+    if debugfile is not None:
+        npad = max(1, factor_size // 20)
+        log.debug(f"Factors will be separated by {npad} rows of NaN values in "
+            "the debug file.")
+
     # focus to intermediate grids
     aztimes = np.array(rc_grid.sensing_times)
     results = []
@@ -1602,22 +1607,16 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         err, pgrid, img, hgt = isce3.focus.backproject_first_stage(
             fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
             atmos)
+        if debugfile is not None:
+            log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
+            img.tofile(debugfile)
+            pad = np.zeros((npad, img.shape[1]), img.dtype) + np.nan
+            pad.tofile(debugfile)
         results.append((err, pgrid, img, hgt))
 
     # pull out sub-image grids
     grids = [result[1] for result in results]
     images = [result[2] for result in results]
-
-    # debug
-    if debugfile is not None:
-        log.debug("Dumping FBP factors to file.  "
-            f"First factor shape = {images[0].shape}")
-        npad = max(1, images[0].shape[0] // 20)
-        log.debug("Factors will be saparated by {npad} rows of NaN values.")
-        pad = np.zeros((npad, images[0].shape[1]), "c8") + np.nan
-        for img in images:
-            img.tofile(debugfile)
-            pad.tofile(debugfile)
 
     # FIXME dummy kernels
     kernel_az = isce3.core.KnabKernel(7, 1 / 1.2)
