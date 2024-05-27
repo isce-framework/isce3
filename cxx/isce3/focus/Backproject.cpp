@@ -412,8 +412,8 @@ backprojectFinalStage(std::complex<float>* out,
     bool all_converged = true;
     #pragma omp parallel for
     for (size_t iflat = 0; iflat < nout; ++iflat) {
-        size_t j = iflat / out_azimuth_time.size();
-        size_t i = iflat % out_azimuth_time.size();
+        const size_t j = iflat / out_slant_range.size();
+        const size_t i = iflat % out_slant_range.size();
 
         // Run rdr2geo using orbit and Doppler associated with output grid
         // to get target position.  Only need LLH if dumping height or
