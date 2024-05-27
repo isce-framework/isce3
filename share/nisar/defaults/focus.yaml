@@ -299,6 +299,8 @@ runconfig:
                     fit: Table # null or Cheby or Table
                     fit_order: 2048
 
+                factor_sizes: [1]
+
             dry_troposphere_model: tsx
 
             dem:

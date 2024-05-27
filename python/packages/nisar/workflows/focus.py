@@ -1548,6 +1548,96 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     return swaths
 
 
+def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, writer,
+              height=None, dem=isce3.geometry.DEMInterpolator(),
+              rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
+              use_gpu=False):
+    if use_gpu:
+        backproject = isce3.cuda.focus.backproject
+    else:
+        backproject = isce3.focus.backproject
+    fc = isce3.core.speed_of_light / ogrid.wavelength
+    zerodop = isce3.core.LUT2d()
+    for block, (t0, t1) in blocks_bounds:
+        description = f"(i, j) = ({block[0].start}, {block[1].start})"
+        if not is_overlapping(t0, t1,
+                            rc_grid.sensing_start, rc_grid.sensing_stop):
+            log.info(f"Skipping inactive azcomp block at {description}")
+            continue
+        log.info(f"Azcomp block at {description}")
+        bgrid = ogrid[block]
+        ogeom = isce3.container.RadarGeometry(bgrid, igeom.orbit, zerodop)
+        z = np.zeros(bgrid.shape, 'c8')
+        hgt = height[block] if height is not None else None
+        err = backproject(z, ogeom, rcdata, igeom, dem, fc, azres, kernel,
+            atmos, rdr2geo_params, geo2rdr_params, height=hgt)
+        if err:
+            log.warning("azcomp block contains some invalid pixels")
+        writer.queue_write(z, block)
+
+
+def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
+        rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
+        rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
+        use_gpu=False, bandwidth=0.0):
+    fc = isce3.core.speed_of_light / ogrid.wavelength
+    zerodop = isce3.core.LUT2d()
+    if len(factor_sizes) > 1:
+        raise NotImplementedError("Only a single backprojection factorization "
+            f"stage is supported (requested {len(factor_sizes)}).")
+    factor_size = factor_sizes[0]
+
+    # focus to intermediate grids
+    aztimes = np.array(rc_grid.sensing_times)
+    results = []
+    for i in range(0, rc_grid.length, factor_size):
+        pulses = slice(i, i + factor_size)
+        ti = aztimes[pulses]
+        pulse_time = igeom.orbit.reference_epoch + isce3.core.TimeDelta(ti[0])
+        fgrid = rc_grid[pulses, :]
+        fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
+        fdata = rcdata[pulses, :]
+        log.info(f"Computing initial factorization of {factor_size} pulses "
+            f"beginning at time {pulse_time}")
+        results.append(isce3.focus.backproject_first_stage(
+            fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
+            atmos))
+
+    # pull out sub-image grids
+    grids = [result[1] for result in results]
+    images = [result[2] for result in results]
+
+    # FIXME dummy kernels
+    kernel_az = isce3.core.KnabKernel(7, 1 / 1.2)
+    kernel_az = isce3.core.TabulatedKernelF32(kernel_az, 2048)
+
+    # sum factors into final image
+    for block, (t0, t1) in blocks_bounds:
+        description = f"(i, j) = ({block[0].start}, {block[1].start})"
+        if not is_overlapping(t0, t1,
+                            rc_grid.sensing_start, rc_grid.sensing_stop):
+            log.info(f"Skipping inactive azcomp block at {description}")
+            continue
+        log.info(f"Azcomp final sums for block at {description}")
+        # Still super inefficient since can upsample same subimages many times.
+        # TODO refactor so subimages only upsampled once.
+        isneeded = [t1 > grid.aztime_start and t0 <= grid.aztime_end for grid in grids]
+        active_grids = [grids[i] for i in range(len(grids)) if isneeded[i]]
+        active_images = [images[i] for i in range(len(images)) if isneeded[i]]
+        bgrid = ogrid[block]
+        ogeom = isce3.container.RadarGeometry(bgrid, igeom.orbit, zerodop)
+        z = np.zeros(bgrid.shape, 'c8')
+        hgt = height[block] if height is not None else None
+        err = isce3.focus.backproject_final_stage(
+            z, ogeom, igeom.orbit, igeom.doppler, active_grids, active_images,
+            dem, fc, azres, kernel, kernel_az, rdr2geo_params, geo2rdr_params,
+            hgt)
+        if err:
+            log.warning("azcomp block contains some invalid pixels")
+        writer.queue_write(z, block)
+
+
+
 def focus(runconfig, runconfig_path=""):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -1574,10 +1664,6 @@ def focus(runconfig, runconfig_path=""):
         isce3.cuda.core.set_device(device)
 
         log.info(f"Processing using CUDA device {device.id} ({device.name})")
-
-        backproject = isce3.cuda.focus.backproject
-    else:
-        backproject = isce3.focus.backproject
 
     # Generate output grids.
     grid_epoch, t0, t1, r0, r1 = get_total_grid_bounds(rawnames)
@@ -1860,27 +1946,21 @@ def focus(runconfig, runconfig_path=""):
 
             # Do azimuth compression.
             igeom = isce3.container.RadarGeometry(rc_grid, orbit, dop[frequency])
-
-            for block, (t0, t1) in blocks_bounds[frequency]:
-                description = f"(i, j) = ({block[0].start}, {block[1].start})"
-                if not cfg.processing.is_enabled.azcomp:
-                    continue
-                if not is_overlapping(t0, t1,
-                                    rc_grid.sensing_start, rc_grid.sensing_stop):
-                    log.info(f"Skipping inactive azcomp block at {description}")
-                    continue
-                log.info(f"Azcomp block at {description}")
-                bgrid = ogrid[frequency][block]
-                ogeom = isce3.container.RadarGeometry(bgrid, orbit, zerodop)
-                z = np.zeros(bgrid.shape, 'c8')
-                hgt = hgt_mm[block] if dump_height else None
-                err = backproject(z, ogeom, rcfile.data, igeom, dem,
-                            channel_out.band.center, azres,
-                            kernel, atmos, get_rdr2geo_params(cfg),
-                            get_geo2rdr_params(cfg, orbit), height=hgt)
-                if err:
-                    log.warning("azcomp block contains some invalid pixels")
-                writer.queue_write(z, block)
+            if cfg.processing.is_enabled.azcomp:
+                factor_sizes = cfg.processing.azcomp.factor_sizes
+                if factor_sizes[0] > 1:
+                    azcomp_ffbp(factor_sizes, azres, kernel,
+                        blocks_bounds[frequency], igeom,
+                        rc_grid, rcfile.data, ogrid[frequency], writer,
+                        hgt_mm if dump_height else None, dem,
+                        get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
+                        atmos, use_gpu, channel_out.band.width)
+                else:
+                    azcomp_bp(azres, kernel, blocks_bounds[frequency], igeom,
+                        rc_grid, rcfile.data, ogrid[frequency], writer,
+                        hgt_mm if dump_height else None, dem,
+                        get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
+                        atmos, use_gpu)
 
             # Raster/GDAL creates a .hdr file we have to clean up manually.
             hdr = fd.name.replace(".c8", ".hdr")

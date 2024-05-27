@@ -188,6 +188,8 @@ runconfig:
           fit: enum('Cheby', 'Table', required=False)
           fit_order: int(min=1, required=False)
 
+        factor_sizes: list(num(min=1), min=1, required=False)
+
 
       dry_troposphere_model: enum('nodelay', 'tsx', required=False)
 
