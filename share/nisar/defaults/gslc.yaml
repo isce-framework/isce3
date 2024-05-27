@@ -80,7 +80,7 @@ runconfig:
             compression_level: 4
 
             # Chunk size of GSLC raster
-            chunk_size: [128, 128]
+            chunk_size: [512, 512]
 
             # File space strategy
             fs_strategy: page
