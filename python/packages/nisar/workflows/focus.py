@@ -1579,7 +1579,7 @@ def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, write
 def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
         rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
-        use_gpu=False, bandwidth=0.0):
+        use_gpu=False, bandwidth=0.0, debugfile=None):
     fc = isce3.core.speed_of_light / ogrid.wavelength
     zerodop = isce3.core.LUT2d()
     if len(factor_sizes) > 1:
@@ -1598,14 +1598,26 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
         log.info(f"Computing initial factorization of {factor_size} pulses "
-            f"beginning at time {pulse_time}")
-        results.append(isce3.focus.backproject_first_stage(
+            f"beginning at pulse {i}")
+        err, pgrid, img, hgt = isce3.focus.backproject_first_stage(
             fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
-            atmos))
+            atmos)
+        results.append((err, pgrid, img, hgt))
 
     # pull out sub-image grids
     grids = [result[1] for result in results]
     images = [result[2] for result in results]
+
+    # debug
+    if debugfile is not None:
+        log.debug("Dumping FBP factors to file.  "
+            f"First factor shape = {images[0].shape}")
+        npad = max(1, images[0].shape[0] // 20)
+        log.debug("Factors will be saparated by {npad} rows of NaN values.")
+        pad = np.zeros((npad, images[0].shape[1]), "c8") + np.nan
+        for img in images:
+            img.tofile(debugfile)
+            pad.tofile(debugfile)
 
     # FIXME dummy kernels
     kernel_az = isce3.core.KnabKernel(7, 1 / 1.2)
@@ -1621,7 +1633,7 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         log.info(f"Azcomp final sums for block at {description}")
         # Still super inefficient since can upsample same subimages many times.
         # TODO refactor so subimages only upsampled once.
-        isneeded = [t1 > grid.aztime_start and t0 <= grid.aztime_end for grid in grids]
+        isneeded = [(t1 > grid.aztime_start) and (t0 <= grid.aztime_end) for grid in grids]
         active_grids = [grids[i] for i in range(len(grids)) if isneeded[i]]
         active_images = [images[i] for i in range(len(images)) if isneeded[i]]
         bgrid = ogrid[block]
@@ -1954,7 +1966,8 @@ def focus(runconfig, runconfig_path=""):
                         rc_grid, rcfile.data, ogrid[frequency], writer,
                         hgt_mm if dump_height else None, dem,
                         get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
-                        atmos, use_gpu, channel_out.band.width)
+                        atmos, use_gpu, channel_out.band.width,
+                        temp("_fbp_factors.c8"))
                 else:
                     azcomp_bp(azres, kernel, blocks_bounds[frequency], igeom,
                         rc_grid, rcfile.data, ogrid[frequency], writer,
