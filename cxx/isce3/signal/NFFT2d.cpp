@@ -101,7 +101,7 @@ NFFT2d<T>::set_spectrum(const dims_t& sizes, const dims_t& strides, const std::c
 }
 
 template <typename T>
-std::complex<T> NFFT2d<T>::interp(const std::array<double, 2>& t) const
+std::complex<T> NFFT2d<T>::interp(const std::array<double, 2>& t, bool periodic) const
 {
     constexpr int xdim = 1, ydim = 0;
 
@@ -111,9 +111,7 @@ std::complex<T> NFFT2d<T>::interp(const std::array<double, 2>& t) const
 
     return isce3::core::interp2d<T, std::complex<T>>(kernels_[xdim],
         kernels_[ydim], xt_.data(), fft_sizes_[xdim], /* stridex */ 1,
-        fft_sizes_[ydim], /* stridey */ fft_sizes_[xdim], x, y,
-        /* periodic */true);
-       
+        fft_sizes_[ydim], /* stridey */ fft_sizes_[xdim], x, y, periodic);
 }
 
 }

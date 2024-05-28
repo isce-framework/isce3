@@ -98,12 +98,11 @@ set_spectrum(const std::valarray<std::complex<T>> &x)
 template<class T>
 std::complex<T>
 isce3::signal::NFFT<T>::
-interp(double t) const
+interp(double t, bool periodic) const
 {
     // scale time index to account for zero-padding of spectrum.
     t *= (double)_fft_size / (double)_n;
-    return isce3::core::interp1d<T,std::complex<T>>(_kernel, _xt, t,
-                                                   /*periodic*/true);
+    return isce3::core::interp1d<T,std::complex<T>>(_kernel, _xt, t, periodic);
 }
 
 template<class T>

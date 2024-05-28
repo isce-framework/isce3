@@ -21,7 +21,8 @@ class isce3::signal::NFFT2d {
         void set_spectrum(const dims_t& sizes, const dims_t& strides,
             const std::complex<T> *x);
 
-        std::complex<T> interp(const std::array<double, 2>& t) const;
+        std::complex<T> interp(const std::array<double, 2>& t,
+            bool periodic = true) const;
 
         const dims_t& sizes() const { return sizes_; }
         const dims_t& fft_sizes() const { return fft_sizes_; }
