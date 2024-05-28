@@ -157,3 +157,5 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
+            validation:
+                metadata_cubes_fail_if_all_nan: False
