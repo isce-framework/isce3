@@ -527,7 +527,7 @@ backprojectFinalStage(std::complex<float>* out,
             const double ix = (range - grid.range.first()) / grid.range.spacing(),
                 iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
             // interpolate baseband data
-            const auto z = nfft.interp({iy, ix});
+            const auto z = nfft.interp({iy, ix}, false);
             // compensate phase and sum contribution
             const double phase = kw * range;
             out[iflat] +=
