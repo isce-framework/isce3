@@ -6,9 +6,9 @@ from __future__ import annotations
 import pathlib
 import time
 
-import h5py
 import journal
 import numpy as np
+from isce3.io import HDF5OptimizedReader
 from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
@@ -51,7 +51,7 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Pull the slant range and zero doppler time of the pixel offsets product
     # at frequencyA
-    with h5py.File(output_hdf5, 'r+', libver='latest', swmr=True) as dst_h5:
+    with HDF5OptimizedReader(name=output_hdf5, mode='r+', libver='latest', swmr=True) as dst_h5:
 
         for freq, _, pol_list in get_cfg_freq_pols(cfg):
             freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'

@@ -759,6 +759,8 @@ runconfig:
             # Set of options to enable compression, choose compression level,
             # chunk size and shuffle filter
         output:
+            # Enable/Disable the paging
+            page_enabled: True
             # Enable/Disable gzip compression
             compression_enabled: True
             # Compression level: 1: least compression; 9: best compression

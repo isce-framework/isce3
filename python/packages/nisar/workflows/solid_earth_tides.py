@@ -4,12 +4,12 @@ import multiprocessing
 import re
 import time
 
-import h5py
 import isce3
 import journal
 import numpy as np
 import pandas as pd
 from isce3.core import transform_xy_to_latlon
+from isce3.io import HDF5OptimizedReader
 from nisar.products.insar.product_paths import GUNWGroupsPaths
 from nisar.workflows.h5_prep import get_products_and_paths
 from nisar.workflows.solid_earth_tides_runconfig import \
@@ -126,7 +126,7 @@ def add_solid_earth_to_gunw_hdf5(los_solid_earth_tides,
          GUNW HDF5 file where SET will be written
     '''
 
-    with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as hdf:
+    with HDF5OptimizedReader(name=gunw_hdf5, mode='a', libver='latest', swmr=True) as hdf:
         radar_grid = hdf.get(GUNWGroupsPaths().RadarGridPath)
         product_names = ['slantRangeSolidEarthTidesPhase']
 
@@ -223,7 +223,8 @@ def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
 
     # Instantiate GUNW object to avoid hard-coded paths to GUNW datasets
     gunw_obj = GUNWGroupsPaths()
-    with h5py.File(gunw_hdf5_path, 'r', libver='latest', swmr=True) as h5_obj:
+    with HDF5OptimizedReader(name=gunw_hdf5_path, mode='r', libver='latest', swmr=True) as h5_obj:
+        # Fetch the GUWN Incidence Angle Datacube
         rdr_grid_path = gunw_obj.RadarGridPath
         [inc_angle_cube,
          los_unit_vector_x_cube,

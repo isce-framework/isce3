@@ -12,8 +12,8 @@ from isce3.core import crop_external_orbit
 from isce3.core.rdr_geo_block_generator import block_generator
 from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
                               to_complex32)
+from isce3.io import HDF5OptimizedReader
 
-import nisar
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.compute_stats import compute_stats_complex_data
@@ -86,7 +86,7 @@ def run(cfg):
 
     t_all = time.perf_counter()
     with h5py.File(output_hdf5, 'w') as dst_h5, \
-            h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5:
+            HDF5OptimizedReader(name=input_hdf5, mode='r', libver='latest', swmr=True) as src_h5:
 
         prep_gslc_dataset(cfg, 'GSLC', dst_h5)
         for freq, pol_list in freq_pols.items():

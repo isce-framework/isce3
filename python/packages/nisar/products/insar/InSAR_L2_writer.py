@@ -42,7 +42,12 @@ class L2InSARWriter(L1InSARWriter):
                                        native_doppler, grid_doppler,
                                        threshold_geo2rdr=1e-8,
                                        numiter_geo2rdr=100,
-                                       delta_range=1e-8):
+                                       delta_range=1e-8,
+                                       chunk_size=None,
+                                       compression_enabled=True,
+                                       compression_type='gzip',
+                                       compression_level=9,
+                                       shuffle_filter=True):
         """
         Add the slant range and azimuth time cubes of the secondary image to the
         radar grids
@@ -82,18 +87,25 @@ class L2InSARWriter(L1InSARWriter):
         ref_epoch_str = ref_epoch.isoformat()
         az_coord_units = f'seconds since {ref_epoch_str}'
 
+        create_dataset_kwargs = {}
+        create_dataset_kwargs['chunk_size'] = chunk_size
+        create_dataset_kwargs['compression_enabled'] = compression_enabled
+        create_dataset_kwargs['compression_type'] = compression_type
+        create_dataset_kwargs['compression_level'] = compression_level
+        create_dataset_kwargs['shuffle_filter'] = shuffle_filter
+
         slant_range_raster = _get_raster_from_hdf5_ds(
             cube_group, 'secondarySlantRange', np.float64, cube_shape,
             zds=zds, yds=yds, xds=xds,
             long_name='slant-range',
             descr='Slant range of the secondary RSLC in meters',
-            units='meters')
+            units='meters', **create_dataset_kwargs)
         azimuth_time_raster = _get_raster_from_hdf5_ds(
             cube_group, 'secondaryZeroDopplerAzimuthTime', np.float64, cube_shape,
             zds=zds, yds=yds, xds=xds,
             long_name='zero-Doppler azimuth time',
             descr='Zero doppler azimuth time of the secondary RSLC image',
-            units=az_coord_units)
+            units=az_coord_units, **create_dataset_kwargs)
 
         isce3.geometry.make_radar_grid_cubes(radar_grid, geogrid, heights,
                                              orbit, native_doppler,
@@ -131,6 +143,13 @@ class L2InSARWriter(L1InSARWriter):
         cube_native_doppler.bounds_error = False
         grid_zero_doppler = LUT2d()
 
+        if self.hdf5_optimizer_config.chunk_size is None:
+            chunk_size = None
+        else:
+            chunk_size = (1,
+                          self.hdf5_optimizer_config.chunk_size[0],
+                          self.hdf5_optimizer_config.chunk_size[1])
+
         add_radar_grid_cubes_to_hdf5(
             self,
             radar_grid_path,
@@ -142,6 +161,15 @@ class L2InSARWriter(L1InSARWriter):
             grid_zero_doppler,
             threshold_geo2rdr,
             iteration_geo2rdr,
+            chunk_size = chunk_size,
+            compression_enabled=\
+                self.hdf5_optimizer_config.compression_enabled,
+            compression_type=\
+                self.hdf5_optimizer_config.compression_type,
+            compression_level=\
+                self.hdf5_optimizer_config.compression_level,
+            shuffle_filter=\
+                self.hdf5_optimizer_config.shuffle_filter,
             )
 
         # Update the radar grids attributes
@@ -213,6 +241,14 @@ class L2InSARWriter(L1InSARWriter):
             frequency=cube_freq
         )
 
+        # if the chunking is enabled
+        if self.hdf5_optimizer_config.chunk_size is not None:
+            chunk_size = (1,
+                          self.hdf5_optimizer_config.chunk_size[0],
+                          self.hdf5_optimizer_config.chunk_size[1])
+        else:
+            chunk_size = None
+
         self.add_secondary_radar_grid_cube(radar_grid_path,
                                             radar_grid_cubes_geogrid,
                                             radar_grid_cubes_heights,
@@ -221,6 +257,15 @@ class L2InSARWriter(L1InSARWriter):
                                             grid_zero_doppler,
                                             threshold_geo2rdr,
                                             iteration_geo2rdr,
+                                            chunk_size = chunk_size,
+                                            compression_enabled=\
+                                                self.hdf5_optimizer_config.compression_enabled,
+                                            compression_type=\
+                                                self.hdf5_optimizer_config.compression_type,
+                                            compression_level=\
+                                                self.hdf5_optimizer_config.compression_level,
+                                            shuffle_filter=\
+                                                self.hdf5_optimizer_config.shuffle_filter
                                             )
 
     def add_geocoding_to_algo_group(self):
