@@ -6,15 +6,14 @@ GSLC, GCOV, GUNW, GOFF, RIFG, ROFF, and RUNW
 import os
 
 import h5py
+import isce3
 import journal
 import numpy as np
-from osgeo import osr
-
-import isce3
+from isce3.core.types import complex32, to_complex32
+from isce3.io import HDF5OptimizedReader, optimize_chunk_size
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
-from isce3.core.types import complex32, to_complex32
-from nisar.workflows.helpers import get_cfg_freq_pols
+from osgeo import osr
 
 
 def get_dataset_output_options(cfg: dict):
@@ -213,7 +212,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     src_meta_path = ref_slc.MetadataPath
     dst_meta_path = f'{common_path}/{dst}/metadata'
 
-    with h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
+    with HDF5OptimizedReader(name=input_hdf5, mode='r', libver='latest', swmr=True) as src_h5, \
             h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5:
         dst_h5.attrs['Conventions'] = np.string_("CF-1.7")
 
@@ -230,7 +229,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         # If insar, create reference/secondary zeroDopplerStartEndTime
         if is_insar:
             # Open secondary hdf5 to copy information
-            with h5py.File(secondary_hdf5, 'r', libver='latest', swmr=True) as sec_src_h5:
+            with HDF5OptimizedReader(name=secondary_hdf5, mode='r', libver='latest', swmr=True) as sec_src_h5:
                 src_dataset = ['zeroDopplerStartTime', 'zeroDopplerEndTime']
                 dst_dataset = ['referenceZeroDopplerStartTime', 'referenceZeroDopplerEndTime']
                 for src_data, dst_data in zip(src_dataset, dst_dataset):
@@ -455,7 +454,7 @@ def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
     # Open secondary SLC
-    with h5py.File(secondary_hdf5, 'r', libver='latest',
+    with HDF5OptimizedReader(name=secondary_hdf5, mode='r', libver='latest',
                    swmr=True) as secondary_h5:
         dst_proc = f'{dst_meta_path}/processingInformation/parameters'
         src_proc = f'{src_meta_path}/processingInformation/parameters'
@@ -507,7 +506,7 @@ def prep_ds(cfg, output_hdf5, dst):
     Prepare datasets for GSLC and GCOV
     '''
     # unpack
-    with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5:
+    with HDF5OptimizedReader(name=output_hdf5, mode='a', libver='latest', swmr=True) as dst_h5:
         # Fork the dataset preparation for GSLC/GCOV and GUNW
         if dst in ['GSLC', 'GCOV']:
             prep_gslc_dataset(cfg, dst, dst_h5)
@@ -862,7 +861,12 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
                                  heights, radar_grid, orbit,
                                  native_doppler, grid_doppler,
                                  threshold_geo2rdr=1e-8,
-                                 numiter_geo2rdr=100, delta_range=1e-8):
+                                 numiter_geo2rdr=100, delta_range=1e-8,
+                                 chunk_size=(1,512,512),
+                                 compression_enabled=True,
+                                 compression_type='gzip',
+                                 compression_level=9,
+                                 shuffle_filter=True):
     if cube_group_name not in hdf5_obj:
         cube_group = hdf5_obj.create_group(cube_group_name)
     else:
@@ -872,6 +876,13 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
 
     zds, yds, xds = set_get_geo_info(hdf5_obj, cube_group_name, geogrid,
                                      z_vect=heights, flag_cube=True)
+
+    create_dataset_kwargs = {}
+    create_dataset_kwargs['chunk_size'] = chunk_size
+    create_dataset_kwargs['compression_enabled'] = compression_enabled
+    create_dataset_kwargs['compression_type'] = compression_type
+    create_dataset_kwargs['compression_level'] = compression_level
+    create_dataset_kwargs['shuffle_filter'] = shuffle_filter
 
     # seconds since ref epoch
     ref_epoch = radar_grid.ref_epoch
@@ -883,58 +894,58 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         zds=zds, yds=yds, xds=xds,
         long_name='slant-range',
         descr='Slant range in meters',
-        units='meter')
+        units='meter', **create_dataset_kwargs)
     azimuth_time_raster = _get_raster_from_hdf5_ds(
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='zero-Doppler azimuth time',
         descr='Zero Doppler azimuth time in seconds',
-        units=az_coord_units)
+        units=az_coord_units, **create_dataset_kwargs)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='incidence angle',
         descr=('Incidence angle is defined as the angle between the LOS vector'
                ' and the normal to the ellipsoid at the target height'),
-        units='degrees', valid_min=0.0, valid_max=90.0)
+        units='degrees', valid_min=0.0, valid_max=90.0, **create_dataset_kwargs)
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
         descr='East component of unit vector of LOS from target to sensor',
-        units='1', valid_min=-1.0, valid_max=1.0)
+        units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
         descr='North component of unit vector of LOS from target to sensor',
-        units='1', valid_min=-1.0, valid_max=1.0)
+        units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
         descr='East component of unit vector along ground track',
-        units='1', valid_min=-1.0, valid_max=1.0)
+        units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
         descr='North component of unit vector along ground track',
-        units='1', valid_min=-1.0, valid_max=1.0)
+        units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Elevation angle',
         descr=('Elevation angle is defined as the angle between the LOS vector'
                ' and the normal to the ellipsoid at the sensor'),
-        units='degrees', valid_min=0.0, valid_max=90.0)
+        units='degrees', valid_min=0.0, valid_max=90.0, **create_dataset_kwargs)
     ground_track_velocity_raster = _get_raster_from_hdf5_ds(
         cube_group, 'groundTrackVelocity', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Ground-track velocity',
         descr=('Absolute value of the platform velocity scaled at the target'
                ' height'),
-        units='m/s')
+        units='m/s', **create_dataset_kwargs)
 
     isce3.geometry.make_radar_grid_cubes(radar_grid,
                                          geogrid,
@@ -961,13 +972,38 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
                              zds=None, yds=None, xds=None, standard_name=None,
                              long_name=None, descr=None,
                              units=None, fill_value=None,
-                             valid_min=None, valid_max=None):
-    # remove dataset if it already exists
-    if ds_name in group:
-        del group[ds_name]
+                             valid_min=None, valid_max=None,
+                             chunk_size=(1,512,512),
+                             compression_enabled=True,
+                             compression_type='gzip',
+                             compression_level=9,
+                             shuffle_filter=True):
 
-    # create dataset
-    dset = group.create_dataset(ds_name, dtype=dtype, shape=shape)
+    create_dataset_kwargs = {}
+    if compression_enabled:
+        if chunk_size is None:
+            err_msg = 'compressing the hdf5 file needs chunking'
+            error_channel = journal.error(
+                'nisar.workflows.h5_prep._get_raster_from_hdf5_ds')
+            error_channel.log(err_msg)
+            raise ValueError(err_msg)
+
+        if compression_type is not None:
+            create_dataset_kwargs['compression'] = compression_type
+        if compression_level is not None:
+            create_dataset_kwargs['compression_opts'] = compression_level
+        # Add shuffle filter options
+        create_dataset_kwargs['shuffle'] = shuffle_filter
+
+    if chunk_size is not None:
+        ds_chunk_size = \
+            optimize_chunk_size(chunk_size, shape)
+        create_dataset_kwargs['chunks'] = ds_chunk_size
+
+    dset = group.require_dataset(
+        ds_name, dtype=dtype, shape=shape,
+        **create_dataset_kwargs
+    )
 
     if zds is not None:
         dset.dims[0].attach_scale(zds)
@@ -1014,13 +1050,26 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
                                        heights, orbit, native_doppler,
                                        grid_doppler, epsg,
                                        threshold_geo2rdr=1e-8,
-                                       numiter_geo2rdr=100, delta_range=1e-8):
+                                       numiter_geo2rdr=100, delta_range=1e-8,
+                                       chunk_size=(1,512,512),
+                                       compression_enabled=True,
+                                       compression_type='gzip',
+                                       compression_level=9,
+                                       shuffle_filter=True):
+
     if cube_group_name not in hdf5_obj:
         cube_group = hdf5_obj.create_group(cube_group_name)
     else:
         cube_group = hdf5_obj[cube_group_name]
 
     cube_shape = [len(heights), radar_grid.length, radar_grid.width]
+
+    create_dataset_kwargs = {}
+    create_dataset_kwargs['chunk_size'] = chunk_size
+    create_dataset_kwargs['compression_enabled'] = compression_enabled
+    create_dataset_kwargs['compression_type'] = compression_type
+    create_dataset_kwargs['compression_level'] = compression_level
+    create_dataset_kwargs['shuffle_filter'] = shuffle_filter
 
     xds, yds, zds = set_create_geolocation_grid_coordinates(
         hdf5_obj, cube_group_name, radar_grid, heights, epsg)
@@ -1037,57 +1086,57 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         zds=zds, yds=yds, xds=xds,
         long_name='Coordinate X',
         descr='X coordinates in specified EPSG code',
-        units=x_coord_units)
+        units=x_coord_units, **create_dataset_kwargs)
     coordinate_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'coordinateY', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Coordinate Y',
         descr='Y coordinates in specified EPSG code',
-        units=y_coord_units)
+        units=y_coord_units, **create_dataset_kwargs)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='incidence angle',
         descr='Incidence angle is defined as the angle between the LOS '
               'vector and the normal to the ellipsoid at the target height',
-        units='degrees', valid_min=0.0, valid_max=90.0)
+        units='degrees', valid_min=0.0, valid_max=90.0, **create_dataset_kwargs)
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
         descr='East component of unit vector of LOS from target to sensor',
-        units='1', valid_min=-1.0, valid_max=1.0)
+        units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
         descr='North component of unit vector of LOS from target to sensor',
-        units='1', valid_min=-1.0, valid_max=1.0)
+        units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
         descr='East component of unit vector along ground track',
-        units='1', valid_min=-1.0, valid_max=1.0)
+        units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
         descr='North component of unit vector along ground track',
-        units='1', valid_min=-1.0, valid_max=1.0)
+        units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Elevation angle',
         descr='Elevation angle is defined as the angle between the LOS vector '
               'and the normal to the ellipsoid at the sensor',
-        units='degrees', valid_min=0.0, valid_max=90.0)
+        units='degrees', valid_min=0.0, valid_max=90.0, **create_dataset_kwargs)
     ground_track_velocity_raster = _get_raster_from_hdf5_ds(
         cube_group, 'groundTrackVelocity', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Ground-track velocity',
         descr='Absolute value of the platform velocity scaled at the target height',
-        units='meters / second')
+        units='meters / second', **create_dataset_kwargs)
 
     isce3.geometry.make_geolocation_cubes(radar_grid,
                                           heights,

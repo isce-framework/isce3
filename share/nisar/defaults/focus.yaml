@@ -368,7 +368,7 @@ runconfig:
             compression_level: 4
 
             # Chunk size of raster.  Enter [-1, -1] to disable chunks.
-            chunk_size: [128, 128]
+            chunk_size: [512, 512]
 
             # Enable shuffle filtering of raster
             shuffle: True
@@ -378,6 +378,17 @@ runconfig:
             # complex sample.  Only relevant when
             # data_type=complex64_zero_mantissa.
             mantissa_nbits: 10
+
+            # HDF5 file space management strategy.  In our tests, the "page"
+            # strategy works well for accessing files stored on the cloud by
+            # reducing the number of high-latency REST API calls needed to read
+            # datasets and their metadata.
+            fs_strategy: page
+
+            # HDF5 file space page size in bytes.  Only relevant when
+            # fs_strategy="page".  Ideally at least large enough to hold
+            # `chunk_size` amount of uncompressed data as well as its metadata.
+            fs_page_size: 4194304
 
         qa:
             workflows:
@@ -403,6 +414,15 @@ runconfig:
                 # Flag to run Point Target Analyzer calibration tool.
                 # Default: True
                 point_target_analyzer: true
+
+            validation:
+
+                # True to raise an exception if one or more metadata cubes contains
+                # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                # z-dimension height layers in a 3D cube has all non-finite values.
+                # False to quiet the exception (although it will still be logged).
+                # Default: True
+                metadata_cubes_fail_if_all_nan: true
 
             qa_reports:
                 backscatter_img:

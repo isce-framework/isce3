@@ -749,9 +749,18 @@ runconfig:
                         # Max number of connected components per tile
                         max_ncomps: 32
 
+            correction_luts:
+                # Boolean flag to activate/deactivate model-based solid earth tide corrections
+                solid_earth_tides_enabled: False
+
+                # Boolean flag to activate/deactivate model-based TEC corrections
+                tec_enabled: False
+
             # Set of options to enable compression, choose compression level,
             # chunk size and shuffle filter
         output:
+            # Enable/Disable the paging
+            page_enabled: True
             # Enable/Disable gzip compression
             compression_enabled: True
             # Compression level: 1: least compression; 9: best compression
@@ -773,6 +782,15 @@ runconfig:
                     # on the input file, etc..
                     # Default: True
                     qa_reports: true
+
+                validation:
+
+                    # True to raise an exception if one or more metadata cubes contains
+                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D cube has all non-finite values.
+                    # False to quiet the exception (although it will still be logged).
+                    # Default: True
+                    metadata_cubes_fail_if_all_nan: true
 
                 qa_reports:
 
@@ -936,6 +954,15 @@ runconfig:
                     # on the input file, etc..
                     # Default: True
                     qa_reports: true
+
+                validation:
+
+                    # True to raise an exception if one or more metadata cubes contains
+                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D cube has all non-finite values.
+                    # False to quiet the exception (although it will still be logged).
+                    # Default: True
+                    metadata_cubes_fail_if_all_nan: true
 
                 qa_reports:
 
@@ -1247,6 +1274,15 @@ runconfig:
                     # on the input file, etc..
                     # Default: True
                     qa_reports: true
+
+                validation:
+
+                    # True to raise an exception if one or more metadata cubes contains
+                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D cube has all non-finite values.
+                    # False to quiet the exception (although it will still be logged).
+                    # Default: True
+                    metadata_cubes_fail_if_all_nan: true
 
                 qa_reports:
 
@@ -1601,6 +1637,15 @@ runconfig:
                     # Default: True
                     qa_reports: true
 
+                validation:
+
+                    # True to raise an exception if one or more metadata cubes contains
+                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D cube has all non-finite values.
+                    # False to quiet the exception (although it will still be logged).
+                    # Default: True
+                    metadata_cubes_fail_if_all_nan: true
+
                 qa_reports:
 
                     az_and_range_offsets:
@@ -1857,6 +1902,15 @@ runconfig:
                     # on the input file, etc..
                     # Default: True
                     qa_reports: true
+
+                validation:
+
+                    # True to raise an exception if one or more metadata cubes contains
+                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D cube has all non-finite values.
+                    # False to quiet the exception (although it will still be logged).
+                    # Default: True
+                    metadata_cubes_fail_if_all_nan: true
 
                 qa_reports:
 

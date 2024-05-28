@@ -4,10 +4,12 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_base_writer import InSARBaseWriter
+from .InSAR_HDF5_optimizer_config import get_InSAR_output_options
 from .InSAR_L1_writer import L1InSARWriter
 from .InSAR_products_info import InSARProductsInfo
 from .product_paths import ROFFGroupsPaths
 from .units import Units
+from .utils import get_pixel_offsets_dataset_shape, get_pixel_offsets_params
 
 
 class ROFFWriter(L1InSARWriter):
@@ -18,7 +20,12 @@ class ROFFWriter(L1InSARWriter):
         """
         Constructor for ROFF class
         """
+        hdf5_opt_config, kwds = get_InSAR_output_options(kwds, 'ROFF')
+
         super().__init__(**kwds)
+
+        # HDF5 IO optimizer configuration
+        self.hdf5_optimizer_config = hdf5_opt_config
 
         # group paths are ROFF group paths
         self.group_paths = ROFFGroupsPaths()
@@ -132,7 +139,7 @@ class ROFFWriter(L1InSARWriter):
         # pull the offset parameters
         is_roff,  margin, rg_start, az_start,\
         rg_skip, az_skip, rg_search, az_search,\
-        rg_chip, az_chip, ovs_factor = self._pull_pixel_offsets_params()
+        rg_chip, az_chip, ovs_factor = get_pixel_offsets_params(self.cfg)
 
         for freq, *_ in get_cfg_freq_pols(self.cfg):
             swath_frequency_path = \
@@ -289,7 +296,7 @@ class ROFFWriter(L1InSARWriter):
             swaths_freq_group = self.require_group(swaths_freq_group_name)
 
             # shape of offset product
-            off_shape = self._get_pixeloffsets_dataset_shape(freq, pol_list[0])
+            off_shape = get_pixel_offsets_dataset_shape(self.cfg, freq)
 
             # pixel offsets dataset parameters including:
             # dataset name, description, and unit
@@ -355,10 +362,6 @@ class ROFFWriter(L1InSARWriter):
                                 np.float32,
                                 ds_description,
                                 units=ds_unit,
-                                compression_enabled=self.cfg['output']['compression_enabled'],
-                                compression_level=self.cfg['output']['compression_level'],
-                                chunk_size=self.cfg['output']['chunk_size'],
-                                shuffle_filter=self.cfg['output']['shuffle']
                             )
 
 

@@ -8,16 +8,16 @@ import pathlib
 import time
 from enum import Enum
 
-import h5py
 import isce3
 import journal
 import numpy as np
 from isce3.core import crop_external_orbit
-from nisar.products.insar.product_paths import (CommonPaths, GOFFGroupsPaths,
+from nisar.products.insar.product_paths import (GOFFGroupsPaths,
                                                 GUNWGroupsPaths,
                                                 RIFGGroupsPaths,
                                                 ROFFGroupsPaths,
                                                 RUNWGroupsPaths)
+from isce3.io import HDF5OptimizedReader
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import prepare_insar_hdf5
@@ -656,7 +656,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     geocode_cplx_obj.data_interpolator = interp_method
 
     t_all = time.time()
-    with h5py.File(output_hdf5, "a") as dst_h5:
+    with HDF5OptimizedReader(name=output_hdf5, mode="a") as dst_h5:
         for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
             # Get azimuth and slant range corrections
             az_correction, srg_correction = \
@@ -1059,7 +1059,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         orbit = crop_external_orbit(external_orbit, orbit)
 
 
-    with h5py.File(output_hdf5, "a", libver='latest', swmr=True) as dst_h5:
+    with HDF5OptimizedReader(name=output_hdf5, mode="a", libver='latest', swmr=True) as dst_h5:
 
         # Based on runconfig iterate over frequencies and their polarizations
         for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):

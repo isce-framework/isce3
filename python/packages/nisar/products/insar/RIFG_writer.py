@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 from nisar.workflows.helpers import get_cfg_freq_pols
 
+from .InSAR_HDF5_optimizer_config import get_InSAR_output_options
 from .InSAR_L1_writer import L1InSARWriter
 from .InSAR_products_info import InSARProductsInfo
 from .product_paths import RIFGGroupsPaths
@@ -17,7 +18,12 @@ class RIFGWriter(L1InSARWriter):
         Constructor for RIFG class with additional range and azimuth looks
         variables for the interferogram multilooking
         """
+        hdf5_opt_config, kwds = get_InSAR_output_options(kwds, 'RIFG')
+
         super().__init__(**kwds)
+
+        # HDF5 IO optimizer configuration
+        self.hdf5_optimizer_config = hdf5_opt_config
 
         # RIFG group paths
         self.group_paths = RIFGGroupsPaths()
@@ -105,10 +111,6 @@ class RIFGWriter(L1InSARWriter):
                         ds_dtype,
                         ds_description,
                         units=ds_unit,
-                        compression_enabled=self.cfg['output']['compression_enabled'],
-                        compression_level=self.cfg['output']['compression_level'],
-                        chunk_size=self.cfg['output']['chunk_size'],
-                        shuffle_filter=self.cfg['output']['shuffle']
                     )
 
     def add_swaths_to_hdf5(self):

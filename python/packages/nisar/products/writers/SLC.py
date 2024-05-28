@@ -10,6 +10,7 @@ import isce3
 from isce3.core import LUT2d, DateTime, Orbit, Attitude, Quaternion, Ellipsoid
 from isce3.product import RadarGridParameters
 from isce3.geometry import DEMInterpolator
+from isce3.product import get_radar_grid_nominal_ground_spacing
 from nisar.h5 import set_string
 from isce3.core.types import complex32
 from nisar.products import descriptions
@@ -142,46 +143,6 @@ def write_dataset(group: h5py.Group, name: str, dtype: np.dtype, value,
     if units is not None:
         dset.attrs["units"] = np.bytes_(units)
     return dset
-
-
-def get_nominal_ground_spacing(grid: RadarGridParameters, orbit: Orbit, **kw):
-    """Calculate along-track and ground-range spacing at middle of swath.
-
-    Parameters
-    ----------
-    grid : isce3.product.RadarGridParameters
-        Radar grid
-    orbit : isce3.core.Orbit
-        Radar orbit
-    threshold : float, optional
-    maxiter : int, optional
-    extraiter : int, optional
-        See rdr2geo
-
-    Returns
-    -------
-    azimuth_spacing : float
-        Along-track spacing in meters at mid-swath
-    ground_range_spacing : float
-        Ground range spacing in meters at mid-swath
-    """
-    if orbit.reference_epoch != grid.ref_epoch:
-        raise ValueError("Need orbit and grid to have same reference epoch")
-    pos, vel = orbit.interpolate(grid.sensing_mid)
-    doppler = 0.0
-    target_llh = isce3.geometry.rdr2geo(grid.sensing_mid, grid.mid_range,
-                                    orbit, grid.lookside, doppler,
-                                    grid.wavelength, **kw)
-    ell = isce3.core.Ellipsoid()
-    target_xyz = ell.lon_lat_to_xyz(target_llh)
-    azimuth_spacing = norm(vel) / grid.prf * norm(target_xyz) / norm(pos)
-    los_enu = isce3.geometry.enu_vector(target_llh[0], target_llh[1],
-        target_xyz - pos)
-    cos_inc = -(los_enu[2] / norm(los_enu))
-    sin_inc = np.sqrt(1 - cos_inc**2)
-    ground_range_spacing = grid.range_pixel_spacing / sin_inc
-    return azimuth_spacing, ground_range_spacing
-
 
 def coswin(t, eta):
     """
@@ -471,7 +432,8 @@ class SLC(h5py.File):
     def update_swath(self, grid: RadarGridParameters, orbit: Orbit,
                      range_bandwidth: float, frequency: str,
                      azimuth_bandwidth: float, acquired_prf: float,
-                     acquired_range_bandwidth: float, acquired_fc: float):
+                     acquired_range_bandwidth: float, acquired_fc: float,
+                     sub_swaths: np.ndarray):
         """Write swath metadata.
 
         Parameters
@@ -492,13 +454,16 @@ class SLC(h5py.File):
             Largest chirp bandwidth (in Hz) among input files.
         acquired_fc : float
             Largest center frequency (in Hz) among input files.
+        sub_swaths : numpy.ndarray
+            Array of shape (nswaths, ntimes, 2) containing the valid
+            [start, stop) grid indices of each sub swath.
         """
         t = grid.sensing_times
         r = grid.slant_ranges
         fc = isce3.core.speed_of_light / grid.wavelength
         epoch = grid.ref_epoch
 
-        daz, dgr = get_nominal_ground_spacing(grid, orbit)
+        daz, dgr = get_radar_grid_nominal_ground_spacing(grid, orbit)
 
         g = self.swath(frequency)
         # Time scale is in parent of group.  Use require_dataset to assert
@@ -553,13 +518,18 @@ class SLC(h5py.File):
         write_dataset(g, "sceneCenterGroundRangeSpacing", float, dgr,
             "Nominal ground range spacing in meters between consecutive pixels "
             "near mid swath of the RSLC image", "meters")
-        # TODO
-        write_dataset(g, "numberOfSubSwaths", 'uint8', 1,
+
+        write_dataset(g, "numberOfSubSwaths", 'uint8', len(sub_swaths),
             "Number of swaths of continuous imagery, due to transmit gaps", "1")
-        d = write_dataset(g, "validSamplesSubSwath1", 'uint32',
-            np.zeros((len(t), 2)),
-            "First and last valid sample in each line of 1st subswath", "1")
-        d[:] = (0, len(r))
+        nth_names = ["1st", "2nd", "3rd"]
+        for i, swath in enumerate(sub_swaths):
+            name = f"validSamplesSubSwath{i + 1}"
+            nth = f"{i + 1}th"
+            if i < 3:
+                nth = nth_names[i]
+            write_dataset(g, name, 'uint32', swath,
+                f"First and last valid sample in each line of {nth} subswath",
+                "1")
 
     def set_orbit(self, orbit: Orbit, type="Custom"):
         log.info("Writing orbit to SLC")

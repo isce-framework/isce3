@@ -742,6 +742,7 @@ def _run(cfg, raster_scratch_dir):
             # out_off_diag_terms_obj.close_dataset()
             del out_off_diag_terms_obj
 
+
         # save Rasters' content into the output HDF5 file using temporary
         # filenames created with NamedTemporaryFile
         with h5py.File(output_hdf5, 'a') as hdf5_obj:

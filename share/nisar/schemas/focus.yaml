@@ -365,6 +365,7 @@ rfi_threshold_options:
 qa_options:
   # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
   workflows: include('workflows_options', required=False)
+  validation: include('qa_validation_options', required=False)
   qa_reports: include('qa_reports_options', required=False)
   absolute_radiometric_calibration: include('absolute_radiometric_calibration_options', required=False)
   point_target_analyzer: include('point_target_analyzer_options', required=False)
@@ -377,6 +378,9 @@ workflows_options:
   absolute_radiometric_calibration: bool(required=False)
   nes0: bool(required=False)
   point_target_analyzer: bool(required=False)
+
+qa_validation_options:
+  metadata_cubes_fail_if_all_nan: bool(required=False)
 
 qa_reports_options:
   backscatter_img:
@@ -452,3 +456,13 @@ output_options:
     # representation of each component (real/imaginary) of each complex
     # sample.  Only relevant when data_type=complex64_zero_mantissa.
     mantissa_nbits: int(min=1, max=23, required=False)
+
+    # HDF5 file space management strategy.  In our tests, the "page" strategy
+    # works well for accessing files stored on the cloud by reducing the number
+    # of high-latency REST API calls needed to read datasets and their metadata.
+    fs_strategy: enum("fsm", "page", "aggregate", "none", required=False)
+
+    # HDF5 file space page size in bytes.  Only relevant when fs_strategy="page".
+    # Ideally at least large enough to hold `chunk_size` amount of uncompressed
+    # data as well as its metadata.
+    fs_page_size: int(min=512, max=1073741824, required=False)

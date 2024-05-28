@@ -7,7 +7,6 @@ __version__ = extisce3.__version__
 
 # export the subpackages
 from . import antenna
-from . import atmosphere
 from . import container
 from . import core
 from . import focus
@@ -21,9 +20,11 @@ from . import math
 from . import polsar
 from . import product
 from . import signal
+from . import solid_earth_tides
 from . import splitspectrum
 from . import unwrap
 
+from . import atmosphere
 # Need to import `cal` after the other submodules that it depends on have been added as
 # attributes to `isce3` above. (If you try to import it in alphabetical order you will
 # get an AttributeError.)

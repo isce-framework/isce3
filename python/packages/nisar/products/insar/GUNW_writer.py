@@ -1,9 +1,11 @@
 import h5py
 import numpy as np
+from isce3.io import optimize_chunk_size
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .InSAR_base_writer import InSARBaseWriter
+from .InSAR_HDF5_optimizer_config import get_InSAR_output_options
 from .InSAR_L2_writer import L2InSARWriter
 from .InSAR_products_info import InSARProductsInfo
 from .product_paths import GUNWGroupsPaths
@@ -21,7 +23,12 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         """
         Constructor for GUNW writer class
         """
+        hdf5_opt_config, kwds = get_InSAR_output_options(kwds, 'GUNW')
+
         super().__init__(**kwds)
+
+        # HDF5 IO optimizer configuration
+        self.hdf5_optimizer_config = hdf5_opt_config
 
         # group paths are GUNW group paths
         self.group_paths = GUNWGroupsPaths()
@@ -85,11 +92,35 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         yds = radar_grid['yCoordinates']
         zds = radar_grid['heightAboveEllipsoid']
 
+        # Include options for compression for dataset creation
+        create_dataset_kwargs = {}
+        if self.hdf5_optimizer_config.compression_enabled:
+            if self.hdf5_optimizer_config.compression_type is not None:
+                create_dataset_kwargs['compression'] = \
+                    self.hdf5_optimizer_config.compression_type
+            if self.hdf5_optimizer_config.compression_level is not None:
+                create_dataset_kwargs['compression_opts'] = \
+                    self.hdf5_optimizer_config.compression_level
+            # Add shuffle filter options
+            create_dataset_kwargs['shuffle'] = \
+                self.hdf5_optimizer_config.shuffle_filter
+
         for product_name, descr in zip(product_names,descrs):
             if product_name not in radar_grid:
+                if self.hdf5_optimizer_config.chunk_size is not None:
+                    ds_chunk_size = \
+                        optimize_chunk_size(
+                            (1,
+                            self.hdf5_optimizer_config.chunk_size[0],
+                            self.hdf5_optimizer_config.chunk_size[1]),
+                            cube_shape)
+                    create_dataset_kwargs['chunks'] = ds_chunk_size
+
                 ds = radar_grid.require_dataset(name=product_name,
-                                                shape=cube_shape,
-                                                dtype=np.float64)
+                            shape=cube_shape,
+                            dtype=np.float64,
+                            **create_dataset_kwargs)
+
                 ds.attrs['description'] = np.string_(descr)
                 ds.attrs['units'] = Units.radian
                 ds.attrs['grid_mapping'] = np.string_('projection')
@@ -220,10 +251,6 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     grids_val,
                     xds=xds,
                     yds=yds,
-                    compression_enabled=self.cfg['output']['compression_enabled'],
-                    compression_level=self.cfg['output']['compression_level'],
-                    chunk_size=self.cfg['output']['chunk_size'],
-                    shuffle_filter=self.cfg['output']['shuffle']
                 )
 
             for pol in pol_list:
@@ -269,10 +296,6 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
-                        compression_enabled=self.cfg['output']['compression_enabled'],
-                        compression_level=self.cfg['output']['compression_level'],
-                        chunk_size=self.cfg['output']['chunk_size'],
-                        shuffle_filter=self.cfg['output']['shuffle']
                     )
 
                 wrapped_pol_name = f"{wrapped_group_name}/{pol}"
@@ -308,10 +331,6 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
-                        compression_enabled=self.cfg['output']['compression_enabled'],
-                        compression_level=self.cfg['output']['compression_level'],
-                        chunk_size=self.cfg['output']['chunk_size'],
-                        shuffle_filter=self.cfg['output']['shuffle']
                     )
 
                 pixeloffsets_pol_name = f"{pixeloffsets_group_name}/{pol}"
@@ -352,8 +371,4 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
-                        compression_enabled=self.cfg['output']['compression_enabled'],
-                        compression_level=self.cfg['output']['compression_level'],
-                        chunk_size=self.cfg['output']['chunk_size'],
-                        shuffle_filter=self.cfg['output']['shuffle']
                     )

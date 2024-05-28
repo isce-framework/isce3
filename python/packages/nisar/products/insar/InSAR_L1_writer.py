@@ -1,15 +1,16 @@
 import numpy as np
 from isce3.core import LUT2d
-from isce3.product import RadarGridParameters
-from nisar.workflows.h5_prep import (add_geolocation_grid_cubes_to_hdf5,
-                                     get_off_params)
+from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_base_writer import InSARBaseWriter
 from .product_paths import L1GroupsPaths
 from .units import Units
-from .utils import extract_datetime_from_string, number_to_ordinal
+from .utils import (extract_datetime_from_string,
+                    get_geolocation_grid_cube_obj,
+                    get_pixel_offsets_dataset_shape, get_pixel_offsets_params,
+                    number_to_ordinal)
 
 
 class L1InSARWriter(InSARBaseWriter):
@@ -61,49 +62,25 @@ class L1InSARWriter(InSARBaseWriter):
 
         # Pull the radar frequency
         cube_freq = "A" if "A" in self.freq_pols else "B"
-        radargrid = self.ref_rslc.getRadarGrid(cube_freq)
-
-        # Figure out decimation factors that give < 500 m spacing.
-        # NOTE: same with the RSLC, the max spacing = 500m is hardcoded.
-        # In addition, we cannot have the exact 500m spacing for both azimuth
-        # and range directions.
-        max_spacing = 500.0
-        t = radargrid.sensing_mid + \
-            (radargrid.ref_epoch - self.ref_orbit.reference_epoch).total_seconds()
-
-        _, v = self.ref_orbit.interpolate(t)
-        dx = np.linalg.norm(v) / radargrid.prf
-
         grid_doppler = LUT2d()
         native_doppler = self.ref_rslc.getDopplerCentroid(
             frequency=cube_freq
         )
-
         native_doppler.bounds_error = False
-
         geo2rdr_params = dict(threshold_geo2rdr=1e-8,
                               numiter_geo2rdr=50,
                               delta_range=10)
 
-        # Create a new geolocation radar grid with 5 extra points
-        # before and after the starting and ending
-        # zeroDopplerTime and slantRange
-        extra_points = 5
-
-        # Total number of samples along the azimuth and slant range
-        # using around 500m sampling interval
-        ysize = int(np.ceil(radargrid.length / (max_spacing / dx)))
-        xsize = int(np.ceil(radargrid.width / \
-            (max_spacing / radargrid.range_pixel_spacing)))
-
-        # New geolocation grid
-        geolocation_radargrid = \
-            radargrid.resize_and_keep_startstop(ysize, xsize)
-        geolocation_radargrid = \
-            geolocation_radargrid.add_margin(extra_points,
-                                             extra_points)
+        geolocation_radargrid = get_geolocation_grid_cube_obj(self.cfg)
 
         # Add geolocation grid cubes to hdf5
+        if self.hdf5_optimizer_config.chunk_size is None:
+            chunk_size = None
+        else:
+            chunk_size = (1,
+                          self.hdf5_optimizer_config.chunk_size[0],
+                          self.hdf5_optimizer_config.chunk_size[1])
+
         add_geolocation_grid_cubes_to_hdf5(
             self,
             geolocationGrid_path,
@@ -113,6 +90,15 @@ class L1InSARWriter(InSARBaseWriter):
             native_doppler,
             grid_doppler,
             epsg,
+            chunk_size=chunk_size,
+            compression_enabled=\
+                self.hdf5_optimizer_config.compression_enabled,
+            compression_type=\
+                self.hdf5_optimizer_config.compression_type,
+            compression_level=\
+                self.hdf5_optimizer_config.compression_level,
+            shuffle_filter=\
+                self.hdf5_optimizer_config.shuffle_filter,
             **geo2rdr_params,
         )
 
@@ -292,46 +278,6 @@ class L1InSARWriter(InSARBaseWriter):
 
         return igram_shape
 
-    def _get_pixeloffsets_dataset_shape(self, freq : str, pol : str):
-        """
-        Get the pixel offsets dataset shape at a given frequency and polarization
-
-        Parameters
-        ---------
-        freq: str
-            frequency ('A' or 'B')
-        pol : str
-            polarization ('HH', 'HV', 'VH', or 'VV')
-
-        Returns
-        ----------
-        tuple
-            (off_length, off_width):
-        """
-        proc_cfg = self.cfg["processing"]
-        is_roff,  margin, _, _,\
-        rg_skip, az_skip, rg_search, az_search,\
-        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()
-
-        # get the RSLC lines and columns
-        slc_dset = \
-            self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol}"]
-
-        slc_lines, slc_cols = slc_dset.shape
-
-        off_length = get_off_params(proc_cfg, "offset_length", is_roff)
-        off_width = get_off_params(proc_cfg, "offset_width", is_roff)
-        if off_length is None:
-            margin_az = 2 * margin + 2 * az_search + az_chip
-            off_length = (slc_lines - margin_az) // az_skip
-        if off_width is None:
-            margin_rg = 2 * margin + 2 * rg_search + rg_chip
-            off_width = (slc_cols - margin_rg) // rg_skip
-
-        # shape of offset product
-        return (off_length, off_width)
-
 
     def _add_datasets_to_pixel_offset_group(self):
         """
@@ -344,8 +290,7 @@ class L1InSARWriter(InSARBaseWriter):
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
 
             # get the shape of offset product
-            off_shape = self._get_pixeloffsets_dataset_shape(freq,
-                                                             pol_list[0])
+            off_shape = get_pixel_offsets_dataset_shape(self.cfg, freq)
 
             # add the interferogram and pixelOffsets groups to the polarization group
             for pol in pol_list:
@@ -383,10 +328,6 @@ class L1InSARWriter(InSARBaseWriter):
                         np.float32,
                         ds_description,
                         units=ds_unit,
-                        compression_enabled=self.cfg['output']['compression_enabled'],
-                        compression_level=self.cfg['output']['compression_level'],
-                        chunk_size=self.cfg['output']['chunk_size'],
-                        shuffle_filter=self.cfg['output']['shuffle']
                     )
 
     def add_pixel_offsets_to_swaths_group(self):
@@ -395,7 +336,7 @@ class L1InSARWriter(InSARBaseWriter):
         """
         is_roff,  margin, rg_start, az_start,\
         rg_skip, az_skip, rg_search, az_search,\
-        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()
+        rg_chip, az_chip, _ = get_pixel_offsets_params(self.cfg)
 
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
@@ -413,8 +354,7 @@ class L1InSARWriter(InSARBaseWriter):
             ]
 
             # shape of offset product
-            off_length, off_width = self._get_pixeloffsets_dataset_shape(freq,
-                                                                         pol_list[0])
+            off_length, off_width = get_pixel_offsets_dataset_shape(self.cfg, freq)
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
             offset_slant_range = \
@@ -631,10 +571,6 @@ class L1InSARWriter(InSARBaseWriter):
                         ds_dtype,
                         ds_description,
                         units=ds_unit,
-                        compression_enabled=self.cfg['output']['compression_enabled'],
-                        compression_level=self.cfg['output']['compression_level'],
-                        chunk_size=self.cfg['output']['chunk_size'],
-                        shuffle_filter=self.cfg['output']['shuffle']
                     )
 
 

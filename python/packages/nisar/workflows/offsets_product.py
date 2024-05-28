@@ -1,10 +1,10 @@
 import pathlib
 import time
 
-import h5py
 import isce3
 import journal
 import numpy as np
+from isce3.io import HDF5OptimizedReader
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.compute_stats import (compute_stats_real_data,
@@ -73,7 +73,7 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Pull the slant range and zero doppler time of the ROFF product
     # at frequencyA
-    with h5py.File(output_hdf5, 'r', libver='latest', swmr=True) as dst_h5:
+    with HDF5OptimizedReader(name=output_hdf5, mode='r', libver='latest', swmr=True) as dst_h5:
         pixel_offsets_path = f'{roff_obj.SwathsPath}/frequencyA/pixelOffsets'
         slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
         zero_doppler_time = \
@@ -86,7 +86,7 @@ def run(cfg: dict, output_hdf5: str = None):
                                                                    output_dir)
 
     info_channel.log('Finish producing the ground track velocity product')
-    with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5:
+    with HDF5OptimizedReader(name=output_hdf5, mode='a', libver='latest', swmr=True) as dst_h5:
         # Loop over frequencies and polarizations
         for freq, _, pol_list in get_cfg_freq_pols(cfg):
             off_scratch = scratch_path / f'offsets_product/freq{freq}'

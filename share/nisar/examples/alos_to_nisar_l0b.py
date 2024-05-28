@@ -30,6 +30,11 @@ def cmdLineParse():
     parser.add_argument('-d', '--debug', dest='debug', action='store_true',
                         help="Use more rigorous parser to check magic bytes aggresively",
                         default=False)
+    parser.add_argument("--simulate-gap", dest="gap_width_usec", type=float,
+                        help="Simulate a transmit gap of the given width in microseconds",
+                        default=0.0)
+    parser.add_argument("--gap-location", type=float, default=0.5,
+                        help="Location of simulated gap given as a fraction of the swath.")
 
     inps = parser.parse_args()
     if not os.path.isdir(inps.indir):
@@ -348,7 +353,7 @@ def getNominalSpacing(prf, dr, orbit, look_angle, i=0):
     return ds, dg
 
 
-def addImagery(h5file, ldr, imgfile, pol):
+def addImagery(h5file, ldr, imgfile, pol, gap_width_usec=0.0, gap_location=0.5):
     '''
     Populate swaths segment of HDF5 file.
     ''' 
@@ -373,6 +378,20 @@ def addImagery(h5file, ldr, imgfile, pol):
     dr = speed_of_light / (2 * fsamp)
     nPixels = image.description.NumberOfBytesOfSARDataPerRecord // image.description.NumberOfSamplesPerDataGroup
     nLines = image.description.NumberOfSARDataRecords
+
+    sub_swaths = [[0, nPixels]]
+    if gap_width_usec > 0.0:
+        print(f"Chirp length is {firstrec.ChirpLengthInns * 1e3} usec")
+        print(f"Simulating {gap_width_usec} usec gap")
+        ngap = round(gap_width_usec * 1e-6 * fsamp)
+        icenter = round(gap_location * nPixels)
+        istop1 = icenter - ngap // 2
+        istart2 = istop1 + ngap
+        print(f"Gap located between pixels [{istop1}, {istart2})")
+        # Need at least one valid sample on each side of gap.
+        if (istop1 < 1) or (istart2 >= nPixels):
+            raise ValueError(f"Gap parameters do not leave two valid subswaths")
+        sub_swaths = [[0, istop1], [istart2, nPixels]]
 
     # Figure out nominal ground spacing
     prf = firstrec.PRFInmHz / 1000./ (1 + (ldr.summary.NumberOfSARChannels == 4))
@@ -405,10 +424,12 @@ def addImagery(h5file, ldr, imgfile, pol):
         txgrp = fid.create_group(txgrpstr)
         time = txgrp.create_dataset('UTCtime', dtype='f8', shape=(nLines,))
         time.attrs['units'] = np.string_("seconds since {0}T00:00:00".format(tstart.strftime('%Y-%m-%d')))
-        txgrp.create_dataset('numberOfSubSwaths', data=1)
+        txgrp.create_dataset('numberOfSubSwaths', data=len(sub_swaths))
         txgrp.create_dataset('radarTime', dtype='f8', shape=(nLines,))
         txgrp.create_dataset('rangeLineIndex', dtype='i8', shape=(nLines,))
-        txgrp.create_dataset('validSamplesSubSwath1', dtype='i8', shape=(nLines,2))
+        for i in range(len(sub_swaths)):
+            key = f"validSamplesSubSwath{i + 1}"
+            txgrp.create_dataset(key, dtype='i8', shape=(nLines, 2))
         txgrp.create_dataset('centerFrequency', data=speed_of_light / (ldr.summary.RadarWavelengthInm))
         txgrp.create_dataset('rangeBandwidth', data=ldr.calibration.header.BandwidthInMHz * 1.0e6)
         txgrp.create_dataset('chirpDuration', data=firstrec.ChirpLengthInns * 1.0e-9)
@@ -490,13 +511,19 @@ def addImagery(h5file, ldr, imgfile, pol):
         else:
             write_arr[:2*rshift] = inarr[-2*rshift:]
 
+        for i in range(len(sub_swaths) - 1):
+            gap_start, gap_stop = 2 * sub_swaths[i][1], 2 * sub_swaths[i + 1][0]
+            write_arr[gap_start:gap_stop] = BAD_VALUE
+
         if firstInPol:
             # check if any samples at the very start of RX window are missing.
             inds = numpy.where(write_arr != BAD_VALUE)[0]
             if (len(inds) > 0 and inds[0] > 0):
                 warn(f'The first {inds[0] // 2} range samples are missing. '
                       f'They are filled with {BAD_VALUE}!')
-            txgrp['validSamplesSubSwath1'][linnum-1] = [0, nPixels]
+            for i in range(len(sub_swaths)):
+                key = f"validSamplesSubSwath{i + 1}"
+                txgrp[key][linnum-1] = sub_swaths[i]
 
         #Complex float 16 writes work with write_direct only
         rximg.write_direct(write_arr.view(cpxtype), dest_sel=numpy.s_[linnum-1])
@@ -591,7 +618,8 @@ def process(args=None):
     #Iterate over polarizations for imagery layers
     for pol in ['HH', 'HV', 'VV', 'VH']:
         if pol in filenames:
-            addImagery(args.outh5, leader, filenames[pol], pol)
+            addImagery(args.outh5, leader, filenames[pol], pol,
+                args.gap_width_usec, args.gap_location)
 
     finalizeIdentification(args.outh5)
 
