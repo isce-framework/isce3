@@ -205,21 +205,21 @@ runconfig:
                     y_abs:
                     x_abs:
 
-            calibration_information: 
+            calibration_information:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 output_posting:
-                    x_posting: 
-                    y_posting:                 
+                    x_posting:
+                    y_posting:
 
-            processing_information: 
+            processing_information:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 output_posting:
-                    x_posting: 
-                    y_posting: 
+                    x_posting:
+                    y_posting:
 
             geo2rdr:
                 threshold: 1.0e-8
@@ -230,6 +230,10 @@ runconfig:
                 y: 1000
 
             flatten: True
+
+            correction_luts:
+                # Boolean flag to activate/deactivate model-based solid earth tide corrections
+                solid_earth_tides_enabled: True
 
         qa:
 
@@ -245,6 +249,15 @@ runconfig:
                 # on the input file, etc..
                 # Default: True
                 qa_reports: true
+
+            validation:
+
+                # True to raise an exception if one or more metadata cubes contains
+                # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                # z-dimension height layers in a 3D cube has all non-finite values.
+                # False to quiet the exception (although it will still be logged).
+                # Default: True
+                metadata_cubes_fail_if_all_nan: true
 
             qa_reports:
 

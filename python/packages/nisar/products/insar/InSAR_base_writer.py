@@ -1,14 +1,15 @@
 import os
 from datetime import datetime
 from itertools import product
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 import h5py
 import numpy as np
 from isce3.core import crop_external_orbit
 from isce3.core.types import complex32, to_complex32
-from nisar.products import descriptions
+from isce3.io import HDF5OptimizedReader, optimize_chunk_size
 from isce3.product import GeoGridParameters, RadarGridParameters
+from nisar.products import descriptions
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import get_off_params
@@ -16,6 +17,7 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .granule_id import get_insar_granule_id
+from .InSAR_HDF5_optimizer_config import HDF5OutputOptimizedConfig
 from .InSAR_products_info import ISCE3_VERSION, InSARProductsInfo
 from .product_paths import CommonPaths
 from .units import Units
@@ -33,6 +35,8 @@ class InSARBaseWriter(h5py.File):
         Runconfig dictionary
     runconfig_path : str
         Path of the runconfig file
+    hdf5_optimizer_config : HDF5OutputOptimizedConfig
+        HDF5 Optimizer configuration object
     ref_h5_slc_file : str
         Path of the reference RSLC
     sec_h5_slc_file : str
@@ -75,7 +79,28 @@ class InSARBaseWriter(h5py.File):
         runconfig_path : str
             Path of the runconfig file
         """
-        super().__init__(**kwds)
+
+        # Deepcopy the kwds to avoid the in-place
+        # change of the kwds, we use loop here instead of copy.deepcopy()
+        # is because the the copy.deepcopy()
+        # cannot pickle 'isce3.ext.isce3.product.GeoGridParameters' object
+        new_kwds = {}
+        for key, val in kwds.items():
+            new_kwds[key] = val
+
+        hdf5_opt_config = HDF5OutputOptimizedConfig.make_base(runconfig_dict)
+        if hdf5_opt_config.page_enabled:
+            base_hdf5_config_dict = {'fs_strategy':'page',
+                                    'fs_page_size':hdf5_opt_config.page_size,
+                                    'fs_persist':True}
+            for key, val in base_hdf5_config_dict.items():
+                if key not in new_kwds:
+                    new_kwds[key] = val
+
+        super().__init__(**new_kwds)
+
+        # HDF5 IO optimizer configuration
+        self.hdf5_optimizer_config = hdf5_opt_config
 
         self.cfg = runconfig_dict
         self.runconfig_path = runconfig_path
@@ -120,10 +145,10 @@ class InSARBaseWriter(h5py.File):
         self.sec_orbit = self.sec_rslc.getOrbit()
 
         self.ref_h5py_file_obj = \
-            h5py.File(self.ref_h5_slc_file, "r", libver="latest", swmr=True)
+            HDF5OptimizedReader(name=self.ref_h5_slc_file, mode="r", libver="latest", swmr=True)
 
         self.sec_h5py_file_obj = \
-            h5py.File(self.sec_h5_slc_file, "r", libver="latest", swmr=True)
+            HDF5OptimizedReader(name=self.sec_h5_slc_file, mode="r", libver="latest", swmr=True)
 
         # Load the external orbits and crop them
         if self.external_ref_orbit_path is not None:
@@ -215,11 +240,24 @@ class InSARBaseWriter(h5py.File):
 
         # Add the baseline dataset to the cube
         for baseline_name in ['parallel', 'perpendicular']:
-            ds = \
-                cube_group.require_dataset(
-                    name= f"{baseline_name}Baseline",
-                    shape=baseline_ds_shape,
-                    dtype=np.float32)
+            if self.hdf5_optimizer_config.chunk_size is not None:
+                ds_chunk_size = optimize_chunk_size((
+                    1, self.hdf5_optimizer_config.chunk_size[0],
+                    self.hdf5_optimizer_config.chunk_size[1]), baseline_ds_shape)
+                ds = \
+                    cube_group.require_dataset(
+                        name= f"{baseline_name}Baseline",
+                        shape=baseline_ds_shape,
+                        dtype=np.float32,
+                        chunks = ds_chunk_size,
+                        )
+            else:
+                ds = \
+                    cube_group.require_dataset(
+                        name= f"{baseline_name}Baseline",
+                        shape=baseline_ds_shape,
+                        dtype=np.float32,
+                        )
             ds.attrs['description'] = np.string_(f"{baseline_name.capitalize()}"
                                                  " component of the InSAR baseline")
             ds.attrs['units'] = Units.meter
@@ -1104,70 +1142,6 @@ class InSARBaseWriter(h5py.File):
         for ds_param in id_ds_names_to_be_created:
             add_dataset_and_attrs(dst_id_group, ds_param)
 
-    def _pull_pixel_offsets_params(self):
-        """
-        Pull the pixel offsets parameters from the runconfig dictionary
-
-        Returns
-        ----------
-        is_roff : boolean
-            Offset product or not
-        margin : int
-            Margin
-        rg_start : int
-            Start range
-        az_start : int
-            Start azimuth
-        rg_skip : int
-            Pixels skiped across range
-        az_skip : int
-            Pixels skiped across the azimth
-        rg_search : int
-            Window size across range
-        az_search : int
-            Window size across azimuth
-        rg_chip : int
-            Fine window size across range
-        az_chip : int
-            Fine window size across azimuth
-        ovs_factor : int
-            Oversampling factor
-        """
-        proc_cfg = self.cfg["processing"]
-
-        # pull the offset parameters
-        is_roff = proc_cfg["offsets_product"]["enabled"]
-        (margin, rg_gross, az_gross,
-         rg_start, az_start,
-         rg_skip, az_skip, ovs_factor) = \
-             [get_off_params(proc_cfg, param, is_roff)
-              for param in ["margin", "gross_offset_range",
-                            "gross_offset_azimuth",
-                            "start_pixel_range","start_pixel_azimuth",
-                            "skip_range", "skip_azimuth",
-                            "correlation_surface_oversampling_factor"]]
-
-        rg_search, az_search, rg_chip, az_chip = \
-            [get_off_params(proc_cfg, param, is_roff,
-                            pattern="layer",
-                            get_min=True,) for param in \
-                                ["half_search_range",
-                                 "half_search_azimuth",
-                                 "window_range",
-                                 "window_azimuth"]]
-        # Adjust margin
-        margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
-
-        # Compute slant range/azimuth vectors of offset grids
-        if rg_start is None:
-            rg_start = margin + rg_search
-        if az_start is None:
-            az_start = margin + az_search
-
-        return (is_roff,  margin, rg_start, az_start,
-                rg_skip, az_skip, rg_search, az_search,
-                rg_chip, az_chip, ovs_factor)
-
     def _get_band_name(self):
         """
         Get the band name ('L', 'S'), Raises exception if neither is found.
@@ -1260,11 +1234,6 @@ class InSARBaseWriter(h5py.File):
         yds: Optional[h5py.Dataset] = None,
         xds: Optional[h5py.Dataset] = None,
         fill_value: Optional[Any] = None,
-        compression_enabled: Optional[bool] = True,
-        compression_type: Optional[str] = 'gzip',
-        compression_level: Optional[int] = 5,
-        chunk_size: Optional[List] = [128, 128],
-        shuffle_filter: Optional[bool] = True
     ):
         """
         Create an empty 2D dataset under the h5py.Group
@@ -1295,41 +1264,31 @@ class InSARBaseWriter(h5py.File):
             X coordinates
         fill_value : Any, optional
             No data value of the dataset
-        compression_enabled: bool
-            Flag to enable/disable data compression
-        compression_type: str
-            Data compression algorithm
-        compression_level: int
-            Level of data compression (1: low compression, 9: high compression)
-        chunk_size: [int, int]
-            Chunk size along rows and columns
-        shuffle_filter: bool
-            Flag to enable/disable shuffle filter
         """
-        # Use the minimum size between the predefined chunk size and dataset shape
-        # to ensure the dataset is chunked if the compression is enabled.
-        ds_chunk_size = tuple(map(min, zip(chunk_size, shape)))
 
         # Include options for compression
         create_dataset_kwargs = {}
-        if compression_enabled:
-            if compression_type is not None:
-                create_dataset_kwargs['compression'] = compression_type
-            if compression_level is not None:
-                create_dataset_kwargs['compression_opts'] = compression_level
-
+        if self.hdf5_optimizer_config.compression_enabled:
+            if self.hdf5_optimizer_config.compression_type is not None:
+                create_dataset_kwargs['compression'] = \
+                    self.hdf5_optimizer_config.compression_type
+            if self.hdf5_optimizer_config.compression_level is not None:
+                create_dataset_kwargs['compression_opts'] = \
+                    self.hdf5_optimizer_config.compression_level
             # Add shuffle filter options
-            create_dataset_kwargs['shuffle'] = shuffle_filter
+            create_dataset_kwargs['shuffle'] = \
+                self.hdf5_optimizer_config.shuffle_filter
 
-        if compression_enabled:
-            ds = h5_group.require_dataset(
-                name, dtype=dtype, shape=shape,
-                chunks=ds_chunk_size, **create_dataset_kwargs
-            )
-        else:
-            # create dataset without chunks
-            ds = h5_group.require_dataset(name, dtype=dtype, shape=shape,
-                                          **create_dataset_kwargs)
+        # If the chunking is enabled
+        if self.hdf5_optimizer_config.chunk_size is not None:
+            # Get the optimum chunk size and chunk cache size
+            opt_chunk_size = \
+                optimize_chunk_size(self.hdf5_optimizer_config.chunk_size, shape)
+            create_dataset_kwargs['chunks'] = opt_chunk_size
+
+        ds = h5_group.require_dataset(
+            name, dtype=dtype, shape=shape,
+            **create_dataset_kwargs)
 
         # set attributes
         ds.attrs["description"] = np.string_(description)

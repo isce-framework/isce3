@@ -905,7 +905,7 @@ class BackgroundWriter(isce3.io.BackgroundWriter):
         self.dset.write_direct(self.encode(z), dest_sel=block)
 
 
-def get_dataset_creation_options(cfg: Struct) -> dict:
+def get_dataset_creation_options(cfg: Struct, shape: tuple[int, int]) -> dict:
     """
     Get h5py keyword arguments needed for image dataset creation.
 
@@ -913,6 +913,8 @@ def get_dataset_creation_options(cfg: Struct) -> dict:
     ----------
     cfg : Struct
         RSLC runconfig data. Only reads `cfg.output` group.
+    shape : tuple[int, int]
+        Shape of dataset.  Used to determine upper bounds on chunk sizes.
 
     Returns
     -------
@@ -929,7 +931,7 @@ def get_dataset_creation_options(cfg: Struct) -> dict:
     # default value is not null, we need another non-null sentinel value to
     # indicate this.  Choose [-1, -1], which implies one full-sized chunk.
     if g.chunk_size != [-1, -1]:
-        opts["chunks"] = tuple(g.chunk_size)
+        opts["chunks"] = tuple(min(dims) for dims in zip(g.chunk_size, shape))
     if g.compression_enabled:
         if opts["chunks"] is None:
             raise ValueError("Chunk size cannot be None when "
@@ -1475,6 +1477,77 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
     return range_spacings
 
 
+def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
+                           rdr2geo_params=dict(), geo2rdr_params=dict(),
+                           ignore_failure=False):
+    """
+    Determine fully-focused regions of the image in a format suitable for
+    populating the validSamplesSubSwathX RSLC datasets.
+
+    Parameters
+    ----------
+    rawlist : list[Raw]
+        List of raw data files (observations) that will be processed.
+    out_chan : PolChannel
+        Desired channel to process (will be matched with available raw data
+        using mixed-mode logic).
+    grid : RadarGridParameters
+        Grid for focused image (zero-Doppler).
+    orbit : Orbit
+        Trajectory of antenna phase center.  Its time span must cover the entire
+        collection of raw data plus any reskew time offset between the native-
+        and zero-Doppler radar coordinate systems.
+    doppler : LUT2d
+        Doppler centroid of raw data, in Hz.
+    dem : DEMInterpolator
+        Digital elevation model.
+    azres : float
+        Processed azimuth resolution, in meters.
+    rdr2geo_params : dict
+        Parameters for rdr2geo_bracket
+    geo2rdr_params : dict
+        Parameters for geo2rdr_bracket
+    ignore_failure : bool
+        If set to True and isce3.focus.get_focused_sub_swaths fails for any
+        reason, then a mask corresponding to all-pixels-valid will be returned.
+        Otherwise an exception will be raised on failures.  This can be useful
+        for datasets where the orbit data covers all the raw data but without
+        enough extra for the reskew to the zero-Doppler image grid.
+
+    Returns
+    -------
+    swaths : numpy.ndarray[np.uint32]
+        Array of [start, stop) valid data regions, shape = (nswath, npulse, 2)
+        where nswath is the number of valid sub-swaths and npulse is the length
+        of the focused image grid.
+    """
+    raw_bbox_lists = []
+    chirp_durations = []
+    for raw in rawlist:
+        raw_chan = find_overlapping_channel(raw, out_chan)
+
+        freq = raw_chan.freq_id
+        bboxes = raw.getSubSwathBboxes(freq, epoch=orbit.reference_epoch)
+        raw_bbox_lists.append(bboxes)
+
+        txpol = raw_chan.pol[0]
+        chirp_durations.append(raw.getChirpParameters(freq, txpol)[3])
+
+    try:
+        swaths = isce3.focus.get_focused_sub_swaths(raw_bbox_lists,
+            chirp_durations, orbit, doppler, azres, grid, dem=dem,
+            rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params)
+    except Exception as e:
+        if ignore_failure:
+            log.error("Failed to calculate valid subswath masks!  "
+                "The entire radar grid will be assumed valid.")
+            swaths = np.zeros((1, grid.length, 2), dtype=np.uint32)
+            swaths[..., 1] = grid.width
+        else:
+            raise e
+    return swaths
+
+
 def focus(runconfig, runconfig_path=""):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -1561,7 +1634,10 @@ def focus(runconfig, runconfig_path=""):
 
     product = cfg.primary_executable.product_type
     log.info(f"Creating output {product} product {output_slc_path}")
-    slc = SLC(output_slc_path, mode="w", product=product)
+    helpers.validate_fs_page_size(cfg.output.fs_page_size, cfg.output.chunk_size)
+    slc = SLC(output_slc_path, mode="w", product=product,
+        fs_strategy=cfg.output.fs_strategy,
+        fs_page_size=cfg.output.fs_page_size)
     slc.set_orbit(orbit)
     slc.set_attitude(attitude, orbit)
     og = next(iter(ogrid.values()))
@@ -1604,11 +1680,17 @@ def focus(runconfig, runconfig_path=""):
 
         # Support nominal != processed parameters for mixed-mode case.
         pols = [chan.pol for chan in common_mode if chan.freq_id == frequency]
+        chan = PolChannel(frequency, pols[0], band)
         acquired_prf, acquired_bw, acquired_fc = reduce_swath_parameters(
-            rawlist, PolChannel(frequency, pols[0], band))
+            rawlist, chan)
+
+        log.info("computing valid swaths")
+        valid_swaths = get_focused_sub_swaths(rawlist, chan, og, orbit,
+            dop[frequency], dem, azres, rdr2geo_params=get_rdr2geo_params(cfg),
+            geo2rdr_params=get_geo2rdr_params(cfg), ignore_failure=False)
 
         slc.update_swath(og, orbit, band.width, frequency,  azimuth_bandwidth,
-            acquired_prf, acquired_bw, acquired_fc),
+            acquired_prf, acquired_bw, acquired_fc, valid_swaths)
         cal = get_calibration(cfg, band.width)
         slc.set_calibration(cal, frequency)
 
@@ -1616,6 +1698,7 @@ def focus(runconfig, runconfig_path=""):
         for pol in pols:
             slc.add_calibration_section(frequency, pol, og.sensing_times,
                                         orbit.reference_epoch, og.slant_ranges)
+
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
@@ -1653,7 +1736,7 @@ def focus(runconfig, runconfig_path=""):
         frequency, pol = channel_out.freq_id, channel_out.pol
         log.info(f"Processing frequency{channel_out.freq_id} {channel_out.pol}")
         acdata = slc.create_image(frequency, pol, shape=ogrid[frequency].shape,
-            **get_dataset_creation_options(cfg))
+            **get_dataset_creation_options(cfg, ogrid[frequency].shape))
         deramp_ac = get_range_deramp(ogrid[frequency])
         writer = BackgroundWriter(scale * deramp_ac, acdata,
             cfg.output.data_type, mantissa_nbits=cfg.output.mantissa_nbits)

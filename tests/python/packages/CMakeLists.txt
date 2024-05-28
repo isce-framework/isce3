@@ -9,6 +9,7 @@ isce3/core/gpu_check.py
 isce3/core/llh.py
 isce3/core/poly2d.py
 isce3/core/resample_block_generators.py
+isce3/focus/valid_regions.py
 isce3/geocode/geocode_slc.py
 isce3/geometry/polygons.py
 isce3/image/resample_slc.py
@@ -20,6 +21,7 @@ isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/rfi_freq_null.py
 isce3/signal/rfi_process_evd.py
+isce3/solid_earth_tides/solid_earth_tides.py
 isce3/unwrap/snaphu.py
 nisar/antenna/beamformer.py
 nisar/antenna/pattern.py
@@ -63,6 +65,7 @@ nisar/workflows/unwrap.py
 nisar/workflows/point_target_analysis.py
 nisar/workflows/noise_estimator.py
 nisar/workflows/pol_channel_imbalance_from_rslc.py
+nisar/workflows/geocode_corrections.py
 )
 
 if(WITH_CUDA)

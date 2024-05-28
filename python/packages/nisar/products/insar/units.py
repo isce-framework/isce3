@@ -1,5 +1,6 @@
 # Class containing units to be allocated in the product
 from dataclasses import dataclass
+
 import numpy as np
 
 

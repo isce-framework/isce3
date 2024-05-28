@@ -5,7 +5,7 @@ Wrapper for interferogram filtering
 import pathlib
 import time
 
-import h5py
+from isce3.io import HDF5OptimizedReader
 from isce3.signal.filter_data import filter_data, create_gaussian_kernel
 import journal
 import numpy as np
@@ -78,7 +78,7 @@ def run(cfg: dict, input_hdf5: str):
     # When using isce3.signal.convolve2D, it is necessary to pad the input block
     # to have an output with the same shape as the input.
 
-    with h5py.File(input_hdf5, 'a', libver='latest', swmr=True) as dst_h5:
+    with HDF5OptimizedReader(name=input_hdf5, mode='a', libver='latest', swmr=True) as dst_h5:
         for freq, pol_list in freq_pols.items():
             freq_group_path = f'{rifg_obj.SwathsPath}/frequency{freq}'
             for pol in pol_list:

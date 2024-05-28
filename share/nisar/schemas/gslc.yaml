@@ -95,6 +95,9 @@ runconfig:
 
             flatten: bool()
 
+            # Options to generate model-based slant range and azimuth correction LUTs
+            correction_luts: include('lut_options', required=False)
+
         # Output options for GSLC raster (e.g. compression, chunking, shuffle filter)
         output: include('output_options', required=False)
 
@@ -183,11 +186,15 @@ logging_options:
 qa_options:
     # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
     workflows: include('workflows_options', required=False)
+    validation: include('qa_validation_options', required=False)
     qa_reports: include('qa_reports_options', required=False)
 
 workflows_options:
     validate: bool(required=False)
     qa_reports: bool(required=False)
+
+qa_validation_options:
+    metadata_cubes_fail_if_all_nan: bool(required=False)
 
 qa_reports_options:
     backscatter_img:
@@ -299,3 +306,7 @@ output_options:
 
     # Enable/disable shuffle filtering of GSLC raster (default True)
     shuffle: bool(required=False)
+
+lut_options:
+    # Boolean flag to activate/deactivate model-based solid earth tide corrections
+    solid_earth_tides_enabled: bool(required=False)

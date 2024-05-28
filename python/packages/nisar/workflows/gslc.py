@@ -14,8 +14,6 @@ from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
                               to_complex32)
 from isce3.io import HDF5OptimizedReader, optimize_chunk_size, compute_page_size
 
-
-import nisar
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.compute_stats import compute_stats_complex_data
