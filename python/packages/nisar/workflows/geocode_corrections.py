@@ -8,6 +8,7 @@ import numpy as np
 from osgeo import gdal
 
 import isce3
+import journal
 from isce3.atmosphere.tec_product import (tec_lut2d_from_json_srg,
                                           tec_lut2d_from_json_az)
 from isce3.product import get_radar_grid_nominal_ground_spacing
@@ -217,12 +218,9 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
     Yields
     ------
     az_corrections: isce3.core.LUT2d
-        Azimuth correction for geocoding. Currently only no corrections are
-        computed and a default isce3.core.LUT2d is be passed back.
+        Azimuth correction for geocoding. Unit in seconds.
     srange_corrections: isce3.core.LUT2d
-        Slant range correction for geocoding. Currently only TEC corrections
-        are considered. If no TEC JSON file is provided in the cfg parameter,
-        a default isce3.core.LUT2d will be passed back.
+        Slant range correction for geocoding. Unit in meters.
     '''
     # Unpack flags and determine which corrections to generate
     correct_set = cfg['processing']['correction_luts']['solid_earth_tides_enabled']
@@ -327,3 +325,36 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
             for data in [az_corrections_arr, srange_corrections_arr]]
 
     return az_lut , srange_lut
+
+
+def get_offset_luts(cfg, slc, frequency, orbit):
+    '''
+    A placeholder to compute timing correction based on offset tracking (ampcor)
+
+    Parameters
+    ----------
+    cfg: dict
+    frequency: ['A', 'B']
+        Str identifcation for NISAR SLC frequencies
+    slc: nisar.products.readers.SLC
+        NISAR single look complex (SLC) object containing swath and radar grid
+        parameters
+    orbit: isce3.core.Orbit
+        Object containing orbit associated with SLC
+
+    Returns
+    -------
+    az_lut: isce3.core.LUT2d
+        2d LUT in azimuth time (seconds) for geolocation correction in azimuth direction.
+    rg_lut: isce3.core.LUT2d
+        2d LUT in meters for geolocation correction in slant range direction.
+    '''
+    info_channel = journal.info("geocode_corrections.get_offset_lut")
+
+    info_channel.log('Data-driven GSLC will be implemented in the next release.'
+                     ' Currently returning empty LUT2d of timing corrections in'
+                     ' both range and azimuth directions.')
+
+    rg_lut = isce3.core.LUT2d()
+    az_lut = isce3.core.LUT2d()
+    return az_lut, rg_lut
