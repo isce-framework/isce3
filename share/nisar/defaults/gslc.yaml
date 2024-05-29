@@ -70,20 +70,26 @@ runconfig:
 
         # Output options for GSLC raster (e.g. compression, chunking, shuffle filter)
         output:
-          # Data type of GSLC raster
-          data_type: complex64_zero_mantissa
+            # Data type of GSLC raster
+            data_type: complex64_zero_mantissa
 
-          # Enable gzip compression of GSLC raster
-          compression_enabled: True
+            # Enable gzip compression of GSLC raster
+            compression_enabled: True
 
-          # Level of compression applied to GSLC raster
-          compression_level: 4
+            # Level of compression applied to GSLC raster
+            compression_level: 4
 
-          # Chunk size of GSLC raster
-          chunk_size: [128, 128]
+            # Chunk size of GSLC raster
+            chunk_size: [512, 512]
 
-          # Enable shuffle filtering of GSLC raster
-          shuffle: True
+            # File space strategy
+            fs_strategy: page
+
+            # File space page size in bytes
+            fs_page_size: 4194304
+
+            # Enable shuffle filtering of GSLC raster
+            shuffle: True
 
         # ADT section - isce3 + pyre workflow
         processing:

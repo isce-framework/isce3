@@ -12,7 +12,7 @@ from isce3.core import crop_external_orbit
 from isce3.core.rdr_geo_block_generator import block_generator
 from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
                               to_complex32)
-from isce3.io import HDF5OptimizedReader
+from isce3.io import HDF5OptimizedReader, optimize_chunk_size, compute_page_size
 
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
@@ -23,7 +23,7 @@ from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.products.writers import GslcWriter
-
+from nisar.workflows.helpers import validate_fs_page_size
 
 def run(cfg):
     '''
@@ -43,6 +43,8 @@ def run(cfg):
     columns_per_block = cfg['processing']['blocksize']['x']
     lines_per_block = cfg['processing']['blocksize']['y']
     flatten = cfg['processing']['flatten']
+    
+    output_options = cfg['output']
     geogrid_expansion_threshold = 100
 
     output_dir = os.path.dirname(os.path.abspath(output_hdf5))
@@ -52,7 +54,7 @@ def run(cfg):
     slc = SLC(hdf5file=input_hdf5)
 
     # if provided, load an external orbit from the runconfig file;
-    # othewise, load the orbit from the RSLC metadata.
+    # otherwise, load the orbit from the RSLC metadata.
     orbit = slc.getOrbit()
     if orbit_file is not None:
         # slc will get first radar grid whose frequency is available.
@@ -83,9 +85,38 @@ def run(cfg):
 
     info_channel = journal.info("gslc_array.run")
     info_channel.log("starting geocode SLC")
+    warning_channel = journal.warning("gslc_array.run")
+
+    fs_dict = dict(fs_strategy=output_options['fs_strategy'],
+                   fs_persist=True)
+
+    if output_options['fs_strategy'] == 'page':
+        # Decide what page size to use based on geogrid shape.
+        # If user provides the page size, then the workflow takes that value.
+        # Otherwise, the workflow decides the pagesize automatically.
+        output_gslc_shape = (geogrids['A'].length,
+                             geogrids['A'].width)
+        optimal_chunk_size = optimize_chunk_size(output_options['chunk_size'],
+                                                 output_gslc_shape)
+        
+        # Populate `fs_page_size` in file space argument dict.
+        # Determine the page size. Use the value provided by the user if available;
+        # otherwise, automatically calculate it based on the memory footprint of the chunk.
+        if output_options['fs_page_size']:
+            validate_fs_page_size(output_options['fs_page_size'], optimal_chunk_size)
+            fs_dict['fs_page_size'] = output_options['fs_page_size']
+        else:
+            gslc_dtype = cfg['output']['data_type'].split('_')[0]
+            gslc_dtype_size = np.dtype(gslc_dtype).itemsize
+            chunk_memory_footprint = np.prod(output_options['chunk_size']) * gslc_dtype_size
+            fs_dict['fs_page_size'] = compute_page_size(chunk_memory_footprint)
+
+    elif output_options['fs_strategy'] != 'page' and output_options['fs_page_size'] is not None:
+            warning_channel.log('fs_page_size is relevant only when '
+                                'fs_strategy is page. Ignoring the page size provided by user.')
 
     t_all = time.perf_counter()
-    with h5py.File(output_hdf5, 'w') as dst_h5, \
+    with h5py.File(output_hdf5, 'w', **fs_dict) as dst_h5, \
             HDF5OptimizedReader(name=input_hdf5, mode='r', libver='latest', swmr=True) as src_h5:
 
         prep_gslc_dataset(cfg, 'GSLC', dst_h5)
@@ -208,7 +239,12 @@ def run(cfg):
                                      cube_geogrid, radar_grid_cubes_heights,
                                      cube_rdr_grid, orbit, cube_native_doppler,
                                      image_grid_doppler, threshold_geo2rdr,
-                                     iteration_geo2rdr)
+                                     iteration_geo2rdr,
+                                     chunk_size=(1,) + tuple(output_options['chunk_size']),
+                                     compression_enabled=output_options['compression_enabled'],
+                                     compression_type='gzip',
+                                     compression_level=output_options['compression_level'],
+                                     shuffle_filter=output_options['shuffle'])
 
     t_all_elapsed = time.perf_counter() - t_all
     info_channel.log(f"successfully ran geocode SLC in {t_all_elapsed:.3f} seconds")

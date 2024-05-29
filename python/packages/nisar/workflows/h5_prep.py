@@ -18,7 +18,7 @@ from osgeo import osr
 
 def get_dataset_output_options(cfg: dict):
     '''
-    Process chunking and compression options for GSLC from runconfing and
+    Process chunking and compression options for GSLC from runconfig and
     return as kwargs dict that can be passed to h5py.Dataset.create_dataset
 
     Parameters
@@ -520,6 +520,7 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
     # unpack info
     common_parent_path = 'science/LSAR'
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
+    chunk_size = cfg['output']['chunk_size']
 
     gslc_output_options = {}
     # if GSLC, populate output dict with h5py.Group.create_dataset kwargs
@@ -530,13 +531,16 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
     # Get complex data type and set fill value for later dataset init
     ctype, complex_fill_value = get_complex_output_dtype(cfg, dst_h5)
 
-    # Create datasets in the ouput hdf5
+    # Create datasets in the output hdf5
     geogrids = cfg['processing']['geocode']['geogrids']
     for freq, pol_list in freq_pols.items():
         shape = (geogrids[freq].length, geogrids[freq].width)
         dst_parent_path = os.path.join(common_parent_path,
                                        f'{dst}/grids/frequency{freq}')
         yds, xds = set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
+        # compute the optimal chunk size and corresponding chunk cache size
+        opt_chunk_size = optimize_chunk_size(chunk_size, shape)
+        gslc_output_options['chunks'] = opt_chunk_size
 
         dst_grp = dst_h5[dst_parent_path]
 
