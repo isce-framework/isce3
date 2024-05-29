@@ -232,10 +232,10 @@ runconfig:
                 lines_per_block: 1000
 
                 # Number of columns for chip/template window in reference image
-                window_range: 32
+                window_range: 64
 
                 # Number of lines for chip/template window in reference image
-                window_azimuth: 32
+                window_azimuth: 64
 
                 # Number of columns for search chip/template in secondary image
                 half_search_range: 4
@@ -250,7 +250,7 @@ runconfig:
                 skip_azimuth: 100
 
                 # Margin around image edges to avoid for offset computation
-                margin: 2
+                margin: 0
 
                 # Number of columns of output offset (covariance, snr) file
                 # TODO think about using only eihter `skip` or `width / length`
@@ -266,7 +266,7 @@ runconfig:
                 start_pixel_azimuth:
 
                 # Domain (frequency or spatial) where to compute cross-correlation
-                cross_correlation_domain: frequency
+                cross_correlation_domain: spatial
 
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
@@ -285,13 +285,13 @@ runconfig:
                 correlation_surface_oversampling_factor: 64
 
                 # Correlation surface oversampling algorithm
-                correlation_surface_oversampling_method: fft
+                correlation_surface_oversampling_method: sinc
 
                 # Number of cuda streams
                 cuda_streams:
 
                 # Number of offset estimates to process in batch along slant range
-                windows_batch_range: 10
+                windows_batch_range: 1
 
                 # Number of offset estimates to process in batch along azimuth
                 windows_batch_azimuth: 1
