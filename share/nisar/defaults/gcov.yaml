@@ -46,67 +46,70 @@ runconfig:
             # Defaults to './qa'
             qa_output_dir: ./qa
 
-        # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
-        output_gcov_terms:
-            # PLACEHOLDER - Output format
-            format: HDF5
+        # Output options
+        output:
 
-            # Enable/disable compression of output raster
-            compression_enabled: True
+            # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
+            output_gcov_terms:
+                # PLACEHOLDER - Output format
+                format: HDF5
 
-            # Compression type. 'none' for no compression
-            compression_type: gzip
+                # Enable/disable compression of output raster
+                compression_enabled: True
 
-            # Compression level
-            compression_level: 9
+                # Compression type. 'none' for no compression
+                compression_type: gzip
 
-            # Enable/disable chunking of output raster
-            chunking_enabled: True
+                # Compression level
+                compression_level: 9
 
-            # Chunk size of output raster as a list: [y, x]
-            # If no value is specified, the chunk_size defaults to [512, 512]
-            # or a smaller size, constrained by the dimensions of the image
-            chunk_size: [512, 512]
+                # Enable/disable chunking of output raster
+                chunking_enabled: True
 
-            # Enable/disable shuffle filtering of output raster
-            shuffle_filtering_enabled: True
+                # Chunk size of output raster as a list: [y, x]
+                # If no value is specified, the chunk_size defaults to [512, 512]
+                # or a smaller size, constrained by the dimensions of the image
+                chunk_size: [512, 512]
 
-            # Number bits retained in the mantissa of the floating point
-            # representation of each component real and imaginary (if applicable)
-            # of each output sample.
-            # If no value is provided, the mantissa bits truncation is not applied
-            mantissa_nbits:
+                # Enable/disable shuffle filtering of output raster
+                shuffle_filtering_enabled: True
 
-        # Output options for secondary layers (e.g., number of looks, RTC ANF)
-        output_secondary_layers:
-            # PLACEHOLDER - Output format
-            format: HDF5
+                # Number bits retained in the mantissa of the floating point
+                # representation of each component real and imaginary (if applicable)
+                # of each output sample.
+                # If no value is provided, the mantissa bits truncation is not applied
+                mantissa_nbits:
 
-            # Enable/disable compression of output raster
-            compression_enabled: True
+            # Output options for secondary layers (e.g., number of looks, RTC ANF)
+            output_secondary_layers:
+                # PLACEHOLDER - Output format
+                format: HDF5
 
-            # Compression type. 'none' for no compression
-            compression_type: gzip
+                # Enable/disable compression of output raster
+                compression_enabled: True
 
-            # Compression level
-            compression_level: 9
+                # Compression type. 'none' for no compression
+                compression_type: gzip
 
-            # Enable/disable chunking of output raster
-            chunking_enabled: True
+                # Compression level
+                compression_level: 9
 
-            # Chunk size of output raster as a list: [y, x]
-            # If no value is specified, the chunk_size defaults to [512, 512]
-            # or a smaller size, constrained by the dimensions of the image
-            chunk_size: [512, 512]
+                # Enable/disable chunking of output raster
+                chunking_enabled: True
 
-            # Enable/disable shuffle filtering of output raster
-            shuffle_filtering_enabled: True
+                # Chunk size of output raster as a list: [y, x]
+                # If no value is specified, the chunk_size defaults to [512, 512]
+                # or a smaller size, constrained by the dimensions of the image
+                chunk_size: [512, 512]
 
-            # Number bits retained in the mantissa of the floating point
-            # representation of each component real and imaginary (if applicable)
-            # of each output sample.
-            # If no value is provided, the mantissa bits truncation is not applied
-            mantissa_nbits:
+                # Enable/disable shuffle filtering of output raster
+                shuffle_filtering_enabled: True
+
+                # Number bits retained in the mantissa of the floating point
+                # representation of each component real and imaginary (if applicable)
+                # of each output sample.
+                # If no value is provided, the mantissa bits truncation is not applied
+                mantissa_nbits:
 
         primary_executable:
             product_type: GCOV

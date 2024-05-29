@@ -48,11 +48,8 @@ runconfig:
             # Defaults to './qa'
             qa_output_dir: str(required=False)
 
-        # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
-        output_gcov_terms: include('output_options', required=False)
-
-        # Output options for secondary layers
-        output_secondary_layers: include('output_options', required=False)
+        # Output options
+        output: include('output_options', required=False)
 
         primary_executable:
             product_type: enum('GCOV')
@@ -415,6 +412,13 @@ worker_options:
     gpu_id: int(min=0, required=False)
 
 output_options:
+    # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
+    output_gcov_terms: include('output_dataset_options', required=False)
+
+    # Output options for secondary layers
+    output_secondary_layers: include('output_dataset_options', required=False)
+
+output_dataset_options:
 
     # Output file format
     format: enum('HDF5', 'GTiff', 'ENVI', required=False)

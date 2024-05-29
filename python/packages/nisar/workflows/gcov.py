@@ -282,8 +282,8 @@ def _run(cfg, raster_scratch_dir):
     flag_symmetrize_cross_pol_channels = \
         cfg['processing']['input_subset']['symmetrize_cross_pol_channels']
 
-    output_gcov_terms_kwargs = cfg['output_gcov_terms']
-    output_secondary_layers_kwargs = cfg['output_secondary_layers']
+    output_gcov_terms_kwargs = cfg['output']['output_gcov_terms']
+    output_secondary_layers_kwargs = cfg['output']['output_secondary_layers']
 
     # Raster files format (output of GeocodeCov).
     # Cannot use HDF5 because we cannot save multiband HDF5 datasets
