@@ -1727,7 +1727,7 @@ def focus(runconfig, runconfig_path=""):
                 "can find a plot in the scratch directory.  You can disable "
                 "this coverage check by setting dem.require_full_coverage to "
                 "False in the runconfig.groups.processing section.")
-                
+
 
     rfi_results = defaultdict(list)
 

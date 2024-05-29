@@ -49,6 +49,17 @@ runconfig:
         # Output options
         output:
 
+            # HDF5 file space management strategy.  In our tests, the "page"
+            # strategy works well for accessing files stored on the cloud by
+            # reducing the number of high-latency REST API calls needed to read
+            # datasets and their metadata.
+            fs_strategy: page
+
+            # HDF5 file space page size.  Only relevant when fs_strategy="page".
+            # Ideally at least large enough to hold `chunk_size` amount of
+            # uncompressed data as well as its metadata.
+            fs_page_size: 4194304
+
             # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
             output_gcov_terms:
                 # PLACEHOLDER - Output format
@@ -385,21 +396,21 @@ runconfig:
                     y_abs:
                     x_abs:
 
-            calibration_information: 
+            calibration_information:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 output_posting:
-                    x_posting: 
-                    y_posting:                 
+                    x_posting:
+                    y_posting:
 
-            processing_information: 
+            processing_information:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 output_posting:
-                    x_posting: 
-                    y_posting: 
+                    x_posting:
+                    y_posting:
 
             geo2rdr:
                 threshold: 1.0e-7

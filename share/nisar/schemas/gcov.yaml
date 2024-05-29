@@ -412,6 +412,17 @@ worker_options:
     gpu_id: int(min=0, required=False)
 
 output_options:
+
+    # HDF5 file space management strategy.  In our tests, the "page" strategy
+    # works well for accessing files stored on the cloud by reducing the number
+    # of high-latency REST API calls needed to read datasets and their metadata.
+    fs_strategy: enum("fsm", "page", "aggregate", "none", required=False)
+
+    # HDF5 file space page size.  Only relevant when fs_strategy="page".
+    # Ideally at least large enough to hold `chunk_size` amount of uncompressed
+    # data as well as its metadata.
+    fs_page_size: int(min=1, required=False)
+
     # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
     output_gcov_terms: include('output_dataset_options', required=False)
 
