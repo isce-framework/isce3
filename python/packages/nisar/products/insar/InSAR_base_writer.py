@@ -258,6 +258,8 @@ class InSARBaseWriter(h5py.File):
                         shape=baseline_ds_shape,
                         dtype=np.float32,
                         )
+
+            ds.attrs['_FillValue'] = np.nan
             ds.attrs['description'] = np.string_(f"{baseline_name.capitalize()}"
                                                  " component of the InSAR baseline")
             ds.attrs['units'] = Units.meter

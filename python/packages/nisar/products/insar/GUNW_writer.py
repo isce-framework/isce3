@@ -121,6 +121,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                             dtype=np.float64,
                             **create_dataset_kwargs)
 
+                ds.attrs['_FillValue'] = np.nan
                 ds.attrs['description'] = np.string_(descr)
                 ds.attrs['units'] = Units.radian
                 ds.attrs['grid_mapping'] = np.string_('projection')
