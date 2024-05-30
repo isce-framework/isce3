@@ -5,7 +5,6 @@ import os
 import pathlib
 import time
 
-import h5py
 import numpy as np
 from osgeo import gdal
 
@@ -14,6 +13,7 @@ from isce3.atmosphere.main_band_estimation import (MainSideBandIonosphereEstimat
                                                    MainDiffMsBandIonosphereEstimation)
 from isce3.atmosphere.split_band_estimation import SplitBandIonosphereEstimation
 from isce3.atmosphere.ionosphere_filter import IonosphereFilter, write_array
+from isce3.io import HDF5OptimizedReader
 from isce3.signal.interpolate_by_range import (decimate_freq_a_array,
                                               interpolate_freq_b_array)
 
@@ -56,7 +56,7 @@ def write_disp_block_hdf5(
         err_str = f"{hdf5_path} not found"
         error_channel.log(err_str)
         raise FileNotFoundError(err_str)
-    with h5py.File(hdf5_path, 'r+') as dst_h5:
+    with HDF5OptimizedReader(name=hdf5_path, mode='r+') as dst_h5:
         block_length, block_width = data.shape
         dst_h5[path].write_direct(data,
             dest_sel=np.s_[block_row : block_row + block_length,
@@ -113,9 +113,9 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
     rspc_path_b = f"{dest_freq_path_b}/interferogram/slantRangeSpacing"
 
     # Read slant range array from main and side bands
-    with h5py.File(runw_freq_a_str, 'r',
+    with HDF5OptimizedReader(name=runw_freq_a_str, mode='r',
         libver='latest', swmr=True) as src_main_h5, \
-        h5py.File(runw_freq_b_str, 'r',
+        HDF5OptimizedReader(name=runw_freq_b_str, mode='r',
         libver='latest', swmr=True) as src_side_h5:
 
         # Read slant range block from HDF5
@@ -244,8 +244,8 @@ def copy_iono_datasets(iono_insar_cfg,
     else:
         freq = 'B'
 
-    with h5py.File(input_runw, 'a', libver='latest', swmr=True) as src_h5, \
-        h5py.File(output_runw, 'a', libver='latest', swmr=True) as dst_h5:
+    with HDF5OptimizedReader(name=input_runw, mode='a', libver='latest', swmr=True) as src_h5, \
+        HDF5OptimizedReader(name=output_runw, mode='a', libver='latest', swmr=True) as dst_h5:
 
         pol_list = iono_freq_pols['A']
         for pol in pol_list:
@@ -803,9 +803,9 @@ def run(cfg: dict, runw_hdf5: str):
             del main_runw_raster
             del side_runw_raster
 
-            with h5py.File(runw_freq_a_str, 'r',
+            with HDF5OptimizedReader(name=runw_freq_a_str, mode='r',
                 libver='latest', swmr=True) as src_main_h5, \
-                h5py.File(runw_freq_b_str, 'r',
+                HDF5OptimizedReader(name=runw_freq_b_str, mode='r',
                 libver='latest', swmr=True) as src_side_h5:
 
                 # Read slant range block from HDF5
@@ -858,9 +858,9 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_main],
                         dtype=float)
 
-                with h5py.File(sub_low_runw_str, 'r',
+                with HDF5OptimizedReader(name=sub_low_runw_str, mode='r',
                     libver='latest', swmr=True) as src_low_h5, \
-                    h5py.File(sub_high_runw_str, 'r',
+                    HDF5OptimizedReader(name=sub_high_runw_str, mode='r',
                     libver='latest', swmr=True) as src_high_h5:
 
                     # Read runw block for sub-bands
@@ -904,9 +904,9 @@ def run(cfg: dict, runw_hdf5: str):
                     side_conn_image = np.empty([block_rows_data, cols_side],
                         dtype=float)
 
-                with h5py.File(runw_freq_a_str, 'r',
+                with HDF5OptimizedReader(name=runw_freq_a_str, mode='r',
                     libver='latest', swmr=True) as src_main_h5, \
-                    h5py.File(runw_freq_b_str, 'r',
+                    HDF5OptimizedReader(name=runw_freq_b_str, mode='r',
                     libver='latest', swmr=True) as src_side_h5:
 
                     # Read runw block for main and side bands
@@ -1065,7 +1065,7 @@ def run(cfg: dict, runw_hdf5: str):
             # if unwrapping correction technique is not requested,
             # save output to hdf5 at this point
             if not unwrap_correction_bool:
-                with h5py.File(iono_output, 'a', libver='latest', swmr=True) as dst_h5:
+                with HDF5OptimizedReader(name=iono_output, mode='a', libver='latest', swmr=True) as dst_h5:
                     iono_hdf5_path = dst_h5[f'{output_pol_path}/ionospherePhaseScreen']
                     iono_sig_hdf5_path = \
                         dst_h5[f'{output_pol_path}/ionospherePhaseScreenUncertainty']
@@ -1148,9 +1148,9 @@ def run(cfg: dict, runw_hdf5: str):
                         sub_high_image = np.empty([block_rows_data, cols_main],
                             dtype=float)
 
-                        with h5py.File(sub_low_runw_str, 'r',
+                        with HDF5OptimizedReader(name=sub_low_runw_str, mode='r',
                             libver='latest', swmr=True) as src_low_h5, \
-                            h5py.File(sub_high_runw_str, 'r',
+                            HDF5OptimizedReader(name=sub_high_runw_str, mode='r',
                             libver='latest', swmr=True) as src_high_h5:
 
                             # Read runw block for sub-bands
@@ -1168,9 +1168,9 @@ def run(cfg: dict, runw_hdf5: str):
                         side_image = np.empty([block_rows_data, cols_side],
                             dtype=float)
 
-                        with h5py.File(runw_freq_a_str, 'r',
+                        with HDF5OptimizedReader(name=runw_freq_a_str, mode='r',
                             libver='latest', swmr=True) as src_main_h5, \
-                            h5py.File(runw_freq_b_str, 'r',
+                            HDF5OptimizedReader(name=runw_freq_b_str, mode='r',
                             libver='latest', swmr=True) as src_side_h5:
 
                             # Read runw block for main and side bands
@@ -1220,7 +1220,7 @@ def run(cfg: dict, runw_hdf5: str):
                         block_row=row_start,
                         data_shape=[rows_output, cols_output])
 
-                with h5py.File(iono_output, 'a', libver='latest', swmr=True) as dst_h5:
+                with HDF5OptimizedReader(name=iono_output, mode='a', libver='latest', swmr=True) as dst_h5:
                     iono_hdf5_path = dst_h5[f'{output_pol_path}/ionospherePhaseScreen']
                     iono_sig_hdf5_path = \
                         dst_h5[f'{output_pol_path}/ionospherePhaseScreenUncertainty']

@@ -133,7 +133,7 @@ runconfig:
             internet_access: False
 
             # OPTIONAL - To explicitly use GPU capability if available. Default False
-            gpu_enabled: True
+            gpu_enabled: False
 
         # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
         logging:

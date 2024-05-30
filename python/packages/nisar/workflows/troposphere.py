@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from datetime import datetime
-import h5py
 import journal
 import numpy as np
 import os
@@ -10,6 +9,7 @@ import pyaps3 as pa
 
 import isce3
 from isce3.core import transform_xy_to_latlon
+from isce3.io import HDF5OptimizedReader
 from nisar.workflows import h5_prep
 from nisar.workflows.troposphere_runconfig import InsarTroposphereRunConfig
 from nisar.products.insar.product_paths import GUNWGroupsPaths
@@ -70,7 +70,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     # Troposphere delay datacube
     troposphere_delay_datacube = dict()
 
-    with h5py.File(gunw_hdf5, 'r', libver='latest', swmr=True) as h5_obj:
+    with HDF5OptimizedReader(name=gunw_hdf5, mode='r', libver='latest', swmr=True) as h5_obj:
 
         # Fetch the GUWN Incidence Angle Datacube
         rdr_grid_path = gunw_obj.RadarGridPath
@@ -323,7 +323,7 @@ def write_to_GUNW_product(tropo_delay_datacubes: dict, gunw_hdf5: str):
     '''
     # Instantiate GUNW object to avoid hard-coded path to GUNW datasets
     gunw_obj = GUNWGroupsPaths()
-    with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
+    with HDF5OptimizedReader(name=gunw_hdf5, mode='a', libver='latest', swmr=True) as f:
 
         for product_name, product_cube in tropo_delay_datacubes.items():
 

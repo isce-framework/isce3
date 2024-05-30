@@ -8,6 +8,7 @@ import h5py
 import isce3
 import journal
 import numpy as np
+from isce3.io import HDF5OptimizedReader
 from isce3.splitspectrum import splitspectrum
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.insar.product_paths import CommonPaths
@@ -117,7 +118,7 @@ def run(cfg: dict):
             sampling_bandwidth_ratio=sampling_bandwidth_ratio)
         swath_path = ref_slc.SwathPath
         dest_freq_path = f"{swath_path}/frequency{freq}"
-        with h5py.File(target_hdf5, 'r', libver='latest',
+        with HDF5OptimizedReader(name=target_hdf5, mode='r', libver='latest',
                        swmr=True) as src_h5, \
             h5py.File(target_output, 'w') as dst_h5:
             # Copy HDF 5 file to be bandpassed

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
-import h5py
 import journal
 import os
 import pygrib
 
+from isce3.io import HDF5OptimizedReader
 from nisar.workflows.runconfig import RunConfig
 
 def troposphere_delay_check(cfg):
@@ -55,7 +55,7 @@ def troposphere_delay_check(cfg):
 
 
             # RSLC start time
-            with h5py.File(rslc_file, 'r', libver='latest', swmr=True) as f:
+            with HDF5OptimizedReader(name=rslc_file, mode='r', libver='latest', swmr=True) as f:
                 rslc_date = f['science/LSAR/identification/zeroDopplerStartTime'][()]\
                         .astype('datetime64[s]').astype(datetime)
 
@@ -96,7 +96,7 @@ def troposphere_delay_check(cfg):
                         weather_model_date = ds.time.values.astype('datetime64[s]').astype(datetime)[0]
                     # The other weather model files with RAiDER NetCDF format
                     else:
-                        with h5py.File(weather_model_file, 'r', libver='latest', swmr=True) as f:
+                        with HDF5OptimizedReader(name=weather_model_file, mode='r', libver='latest', swmr=True) as f:
                                 weather_model_date = datetime.strptime(f.attrs['datetime'].astype(str),
                                                                     '%Y_%m_%dT%H_%M_%S')
                 except ValueError:

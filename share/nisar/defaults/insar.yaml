@@ -184,7 +184,7 @@ runconfig:
             radar_grid_cubes:
 
                 # List of heights in meters
-                heights:
+                heights: [-500, 0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000]
 
                 # OPTIONAL - Same as the geocode group output_epsg if not provided
                 output_epsg:
@@ -759,6 +759,8 @@ runconfig:
             # Set of options to enable compression, choose compression level,
             # chunk size and shuffle filter
         output:
+            # Enable/Disable the paging
+            page_enabled: True
             # Enable/Disable gzip compression
             compression_enabled: True
             # Compression level: 1: least compression; 9: best compression

@@ -2,13 +2,13 @@ import numpy as np
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .InSAR_products_info import InSARProductsInfo
 from .InSAR_base_writer import InSARBaseWriter
+from .InSAR_HDF5_optimizer_config import get_InSAR_output_options
 from .InSAR_L2_writer import L2InSARWriter
+from .InSAR_products_info import InSARProductsInfo
 from .product_paths import GOFFGroupsPaths
 from .ROFF_writer import ROFFWriter
 from .units import Units
-
 
 class GOFFWriter(ROFFWriter, L2InSARWriter):
     """
@@ -20,8 +20,12 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
         """
         Constructor for GOFF class
         """
+        hdf5_opt_config, kwds = get_InSAR_output_options(kwds, 'GOFF')
 
         super().__init__(**kwds)
+
+        # HDF5 IO optimizer configuration
+        self.hdf5_optimizer_config = hdf5_opt_config
 
         # group paths are GOFF group paths
         self.group_paths = GOFFGroupsPaths()
@@ -169,8 +173,4 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                             grids_val,
                             xds=xds,
                             yds=yds,
-                            compression_enabled=self.cfg['output']['compression_enabled'],
-                            compression_level=self.cfg['output']['compression_level'],
-                            chunk_size=self.cfg['output']['chunk_size'],
-                            shuffle_filter=self.cfg['output']['shuffle']
                         )

@@ -117,6 +117,11 @@ runconfig:
             # flag to flatten output GSLC
             flatten: True
 
+            correction_luts:
+                # XXX Disable SET for this dataset due to an invalid EPSG code that
+                # causes topo to fail.
+                solid_earth_tides_enabled: False
+
         # OPTIONAL - To setup type of worker
         worker:
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True

@@ -1090,6 +1090,7 @@ worker_options:
     gpu_id: int(min=0, required=False)
 
 output_options:
+    page_enabled: bool(required=False)
     compression_enabled: bool(required=False)
     compression_level: int(min=1, max=9, required=False)
     chunk_size: list(int(min=4), min=2, max=2, required=False)

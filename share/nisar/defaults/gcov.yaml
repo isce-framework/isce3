@@ -46,67 +46,81 @@ runconfig:
             # Defaults to './qa'
             qa_output_dir: ./qa
 
-        # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
-        output_gcov_terms:
-            # PLACEHOLDER - Output format
-            format: HDF5
+        # Output options
+        output:
 
-            # Enable/disable compression of output raster
-            compression_enabled: True
+            # HDF5 file space management strategy.  In our tests, the "page"
+            # strategy works well for accessing files stored on the cloud by
+            # reducing the number of high-latency REST API calls needed to read
+            # datasets and their metadata.
+            fs_strategy: page
 
-            # Compression type. 'none' for no compression
-            compression_type: gzip
+            # HDF5 file space page size.  Only relevant when fs_strategy="page".
+            # Ideally at least large enough to hold `chunk_size` amount of
+            # uncompressed data as well as its metadata.
+            fs_page_size: 4194304
 
-            # Compression level
-            compression_level: 9
+            # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
+            output_gcov_terms:
+                # PLACEHOLDER - Output format
+                format: HDF5
 
-            # Enable/disable chunking of output raster
-            chunking_enabled: True
+                # Enable/disable compression of output raster
+                compression_enabled: True
 
-            # Chunk size of output raster as a list: [y, x]
-            # If no value is specified, the chunk_size defaults to [512, 512]
-            # or a smaller size, constrained by the dimensions of the image
-            chunk_size: [512, 512]
+                # Compression type. 'none' for no compression
+                compression_type: gzip
 
-            # Enable/disable shuffle filtering of output raster
-            shuffle_filtering_enabled: True
+                # Compression level
+                compression_level: 9
 
-            # Number bits retained in the mantissa of the floating point
-            # representation of each component real and imaginary (if applicable)
-            # of each output sample.
-            # If no value is provided, the mantissa bits truncation is not applied
-            mantissa_nbits:
+                # Enable/disable chunking of output raster
+                chunking_enabled: True
 
-        # Output options for secondary layers (e.g., number of looks, RTC ANF)
-        output_secondary_layers:
-            # PLACEHOLDER - Output format
-            format: HDF5
+                # Chunk size of output raster as a list: [y, x]
+                # If no value is specified, the chunk_size defaults to [512, 512]
+                # or a smaller size, constrained by the dimensions of the image
+                chunk_size: [512, 512]
 
-            # Enable/disable compression of output raster
-            compression_enabled: True
+                # Enable/disable shuffle filtering of output raster
+                shuffle_filtering_enabled: True
 
-            # Compression type. 'none' for no compression
-            compression_type: gzip
+                # Number bits retained in the mantissa of the floating point
+                # representation of each component real and imaginary (if applicable)
+                # of each output sample.
+                # If no value is provided, the mantissa bits truncation is not applied
+                mantissa_nbits:
 
-            # Compression level
-            compression_level: 9
+            # Output options for secondary layers (e.g., number of looks, RTC ANF)
+            output_secondary_layers:
+                # PLACEHOLDER - Output format
+                format: HDF5
 
-            # Enable/disable chunking of output raster
-            chunking_enabled: True
+                # Enable/disable compression of output raster
+                compression_enabled: True
 
-            # Chunk size of output raster as a list: [y, x]
-            # If no value is specified, the chunk_size defaults to [512, 512]
-            # or a smaller size, constrained by the dimensions of the image
-            chunk_size: [512, 512]
+                # Compression type. 'none' for no compression
+                compression_type: gzip
 
-            # Enable/disable shuffle filtering of output raster
-            shuffle_filtering_enabled: True
+                # Compression level
+                compression_level: 9
 
-            # Number bits retained in the mantissa of the floating point
-            # representation of each component real and imaginary (if applicable)
-            # of each output sample.
-            # If no value is provided, the mantissa bits truncation is not applied
-            mantissa_nbits:
+                # Enable/disable chunking of output raster
+                chunking_enabled: True
+
+                # Chunk size of output raster as a list: [y, x]
+                # If no value is specified, the chunk_size defaults to [512, 512]
+                # or a smaller size, constrained by the dimensions of the image
+                chunk_size: [512, 512]
+
+                # Enable/disable shuffle filtering of output raster
+                shuffle_filtering_enabled: True
+
+                # Number bits retained in the mantissa of the floating point
+                # representation of each component real and imaginary (if applicable)
+                # of each output sample.
+                # If no value is provided, the mantissa bits truncation is not applied
+                mantissa_nbits:
 
         primary_executable:
             product_type: GCOV
@@ -382,21 +396,21 @@ runconfig:
                     y_abs:
                     x_abs:
 
-            calibration_information: 
+            calibration_information:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 output_posting:
-                    x_posting: 
-                    y_posting:                 
+                    x_posting:
+                    y_posting:
 
-            processing_information: 
+            processing_information:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 output_posting:
-                    x_posting: 
-                    y_posting: 
+                    x_posting:
+                    y_posting:
 
             geo2rdr:
                 threshold: 1.0e-7

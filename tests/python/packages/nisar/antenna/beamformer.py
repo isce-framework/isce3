@@ -347,11 +347,12 @@ class TestElevationBeamformer:
 
     def test_tx_bmf_with_txphase_chanladj(self):
         for el_lut in (None, self.el_lut):
-            # make a copy of the tx_trm object to be modified
-            tx_trm = deepcopy(self.tx_trm)
             # set TX-path phases for TxTRMInfo from Raw
-            tx_trm.tx_phase = np.deg2rad(
+            tx_phase = np.deg2rad(
                 self._raw.getTxPhase(self.freq_band, self.txrx_pol[0]))
+            tx_trm = TxTrmInfo(self.tx_trm.time, self.tx_trm.channels,
+                self.tx_trm.correlator_tap2, self.tx_trm.cal_path_mask,
+                tx_phase)
             # construct TX BMF object
             tx_bmf = TxBMF(self.orbit, self.attitude, self.dem_interp,
                            self.el_pat_tx, tx_trm,

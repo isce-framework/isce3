@@ -6,13 +6,13 @@ wrapper for crossmul
 import pathlib
 import time
 
-import h5py
 import isce3
 import journal
 from osgeo import gdal
 
 gdal.UseExceptions()
 
+from isce3.io import HDF5OptimizedReader
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.compute_stats import compute_stats_real_data
@@ -81,7 +81,7 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
         raise ValueError(err_str)
 
     t_all = time.time()
-    with h5py.File(output_hdf5, 'a', libver='latest') as dst_h5:
+    with HDF5OptimizedReader(name=output_hdf5, mode='a', libver='latest') as dst_h5:
         for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
             # create output product
             crossmul_dir = scratch_path / f'crossmul/freq{freq}'

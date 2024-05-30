@@ -107,6 +107,12 @@ class ElevationBeamformer(ABC):
         # get peak location of first and last active beam in EL direction
         self._el_peak_first, self._el_peak_last = self._peak_loc_beam_el()
 
+        # calculate time bounds (with padding for rounding/QP) for use in
+        # checks of user input.
+        max_pri = np.max(np.diff(self.trm_info.time))
+        self._tm_first_trm = self.trm_info.time[0] - max_pri
+        self._tm_last_trm = self.trm_info.time[-1] + max_pri
+
     @property
     def weights(self):
         return self._weights
@@ -307,12 +313,14 @@ class TxBMF(ElevationBeamformer):
             pulse_time = [pulse_time]
 
         # check the pulse_time to be within time tag of TxTRM
-        if (pulse_time[0] < self.trm_info.time[0] or
-                pulse_time[-1] > self.trm_info.time[-1]):
-            raise ValueError(
-                f'Pulse time is out of Tx time tag [{self.trm_info.time[0]}, '
-                f'{self.trm_info.time[-1]}] (sec, sec)!'
-            )
+        if (pulse_time[0] < self._tm_first_trm or
+                pulse_time[-1] > self._tm_last_trm):
+            raise ValueError("Requested time interval "
+                f"[{pulse_time[0]}, {pulse_time[-1]}] (s) is not fully "
+                "contained within expected TxTrmInfo time interval "
+                f"[{self.trm_info.time[0]}, {self.trm_info.time[-1]}] (s) "
+                f"relative to {str(self.orbit.reference_epoch)}")
+
         # get total number of TX channels
         _, num_chanl = self.trm_info.correlator_tap2.shape
 
@@ -570,12 +578,13 @@ class RxDBF(ElevationBeamformer):
             pulse_time = [pulse_time]
 
         # check the pulse_time to be within time tag of RxTRM
-        if (pulse_time[0] < self.trm_info.time[0] or
-                pulse_time[-1] > self.trm_info.time[-1]):
-            raise ValueError(
-                f'Pulse time is out of Rx time tag [{self.trm_info.time[0]}, '
-                f'{self.trm_info.time[-1]}] (sec, sec)!'
-            )
+        if (pulse_time[0] < self._tm_first_trm or
+                pulse_time[-1] > self._tm_last_trm):
+            raise ValueError("Requested time interval "
+                f"[{pulse_time[0]}, {pulse_time[-1]}] (s) is not fully "
+                "contained within expected RxTrmInfo time interval "
+                f"[{self.trm_info.time[0]}, {self.trm_info.time[-1]}] (s) "
+                f"relative to {str(self.orbit.reference_epoch)}")
 
         # EL-cut pattern with shape active beams by EL angles
         ant_pat_el = self.el_ant_info.copol_pattern[self.active_channel_idx]
