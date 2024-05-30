@@ -523,7 +523,7 @@ def get_raster_lists(all_geocoded_dataset_flags,
         error_channel = journal.error('geocode_insar.get_raster_lists')
         err_str = 'Not all output lists have the same length'
         error_channel.log(err_str)
-        raise RunTimeError(err_str)
+        raise RuntimeError(err_str)
 
     return (geocoded_rasters, geocoded_datasets, input_rasters, interp_methods,
             invalid_values)
@@ -1059,7 +1059,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         orbit = crop_external_orbit(external_orbit, orbit)
 
 
-    with HDF5OptimizedReader(name=output_hdf5, mode="a", libver='latest', swmr=True) as dst_h5:
+    with HDF5OptimizedReader(name=output_hdf5, mode="a", libver='latest') as dst_h5:
 
         # Based on runconfig iterate over frequencies and their polarizations
         for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):

@@ -79,7 +79,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 if tropo_cfg[f'enable_{delay_type}_product']:
                     descrs.append(f"{delay_type.capitalize()} component "
                                   "of the troposphere phase screen")
-                    product_names.append(f'{delay_type}TroposphericPhaseScreen')
+                    if delay_type == 'comb':
+                        product_names.append(f'combinedTroposphericPhaseScreen')
+                    else:
+                        product_names.append(f'{delay_type}TroposphericPhaseScreen')
 
         cube_shape = [len(radar_grid_cubes_heights),
                       radar_grid_cubes_geogrid.length,
