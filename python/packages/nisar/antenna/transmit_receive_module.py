@@ -22,7 +22,7 @@ class CalPath(IntEnum):
     BYPASS = 2
 
 
-@dataclass
+@dataclass(frozen=True)
 class TxTrmInfo:
     """Transmit (TX) side info of transmit-receive module (TRM) class used to
     compute the beamformed (BMF) Tx antenna pattern in elevation (EL)
@@ -62,7 +62,7 @@ class TxTrmInfo:
     tx_phase: Sequence[Sequence[float]] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class RxTrmInfo:
     """Receive (RX) side info of transmit-receive module (TRM) class used to
     compute the digitally beamformed (DBF) RX antenna pattern in elevation
