@@ -17,7 +17,7 @@ runconfig:
 
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
-            orbit: input_L0B_RRSD_REE2/NISAR_ANC_L_PR_FOE_20230929T121335_20230701T000150_20230701T000230.xml
+            orbit: input_L0B_RRSD_REE2/NISAR_ANC_L_PR_FOE_20240528T172233_20230701T000140_20230701T000240.xml
 
             # Refined pointing, optional.
             # Defaults to attitude within L0B product.

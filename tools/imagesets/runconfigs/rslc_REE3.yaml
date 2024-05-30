@@ -9,7 +9,7 @@ runconfig:
             qa_input_file: output_rslc/rslc.h5
         dynamic_ancillary_file_group:
             dem_file: input_L0B_RRSD_REE3/dem_90_09_945_16.tiff
-            orbit: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FOE_20231207T182337_20251011T121909_20251011T122039.xml
+            orbit: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FOE_20240528T193920_20251011T121859_20251011T122049.xml
             pointing: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FRP_20231207T182337_20251011T121909_20251011T122039.xml
             external_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_EXT_CAL_20220101T120000_03.yaml
             internal_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_INT_CAL_20220101T120000_01.h5
