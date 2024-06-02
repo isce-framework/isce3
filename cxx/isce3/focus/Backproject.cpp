@@ -265,7 +265,7 @@ backprojectFirstStage(
         const double vs = axis.norm();
         axis /= vs;
 
-        const double
+        double
             fmax = fc + range_bandwidth / 2,
             length = vs * (in_azimuth_time[iend] - in_azimuth_time[0]),
             // Yegulalp, Eq. (11) and (12)
@@ -283,8 +283,15 @@ backprojectFirstStage(
             qmid = (q0 + q1) / 2,
             qspan = std::abs(q1 - q0) + c / (fc * 2 * ds);
 
-        const int nr = static_cast<int>(std::ceil((r1 - r0) / dr));
-        const int nq = static_cast<int>(std::ceil(qspan / dq));
+        int nr = static_cast<int>(std::ceil((r1 - r0) / dr));
+        int nq = static_cast<int>(std::ceil(qspan / dq));
+
+        // adjust spacing so we end up with a fast FFT sizes
+        nr = nextFastPower(nr);
+        nq = nextFastPower(nq);
+        dr = (r1 - r0) / nr;
+        dq = qspan / nq;
+
         return PolarGrid{in_azimuth_time[0], in_azimuth_time[iend],
             origin, axis, Linspace<double>(r0, dr, nr),
             Linspace<double>(qmid - qspan / 2, dq, nq)};
