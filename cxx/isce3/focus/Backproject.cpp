@@ -499,7 +499,7 @@ backprojectFinalStage(std::complex<float>* out,
     constexpr int my = 2, mx = 2, s = 2;
     auto nfft = NFFT2d<float>({my, mx}, dims, {s * dims[0], s * dims[1]});
 
-    size_t nimg = grid.length() * grid.width();
+    size_t nimg = static_cast<size_t>(grid.length()) * grid.width();
     std::vector<std::complex<float>> img(nimg);
     std::vector<std::complex<float>> img_spectrum(nimg);
     auto fft = planfft2d(img_spectrum.data(), img.data(), {dims[0], dims[1]});
@@ -510,7 +510,7 @@ backprojectFinalStage(std::complex<float>* out,
         dims = {grid.length(), grid.width()};
         if (dims != nfft.sizes()) {
             nfft = NFFT2d<float>({my, mx}, dims, {s * dims[0], s * dims[1]});
-            nimg = grid.length() * grid.width();
+            nimg = static_cast<size_t>(grid.length()) * grid.width();
             img.resize(nimg);
             img_spectrum.resize(nimg);
             fft = planfft2d(img_spectrum.data(), img.data(), {dims[0], dims[1]});
