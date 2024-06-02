@@ -10,6 +10,7 @@
 #include <isce3/core/Projections.h>
 #include <isce3/except/Error.h>
 #include <isce3/fft/FFT.h>
+#include <isce3/fft/FFTUtil.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/geometry/rdr2geo_roots.h>
@@ -28,6 +29,7 @@ using isce3::error::ErrorCode;
 using isce3::container::RadarGeometry;
 using isce3::signal::NFFT2d;
 using isce3::fft::planfft2d;
+using isce3::fft::nextFastPower;
 
 namespace isce3 {
 namespace focus {
@@ -546,6 +548,209 @@ backprojectFinalStage(std::complex<float>* out,
         return ErrorCode::FailedToConverge;
     }
     return ErrorCode::Success;
+}
+
+// WIP stuff to do one polar image at a time.
+
+ErrorCode
+projectPolarToGeo(
+        std::complex<float>* geo_image,
+        const Vec3* geo_points,
+        const size_t n,
+        const PolarGrid& grid,
+        const std::complex<float>* polar_image,
+        const double wavelength,
+        const NFFT2Params& params)
+{
+    using dims_t = NFFT2d<float>::dims_t;
+    using std::lround;
+
+    const dims_t m = {params.y.m, params.x.m};
+    const dims_t dims_in = {grid.length(), grid.width()};
+    const dims_t dims_out = {
+        nextFastPower(static_cast<int32_t>(lround(params.y.s * dims_in[0]))),
+        nextFastPower(static_cast<int32_t>(lround(params.x.s * dims_in[1])))
+    };
+
+    auto nfft = NFFT2d<float>(m, dims_in, dims_out);
+    const size_t nin = static_cast<size_t>(grid.length()) * grid.width();
+    std::vector<std::complex<float>> spectrum(nin);
+    // Okay to discard const because fft is planned with FFTW_EXECUTE which
+    // doesn't modify input.
+    isce3::fft::fft2d(spectrum.data(),
+        const_cast<std::complex<float>*>(polar_image),
+        {dims_in[0], dims_in[1]});
+    // zero-pad and filter
+    nfft.set_spectrum(dims_in, /* strides */ {dims_in[1], 1}, spectrum.data());
+
+    const double kw = 4 * M_PI / wavelength;
+
+    #pragma omp parallel for
+    for (size_t i= 0; i < n; ++i) {
+        // compute target location in polar grid
+        double sin_squint, range;
+        geo2polar(&sin_squint, &range, geo_points[i], grid.origin, grid.axis);
+        // convert to image index
+        const double ix = (range - grid.range.first()) / grid.range.spacing(),
+            iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
+        // interpolate baseband data
+        const auto z = nfft.interp({iy, ix}, /* periodic */ false);
+        // compensate phase and sum contribution
+        const double phase = kw * range;
+        geo_image[i] +=
+            z * std::complex<float>(std::cos(phase), std::sin(phase));
+    }
+    return ErrorCode::Success;
+}
+
+auto
+findPolarGridBoundingBoxInRadarGrid(
+    const PolarGrid& polar_grid,
+    const RadarGeometry& radar_geom,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+    const int nextra,
+    bool clamp)
+{
+    using isce3::geometry::detail::polar2geo_bracket;
+    if (nextra < 0) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "specified negative number of extra points");
+    }
+
+    // get (angle, range) points along perimeter of polar grid
+    const int n = 4 * (1 + nextra);
+    int nwritten = 0;
+    std::vector<std::array<double, 2>> points(n);
+    for (int i = 0; i <= nextra; ++i) {
+        const auto q = polar_grid.sin_squint.first();
+        const auto dr = (polar_grid.range.last() - polar_grid.range.first()) /
+            (1 + nextra);
+        const auto r = polar_grid.range.first() + i * dr;
+        points[nwritten++] = {q, r};
+    }
+    for (int i = 0; i <= nextra; ++i) {
+        const auto r = polar_grid.range.last();
+        const auto dq = (polar_grid.sin_squint.last() - polar_grid.sin_squint.first()) /
+            (1 + nextra);
+        const auto q = polar_grid.sin_squint.first() + i * dq;
+        points[nwritten++] = {q, r};
+    }
+    for (int i = 0; i <= nextra; ++i) {
+        const auto q = polar_grid.sin_squint.last();
+        const auto dr = (polar_grid.range.last() - polar_grid.range.first()) /
+            (1 + nextra);
+        const auto r = polar_grid.range.last() - i * dr;
+        points[nwritten++] = {q, r};
+    }
+    for (int i = 0; i <= nextra; ++i) {
+        const auto r = polar_grid.range.first();
+        const auto dq = (polar_grid.sin_squint.last() - polar_grid.sin_squint.first()) /
+            (1 + nextra);
+        const auto q = polar_grid.sin_squint.last() - i * dq;
+        points[nwritten++] = {q, r};
+    }
+    assert(nwritten == n);
+
+    int epsg = dem.epsgCode();
+    Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+    auto status = ErrorCode::Success;
+
+    #pragma omp parallel for
+    for (int i = 0; i < n; ++i) {
+        // read polar coordinate
+        const double ssq = points[i][0];
+        const double rin = points[i][1];
+        // compute cos from sin assuming abs(squint) < 90 deg
+        const double csq = std::sqrt(1.0 - ssq * ssq);
+        // convert to xyz
+        Vec3 xyz;
+        double lookangle;
+        auto err = polar2geo_bracket(&xyz, &lookangle, polar_grid.origin,
+            polar_grid.axis, rin, ssq, csq, dem, ellipsoid,
+            radar_geom.lookSide(), r2g_params);
+        if (err != ErrorCode::Success) {
+            status = err;
+        }
+        // convert to stripmap radar coordinates
+        double tout, rout;
+        int success = geo2rdr_bracket(xyz, radar_geom.orbit(),
+            radar_geom.doppler(), tout, rout, radar_geom.wavelength(),
+            radar_geom.lookSide(), g2r_params.tol_aztime, g2r_params.time_start,
+            g2r_params.time_end);
+        if (!success) {
+            status = ErrorCode::FailedToConverge;
+        }
+        // write back
+        points[i] = {tout, rout};
+    }
+
+    // find extrema
+    double tmin, tmax, rmin, rmax;
+    tmin = tmax = points[0][0];
+    rmin = rmax = points[0][1];
+    for (int i = 1; i < n; ++i) {
+        const double t = points[i][0], r = points[i][1];
+        if (t > tmax) tmax = t;
+        if (t < tmin) tmin = t;
+        if (r > rmax) rmax = r;
+        if (r < rmin) rmin = r;
+    }
+
+    // convert to indices
+    int iaz, irg, naz, nrg;
+    const auto t0 = radar_geom.sensingTime().first();
+    const auto dt = radar_geom.sensingTime().spacing();
+    iaz = static_cast<int>(std::floor((tmin - t0) / dt));
+    naz = static_cast<int>(std::ceil((tmax - t0) / dt)) - iaz + 1;
+
+    const auto r0 = radar_geom.slantRange().first();
+    const auto dr = radar_geom.slantRange().spacing();
+    irg = static_cast<int>(std::floor((rmin - r0) / dr));
+    nrg = static_cast<int>(std::ceil((rmax - r0) / dr)) - irg + 1;
+
+    if (clamp) {
+        const int m = static_cast<int>(radar_geom.gridLength());
+        const int n = static_cast<int>(radar_geom.gridWidth());
+        const int i0 = iaz, j0 = irg;
+        iaz = std::max(0, std::min(i0, m - 1));
+        irg = std::max(0, std::min(j0, n - 1));
+        int i1 = i0 + naz, j1 = j0 + nrg;
+        i1 = std::max(0, std::min(i1, m - 1));
+        j1 = std::max(0, std::min(j1, n - 1));
+        naz = i1 - i0 + 1;
+        nrg = j1 - j0 + 1;
+    }
+
+    return std::tie(iaz, irg, naz, nrg, status);
+}
+
+std::tuple<std::vector<isce3::core::Vec3>, isce3::error::ErrorCode>
+computeRadarGridGeoPoints(
+    const RadarGeometry& geom,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+{
+    const size_t n = geom.gridLength() * geom.gridWidth();
+    std::vector<Vec3> points(n);
+    ErrorCode status = ErrorCode::Success;
+    #pragma omp parallel for
+    for (size_t k = 0; k < n; ++k) {
+        const int i = static_cast<int>(k / geom.gridWidth());
+        const int j = static_cast<int>(k % geom.gridWidth());
+        const double t = geom.sensingTime()[i];
+        const double r = geom.slantRange()[j];
+        const double fd = geom.doppler().eval(t, r);
+        const int success = isce3::geometry::rdr2geo_bracket(t, r, fd,
+            geom.orbit(), dem, points[k], geom.wavelength(), geom.lookSide(),
+            r2g_params.tol_height, r2g_params.look_min, r2g_params.look_max);
+        if (!success) {
+            // race condition okay since always pushing the same value
+            status = ErrorCode::FailedToConverge;
+        }
+    }
+    return std::tie(points, status);
 }
 
 } // namespace focus

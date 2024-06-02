@@ -87,5 +87,57 @@ backprojectFinalStage(std::complex<float>* out,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
         float* height);
 
+
+// WIP stuff to do one polar image at a time.
+
+struct NFFTParams {
+    int m = 2;  /// half width of interpolator
+    double s = 2.0;  /// oversampling factor
+
+    NFFTParams(int m_, double s_) : m{m_}, s{s_} {
+        if (m_ < 1) {
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Need interpolator size m >= 1 for NFFT");
+        }
+        if (s_ <= 1.0) {
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Need oversampling ratio s > 1.0 for NFFT");
+        }
+    }
+};
+
+struct NFFT2Params {
+    NFFTParams x, y;
+};
+
+// interpolate polar grid to given set of XYZ positions
+isce3::error::ErrorCode
+projectPolarToGeo(
+        std::complex<float>* geo_image,
+        const isce3::core::Vec3* geo_points,
+        const size_t n,
+        const PolarGrid& grid,
+        const std::complex<float>* polar_image,
+        const double wavelength,
+        const NFFT2Params& params);
+
+// figure out subset of stripmap radar grid that is covered by a polar grid
+std::tuple<int, int, int, int, isce3::error::ErrorCode>
+findPolarGridBoundingBoxInRadarGrid(
+    int* irg, int* iaz, int* nrg, int* naz,
+    const PolarGrid& polar_grid,
+    const isce3::container::RadarGeometry& radar_geom,
+    const isce3::geometry::DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+    const int nextra = 0,
+    bool clamp = true);
+
+std::tuple<std::vector<isce3::core::Vec3>, isce3::error::ErrorCode>
+computeRadarGridGeoPoints(
+    const isce3::container::RadarGeometry& geom,
+    const isce3::geometry::DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params);
+
 } // namespace focus
 } // namespace isce3
