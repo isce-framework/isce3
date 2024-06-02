@@ -3,6 +3,7 @@
 #include <isce3/container/forward.h>
 #include <isce3/core/forward.h>
 #include <isce3/geometry/forward.h>
+#include <isce3/product/forward.h>
 
 #include <complex>
 #include <memory>
@@ -113,7 +114,7 @@ struct NFFT2Params {
 // interpolate polar grid to given set of XYZ positions
 isce3::error::ErrorCode
 projectPolarToGeo(
-        std::complex<float>* geo_image,
+        std::complex<float>* geo_image,  // accumulates, so init to zero!
         const isce3::core::Vec3* geo_points,
         const size_t n,
         const PolarGrid& grid,
@@ -121,17 +122,28 @@ projectPolarToGeo(
         const double wavelength,
         const NFFT2Params& params);
 
+// figure out bounds of polar grid in stripmap radar coordinates
+std::tuple<double, double, double, double, isce3::error::ErrorCode>
+findPolarGridBoundingBoxInRadarCoord(
+    const PolarGrid& polar_grid,
+    const isce3::core::Orbit& orbit,
+    const isce3::core::LUT2d<double>& doppler,
+    const double wavelength,
+    const isce3::core::LookSide lookside,
+    const isce3::geometry::DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+    const int nextra = 0);
+
 // figure out subset of stripmap radar grid that is covered by a polar grid
-std::tuple<int, int, int, int, isce3::error::ErrorCode>
+std::tuple<isce3::product::RadarGridParameters, isce3::error::ErrorCode>
 findPolarGridBoundingBoxInRadarGrid(
-    int* irg, int* iaz, int* nrg, int* naz,
     const PolarGrid& polar_grid,
     const isce3::container::RadarGeometry& radar_geom,
     const isce3::geometry::DEMInterpolator& dem,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
     const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
-    const int nextra = 0,
-    bool clamp = true);
+    const int nextra = 0);
 
 std::tuple<std::vector<isce3::core::Vec3>, isce3::error::ErrorCode>
 computeRadarGridGeoPoints(

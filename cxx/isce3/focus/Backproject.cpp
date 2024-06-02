@@ -603,15 +603,17 @@ projectPolarToGeo(
     return ErrorCode::Success;
 }
 
-auto
-findPolarGridBoundingBoxInRadarGrid(
+std::tuple<double, double, double, double, isce3::error::ErrorCode>
+findPolarGridBoundingBoxInRadarCoord(
     const PolarGrid& polar_grid,
-    const RadarGeometry& radar_geom,
+    const Orbit& orbit,
+    const LUT2d<double>& doppler,
+    const double wavelength,
+    const LookSide lookside,
     const DEMInterpolator& dem,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
     const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
-    const int nextra,
-    bool clamp)
+    const int nextra)
 {
     using isce3::geometry::detail::polar2geo_bracket;
     if (nextra < 0) {
@@ -669,15 +671,15 @@ findPolarGridBoundingBoxInRadarGrid(
         double lookangle;
         auto err = polar2geo_bracket(&xyz, &lookangle, polar_grid.origin,
             polar_grid.axis, rin, ssq, csq, dem, ellipsoid,
-            radar_geom.lookSide(), r2g_params);
+            lookside, r2g_params);
         if (err != ErrorCode::Success) {
             status = err;
         }
         // convert to stripmap radar coordinates
         double tout, rout;
-        int success = geo2rdr_bracket(xyz, radar_geom.orbit(),
-            radar_geom.doppler(), tout, rout, radar_geom.wavelength(),
-            radar_geom.lookSide(), g2r_params.tol_aztime, g2r_params.time_start,
+        int success = geo2rdr_bracket(xyz, orbit,
+            doppler, tout, rout, wavelength,
+            lookside, g2r_params.tol_aztime, g2r_params.time_start,
             g2r_params.time_end);
         if (!success) {
             status = ErrorCode::FailedToConverge;
@@ -698,32 +700,67 @@ findPolarGridBoundingBoxInRadarGrid(
         if (r < rmin) rmin = r;
     }
 
-    // convert to indices
-    int iaz, irg, naz, nrg;
+    return std::tie(tmin, tmax, rmin, rmax, status);
+}
+
+std::tuple<isce3::product::RadarGridParameters, isce3::error::ErrorCode>
+findPolarGridBoundingBoxInRadarGrid(
+    const PolarGrid& polar_grid,
+    const RadarGeometry& radar_geom,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+    const int nextra)
+{
+    auto [tmin, tmax, rmin, rmax, status] =
+        findPolarGridBoundingBoxInRadarCoord(polar_grid, radar_geom.orbit(),
+            radar_geom.doppler(), radar_geom.wavelength(),
+            radar_geom.lookSide(), dem, r2g_params, g2r_params, nextra);
+
+    // too much typing
     const auto t0 = radar_geom.sensingTime().first();
     const auto dt = radar_geom.sensingTime().spacing();
-    iaz = static_cast<int>(std::floor((tmin - t0) / dt));
-    naz = static_cast<int>(std::ceil((tmax - t0) / dt)) - iaz + 1;
-
     const auto r0 = radar_geom.slantRange().first();
     const auto dr = radar_geom.slantRange().spacing();
-    irg = static_cast<int>(std::floor((rmin - r0) / dr));
-    nrg = static_cast<int>(std::ceil((rmax - r0) / dr)) - irg + 1;
+    const int m = static_cast<int>(radar_geom.gridLength());
+    const int n = static_cast<int>(radar_geom.gridWidth());
 
-    if (clamp) {
-        const int m = static_cast<int>(radar_geom.gridLength());
-        const int n = static_cast<int>(radar_geom.gridWidth());
-        const int i0 = iaz, j0 = irg;
-        iaz = std::max(0, std::min(i0, m - 1));
-        irg = std::max(0, std::min(j0, n - 1));
-        int i1 = i0 + naz, j1 = j0 + nrg;
-        i1 = std::max(0, std::min(i1, m - 1));
-        j1 = std::max(0, std::min(j1, n - 1));
-        naz = i1 - i0 + 1;
-        nrg = j1 - j0 + 1;
+    // convert extrema to indices in radar grid
+    int i0, j0, i1, j1;
+    i0 = static_cast<int>(std::floor((tmin - t0) / dt));
+    i1 = static_cast<int>(std::ceil((tmax - t0) / dt));
+    j0 = static_cast<int>(std::floor((rmin - r0) / dr));
+    j1 = static_cast<int>(std::ceil((rmax - r0) / dr));
+
+    // copy of radar grid but with shape = (0, 0)
+    using isce3::product::RadarGridParameters;
+    const auto& igrid = radar_geom.radarGrid();
+    const auto empty =  RadarGridParameters(t0, igrid.wavelength(),
+        igrid.prf(), r0, dr, igrid.lookSide(), 0, 0, igrid.refEpoch());
+
+    // return empty grid if non-overlapping
+    if ((i1 < 0) or (i0 >= m) or (j1 < 0) or (j0 >= n)) {
+        return std::tie(empty, status);
     }
 
-    return std::tie(iaz, irg, naz, nrg, status);
+    // otherwise clamp to grid bounds
+    i0 = std::max(0, std::min(i0, m - 1));
+    i1 = std::max(0, std::min(i1, m));
+    j0 = std::max(0, std::min(j0, n - 1));
+    j1 = std::max(0, std::min(j1, n));
+
+    const auto ogrid =  RadarGridParameters(
+        radar_geom.sensingTime()[i0],
+        igrid.wavelength(),
+        igrid.prf(),
+        radar_geom.slantRange()[j0],
+        igrid.rangePixelSpacing(),
+        igrid.lookSide(),
+        i1 - i0,
+        j1 - j0,
+        igrid.refEpoch());
+
+    return std::tie(ogrid, status);
 }
 
 std::tuple<std::vector<isce3::core::Vec3>, isce3::error::ErrorCode>
