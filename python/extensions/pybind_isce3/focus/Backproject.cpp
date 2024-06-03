@@ -78,6 +78,42 @@ Geo2RdrBracketParams parse_geo2rdr_params(const py::dict& params)
     return out;
 }
 
+NFFT2Params parse_nfft2_params(const py::dict& params)
+{
+    auto parse_ms = [](const py::dict& d) {
+        NFFTParams out;
+        for (auto item : d) {
+            auto key = item.first.cast<std::string>();
+            if (key == "m") {
+                out.m = item.second.cast<int>();
+            }
+            else if (key == "s") {
+                out.s = item.second.cast<double>();
+            }
+            else {
+                throw InvalidArgument(ISCE_SRCINFO(),
+                    "unexpected NFFT keyword: " + key);
+            }
+        }
+        return out;
+    };
+    NFFT2Params out;
+    for (auto item : params) {
+        auto key = item.first.cast<std::string>();
+        if (key == "x") {
+            out.x = parse_ms(item.second.cast<py::dict>());
+        }
+        else if (key == "y") {
+            out.y = parse_ms(item.second.cast<py::dict>());
+        }
+        else {
+            throw InvalidArgument(ISCE_SRCINFO(),
+                "unexpected NFFT2Parms keyword: " + key);
+        }
+    }
+    return out;
+}
+
 void addbinding(py::class_<PolarGrid>& pyPolarGrid)
 {
     double aztime_start, aztime_end;
@@ -346,4 +382,104 @@ void addbinding_backproject(py::module& m)
         py::arg("rdr2geo_params") = py::dict(),
         py::arg("geo2rdr_params") = py::dict(),
         py::arg("height") = py::none());
+
+    m.def("find_polar_grid_bbox_in_radar_grid", [](
+                const PolarGrid& polar_grid,
+                const RadarGeometry& radar_geom,
+                const DEMInterpolator& dem,
+                py::dict rdr2geo_params,
+                py::dict geo2rdr_params,
+                int nextra) {
+
+            const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
+            const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
+
+            auto [grid, status] = findPolarGridBoundingBoxInRadarGrid(polar_grid,
+                radar_geom, dem, r2gparams, g2rparams, nextra);
+
+            if (status != ErrorCode::Success) {
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                    "Could not determine polar grid bounds within radar grid.");
+            }
+            return grid;
+        },
+        py::arg("polar_grid"),
+        py::arg("radar_geom"),
+        py::arg("dem"),
+        py::arg("rdr2geo_params") = py::dict(),
+        py::arg("geo2rdr_params") = py::dict(),
+        py::arg("nextra") = 0);
+
+    m.def("computeRadarGridGeoPoints", [](
+                const RadarGeometry& geom,
+                const DEMInterpolator& dem,
+                py::dict rdr2geo_params) {
+
+            // get root finding parameters
+            const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
+
+            // allocate memory
+            const py::ssize_t m = geom.gridLength(), n = geom.gridWidth();
+            auto points = py::array_t<double, py::array::c_style>({m, n, 3L});
+
+            // XXX type cast after checking sizes, assume alignment is okay
+            // TODO redo with Eigen::Map or change interface from Vec3 to double[3]?
+            using isce3::core::Vec3;
+            static_assert(sizeof(Vec3) == (sizeof(double[3])));
+            auto ptr = reinterpret_cast<Vec3*>(points.mutable_data());
+
+            // run the thing
+            auto status = computeRadarGridGeoPoints(ptr, geom, dem, r2gparams);
+
+            if (status != ErrorCode::Success) {
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                    "Could not compute map projection of polar grid coords.");
+            }
+            return points;
+        },
+        py::arg("geom"),
+        py::arg("dem"), 
+        py::arg("rdr2geo_params") = py::dict());
+
+    m.def("project_polar_to_geo", [](
+                py::array_t<std::complex<float>>& geo_image,
+                const py::array_t<double>& geo_points,
+                const PolarGrid& grid,
+                const py::array_t<std::complex<float>>& polar_image,
+                const double wavelength,
+                py::dict nfft2_params) {
+
+            // get root finding parameters
+            const auto params = parse_nfft2_params(nfft2_params);
+            if (geo_points.size() != 3 * geo_image.size()) {
+                throw isce3::except::LengthError(ISCE_SRCINFO(),
+                    "shape mismatch between geo image and position arrays");
+            }
+            auto n = static_cast<size_t>(geo_image.size());
+            if ((polar_image.shape(0) != grid.length())
+                    or (polar_image.shape(1) != grid.width())) {
+                throw isce3::except::LengthError(ISCE_SRCINFO(),
+                    "shape mismatch between polar image array and grid");
+            }
+
+            // XXX type cast after checking sizes, assume alignment is okay
+            // TODO redo with Eigen::Map or change interface from Vec3 to double[3]?
+            using isce3::core::Vec3;
+            static_assert(sizeof(Vec3) == (sizeof(double[3])));
+            const auto ptr = reinterpret_cast<const Vec3*>(geo_points.data());
+
+            auto status = projectPolarToGeo(geo_image.mutable_data(), ptr,
+                n, grid, polar_image.data(), wavelength, params);
+
+            if (status != ErrorCode::Success) {
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                    "Could not compute map projection of polar grid coords.");
+            }
+        },
+        py::arg("geo_image"),
+        py::arg("geo_points"),
+        py::arg("grid"),
+        py::arg("polar_image"),
+        py::arg("wavelength"),
+        py::arg("nfft2_params") = py::dict());
 }
