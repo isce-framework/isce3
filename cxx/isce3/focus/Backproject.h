@@ -92,10 +92,10 @@ backprojectFinalStage(std::complex<float>* out,
 // WIP stuff to do one polar image at a time.
 
 struct NFFTParams {
-    int m = 2;  /// half width of interpolator
-    double s = 2.0;  /// oversampling factor
+    int m;  /// half width of interpolator
+    double s;  /// oversampling factor
 
-    NFFTParams(int m_, double s_) : m{m_}, s{s_} {
+    NFFTParams(int m_ = 2, double s_ = 2.0) : m{m_}, s{s_} {
         if (m_ < 1) {
             throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
                 "Need interpolator size m >= 1 for NFFT");
@@ -120,7 +120,7 @@ projectPolarToGeo(
         const PolarGrid& grid,
         const std::complex<float>* polar_image,
         const double wavelength,
-        const NFFT2Params& params);
+        const NFFT2Params& params = {});
 
 // figure out bounds of polar grid in stripmap radar coordinates
 std::tuple<double, double, double, double, isce3::error::ErrorCode>
