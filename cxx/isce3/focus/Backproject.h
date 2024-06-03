@@ -151,5 +151,12 @@ computeRadarGridGeoPoints(
     const isce3::geometry::DEMInterpolator& dem,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params);
 
+isce3::error::ErrorCode
+computeRadarGridGeoPoints(
+    isce3::core::Vec3* points,
+    const isce3::container::RadarGeometry& geom,
+    const isce3::geometry::DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params);
+
 } // namespace focus
 } // namespace isce3

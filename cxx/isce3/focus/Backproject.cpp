@@ -763,7 +763,7 @@ findPolarGridBoundingBoxInRadarGrid(
     return std::tie(ogrid, status);
 }
 
-std::tuple<std::vector<isce3::core::Vec3>, isce3::error::ErrorCode>
+std::tuple<std::vector<Vec3>, ErrorCode>
 computeRadarGridGeoPoints(
     const RadarGeometry& geom,
     const DEMInterpolator& dem,
@@ -771,6 +771,18 @@ computeRadarGridGeoPoints(
 {
     const size_t n = geom.gridLength() * geom.gridWidth();
     std::vector<Vec3> points(n);
+    auto status = computeRadarGridGeoPoints(points.data(), geom, dem, r2g_params);
+    return std::tie(points, status);
+}
+
+ErrorCode
+computeRadarGridGeoPoints(
+    Vec3* points,
+    const RadarGeometry& geom,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+{
+    const size_t n = geom.gridLength() * geom.gridWidth();
     ErrorCode status = ErrorCode::Success;
     #pragma omp parallel for
     for (size_t k = 0; k < n; ++k) {
@@ -787,7 +799,7 @@ computeRadarGridGeoPoints(
             status = ErrorCode::FailedToConverge;
         }
     }
-    return std::tie(points, status);
+    return status;
 }
 
 } // namespace focus
