@@ -441,7 +441,7 @@ output_dataset_options:
     compression_type: str(required=False)
 
     # Compression level
-    # 1 - least compression, 9 - best compresssion
+    # 1 - least compression, 9 - best compression
     compression_level: int(min=1, max=9, required=False)
 
     # Enable/disable chunking of output raster
