@@ -223,7 +223,7 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
     if off_width is None:
         width_margin = 2 * margin + 2 * rg_search + rg_window
         off_width = (radar_grid_slc.width - width_margin) // \
-                    offset_cfg['skip_azimuth']
+                    offset_cfg['skip_range']
     # Determine the starting range and sensing start for the offset radar grid
     if rg_start is None:
         rg_start = margin + rg_search
