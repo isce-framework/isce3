@@ -321,8 +321,11 @@ runconfig:
             coarse_resample:
                 # Path to coarse offsets directory (geo2rdr offsets)
                 offsets_dir:
-                # Number of lines per tile to resample in batch
+                # Number of lines and columns per tile to resample in batch.
+                # If columns_per_tile is 0, the tiles will span across all columns of
+                # the raster.
                 lines_per_tile: 100
+                columns_per_tile: 0
 
             dense_offsets:
                 # Flag to enable/disable dense offsets estimation
@@ -507,8 +510,11 @@ runconfig:
                 enabled: True
                 # Path to fine offsets (rubbersheet dense offsets)
                 offsets_dir:
-                # Number of lines per tile to resample in batch
+                # Number of lines and columns per tile to resample in batch.
+                # If columns_per_tile is 0, the tiles will span across all columns of
+                # the raster.
                 lines_per_tile: 100
+                columns_per_tile: 0
 
             crossmul:
                 # Number of range looks to generate wrapped interferogram in RIFG

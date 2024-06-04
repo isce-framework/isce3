@@ -17,7 +17,7 @@ def resample_slc_blocks(
     input_slcs: Sequence[DatasetReader],
     az_offsets_dataset: DatasetReader,
     rg_offsets_dataset: DatasetReader,
-    in_grid: RadarGridParameters,
+    input_radar_grid: RadarGridParameters,
     doppler: LUT2d = LUT2d(),
     block_size_az: int = 1024,
     block_size_rg: int = 1024,
@@ -45,7 +45,7 @@ def resample_slc_blocks(
         A dataset containing range offsets, in pixels. Each offset defines the range
         component of the displacement from a pixel in the output grid to the
         corresponding pixel in the input grid.
-    in_grid : RadarGridParameters
+    input_radar_grid : RadarGridParameters
         The RadarGridParameters for the input data swath.
     doppler : LUT2d, optional
         The doppler lookup table, in Hertz, as a function of azimuth and range. Defaults
@@ -118,7 +118,8 @@ def resample_slc_blocks(
             raise ValueError(err_log)
 
     # Initialize the overall runtime timers, denoted in seconds, for benchmarking.
-    read_timer = 0
+    offsets_read_timer = 0
+    slc_read_timer = 0
     write_timer = 0
     processing_timer = 0
 
@@ -132,15 +133,16 @@ def resample_slc_blocks(
         # These take the time of major I/O and processing tasks by subtracting
         # their beginning time and then adding their end time, which leaves the
         # time committed per task.
-        block_read_timer = 0
+        block_offsets_read_timer = 0
+        block_slc_read_timer = 0
         block_write_timer = 0
         block_processing_timer = 0
 
         # Get the offsets blocks using the slices.
-        block_read_timer -= perf_counter()
+        block_offsets_read_timer -= perf_counter()
         az_offsets_block = np.array(az_offsets_dataset[out_block_slice], np.float64)
         rg_offsets_block = np.array(rg_offsets_dataset[out_block_slice], np.float64)
-        block_read_timer += perf_counter()
+        block_offsets_read_timer += perf_counter()
 
         # Interpret extremely low values as NaN
         block_processing_timer -= perf_counter()
@@ -180,14 +182,14 @@ def resample_slc_blocks(
 
         # For each input SLC given, acquire a block of data to the in_blocks list
         # and create one in output_blocks that is filled with zeros to populate.
-        block_read_timer -= perf_counter()
+        block_slc_read_timer -= perf_counter()
         for input_slc in input_slcs:
             input_blocks.append(np.array(input_slc[in_slices], dtype=np.complex64))
             output_block = np.full(
                 out_block_shape, fill_value=fill_value, dtype=np.complex64
             )
             output_blocks.append(output_block)
-        block_read_timer += perf_counter()
+        block_slc_read_timer += perf_counter()
 
         # Get the first positions in azimuth and range on both the resampled block
         # and input block.
@@ -225,12 +227,14 @@ def resample_slc_blocks(
                 info_channel.log(
                     f"interpolating to output SLC for block {out_block_slice}..."
                 )
+                # Reporting input block shape for debugging
+                info_channel.log(f"Input block: {in_slices}")
             resample_to_coords(
                 output_block,
                 input_block,
                 range_index_grid,
                 azimuth_index_grid,
-                in_grid,
+                input_radar_grid[in_slices],
                 doppler,
                 fill_value,
             )
@@ -245,17 +249,22 @@ def resample_slc_blocks(
         block_write_timer += perf_counter()
 
         # Add the accumulated times per block to the overall totals and report.
-        read_timer += block_read_timer
+        offsets_read_timer += block_offsets_read_timer
+        slc_read_timer += block_slc_read_timer
         write_timer += block_write_timer
         processing_timer += block_processing_timer
         if not quiet:
-            info_channel.log(f"Block I/O read time (sec): {block_read_timer}")
+            info_channel.log(f"Block SLC I/O read time (sec): {block_slc_read_timer}")
+            info_channel.log(
+                f"Block Offsets I/O read time (sec): {block_offsets_read_timer}"
+            )
             info_channel.log(f"Block I/O write time (sec): {block_write_timer}")
             info_channel.log(f"Block Processing time (sec): {block_processing_timer}")
 
     # Report the overall totals and return.
     if not quiet:
-        info_channel.log(f"Total I/O read time (sec): {read_timer}")
+        info_channel.log(f"Total SLC I/O read time (sec): {slc_read_timer}")
+        info_channel.log(f"Total Offsets I/O read time (sec): {offsets_read_timer}")
         info_channel.log(f"Total I/O write time (sec): {write_timer}")
         info_channel.log(f"Total Processing time (sec): {processing_timer}")
 

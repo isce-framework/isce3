@@ -61,6 +61,7 @@ nisar/workflows/baseline.py
 nisar/workflows/process_args.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
+nisar/workflows/resample_slc_v2.py
 nisar/workflows/unwrap.py
 nisar/workflows/point_target_analysis.py
 nisar/workflows/noise_estimator.py
@@ -94,8 +95,14 @@ set_tests_properties(test.python.pkg.nisar.workflows.geo2rdr PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.rdr2geo)
 set_tests_properties(test.python.pkg.nisar.workflows.resample_slc PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.geo2rdr)
+set_tests_properties(test.python.pkg.nisar.workflows.resample_slc_v2 PROPERTIES
+             DEPENDS test.python.pkg.nisar.workflows.geo2rdr)
+
+# crossmul doesn't technically require resample_slc_v2, but resample_slc_v2 needs to be
+# run before other dependent tests or files that it depends on will be overwritten
+# and it will fail.
 set_tests_properties(test.python.pkg.nisar.workflows.crossmul PROPERTIES
-             DEPENDS test.python.pkg.nisar.workflows.resample_slc)
+             DEPENDS "test.python.pkg.nisar.workflows.resample_slc;test.python.pkg.nisar.workflows.resample_slc_v2")
 set_tests_properties(test.python.pkg.nisar.workflows.filter_interferogram PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.crossmul)
 

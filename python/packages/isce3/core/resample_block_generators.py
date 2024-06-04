@@ -107,6 +107,11 @@ def get_blocks_by_offsets(
         err_str = f"Buffer given as {buffer}; must be at least 0."
         error_channel.log(err_str)
         raise ValueError(err_str)
+    
+    # Check for all-NaN slices
+    if np.all(np.isnan(x_offsets_block)) or np.all(np.isnan(y_offsets_block)):
+        warn_channel.log(f"All-NaN offsets encountered in block: {out_block_slices}")
+        return None
 
     # Get the extremities of the slice.
     y_slice, x_slice = out_block_slices
@@ -127,17 +132,6 @@ def get_blocks_by_offsets(
     y_off_max = y_end_index + np.ceil(np.nanmax(y_offsets_block)) + buffer
     x_off_min = x_start_index + np.floor(np.nanmin(x_offsets_block)) - buffer
     x_off_max = x_end_index + np.ceil(np.nanmax(x_offsets_block)) + buffer
-
-    # Check for all-NaN slices, which will appear if one or more of the above values
-    # ends up equaling NaN. Return None if one is found.
-    if (
-        np.isnan(y_off_min)
-        or np.isnan(y_off_max)
-        or np.isnan(x_off_min)
-        or np.isnan(x_off_max)
-    ):
-        warn_channel.log(f"All-NaN offsets encountered in block: {out_block_slices}")
-        return None
 
     # Clip the output shape to the dimensions of the data grid.
     data_block_y_start = int(max(0, y_off_min))

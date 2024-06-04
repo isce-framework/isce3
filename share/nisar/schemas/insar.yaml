@@ -287,6 +287,10 @@ coarse_resample_options:
     # Number of lines per tile to resample in batch
     lines_per_tile: int(min=1, required=False)
 
+    # Number of columns per tile to resample in batch. If 0, the tiles will span across
+    # all columns of the raster.
+    columns_per_tile: int(min=0, required=False)
+
 fine_resample_options:
     # Flag to switch on/off fine resampling
     enabled: bool(required=False)
@@ -296,6 +300,10 @@ fine_resample_options:
 
     # Number of lines per tile to resample in batch
     lines_per_tile: int(min=1, required=False)
+
+    # Number of columns per tile to resample in batch. If 0, the tiles will span across
+    # all columns of the raster.
+    columns_per_tile: int(min=0, required=False)
 
 dense_offsets_options:
     # Flag to enable/disable dense offsets estimation. Default: True
