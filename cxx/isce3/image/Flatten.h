@@ -22,7 +22,6 @@ using ArrayRefConst2D = Eigen::Ref<const Array2D<T, Options>>;
  * grid parameters.
  *
  * @param[out] dataBlock        The SLC data to flatten
- * @param[in] nativeDopplerLUT  native doppler of SLC image
  * @param[in] rangeIndices      range index of each coordinate pixel in the data block
  *                              in the coordinate system of the alternate radar grid
  * @param[in] radarGridOut      radar grid parameters of the alternate grid
