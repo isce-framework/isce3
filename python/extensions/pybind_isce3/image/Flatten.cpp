@@ -13,7 +13,7 @@ namespace py = pybind11;
 void addbindings_modulate(py::module & m)
 {
     m.def(
-        "flatten_at_coords",
+        "_flatten_at_coords",
         &isce3::image::flatten::flattenAtCoords,
         py::arg("data_block"),
         py::arg("range_indices"),
@@ -24,6 +24,10 @@ void addbindings_modulate(py::module & m)
         R"(
         Re-flatten a grid of SLC data from its' original grid parameters into a new set
         of grid parameters.
+
+        This function does not check the sizes of the input grids against each other,
+        and should be considered an implementation. See the Python function
+        isce3.image.flatten.flatten_at_coords for the full implementation.
 
         Parameters
         ----------
@@ -42,9 +46,9 @@ void addbindings_modulate(py::module & m)
             range index of the first sample of the alternate grid
         )"
     );
-    
+
     m.def(
-        "get_flattening_phase",
+        "_get_flattening_phase_at_coords",
         &isce3::image::flatten::getFlatteningPhase,
         py::arg("data_block"),
         py::arg("range_indices"),
@@ -55,6 +59,10 @@ void addbindings_modulate(py::module & m)
         R"(
         Re-flatten a grid of SLC data from its' original grid parameters into a new set
         of grid parameters.
+
+        This function does not check the sizes of the input grids against each other,
+        and should be considered an implementation. See the Python function
+        isce3.image.flatten.get_flattening_phase_at_coords for the full implementation.
 
         Parameters
         ----------
