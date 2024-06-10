@@ -104,4 +104,41 @@ void flattenAtCoords(
 }
 
 
+void getFlatteningPhase(
+    ArrayRef2D<std::complex<float>> dataBlock,
+    const EArray2df64& rangeIndices,
+    const isce3::product::RadarGridParameters& radarGridOut,
+    const isce3::product::RadarGridParameters& radarGridIn,
+    const size_t inRgFirstPixel,
+    const size_t outRgFirstPixel
+)
+{
+    const size_t outWidth = dataBlock.cols();
+    const size_t outLength = dataBlock.rows();
+
+#pragma omp parallel for collapse(2)
+    for (size_t azIndexIn = 0; azIndexIn < outLength; ++azIndexIn){
+        for (size_t rgIndexIn = 0; rgIndexIn < outWidth; ++rgIndexIn){
+
+            // Get the range indices on the output grid corresponding to these indices
+            // on the input grid overall.
+            const double rgIndexOut = rangeIndices(azIndexIn, rgIndexIn);
+
+            double rangeOffset = rgIndexOut - static_cast<double>(rgIndexIn) -
+                static_cast<double>(outRgFirstPixel);
+
+            const double flattenPhase = _pixelFlatteningPhase(
+                radarGridOut, radarGridIn, rangeOffset
+            );
+
+            // Update dataBlock column and row from index
+            const std::complex<float> cpxVal(
+                std::cos(flattenPhase), std::sin(flattenPhase)
+            );
+            dataBlock(azIndexIn, rgIndexIn) = cpxVal;
+        }
+    } // end multithreaded block
+}
+
+
 }  // namespace isce3::image::flatten
