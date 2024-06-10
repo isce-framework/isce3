@@ -112,7 +112,7 @@ def get_flattening_phase_at_coords(
         The flattened SLC block. If `out` was given, this will be the same array as
         the `out` array.
     """
-    error_channel = journal.error("modulate.get_modulation_phase_at_coords")
+    error_channel = journal.error("flatten.get_flattening_phase_at_coords")
     out_array = out if out is not None else np.full(
         range_indices.shape,
         fill_value=np.nan + 1.0j * np.nan,
