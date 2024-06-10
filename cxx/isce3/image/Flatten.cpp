@@ -69,10 +69,9 @@ double _pixelFlatteningPhase(
 
 void flattenAtCoords(
     ArrayRef2D<std::complex<float>> dataBlock,
-    const EArray2df64& rangeIndices,
+    const ArrayRefConst2D<double> rangeIndices,
     const isce3::product::RadarGridParameters& radarGridOut,
     const isce3::product::RadarGridParameters& radarGridIn,
-    const size_t inRgFirstPixel,
     const size_t outRgFirstPixel
 )
 {
@@ -106,10 +105,9 @@ void flattenAtCoords(
 
 void getFlatteningPhase(
     ArrayRef2D<std::complex<float>> dataBlock,
-    const EArray2df64& rangeIndices,
+    const ArrayRefConst2D<double> rangeIndices,
     const isce3::product::RadarGridParameters& radarGridOut,
     const isce3::product::RadarGridParameters& radarGridIn,
-    const size_t inRgFirstPixel,
     const size_t outRgFirstPixel
 )
 {

@@ -15,7 +15,6 @@ def flatten_at_coords(
     range_indices: np.ndarray,
     radar_grid_out: RadarGridParameters,
     radar_grid_in: RadarGridParameters,
-    in_rg_first_pixel: int,
     out_rg_first_pixel: int,
     out: np.ndarray | None = None,
 ) -> np.ndarray:
@@ -34,8 +33,6 @@ def flatten_at_coords(
         radar grid parameters of the alternate grid
     radar_grid_in : isce3.product.RadarGridParameters
         radar grid parameters of the original grid
-    in_rg_first_pixel : int
-        range index of the first sample of the original grid
     out_rg_first_pixel : int
         range index of the first sample of the alternate grid
     out : np.ndarray of np.complex64 | None, optional
@@ -70,7 +67,6 @@ def flatten_at_coords(
         range_indices=range_indices,
         radar_grid_out=radar_grid_out,
         radar_grid_in=radar_grid_in,
-        in_rg_first_pixel=in_rg_first_pixel,
         out_rg_first_pixel=out_rg_first_pixel,
     )
     
@@ -81,7 +77,6 @@ def get_flattening_phase_at_coords(
     range_indices: np.ndarray,
     radar_grid_out: RadarGridParameters,
     radar_grid_in: RadarGridParameters,
-    in_rg_first_pixel: int,
     out_rg_first_pixel: int,
     out: np.ndarray | None = None,
 ) -> np.ndarray[np.complex64]:
@@ -97,8 +92,6 @@ def get_flattening_phase_at_coords(
         radar grid parameters of the alternate grid
     radar_grid_in : isce3.product.RadarGridParameters
         radar grid parameters of the original grid
-    in_rg_first_pixel : int
-        range index of the first sample of the original grid
     out_rg_first_pixel : int
         range index of the first sample of the alternate grid
     out : np.ndarray of np.complex64 | None, optional
@@ -132,7 +125,6 @@ def get_flattening_phase_at_coords(
         range_indices=range_indices,
         radar_grid_out=radar_grid_out,
         radar_grid_in=radar_grid_in,
-        in_rg_first_pixel=in_rg_first_pixel,
         out_rg_first_pixel=out_rg_first_pixel,
     )
     

@@ -19,7 +19,6 @@ void addbindings_modulate(py::module & m)
         py::arg("range_indices"),
         py::arg("radar_grid_out"),
         py::arg("radar_grid_in"),
-        py::arg("in_rg_first_pixel"),
         py::arg("out_rg_first_pixel"),
         R"(
         Re-flatten a grid of SLC data from its' original grid parameters into a new set
@@ -40,8 +39,6 @@ void addbindings_modulate(py::module & m)
             radar grid parameters of the alternate grid
         radar_grid_in : isce3.product.RadarGridParameters
             radar grid parameters of the original grid
-        in_rg_first_pixel : int
-            range index of the first sample of the original grid
         out_rg_first_pixel : int
             range index of the first sample of the alternate grid
         )"
@@ -54,7 +51,6 @@ void addbindings_modulate(py::module & m)
         py::arg("range_indices"),
         py::arg("radar_grid_out"),
         py::arg("radar_grid_in"),
-        py::arg("in_rg_first_pixel"),
         py::arg("out_rg_first_pixel"),
         R"(
         Re-flatten a grid of SLC data from its' original grid parameters into a new set
@@ -76,8 +72,6 @@ void addbindings_modulate(py::module & m)
             radar grid parameters of the alternate grid
         radar_grid_in : isce3.product.RadarGridParameters
             radar grid parameters of the original grid
-        in_rg_first_pixel : int
-            range index of the first sample of the original grid
         out_rg_first_pixel : int
             range index of the first sample of the alternate grid
         )"

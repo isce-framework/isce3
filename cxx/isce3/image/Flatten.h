@@ -26,7 +26,6 @@ using ArrayRefConst2D = Eigen::Ref<const Array2D<T, Options>>;
  *                              in the coordinate system of the alternate radar grid
  * @param[in] radarGridOut      radar grid parameters of the alternate grid
  * @param[in] radarGridIn       radar grid parameters of the original grid
- * @param[in] inRgFirstPixel    range index of the first sample of the original grid
  * @param[in] outRgFirstPixel   range index of the first sample of the alternate grid
  */
 void flattenAtCoords(
@@ -34,7 +33,6 @@ void flattenAtCoords(
     const ArrayRefConst2D<double> rangeIndices,
     const isce3::product::RadarGridParameters& radarGridOut,
     const isce3::product::RadarGridParameters& radarGridIn,
-    const size_t inRgFirstPixel,
     const size_t outRgFirstPixel
 );
 
@@ -48,7 +46,6 @@ void flattenAtCoords(
  *                              in the coordinate system of the alternate radar grid
  * @param[in] radarGridOut      radar grid parameters of the alternate grid
  * @param[in] radarGridIn       radar grid parameters of the original grid
- * @param[in] inRgFirstPixel    range index of the first sample of the original grid
  * @param[in] outRgFirstPixel   range index of the first sample of the alternate grid
  */
 void getFlatteningPhase(
@@ -56,7 +53,6 @@ void getFlatteningPhase(
     const ArrayRefConst2D<double> rangeIndices,
     const isce3::product::RadarGridParameters& radarGridOut,
     const isce3::product::RadarGridParameters& radarGridIn,
-    const size_t inRgFirstPixel,
     const size_t outRgFirstPixel
 );
 
