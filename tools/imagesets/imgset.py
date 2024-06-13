@@ -132,11 +132,12 @@ class ImageSet:
             Modifier to nominal Docker tag name
 
         """
+        if tagmod != "":
+            tagmod = "-" + tagmod
+
         if self.imgtag:
-            return f"nisar-adt/isce3{repomod}:{self.imgtag}"
+            return f"nisar-adt/isce3{repomod}:{self.imgtag}{tagmod}"
         else:
-            if tagmod != "":
-                tagmod = "-" + tagmod
             try:
                 gitmod = '-' + subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode('ascii').strip()
             except:
@@ -271,7 +272,7 @@ class ImageSet:
         squash_arg = "--squash" if "Experimental: true" in docker_info else ""
 
         cmd = f"{docker} build {self.build_args} {squash_arg} \
-                    {thisdir}/{self.name}/distrib -t {self.imgname()}"
+                    {thisdir}/{self.name}/distrib -t {self.imgname(tagmod='distrib')}"
         subprocess.check_call(cmd.split())
 
 
@@ -295,7 +296,7 @@ class ImageSet:
             git_commit = ""
 
         build_args = {
-            "distrib_img": self.imgname(),
+            "distrib_img": self.imgname(tagmod='distrib'),
             "GIT_OAUTH_TOKEN": os.environ.get('GIT_OAUTH_TOKEN').strip(),
             "CREATION_DATETIME": creation_datetime,
             "ISCE3_VERSION": isce3_version,
@@ -304,7 +305,7 @@ class ImageSet:
         build_args = " ".join(f"--build-arg {k}={v}" for (k, v) in build_args.items())
 
         cmd = f"{docker} build {build_args} \
-                {thisdir}/{self.name}/distrib_nisar -t {self.imgname(tagmod='nisar')}"
+                {thisdir}/{self.name}/distrib_nisar -t {self.imgname()}"
         subprocess.check_call(cmd.split())
 
 
@@ -382,9 +383,9 @@ class ImageSet:
         logger.addHandler(hdlr)
 
         if nisarimg:
-            img = self.imgname(tagmod="nisar")
-        else:
             img = self.imgname()
+        else:
+            img = self.imgname(tagmod="distrib")
 
         datamount = ""
         if dataname is not None:
@@ -816,7 +817,7 @@ class ImageSet:
         and 'docker-stage-local' registries on artifactory.
         """
         # The name:tag of the NISAR distrib image created by `self.makedistrib_nisar()`.
-        nisar_distrib_name = self.imgname(tagmod="nisar")
+        nisar_distrib_name = self.imgname()
 
         # The name:tag to give the image in the remote registry.
         # Release images are tagged 'gov/nasa/jpl/nisar/adt/nisar-adt/isce3:{release}'
