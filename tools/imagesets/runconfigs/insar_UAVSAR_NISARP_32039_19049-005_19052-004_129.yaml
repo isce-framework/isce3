@@ -12,8 +12,8 @@ runconfig:
             qa_rifg_input_file: output_insar/RIFG_product.h5
             qa_runw_input_file: output_insar/RUNW_product.h5
             qa_gunw_input_file: output_insar/GUNW_product.h5
-            qa_roff_input_file:
-            qa_goff_input_file:
+            qa_roff_input_file: output_insar/ROFF_product.h5
+            qa_goff_input_file: output_insar/GOFF_product.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
@@ -33,7 +33,7 @@ runconfig:
             qa_output_dir: qa_insar
 
         primary_executable:
-            product_type: RIFG_RUNW_GUNW
+            product_type: ROFF_RIFG_RUNW_GOFF_GUNW
 
         debug_level_group:
             debug_switch: false
@@ -105,8 +105,23 @@ runconfig:
                 lines_per_tile: 100
 
             dense_offsets:
-                enabled: True
+                enabled: False
 
+            offsets_product:
+                enabled: True
+                skip_range: 30
+                skip_azimuth: 50
+                layer1:
+                    window_range: 64
+                    window_azimuth: 64
+                    half_search_range: 16
+                    half_search_azimuth: 16
+                layer2:
+                    window_range: 96
+                    window_azimuth: 96
+                    half_search_range: 32
+                    half_search_azimuth: 32
+                    
             rubbersheet:
                 enabled: True
 
