@@ -183,18 +183,20 @@ class RawBase(Base, family='nisar.productreader.raw'):
         return out
 
 
-    def getPulseTimes(self, frequency='A', tx='H', epoch=None):
+    def getPulseTimes(self, frequency=None, tx=None, epoch=None):
         """
         Read pulse time tags.
 
         Parameters
         ----------
-        frequency : {'A', 'B'}
+        frequency : {'A', 'B'}, optional
             Sub-band.  Typically main science band is 'A'.
+            Default is the first frequency in self.frequencies.
 
-        tx : {'H', 'V', 'L', 'R'}
+        tx : {'H', 'V', 'L', 'R'}, optional
             Transmit polarization.  Abbreviations correspond to horizontal
             (linear), vertical (linear), left circular, right circular
+            Default is the first pol under `frequency`.
 
         epoch : isce3.core.DateTime, optional
             Desired time reference.  If not provided the one from the file
@@ -209,6 +211,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
         t : array_like
             Transmit time of each pulse, in seconds relative to epoch.
         """
+        if frequency is None:
+            frequency = sorted(self.frequencies)[0]
+        if tx is None:
+            tx = self.polarizations[frequency][0][0]
         txpath = self.TransmitPath(frequency, tx)
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             # FIXME product spec changed UTCTime -> UTCtime

@@ -268,7 +268,7 @@ class AntennaPattern:
         # shouldn't affect the time index finding process below, otherwise,
         # two sets of pulse time is required in case of quad-pol!
         self.reference_epoch, self.pulse_times = raw.getPulseTimes(
-            self.freq_band, self.tx_pols[0])
+            self.freq_band)
 
         # Harmonize epochs.  Already made copies above, so not modifying input.
         self.orbit.update_reference_epoch(self.reference_epoch)
