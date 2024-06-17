@@ -553,6 +553,7 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                 max_block_size=block_size,
                 az_time_correction=az_correction,
                 slant_range_correction=srg_correction,
+                apply_valid_samples_sub_swath_masking=False,
                 sub_swaths=subswaths)
 
         if compute_stats:
