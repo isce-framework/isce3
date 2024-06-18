@@ -1107,6 +1107,3 @@ output_options:
 lut_options:
     # Boolean flag to activate/deactivate model-based solid earth tide corrections
     solid_earth_tides_enabled: bool(required=False)
-
-    # Boolean flag to activate/deactivate model-based TEC corrections
-    tec_enabled: bool(required=False)

@@ -759,9 +759,6 @@ runconfig:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: False
 
-                # Boolean flag to activate/deactivate model-based TEC corrections
-                tec_enabled: False
-
             # Set of options to enable compression, choose compression level,
             # chunk size and shuffle filter
         output:
