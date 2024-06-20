@@ -78,8 +78,7 @@ def _get_attribute_dict(band,
         attr_dict['min_value'] = stats_obj.min
         attr_dict['mean_value'] = stats_obj.mean
         attr_dict['max_value'] = stats_obj.max
-        attr_dict['sample_standard_deviation'] = \
-            stats_obj.sample_stddev
+        attr_dict['sample_stddev'] = stats_obj.sample_stddev
 
     elif stats_real_imag_obj_list is not None:
 
@@ -87,14 +86,12 @@ def _get_attribute_dict(band,
         attr_dict['min_real_value'] = stats_obj.real.min
         attr_dict['mean_real_value'] = stats_obj.real.mean
         attr_dict['max_real_value'] = stats_obj.real.max
-        attr_dict['sample_standard_deviation_real'] = \
-            stats_obj.real.sample_stddev
+        attr_dict['sample_stddev_real'] = stats_obj.real.sample_stddev
 
         attr_dict['min_imag_value'] = stats_obj.imag.min
         attr_dict['mean_imag_value'] = stats_obj.imag.mean
         attr_dict['max_imag_value'] = stats_obj.imag.max
-        attr_dict['sample_standard_deviation_imag'] = \
-            stats_obj.imag.sample_stddev
+        attr_dict['sample_stddev_imag'] = stats_obj.imag.sample_stddev
 
     if valid_min is not None:
         attr_dict['valid_min'] = valid_min
