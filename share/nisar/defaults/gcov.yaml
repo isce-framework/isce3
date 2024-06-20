@@ -72,7 +72,7 @@ runconfig:
                 compression_type: gzip
 
                 # Compression level
-                compression_level: 9
+                compression_level: 1
 
                 # Enable/disable chunking of output raster
                 chunking_enabled: True
@@ -103,7 +103,7 @@ runconfig:
                 compression_type: gzip
 
                 # Compression level
-                compression_level: 9
+                compression_level: 1
 
                 # Enable/disable chunking of output raster
                 chunking_enabled: True
