@@ -35,6 +35,7 @@ nisar/pointing/doppler_lut_from_raw.py
 #nisar/pointing/el_null_range_from_raw_ant.py
 nisar/products/readers/antenna_parser.py
 nisar/products/readers/attitude.py
+nisar/products/readers/GSLC.py
 nisar/products/readers/instrument_parser.py
 nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
@@ -105,6 +106,9 @@ set_tests_properties(test.python.pkg.nisar.workflows.crossmul PROPERTIES
              DEPENDS "test.python.pkg.nisar.workflows.resample_slc;test.python.pkg.nisar.workflows.resample_slc_v2")
 set_tests_properties(test.python.pkg.nisar.workflows.filter_interferogram PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.crossmul)
+
+set_tests_properties(test.python.pkg.nisar.products.readers.GSLC PROPERTIES
+             DEPENDS test.python.pkg.nisar.workflows.gslc)
 
 # using rdr2geo outputs as RUNW rasters to confirm geocode run
 # using RUNW HDF5 needed as a verifiable dummy RUNW input

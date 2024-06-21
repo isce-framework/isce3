@@ -3,11 +3,12 @@ import argparse
 import os
 
 import numpy as np
+import pytest
 import isce3.ext.isce3 as isce3
 from nisar.workflows import gslc
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.products.writers import GslcWriter
-from nisar.products.readers import open_product
+from nisar.products.readers import GSLC, RSLC
 from osgeo import gdal
 
 import iscetest
@@ -101,13 +102,13 @@ def test_run():
         # hh_ymax needs to end before cubes_ymax
         assert (cubes_ymax - hh_ymax > margin_y)
 
-        gslc_product = open_product(sas_output_file)
+        gslc_product = GSLC(hdf5file=sas_output_file)
         gslc_doppler_centroid_lut = gslc_product.getDopplerCentroid()
         assert isinstance(gslc_doppler_centroid_lut, isce3.core.LUT2d)
 
         # The GSLC Doppler Centroid LUT in radar coordiantes must match
         # the RSLC Doppler Centroid LUT
-        rslc_product = open_product(f'{iscetest.data}/envisat.h5')
+        rslc_product = RSLC(hdf5file=f'{iscetest.data}/envisat.h5')
         rslc_doppler_centroid_lut = rslc_product.getDopplerCentroid()
 
         assert np.array_equal(gslc_doppler_centroid_lut.data,

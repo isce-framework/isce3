@@ -8,7 +8,7 @@ libgomp
 libstdcxx-ng>=9
 matplotlib
 numpy>=1.20
-pyre>=1.12
+pyre>=1.12.5
 pyaps3>=0.3
 pysolid>=0.2
 python>=3.7
