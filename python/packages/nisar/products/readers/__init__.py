@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from .Base import Base
-from .GenericProduct import (open_product,
-                             get_hdf5_file_product_type,
-                             GenericProduct)
-from .SLC import SLC
+from .GenericProduct import (
+    GenericProduct,
+    GenericSingleSourceL2Product,
+    get_hdf5_file_product_type,
+)
+from .SLC import GSLC, RSLC, SLC
 from . import Raw
 from . import antenna
 from .attitude import load_attitude_from_xml
 from .orbit import load_orbit_from_xml
+from .product import open_product
 from . import instrument 
 from .rslc_cal import parse_rslc_calibration
 # end of file

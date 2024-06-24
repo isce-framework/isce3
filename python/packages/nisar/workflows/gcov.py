@@ -913,12 +913,36 @@ def _run(cfg, raster_scratch_dir):
             The native-Doppler LUT bounds error is turned off to
             computer cubes values outside radar-grid boundaries
             '''
+
             native_doppler.bounds_error = False
-            add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name,
-                                         cube_geogrid,
-                                         radar_grid_cubes_heights,
-                                         radar_grid, orbit, native_doppler,
-                                         zero_doppler, threshold, maxiter)
+            # Get a 3D chunk size for metadata cubes from:
+            # - One height layer (H = 1)
+            # - The secondary layers chunk size (A X B):
+            # chunk_size = [H, A, B] = [1, A, B]
+            chunk_size_height_layers = [1]
+            radar_grid_cubes_chunk_size = (
+                chunk_size_height_layers +
+                output_secondary_layers_kwargs['chunk_size'])
+            radar_grid_cubes_compression_enabled = \
+                output_secondary_layers_kwargs['compression_enabled']
+            radar_grid_cubes_compression_type = \
+                output_secondary_layers_kwargs['compression_type']
+            radar_grid_cubes_compression_level = \
+                output_secondary_layers_kwargs['compression_level']
+            radar_grid_cubes_shuffle_filter = \
+                output_secondary_layers_kwargs['shuffle_filtering_enabled']
+
+            add_radar_grid_cubes_to_hdf5(
+                hdf5_obj, cube_group_name,
+                cube_geogrid,
+                radar_grid_cubes_heights,
+                radar_grid, orbit, native_doppler,
+                zero_doppler, threshold, maxiter,
+                chunk_size=radar_grid_cubes_chunk_size,
+                compression_enabled=radar_grid_cubes_compression_enabled,
+                compression_type=radar_grid_cubes_compression_type,
+                compression_level=radar_grid_cubes_compression_level,
+                shuffle_filter=radar_grid_cubes_shuffle_filter)
 
     return output_files_list
 

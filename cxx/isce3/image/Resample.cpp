@@ -52,6 +52,11 @@ void resampleToCoords(
         #pragma omp for collapse(2)
         for (size_t az_resamp_ind = 0; az_resamp_ind < out_length; ++az_resamp_ind) {
             for (size_t rg_resamp_ind = 0; rg_resamp_ind < out_width; ++rg_resamp_ind) {
+                // Populate the position with the fill value first.
+                // Having this happen first means that the `continue` statement can
+                // be used any time a pixel cannot be interpolated.
+                resampled_data_block(az_resamp_ind, rg_resamp_ind) = fill_value;
+
                 // The indices on the resampled data block
                 // unit: column pixels on input array (double)
                 const auto range_input_ind =
@@ -60,19 +65,15 @@ void resampleToCoords(
                 const auto azimuth_input_ind =
                     azimuth_input_indices(az_resamp_ind, rg_resamp_ind);
 
+                // Skip if either the azimuth or range input index are NaN.
+                if (std::isnan(azimuth_input_ind) || std::isnan(range_input_ind)) {
+                    continue;
+                }
+
                 // unit: range column indices (int)
                 const auto range_input_ind_int = static_cast<int>(range_input_ind);
                 // unit: azimuth row indices (int)
                 const auto azimuth_input_ind_int = static_cast<int>(azimuth_input_ind);
-
-                // unit: range column indices (double)
-                const auto range_input_index_remainder =
-                    range_input_ind - static_cast<double>(range_input_ind_int);
-                // unit: azimuth row indices (double)
-                const auto azimuth_input_index_remainder =
-                    azimuth_input_ind - static_cast<double>(azimuth_input_ind_int);
-
-                resampled_data_block(az_resamp_ind, rg_resamp_ind) = fill_value;
                 
                 // Check if chip indices could be outside radar grid minus margin to
                 // account for sinc chip. Fill with fill_value and skip if chip indices
@@ -83,6 +84,13 @@ void resampleToCoords(
                 if ((azimuth_input_ind_int < chip_half) ||
                     (azimuth_input_ind_int >= (in_length - chip_half)))
                     continue;
+
+                // unit: range column indices (double)
+                const auto range_input_index_remainder =
+                    range_input_ind - static_cast<double>(range_input_ind_int);
+                // unit: azimuth row indices (double)
+                const auto azimuth_input_index_remainder =
+                    azimuth_input_ind - static_cast<double>(azimuth_input_ind_int);
 
                 // Slant Range at the current output pixel
                 // unit: distance (meters)
