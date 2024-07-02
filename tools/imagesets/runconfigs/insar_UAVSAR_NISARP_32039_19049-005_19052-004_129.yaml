@@ -109,6 +109,7 @@ runconfig:
 
             offsets_product:
                 enabled: True
+                margin: 250
                 skip_range: 30
                 skip_azimuth: 50
                 layer1:
