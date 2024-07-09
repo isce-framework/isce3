@@ -190,8 +190,8 @@ runconfig:
                 output_epsg:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
-                # If not provided, spacing values will be taken from geocode group
-                # parameters.
+                # If not provided, spacing values are 0.005 degrees for EPSG:4326
+                # and spacing values of other EPSG are 500 meters.
                 # All postings/spacings must be > 0.
                 # ISCE3 output rasters always have North-up West-left orientation
                 output_posting:

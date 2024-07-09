@@ -681,7 +681,7 @@ radar_grid_cubes_options:
     output_epsg: int(min=1024, max=32767, required=False)
 
     # Output posting in same units as output EPSG.
-    # If not provided, spacing values will be taken from provided DEM.
+    # If not provided, default spacing values will be applied based on the output EPSG.
     output_posting:
         x_posting: num(min=0, required=False)
         y_posting: num(min=0, required=False)
