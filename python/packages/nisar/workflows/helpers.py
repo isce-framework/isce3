@@ -261,8 +261,9 @@ def copy_raster(infile, freq, pol,
         GDAL-friendly file format
     '''
 
-    # Open RSLC HDF5 file dataset
+    # Open RSLC HDF5 file dataset and check if complex32
     rslc = SLC(hdf5file=infile)
+    is_complex32 = rslc.is_dataset_complex32(freq, pol)
     hdf5_ds = rslc.getSlcDataset(freq, pol)
 
     # Get RSLC dimension through GDAL
@@ -290,7 +291,10 @@ def copy_raster(infile, freq, pol,
 
         # Read a block of data from RSLC and convert real and imag part to float32
         s = np.s_[line_start:line_start + block_length, :]
-        data_block = isce3.core.types.read_c4_dataset_as_c8(hdf5_ds, s)
+        if is_complex32:
+            data_block = isce3.core.types.read_c4_dataset_as_c8(hdf5_ds, s)
+        else:
+            data_block = hdf5_ds[s]
 
         # Write to GDAL raster
         out_ds.GetRasterBand(1).WriteArray(data_block[0:block_length],
