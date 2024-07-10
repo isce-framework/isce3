@@ -53,9 +53,9 @@ class RUNWWriter(L1InSARWriter):
         """
         super().add_root_attrs()
 
-        self.attrs["title"] = np.string_("NISAR L1 RUNW Product")
+        self.attrs["title"] = np.bytes_("NISAR L1 RUNW Product")
         self.attrs["reference_document"] = \
-            np.string_("D-102271 NISAR NASA SDS Product Specification"
+            np.bytes_("D-102271 NISAR NASA SDS Product Specification"
                        " L1 Range Doppler UnWrapped Interferogram")
 
     def add_ionosphere_to_procinfo_params_group(self):
@@ -178,7 +178,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "unwrappingErrorCorrection",
-                np.string_(unwrap_correction),
+                np.bytes_(unwrap_correction),
                 "Algorithm correcting unwrapping errors in sub-band"
                 " unwrapped interferograms"
                 ,

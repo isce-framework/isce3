@@ -9,13 +9,13 @@ class Units:
     """
     Convenience dataclass for storing units in InSAR products
     """
-    meter: np.bytes_ = np.string_('meters')
-    meter2: np.bytes_ = np.string_('meters^2')
-    second: np.bytes_ = np.string_('seconds')
-    unitless: np.bytes_ = np.string_('1')
-    dn: np.bytes_ = np.string_('DN')
-    radian: np.bytes_ = np.string_('radians')
-    hertz: np.bytes_ = np.string_('hertz')
-    rad_per_second: np.bytes_ = np.string_('radians / second')
-    meter_per_second: np.bytes_ = np.string_('meters / second')
+    meter: np.bytes_ = np.bytes_('meters')
+    meter2: np.bytes_ = np.bytes_('meters^2')
+    second: np.bytes_ = np.bytes_('seconds')
+    unitless: np.bytes_ = np.bytes_('1')
+    dn: np.bytes_ = np.bytes_('DN')
+    radian: np.bytes_ = np.bytes_('radians')
+    hertz: np.bytes_ = np.bytes_('hertz')
+    rad_per_second: np.bytes_ = np.bytes_('radians / second')
+    meter_per_second: np.bytes_ = np.bytes_('meters / second')
 

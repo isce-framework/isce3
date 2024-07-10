@@ -775,7 +775,7 @@ def _run(cfg, raster_scratch_dir):
                 del hdf5_obj[h5_ds]
             pol_list_s2 = np.array(pol_list, dtype='S2')
             dset = hdf5_obj.create_dataset(h5_ds, data=pol_list_s2)
-            dset.attrs['description'] = np.string_(
+            dset.attrs['description'] = np.bytes_(
                 'List of processed polarization layers with frequency ' +
                 frequency)
 
@@ -954,7 +954,7 @@ def _save_list_cov_terms(cov_elements_list, dataset_group):
     cov_elements_array = np.array(cov_elements_list, dtype="S4")
     dset = dataset_group.create_dataset(name, data=cov_elements_array)
     desc = "List of processed covariance terms"
-    dset.attrs["description"] = np.string_(desc)
+    dset.attrs["description"] = np.bytes_(desc)
 
 
 if __name__ == "__main__":

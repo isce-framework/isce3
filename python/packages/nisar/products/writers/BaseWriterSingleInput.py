@@ -331,7 +331,7 @@ def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
                         continue
 
                     h5_dataset_obj.attrs['units'] = \
-                        np.string_(unit_name)
+                        np.bytes_(unit_name)
 
                     flag_found_units = True
                     break
@@ -419,7 +419,7 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
         elif xml_description and not flag_found_description:
             flag_found_description = True
             h5_dataset_obj.attrs['description'] = \
-                np.string_(xml_description)
+                np.bytes_(xml_description)
 
         # if the XML description is empty, raise a warning
         if not flag_found_description:
@@ -594,11 +594,11 @@ class BaseWriterSingleInput():
             self.cfg['primary_executable']['processing_type']
 
         if processing_type_runconfig == 'PR':
-            processing_type = np.string_('NOMINAL')
+            processing_type = np.bytes_('NOMINAL')
         elif processing_type_runconfig == 'UR':
-            processing_type = np.string_('URGENT')
+            processing_type = np.bytes_('URGENT')
         else:
-            processing_type = np.string_('UNDEFINED')
+            processing_type = np.bytes_('UNDEFINED')
         self.set_value(
             'identification/processingType',
             processing_type,
@@ -640,7 +640,7 @@ class BaseWriterSingleInput():
         # characters
         if ((isinstance(data, np.bytes_) or isinstance(data, np.ndarray))
                 and (data.dtype.char == 'S')):
-            data = np.string_(data)
+            data = np.bytes_(data)
             try:
                 data = data.decode()
             except UnicodeDecodeError:
@@ -660,12 +660,12 @@ class BaseWriterSingleInput():
         if isinstance(data, str):
 
             self.output_hdf5_obj.create_dataset(
-                path_dataset_in_h5, data=np.string_(data))
+                path_dataset_in_h5, data=np.bytes_(data))
             return
 
         if isinstance(data, bool):
             self.output_hdf5_obj.create_dataset(
-                path_dataset_in_h5, data=np.string_(str(data)))
+                path_dataset_in_h5, data=np.bytes_(str(data)))
             return
 
         if (isinstance(data, list) and
@@ -818,7 +818,7 @@ class BaseWriterSingleInput():
         for key, value in annotation_et.items():
             if key == 'app':
                 continue
-            self.output_hdf5_obj.attrs[key] = np.string_(value)
+            self.output_hdf5_obj.attrs[key] = np.bytes_(value)
 
         # iterate over all XML specs parameters
         nodes_et = specs.find('./product/science/nodes')

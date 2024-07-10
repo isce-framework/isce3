@@ -206,46 +206,46 @@ def construct_nisar_hdf5(outh5, ldr):
 
     # scalar
     ident_group.create_dataset('diagnosticModeFlag', data=np.uint8(0))
-    ident_group.create_dataset('isGeocoded', data=np.string_("False"))
-    ident_group.create_dataset('listOfFrequencies', data=np.string_(["A"]))
-    ident_group.create_dataset('missionId', data=np.string_("ALOS-2"))
+    ident_group.create_dataset('isGeocoded', data=np.bytes_("False"))
+    ident_group.create_dataset('listOfFrequencies', data=np.bytes_(["A"]))
+    ident_group.create_dataset('missionId', data=np.bytes_("ALOS-2"))
     if ldr.summary.TimeDirectionIndicatorAlongLine[0] == "A":
         direction = "ascending"
     else:
         direction = "descending"
     ident_group.create_dataset('orbitPassDirection',
-                               data=np.string_(direction))
+                               data=np.bytes_(direction))
     ident_group.create_dataset('processingType',
-                               data=np.string_("repackaging"))
-    ident_group.create_dataset('productType', data=np.string_("RSLC"))
-    ident_group.create_dataset('productVersion', data=np.string_("0.1.0"))
+                               data=np.bytes_("repackaging"))
+    ident_group.create_dataset('productType', data=np.bytes_("RSLC"))
+    ident_group.create_dataset('productVersion', data=np.bytes_("0.1.0"))
     ident_group.create_dataset('absoluteOrbitNumber',
                                data=np.array(0, dtype='u4'))
     ident_group.create_dataset('trackNumber', data=np.array(0, dtype=np.uint8))
     ident_group.create_dataset('frameNumber', data=np.array(0,
                                                             dtype=np.uint16))
-    ident_group.create_dataset("isUrgentObservation", data=np.string_("False"))
+    ident_group.create_dataset("isUrgentObservation", data=np.bytes_("False"))
 
-    ident_group.create_dataset("plannedObservationId", data=np.string_(["0"]))
+    ident_group.create_dataset("plannedObservationId", data=np.bytes_(["0"]))
     # shape = numberOfDatatakes
-    ident_group.create_dataset("plannedDatatakeId", data=np.string_(["0"]))
+    ident_group.create_dataset("plannedDatatakeId", data=np.bytes_(["0"]))
 
     # fields added to spec in 2023
-    ident_group.create_dataset("granuleId", data=np.string_("None"))
-    ident_group.create_dataset("instrumentName", data=np.string_("PALSAR-2"))
-    ident_group.create_dataset("isDithered", data=np.string_("False"))
-    ident_group.create_dataset("isMixedMode", data=np.string_("False"))
+    ident_group.create_dataset("granuleId", data=np.bytes_("None"))
+    ident_group.create_dataset("instrumentName", data=np.bytes_("PALSAR-2"))
+    ident_group.create_dataset("isDithered", data=np.bytes_("False"))
+    ident_group.create_dataset("isMixedMode", data=np.bytes_("False"))
     ident_group.create_dataset("processingCenter",
-                               data=np.string_(
+                               data=np.bytes_(
                                    "JAXA (SLC repackaged at JPL)"))
     ident_group.create_dataset(
         "processingDateTime",
-        data=np.string_(datetime.datetime.now().isoformat()))
-    ident_group.create_dataset("productLevel", data=np.string_("L1"))
+        data=np.bytes_(datetime.datetime.now().isoformat()))
+    ident_group.create_dataset("productLevel", data=np.bytes_("L1"))
     ident_group.create_dataset(
         "productSpecificationVersion",
-        data=np.string_("0.9.0"))
-    ident_group.create_dataset("radarBand", data=np.string_("L"))
+        data=np.bytes_("0.9.0"))
+    ident_group.create_dataset("radarBand", data=np.bytes_("L"))
 
     # Start populating metadata parts
     rslc = lsar_group.create_group('RSLC')
@@ -538,7 +538,7 @@ def populate_hdf5(metadata, outfile, orbit, pol_list, frequency='A'):
 
         # Set global CF conventions attribute
         if frequency == 'A':
-            root_group.attrs['Conventions'] = np.string_('CF-1.7')
+            root_group.attrs['Conventions'] = np.bytes_('CF-1.7')
 
         # Update the calibration information
         update_calibration_information(root_group, metadata, pol_list,
@@ -564,7 +564,7 @@ def update_metadata(fid, metadata, pol_list, frequency='A'):
 
     # Update polarization list
     group['listOfPolarizations'] = np.array(pol_list, dtype='S2')
-    group['listOfPolarizations'].attrs['description'] = np.string_(
+    group['listOfPolarizations'].attrs['description'] = np.bytes_(
         'List of processed polarization layers with frequency ' + frequency)
 
     # Create new slant range array for all pixels
@@ -572,10 +572,10 @@ def update_metadata(fid, metadata, pol_list, frequency='A'):
     R = (metadata['Image Starting Range'] + metadata['Range Spacing per Bin'] *
          np.arange(metadata['SLC width']))
     group['slantRange'] = R
-    group['slantRange'].attrs['description'] = np.string_(
+    group['slantRange'].attrs['description'] = np.bytes_(
         'CF compliant dimension associated with slant range'
     )
-    group['slantRange'].attrs['units'] = np.string_('meters')
+    group['slantRange'].attrs['units'] = np.bytes_('meters')
     group['slantRangeSpacing'][...] = metadata['Range Spacing per Bin']
 
     inc = np.radians(metadata['Scene Center Incidence Angle'])
@@ -624,7 +624,7 @@ def update_metadata(fid, metadata, pol_list, frequency='A'):
             desc = ''
         group['zeroDopplerTime'] = t
         group['zeroDopplerTime'].attrs['description'] = desc
-        group['zeroDopplerTime'].attrs['units'] = np.string_(
+        group['zeroDopplerTime'].attrs['units'] = np.bytes_(
             metadata['ref_epoch_attr'])
         group['zeroDopplerTimeSpacing'] = pri
 
@@ -696,14 +696,14 @@ def update_identification(fid, orbit, metadata):
     stop = metadata['Stop Time of Acquisition']
 
     group.create_dataset('zeroDopplerStartTime',
-                         data=np.string_(start.isoformat()))
+                         data=np.bytes_(start.isoformat()))
 
     group.create_dataset('zeroDopplerEndTime',
-                         data=np.string_(stop.isoformat()))
+                         data=np.bytes_(stop.isoformat()))
 
     # Look direction
     group.create_dataset('lookDirection',
-                         data=np.string_(metadata['Look Direction'].title()))
+                         data=np.bytes_(metadata['Look Direction'].title()))
 
     # Radar grid
     radar_grid = metadata['Radar Grid']
@@ -716,12 +716,12 @@ def update_identification(fid, orbit, metadata):
                                                 dem)
 
     # Allocate bounding polygon in the identification group
-    group.create_dataset('boundingPolygon', data=np.string_(poly))
+    group.create_dataset('boundingPolygon', data=np.bytes_(poly))
     group['boundingPolygon'].attrs['epsg'] = 4326
-    group['boundingPolygon'].attrs['ogr_geometry'] = np.string_('polygon')
+    group['boundingPolygon'].attrs['ogr_geometry'] = np.bytes_('polygon')
 
     for name, desc in ident_descriptions.items():
-        group[name].attrs["description"] = np.string_(desc)
+        group[name].attrs["description"] = np.bytes_(desc)
 
 
 def _create_lut_coordinate_vectors(h5_group, zero_doppler_time_vector,
@@ -748,18 +748,18 @@ def _create_lut_coordinate_vectors(h5_group, zero_doppler_time_vector,
     if 'slantRange' not in h5_group:
         h5_group.create_dataset(
                 'slantRange', data=slantrange_vector)
-        h5_group['slantRange'].attrs['description'] = np.string_(
+        h5_group['slantRange'].attrs['description'] = np.bytes_(
                 'Slant range dimension corresponding to'
                 f' {description} records')
-        h5_group['slantRange'].attrs['units'] = np.string_('meters')
+        h5_group['slantRange'].attrs['units'] = np.bytes_('meters')
 
     if 'zeroDopplerTime' not in h5_group:
         h5_group.create_dataset(
                 'zeroDopplerTime', data=zero_doppler_time_vector)
-        h5_group['zeroDopplerTime'].attrs['description'] = np.string_(
+        h5_group['zeroDopplerTime'].attrs['description'] = np.bytes_(
                 'Zero doppler time dimension corresponding to'
                 f' {description} records')
-        h5_group['zeroDopplerTime'].attrs['units'] = np.string_(time_units)
+        h5_group['zeroDopplerTime'].attrs['units'] = np.bytes_(time_units)
 
 
 def update_calibration_information(fid, metadata, pol_list, frequency):
@@ -816,9 +816,9 @@ def update_calibration_information(fid, metadata, pol_list, frequency):
 
             # Update calibration LUT values
             calibration_group.create_dataset(pol, data=data)
-            calibration_group[pol].attrs['description'] = np.string_(
+            calibration_group[pol].attrs['description'] = np.bytes_(
                 description)
-            calibration_group[pol].attrs['units'] = np.string_('1')
+            calibration_group[pol].attrs['units'] = np.bytes_('1')
 
 
 def update_doppler(fid, metadata, frequency):  # time, position, velocity,
@@ -871,9 +871,9 @@ def update_doppler(fid, metadata, frequency):  # time, position, velocity,
     # Update Doppler values
     doppler_group.create_dataset(
         'dopplerCentroid', data=np.asarray(dop_vals, dtype=np.float64))
-    doppler_group['dopplerCentroid'].attrs['description'] = np.string_(
+    doppler_group['dopplerCentroid'].attrs['description'] = np.bytes_(
         '2D LUT of Doppler Centroid for Frequency ' + frequency)
-    doppler_group['dopplerCentroid'].attrs['units'] = np.string_('Hz')
+    doppler_group['dopplerCentroid'].attrs['units'] = np.bytes_('Hz')
 
 
 if __name__ == "__main__":

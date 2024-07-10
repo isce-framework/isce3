@@ -43,13 +43,13 @@ class RIFGWriter(L1InSARWriter):
         super().add_root_attrs()
 
         # Add additional attributes
-        self.attrs["title"] = np.string_("NISAR L1 RIFG Product")
+        self.attrs["title"] = np.bytes_("NISAR L1 RIFG Product")
         self.attrs["reference_document"] = \
-            np.string_("D-102270 NISAR NASA SDS Product Specification"
+            np.bytes_("D-102270 NISAR NASA SDS Product Specification"
                        " L1 Range Doppler Wrapped Interferogram")
 
         ctype = h5py.h5t.py_create(np.complex64)
-        ctype.commit(self["/"].id, np.string_("complex64"))
+        ctype.commit(self["/"].id, np.bytes_("complex64"))
 
     def add_parameters_to_procinfo_group(self):
         """

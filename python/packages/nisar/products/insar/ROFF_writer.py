@@ -40,9 +40,9 @@ class ROFFWriter(L1InSARWriter):
         """
         super().add_root_attrs()
 
-        self.attrs["title"] = np.string_("NISAR L1 ROFF Product")
+        self.attrs["title"] = np.bytes_("NISAR L1 ROFF Product")
         self.attrs["reference_document"] = \
-            np.string_("D-105009 NISAR NASA SDS"
+            np.bytes_("D-105009 NISAR NASA SDS"
                        " Product Specification L1 Range Doppler Pixel Offsets")
 
     def add_coregistration_to_algo_group(self):
@@ -386,7 +386,7 @@ class ROFFWriter(L1InSARWriter):
             for layer in proc_cfg["offsets_product"]
             if layer.startswith("layer")]
 
-        list_of_layers = np.string_(layers)
+        list_of_layers = np.bytes_(layers)
         freq_group.require_dataset('listOfLayers',
                                     shape=list_of_layers.shape,
                                     dtype=list_of_layers.dtype,
@@ -394,4 +394,4 @@ class ROFFWriter(L1InSARWriter):
 
         freq_group['listOfLayers'].attrs['units'] = Units.unitless
         freq_group['listOfLayers'].attrs['description'] =\
-            np.string_('List of pixel offsets layers')
+            np.bytes_('List of pixel offsets layers')

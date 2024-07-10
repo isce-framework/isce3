@@ -47,7 +47,7 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
 
         self.attrs["title"] = "NISAR L2 GOFF Product"
         self.attrs["reference_document"] = \
-            np.string_("D-105010 NISAR NASA SDS Product Specification"
+            np.bytes_("D-105010 NISAR NASA SDS Product Specification"
                        " L2 Geocoded Pixel Offsets")
 
     def add_algorithms_to_procinfo_group(self):
@@ -69,7 +69,7 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
         for rslc_name in ['reference', 'secondary']:
             rslc = self[self.group_paths.ParametersPath][rslc_name]
             rslc['referenceTerrainHeight'].attrs['description'] = \
-                np.string_("Reference Terrain Height as a function of"
+                np.bytes_("Reference Terrain Height as a function of"
                            f" map coordinates for {rslc_name} RSLC")
             rslc['referenceTerrainHeight'].attrs['units'] = \
                 Units.meter
@@ -83,7 +83,7 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
 
         proc_cfg = self.cfg["processing"]
         geogrids = proc_cfg["geocode"]["geogrids"]
-        grids_val = np.string_("projection")
+        grids_val = np.bytes_("projection")
 
         # Extract offset layer names for later processing
         layers = [
@@ -127,13 +127,13 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                     pixeloffsets_pol_layer_group['projection'][...] = \
                         pixeloffsets_pol_layer_group['projection'][()].astype(np.uint32)
                     pixeloffsets_pol_layer_group['yCoordinateSpacing'].attrs['long_name'] = \
-                        np.string_("Y coordinates spacing")
+                        np.bytes_("Y coordinates spacing")
                     pixeloffsets_pol_layer_group['xCoordinateSpacing'].attrs['long_name'] = \
-                        np.string_("X coordinates spacing")
+                        np.bytes_("X coordinates spacing")
                     pixeloffsets_pol_layer_group['xCoordinates'].attrs['long_name'] = \
-                        np.string_("X coordinates of projection")
+                        np.bytes_("X coordinates of projection")
                     pixeloffsets_pol_layer_group['yCoordinates'].attrs['long_name'] = \
-                        np.string_("Y coordinates of projection")
+                        np.bytes_("Y coordinates of projection")
 
                     #pixeloffsets dataset parameters as tuples in the following
                     #order: dataset name, description, and units

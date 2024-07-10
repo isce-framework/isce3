@@ -48,13 +48,13 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         """
         InSARBaseWriter.add_root_attrs(self)
 
-        self.attrs["title"] = np.string_("NISAR L2 GUNW Product")
+        self.attrs["title"] = np.bytes_("NISAR L2 GUNW Product")
         self.attrs["reference_document"] = \
-            np.string_("D-102272 NISAR NASA SDS Product Specification"
+            np.bytes_("D-102272 NISAR NASA SDS Product Specification"
                        " L2 Geocoded Unwrapped Interferogram")
 
         ctype = h5py.h5t.py_create(np.complex64)
-        ctype.commit(self["/"].id, np.string_("complex64"))
+        ctype.commit(self["/"].id, np.bytes_("complex64"))
 
     def add_radar_grid_cubes(self):
         """
@@ -125,9 +125,9 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                             **create_dataset_kwargs)
 
                 ds.attrs['_FillValue'] = np.nan
-                ds.attrs['description'] = np.string_(descr)
+                ds.attrs['description'] = np.bytes_(descr)
                 ds.attrs['units'] = Units.radian
-                ds.attrs['grid_mapping'] = np.string_('projection')
+                ds.attrs['grid_mapping'] = np.bytes_('projection')
                 ds.dims[0].attach_scale(zds)
                 ds.dims[1].attach_scale(yds)
                 ds.dims[2].attach_scale(xds)
@@ -170,7 +170,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         for rslc_name in ['reference', 'secondary']:
             rslc = self[self.group_paths.ParametersPath][rslc_name]
             rslc['referenceTerrainHeight'].attrs['description'] = \
-                np.string_("Reference Terrain Height as a function of"
+                np.bytes_("Reference Terrain Height as a function of"
                            f" map coordinates for {rslc_name} RSLC")
             rslc['referenceTerrainHeight'].attrs['units'] = \
                 Units.meter
@@ -185,7 +185,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         geogrids = pcfg["geocode"]["geogrids"]
         wrapped_igram_geogrids = pcfg["geocode"]["wrapped_igram_geogrids"]
 
-        grids_val = np.string_("projection")
+        grids_val = np.bytes_("projection")
 
         # Only add the common fields such as list of polarizations, pixel offsets, and center frequency
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
