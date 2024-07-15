@@ -5,6 +5,36 @@ import numpy as np
 complex32 = np.dtype([('r', np.float16), ('i', np.float16)])
 
 
+def is_complex32(dataset: h5py.Dataset) -> bool:
+    """
+    Check if the input dataset is complex32 (i.e. pairs of 16-bit floats).
+    Parameters
+    ----------
+    dataset : h5py.Dataset
+        The input dataset.
+    Returns
+    -------
+    bool
+        True if the input dataset is complex32; otherwise False.
+    """
+    # h5py 3.8.0 returns a compound datatype when accessing a complex32
+    # dataset's dtype (https://github.com/h5py/h5py/pull/2157). Previous
+    # versions of h5py raise TypeError when attempting to get the dtype. In this
+    # case, we try to infer whether the dataset was complex32 based on the error
+    # message.
+    try:
+        dtype = dataset.dtype
+    except TypeError as e:
+        regex = re.compile(r"^data type '([<>|=])?c4' not understood$")
+        errmsg = str(e)
+        if regex.match(errmsg):
+            return True
+        else:
+            raise
+    else:
+        return dtype == complex32
+
+
 def to_complex32(z: np.array):
     zf = np.zeros(z.shape, dtype=complex32)
     zf['r'] = z.real
@@ -60,10 +90,9 @@ def read_complex_dataset(ds: h5py.Dataset, key=np.s_[...]):
     np.ndarray
         Complex array from sliced input HDF5 dataset
     """
-    try:
+    if not is_complex32(ds[key]):
         return ds[key]
-    except TypeError:
-        pass
+
     return read_c4_dataset_as_c8(ds, key=key)
 
 

@@ -6,7 +6,7 @@ import journal
 import pyre
 import re
 
-from isce3.core.types import ComplexFloat16Decoder, complex32
+from isce3.core.types import ComplexFloat16Decoder, is_complex32
 
 from .SLCBase import SLCBase
 
@@ -111,33 +111,3 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
                 raise LookupError(err_str)
 
             return is_complex32(h[slc_path])
-
-
-def is_complex32(dataset: h5py.Dataset) -> bool:
-    """
-    Check if the input dataset is complex32 (i.e. pairs of 16-bit floats).
-    Parameters
-    ----------
-    dataset : h5py.Dataset
-        The input dataset.
-    Returns
-    -------
-    bool
-        True if the input dataset is complex32; otherwise False.
-    """
-    # h5py 3.8.0 returns a compound datatype when accessing a complex32
-    # dataset's dtype (https://github.com/h5py/h5py/pull/2157). Previous
-    # versions of h5py raise TypeError when attempting to get the dtype. In this
-    # case, we try to infer whether the dataset was complex32 based on the error
-    # message.
-    try:
-        dtype = dataset.dtype
-    except TypeError as e:
-        regex = re.compile(r"^data type '([<>|=])?c4' not understood$")
-        errmsg = str(e)
-        if regex.match(errmsg):
-            return True
-        else:
-            raise
-    else:
-        return dtype == complex32
