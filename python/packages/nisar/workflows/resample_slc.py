@@ -12,7 +12,7 @@ import journal
 import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
-from nisar.workflows.helpers import complex_raster_path_from_h5
+from nisar.workflows.helpers import copy_raster
 from nisar.workflows.resample_slc_runconfig import ResampleSlcRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -96,12 +96,11 @@ def run(cfg, resample_type):
             out_dir.mkdir(parents=True, exist_ok=True)
             out_path = out_dir / 'coregistered_secondary.slc'
 
-            # If necessary, perform complex32 to complex64 conversion on input
-            input_as_c32_path = str(out_dir/'secondary.slc')
-            input_raster_path, _ = complex_raster_path_from_h5(
-                slc, freq, pol, input_hdf5, resamp_args['lines_per_tile'],
-                input_as_c32_path)
-            input_raster = isce3.io.Raster(input_raster_path)
+            # Dump secondary RSLC on disk
+            raster_path = str(out_dir/'secondary.slc')
+            copy_raster(input_hdf5, freq, pol, 1000,
+                        raster_path, file_type='ENVI')
+            input_raster = isce3.io.Raster(raster_path)
 
             # Create output raster
             resamp_slc = isce3.io.Raster(str(out_path), rg_off.width,
