@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
@@ -116,12 +117,18 @@ NFFT2Params parse_nfft2_params(const py::dict& params)
 
 void addbinding(py::class_<PolarGrid>& pyPolarGrid)
 {
-    double aztime_start, aztime_end;
-    isce3::core::Vec3 origin, axis;
-    isce3::core::Linspace<double> range;
-    isce3::core::Linspace<double> sin_squint;
+    using isce3::core::Vec3;
+    using isce3::core::Linspace;
 
     pyPolarGrid
+        .def(py::init<double, double, Vec3, Vec3, Linspace<double>, Linspace<double>>(),
+            py::arg("aztime_start"),
+            py::arg("aztime_end"),
+            py::arg("origin"),
+            py::arg("axis"),
+            py::arg("range"),
+            py::arg("sin_squint")
+        )
         .def_readonly("aztime_start", &PolarGrid::aztime_start)
         .def_readonly("aztime_end", &PolarGrid::aztime_end)
         .def_readonly("origin", &PolarGrid::origin)
@@ -269,6 +276,7 @@ void addbinding_backproject(py::module& m)
             auto out = py::array_t<std::complex<float>>(
                 {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
                 outp.release());
+            bytes = sizeof(float);
             auto height = py::array_t<float>(
                 {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
                 heightp.release());
