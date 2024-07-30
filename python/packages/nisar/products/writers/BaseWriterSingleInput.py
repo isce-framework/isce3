@@ -388,8 +388,10 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
 
         if (not existing_h5_description and
                 'description' in h5_dataset_obj.attrs.keys()):
-            existing_h5_description = h5_dataset_obj.attrs[
-                'description'].tobytes().decode()
+            existing_h5_description = h5_dataset_obj.attrs['description']
+            if not isinstance(existing_h5_description, str):
+                existing_h5_description = \
+                    existing_h5_description.tobytes().decode()
 
         # update the metadata field description from XML description
         xml_description = annotation_et.text
