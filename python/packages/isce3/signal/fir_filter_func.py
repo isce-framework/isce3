@@ -78,7 +78,7 @@ def cheby_equi_ripple_filter(samprate, bandwidth, rolloff=1.2, ripple=0.1,
     coeffs = spsg.remez(len_flt, 0.5 / samprate
                         * np.array([0, bandwidth, fstop, samprate]),
                         np.array([1.0, 0.0]), np.array([1, weight_fact]),
-                        Hz=1, type='bandpass', maxiter=50)
+                        fs=1, type='bandpass', maxiter=50)
 
     # up/down conversion
     if abs(centerfreq) > 0.0:
