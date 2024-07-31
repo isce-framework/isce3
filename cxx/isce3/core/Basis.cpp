@@ -20,7 +20,8 @@ Vec3 velocityECF(const Vec3& position, const Vec3& velocityECI)
 
 Basis geodeticTCN(const Vec3& x, const Vec3& v, const Ellipsoid& ellipsoid)
 {
-    const Vec3 temp(x[0], x[1], x[2] / (1 - ellipsoid.e2()));
+    const auto lonLatHgt = ellipsoid.xyzToLonLat(x);
+    const auto temp = ellipsoid.nVector(lonLatHgt[0], lonLatHgt[1]);
     return Basis(temp, v);
 }
 
