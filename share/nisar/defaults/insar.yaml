@@ -644,116 +644,65 @@ runconfig:
                     # Filepath to power raster (reference RSLC)
                     power:
                 snaphu:
-                    # Effective number of looks used in input correlation data
+                    # Effective number of looks used to form the sample coherence.
+                    # It provides an estimate of the number of statistically independent
+                    # samples averaged in the multilooked data, taking into account spatial
+                    # correlation due to filtering/oversampling. If not specified, nlooks (n_e) is
+                    # estimated as:
+                    # $$
+                    # n_e = k_r k_a \frac{d_r d_a}{\rho_r \rho_a}
+                    # $$
+                    # where $k_r$ and $k_a$ are the number of looks in range and azimuth,
+                    # $d_r$ and $d_a$ are the (single-look) sample spacing in range and
+                    # azimuth, and $\rho_r$ and $\rho_a$ are the range and azimuth resolution.
                     nlooks:
-                    # Statistical cost mode
+                    # Statistical cost mode. One of {smooth, defo}
                     cost_mode: smooth
-                    # File path to binary mask of valid pixels (GDT_Byte). Pixels labelled
-                    # with 0 will be masked out in the wrapped interferogram.
+                    # File path to a binary mask of valid pixels. Zeros in this raster indicate
+                    # interferogram pixels that should be masked out. If provided, it must have
+                    # the same dimensions as the input interferogram and boolean or 8-bit integer datatype
                     mask:
-                    # Coarse unwrapped phase estimates to guide SNAPHU. Must be same shape
-                    # as input wrapped interferogram.
-                    unwrapped_phase_estimate:
                     # Algorithm used for initialize unwrapped phase gradients.
                     # Supported algorithms: MST (Minimum Spanning Tree); MCF
                     # (Minimum Cost Flow)
                     initialization_method: mcf
-                    # If True, prints verbose outputs
-                    verbose: False
-                    # If True, dumps intermediate data to 'scratchdir' for debugging
-                    debug: False
-                    # Configuration parameters for the specified cost mode.
-                    cost_mode_parameters:
-                        # Deformation cost parameter options
-                        deformation_parameters:
-                            # Factor applied to range discontinuity probability density to get
-                            # corresponding value for azimuth
-                            azdz_factor: 1.0
-                            # Max phase discontinuity in units of cycle of 2*pi. Set to 0 if not abrupt
-                            # phase discontinuity are expected
-                            defo_max: 1.2
-                            # Phase variance in cycle^2 reflecting uncertainty in measurement of
-                            # actual statistical correlation
-                            sigsq_corr: 0.05
-                            # Ratio of phase discontinuity probability density to peak probability
-                            # density expected for discontinuity-possible pixel differences. 1: zero
-                            # cost for discontinuity, o: infinite cost
-                            defo_const: 0.9
-                            # Factor for slope variance for non-layover to get falloff of probability
-                            # density after the upper layover slope limit has been exceeded
-                            lay_falloff_const: 2.0
-                            # Number sliding window pixel to average the wrapped phase gradient to get mean
-                            # non-layover slope in the direction parallel to the examined phase difference
-                            kpar_dpsi: 7
-                            # Same as above but in the perpendicular direction
-                            kperp_dpsi: 7
-                        # Smooth cost parameter options
-                        smooth_parameters:
-                            # Number sliding window pixel to average the wrapped phase gradient to get mean
-                            # non-layover slope in the direction parallel to the examined phase difference
-                            kpar_dpsi: 7
-                            # Same as above but in the perpendicular direction
-                            kperp_dpsi: 7
-                        # PNorm cost parameter options
-                        pnorm_parameters:
-                            # Lp norm non-negative exponent
-                            p: 0.0
-                            # Flag to activate bidirectional Lp costs. If True, scalar weight of a Lp arc
-                            # may be different depending on the direction of net flow arc. If False, scalar
-                            # weight is the same regardless arc direction
-                            bidir: True
-                    # Configuration parameters used by the network initialization and nonlinear
-                    # network flow solver algorithms
-                    solver_parameters:
-                        # Maximum flow increment
-                        max_flow_inc: 4
-                        # Maximum flow in initialization. If 0, max flow is computed automatically.
-                        # To disable, set to large value not overflowing long integer data
-                        init_max_flow: 9999
-                        # Constant to add to max flow expected from statistical cost functions for automatically
-                        # determining initial maximum flow
-                        arc_max_flow_const: 3
-                        # Threshold precision for iterative numerical calculation
-                        threshold: 0.001
-                        # Max cost for scalar MST cost and to estimate number of buckets
-                        # for solver routine
-                        max_cost: 1000.0
-                        # Cost scaling factor applied to floating-point costs before integer
-                        # cost quantization
-                        cost_scale: 100.0
-                        # Integer spacing representing one unit of flow (one phase cycle)
-                        # when storing costs as short integers
-                        n_cycle: 200
-                        # Fraction of total number of nodes to add in each tree expansion phase of
-                        # the solver algorithm.
-                        max_new_node_const: 0.0008
-                        # Number of cycles to call to the solver with a specific flow increment delta
-                        # and still consider that increment done. Ideally zero, but scaling for different
-                        # deltas may leave some negative cycles not critically affecting the solution.
-                        # If None, automatically determined from interferogram shape
-                        max_n_flow_cycles:
-                        # Fraction of the number of pixels to use as the maximum number of cycles
-                        # allowed for a specific flow increment if max_n_flow_cycles was None
-                        max_cycle_frac: 0.00001
-                        # Minimum number of connected nodes for unwrappping. If disconnected sets of pixels are
-                        # present, a source is selected for each connected set, if number of nodes in the set
-                        # is greater than n_conn_node_min. Must be nonnegative.
-                        n_conn_node_min: 0
-                        # Number of major iteration between tree pruning operations. Smaller numbers cause
-                        # pruning to occur more frequently
-                        n_major_prune: 2000000000
-                        # Cost threshold for tree pruning. Lower thresholds prune more aggressively
-                        prune_cost_thresh: 2000000000
-                    # Connected components parameters
-                    connected_components_parameters:
-                        # Minimum size of a single connected component, as a fraction of the total
-                        # number of pixels in the tile
-                        min_frac_area: 0.01
-                        # Cost threshold for connected components. Higher threshold gives smaller
-                        # connected components
-                        cost_thresh: 300
-                        # Max number of connected components per tile
-                        max_ncomps: 32
+                    # Minimum size of a single connected component, as a fraction of the total number
+                    # of pixels in the tile.
+                    min_conncomp_frac: 0.01
+                    # The dimensions, in pixels, of the sliding window used for averaging wrapped
+                    # phase gradients to get the mean non-layover slope, in directions parallel and
+                    # perpendicular to the examined phase difference. This parameter corresponds to
+                    # SNAPHU's `KPARDPSI` and `KPERPDPSI` configuration options.
+                    phase_grad_window: [7, 7]
+                    # Number of tiles along the row/column directions. If `ntiles` is (1, 1), then the
+                    # interferogram will be unwrapped as a single tile. Increasing the number of tiles
+                    # may improve runtime and reduce peak memory utilization, but may also introduce
+                    # tile boundary artifacts in the unwrapped result.
+                    ntiles: [1, 1]
+                    # Overlap, in pixels, between neighboring tiles. Increasing overlap may help to
+                    # avoid phase discontinuities between tiles. If `tile_overlap` is a scalar
+                    # integer, the number of overlapping rows and columns will be the same.
+                    tile_overlap: [0, 0]
+                    # Maximum number of child processes to spawn for parallel tile unwrapping. If
+                    # `nproc` is less than 1, use all available processors. Defaults to 1.
+                    nproc: 1
+                    # Cost threshold to use for determining boundaries of reliable regions
+                    # (dimensionless; scaled according to other cost constants). Larger cost threshold
+                    # implies smaller regions -- safer, but more expensive computationally
+                    tile_cost_thresh: 500
+                    # Minimum size, in pixels, of a reliable region in tile mode.
+                    min_region_size: 300
+                    # If True, after unwrapping with multiple tiles, an additional post-processing
+                    # unwrapping step is performed to re-optimize the unwrapped phase using a single
+                    # tile. This option is disregarded when `ntiles` is (1, 1). It supersedes the
+                    # `regrow_conncomps` option -- if both are enabled, only the single-tile
+                    # re-optimization step will be performed in order to avoid redundant computation.
+                    single_tile_reoptimize: True
+                    # If True, the connected component labels will be re-computed using a single tile
+                    # after first unwrapping with multiple tiles. This option is disregarded when
+                    # `ntiles` is (1, 1). It has no effect if `single_tile_reoptimize` was also
+                    #  enabled (since regrowing connected components would be redundant in that case).
+                    regrow_conncomps: True
 
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections

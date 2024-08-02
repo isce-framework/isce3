@@ -210,57 +210,18 @@ phass_options:
 
 snaphu_options:
     nlooks: num(min=1, required=False)
-    cost_mode: enum('defo', 'smooth', 'p-norm', required=False)
-    cost_mode_parameters: include('cost_mode_options', required=False)
+    cost_mode: enum('defo', 'smooth', required=False)
     mask: str(required=False)
-    unwrapped_phase_estimate: str(required=False)
     initialization_method: enum('mst', 'mcf', required=False)
-    solver_parameters: include('solver_options', required=False)
-    connected_components_parameters: include('connected_components_options', required=False)
-    verbose: bool(required=False)
-    debug: bool(required=False)
-
-cost_mode_options:
-    deformation_parameters: include('deformation_cost_options', required=False)
-    smooth_parameters: include('smooth_cost_options', required=False)
-    pnorm_parameters: include('pnorm_cost_options', required=False)
-
-deformation_cost_options:
-    azdz_factor: num(required=False)
-    defo_max: num(min=0, required=False)
-    sigsq_corr: num(min=0, required=False)
-    defo_const: num(min=0, max=1, required=False)
-    lay_falloff_const: num(required=False)
-    kpar_dpsi: int(min=1, required=False)
-    kperp_dpsi: int(min=1, required=False)
-
-smooth_cost_options:
-    kpar_dpsi: int(min=1, required=False)
-    kperp_dpsi: int(min=1, required=False)
-
-pnorm_cost_options:
-    p: num(min=0, required=False)
-    bidir: bool(required=False)
-
-solver_options:
-    max_flow_inc: int(min=0, required=False)
-    init_max_flow: int(min=0, max=9999, required=False)
-    arc_max_flow_const: int(required=False)
-    threshold: num(required=False)
-    max_cost: num(required=False)
-    cost_scale: num(required=False)
-    n_cycle: int(required=False)
-    max_new_node_const: num(required=False)
-    max_n_flow_cycles: num(required=False)
-    max_cycle_frac: num(required=False)
-    n_conn_node_min: int(min=0, required=False)
-    n_major_prune: int(required=False)
-    prune_cost_thresh: int(required=False)
-
-connected_components_options:
-    min_frac_area: num(required=False)
-    cost_thresh: int(required=False)
-    max_ncomps: int(required=False)
+    min_conncomp_frac: num(required=False)
+    phase_grad_window: list(int(min=1), min=2, max=2, required=False)
+    ntiles: list(int(min=0), min=2, max=2, required=False)
+    tile_overlap: list(int(min=4), min=2, max=2, required=False)
+    nproc: int(required=False)
+    tile_cost_thresh: int(min=1, required=False)
+    min_region_size: int(min=1, required=False)
+    single_tile_reoptimize: bool(required=False)
+    regrow_conncomps: bool(required=False)
 
 preprocess_wrapped_phase_options:
     enabled: bool(required=False)
