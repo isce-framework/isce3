@@ -211,6 +211,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     compute_stats_real_data(unw_raster, unw_dataset)
                     # Log attributes for ICU
                     log_unwrap_attributes(icu_obj, info_channel, algorithm)
+                    # Clean connected components raster
+                    del conn_comp_raster
 
                 elif algorithm == "phass":
                     info_channel.log("Unwrapping using PHASS")
@@ -225,6 +227,9 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     # Allocate input/output raster
                     igram_phase_raster = isce3.io.Raster(str(igram_phase_path))
                     corr_raster = isce3.io.Raster(corr_path)
+                    unw_raster = isce3.io.Raster(unw_raster_path, update=True)
+                    conn_comp_raster = isce3.io.Raster(
+                        conn_comp_raster_path, update=True)
 
                     # Check if it is required to unwrap with power raster
                     if phass_cfg.get("power") is not None:
@@ -245,6 +250,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     compute_stats_real_data(unw_raster, unw_dataset)
                     # Log attributes for phass
                     log_unwrap_attributes(phass_obj, info_channel, algorithm)
+                    # Clean connected components raster
+                    del conn_comp_raster
                 elif algorithm == "snaphu":
                     info_channel.log("Unwrapping with SNAPHU")
 
@@ -290,10 +297,14 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     # Compute statistics (stats module supports isce3.io.Raster)
                     unw_raster = isce3.io.Raster(unw_raster_path)
                     compute_stats_real_data(unw_raster, unw_dataset)
-                    del unw_raster
+
                 else:
                     err_str = f"{algorithm} is an invalid unwrapping algorithm"
                     error_channel.log(err_str)
+
+                # Clean up unwrapped phase raster
+                del unw_raster
+                
                 # Allocate coherence in RUNW. If no further multilooking, the coherence
                 # is copied from RIFG
                 datasets = ['coherenceMagnitude']
@@ -433,7 +444,7 @@ def set_phass_attributes(cfg: dict):
     """
     unwrap = isce3.unwrap.Phass()
 
-    unwrap.corr_incr_thr = cfg["correlation_threshold_increments"]
+    unwrap.correlation_threshold = cfg["correlation_threshold_increments"]
     unwrap.good_correlation = cfg["good_correlation"]
     unwrap.min_pixels_region = cfg["min_unwrap_area"]
 
