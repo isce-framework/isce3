@@ -177,6 +177,7 @@ class PolChannelSet(set):
         - All entries for a given freq_id have a common band (e.g., can't have
           20 MHz and 40 MHz both labeled freq_id=A).
         - Re-label freq_id in cases where one band overlaps two others.
+        - Invalid bands (bw=0) are excluded.
 
         Raises UnsupportedModeIntersection if constraints can't be satisfied.
         """
@@ -184,7 +185,8 @@ class PolChannelSet(set):
         d = defaultdict(list)
         for chan in self:
             key = (chan.freq_id, chan.pol)
-            d[key].append(chan)
+            if chan.band.isvalid:
+                d[key].append(chan)
         # Modes are designed so that bands don't overlap except in 80 MHz case.
         # Handle that by assigning the upper overlap to freq_id "B", and verify
         # that there's not an unanticipated scenario.

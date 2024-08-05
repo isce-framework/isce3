@@ -1825,8 +1825,7 @@ def focus(runconfig, runconfig_path=""):
                 nbins = math.ceil(span / spacing) + 1
                 pat_ranges = isce3.core.Linspace(rc_grid.slant_ranges[0], spacing, nbins)
                 patterns = antpat.form_pattern(
-                    ti, pat_ranges, nearest=not uniform_pri,
-                    tx_pols=[pol[0]], rx_pols=[pol[1]])
+                    ti, pat_ranges, nearest=not uniform_pri, txrx_pols=[pol])
 
             # And do radiometric corrections at the same time.
             for pulse in range(0, rc_grid.shape[0], na):
