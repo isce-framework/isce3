@@ -6,6 +6,7 @@ import os
 import pathlib
 from collections import defaultdict
 from dataclasses import dataclass
+import json
 
 import h5py
 import isce3
@@ -17,6 +18,30 @@ from nisar.workflows.get_product_geometry import \
     get_geolocation_grid as compute_geogrid_geometry
 from osgeo import gdal
 
+
+class JsonNumpyEncoder(json.JSONEncoder):
+    """
+    A thin wrapper around JSONEncoder w/ augmented default method to support
+    various numpy array and complex data types
+    """
+
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+
+        elif isinstance(obj, np.floating):
+            return float(obj)
+
+        elif isinstance(obj, (complex, np.complexfloating)):
+            return {'real': obj.real, 'imag': obj.imag}
+
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+
+        return super().default(obj)
 
 
 def deep_update(original, update, flag_none_is_valid=True):

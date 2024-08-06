@@ -31,6 +31,7 @@ nisar/cal/faraday_rotation_angle_slc.py
 nisar/cal/pol_channel_imbalance_slc.py
 nisar/mixed_mode/logic.py
 nisar/mixed_mode/processing.py
+nisar/noise/noise_estimation_from_raw.py
 nisar/pointing/doppler_lut_from_raw.py
 #nisar/pointing/el_null_range_from_raw_ant.py
 nisar/products/readers/antenna_parser.py

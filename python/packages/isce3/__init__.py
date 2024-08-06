@@ -17,6 +17,7 @@ from . import image
 from . import io
 from . import matchtemplate
 from . import math
+from . import noise
 from . import polsar
 from . import product
 from . import signal

@@ -1,127 +1,49 @@
-import iscetest
-import numpy as np
-import numpy.testing as npt
 import os
-from nisar.workflows.noise_estimator import extract_cal_lines, noise_est_avg, noise_est_evd
+import argparse
 
-def get_test_file():
-    raw_data_file = os.path.join(iscetest.data, "bf", "REE_L0B_ECHO_DATA_NOISE_EST.h5")
+import pytest
 
-    return raw_data_file
+from nisar.workflows.noise_estimator import run_noise_estimator
+import iscetest
 
-def read_cal_lines():
-    freq_group = 'A'
-    pols = 'HH'
-    raw_data_file = get_test_file()
 
-    raw_cal_lines = extract_cal_lines(raw_data_file, freq_group, pols)
+@pytest.mark.parametrize(
+    "algorithm,num_rng_block,cpi,perc_invalid_rngblk,"
+    "plot,no_diff,no_median_ev,exclude_first_last,diff_method",
+    [
+        ('MVE', None, 3, 5, False, False, False, True, 'mean'),
+        ('MVE', None, 3, 5, False, False, False, False, 'diff'),
+        ('MVE', 50, 3, 20, True, False, False, False, 'single'),
+        ('MEE', None, 4, 5, False, True, True, True, 'single'),
+        ('MEE', 50, None, 20, True, False, False, False, 'single'),
+    ]
+)
+def test_noise_estimator(algorithm, num_rng_block,
+                         cpi, perc_invalid_rngblk,
+                         plot, no_diff, no_median_ev,
+                         exclude_first_last, diff_method):
+    # sub directory for all test files under "isce3/tests/data"
+    sub_dir = 'bf'
+    # sample single-pol single-band L0B file (noise-only)
+    l0b_name = 'REE_L0B_ECHO_DATA_NOISE_EST.h5'
 
-    return raw_cal_lines
+    # l0b filepath
+    l0b_file = os.path.join(iscetest.data, sub_dir, l0b_name)
 
-def test_noise_avg_estimate_entire_rng_line():
-    noise_est_bench = 41.82
-    noise_est_margin = 0.1
-    raw_cal_lines = read_cal_lines()
-    noise_pwr_beam = noise_est_avg(raw_cal_lines)
-    
-    noise_est_error = noise_pwr_beam - noise_est_bench
-
-    npt.assert_array_less(
-        noise_est_error,
-        noise_est_margin,
-        "Noise power estimate error is larger than error margin",
+    # form the input args
+    args = argparse.Namespace(
+        l0b_file=l0b_file,
+        algorithm=algorithm,
+        num_rng_block=num_rng_block,
+        cpi=cpi,
+        pct_invalid_rngblk=perc_invalid_rngblk,
+        plot=plot,
+        output_path='.',
+        json_file='noise_power_est_info.json',
+        diff_quad=False,
+        no_diff=no_diff,
+        no_median_ev=no_median_ev,
+        exclude_first_last=exclude_first_last,
+        diff_method=diff_method
     )
-
-    return noise_pwr_beam
-
-def test_noise_avg_estimate_single_beam():
-    noise_est_bench = 35.15
-    noise_est_margin = 0.5
-    rng_start = [2000]
-    rng_stop = [4000]
-    raw_cal_lines = read_cal_lines()
-    noise_pwr_beam = noise_est_avg(raw_cal_lines, rng_start, rng_stop)
-    
-    noise_est_error = noise_pwr_beam - noise_est_bench
-
-    npt.assert_array_less(
-        noise_est_error,
-        noise_est_margin,
-        "Noise power estimate error is larger than error margin",
-    )
-
-    return noise_pwr_beam
-
-def test_noise_avg_estimate_multiple_beams():
-    noise_est_bench = 35.15
-    noise_est_margin = 0.5
-    rng_start = [2000, 4000, 8000, 10000, 14000, 20000, 25000]
-    rng_stop = [4000, 6000, 10000, 14000, 20000, 25000, 28000]
-    raw_cal_lines = read_cal_lines()
-    noise_pwr_beam = noise_est_avg(raw_cal_lines, rng_start, rng_stop)
-    
-    noise_est_error = noise_pwr_beam - noise_est_bench
-
-    npt.assert_array_less(
-        noise_est_error,
-        noise_est_margin,
-        "Noise power estimate error is larger than error margin",
-    )
-
-    return noise_pwr_beam
-
-def test_noise_evd_estimate_entire_rng_line():
-    noise_est_bench = 35.15
-    noise_est_margin = 0.5
-    cpi = 2
-    raw_cal_lines = read_cal_lines()
-    noise_pwr_beam = noise_est_evd(raw_cal_lines, cpi)
-    
-    noise_est_error = noise_pwr_beam - noise_est_bench
-
-    npt.assert_array_less(
-        noise_est_error,
-        noise_est_margin,
-        "Noise power estimate error is larger than error margin",
-    )
-
-    return noise_pwr_beam
-
-def test_noise_evd_estimate_single_beam():
-    noise_est_bench = 35.15
-    noise_est_margin = 0.5
-    cpi = 2
-    rng_start = [2000]
-    rng_stop = [4000]
-    raw_cal_lines = read_cal_lines()
-    noise_pwr_beam = noise_est_evd(raw_cal_lines, cpi, rng_start, rng_stop)
-    
-    noise_est_error = noise_pwr_beam - noise_est_bench
-
-    npt.assert_array_less(
-        noise_est_error,
-        noise_est_margin,
-        "Noise power estimate error is larger than error margin",
-    )
-
-    return noise_pwr_beam
-
-def test_noise_evd_estimate_multiple_beams():
-    noise_est_bench = 35.15
-    noise_est_margin = 0.5
-    cpi = 8
-    rng_start = [2000, 4000, 8000, 10000, 14000, 20000, 25000]
-    rng_stop = [4000, 6000, 10000, 14000, 20000, 25000, 28000]
-    raw_cal_lines = read_cal_lines()
-    noise_pwr_beam = noise_est_evd(raw_cal_lines, cpi, rng_start, rng_stop)
-    
-    noise_est_error = noise_pwr_beam - noise_est_bench
-
-    npt.assert_array_less(
-        noise_est_error,
-        noise_est_margin,
-        "Noise power estimate error is larger than error margin",
-    )
-
-    return noise_pwr_beam
-
+    run_noise_estimator(args)
