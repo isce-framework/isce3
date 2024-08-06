@@ -7,8 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from isce3.noise import noise_pow_min_var_est, noise_pow_min_eigval_est
-from nisar.antenna import get_calib_range_line_idx, PolType
-from nisar.antenna.pattern import pols_type_from_raw
+from nisar.antenna import get_calib_range_line_idx
 from nisar.log import set_logger
 
 
@@ -276,12 +275,8 @@ def est_noise_power_from_raw(
 
     # parse all polarizations
     frq_pol = raw.polarizations
-
-    # get polarization type
-    pol_type, is_ssp, tx_pols, rx_pols, freq = pols_type_from_raw(raw)
-    logger.info(f'Polarization type -> {pol_type.name}')
-    logger.info(f'Split spectrum -> {is_ssp}')
-
+    # the very first frequency band
+    freq = sorted(raw.frequencies)[0]
     is_dither = raw.isDithered(freq)
     logger.info(f'PRF dithering -> {is_dither}')
 
@@ -318,7 +313,7 @@ def est_noise_power_from_raw(
     # loop over freq bands
     for freq_band in frq_pol:
         # check if it is QP and product differentiation is set to True
-        if pol_type == PolType.quad and dif_quad:
+        if dif_quad and _is_quad_pol(frq_pol[freq_band]):
             logger.info('The difference of co-pol and cx-pol with'
                         ' the same RX pol will be used in Noise est!')
             # let's combine datasets with the same RX Pol
@@ -326,11 +321,12 @@ def est_noise_power_from_raw(
             # removing undesired deterministic signals
             # repeated almost equally in both products.
             # Thus, simply loop over RX pols per band!
-            for rx_pol in rx_pols:
-                txrx_pols = [tx_pol + rx_pol for tx_pol in tx_pols]
+
+            for rx_pol in ('H', 'V'):
+                txrx_pols = [tx_pol + rx_pol for tx_pol in ('H', 'V')]
                 logger.info(
-                    f'Processing {pol_type.name} frequency band'
-                    f' {freq_band} and Rx Pol {rx_pol} ...'
+                    'Processing TX co-pol and cx-pol jointly for frequency '
+                    f'band {freq_band} and Rx Pol {rx_pol} ...'
                 )
                 # parse two noise datasets
                 dset_noise1, idx_rgl_ns = extract_noise_only_lines(
@@ -349,7 +345,7 @@ def est_noise_power_from_raw(
                     idx_rgl_ns = idx_rgl_ns[1:-1]
                 # get noise product
                 ns_prod = _noise_product_rng_blocks(
-                    raw, dset_noise, idx_rgl_ns, freq_band, txrx_pols[0],
+                    raw, dset_noise, idx_rgl_ns, freq_band, 2 * rx_pol,
                     is_dither, algorithm, cpi, num_rng_block, 0.5, diff,
                     diff_method, median_ev, remove_mean,
                     perc_invalid_rngblk, logger
@@ -359,8 +355,8 @@ def est_noise_power_from_raw(
         else:  # other pol types than QP
             for txrx_pol in frq_pol[freq_band]:
                 logger.info(
-                    f'Processing {pol_type.name} frequency band'
-                    f'  {freq_band} and Pol {txrx_pol} ...'
+                    'Processing individually frequency band '
+                    f'{freq_band} and Pol {txrx_pol} ...'
                 )
                 # parse one noise dataset
                 dset_noise, idx_rgl_ns = extract_noise_only_lines(
@@ -386,6 +382,24 @@ def est_noise_power_from_raw(
 def _pow2db(p: float) -> float:
     """Linear power to dB"""
     return 10 * np.log10(p)
+
+
+def _is_quad_pol(txrx_pols):
+    """
+    Whether the list of two-char TxRx Pols represents linear quad
+    polarization or not.
+
+    Parameters
+    ----------
+    txrx_pols : List of str
+        List of TxRx polarizations
+
+    Returns
+    -------
+    bool :
+        True only if the pol list represents linear quad pol.
+    """
+    return set(txrx_pols) == {'HH', 'HV', 'VH', 'VV'}
 
 
 def _range_slice_gen(n_rgb, n_blk, min_rgbs=RGB_MIN_NOISE):
