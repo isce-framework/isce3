@@ -862,6 +862,27 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
+            'parameters/referenceTerrainHeight',
+            '{PRODUCT}/metadata/processingInformation/parameters/'
+            'referenceTerrainHeight',
+            skip_if_not_present=True)
+
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingInformation/'
+            'parameters/zeroDopplerTime',
+            '{PRODUCT}/metadata/processingInformation/parameters/'
+            'zeroDopplerTime',
+            skip_if_not_present=True)
+
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingInformation/'
+            'parameters/slantRange',
+            '{PRODUCT}/metadata/processingInformation/parameters/'
+            'slantRange',
+            skip_if_not_present=True)
+
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingInformation/'
             'algorithms/rfiDetection',
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'rfiDetection',
