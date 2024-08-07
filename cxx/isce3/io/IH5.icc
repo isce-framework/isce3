@@ -9,7 +9,6 @@ using namespace H5;
 using DT = DataType;
 using PT = PredType;
 using namespace isce3::core;
-using namespace isce3::io;
 
 inline DT getH5StrType(size_t strlen) {
     // HDF5 doesn't seem to support zero-length strings.

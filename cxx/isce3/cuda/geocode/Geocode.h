@@ -112,7 +112,7 @@ public:
             const std::vector<isce3::core::dataInterpMethod>& interp_methods,
             const std::vector<GDALDataType>& raster_datatypes,
             const std::vector<double>& invalid_values,
-            Raster& dem_raster,
+            isce3::io::Raster& dem_raster,
             const isce3::core::LUT2d<double>& hostNativeDoppler = {},
             const isce3::core::LUT2d<double>& hostAzTimeCorrection = {},
             const isce3::core::LUT2d<double>& hostSRangeCorrection = {},
@@ -211,7 +211,7 @@ private:
      *                                  portions of a swath
      */
     void setBlockRdrCoordGrid(const size_t block_number,
-            Raster& dem_raster,
+            isce3::io::Raster& dem_raster,
             const isce3::core::dataInterpMethod dem_interp_method,
             const isce3::cuda::container::RadarGeometry& dev_rdr_geom,
             const isce3::geometry::detail::Geo2RdrParams geo2rdr_params,
