@@ -163,7 +163,8 @@ def save_dataset(ds_filename, h5py_obj, root_path,
                  fill_value=None,
                  valid_min=None,
                  valid_max=None,
-                 compute_stats=True):
+                 compute_stats=True,
+                 hdf5_data_type=None):
     '''
     Write a temporary multi-band raster file as an output HDF5 file
     or a set of single-band files.
@@ -247,7 +248,9 @@ def save_dataset(ds_filename, h5py_obj, root_path,
         Value to populate the HDF5 dataset attribute "valid_max"
     compute_stats: bool, optional
         Flag that indicates if statistics should be compute for the
-        raster layer. Defaults to True.
+        raster layer. Defaults to True
+    hdf5_data_type: Union[h5py.h5t.TypeCompoundID, numpy.dtype], optional
+        Data type of the output H5 datasets
     '''
 
     raster = isce3.io.Raster(ds_filename)
@@ -277,7 +280,8 @@ def save_dataset(ds_filename, h5py_obj, root_path,
                           fill_value=fill_value,
                           valid_min=valid_min,
                           valid_max=valid_max,
-                          compute_stats=compute_stats)
+                          compute_stats=compute_stats,
+                          hdf5_data_type=hdf5_data_type)
 
     else:
         save_raster(ds_filename, output_ds_name,
@@ -310,7 +314,8 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
                       fill_value=None,
                       valid_min=None,
                       valid_max=None,
-                      compute_stats=True):
+                      compute_stats=True,
+                      hdf5_data_type=None):
     '''
     Write a raster files as a set of HDF5 datasets
 
@@ -371,7 +376,9 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         Value to populate the HDF5 dataset attribute "valid_max"
     compute_stats: bool, optional
         Flag that indicates if statistics should be compute for the
-        raster layer. Defaults to True.
+        raster layer. Defaults to True
+    hdf5_data_type: Union[h5py.h5t.TypeCompoundID, numpy.dtype], optional
+        Data type of the output H5 datasets
     '''
 
     gdal_ds = gdal.Open(ds_filename, gdal.GA_ReadOnly)
@@ -442,9 +449,14 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
 
         h5_ds = f'{root_path}/{output_ds_name_band}'
 
+        if hdf5_data_type is not None:
+            band_data_type = hdf5_data_type
+        else:
+            band_data_type = data.dtype
+
         dset = h5py_obj.require_dataset(h5_ds, data=data,
                                         shape=data.shape,
-                                        dtype=data.dtype,
+                                        dtype=band_data_type,
                                         **create_dataset_kwargs)
 
         dset.dims[0].attach_scale(yds)

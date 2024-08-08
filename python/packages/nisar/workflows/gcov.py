@@ -482,6 +482,10 @@ def _run(cfg, raster_scratch_dir):
     proj = isce3.core.make_projection(epsg)
     ellipsoid = proj.ellipsoid
 
+    # the variable `complex_type` will hold the complex data type
+    # to be used for off-diagonal terms (if full covariance GCOV)
+    complex_type = None
+
     for frequency, input_pol_list in freq_pols.items():
 
         # do no processing if no polarizations specified for current frequency
@@ -940,12 +944,23 @@ def _run(cfg, raster_scratch_dir):
                 _save_list_cov_terms(cov_elements_list + off_diag_terms_list,
                                      freq_group)
 
+                # if the complex data type has not been defined yet,
+                # define it. This is required to open the H5 dataset
+                # using the netCDF driver
+                if complex_type is None:
+                    complex_type = h5py.h5t.py_create(np.complex64)
+                    complex_type.commit(hdf5_obj['/'].id,
+                                        np.bytes_('complex64'))
+                else:
+                    complex_type = hdf5_obj['/complex64']
+
                 save_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                              yds, xds, off_diag_terms_list,
                              long_name=output_radiometry_str,
                              units='1',
                              valid_min=clip_min,
                              valid_max=clip_max,
+                             hdf5_data_type=complex_type,
                              **output_gcov_terms_kwargs)
 
             t_freq_elapsed = time.time() - t_freq
