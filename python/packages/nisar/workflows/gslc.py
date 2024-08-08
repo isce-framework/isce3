@@ -141,6 +141,9 @@ def run(cfg):
             rslc_datasets = []
             gslc_datasets = []
             for polarization in pol_list:
+                # check the datatype of RSLC
+                is_complex32 = slc.is_dataset_complex32(freq, polarization)
+
                 # path and dataset to rdr SLC data in HDF5
                 rslc_ds_path = slc.slcPath(freq, polarization)
                 rslc_datasets.append(src_h5[rslc_ds_path])
@@ -169,8 +172,11 @@ def run(cfg):
                 rslc_data_blks = []
                 for rslc_dataset in rslc_datasets:
                     # extract RSLC data block/array
-                    rslc_data_blks.append(
-                        read_c4_dataset_as_c8(rslc_dataset, rdr_blk_slice))
+                    if is_complex32:
+                        rslc_data_blks.append(
+                            read_c4_dataset_as_c8(rslc_dataset, rdr_blk_slice))
+                    else:
+                        rslc_data_blks.append(rslc_dataset[rdr_blk_slice])
 
                     # prepare zero'd GSLC data block/array
                     gslc_data_blks.append(
