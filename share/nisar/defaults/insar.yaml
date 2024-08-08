@@ -324,8 +324,8 @@ runconfig:
                 # Number of lines and columns per tile to resample in batch.
                 # If columns_per_tile is 0, the tiles will span across all columns of
                 # the raster.
-                lines_per_tile: 100
-                columns_per_tile: 0
+                lines_per_tile: 1000
+                columns_per_tile: 1000
 
             dense_offsets:
                 # Flag to enable/disable dense offsets estimation

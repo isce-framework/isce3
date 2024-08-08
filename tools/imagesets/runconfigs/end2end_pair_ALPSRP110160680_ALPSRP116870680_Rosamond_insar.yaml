@@ -99,6 +99,7 @@ runconfig:
 
             coarse_resample:
                 lines_per_tile: 1000
+                columns_per_tile: 1000
 
             dense_offsets:
                 enabled: False
