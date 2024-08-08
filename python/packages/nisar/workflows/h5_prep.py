@@ -695,7 +695,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                                                dtype=np.float64, data=dx)
         xds_spacing.attrs["description"] = np.bytes_(descr)
         xds_spacing.attrs["units"] = np.bytes_(x_coord_units)
-        xds_spacing.attrs["long_name"] = np.bytes_("x coordinate spacing")
+        xds_spacing.attrs["long_name"] = np.bytes_("X coordinates spacing")
 
         # yCoordinateSpacing
         descr = (f'Nominal spacing in {y_coord_units}'
@@ -706,7 +706,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                                                dtype=np.float64, data=dy)
         yds_spacing.attrs["description"] = np.bytes_(descr)
         yds_spacing.attrs["units"] = np.bytes_(y_coord_units)
-        yds_spacing.attrs["long_name"] = np.bytes_("y coordinates spacing")
+        yds_spacing.attrs["long_name"] = np.bytes_("Y coordinates spacing")
 
     # xCoordinates
     descr = 'X coordinates in specified projection'
@@ -718,7 +718,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     xds.attrs['standard_name'] = x_standard_name
     xds.attrs["description"] = np.bytes_(descr)
     xds.attrs["units"] = np.bytes_(x_coord_units)
-    xds.attrs["long_name"] = np.bytes_("x coordinate")
+    xds.attrs["long_name"] = np.bytes_("X coordinates of projection")
 
     # yCoordinates
     descr = 'Y coordinates in specified projection'
@@ -732,7 +732,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     yds.attrs['standard_name'] = y_standard_name
     yds.attrs["description"] = np.bytes_(descr)
     yds.attrs["units"] = np.bytes_(y_coord_units)
-    yds.attrs["long_name"] = np.bytes_("y coordinate")
+    yds.attrs["long_name"] = np.bytes_("Y coordinates of projection")
 
     coordinates_list = [xds, yds]
 
@@ -764,7 +764,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     # Create a new single int dataset for projections
     projds = hdf5_obj.require_dataset(projection_ds_name,
                                       shape=(),
-                                      dtype='i',
+                                      dtype='uint32',
                                       data=epsg_code)
     # Set up osr for wkt
     srs = osr.SpatialReference()
@@ -844,8 +844,8 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                 f'EPSG {epsg_code} waiting for implementation / not supported in ISCE3')
 
         # Setup common parameters
-        xds.attrs['long_name'] = np.bytes_("x coordinate of projection")
-        yds.attrs['long_name'] = np.bytes_("y coordinate of projection")
+        xds.attrs['long_name'] = np.bytes_("X coordinate of projection")
+        yds.attrs['long_name'] = np.bytes_("Y coordinate of projection")
 
         projds.attrs['false_easting'] = sr.GetProjParm(osr.SRS_PP_FALSE_EASTING)
         projds.attrs['false_northing'] = sr.GetProjParm(
@@ -896,19 +896,19 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
     slant_range_raster = _get_raster_from_hdf5_ds(
         cube_group, 'slantRange', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
-        long_name='slant-range',
+        long_name='Slant range',
         descr='Slant range in meters',
-        units='meter', **create_dataset_kwargs)
+        units='meters', **create_dataset_kwargs)
     azimuth_time_raster = _get_raster_from_hdf5_ds(
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
-        long_name='zero-Doppler azimuth time',
-        descr='Zero Doppler azimuth time in seconds',
+        long_name='Zero-Doppler azimuth time',
+        descr='Zero-Doppler azimuth time in seconds',
         units=az_coord_units, **create_dataset_kwargs)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
-        long_name='incidence angle',
+        long_name='Incidence angle',
         descr=('Incidence angle is defined as the angle between the LOS vector'
                ' and the normal to the ellipsoid at the target height'),
         units='degrees', valid_min=0.0, valid_max=90.0, **create_dataset_kwargs)
@@ -946,10 +946,10 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
     ground_track_velocity_raster = _get_raster_from_hdf5_ds(
         cube_group, 'groundTrackVelocity', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
-        long_name='Ground-track velocity',
+        long_name='Ground track velocity',
         descr=('Absolute value of the platform velocity scaled at the target'
                ' height'),
-        units='m/s', **create_dataset_kwargs)
+        units='meters / second', **create_dataset_kwargs)
 
     isce3.geometry.make_radar_grid_cubes(radar_grid,
                                          geogrid,
@@ -1100,7 +1100,7 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
-        long_name='incidence angle',
+        long_name='Incidence angle',
         descr='Incidence angle is defined as the angle between the LOS '
               'vector and the normal to the ellipsoid at the target height',
         units='degrees', valid_min=0.0, valid_max=90.0, **create_dataset_kwargs)
@@ -1138,7 +1138,7 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
     ground_track_velocity_raster = _get_raster_from_hdf5_ds(
         cube_group, 'groundTrackVelocity', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
-        long_name='Ground-track velocity',
+        long_name='Ground track velocity',
         descr='Absolute value of the platform velocity scaled at the target height',
         units='meters / second', **create_dataset_kwargs)
 
@@ -1204,7 +1204,7 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     rg_dataset = hdf5_obj.create_dataset(rg_dataset_name, data=rg_vect)
     rg_dataset.attrs["description"] = np.bytes_(descr)
     rg_dataset.attrs["units"] = np.bytes_(rg_coord_units)
-    rg_dataset.attrs["long_name"] = np.bytes_("slant range")
+    rg_dataset.attrs["long_name"] = np.bytes_("Slant range")
     coordinates_list.append(rg_dataset)
 
     # Zero-doppler time
@@ -1215,7 +1215,7 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     az_dataset = hdf5_obj.create_dataset(az_dataset_name, data=az_vect)
     az_dataset.attrs["description"] = np.bytes_(descr)
     az_dataset.attrs["units"] = np.bytes_(az_coord_units)
-    az_dataset.attrs["long_name"] = np.bytes_("zero-Doppler time")
+    az_dataset.attrs["long_name"] = np.bytes_("Zero-Doppler time")
     coordinates_list.append(az_dataset)
 
     # Height above reference ellipsoid
