@@ -57,8 +57,8 @@ struct PolarGrid {
 
     PolarGrid() = delete;
 
-    auto width() const { return range.size(); }
-    auto length() const { return sin_squint.size(); }
+    CUDA_HOSTDEV auto width() const { return range.size(); }
+    CUDA_HOSTDEV auto length() const { return sin_squint.size(); }
 };
 
 std::tuple<isce3::error::ErrorCode,
