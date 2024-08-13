@@ -23,7 +23,7 @@ from nisar.workflows.geocode_corrections import get_az_srg_corrections, get_offs
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.products.writers import GslcWriter
-from nisar.workflows.helpers import validate_fs_page_size
+from nisar.workflows.helpers import validate_fs_page_size, check_radargrid_orbit_tec
 
 def run(cfg):
     '''
@@ -37,6 +37,7 @@ def run(cfg):
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+    tec_file = cfg['dynamic_ancillary_file_group']['tec_file']
     orbit_file = cfg["dynamic_ancillary_file_group"]['orbit_file']
     threshold_geo2rdr = cfg['processing']['geo2rdr']['threshold']
     iteration_geo2rdr = cfg['processing']['geo2rdr']['maxiter']
@@ -125,6 +126,9 @@ def run(cfg):
             root_ds = f'/science/LSAR/GSLC/grids/frequency{freq}'
             radar_grid = slc.getRadarGrid(freq)
             geo_grid = geogrids[freq]
+
+            # Check the temporal coverages of orbit and the TEC file
+            check_radargrid_orbit_tec(radar_grid, orbit, tec_file)
 
             # get doppler centroid
             native_doppler = slc.getDopplerCentroid(frequency=freq)
