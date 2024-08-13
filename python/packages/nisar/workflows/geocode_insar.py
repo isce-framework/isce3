@@ -223,7 +223,7 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
     if off_width is None:
         width_margin = 2 * margin + 2 * rg_search + rg_window
         off_width = (radar_grid_slc.width - width_margin) // \
-                    offset_cfg['skip_azimuth']
+                    offset_cfg['skip_range']
     # Determine the starting range and sensing start for the offset radar grid
     if rg_start is None:
         rg_start = margin + rg_search
@@ -553,6 +553,7 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                 max_block_size=block_size,
                 az_time_correction=az_correction,
                 slant_range_correction=srg_correction,
+                apply_valid_samples_sub_swath_masking=False,
                 sub_swaths=subswaths)
 
         if compute_stats:

@@ -423,7 +423,7 @@ def addImagery(h5file, ldr, imgfile, pol, gap_width_usec=0.0, gap_location=0.5):
                  datetime.timedelta(days=int(firstrec.SensorAcquisitionDayOfYear-1))
         txgrp = fid.create_group(txgrpstr)
         time = txgrp.create_dataset('UTCtime', dtype='f8', shape=(nLines,))
-        time.attrs['units'] = np.string_("seconds since {0}T00:00:00".format(tstart.strftime('%Y-%m-%d')))
+        time.attrs['units'] = numpy.string_("seconds since {0}T00:00:00".format(tstart.strftime('%Y-%m-%d')))
         txgrp.create_dataset('numberOfSubSwaths', data=len(sub_swaths))
         txgrp.create_dataset('radarTime', dtype='f8', shape=(nLines,))
         txgrp.create_dataset('rangeLineIndex', dtype='i8', shape=(nLines,))

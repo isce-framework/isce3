@@ -54,6 +54,7 @@ geometry/RTC.cpp
 geometry/metadataCubes.cpp
 geometry/ltpcoordinates.cpp
 geometry/pntintersect.cpp
+geogrid/geogrid_ecef_coords.cpp
 geogrid/getRadarGrid.cpp
 geogrid/relocateRaster.cpp
 geogrid/geogrid.cpp

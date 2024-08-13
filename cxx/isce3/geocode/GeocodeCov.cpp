@@ -166,7 +166,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 phase_screen_raster, az_time_correction,
                 slant_range_correction, input_rtc, output_rtc,
                 input_layover_shadow_mask_raster, sub_swaths,
-                out_mask,
+                apply_valid_samples_sub_swath_masking, out_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
                 dem_interp_method);
     else if (flag_run_geocode_interp &&
@@ -182,7 +182,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 az_time_correction,
                 slant_range_correction, input_rtc, output_rtc,
                 input_layover_shadow_mask_raster, sub_swaths,
-                out_mask, 
+                apply_valid_samples_sub_swath_masking, out_mask, 
                 geocode_memory_mode, min_block_size, max_block_size,
                 dem_interp_method);
     else if (flag_run_geocode_interp)
@@ -196,7 +196,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 phase_screen_raster, az_time_correction,
                 slant_range_correction, input_rtc, output_rtc,
                 input_layover_shadow_mask_raster, sub_swaths,
-                out_mask,
+                apply_valid_samples_sub_swath_masking, out_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
                 dem_interp_method);
     else if (!flag_complex_to_real)
@@ -270,6 +270,7 @@ void Geocode<T>::geocodeInterp(
         isce3::io::Raster* output_rtc,
         isce3::io::Raster* input_layover_shadow_mask_raster,
         isce3::product::SubSwaths* sub_swaths,
+        std::optional<bool> apply_valid_samples_sub_swath_masking,
         isce3::io::Raster* out_mask,
         isce3::core::GeocodeMemoryMode geocode_memory_mode, const long long min_block_size,
         const long long max_block_size,
@@ -282,6 +283,31 @@ void Geocode<T>::geocodeInterp(
     isce3::product::GeoGridParameters geogrid(_geoGridStartX, _geoGridStartY,
             _geoGridSpacingX, _geoGridSpacingY, _geoGridWidth, _geoGridLength,
             _epsgOut);
+
+    /*
+    If `apply_valid_samples_sub_swath_masking` is `true` and the
+    `sub_swath` object was not provided, raise an error
+    */
+    if (apply_valid_samples_sub_swath_masking &&
+            *apply_valid_samples_sub_swath_masking && sub_swaths == nullptr) {
+        std::string error_message =
+            ("ERROR cannot apply valid-samples sub-swath"
+             "masking without a sub_swaths object");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+    }
+
+    /*
+    `apply_valid_samples_sub_swath_masking` is an optional argument whereas
+    `effective_apply_valid_samples_sub_swath_masking` is the "effective"
+    boolean value.
+    If `apply_valid_samples_sub_swath_masking` has a "valid" value, assign
+    it to `effective_apply_valid_samples_sub_swath_masking`, otherwise
+    only enable sub-swath masking if the object sub_swaths was provided by
+    the user (i.e., if `sub_swaths != nullptr`)
+    */
+    bool effective_apply_valid_samples_sub_swath_masking =
+        apply_valid_samples_sub_swath_masking?
+        *apply_valid_samples_sub_swath_masking: sub_swaths != nullptr;
 
     info << "geo2rdr threshold: " << _threshold << pyre::journal::newline;
     info << "geo2rdr numiter: " << _numiter << pyre::journal::newline;
@@ -760,7 +786,7 @@ void Geocode<T>::geocodeInterp(
             isce3::core::Matrix<uint8_t> out_mask_array;
             if (out_mask != nullptr) {
                 out_mask_array.resize(geoBlockLength, geogrid.width());
-                out_mask_array.fill(0);
+                out_mask_array.fill(255);
             }
  
             _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY,
@@ -773,6 +799,7 @@ void Geocode<T>::geocodeInterp(
                     out_geo_rtc_gamma0_to_sigma0_array,
                     input_layover_shadow_mask_raster,
                     input_layover_shadow_mask, sub_swaths,
+                    effective_apply_valid_samples_sub_swath_masking,
                     out_mask, out_mask_array);
 
             // flush optional layers
@@ -862,6 +889,7 @@ inline void Geocode<T>::_interpolate(
         isce3::io::Raster* input_layover_shadow_mask_raster,
         isce3::core::Matrix<uint8_t>& input_layover_shadow_mask_array,
         isce3::product::SubSwaths * sub_swaths,
+        bool apply_valid_samples_sub_swath_masking,
         isce3::io::Raster* out_mask,
         isce3::core::Matrix<uint8_t>& out_mask_array)
 {
@@ -892,70 +920,69 @@ inline void Geocode<T>::_interpolate(
         if (rdrX < interp_margin || rdrY < interp_margin ||
                 rdrX >= (radarBlockWidth - interp_margin) ||
                 rdrY >= (radarBlockLength - interp_margin)) {
-
-            // set NaN values according to T_out, i.e. real (NaN) or complex
-            // (NaN, NaN)
-            using T_out_real = typename isce3::real<T_out>::type;
-            geoDataBlock(i, j) *= std::numeric_limits<T_out_real>::quiet_NaN();
-            if (flag_apply_rtc && out_geo_rtc != nullptr) {
-                out_geo_rtc_array(i, j) = std::numeric_limits<float>::quiet_NaN();
-            }
-            if (flag_apply_rtc && out_geo_rtc_gamma0_to_sigma0 != nullptr) {
-                out_geo_rtc_gamma0_to_sigma0_array(i, j) =
-                    std::numeric_limits<float>::quiet_NaN();
-            }
-            if (out_mask != nullptr) {
-                out_mask_array(i, j) = 0;
-            }
             continue;
         }
 
         int rdr_y_rslc = std::floor(rdrY + azimuthFirstLine);
         int rdr_x_rslc = std::floor(rdrX + rangeFirstPixel);
 
-        uint8_t sample_sub_swath_center = 1;
+        /*
+        If we need to output the mask layer AND the current geogrid pixel
+        (valid or invalid) is inside the radar grid, initialize the
+        output mask with `0` (originally it has fill value `255`)
+        */
+        if (out_mask != nullptr) {
+            out_mask_array(i, j) = 0;
+        }
+
         if (sub_swaths != nullptr) {
-            bool flag_skip = false;
-            for (int yy = -interp_margin; yy <= interp_margin; ++yy) {
-                for (int xx = -interp_margin; xx <= interp_margin; ++xx) {
-                    uint8_t sample_sub_swath = sub_swaths->getSampleSubSwath(
-                        rdr_y_rslc + yy, rdr_x_rslc + xx);
-                    if (sample_sub_swath == 0) {
-                        // set NaN values according to T_out, i.e. real (NaN)
-                        // or complex (NaN, NaN)
-                        using T_out_real = typename isce3::real<T_out>::type;
-                        geoDataBlock(i, j) *= 
-                            std::numeric_limits<T_out_real>::quiet_NaN();
-                        if (flag_apply_rtc && out_geo_rtc != nullptr) {
-                            out_geo_rtc_array(i, j) =
-                                std::numeric_limits<float>::quiet_NaN();
+
+            // read the sub-swath value at the center to save the output mask
+            uint8_t sample_sub_swath_center = sub_swaths->getSampleSubSwath(
+                rdr_y_rslc, rdr_x_rslc);
+
+            if (out_mask != nullptr) {
+                out_mask_array(i, j) = sample_sub_swath_center;
+            }
+
+           if (apply_valid_samples_sub_swath_masking) {
+
+                bool flag_has_invalid_sample = sample_sub_swath_center == 0;
+
+                // loop through interpolation window and check if there's at least
+                // one sample that is invalid/partially focused
+                for (int yy = -interp_margin; yy <= interp_margin; ++yy) {
+                    for (int xx = -interp_margin; xx <= interp_margin; ++xx) {
+                        if (flag_has_invalid_sample) {
+                            break;
                         }
-                        if (flag_apply_rtc &&
-                                out_geo_rtc_gamma0_to_sigma0 != nullptr) {
-                            out_geo_rtc_gamma0_to_sigma0_array(i, j) =
-                                std::numeric_limits<float>::quiet_NaN();
-                        }
-                        if (out_mask != nullptr) {
-                            out_mask_array(i, j) = 0;
-                        }
-                        flag_skip = true;
+                        uint8_t sample_sub_swath = sub_swaths->getSampleSubSwath(
+                            rdr_y_rslc + yy, rdr_x_rslc + xx);
+                        flag_has_invalid_sample |= sample_sub_swath == 0;
+                    }
+                    if (flag_has_invalid_sample) {
                         break;
                     }
-                    if (yy == 0 && xx == 0) {
-                        sample_sub_swath_center = sample_sub_swath;
+                }
+
+                if (flag_has_invalid_sample) {
+                    // set NaN values according to T_out, i.e. real (NaN)
+                    // or complex (NaN, NaN)
+                    using T_out_real = typename isce3::real<T_out>::type;
+                    geoDataBlock(i, j) *= 
+                        std::numeric_limits<T_out_real>::quiet_NaN();
+                    if (flag_apply_rtc && out_geo_rtc != nullptr) {
+                        out_geo_rtc_array(i, j) =
+                            std::numeric_limits<float>::quiet_NaN();
                     }
- 
+                    if (flag_apply_rtc &&
+                            out_geo_rtc_gamma0_to_sigma0 != nullptr) {
+                        out_geo_rtc_gamma0_to_sigma0_array(i, j) =
+                            std::numeric_limits<float>::quiet_NaN();
+                    }
+                    continue;
                 }
-                if (flag_skip) {
-                    break;
-                }
-            }
-            if (flag_skip) {
-                continue;
-            }
-        }
-        if (out_mask != nullptr) {
-            out_mask_array(i, j) = sample_sub_swath_center;
+           }
         }
 
         /* 

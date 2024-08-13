@@ -119,18 +119,18 @@ endmacro()
 
 macro(getpackage_pyre)
     if(ISCE3_FETCH_PYRE)
-        find_package(pyre 1.12 CONFIG)
+        find_package(pyre 1.12.5 CONFIG)
         if(NOT pyre_FOUND)
             # disable pyre's test suite
             set(BUILD_TESTING OFF)
             fetch_extern_repo(pyre
                 GIT_REPOSITORY  https://github.com/pyre/pyre
-                GIT_TAG         v1.12.1
+                GIT_TAG         v1.12.5
                 GIT_SHALLOW     TRUE
                 )
         endif()
     else()
-        find_package(pyre 1.12 REQUIRED CONFIG)
+        find_package(pyre 1.12.5 REQUIRED CONFIG)
     endif()
 endmacro()
 
