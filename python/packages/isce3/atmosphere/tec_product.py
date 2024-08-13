@@ -401,13 +401,13 @@ def _check_tec_grid_contains_radargrid(radar_grid: isce3.product.RadarGridParame
     error_channel = journal.error(
             "tec_product._check_tec_grid_contains_radargrid")
     err_msg = ('Cropped TEC grid does not contain the radargrid.\n'
-                f'tec_start={tec_t[0]}, tec_end={tec_t[-1]}\n'
-                f'radargrid start={radar_grid.sensing_start}, radargrid stop={radar_grid.sensing_stop}\n'
-                f'staggered: {staggered}\n'
-                f'TEC grid spacing: {tec_grid_spacing}\n\n'
-                f'Relative timing w.r.t. Sensing start:\ntec_start={tec_t[0] - radar_grid.sensing_start}, '
-                f'tec_end={tec_t[-1] - radar_grid.sensing_start}\n'
-                f'radargrid start={0}, radargrid_stop={radar_grid.sensing_stop - radar_grid.sensing_start}')
+               f'tec_start={tec_t[0]}, tec_end={tec_t[-1]}\n'
+               f'radargrid start={radar_grid.sensing_start}, radargrid stop={radar_grid.sensing_stop}\n'
+               f'staggered: {staggered}\n'
+               f'TEC grid spacing: {tec_grid_spacing}\n\n'
+               f'Relative timing w.r.t. Sensing start:\ntec_start={tec_t[0] - radar_grid.sensing_start}, '
+               f'tec_end={tec_t[-1] - radar_grid.sensing_start}\n'
+               f'radargrid start={0}, radargrid_stop={radar_grid.sensing_stop - radar_grid.sensing_start}')
 
     error_channel.log(err_msg)
     raise ValueError(err_msg)
