@@ -269,6 +269,7 @@ void addbinding_backproject(py::module& m)
             auto out = py::array_t<std::complex<float>>(
                 {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
                 outp.release());
+            bytes = sizeof(float);
             auto height = py::array_t<float>(
                 {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
                 heightp.release());
