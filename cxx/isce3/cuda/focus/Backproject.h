@@ -87,4 +87,22 @@ backproject(std::complex<float>* out,
             const Geo2RdrBracketParams& geo2rdr_params = {},
             int batch = 1024, float* height = nullptr);
 
+
+std::tuple<
+        isce3::error::ErrorCode,
+        isce3::focus::PolarGrid,
+        std::unique_ptr<std::complex<float>[]>, // image
+        std::unique_ptr<float[]>> // height
+backprojectFirstStage(
+        const std::complex<float>* in,
+        const isce3::container::RadarGeometry& in_geometry,
+        const std::vector<double>& in_azimuth_time,
+        double range_bandwidth,
+        const isce3::geometry::DEMInterpolator& dem,
+        double fc, double ds,
+        const isce3::core::Kernel<float>& kernel,
+        DryTroposphereModel dry_tropo_model,
+        const Rdr2GeoBracketParams& r2g_params = {},
+        double oversample_range = 1.2, double oversample_azimuth = 1.2);
+
 }}} // namespace isce3::cuda::focus

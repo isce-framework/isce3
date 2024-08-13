@@ -25,7 +25,9 @@
 #include <isce3/cuda/except/Error.h>
 #include <isce3/cuda/geometry/gpuDEMInterpolator.h>
 #include <isce3/cuda/geometry/gpuGeometry.h>
+#include <isce3/fft/FFTUtil.h>
 #include <isce3/focus/BistaticDelay.h>
+#include <isce3/geometry/DEMInterpolator.h>
 
 using namespace isce3::core;
 using namespace isce3::cuda::geometry;
@@ -34,6 +36,7 @@ using isce3::cuda::core::interp1d;
 using isce3::error::ErrorCode;
 using isce3::focus::bistaticDelay;
 using isce3::focus::dryTropoDelayTSX;
+using isce3::focus::PolarGrid;
 
 using HostDEMInterpolator = isce3::geometry::DEMInterpolator;
 using HostRadarGeometry = isce3::container::RadarGeometry;
@@ -751,6 +754,332 @@ ErrorCode backproject(std::complex<float>* out,
         throw isce3::except::RuntimeError(ISCE_SRCINFO(), "not implemented");
     }
     return ec;
+}
+
+
+// FBP junk
+
+/**
+ * \internal
+ * Transform a 2D radar grid from polar coordinates (cos_squint, range) to
+ * ECEF XYZ coordinates.
+ *
+ * The global error code is set if any thread encounters an error.
+ *
+ * \param[out] xyz_out      ECEF XYZ of each target (m)
+ * \param[in]  grid         Polar grid
+ * \param[in]  dem          DEM sampling interface
+ * \param[in]  ellipsoid    Reference ellipsoid
+ * \param[in]  side         Radar look side
+ * \param[in]  params       Root-finding algorithm parameters
+ * \param[out] errc         Error flag
+ */
+__global__ void runPolar2Geo(Vec3* xyz_out, const PolarGrid grid,
+                           DeviceDEMInterpolator dem, const Ellipsoid ellipsoid,
+                           const LookSide side,
+                           const Rdr2GeoBracketParams params,
+                           ErrorCode* errc)
+{
+    using isce3::geometry::detail::polar2geo_bracket;
+
+    // thread index (1d grid of 1d blocks)
+    const auto tid = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+
+    // bounds check
+    const auto lines = static_cast<size_t>(grid.length());
+    const auto samples = static_cast<size_t>(grid.width());
+    if (tid >= lines * samples) {
+        return;
+    }
+
+    // convert flat index to 2D array indices
+    const auto j = static_cast<int>(tid / samples);
+    const auto i = static_cast<int>(tid % samples);
+
+    const double r = grid.range[i];
+    const double q = grid.sin_squint[j];
+    const double c = sqrt(1.0 - q * q);
+
+    Vec3 xyz;
+    double look_angle;
+
+    const auto status = polar2geo_bracket(&xyz, &look_angle,
+                        grid.origin, grid.axis, r, q, c, dem, ellipsoid,
+                        side, params);
+
+    // check convergence
+    if (status == isce3::error::ErrorCode::Success) {
+        xyz_out[tid] = xyz;
+    } else {
+        // set output to NaN
+        constexpr static auto nan = std::numeric_limits<double>::quiet_NaN();
+        xyz_out[tid] = {nan, nan, nan};
+
+        // set global error flag
+        *errc = ErrorCode::FailedToConverge;
+    }
+}
+
+
+template<class Kernel>
+std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
+backprojectFirstStage(
+        const std::complex<float>* in, const HostRadarGeometry& in_geometry,
+        const std::vector<double>& in_azimuth_time,
+        double range_bandwidth,
+        DeviceDEMInterpolator& dem, double fc, double ds,
+        const Kernel& kernel, DryTroposphereModel dry_tropo_model,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+        double oversample_range, double oversample_azimuth)
+{
+    if (in_azimuth_time.size() < 2) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "require at least two pulses in FBP stage1");
+    }
+
+    static constexpr double c = isce3::core::speed_of_light;
+
+    // check that dry_tropo_model is supported internally
+    if (not(dry_tropo_model == DryTroposphereModel::NoDelay or
+            dry_tropo_model == DryTroposphereModel::TSX)) {
+
+        std::string errmsg = "unexpected dry troposphere model";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+    }
+
+    // get input & output radar grid azimuth time & slant range
+    Linspace<double> in_slant_range = in_geometry.slantRange();
+
+    // interpolate platform position & velocity at each pulse
+    std::vector<Vec3> pos(in_azimuth_time.size());
+    std::vector<Vec3> vel(in_azimuth_time.size());
+    for (int i = 0; i < in_azimuth_time.size(); ++i) {
+        double t = in_azimuth_time[i];
+        in_geometry.orbit().interpolate(&pos[i], &vel[i], t);
+    }
+
+    const PolarGrid out_grid = [&](void) {
+        const auto iend = in_azimuth_time.size() - 1;
+        const auto jend = in_slant_range.size() - 1;
+
+        const Vec3 origin = (pos[0] + pos[iend]) / 2;
+        Vec3 axis = (vel[0] + vel[iend]) / 2;
+        const double vs = axis.norm();
+        axis /= vs;
+
+        double
+            fmax = fc + range_bandwidth / 2,
+            length = vs * (in_azimuth_time[iend] - in_azimuth_time[0]),
+            // Yegulalp, Eq. (11) and (12)
+            dq = c / (2 * fmax * length * oversample_azimuth),
+            dr = c / (2 * range_bandwidth * oversample_range);
+
+        // evaluate Doppler at a couple of points to try to cover variation
+        const double
+            tmid = (in_azimuth_time[0] + in_azimuth_time[iend]) / 2,
+            r0 = in_slant_range.first(),
+            r1 = in_slant_range[jend],
+            dop2q = c / (fc * 2 * vs),
+            q0 = in_geometry.doppler().eval(tmid, r0) * dop2q,
+            q1 = in_geometry.doppler().eval(tmid, r1) * dop2q,
+            qmid = (q0 + q1) / 2,
+            qspan = std::abs(q1 - q0) + c / (fc * 2 * ds);
+
+        int nr = static_cast<int>(std::ceil((r1 - r0) / dr));
+        int nq = static_cast<int>(std::ceil(qspan / dq));
+
+        // adjust spacing so we end up with a fast FFT sizes
+        nr = isce3::fft::nextFastPower(nr);
+        nq = isce3::fft::nextFastPower(nq);
+        dr = (r1 - r0) / nr;
+        dq = qspan / nq;
+
+        return PolarGrid{in_azimuth_time[0], in_azimuth_time[iend],
+            origin, axis, Linspace<double>(r0, dr, nr),
+            Linspace<double>(qmid - qspan / 2, dq, nq)};
+    }();
+
+    const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
+    auto height = std::make_unique<float[]>(npix);
+    auto out = std::make_unique<std::complex<float>[]>(npix);
+
+    // range sampling window
+    double swst = 2. * in_slant_range.first() / c;
+    double dtau = 2. * in_slant_range.spacing() / c;
+    int nr = in_slant_range.size();
+    Linspace<double> sampling_window(swst, dtau, nr);
+
+    // reference ellipsoid
+    int epsg = dem.epsgCode();
+    const Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+
+    // init device variable to return error codes from device code
+    thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
+
+    thrust::device_vector<Vec3> x(npix);
+
+    {
+        const unsigned block = 256;
+        const unsigned grid = (npix + block - 1) / block;
+
+        runPolar2Geo<<<grid, block>>>(x.data().get(), out_grid,
+                                    dem, ellipsoid,
+                                    in_geometry.lookSide(), r2g_params,
+                                    errc.data().get());
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    // transform each target position from ECEF to LLH coordinates
+    // NOTE only really needed if dumping height layer or doing TSX atmosphere
+    // correction, but just compute it unconditionally.
+    thrust::device_vector<Vec3> llh(npix);
+
+    {
+        const unsigned block = 256;
+        const unsigned grid = (npix + block - 1) / block;
+
+        ecef2llh<<<grid, block>>>(llh.data().get(), x.data().get(),
+                                  npix, ellipsoid);
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    if (height != nullptr) {
+        thrust::device_vector<float> d_height(npix);
+        thrust::transform(llh.begin(), llh.end(), d_height.begin(),
+                [] __device__ (const Vec3& x) { return (float)x[2]; });
+        checkCudaErrors(cudaMemcpy(height.get(), d_height.data().get(),
+                npix * sizeof(float), cudaMemcpyDeviceToHost));
+    }
+
+    // estimate dry troposphere delay
+    thrust::device_vector<double> tau_atm(npix);
+
+    if (dry_tropo_model == DryTroposphereModel::NoDelay) {
+        checkCudaErrors(cudaMemset(tau_atm.data().get(), 0,
+                                   npix * sizeof(double)));
+    } else if (dry_tropo_model == DryTroposphereModel::TSX) {
+        const unsigned block = 256;
+        const unsigned grid = (npix + block - 1) / block;
+
+        // TODO new interface for constant aperture center
+        thrust::device_vector<Vec3> p(npix);
+        thrust::fill(p.begin(), p.end(), out_grid.origin);
+
+        estimateDryTropoDelayTSX<<<grid, block>>>(
+                tau_atm.data().get(), p.data().get(), llh.data().get(),
+                npix, ellipsoid);
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    } else {
+        std::string errmsg = "unexpected dry troposphere model";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+    }
+
+    // Assume we can fit all pulses for a subimage in device memory.
+    const auto npix_in = static_cast<size_t>(in_geometry.gridWidth()) *
+        in_geometry.gridLength();
+    thrust::device_vector<thrust::complex<float>> rc(npix_in);
+    thrust::copy(in, in + npix_in, rc.begin());
+
+    thrust::device_vector<thrust::complex<float>> img(npix, 0.0);
+	{
+        // integrate pulses
+        const unsigned block = 256;
+        const unsigned grid = (npix + block - 1) / block;
+
+        using KV = typename Kernel::view_type;
+
+        thrust::device_vector<Vec3> d_pos(pos);
+        thrust::device_vector<Vec3> d_vel(vel);
+
+        // TODO interface with scalar kstart & kstop
+        const auto nt = static_cast<int>(in_azimuth_time.size());
+        thrust::device_vector<int> kstart(npix, 0);
+        thrust::device_vector<int> kstop(npix, nt);
+
+        sumCoherentBatch<KV><<<grid, block>>>(
+                img.data().get(), rc.data().get(), d_pos.data().get(),
+                d_vel.data().get(), sampling_window, x.data().get(),
+                tau_atm.data().get(), kstart.data().get(), kstop.data().get(),
+                npix, fc, kernel, 0, nt);
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    // copy output back to the host
+    checkCudaErrors(cudaMemcpy(out.get(), img.data().get(),
+                               npix * sizeof(std::complex<float>),
+                               cudaMemcpyDeviceToHost));
+
+
+    // baseband
+    const double kw = 4 * M_PI / (c / fc);
+    #pragma omp parallel for
+    for (int i = 0; i < out_grid.range.size(); ++i) {
+        const double phi = -kw * out_grid.range[i];
+        const auto phasor = std::complex<float>(std::cos(phi), std::sin(phi));
+        for (int j = 0; j < out_grid.sin_squint.size(); ++j) {
+            out[j * out_grid.width() + i] *= phasor;
+        }
+    }
+
+    return std::make_tuple(errc[0], out_grid, std::move(out), std::move(height));
+}
+
+std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
+backprojectFirstStage(
+        const std::complex<float>* in, const HostRadarGeometry& in_geometry,
+        const std::vector<double>& in_azimuth_time,
+        double range_bandwidth,
+        const HostDEMInterpolator& dem, double fc, double ds,
+        const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+        double oversample_range, double oversample_azimuth)
+{
+    DeviceDEMInterpolator d_dem(dem);
+
+    if (typeid(kernel) == typeid(HostBartlettKernel<float>)) {
+        const DeviceBartlettKernel<float> d_kernel(
+                dynamic_cast<const HostBartlettKernel<float>&>(kernel));
+        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
+            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
+            oversample_range, oversample_azimuth);
+    }
+    else if (typeid(kernel) == typeid(HostLinearKernel<float>)) {
+        const DeviceLinearKernel<float> d_kernel(
+                dynamic_cast<const HostLinearKernel<float>&>(kernel));
+        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
+            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
+            oversample_range, oversample_azimuth);
+    }
+    else if (typeid(kernel) == typeid(HostKnabKernel<float>)) {
+        const DeviceKnabKernel<float> d_kernel(
+                dynamic_cast<const HostKnabKernel<float>&>(kernel));
+        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
+            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
+            oversample_range, oversample_azimuth);
+    }
+    else if (typeid(kernel) == typeid(HostTabulatedKernel<float>)) {
+        const DeviceTabulatedKernel<float> d_kernel(
+                dynamic_cast<const HostTabulatedKernel<float>&>(kernel));
+        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
+            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
+            oversample_range, oversample_azimuth);
+    }
+    else if (typeid(kernel) == typeid(HostChebyKernel<float>)) {
+        const DeviceChebyKernel<float> d_kernel(
+                dynamic_cast<const HostChebyKernel<float>&>(kernel));
+        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
+            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
+            oversample_range, oversample_azimuth);
+    }
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "not implemented");
 }
 
 }}} // namespace isce3::cuda::focus
