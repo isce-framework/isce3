@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <chrono>
 #include <limits>
+#include <pyre/journal.h>
 #include <thrust/complex.h>
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>
@@ -821,6 +823,33 @@ __global__ void runPolar2Geo(Vec3* xyz_out, const PolarGrid grid,
 }
 
 
+template <class Clock = std::chrono::high_resolution_clock>
+class TimingReporter {
+public:
+    TimingReporter(const std::string& channel_id) :
+        prev_time_{Clock::now()}, log_{channel_id} {}
+
+    void report(const std::string& step) {
+        using namespace std::chrono;
+        auto cur_time = Clock::now();
+        auto duration = cur_time - prev_time_;
+        auto msec = duration_cast<milliseconds>(duration).count();
+        log_ << step << " took " << msec << " ms" << pyre::journal::endl;
+        prev_time_ = cur_time;
+    }
+private:
+    std::chrono::time_point<Clock> prev_time_;
+    pyre::journal::info_t log_;
+};
+
+// macro to enable logging of timing info
+#ifdef ISCE3_ENABLE_FBP_TIMING
+#define ISCE3_FBP_TIMING(x) x
+#else
+#define ISCE3_FBP_TIMING(x)  // no-op
+#endif
+
+
 template<class Kernel>
 std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
 backprojectFirstStage(
@@ -850,6 +879,9 @@ backprojectFirstStage(
     // get input & output radar grid azimuth time & slant range
     Linspace<double> in_slant_range = in_geometry.slantRange();
 
+    ISCE3_FBP_TIMING(
+        auto timing = TimingReporter("isce3.cuda.focus.backprojectFirstStage");)
+
     // interpolate platform position & velocity at each pulse
     std::vector<Vec3> pos(in_azimuth_time.size());
     std::vector<Vec3> vel(in_azimuth_time.size());
@@ -857,6 +889,7 @@ backprojectFirstStage(
         double t = in_azimuth_time[i];
         in_geometry.orbit().interpolate(&pos[i], &vel[i], t);
     }
+    ISCE3_FBP_TIMING(timing.report("orbit interp");)
 
     const PolarGrid out_grid = [&](void) {
         const auto iend = in_azimuth_time.size() - 1;
@@ -898,6 +931,7 @@ backprojectFirstStage(
             origin, axis, Linspace<double>(r0, dr, nr),
             Linspace<double>(qmid - qspan / 2, dq, nq)};
     }();
+    ISCE3_FBP_TIMING(timing.report("polar grid");)
 
     const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
     auto height = std::make_unique<float[]>(npix);
@@ -930,6 +964,7 @@ backprojectFirstStage(
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
     }
+    ISCE3_FBP_TIMING(timing.report("polar2geo");)
 
     // transform each target position from ECEF to LLH coordinates
     // NOTE only really needed if dumping height layer or doing TSX atmosphere
@@ -954,6 +989,7 @@ backprojectFirstStage(
         checkCudaErrors(cudaMemcpy(height.get(), d_height.data().get(),
                 npix * sizeof(float), cudaMemcpyDeviceToHost));
     }
+    ISCE3_FBP_TIMING(timing.report("ecef2llh");)
 
     // estimate dry troposphere delay
     thrust::device_vector<double> tau_atm(npix);
@@ -979,6 +1015,7 @@ backprojectFirstStage(
         std::string errmsg = "unexpected dry troposphere model";
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
     }
+    ISCE3_FBP_TIMING(timing.report("dry troposphere");)
 
     // Assume we can fit all pulses for a subimage in device memory.
     const auto npix_in = static_cast<size_t>(in_geometry.gridWidth()) *
@@ -1011,6 +1048,7 @@ backprojectFirstStage(
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
     }
+    ISCE3_FBP_TIMING(timing.report("sum coherent");)
 
     // copy output back to the host
     checkCudaErrors(cudaMemcpy(out.get(), img.data().get(),
@@ -1028,6 +1066,7 @@ backprojectFirstStage(
             out[j * out_grid.width() + i] *= phasor;
         }
     }
+    ISCE3_FBP_TIMING(timing.report("baseband");)
 
     return std::make_tuple(errc[0], out_grid, std::move(out), std::move(height));
 }
