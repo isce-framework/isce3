@@ -49,4 +49,5 @@ signal/gpuCrossMul.h
 signal/gpuFilter.h
 signal/gpuLooks.h
 signal/gpuSignal.h
+signal/NFFT2d.h
 )

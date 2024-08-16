@@ -1,0 +1,160 @@
+#include "NFFT2d.h"
+
+#include <isce3/cuda/core/Interp2d.h>
+#include <isce3/cuda/fft/FFT.h>
+
+template <typename T>
+using Kernel = isce3::core::NFFTKernel<T>;
+
+// TODO expose
+constexpr int NTABLE = 1024;
+
+using isce3::cuda::core::TabulatedKernel;
+using isce3::cuda::core::TabulatedKernelView;
+
+namespace isce3::cuda::signal {
+
+// constructor
+template <class T>
+NFFT2d<T>::NFFT2d(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes)
+    : m_(m), sizes_(sizes), fft_sizes_(fft_sizes), kernels_(
+        {TabulatedKernel<T>(Kernel<T>{m[0], sizes[0], fft_sizes[0]}, NTABLE),
+        TabulatedKernel<T>(Kernel<T>{m[1], sizes[1], fft_sizes[1]}, NTABLE)})
+{
+    size_t nout = static_cast<size_t>(fft_sizes[0]) * fft_sizes[1];
+    xf_.resize(nout);
+    xt_.resize(nout);
+
+    int idims[2] = {fft_sizes_[0], fft_sizes_[1]};
+    inv_plan_ = isce3::cuda::fft::planifft2d<T>(xt_.data().get(),
+        xf_.data().get(), idims);
+
+    // FIXME avoid element-wise access to device vectors
+
+    // Pre-compute spectral weights (1/phi_hat in NFFT papers).
+    // Also include factor of n since FFTW does not normalize DFT.
+    for (int idim = 0; idim < ndims; ++idim) {
+        weights_[idim].resize(sizes[idim]);
+        T b = M_PI * (2.0 - 1.0 * sizes[idim] / fft_sizes[idim]);
+        T norm = isce3::math::bessel_i0(b * m[idim]) / sizes[idim];
+        size_t n2 = (sizes[idim] - 1) / 2 + 1;
+        for (size_t i = 0; i < n2; ++i) {
+            double f = 2 * M_PI * i / fft_sizes_[idim];
+            weights_[idim][i] = norm /
+                isce3::math::bessel_i0(m[idim] * std::sqrt(b * b - f * f));
+        }
+        for (size_t i = n2; i < sizes[idim]; ++i) {
+            double f = 2 * M_PI * ((double)i - sizes[idim]) / fft_sizes[idim];
+            weights_[idim][i] = norm /
+                isce3::math::bessel_i0(m[idim] * std::sqrt(b * b - f * f));
+        }
+    }
+}
+
+template <typename T>
+__global__ void setSpectrum2d(thrust::complex<T>* xout, int rows_out, int cols_out, 
+    thrust::complex<T>* xin, int rows_in, int cols_in, int row_stride_in,
+    int col_stride_in, T* weights_rows, T* weights_cols)
+{
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if ((col > cols_in) || (row > rows_in)) {
+        return;
+    }
+
+    // NOTE For even lengths we're not splitting Nyquist bins.
+    const auto kin = static_cast<long>(row) * row_stride_in +
+        col * col_stride_in;
+
+    long row_out = 0, col_out = 0;
+
+    const int m2 = rows_in / 2;
+    const int n2 = cols_in / 2;
+
+    if (row < m2) {
+        row_out = row;
+    } else {
+        row_out = rows_out - (rows_in - row);
+    }
+    if (col < n2) {
+        col_out = col;
+    } else {
+        col_out = cols_out - (cols_in - col);
+    }
+
+    const auto kout = row_out * cols_out + col_out;
+    xout[kout] = weights_rows[row] * weights_cols[col] * xin[kin];
+}
+
+// Digest some data.
+template<class T>
+void
+NFFT2d<T>::set_spectrum(const dims_t& sizes, const dims_t& strides, const std::complex<T> *x)
+{
+    for (int idim = 0; idim < ndims; ++idim) {
+        if (sizes[idim] != sizes_[idim]) {
+            throw isce3::except::LengthError(ISCE_SRCINFO(),
+                "Spectrum size != NFFT size.");
+        }
+    }
+    // Clear any old data.
+    auto nout = static_cast<size_t>(fft_sizes_[0]) * fft_sizes_[1];
+    xf_.assign(nout, thrust::complex<T>(0, 0));
+
+    // Copy input data to device.
+    auto nin = static_cast<size_t>(sizes[0]) * sizes[1];
+    auto px = reinterpret_cast<const thrust::complex<T>*>(x);
+    thrust::device_vector<thrust::complex<T>> d_x(px, px + nin);
+
+    // Pad and weight
+    {
+        dim3 cu_block(16, 16);
+        dim3 cu_grid(
+            (sizes[1] + cu_block.x - 1) / cu_block.x,
+            (sizes[0] + cu_block.y - 1) / cu_block.y);
+
+        setSpectrum2d<<<cu_grid, cu_block>>>(
+            xf_.data().get(), fft_sizes_[0], fft_sizes_[1],
+            d_x.data().get(), sizes[0], sizes[1], strides[0], strides[1],
+            weights_[0].data().get(), weights_[1].data().get());
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    // Transform to (expanded) time-domain.
+    inv_plan_.execute();
+}
+
+template <typename T>
+NFFT2dView<T>::NFFT2dView(const NFFT2d<T>& nfft) :
+    sizes_{nfft.sizes_},
+    fft_sizes_{nfft.fft_sizes_},
+    pxt_{nfft.xt_.data().get()},
+    kernel_views_{{
+        TabulatedKernelView(nfft.kernels_[0]),
+        TabulatedKernelView(nfft.kernels_[1])}}
+    {}
+
+template <typename T>
+CUDA_DEV
+thrust::complex<T> NFFT2dView<T>::interp(const std::array<double, 2>& t, bool periodic) const
+{
+    constexpr int xdim = 1, ydim = 0;
+
+    // scale time index to account for zero-padding of spectrum.
+    double x = t[xdim] * fft_sizes_[xdim] / sizes_[xdim];
+    double y = t[ydim] * fft_sizes_[ydim] / sizes_[ydim];
+
+    return isce3::cuda::core::interp2d(kernel_views_[xdim],
+        kernel_views_[ydim], pxt_, fft_sizes_[xdim], /* stridex */ 1,
+        fft_sizes_[ydim], /* stridey */ fft_sizes_[xdim], x, y, periodic);
+}
+
+}
+
+template class isce3::cuda::signal::NFFT2d<float>;
+template class isce3::cuda::signal::NFFT2d<double>;
+template class isce3::cuda::signal::NFFT2dView<float>;
+template class isce3::cuda::signal::NFFT2dView<double>;

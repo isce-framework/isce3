@@ -52,4 +52,5 @@ signal/gpuFilter.cu
 signal/gpuLooks.cu
 signal/gpuRangeFilter.cu
 signal/gpuSignal.cu
+signal/NFFT2d.cu
 )
