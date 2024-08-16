@@ -25,11 +25,15 @@
 #include <isce3/cuda/core/OrbitView.h>
 #include <isce3/cuda/core/gpuLUT2d.h>
 #include <isce3/cuda/except/Error.h>
+#include <isce3/cuda/fft/FFT.h>
 #include <isce3/cuda/geometry/gpuDEMInterpolator.h>
 #include <isce3/cuda/geometry/gpuGeometry.h>
+#include <isce3/cuda/signal/NFFT2d.h>
+#include <isce3/fft/FFT.h>
 #include <isce3/fft/FFTUtil.h>
 #include <isce3/focus/BistaticDelay.h>
 #include <isce3/geometry/DEMInterpolator.h>
+#include <isce3/geometry/geometry.h>
 
 using namespace isce3::core;
 using namespace isce3::cuda::geometry;
@@ -1119,6 +1123,111 @@ backprojectFirstStage(
             oversample_range, oversample_azimuth);
     }
     throw isce3::except::RuntimeError(ISCE_SRCINFO(), "not implemented");
+}
+
+__global__ void
+interpPolar(thrust::complex<float>* geo_image, const Vec3* geo_points,
+    size_t n, const PolarGrid grid,
+    const isce3::cuda::signal::NFFT2dView<float> nfft, const double kw)
+{
+    // thread index (1d grid of 1d blocks)
+    const auto i = static_cast<long>(blockIdx.x * blockDim.x + threadIdx.x);
+
+    // bounds check
+    if (i >= n) {
+        return;
+    }
+
+    // compute target location in polar grid
+    // TODO not sure why I get a linker error when I try using the API (with CUDA_HOSTDEV added)
+    // double sin_squint, range;
+    // isce3::geometry::geo2polar(&sin_squint, &range, geo_points[i], grid.origin, grid.axis);
+    const Vec3 lookvec = geo_points[i] - grid.origin;
+    const double range = lookvec.norm();
+    const double sin_squint = lookvec.dot(grid.axis) / range;
+
+    // convert to image index
+    const double ix = (range - grid.range.first()) / grid.range.spacing(),
+        iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
+
+    // interpolate baseband data
+    const auto z = nfft.interp({iy, ix}, /* periodic */ false);
+
+    // compensate phase and sum contribution
+    float sin_phi, cos_phi;
+    ::sincospif(kw * range, &sin_phi, &cos_phi);
+    geo_image[i] += z * thrust::complex<float>(cos_phi, sin_phi);
+}
+
+ErrorCode
+projectPolarToGeo(
+        std::complex<float>* geo_image,
+        const Vec3* geo_points,
+        const size_t n,
+        const PolarGrid& grid,
+        const std::complex<float>* polar_image,
+        const double wavelength,
+        const isce3::focus::NFFT2Params& params)
+{
+    using isce3::fft::nextFastPower;
+    using dims_t = isce3::cuda::signal::NFFT2d<float>::dims_t;
+    using std::lround;
+
+    const dims_t m = {params.y.m, params.x.m};
+    const dims_t dims_in = {grid.length(), grid.width()};
+    const dims_t dims_out = {
+        nextFastPower(static_cast<int32_t>(lround(params.y.s * dims_in[0]))),
+        nextFastPower(static_cast<int32_t>(lround(params.x.s * dims_in[1])))
+    };
+
+    auto nfft = isce3::cuda::signal::NFFT2d<float>(m, dims_in, dims_out);
+    auto nfft_view = isce3::cuda::signal::NFFT2dView<float>(nfft);
+    const size_t nin = static_cast<size_t>(grid.length()) * grid.width();
+    std::vector<std::complex<float>> spectrum(nin);
+    // Okay to discard const because fft is planned with FFTW_EXECUTE which
+    // doesn't modify input.
+    ISCE3_FBP_TIMING(
+        auto timing = TimingReporter("isce3.cuda.focus.backprojectFirstStage");)
+    // TODO do this FFT on GPU
+    isce3::fft::fft2d(spectrum.data(),
+        const_cast<std::complex<float>*>(polar_image),
+        {dims_in[0], dims_in[1]});
+    ISCE3_FBP_TIMING(timing.report("FFT");)
+
+    // zero-pad and filter
+    nfft.set_spectrum(dims_in, /* strides */ {dims_in[1], 1}, spectrum.data());
+    ISCE3_FBP_TIMING(timing.report("IFFT");)
+
+    const double kw = 4 * M_PI / wavelength;
+
+    // TODO add interface that just accepts device pointers as argument?
+    // NOTE You can construct device_vector using iterators, but that's super
+    // slow, hence the manual copy.
+    thrust::device_vector<thrust::complex<float>> d_geo_image(n);
+    thrust::device_vector<Vec3> d_geo_points(n);
+    checkCudaErrors(cudaMemcpy(d_geo_image.data().get(), geo_image,
+        n * sizeof(*geo_image), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_geo_points.data().get(), geo_points,
+        n * sizeof(*geo_points), cudaMemcpyHostToDevice));
+    ISCE3_FBP_TIMING(timing.report("copy to device");)
+
+    {
+        const unsigned block = 256;
+        const unsigned cugrid = (n + block - 1) / block;
+
+        interpPolar<<<cugrid, block>>>(d_geo_image.data().get(),
+            d_geo_points.data().get(), n, grid, nfft_view, kw);
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+    ISCE3_FBP_TIMING(timing.report("interp");)
+
+    checkCudaErrors(cudaMemcpy(geo_image, d_geo_image.data().get(),
+        n * sizeof(*geo_image), cudaMemcpyDeviceToHost));
+    ISCE3_FBP_TIMING(timing.report("copy to host");)
+
+    return ErrorCode::Success;
 }
 
 }}} // namespace isce3::cuda::focus

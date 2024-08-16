@@ -187,4 +187,46 @@ void addbinding_cuda_backproject(py::module& m)
             py::arg("rdr2geo_params") = py::dict(),
             py::arg("oversample_range") = 1.2,
             py::arg("oversample_azimuth") = 1.2);
+
+    m.def("project_polar_to_geo", [](
+                py::array_t<std::complex<float>>& geo_image,
+                const py::array_t<double>& geo_points,
+                const isce3::focus::PolarGrid& grid,
+                const py::array_t<std::complex<float>>& polar_image,
+                const double wavelength,
+                py::dict nfft2_params) {
+
+            // get root finding parameters
+            const auto params = parse_nfft2_params(nfft2_params);
+            if (geo_points.size() != 3 * geo_image.size()) {
+                throw isce3::except::LengthError(ISCE_SRCINFO(),
+                    "shape mismatch between geo image and position arrays");
+            }
+            auto n = static_cast<size_t>(geo_image.size());
+            if ((polar_image.shape(0) != grid.length())
+                    or (polar_image.shape(1) != grid.width())) {
+                throw isce3::except::LengthError(ISCE_SRCINFO(),
+                    "shape mismatch between polar image array and grid");
+            }
+
+            // XXX type cast after checking sizes, assume alignment is okay
+            // TODO redo with Eigen::Map or change interface from Vec3 to double[3]?
+            using isce3::core::Vec3;
+            static_assert(sizeof(Vec3) == (sizeof(double[3])));
+            const auto ptr = reinterpret_cast<const Vec3*>(geo_points.data());
+
+            auto status = isce3::cuda::focus::projectPolarToGeo(geo_image.mutable_data(), ptr,
+                n, grid, polar_image.data(), wavelength, params);
+
+            if (status != ErrorCode::Success) {
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                    "Could not compute map projection of polar grid coords.");
+            }
+        },
+        py::arg("geo_image"),
+        py::arg("geo_points"),
+        py::arg("grid"),
+        py::arg("polar_image"),
+        py::arg("wavelength"),
+        py::arg("nfft2_params") = py::dict());
 }

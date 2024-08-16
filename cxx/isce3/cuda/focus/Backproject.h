@@ -105,4 +105,14 @@ backprojectFirstStage(
         const Rdr2GeoBracketParams& r2g_params = {},
         double oversample_range = 1.2, double oversample_azimuth = 1.2);
 
+isce3::error::ErrorCode
+projectPolarToGeo(
+        std::complex<float>* geo_image,
+        const isce3::core::Vec3* geo_points,
+        const size_t n,
+        const isce3::focus::PolarGrid& grid,
+        const std::complex<float>* polar_image,
+        const double wavelength,
+        const isce3::focus::NFFT2Params& params);
+
 }}} // namespace isce3::cuda::focus
