@@ -851,10 +851,6 @@ def _run(cfg, raster_scratch_dir):
             # save GCOV imagery
             save_dataset(temp_output.name, hdf5_obj, root_ds,
                          yds, xds, cov_elements_list,
-                         long_name=output_radiometry_str,
-                         units='1',
-                         valid_min=clip_min,
-                         valid_max=clip_max,
                          **output_gcov_terms_kwargs)
 
             # save listOfCovarianceTerms
@@ -866,9 +862,6 @@ def _run(cfg, raster_scratch_dir):
             if save_nlooks:
                 save_dataset(temp_nlooks.name, hdf5_obj, root_ds,
                              yds, xds, 'numberOfLooks',
-                             long_name='number of looks',
-                             units='1',
-                             valid_min=0,
                              **output_secondary_layers_kwargs)
 
             # save mask
@@ -877,29 +870,20 @@ def _run(cfg, raster_scratch_dir):
                              hdf5_obj, root_ds,
                              yds, xds,
                              'mask',
-                             long_name=('Mask'),
-                             units='',
-                             valid_min=0)
+                             fill_value=255)
 
             # save rtc
             if save_rtc_anf:
                 save_dataset(temp_rtc_anf.name, hdf5_obj, root_ds,
                              yds, xds,
                              'rtcAreaNormalizationFactor',
-                             long_name='RTC area factor',
-                             units='1',
-                             valid_min=0,
                              **output_secondary_layers_kwargs)
 
             # save rtc
             if save_rtc_anf_gamma0_to_sigma0:
                 save_dataset(temp_rtc_anf_gamma0_to_sigma0.name,
                              hdf5_obj, root_ds,
-                             yds, xds,
-                             'rtcGammaToSigmaFactor',
-                             long_name=('RTC Area Normalization Factor'
-                                        'Gamma0 to Sigma0'),
-                             units='1',
+                             yds, xds, 'rtcGammaToSigmaFactor',
                              valid_min=0,
                              **output_secondary_layers_kwargs)
 
@@ -929,8 +913,6 @@ def _run(cfg, raster_scratch_dir):
                 save_dataset(temp_interpolated_dem.name, hdf5_obj,
                              root_ds, yds_dem, xds_dem,
                              'interpolatedDem',
-                             long_name='Interpolated DEM',
-                             units='1',
                              **output_secondary_layers_kwargs)
 
             # save GCOV off-diagonal elements
@@ -956,10 +938,6 @@ def _run(cfg, raster_scratch_dir):
 
                 save_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                              yds, xds, off_diag_terms_list,
-                             long_name=output_radiometry_str,
-                             units='1',
-                             valid_min=clip_min,
-                             valid_max=clip_max,
                              hdf5_data_type=complex_type,
                              **output_gcov_terms_kwargs)
 

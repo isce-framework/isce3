@@ -903,7 +903,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Zero-Doppler azimuth time',
-        descr='Zero-Doppler azimuth time in seconds',
+        descr='Zero Doppler azimuth time in seconds',
         units=az_coord_units, **create_dataset_kwargs)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
@@ -911,7 +911,8 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         long_name='Incidence angle',
         descr=('Incidence angle is defined as the angle between the LOS vector'
                ' and the normal to the ellipsoid at the target height'),
-        units='degrees', valid_min=0.0, valid_max=90.0, **create_dataset_kwargs)
+        units='degrees', valid_min=0.0, valid_max=90.0,
+        **create_dataset_kwargs)
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
