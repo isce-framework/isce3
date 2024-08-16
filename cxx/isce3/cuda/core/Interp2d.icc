@@ -1,0 +1,122 @@
+#include <isce3/math/complexOperations.h>
+
+#include "Interp1d.h"
+
+namespace isce3::cuda::core {
+
+namespace detail {
+    template<typename Kernel, typename KT>
+    CUDA_HOSTDEV
+    void interp1d_coeffs(const Kernel& kernel, const double t,
+            long* low, KT coeffs[])
+    {
+        int width = int(ceil(kernel.width()));
+        long i0 = 0;
+        if (width % 2 == 0) {
+            i0 = static_cast<long>(ceil(t));
+        } else {
+            i0 = static_cast<long>(round(t));
+        }
+        *low = i0 - width / 2; // integer division implicit floor()
+        for (int i = 0; i < width; ++i) {
+            double ti = i + (*low) - t;
+            coeffs[i] = kernel(ti);
+        }
+    }
+
+    template<typename DataType>
+    CUDA_HOSTDEV
+    const DataType* get_contiguous_view_or_copy(DataType block[], int width,
+            long low, const DataType* data, size_t size, size_t stride,
+            bool periodic)
+    {
+        const long high = low + width;
+        if ((stride == 1) and (low >= 0) and (high < size)) {
+            return &data[low];
+        }
+        // else
+        if (periodic) {
+            for (int i = 0; i < width; ++i) {
+                long j = ((low + i) % size) * stride;
+                block[i] = data[j];
+            }
+        } else {
+            for (int i = 0; i < width; ++i) {
+                long j = (low + i) * stride;
+                if ((j >= 0) and (j < size)) {
+                    block[i] = data[j];
+                } else {
+                    block[i] = static_cast<DataType>(0);
+                }
+            }
+        }
+        return block;
+    }
+
+    template<typename TX, typename TY>
+    CUDA_HOSTDEV
+    auto inner_product(const int width, const TX x[], const TY y[])
+    {
+        using namespace isce3::math::complex_operations;
+        using TO = typename std::common_type<TX, TY>::type;
+        TO sum = 0;
+    
+        for (int i = 0; i < width; ++i) {
+            sum += x[i] * y[i];
+        }
+        return sum;
+    }
+}
+
+template<typename KernelX, typename KernelY, typename DataType>
+CUDA_HOSTDEV
+DataType interp2d(const KernelX& kernelx,
+        const KernelY& kernely, const DataType* z, size_t nx,
+        size_t stridex, size_t ny, size_t stridey, double x, double y,
+        bool periodic)
+{
+    using namespace isce3::math::complex_operations;
+
+    const int MAX_WIDTH = 16;
+
+    // Small-size optimization to avoid heap allocation.
+    const int widthx = static_cast<int>(ceil(kernelx.width()));
+    const int widthy = static_cast<int>(ceil(kernely.width()));
+    // TODO check < max
+
+    using TX = typename KernelX::value_type;
+    using TY = typename KernelY::value_type;
+    static_assert(std::is_same<TX, TY>::value);
+    TX coeffsx[MAX_WIDTH];
+    TY coeffsy[MAX_WIDTH];
+    DataType datax[MAX_WIDTH], datay[MAX_WIDTH];
+
+    // Pre-compute (widthx + widthy) coefficients rather than calculating them
+    // (widthx * widthy) times inside the loop.
+    // In principle we could delay calculating coeffsy until after the loop, in
+    // which case we'd only need a single coefficient buffer.  But we need lowy
+    // which comes from the same API call, and we're probably okay on stack
+    // space anyhow.
+    long lowx = 0, lowy = 0;
+    detail::interp1d_coeffs(kernelx, x, &lowx, coeffsx);
+    detail::interp1d_coeffs(kernely, y, &lowy, coeffsy);
+
+    // Do X interp at each Y index.
+    for (int i_kernely = 0; i_kernely < widthy; ++i_kernely) {
+        long i_datay = i_kernely + lowy;
+        if (periodic)
+            i_datay %= ny;
+        if ((i_datay >= 0) and (i_datay < ny)) {
+            const DataType* zi = &z[i_datay * stridey];
+            const DataType* px = detail::get_contiguous_view_or_copy(
+                    datax, widthx, lowx, zi, nx, stridex, periodic);
+            datay[i_kernely] = detail::inner_product(widthx, coeffsx, px);
+        } else {
+            datay[i_kernely] = 0;
+        }
+    }
+    // Do Y interp.
+    return detail::inner_product(widthy, coeffsy, datay);
+}
+
+}
