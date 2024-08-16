@@ -16,6 +16,7 @@
 
 #include "forward.h"
 #include <isce3/core/forward.h>
+#include <isce3/core/Common.h>
 #include <isce3/product/forward.h>
 
 #include <optional>
@@ -415,6 +416,7 @@ double compute_mean_dem(const DEMInterpolator& dem);
  * @param[in]  origin       Origin of polar coordinate system, ECEF XYZ (m)
  * @param[in]  axis         Azimuth axis, unit ECEF XYZ
  */
+CUDA_HOSTDEV
 isce3::error::ErrorCode
 geo2polar(double* sinSquint, double* range, const isce3::core::Vec3& xyz,
         const isce3::core::Vec3& origin, const isce3::core::Vec3& axis);

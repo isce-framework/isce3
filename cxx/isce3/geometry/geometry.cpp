@@ -644,12 +644,13 @@ double isce3::geometry::compute_mean_dem(const DEMInterpolator& dem)
 }
 
 
+CUDA_HOSTDEV
 isce3::error::ErrorCode
 isce3::geometry::geo2polar(double* sinSquint, double* range,
-        const isce3::core::Vec3& xyz, const isce3::core::Vec3& origin,
-        const isce3::core::Vec3& axis)
+        const Vec3& xyz, const Vec3& origin,
+        const Vec3& axis)
 {
-    const isce3::core::Vec3 lookvec = xyz - origin;
+    const Vec3 lookvec = xyz - origin;
     *range = lookvec.norm();
     *sinSquint = lookvec.dot(axis) / (*range);
     return isce3::error::ErrorCode::Success;
