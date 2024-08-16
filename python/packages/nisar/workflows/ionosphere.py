@@ -22,7 +22,7 @@ from isce3.splitspectrum import splitspectrum
 from nisar.products.readers import SLC
 from nisar.workflows import (crossmul, dense_offsets, h5_prep,
                              filter_interferogram, prepare_insar_hdf5,
-                             resample_slc,
+                             resample_slc_v2,
                              rubbersheet, unwrap)
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
 from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
@@ -550,9 +550,9 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
         decimate_freq_a_offset(iono_insar_cfg, original_dict)
 
     if iono_insar_cfg['processing']['fine_resample']['enabled']:
-        resample_slc.run(iono_insar_cfg, 'fine')
+        resample_slc_v2.run(iono_insar_cfg, 'fine')
     else:
-        resample_slc.run(iono_insar_cfg, 'coarse')
+        resample_slc_v2.run(iono_insar_cfg, 'coarse')
 
     if iono_insar_cfg['processing']['fine_resample']['enabled']:
         crossmul.run(iono_insar_cfg, out_paths['RIFG'], 'fine')
