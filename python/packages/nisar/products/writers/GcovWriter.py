@@ -352,7 +352,8 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
         save_dataset(temp_mask_file,
                      hdf5_obj, root_ds,
                      yds, xds,
-                     'mask')
+                     'mask',
+                     compute_stats=False)
 
     # save rtc
     if save_rtc_anf:
