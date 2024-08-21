@@ -160,45 +160,61 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
     orbit_start = datetime.datetime.fromisoformat(orbit.start_datetime.isoformat_usec())
     orbit_end = datetime.datetime.fromisoformat(orbit.end_datetime.isoformat_usec())
 
-    with open(tec_path, 'r') as jin:
-        imagen_dict = json.load(jin)
-        num_utc = len(imagen_dict['utc'])
-        tec_start = datetime.datetime.fromisoformat(imagen_dict['utc'][0])
-        tec_end = datetime.datetime.fromisoformat(imagen_dict['utc'][-1])
-
-    minimum_margin_sec = (tec_end - tec_start).total_seconds() / (num_utc -1) / 2
-
     # Compute the paddings of orbit and TEC w.r.t. radar grid
     orbit_margin_start = (sensing_start - orbit_start).total_seconds()
     orbit_margin_end = (orbit_end - sensing_stop).total_seconds()
 
-    tec_margin_start = (sensing_start - tec_start).total_seconds()
-    tec_margin_end = (tec_end - sensing_stop).total_seconds()
+    margin_info_msg = (f'Orbit margin before sensing start      :      {orbit_margin_start} seconds\n'
+                       f'Orbit margin after sensing stop        :        {orbit_margin_end} seconds\n')
 
-    margin_info_msg = (f'Orbit margin before sensing start:      {orbit_margin_start} seconds\n'
-                       f'Orbit margin after sensing stop:        {orbit_margin_end} seconds\n'
-                       f'IMAGEN TEC margin before sensing start: {tec_margin_start} seconds\n'
-                       f'IMAGEN TEC margin after sensing stop:   {tec_margin_end} seconds\n'
-                       f'Minimum required margin: {minimum_margin_sec} seconds\n')
+    if not tec_path:
+        info_channel.log('IMAGEN TEC was not provided. '
+                         'Checking the orbit data and sensing start / stop.')
+        
+        info_channel.log(margin_info_msg)
 
-    info_channel.log(margin_info_msg)
+        if orbit_margin_start < 0.0:
+            error_channel.log('Not enough orbit data at the sensing start.')
+        if orbit_margin_end < 0.0:
+            error_channel.log('Not enough orbit data at the sensing end.')
 
-    # Check if the margin looks okay
-    if orbit_margin_start < minimum_margin_sec:
-        error_channel.log('Orbit margin before sensing start is not enough '
-                          f'({orbit_margin_start} < {minimum_margin_sec})')
+    else:
+        # Load timing information from IMAGEN TEC and check with orbit and sensing
+        with open(tec_path, 'r') as jin:
+            imagen_dict = json.load(jin)
+            num_utc = len(imagen_dict['utc'])
+            tec_start = datetime.datetime.fromisoformat(imagen_dict['utc'][0])
+            tec_end = datetime.datetime.fromisoformat(imagen_dict['utc'][-1])
 
-    if orbit_margin_end < minimum_margin_sec:
-        error_channel.log('Orbit margin after sensing stop is not enough '
-                          f'({orbit_margin_end} < {minimum_margin_sec})')
+        tec_margin_start = (sensing_start - tec_start).total_seconds()
+        tec_margin_end = (tec_end - sensing_stop).total_seconds()
 
-    if orbit_margin_start < minimum_margin_sec:
-        error_channel.log('IMAGEN TEC margin before sensing start is not enough '
-                          f'({tec_margin_start} < {minimum_margin_sec})')
+        minimum_margin_sec = (tec_end - tec_start).total_seconds() / (num_utc -1) / 2
 
-    if orbit_margin_end < minimum_margin_sec:
-        error_channel.log(f'IMAGEN TEC margin after sensing stop is not enough '
-                          f'({tec_margin_end} < {minimum_margin_sec})')
+        margin_info_msg += (f'IMAGEN TEC margin before sensing start : {tec_margin_start} seconds\n'
+                            f'IMAGEN TEC margin after sensing stop   :   {tec_margin_end} seconds\n'
+                            f'Minimum required margin                : {minimum_margin_sec} seconds\n')
+
+        info_channel.log(margin_info_msg)
+
+        # Check if the margin looks okay
+
+        if orbit_margin_start < minimum_margin_sec:
+            error_channel.log('Orbit margin before sensing start is not enough '
+                            f'({orbit_margin_start} < {minimum_margin_sec})')
+
+        if orbit_margin_end < minimum_margin_sec:
+            error_channel.log('Orbit margin after sensing stop is not enough '
+                            f'({orbit_margin_end} < {minimum_margin_sec})')
+
+
+        if orbit_margin_start < minimum_margin_sec:
+            error_channel.log('IMAGEN TEC margin before sensing start is not enough '
+                            f'({tec_margin_start} < {minimum_margin_sec})')
+
+        if orbit_margin_end < minimum_margin_sec:
+            error_channel.log(f'IMAGEN TEC margin after sensing stop is not enough '
+                            f'({tec_margin_end} < {minimum_margin_sec})')
 
 
 def check_log_dir_writable(log_file_path: str):
