@@ -2,8 +2,6 @@
 #include "ICU.h"
 #include "Phass.h"
 
-#include <isce3/unwrap/snaphu/snaphu_unwrap.h>
-
 namespace py = pybind11;
 
 void addsubmodule_unwrap(py::module & m)
@@ -17,7 +15,4 @@ void addsubmodule_unwrap(py::module & m)
     // add bindings
     addbinding(pyICU);
     addbinding(pyPhass);
-  
-    m_unwrap.def("_snaphu_unwrap", &isce3::unwrap::snaphuUnwrap,
-            py::arg("configfile"), py::call_guard<py::gil_scoped_release>());
 }

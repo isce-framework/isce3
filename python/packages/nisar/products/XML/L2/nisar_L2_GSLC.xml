@@ -543,6 +543,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      long_name="Zero-Doppler azimuth time"
+                      grid_mapping="projection"
                       units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler azimuth time in seconds</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/slantRange"
@@ -550,6 +552,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      long_name="Slant range"
+                      grid_mapping="projection"
                       units="meters">Slant range in meters</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/incidenceAngle"
@@ -631,7 +635,7 @@
                       lang="en"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      long_name="Ground-track velocity"
+                      long_name="Ground track velocity"
                       units="meters / second">Absolute value of the platform velocity scaled at the target height</annotation>
         </real>
 
@@ -1975,65 +1979,64 @@
               <annotation app="conformance"
                           lang="en">Contents of the run configuration file associated with the processing of the source data</annotation>
         </string>
-
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/referenceTerrainHeight"
-              shape="dopplerCentroidTimeLength"
+              shape="sourceDataDopplerCentroidTimeLength"
               width="32">
               <annotation app="conformance"
                           lang="en"
                           units="meters">Reference terrain height corresponding to the source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/zeroDopplerTime"
-              shape="dopplerCentroidTimeLength"
+              shape="sourceDataDopplerCentroidTimeLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/slantRange"
-              shape="dopplerCentroidSlantRangeWidth"
+              shape="sourceDataDopplerCentroidSlantRangeWidth"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="meters">Slant range dimension corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyA/zeroDopplerTime"
-              shape="dopplerCentroidTimeLength"
+              shape="sourceDataDopplerCentroidTimeLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyA/slantRange"
-              shape="dopplerCentroidSlantRangeWidth"
+              shape="sourceDataDopplerCentroidSlantRangeWidth"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="meters">Slant range dimension corresponding to the source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyA/dopplerCentroid"
-              shape="dopplerCentroidShape"
+              shape="sourceDataDopplerCentroidShape"
               width="64">
           <annotation app="conformance"
                       lang="en"
                       units="hertz">2D LUT of Doppler centroid for frequency A corresponding to the source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyB/zeroDopplerTime"
-              shape="dopplerCentroidTimeLength"
+              shape="sourceDataDopplerCentroidTimeLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyB/slantRange"
-              shape="dopplerCentroidSlantRangeWidth"
+              shape="sourceDataDopplerCentroidSlantRangeWidth"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="meters">Slant range dimension corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyB/dopplerCentroid"
-              shape="dopplerCentroidShape"
+              shape="sourceDataDopplerCentroidShape"
               width="64">
           <annotation app="conformance"
                       lang="en"
@@ -2428,7 +2431,30 @@
                        lang="en">Shape of crosstalk datasets</annotation>
            <dimension name="complex" extent="2"/>
     </shape>
-
+    <!-- Source data related shape -->
+    <shape name="sourceDataDopplerCentroidTimeLength"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Length dimension of Doppler centroid grid corresponding to the source data</annotation>
+           <dimension extent="0"
+                      name="sourceDataDopplerCentroidTimeLength"/>
+    </shape>
+    <shape name="sourceDataDopplerCentroidSlantRangeWidth"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Length dimension of Doppler centroid grid corresponding to the source data</annotation>
+           <dimension extent="0"
+                      name="sourceDataDopplerCentroidSlantRangeWidth"/>
+    </shape>
+    <shape name="sourceDataDopplerCentroidShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape of the Doppler centroid grid corresponding to the source data</annotation>
+            <dimension extent="0"
+                       name="sourceDataDopplerCentroidTimeLength"/>
+            <dimension extent="0"
+                       name="sourceDataDopplerCentroidSlantRangeWidth"/>
+    </shape>
     <!-- Orbit related shape -->
     <shape name="orbitListLength"
            order="slowest...fastest">

@@ -277,10 +277,9 @@ def check_h5_dtype_vs_xml_spec(xml_metadata_entry, h5_dataset_obj,
                                 f' {xml_length}')
 
 
-def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
+def write_xml_spec_attrs_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
     """
-    Write a physical unit to an HDF5 Dataset based on the
-    product specification XML
+    Write attributes to an HDF5 Dataset based on the product specification XML
 
     Parameters
     ----------
@@ -289,12 +288,16 @@ def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
     h5_dataset_obj: h5py.Dataset
         Product h5py dataset
     """
-    warning_channel = journal.warning('write_xml_spec_unit_to_h5_dataset')
-    error_channel = journal.error('write_xml_spec_unit_to_h5_dataset')
+    warning_channel = journal.warning('write_xml_spec_attrs_to_h5_dataset')
+    error_channel = journal.error('write_xml_spec_attrs_to_h5_dataset')
 
     full_h5_ds_path = xml_metadata_entry.attrib['name']
 
     flag_found_units = False
+
+    attributes_to_copy_string_list = {'long_name', 'standard_name'}
+
+    attributes_to_copy_numeric_list = {'valid_min', 'valid_max'}
 
     # iterate over the annotation elements
     for annotation_et in xml_metadata_entry:
@@ -355,6 +358,15 @@ def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
                     warning_channel.log(f'The metadata field {full_h5_ds_path}'
                                         ' has an invalid unit:'
                                         f' "{annotation_value}"')
+
+            elif annotation_key in attributes_to_copy_string_list:
+                h5_dataset_obj.attrs[annotation_key] = \
+                    np.bytes_(annotation_value)
+
+            elif (annotation_key in attributes_to_copy_numeric_list):
+                h5_dataset_obj.attrs.create(annotation_key,
+                                            data=annotation_value,
+                                            dtype=h5_dataset_obj.dtype)
 
 
 def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
@@ -841,7 +853,7 @@ class BaseWriterSingleInput():
             h5_dataset_obj = self.output_hdf5_obj[full_h5_ds_path]
 
             check_h5_dtype_vs_xml_spec(xml_metadata_entry, h5_dataset_obj)
-            write_xml_spec_unit_to_h5_dataset(xml_metadata_entry,
+            write_xml_spec_attrs_to_h5_dataset(xml_metadata_entry,
                                               h5_dataset_obj)
             write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj)
 

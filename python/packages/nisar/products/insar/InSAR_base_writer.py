@@ -832,18 +832,12 @@ class InSARBaseWriter(h5py.File):
         """
         Write metadata datasets and attributes common to all InSAR products to HDF5
         """
-        groups = ['reference', 'secondary']
-        ref_metadata_group = self.ref_h5py_file_obj[self.ref_rslc.MetadataPath]
-        sec_metadata_group = self.sec_h5py_file_obj[self.sec_rslc.MetadataPath]
-
         for group, h5py_file_obj, orbit_to_save in zip(['reference', 'secondary'],
                                                        [self.ref_h5py_file_obj,
                                                         self.sec_h5py_file_obj],
                                                        [self.ref_orbit,
                                                         self.sec_orbit]):
             # Create metadata group, copy over attitude group, and open newly create attitude group
-            metadata_group = h5py_file_obj[self.ref_rslc.MetadataPath]
-            dst_meta_data_group = self.require_group(self.group_paths.MetadataPath)
             dst_attitude_group = self.require_group(
                 f'{self.group_paths.MetadataPath}/attitude/{group}')
             src_attitude_group = h5py_file_obj[f'{self.ref_rslc.MetadataPath}/attitude']
@@ -886,7 +880,15 @@ class InSARBaseWriter(h5py.File):
             if orbit_time_units is not None:
                 orbit_time.attrs['units'] = np.bytes_(orbit_time_units)
 
-            # Orbit velocity
+            # Update the description of orbit position
+            dst_orbit_group["position"].attrs["description"] = np.bytes_(
+                "Position vector record. This record contains the platform "
+                "position data with respect to WGS84 G1762 reference frame")
+
+            # Update the description of orbit velocity
+            dst_orbit_group["velocity"].attrs["description"] = np.bytes_(
+                'Velocity vector record. This record contains the platform velocity data '
+                'with respect to WGS84 G1762 reference frame')
             dst_orbit_group["velocity"].attrs["units"] = Units.meter_per_second
 
             # Update orbitType description
