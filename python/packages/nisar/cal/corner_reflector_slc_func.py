@@ -1,6 +1,8 @@
 """
 Some functionalities for corner reflectors from RSLC product
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
 import typing
 import numpy as np
@@ -10,6 +12,8 @@ from isce3.core import Ellipsoid, LUT2d, LookSide
 from isce3.geometry import geo2rdr, rdr2geo, DEMInterpolator, heading
 from isce3.cal.point_target_info import get_chip, oversample
 from isce3.antenna import geo2ant, ant2geo
+
+from nisar.products.readers import GSLC, RSLC
 
 # datatype aliases
 VectorFloat = typing.Union[typing.Sequence[float], np.ndarray]
@@ -242,15 +246,15 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, freq_band='A',
     return cr_info
 
 
-def est_cr_az_mid_swath_from_slc(slc):
+def est_cr_az_mid_swath_from_slc(slc: GSLC | RSLC):
     """
     Estimate approximately optimum azimuth (AZ) angle for a CR at mid swath
-    from RSLC product.
+    from RSLC or GSLC product.
 
     Parameters
     ----------
-    slc : nisar.products.readers.SLC
-        The input RSLC product.
+    slc : nisar.products.readers.RSLC or nisar.products.readers.GSLC
+        The input SLC product.
 
     Returns
     -------
@@ -269,7 +273,12 @@ def est_cr_az_mid_swath_from_slc(slc):
 
     """
     # get mid azimuth time of slc
-    rdr_grid = slc.getRadarGrid()
+    if isinstance(slc, RSLC):
+         rdr_grid = slc.getRadarGrid()
+    elif isinstance(slc, GSLC):
+         rdr_grid = slc.getSourceRadarGridParameters()
+    else:
+         raise TypeError(f"slc must be an RSLC or GSLC product reader, got {type(slc)}")
     az_time = rdr_grid.sensing_mid
 
     # get pos/vel at mid slc time
