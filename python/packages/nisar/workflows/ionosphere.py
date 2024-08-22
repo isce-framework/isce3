@@ -137,8 +137,6 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
 
             offsets_path = f'{offsets_dir}/{coarse_offset_path}'
             offsets_b_path = f'{decimated_offset_dir}/{coarse_offset_b_path}'
-
-            raster_ext = 'off'
         else:
             # We checked the existence of HH/VV offsets in resample_slc_runconfig.py
             # Select the first offsets available between HH and VV
@@ -154,13 +152,12 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
             else:
                 offsets_path = f'{freq_offsets_path}/VV'
                 offsets_b_path = f'{freq_offsets_b_path}/VV'
-            raster_ext = 'off.vrt'
 
-        rg_off_path = str(f'{offsets_path}/range.{raster_ext}')
-        az_off_path = str(f'{offsets_path}/azimuth.{raster_ext}')
+        rg_off_path = str(f'{offsets_path}/range.off')
+        az_off_path = str(f'{offsets_path}/azimuth.off')
 
-        rg_b_off_path = str(f'{offsets_b_path}/range.{raster_ext}')
-        az_b_off_path = str(f'{offsets_b_path}/azimuth.{raster_ext}')
+        rg_b_off_path = str(f'{offsets_b_path}/range.off')
+        az_b_off_path = str(f'{offsets_b_path}/azimuth.off')
 
         # create new offset directory in ionosphere scratch
         os.makedirs(offsets_b_path, exist_ok=True)

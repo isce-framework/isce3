@@ -59,8 +59,6 @@ def run(cfg, resample_type):
                                     f'{resample_type}_resample_slc' / f'freq{freq}'
         if resample_type == 'coarse':
             offsets_path = offsets_dir / 'geo2rdr' / f'freq{freq}'
-            rg_off = isce3.io.Raster(str(offsets_path / 'range.off'))
-            az_off = isce3.io.Raster(str(offsets_path / 'azimuth.off'))
         else:
             # We checked the existence of HH/VV offsets in resample_slc_runconfig.py
             # Select the first offsets available between HH and VV
@@ -69,8 +67,8 @@ def run(cfg, resample_type):
                 offsets_path = freq_offsets_path/'HH'
             else:
                 offsets_path = freq_offsets_path/'VV'
-            rg_off = isce3.io.Raster(str(offsets_path / 'range.off.vrt'))
-            az_off = isce3.io.Raster(str(offsets_path / 'azimuth.off.vrt'))
+        rg_off = isce3.io.Raster(str(offsets_path / 'range.off'))
+        az_off = isce3.io.Raster(str(offsets_path / 'azimuth.off'))
 
         # Create resample slc directory
         resample_slc_scratch_path.mkdir(parents=True, exist_ok=True)

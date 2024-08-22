@@ -12,11 +12,14 @@ import h5py
 import isce3
 import journal
 import numpy as np
+from isce3.core.resample_block_generators import get_blocks
+from isce3.io.gdal.gdal_raster import GDALRaster
 from isce3.product import RadarGridParameters
 from nisar.products.readers import SLC
 from nisar.workflows.get_product_geometry import \
     get_geolocation_grid as compute_geogrid_geometry
-from osgeo import gdal
+from osgeo import gdal, gdal_array
+from pathlib import Path
 
 
 class JsonNumpyEncoder(json.JSONEncoder):
@@ -534,3 +537,91 @@ def validate_fs_page_size(fs_page_size, chunks, itemsize=8):
     # sure how much storage is required for HDF5 metadata.
     if not (fs_page_size > np.prod(chunks) * itemsize):
         warn("File space page size is not larger than a chunk of data.")
+
+
+def sum_gdal_rasters(filepath1, filepath2, out_filepath, data_type=np.float64,
+                     driver_name='ENVI', row_blocks=2048, col_blocks=2048):
+    """
+    Sum 2 GDAL memory-mappable rasters block by block and save the result
+    to an output file in a GDAL-friendly format
+
+    Parameters
+    ----------
+    filepath1: str | os.PathLike
+        Path to the first GDAL memory-mappable raster
+    filepath2: str | os.PathLike
+        Path to the second GDAL memory-mappable raster
+    out_filepath: str | os.PathLike
+        Path to the output file
+    data_type: np.dtype, optional
+        Data type of the input and output files (default: np.float64)
+    driver_name: str, optional
+        Name of the GDAL driver for the output file (default: ENVI)
+    row_blocks: int, optional
+        Number of rows in each block (default: 2048)
+    col_blocks: int, optional
+        Number of columns in each block (default: 2048)
+    """
+    error_channel = journal.error('helpers.sum_gdal_rasters').log
+
+    if not isinstance(row_blocks, int) or not isinstance(col_blocks, int):
+        error_channel('row_block and col_blocks must be integers')
+
+    # Open the GDAL rasters and get shape
+    in_ds1 = gdal.Open(os.fspath(filepath1))
+    in_ds2 = gdal.Open(os.fspath(filepath2))
+    length1, width1 = in_ds1.RasterYSize, in_ds1.RasterXSize
+    length2, width2 = in_ds2.RasterYSize, in_ds2.RasterXSize
+
+    # Check that rasters have the same shape
+    if (length1 != length2) or (width1 != width2):
+       error_channel(f'Input raster files do not have the same number of '
+                     f'rows ({length1}, {length2}) or columns ({width1},{width2}')
+
+    # Check we only have one raster band for both input rasters
+    if (in_ds1.RasterCount != 1) or (in_ds2.RasterCount != 1):
+        error_channel("Input raster files must be single-band rasters")
+
+    # Check that the data-type specified by the user matches the data type
+    # of the GDAL input raster files
+    gdal_dtype = gdal_array.NumericTypeCodeToGDALTypeCode(data_type)
+
+    for ds in [in_ds1, in_ds2]:
+        raster_dtype = ds.GetRasterBand(1).DataType
+        if raster_dtype != gdal_dtype:
+            error_channel(f"input file has unexpected GDAL datatype {raster_dtype};"
+                          f" expected {gdal_dtype}")
+
+    # Initialize reader objects for filepath1 and filepath2
+    file1_reader = np.memmap(
+            filename=filepath1,
+            shape=(length1, width1),
+            dtype=data_type,
+            mode='r',
+        )
+
+    file2_reader = np.memmap(
+        filename=filepath2,
+        shape=(length1, width1),
+        dtype=data_type,
+        mode='r',
+    )
+
+    # Initialize output writer
+    out_file_writer = GDALRaster.create_dataset_file(
+        filepath=Path(out_filepath),
+        dtype=data_type,
+        shape=(length1, width2),
+        num_bands=1,
+        driver_name=driver_name,
+    )
+
+    # Process blocks
+    for out_block_slice in get_blocks(
+            block_max_shape=(row_blocks, col_blocks),
+            grid_shape=(length1, width1),
+            quiet=True,
+    ):
+        file1_block = file1_reader[out_block_slice].astype(data_type, copy=False)
+        file2_block = file2_reader[out_block_slice].astype(data_type, copy=False)
+        out_file_writer[out_block_slice] = file1_block + file2_block

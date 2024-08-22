@@ -13,7 +13,8 @@ from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.helpers import (get_cfg_freq_pols,
-                                     get_ground_track_velocity_product)
+                                     get_ground_track_velocity_product,
+                                     sum_gdal_rasters)
 from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
@@ -149,11 +150,9 @@ def run(cfg: dict, output_hdf5: str = None):
                                    width=ref_radar_grid.width,
                                    height=ref_radar_grid.length, format='ENVI')
                     # Sum resampled offsets to geometry offsets
-                    sum_off_path = f'{str(out_dir / geo_off)}.vrt'
-                    _write_vrt(str(geo_offset_dir / geo_off),
-                               resamp_off_path,
-                               sum_off_path, ref_radar_grid.width,
-                               ref_radar_grid.length, 'Float32', 'sum')
+                    sum_off_path = str(out_dir / geo_off)
+                    sum_gdal_rasters(str(geo_offset_dir / geo_off),
+                                     resamp_off_path, sum_off_path)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(
@@ -183,7 +182,7 @@ def _open_raster(filepath, band=1):
 
 
 def _write_to_disk(outpath, array, format='ENVI',
-                   datatype=gdal.GDT_Float32):
+                   datatype=gdal.GDT_Float64):
     '''
     Write numpy array to disk as a GDAl raster
 
@@ -496,47 +495,6 @@ def _filter_offsets(offset, rubbersheet_params):
         error_channel.log(err_str)
         raise ValueError(err_str)
 
-
-def _write_vrt(file1, file2, out_vrt, width, length, data_type,
-               function_name, description='Sum'):
-    '''
-    Write VRT file using GDAL pixel function capabilities
-
-    Parameter
-    ----------
-    file1:  str
-        First source file to use in the VRT generation
-    file2:  str
-        Second source file to use in VRT generation
-    out_vrt: str
-        Filepath to the output VRT
-    width:
-        Width of output vrt
-    length:
-        Length of VRT output file
-    data_type:
-        Data type of output VRT
-    function_name:
-        Name of pixel function used to create VRT
-    description: str
-        Description of the pixel function to create the VRT
-    '''
-    vrttmpl = f'''
-    <VRTDataset rasterXSize="{width}" rasterYSize="{length}">
-      <VRTRasterBand dataType="{data_type}" band="1" subClass="VRTDerivedRasterBand">
-        <Description>{description}</Description>
-        <PixelFunctionType>{function_name}</PixelFunctionType>
-        <SimpleSource>
-          <SourceFilename>{file1}</SourceFilename>
-        </SimpleSource>
-        <SimpleSource>
-          <SourceFilename>{file2}</SourceFilename>
-        </SimpleSource>
-      </VRTRasterBand>
-    </VRTDataset>'''
-
-    with open(out_vrt, 'w') as fid:
-        fid.write(vrttmpl)
 
 
 if __name__ == "__main__":

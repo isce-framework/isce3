@@ -55,12 +55,8 @@ def run(cfg: dict, resample_type: str) -> None:
         offsets_dir = Path(resamp_args["offsets_dir"])
 
         if resample_type == "coarse":
-            az_off_filename = "azimuth.off"
-            rg_off_filename = "range.off"
             offsets_path = offsets_dir / f"geo2rdr/freq{freq}"
         elif resample_type == "fine":
-            az_off_filename = "azimuth.off.vrt"
-            rg_off_filename = "range.off.vrt"
             # We checked the existence of HH/VV offsets in resample_slc_runconfig.py
             # Select the first offsets available between HH and VV
             freq_offsets_path = \
@@ -74,8 +70,8 @@ def run(cfg: dict, resample_type: str) -> None:
                 "resample_type must be 'coarse' or 'fine', instead got "
                 f"{resample_type!r}")
         
-        az_off_path = offsets_path / az_off_filename
-        rg_off_path = offsets_path / rg_off_filename
+        az_off_path = offsets_path / "azimuth.off"
+        rg_off_path = offsets_path / "range.off"
 
         # Create separate directories for coarse and fine resample
         # Open corresponding range/azimuth offsets
