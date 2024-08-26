@@ -17,6 +17,7 @@ isce3/io/gdal/gdal_raster.py
 isce3/io/background.py
 isce3/matchtemplate/import_ampcor.py
 isce3/matchtemplate/test_ampcor.py
+isce3/product/cf_conventions.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/rfi_freq_null.py

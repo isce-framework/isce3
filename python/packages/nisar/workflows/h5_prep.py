@@ -7,6 +7,7 @@ import os
 
 import h5py
 import isce3
+from isce3.product.cf_conventions import get_grid_mapping_name
 import journal
 import numpy as np
 from isce3.core.types import complex32, to_complex32
@@ -794,7 +795,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     sr = osr.SpatialReference()
     sr.ImportFromEPSG(epsg_code)
 
-    projds.attrs['grid_mapping_name'] = sr.GetName()
+    projds.attrs['grid_mapping_name'] = get_grid_mapping_name(sr)
 
     # Set up units
     # Geodetic latitude / longitude
