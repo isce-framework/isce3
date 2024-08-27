@@ -80,7 +80,7 @@ Note that these files may be stored in a separate location outside *isce3* repo.
 
 - **REE_CR_INFO_out17.csv**
 
-  UAVSAR-formatted CSV file for info of a single point target/ corner reflector (CR)
+  NISAR-formatted CSV file for info of a single point target/ corner reflector (CR)
   of REE simulation with config/RDF file *REE_L0B_out17.rdf*.
 
 - **REE_GSLC_out17_unflattened.h5**

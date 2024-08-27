@@ -431,6 +431,8 @@ def analyze_gslc_point_targets_csv(
         
     to_json(results, output_file, encoder=CustomJSONEncoder)
 
+    return results
+
 
 def analyze_gslc_point_target_llh(
     gslc_filename: os.PathLike | str,
