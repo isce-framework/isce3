@@ -668,8 +668,7 @@ def construct_calibration_grid(metadata, orbit, az_pad_in_pixels=20,
     metadata['ref_epoch'] = ref_epoch
     metadata['Start Seconds of Acquisition'] = (a0 - ref_epoch).total_seconds()
     metadata['Stop Seconds of Acquisition'] = (a1 - ref_epoch).total_seconds()
-    metadata['ref_epoch_attr'] = 'seconds since %s' % ref_epoch.isoformat(
-        sep=' ')
+    metadata['ref_epoch_attr'] = 'seconds since %s' % ref_epoch.isoformat()
 
     # Pad the azimuth time bounds in each direction (az_pad in units of
     # seconds)

@@ -891,7 +891,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
 
     # seconds since ref epoch
     ref_epoch = radar_grid.ref_epoch
-    ref_epoch_str = ref_epoch.isoformat().replace('T', ' ')
+    ref_epoch_str = ref_epoch.isoformat()
     az_coord_units = f'seconds since {ref_epoch_str}'
 
     slant_range_raster = _get_raster_from_hdf5_ds(
@@ -1182,7 +1182,7 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
 
     # seconds since ref epoch
     ref_epoch = radar_grid.ref_epoch
-    ref_epoch_str = ref_epoch.isoformat().replace('T', ' ')
+    ref_epoch_str = ref_epoch.isoformat()
     az_coord_units = f'seconds since {ref_epoch_str}'
 
     coordinates_list = []
