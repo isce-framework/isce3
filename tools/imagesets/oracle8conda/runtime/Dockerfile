@@ -14,7 +14,7 @@ RUN yum update -y \
 
 # install latest miniconda
 ARG conda_prefix
-RUN curl -sSL https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh \
+RUN curl -sSL https://repo.anaconda.com/miniconda/Miniconda3-py312_24.5.0-0-Linux-x86_64.sh \
         -o miniconda.sh \
  && bash miniconda.sh -b -p $conda_prefix \
  && rm miniconda.sh

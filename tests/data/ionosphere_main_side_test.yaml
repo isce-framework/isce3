@@ -111,7 +111,8 @@ runconfig:
                 write_layover_shadow: True
 
             coarse_resample:
-                lines_per_tile: 100
+                lines_per_tile: 1000
+                columns_per_tile: 1000
 
             dense_offsets:
                 enabled: False

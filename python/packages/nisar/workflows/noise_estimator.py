@@ -1,381 +1,176 @@
+#!/usr/bin/env python3
 """
-Estimate noise power of BCAL/LCAL lines in L0B raw data
+Workflow for estimating noise power from L0B raw data
 """
-import numpy as np
-from numpy import linalg as la
 import argparse
-from nisar.products.readers.Raw import Raw
-from nisar.antenna import CalPath
 import json
-import warnings
+from pathlib import Path
+import time
 
-desc = __doc__
+import numpy as np
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
+from nisar.log import set_logger
+from nisar.products.readers.Raw import Raw
+from nisar.noise import est_noise_power_from_raw
+from nisar.noise.noise_estimation_from_raw import PERC_INVALID_NOISE
+from nisar.workflows.helpers import JsonNumpyEncoder
 
 
 def cmd_line_parse():
     parser = argparse.ArgumentParser(
-        description=desc, formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=(
+            'Estimate noise power in DN**2 units for all frequency bands'
+            ' and polarizations from a L0B raw product.'
+        ),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         fromfile_prefix_chars="@",
     )
-    parser.add_argument(
-        "-i",
-        "--input",
-        dest="input_path",
-        type=str,
-        required=True,
-        help="Input file path",
-    )
-    parser.add_argument(
-        "-f",
-        "--freq",
-        dest="freq_group",
-        type=str,
-        required=True,
-        choices=["A", "B"],
-        help="Frequency group in raw L0B H5 file: A or B",
-    )
-    parser.add_argument(
-        "-p",
-        "--polarizations",
-        dest="pol",
-        type=str,
-        required=True,
-        choices=["HH", "HV", "VH", "VV", "LH", "LV", "RH", "RV"],
-        help=(
-            "Tx and Rx polarizations in raw L0B file:"
-            " HH, HV, VH, VV, LH, LV, RH, or RV"
-        ),
-    )
-    parser.add_argument(
-        "--rng-start",
-        dest="rng_start",
-        type=int,
-        default=None,
-        nargs="+",
-        required=False,
-        help="Start range bins for beams",
-    )
-    parser.add_argument(
-        "--rng-stop",
-        dest="rng_stop",
-        type=int,
-        default=None,
-        nargs="+",
-        required=False,
-        help="Stop range bins for beams",
-    )
-    parser.add_argument(
-        "-c",
-        "--cpi",
-        type=int,
-        default=2,
-        required=False,
-        help="""Coherent processing interval in number of range lines. 
-              Only used when --algorithm='evd'.""",
-    )
-    parser.add_argument(
-        "-a",
-        "--algorithm",
-        dest="algo",
-        type=str,
-        default="avg",
-        required=False,
-        help="""Noise Estimation algorithms: 'avg' - mean of sum of squares and 
-                'evd' - Eigen Value Decompostion""",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        dest="output_path",
-        type=str,
-        default=None,
-        help="Output JSON file path that stores noise estimates",
-    )
+    parser.add_argument('l0b_file', type=str, help='L0B path and filename')
+    parser.add_argument('-n', '--num-rng-block', type=int,
+                        dest='num_rng_block',
+                        help=('Number of range blocks. Default is min '
+                              'recommended `2*C-1` where `C` is number of RX '
+                              'channels.')
+                        )
+    parser.add_argument('-c', '--cpi', type=int, dest='cpi',
+                        help=('Coherent processing interval in number of '
+                              'range lines. Only used when algorithm=MEE. '
+                              'Min required value is 2! Default is set to '
+                              'min 3 while the max number of CPI blocks is '
+                              'limited to 8 if possible.')
+                        )
+    parser.add_argument('-a', '--algorithm', dest='algorithm', type=str,
+                        default='MEE', choices=('MVE', 'MEE'),
+                        help=('Noise Estimation algorithms: '
+                              'MVE (Min Variance Estimator) per sample var, '
+                              'MEE (Min Eigenvalue Estimator)')
+                        )
+    parser.add_argument('-o', '--output', dest='output_path', type=str,
+                        default='.',
+                        help='Output directory for PNG plots if `--plot`.')
+    parser.add_argument('-j', '--json', dest='json_file', type=str,
+                        default='noise_power_est_info.json',
+                        help='Output JSON path and filename.')
+    parser.add_argument('--no-diff', action='store_true',
+                        dest='no_diff',
+                        help=('If True, it will not differentiate dataset '
+                              'w.r.t to the one of the range line for each '
+                              'product when algorithm=MVE.')
+                        )
+    parser.add_argument('--diff-method', type=str, default='single',
+                        dest='diff_method',
+                        choices=['single', 'mean', 'diff'],
+                        help=('Method for differentiating range lines for '
+                              'algorithm=MVE if diff is True.')
+                        )
+    parser.add_argument('--diff-quad', action='store_true',
+                        dest='diff_quad',
+                        help=('If set, it will differentiate Co/Cx-pol '
+                              'datasets with the same RX pol in a joint '
+                              'noise est for only QP case.')
+                        )
+    parser.add_argument('--pct-invalid-rngblk', type=float,
+                        dest='pct_invalid_rngblk',
+                        default=PERC_INVALID_NOISE,
+                        help=('Threshold in percentage of invalid range bins '
+                              'within range block above which the block is '
+                              'skipped and noise power is set to NaN. '
+                              'A value within [0, 100]!')
+                        )
+    parser.add_argument('--exclude-first-last', action='store_true',
+                        dest='exclude_first_last',
+                        help=('First and last noise-only range lines will be '
+                              'excluded in noise estimation. This can '
+                              'help avoid possible outliers in some '
+                              'mixed-mode NISAR cases.'
+                              )
+                        )
+    parser.add_argument('--no-median-ev', action='store_true',
+                        dest='no_median_ev',
+                        help=('If set, no median of eigenvals but '
+                              'simply min eigenval as noise power in MEE.')
+                        )
+    parser.add_argument('--plot', action='store_true', dest='plot',
+                        help='Generates PNG plots of noise power at `output`.'
+                        )
 
     return parser.parse_args()
 
 
-class InsufficientPulses(UserWarning):
-    """
-    Raised if number of input range lines is less than number
-    range lines in a CPI.
-    """
-
-    pass
-
-
-def validate_rng_start_stop(rng_start, rng_stop, raw_data):
-    """Validate input parameters and reformat.
-
-    Parameters:
-    -----------
-    rng_start: int or list of int
-        Start range bin of each beam
-    rng_stop: int or list of int
-        Stop range bin of each beam
-    raw_data: 2D array of complex
-        Raw data for noise power estimation
-
-    Returns:
-    --------
-    rng_start: list of int
-        Start range bin of each beam
-    rng_stop: list of int
-        Stop range bin of each beam
-    num_samps_beam: list of int
-        number samples in a beam
-    num_beams: int
-        number of beams after beamforming, maximum = 12
-    """
-    # handle the case where noise power estimate over a single beam is requested.
-    if isinstance(rng_start, int) and isinstance(rng_stop, int):
-        num_samps_beam = [rng_stop - rng_start + 1]
-        rng_start = [rng_start]
-        rng_stop = [rng_stop]
-        num_beams = len(rng_start)
-    # handle the case where rng_start and rng_stop are not provided by user.
-    # In this case, the noise power is estimated over the entire rangeline.
-    elif rng_start == None and rng_stop == None:
-        num_samps_beam = [raw_data.shape[1]]
-        rng_start = [0]
-        rng_stop = num_samps_beam
-        num_beams = len(rng_start)
-    # handle the case where noise power estimates are requested for multiple beams.
-    elif isinstance(rng_start, list) and isinstance(rng_stop, list):
-        # Check if rng_start and rng_stop are of the same size
-        if len(rng_start) != len(rng_stop):
-            raise ValueError("size of rng_start and rng_stop should be the same")
-        num_samps_beam = list(
-            np.array(rng_stop).astype(int) - np.array(rng_start).astype(int) + 1
-        )
-        num_beams = len(rng_start)
-    # Handle the case when rng_start and rng_stop are of different data types
-    elif type(rng_start) != type(rng_stop):
-        raise TypeError("Data type of rng_start and rng_stop are not identical")
-
-    # Check if rng_start values are negative
-    if not all(x >= 0 for x in rng_start):
-        raise ValueError("rng_start value should be >0")
-
-    # Check if rng_stop is greater than rng_start
-    if any((np.array(rng_stop) - np.array(rng_start)) <= 0):
-        raise ValueError("rng_stop value should be greater than rng_start")
-
-    return (rng_start, rng_stop, num_samps_beam, num_beams)
-
-
-def noise_est_avg(raw_data, rng_start=None, rng_stop=None):
-    """Estimate noise power using sample square average.
-
-    Parameters:
-    -----------
-    raw_data: 2d array of complex
-        Raw data for noise power estimation
-    rng_start: int or list of int
-        start range bin of each beam
-    rng_stop: int or list of int
-        stop range bin of each beam
-
-    Returns:
-    --------
-    noise_pwr_beam_db: float or array of float
-        Mean noise power estimate of all samples or of each beam in db, scalar if num_beams = 1
-    """
-
-    # validate range start and range stop indices
-    rng_start, rng_stop, num_samps_beam, num_beams = validate_rng_start_stop(
-        rng_start, rng_stop, raw_data
+def run_noise_estimator(args: argparse.Namespace):
+    """Run CLI noise estimator"""
+    tic = time.time()
+    # set logger
+    logger = set_logger(Path(__file__).name.split('.')[0])
+    # check plot status
+    plot = args.plot
+    if plot and plt is None:
+        logger.warning('No plots due to missing package `matplotlib`!')
+        plot = False
+    # set output path
+    p_out = Path(args.output_path)
+    # Create the output directory if it didn't already exist.
+    p_out.mkdir(parents=True, exist_ok=True)
+    # parse L0B
+    raw = Raw(hdf5file=args.l0b_file)
+    # run noise estimator
+    noise_prods = est_noise_power_from_raw(
+        raw,
+        num_rng_block=args.num_rng_block,
+        algorithm=args.algorithm,
+        cpi=args.cpi,
+        diff=not args.no_diff,
+        diff_method=args.diff_method,
+        median_ev=not args.no_median_ev,
+        dif_quad=args.diff_quad,
+        perc_invalid_rngblk=args.pct_invalid_rngblk,
+        exclude_first_last=args.exclude_first_last,
+        logger=logger
     )
+    # report stats of noise power
+    for ns_prod in noise_prods:
+        logger.info(f'Noise stats for w/ TxRx Pol={ns_prod.txrx_pol} '
+                    f'and Band={ns_prod.freq_band} ...')
+        _log_noise_stats_db(ns_prod.power_linear, logger)
+    # dump noise products to a JSON file
+    f_json = Path(args.json_file)
+    logger.info(f'Dumping Noise products to -> "{f_json}"')
+    with open(f_json, 'w') as fidw:
+        json.dump([vars(ns_prod) for ns_prod in noise_prods],
+                  fidw, indent=4, cls=JsonNumpyEncoder)
+    # plotting
+    if plot:
+        for nn, ns_prod in enumerate(noise_prods, start=1):
+            plot_name = (f'Plot_Noise_Power_{ns_prod.method}_'
+                         f'Freq{ns_prod.freq_band}_'
+                         f'Pol{ns_prod.txrx_pol}.png')
+            plt.figure()
+            plt.plot(ns_prod.slant_range * 1e-3,
+                     10 * np.log10(ns_prod.power_linear), 'r*--')
+            plt.xlabel('Slant Range (km)')
+            plt.ylabel(r'Noise Power (${dB_{DN^2}}$)')
+            plt.grid(True)
+            plt.title(f'{ns_prod.method} Noise Power '
+                      fr'within $ENBW={ns_prod.enbw * 1e-6}$(MHz)'
+                      f'\nFor TxRx-Pol={ns_prod.txrx_pol} & '
+                      f'Freq-Band={ns_prod.freq_band} ')
+            plt.savefig(p_out.joinpath(plot_name))
 
-    num_lines = raw_data.shape[0]
-
-    noise_pwr = np.zeros([num_lines, num_beams])
-    for idx_line in range(num_lines):
-        raw_line = raw_data[idx_line]
-        for idx_beam in range(num_beams):
-            raw_beam = raw_line[rng_start[idx_beam] : rng_stop[idx_beam]]
-            pwr_beam = np.square(np.abs(raw_beam))
-            pwr_beam_avg = np.mean(pwr_beam)
-
-            noise_pwr[idx_line, idx_beam] = pwr_beam_avg
-
-    if num_beams == 1:
-        noise_pwr = np.squeeze(noise_pwr, axis=1)
-
-    noise_pwr_beam_db = 10 * np.log10(np.mean(noise_pwr, axis=0))
-
-    return noise_pwr_beam_db
-
-
-def noise_est_evd(raw_data, cpi=2, rng_start=None, rng_stop=None):
-    """Estimate Noise Power using Minimum Eigenvalues.
-       1. Divide slow time range lines into coherent processing interval (CPI) blocks
-       2. Perform Eigenvalue decomposition (EVD) on each CPI.
-       3. Minimum eigenvalue of the CPI is the noise power estimate of all range lines in CPI.
-
-    Parameters:
-    -----------
-    raw_data: 2D array of complex
-        Raw data for noise power estimation
-    cpi: int
-        Number of range lines in a Coherent Processing Interval (CPI) which the algorithm constructs
-        a sample covariance matrix, default = 2
-    rng_start: int or list of int
-        Start range bin of each beam
-    rng_stop: int or list of int
-        Stop range bin of each beam
-
-    Returns:
-    --------
-    noise_pwr_beam_db: float or array of float
-        Noise power estimate of all samples or of each beam in db, scalar if num_beams = 1
-    """
-
-    # validate beam start and stop indices
-    rng_start, rng_stop, num_samps_beam, num_beams = validate_rng_start_stop(
-        rng_start, rng_stop, raw_data
-    )
-
-    num_lines = raw_data.shape[0]
-    num_cpi = int(num_lines / cpi)
-
-    cpi_start = np.arange(0, num_lines, cpi)
-    cpi_stop = cpi_start + cpi
-
-    # If number of lines in the raw data is a small value
-    if num_lines < 2:
-        raise ValueError(
-            "Total number range lines must be at least 2 for EVD algorithm"
-        )
-    elif num_lines < cpi:
-        warnings.warn(
-            "Number of input pulses is less than that of CPI. CPI is changed to number of input pulses.",
-            InsufficientPulses,
-        )
-        num_cpi = 1
-        cpi_start = [0]
-        cpi_stop = [num_lines]
-    elif num_lines > cpi:
-        # Check to see if there is a partial block.
-        # Shift cpi_start[-1] and cpi_stop[-1] form a full CPI block
-
-        if cpi_start[-1] + cpi > num_lines:
-            cpi_start[-1] = num_lines - cpi
-            cpi_stop[-1] = cpi_start[-1] + cpi
-
-    noise_pwr_ev_min_beam = np.zeros((num_cpi, num_beams))
-
-    for idx_cpi in range(num_cpi):
-        data_cpi = raw_data[cpi_start[idx_cpi] : cpi_stop[idx_cpi]]
-
-        # Construct sample covariance matrix and perform Eigenvalue Decomposition
-        for idx_beam in range(num_beams):
-            beam_cpi = data_cpi[:, rng_start[idx_beam] : rng_stop[idx_beam]]
-            cov_cpi_beam = (
-                np.matmul(beam_cpi, np.conj(beam_cpi).transpose())
-                / num_samps_beam[idx_beam]
-            )
-            ev_min = eigen_decomp(cov_cpi_beam)
-
-            noise_pwr_ev_min_beam[idx_cpi, idx_beam] = np.abs(ev_min)
-
-    if num_beams == 1:
-        noise_pwr_ev_min_beam = np.squeeze(noise_pwr_ev_min_beam, axis=1)
-
-    noise_pwr_beam_db = 10 * np.log10(np.mean(noise_pwr_ev_min_beam, axis=0))
-
-    return noise_pwr_beam_db
+    logger.info(f'Elapsed time (sec) -> {time.time() - tic:.1f}')
 
 
-def eigen_decomp(cov_matrix):
-    """Compute Minimum Eigenvalue of sample covariance matrix
-
-    Parameters:
-    -----------
-    cov_matrix: array of 2D complex
-        Covariance Matrix of input raw data lines
-
-    Returns:
-    --------
-    ev_min:  float
-        Minimum eigenvalue as noise power estimate in linear value
-    """
-
-    eig_val, eig_vec = la.eig(cov_matrix)
-
-    ev_min = np.amin(eig_val)
-
-    return ev_min
+def _log_noise_stats_db(ns_pow_lin: np.ndarray, logger: 'logging.Logger'):
+    """Helper function to log noise power stats in dB"""
+    p_db = 10 * np.log10(ns_pow_lin)
+    logger.info('Noise power (min, max) in (dB) -> '
+                f'({np.nanmin(p_db):.3f}, {np.nanmax(p_db):.3f})')
+    logger.info('Noise Power (mean, std) (dB) -> '
+                f'({np.nanmean(p_db):.3f}, {np.nanstd(p_db):.3f})')
 
 
-def extract_cal_lines(data_input, freq_group, pol):
-    """Extract BCAL and LCAL lines from a L0B raw data set
-
-    Parameters:
-    -----------
-    data_input: str
-        Raw L0B data file path
-    freq_group: str
-        L0B raw data file frequency selection 'A' or 'B'
-    pol: str
-        L0B raw data file Tx and Rx polarization selection 'HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'
-
-    Returns:
-    --------
-    raw_cal_lines: complex array of 2D
-         BCAL and LCAL range line data
-    """
-    raw = Raw(hdf5file=data_input)
-    raw_data = raw.getRawDataset(freq_group, pol)
-
-    cal_path_mask = raw.getCalType(freq_group, tx=pol[0])
-    cal_lines_idx = (cal_path_mask == CalPath.BYPASS) | (
-        cal_path_mask == CalPath.LNA
-    ).astype(int)
-
-    return raw_data[cal_lines_idx.nonzero()[0], :]
-
-
-if __name__ == "__main__":
-    inputs = cmd_line_parse()
-
-    data_input = inputs.input_path
-    freq_group = inputs.freq_group
-    cpi = inputs.cpi
-    pol = inputs.pol
-    rng_start = inputs.rng_start
-    rng_stop = inputs.rng_stop
-    algo = inputs.algo
-    output_file = inputs.output_path
-
-    # Get indices of rangelines that correspond to BCAL and LCAL measurements
-    raw_cal_lines = extract_cal_lines(data_input, freq_group, pol)
-    num_lines, num_samples = raw_cal_lines.shape
-
-    # Check number of Cal range lines.
-    if num_lines == 0:
-        raise ValueError("There are no CAL line in this raw data set.")
-    elif num_lines == 1 and algo != "avg":
-        raise ValueError(
-            "Only one Cal pulse found, which is too few for 'evd'"
-            " method. Try 'avg' instead or supply more data."
-        )
-
-    # Run Sample Mean or EVD methods
-    if algo == "evd":
-        noise_pwr_beam_db = noise_est_evd(raw_cal_lines, cpi, rng_start, rng_stop)
-    elif algo == "avg":
-        noise_pwr_beam_db = noise_est_avg(raw_cal_lines, rng_start, rng_stop)
-    else:
-        raise ValueError("Unrecognized algorithm.")
-
-    # Generate output JSON file
-    noise_pwr_dictionary = {
-        "Noise Power Estimate(s) dB": noise_pwr_beam_db.tolist(),
-        "Estimation Method": algo.upper(),
-    }
-    if output_file is not None:
-        with open(output_file, "w") as f:
-            json.dump(noise_pwr_dictionary, f, ensure_ascii=False, indent=2)
-
-    print(json.dumps(noise_pwr_dictionary, ensure_ascii=False, indent=2))
+if __name__ == '__main__':
+    run_noise_estimator(cmd_line_parse())

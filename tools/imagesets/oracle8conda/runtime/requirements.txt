@@ -16,5 +16,6 @@ raider-base>=0.4.5
 ruamel.yaml
 scipy!=1.10.0
 shapely>=2
+snaphu>=0.4
 sysroot_linux-64>=2.17
 yamale

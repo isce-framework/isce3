@@ -2761,11 +2761,11 @@ void Geocode<T>::_runBlock(
                     radar_grid_block.width(), radar_grid_block.length(), 1);
 
            if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
-                rtc_area_sigma_block.resize(radar_grid.length(),
-                                            radar_grid.width());
+                rtc_area_sigma_block.resize(radar_grid_block.length(),
+                                            radar_grid_block.width());
                 rtc_sigma0_raster->getBlock(
-                    rtc_area_sigma_block.data(), 0, 0,
-                    radar_grid.width(), radar_grid.length(), 1);
+                    rtc_area_sigma_block.data(), offset_x, offset_y,
+                    radar_grid_block.width(), radar_grid_block.length(), 1);
             }
 
         }

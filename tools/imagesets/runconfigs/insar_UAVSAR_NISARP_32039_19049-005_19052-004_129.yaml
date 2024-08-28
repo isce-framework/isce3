@@ -102,13 +102,15 @@ runconfig:
                 lines_per_block: 1000
 
             coarse_resample:
-                lines_per_tile: 100
+                lines_per_tile: 1000
+                columns_per_tile: 1000
 
             dense_offsets:
                 enabled: False
 
             offsets_product:
                 enabled: True
+                margin: 250
                 skip_range: 30
                 skip_azimuth: 50
                 layer1:

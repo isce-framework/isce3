@@ -6,7 +6,7 @@ from nisar.workflows import (bandpass_insar, crossmul,
                              dense_offsets, geo2rdr,geocode_insar,
                              h5_prep, filter_interferogram,
                              offsets_product, prepare_insar_hdf5, rdr2geo,
-                             resample_slc, rubbersheet,
+                             resample_slc_v2, rubbersheet,
                              split_spectrum, unwrap, ionosphere, baseline,
                              troposphere, solid_earth_tides)
 
@@ -24,7 +24,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     info_channel.log("starting INSAR")
 
     t_all = time.time()
-    
+
     if run_steps['bandpass_insar']:
         bandpass_insar.run(cfg)
 
@@ -38,7 +38,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         geo2rdr.run(cfg)
 
     if run_steps['coarse_resample']:
-        resample_slc.run(cfg, 'coarse')
+        resample_slc_v2.run(cfg, 'coarse')
 
     if (run_steps['dense_offsets']) and \
             (cfg['processing']['dense_offsets']['enabled']):
@@ -54,11 +54,12 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         rubbersheet.run(cfg, out_paths['RIFG'])
 
     # If enabled, run fine_resampling
-    if run_steps['fine_resample'] and \
-            cfg['processing']['fine_resample']['enabled'] and \
-            'RIFG' in out_paths:
-        resample_slc.run(cfg, 'fine')
-
+    if (
+        run_steps['fine_resample']
+        and cfg['processing']['fine_resample']['enabled']
+        and 'RIFG' in out_paths
+    ):
+        resample_slc_v2.run(cfg, 'fine')
 
     # If fine_resampling is enabled, use fine-coregistered SLC
     # to run crossmul

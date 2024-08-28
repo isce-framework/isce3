@@ -277,10 +277,9 @@ def check_h5_dtype_vs_xml_spec(xml_metadata_entry, h5_dataset_obj,
                                 f' {xml_length}')
 
 
-def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
+def write_xml_spec_attrs_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
     """
-    Write a physical unit to an HDF5 Dataset based on the
-    product specification XML
+    Write attributes to an HDF5 Dataset based on the product specification XML
 
     Parameters
     ----------
@@ -289,12 +288,16 @@ def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
     h5_dataset_obj: h5py.Dataset
         Product h5py dataset
     """
-    warning_channel = journal.warning('write_xml_spec_unit_to_h5_dataset')
-    error_channel = journal.error('write_xml_spec_unit_to_h5_dataset')
+    warning_channel = journal.warning('write_xml_spec_attrs_to_h5_dataset')
+    error_channel = journal.error('write_xml_spec_attrs_to_h5_dataset')
 
     full_h5_ds_path = xml_metadata_entry.attrib['name']
 
     flag_found_units = False
+
+    attributes_to_copy_string_list = {'long_name', 'standard_name'}
+
+    attributes_to_copy_numeric_list = {'valid_min', 'valid_max'}
 
     # iterate over the annotation elements
     for annotation_et in xml_metadata_entry:
@@ -331,7 +334,7 @@ def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
                         continue
 
                     h5_dataset_obj.attrs['units'] = \
-                        np.string_(unit_name)
+                        np.bytes_(unit_name)
 
                     flag_found_units = True
                     break
@@ -355,6 +358,15 @@ def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
                     warning_channel.log(f'The metadata field {full_h5_ds_path}'
                                         ' has an invalid unit:'
                                         f' "{annotation_value}"')
+
+            elif annotation_key in attributes_to_copy_string_list:
+                h5_dataset_obj.attrs[annotation_key] = \
+                    np.bytes_(annotation_value)
+
+            elif (annotation_key in attributes_to_copy_numeric_list):
+                h5_dataset_obj.attrs.create(annotation_key,
+                                            data=annotation_value,
+                                            dtype=h5_dataset_obj.dtype)
 
 
 def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
@@ -388,8 +400,10 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
 
         if (not existing_h5_description and
                 'description' in h5_dataset_obj.attrs.keys()):
-            existing_h5_description = h5_dataset_obj.attrs[
-                'description'].tobytes().decode()
+            existing_h5_description = h5_dataset_obj.attrs['description']
+            if not isinstance(existing_h5_description, str):
+                existing_h5_description = \
+                    existing_h5_description.tobytes().decode()
 
         # update the metadata field description from XML description
         xml_description = annotation_et.text
@@ -419,7 +433,7 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
         elif xml_description and not flag_found_description:
             flag_found_description = True
             h5_dataset_obj.attrs['description'] = \
-                np.string_(xml_description)
+                np.bytes_(xml_description)
 
         # if the XML description is empty, raise a warning
         if not flag_found_description:
@@ -594,11 +608,11 @@ class BaseWriterSingleInput():
             self.cfg['primary_executable']['processing_type']
 
         if processing_type_runconfig == 'PR':
-            processing_type = np.string_('NOMINAL')
+            processing_type = np.bytes_('NOMINAL')
         elif processing_type_runconfig == 'UR':
-            processing_type = np.string_('URGENT')
+            processing_type = np.bytes_('URGENT')
         else:
-            processing_type = np.string_('UNDEFINED')
+            processing_type = np.bytes_('UNDEFINED')
         self.set_value(
             'identification/processingType',
             processing_type,
@@ -640,7 +654,7 @@ class BaseWriterSingleInput():
         # characters
         if ((isinstance(data, np.bytes_) or isinstance(data, np.ndarray))
                 and (data.dtype.char == 'S')):
-            data = np.string_(data)
+            data = np.bytes_(data)
             try:
                 data = data.decode()
             except UnicodeDecodeError:
@@ -660,12 +674,12 @@ class BaseWriterSingleInput():
         if isinstance(data, str):
 
             self.output_hdf5_obj.create_dataset(
-                path_dataset_in_h5, data=np.string_(data))
+                path_dataset_in_h5, data=np.bytes_(data))
             return
 
         if isinstance(data, bool):
             self.output_hdf5_obj.create_dataset(
-                path_dataset_in_h5, data=np.string_(str(data)))
+                path_dataset_in_h5, data=np.bytes_(str(data)))
             return
 
         if (isinstance(data, list) and
@@ -818,7 +832,7 @@ class BaseWriterSingleInput():
         for key, value in annotation_et.items():
             if key == 'app':
                 continue
-            self.output_hdf5_obj.attrs[key] = np.string_(value)
+            self.output_hdf5_obj.attrs[key] = np.bytes_(value)
 
         # iterate over all XML specs parameters
         nodes_et = specs.find('./product/science/nodes')
@@ -839,7 +853,7 @@ class BaseWriterSingleInput():
             h5_dataset_obj = self.output_hdf5_obj[full_h5_ds_path]
 
             check_h5_dtype_vs_xml_spec(xml_metadata_entry, h5_dataset_obj)
-            write_xml_spec_unit_to_h5_dataset(xml_metadata_entry,
+            write_xml_spec_attrs_to_h5_dataset(xml_metadata_entry,
                                               h5_dataset_obj)
             write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj)
 

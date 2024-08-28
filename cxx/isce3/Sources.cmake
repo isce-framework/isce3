@@ -116,8 +116,6 @@ unwrap/icu/PhaseGrad.cpp
 unwrap/icu/Residue.cpp
 unwrap/icu/Tree.cpp
 unwrap/icu/Unwrap.cpp
-unwrap/ortools/max_flow.cc
-unwrap/ortools/min_cost_flow.cc
 unwrap/phass/ASSP.cc
 unwrap/phass/BMFS.cc
 unwrap/phass/CannyEdgeDetector.cc
@@ -130,10 +128,4 @@ unwrap/phass/Point.cc
 unwrap/phass/RegionMap.cc
 unwrap/phass/Seed.cc
 unwrap/phass/sort.cc
-unwrap/snaphu/snaphu_cost.cpp
-unwrap/snaphu/snaphu.cpp
-unwrap/snaphu/snaphu_io.cpp
-unwrap/snaphu/snaphu_solver.cpp
-unwrap/snaphu/snaphu_tile.cpp
-unwrap/snaphu/snaphu_util.cpp
 )

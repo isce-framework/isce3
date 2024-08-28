@@ -114,7 +114,7 @@ class L1InSARWriter(InSARBaseWriter):
         geolocation_grid_group['epsg'][...] = \
             geolocation_grid_group['epsg'][()].astype(np.uint32)
         geolocation_grid_group['epsg'].attrs['description'] = \
-            np.string_("EPSG code corresponding to the coordinate system"
+            np.bytes_("EPSG code corresponding to the coordinate system"
                        " used for representing the geolocation grid")
         geolocation_grid_group['epsg'].attrs['units'] = Units.unitless
         geolocation_grid_group['losUnitVectorX'].attrs['units'] = Units.unitless
@@ -132,7 +132,7 @@ class L1InSARWriter(InSARBaseWriter):
                                                             'seconds since ')
         if zero_dopp_time_units is not None:
             geolocation_grid_group['zeroDopplerTime'].attrs['units']\
-                = np.string_(zero_dopp_time_units)
+                = np.bytes_(zero_dopp_time_units)
 
     def add_algorithms_to_procinfo_group(self):
         """
@@ -154,7 +154,7 @@ class L1InSARWriter(InSARBaseWriter):
         interferogram_ds_params = [
             DatasetParams(
                 "commonBandRangeFilterApplied",
-                np.string_(str(range_filter)),
+                np.bytes_(str(range_filter)),
                 (
                     "Flag to indicate if common band range filter has been"
                     " applied"
@@ -162,7 +162,7 @@ class L1InSARWriter(InSARBaseWriter):
             ),
             DatasetParams(
                 "commonBandAzimuthFilterApplied",
-                np.string_(str(azimuth_filter)),
+                np.bytes_(str(azimuth_filter)),
                 (
                     "Flag to indicate if common band azimuth filter has been"
                     " applied"
@@ -170,7 +170,7 @@ class L1InSARWriter(InSARBaseWriter):
             ),
             DatasetParams(
                 "ellipsoidalFlatteningApplied",
-                np.string_(str(flatten)),
+                np.bytes_(str(flatten)),
                 (
                     "Flag to indicate if the interferometric phase has been "
                     "flattened with respect to a zero height ellipsoid"
@@ -178,7 +178,7 @@ class L1InSARWriter(InSARBaseWriter):
             ),
             DatasetParams(
                 "topographicFlatteningApplied",
-                np.string_(str(flatten)),
+                np.bytes_(str(flatten)),
                 (
                     "Flag to indicate if the interferometric phase has been "
                     "flattened with respect to topographic height using a DEM"
@@ -225,7 +225,7 @@ class L1InSARWriter(InSARBaseWriter):
                 "azimuthBandwidth",
             )
             igram_group['azimuthBandwidth'].attrs['description'] = \
-                np.string_("Processed azimuth bandwidth for frequency " + \
+                np.bytes_("Processed azimuth bandwidth for frequency " + \
                            f"{freq} interferometric layers")
             igram_group['azimuthBandwidth'].attrs['units'] = Units.hertz
 
@@ -235,7 +235,7 @@ class L1InSARWriter(InSARBaseWriter):
                 "rangeBandwidth",
             )
             igram_group['rangeBandwidth'].attrs['description'] = \
-                np.string_("Processed slant range bandwidth for frequency " + \
+                np.bytes_("Processed slant range bandwidth for frequency " + \
                            f"{freq} interferometric layers")
             igram_group['rangeBandwidth'].attrs['units'] = Units.hertz
 
@@ -596,7 +596,7 @@ class L1InSARWriter(InSARBaseWriter):
                                                   dtype=np.uint8,
                                                   data=number_of_subswaths[...])
             number_of_subwaths_ds.attrs['description'] = \
-                np.string_('Number of swaths of continuous imagery, due to transmit gaps')
+                np.bytes_('Number of swaths of continuous imagery, due to transmit gaps')
             number_of_subwaths_ds.attrs['units'] = Units.unitless
 
             # valid samples subswath
@@ -629,7 +629,7 @@ class L1InSARWriter(InSARBaseWriter):
                     dtype=np.uint32,
                 )
                 dst_subswath_ds.attrs['units'] = Units.unitless
-                dst_subswath_ds.attrs['description'] = np.string_(description)
+                dst_subswath_ds.attrs['description'] = np.bytes_(description)
 
 
     def add_swaths_to_hdf5(self):
@@ -648,7 +648,7 @@ class L1InSARWriter(InSARBaseWriter):
 
             list_of_pols = DatasetParams(
                 "listOfPolarizations",
-                np.string_(pol_list),
+                np.bytes_(pol_list),
                 f"List of processed polarization layers with frequency {freq}",
             )
             add_dataset_and_attrs(swaths_freq_group, list_of_pols)
@@ -663,7 +663,7 @@ class L1InSARWriter(InSARBaseWriter):
 
             # Add the description and units
             cfreq = swaths_freq_group["centerFrequency"]
-            cfreq.attrs['description'] = np.string_("Center frequency of"
+            cfreq.attrs['description'] = np.bytes_("Center frequency of"
                                                     " the processed image in hertz")
             cfreq.attrs['units'] = Units.hertz
 

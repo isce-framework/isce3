@@ -22,7 +22,7 @@ from isce3.splitspectrum import splitspectrum
 from nisar.products.readers import SLC
 from nisar.workflows import (crossmul, dense_offsets, h5_prep,
                              filter_interferogram, prepare_insar_hdf5,
-                             resample_slc,
+                             resample_slc_v2,
                              rubbersheet, unwrap)
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
 from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
@@ -137,8 +137,6 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
 
             offsets_path = f'{offsets_dir}/{coarse_offset_path}'
             offsets_b_path = f'{decimated_offset_dir}/{coarse_offset_b_path}'
-
-            raster_ext = 'off'
         else:
             # We checked the existence of HH/VV offsets in resample_slc_runconfig.py
             # Select the first offsets available between HH and VV
@@ -154,13 +152,12 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
             else:
                 offsets_path = f'{freq_offsets_path}/VV'
                 offsets_b_path = f'{freq_offsets_b_path}/VV'
-            raster_ext = 'off.vrt'
 
-        rg_off_path = str(f'{offsets_path}/range.{raster_ext}')
-        az_off_path = str(f'{offsets_path}/azimuth.{raster_ext}')
+        rg_off_path = str(f'{offsets_path}/range.off')
+        az_off_path = str(f'{offsets_path}/azimuth.off')
 
-        rg_b_off_path = str(f'{offsets_b_path}/range.{raster_ext}')
-        az_b_off_path = str(f'{offsets_b_path}/azimuth.{raster_ext}')
+        rg_b_off_path = str(f'{offsets_b_path}/range.off')
+        az_b_off_path = str(f'{offsets_b_path}/azimuth.off')
 
         # create new offset directory in ionosphere scratch
         os.makedirs(offsets_b_path, exist_ok=True)
@@ -550,9 +547,9 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
         decimate_freq_a_offset(iono_insar_cfg, original_dict)
 
     if iono_insar_cfg['processing']['fine_resample']['enabled']:
-        resample_slc.run(iono_insar_cfg, 'fine')
+        resample_slc_v2.run(iono_insar_cfg, 'fine')
     else:
-        resample_slc.run(iono_insar_cfg, 'coarse')
+        resample_slc_v2.run(iono_insar_cfg, 'coarse')
 
     if iono_insar_cfg['processing']['fine_resample']['enabled']:
         crossmul.run(iono_insar_cfg, out_paths['RIFG'], 'fine')

@@ -37,6 +37,7 @@ set (list_of_exe
      nisar/workflows/get_product_geometry.py
      nisar/workflows/gcov.py
      nisar/workflows/gslc.py
+     nisar/workflows/gslc_point_target_analysis.py
      nisar/workflows/insar.py
      nisar/workflows/noise_estimator.py
      nisar/workflows/point_target_analysis.py

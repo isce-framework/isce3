@@ -280,7 +280,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
                           epsgcode);
 
     // load complex raster X and Y as a raster vector
-    std::vector<Raster> slc_raster_xyVect = {isce3::io::Raster("xslc_rdr.bin"),
+    std::vector<isce3::io::Raster> slc_raster_xyVect = {isce3::io::Raster("xslc_rdr.bin"),
                                            isce3::io::Raster("yslc_rdr.bin")};
 
     isce3::io::Raster slc_raster_xy =

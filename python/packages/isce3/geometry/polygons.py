@@ -3,7 +3,9 @@ import logging
 import numpy as np
 from osgeo import ogr, osr, gdal
 import textwrap
+from typing import Union
 import shapely
+from shapely import Polygon, MultiPolygon
 import shapely.affinity
 import shapely.wkt
 try:
@@ -230,13 +232,14 @@ def compute_dem_overlap(swath_polygon_wkt: str, dem: DEMInterpolator, plot=None)
 
 # Added to support track/frame & bounding polygon intersection.
 
-def shapely2ogr_polygon(poly: shapely.Polygon, h: float = 0.0) -> ogr.Geometry:
+def shapely2ogr_polygon(poly: Union[Polygon, MultiPolygon],
+                        h: float = 0.0) -> ogr.Geometry:
     """
     Convert a shapely polygon object to an OGR polygon object.
 
     Parameters
     ----------
-    poly : shapely.Polygon
+    poly : Union[shapely.Polygon, shapely.MultiPolygon]
         Input shapely Polygon
     h : float
         Height to use if polygon doesn't have Z values.
@@ -244,8 +247,14 @@ def shapely2ogr_polygon(poly: shapely.Polygon, h: float = 0.0) -> ogr.Geometry:
     Returns
     -------
     polygon : ogr.Geometry
-        Output OGR polygon
+        Output OGR polygon (or multi-polygon)
     """
+    if isinstance(poly, MultiPolygon):
+        out = ogr.Geometry(ogr.wkbMultiPolygon)
+        for p in poly.geoms:
+            out.AddGeometry(shapely2ogr_polygon(p))
+        return out
+
     ring = ogr.Geometry(ogr.wkbLinearRing)
     for point in shapely.get_coordinates(poly, include_z=True):
         lon, lat, z = point
@@ -258,16 +267,17 @@ def shapely2ogr_polygon(poly: shapely.Polygon, h: float = 0.0) -> ogr.Geometry:
     return polygon
 
 
-def compute_polygon_overlap(poly1: shapely.Polygon, poly2: shapely.Polygon) -> float:
+def compute_polygon_overlap(poly1: Union[Polygon, MultiPolygon],
+                            poly2: Union[Polygon, MultiPolygon]) -> float:
     """
     Take two lon/lat polygons, convert to a local projection, and calculate the
     amount of overlap.
 
     Parameters
     ----------
-    poly1 : shapely.Polygon
+    poly1 : Union[shapely.Polygon, shapely.MultiPolygon]
         Polygon where (x, y) correspond to (longitude, latitude) in degrees.
-    poly2 : shapely.Polygon
+    poly2 : Union[shapely.Polygon, shapely.MultiPolygon]
         Polygon where (x, y) correspond to (longitude, latitude) in degrees.
 
     Returns
@@ -285,7 +295,11 @@ def compute_polygon_overlap(poly1: shapely.Polygon, poly2: shapely.Polygon) -> f
     poly2.AssignSpatialReference(srs_lonlat)
 
     # convert to a local LAEA projection to avoid issues with dateline or pole
-    lon, lat = poly1.GetGeometryRef(0).GetPoint(0)[:2]
+    if poly1.GetGeometryType() in (ogr.wkbMultiPolygon, ogr.wkbMultiPolygon25D):
+        ring = poly1.GetGeometryRef(0).GetGeometryRef(0)
+    else:
+        ring = poly1.GetGeometryRef(0)
+    lon, lat = ring.GetPoint(0)[:2]
     srs_local = get_srs_local(lon, lat)
     xform = osr.CoordinateTransformation(srs_lonlat, srs_local)
     poly1.Transform(xform)

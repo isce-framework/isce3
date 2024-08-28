@@ -44,9 +44,9 @@ def add_dataset_and_attrs(group, dataset_param_item):
     def _as_np_string_if_needed(val):
         """
         Internal convenience function where if type str encountered, convert
-        and return as np.string_. Otherwise return as is.
+        and return as np.bytes_. Otherwise return as is.
         """
-        val = np.string_(val) if isinstance(val, str) else val
+        val = np.bytes_(val) if isinstance(val, str) else val
         return val
 
     # Convert data to written if necessary

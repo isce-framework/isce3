@@ -12,7 +12,7 @@ from journal.Channel import Channel
 from isce3.image.v2.resample_slc import resample_slc_blocks
 from isce3.io.gdal.gdal_raster import GDALRaster
 
-from nisar.products.readers import SLC
+from nisar.products.readers import RSLC
 from nisar.workflows.resample_slc_runconfig import ResampleSlcRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -55,12 +55,8 @@ def run(cfg: dict, resample_type: str) -> None:
         offsets_dir = Path(resamp_args["offsets_dir"])
 
         if resample_type == "coarse":
-            az_off_filename = "azimuth.off"
-            rg_off_filename = "range.off"
             offsets_path = offsets_dir / f"geo2rdr/freq{freq}"
         elif resample_type == "fine":
-            az_off_filename = "azimuth.off.vrt"
-            rg_off_filename = "range.off.vrt"
             # We checked the existence of HH/VV offsets in resample_slc_runconfig.py
             # Select the first offsets available between HH and VV
             freq_offsets_path = \
@@ -74,8 +70,8 @@ def run(cfg: dict, resample_type: str) -> None:
                 "resample_type must be 'coarse' or 'fine', instead got "
                 f"{resample_type!r}")
         
-        az_off_path = offsets_path / az_off_filename
-        rg_off_path = offsets_path / rg_off_filename
+        az_off_path = offsets_path / "azimuth.off"
+        rg_off_path = offsets_path / "range.off"
 
         # Create separate directories for coarse and fine resample
         # Open corresponding range/azimuth offsets
@@ -125,8 +121,6 @@ def resample_secondary_rslc_onto_reference(
     pols: Iterable[str],
     block_size_az: int,
     block_size_rg: int,
-    az_off_band: int = 1,
-    rg_off_band: int = 1,
 ) -> None:
     """
     Resample a secondary RSLC product onto a reference one using NISAR HDF5 datasets.
@@ -155,29 +149,36 @@ def resample_secondary_rslc_onto_reference(
     block_size_rg : int
         The block size along the range axis. Must be 0 or greater. If 0, the block size
         in the range dimension will be the entire line of range values.
-    az_off_band : int, optional
-        The GDAL band to read from the azimuth offsets file. Defaults to 1.
-    rg_off_band : int, optional
-        The GDAL band to read from the range offsets file. Defaults to 1.
     """
-    sec_slc_obj = SLC(hdf5file=os.fspath(sec_file_path))
+    sec_slc_obj = RSLC(hdf5file=os.fspath(sec_file_path))
     sec_grid = sec_slc_obj.getRadarGrid(freq)
     doppler = sec_slc_obj.getDopplerCentroid(frequency=freq)
 
-    ref_radar_grid = SLC(hdf5file=os.fspath(ref_file_path)).getRadarGrid(freq)
+    ref_radar_grid = RSLC(hdf5file=os.fspath(ref_file_path)).getRadarGrid(freq)
     
     # Get dimensions of sec grid
     out_length = ref_radar_grid.length
     out_width = ref_radar_grid.width
+
+    out_shape = (out_length, out_width)
 
     if block_size_rg == 0:
         block_size_rg = out_width
 
     # Initialize the data reader objects.
     # First, initialize the azimuth and range offset readers.
-    az_off_reader = GDALRaster(filepath=Path(az_off_file), band=az_off_band)
-
-    rg_off_reader = GDALRaster(filepath=Path(rg_off_file), band=rg_off_band)
+    az_off_reader = np.memmap(
+        filename=az_off_file,
+        shape=out_shape,
+        dtype=np.float64,
+        mode='r+',
+    )
+    rg_off_reader = np.memmap(
+        filename=rg_off_file,
+        shape=out_shape,
+        dtype=np.float64,
+        mode='r+',
+    )
 
     # For each polarization being output, create a GDALRaster to write to it.
     out_writers: list[GDALRaster] = []

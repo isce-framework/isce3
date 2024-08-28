@@ -60,4 +60,4 @@ def set_string(group: h5py.Group, name: str, data: str) -> h5py.Dataset:
     "Simplify updates of fixed-length strings."
     if name in group:
         del group[name]
-    return group.create_dataset(name, data=np.string_(data))
+    return group.create_dataset(name, data=np.bytes_(data))

@@ -101,7 +101,8 @@ runconfig:
                 lines_per_block: 1000
 
             coarse_resample:
-                lines_per_tile: 100
+                lines_per_tile: 1000
+                columns_per_tile: 1000
 
             dense_offsets:
                 # OPTIONAL - Flag to enable/disable dense offsets estimation. Default True

@@ -869,14 +869,14 @@ def analyze_point_target_chip(
             "offset": imax - i_pos,
             "phase ramp": fy,
         }
-
         # In the case of a geocoded dataset, the range and azimuth slices will have the
         # peak power position located directly at the center of the slice.
-        rg_indices = np.arange(rg_slice.shape[0], dtype=np.float64) - rg_slice[0] / 2
-        az_indices = np.arange(az_slice.shape[0], dtype=np.float64) - az_slice[0] / 2
-        if cuts:
-            return_dict["azimuth"]["cut"] = az_indices.tolist()
-            return_dict["range"]["cut"] = rg_indices.tolist()
+        def get_slice_indices(n: int) -> np.ndarray:
+            return (np.arange(n, dtype=np.float64) - (n - 1) / 2) / nov
+
+        rg_indices = get_slice_indices(len(rg_slice))
+        az_indices = get_slice_indices(len(az_slice))
+
     else:
         return_dict["azimuth"]["index"] = imax
         return_dict["azimuth"]["offset"] = imax - i_pos
@@ -891,13 +891,13 @@ def analyze_point_target_chip(
         idx_az = np.arange(az_slice.shape[0], dtype=float)
         rg_indices = chip_min_j + idx_rg / nov - j_pos
         az_indices = chip_min_i + idx_az / nov - i_pos
-        if cuts:
-            return_dict["azimuth"]["cut"] = az_indices.tolist()
-            return_dict["range"]["cut"] = rg_indices.tolist()
 
     if cuts:
+        return_dict["azimuth"]["cut"] = az_indices.tolist()
         return_dict["azimuth"]["magnitude cut"] = list(np.abs(az_slice))
         return_dict["azimuth"]["phase cut"] = list(np.angle(az_slice))
+
+        return_dict["range"]["cut"] = rg_indices.tolist()
         return_dict["range"]["magnitude cut"] = list(np.abs(rg_slice))
         return_dict["range"]["phase cut"] = list(np.angle(rg_slice))
     
