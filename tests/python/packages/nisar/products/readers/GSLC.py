@@ -177,3 +177,20 @@ def test_gslc_epsg(gslc_runconfig: GSLCRunConfig, gslc_object: GSLC):
     epsg = gslc_object.getProjectionEpsg("A")
 
     assert cfg_epsg == epsg
+
+
+def test_gslc_geogrid_params(gslc_object: GSLC):
+    """
+    Tests that the GSLC reader object gives the same dimensions to the length and width
+    as those of in the SLC dataset.
+    """
+    geo_grid_params = gslc_object.getGeoGridParameters("A", "HH")
+    slc_dataset = gslc_object.getSlcDataset("A", "HH")
+
+    params_width = geo_grid_params.width
+    params_length = geo_grid_params.length
+
+    slc_length, slc_width = slc_dataset.shape
+
+    assert params_length == slc_length
+    assert params_width == slc_width

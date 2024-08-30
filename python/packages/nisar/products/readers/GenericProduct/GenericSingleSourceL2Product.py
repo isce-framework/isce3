@@ -442,7 +442,7 @@ class GenericSingleSourceL2Product(
         x_coords, y_coords = self.getGeoGridCoordinateDatasets(frequency=frequency)
         x_spacing, y_spacing = self.getGeoGridCoordinateSpacing(frequency=frequency)
 
-        width, length = self.getImageDataset(
+        length, width = self.getImageDataset(
             frequency=frequency,
             polarization=polarization
         ).shape
