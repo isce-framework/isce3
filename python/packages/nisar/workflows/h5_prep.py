@@ -815,6 +815,10 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                  epsg_code < 32761)):
             # Set up grid mapping
             projds.attrs['utm_zone_number'] = epsg_code % 100
+            projds.attrs["longitude_of_central_meridian"] = srs.GetProjParm(
+                osr.SRS_PP_CENTRAL_MERIDIAN)
+            projds.attrs["scale_factor_at_central_meridian"] = srs.GetProjParm(
+                osr.SRS_PP_SCALE_FACTOR)
 
         # Polar Stereo North
         elif epsg_code == 3413:
