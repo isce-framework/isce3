@@ -369,7 +369,8 @@ def write_xml_spec_attrs_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
                                             dtype=h5_dataset_obj.dtype)
 
 
-def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
+def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj,
+                                  flag_warn_if_different=True):
     """
     Write a description to an HDF5 Dataset based on the
     product specification XML
@@ -380,6 +381,13 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
         ElementTree object parsed from the product specifications XML file
     h5_dataset_obj: h5py.Dataset
         Product h5py dataset
+    flag_warn_if_different: bool
+       Flag to indicate if a warning should be raised if the descriptions
+       saved in the product (HDF5 file) and the specs (XML) differ. The
+       only exceptions are the datasets under the `sourceData` group.
+       These datasets were copied from the source data (e.g., RSLC) and their
+       attributes are expected to be different from the L2 specs XML,
+       therefore no warning is printed for those datasets
     """
     warning_channel = journal.warning('write_xml_description_to_hdf5')
     error_channel = journal.error('write_xml_description_to_hdf5')
@@ -393,7 +401,7 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
     for annotation_et in xml_metadata_entry:
 
         # descriptions are provided in annotation entries with attribute
-        # "app" set to "conformace"
+        # "app" set to "conformance"
         if ('app' not in annotation_et.attrib or
                 annotation_et.attrib['app'] != 'conformance'):
             continue
@@ -408,6 +416,11 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
         # update the metadata field description from XML description
         xml_description = annotation_et.text
 
+        # escape if the XML description is empty (a warning will be issued
+        # later on)
+        if not xml_description:
+            continue
+
         # if found multiple descriptions, raise an error
         if flag_found_description and xml_description:
             error_message = ('ERROR multiple description entries'
@@ -416,29 +429,49 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
             error_channel.log(error_message)
             raise ValueError(error_message)
 
-        # If the product specs description is valid but the
-        # product has an existing destription that does not
-        # match the product specs description, raise a
-        # warning
-        if (xml_description and existing_h5_description and
-                xml_description != existing_h5_description):
+        flag_found_description = True
+
+        # If the H5 dataset has an existing description that matches
+        # the XML description, continue
+        if (existing_h5_description and
+                existing_h5_description == xml_description):
+            continue
+
+        # Otherwise, update the H5 dataset description with the XML
+        # description
+        h5_dataset_obj.attrs['description'] = np.bytes_(xml_description)
+
+        # If `flag_warn_if_different` is True and the datasets
+        # is not under the `sourceData` group, raise a warning
+        #
+        # This is done because the datasets under
+        # `sourceData` are copied from the input product (e.g., RSLC)
+        # but their descriptions often differ from the L2 product
+        # specifications (XML)
+        #
+        # For example, the description of an input RSLC dataset
+        # `slantRange` is:
+        #
+        #     "CF compliant dimension associated with slant range"
+        #
+        # When copied to L2 products `sourceData`, this description
+        # needs to be updated to:
+        #
+        #     "Slant range dimension corresponding to the source data
+        # processing information records"
+        #
+        if flag_warn_if_different and '/sourceData/' not in full_h5_ds_path:
             warning_channel.log('WARNING existing metadata entry description'
                                 f' for metadata entry {full_h5_ds_path}'
                                 f' "{existing_h5_description}" does not match'
                                 ' product specification description'
-                                f' "{xml_description}"')
-            flag_found_description = True
+                                f' "{xml_description}". Overwriting'
+                                ' existing description.')
 
-        # if the XML description is valid, update metadata field
-        elif xml_description and not flag_found_description:
-            flag_found_description = True
-            h5_dataset_obj.attrs['description'] = \
-                np.bytes_(xml_description)
-
-        # if the XML description is empty, raise a warning
-        if not flag_found_description:
-            warning_channel.log(f'The metadata field {full_h5_ds_path} has no'
-                                ' description')
+    # if the XML description is empty, raise a warning
+    if not flag_found_description:
+        warning_channel.log('No valid description was found for the metadata field'
+                            f' {full_h5_ds_path}')
 
 
 class BaseWriterSingleInput():
@@ -641,6 +674,11 @@ class BaseWriterSingleInput():
             Default value to be used when input data is None
         format_function: function, optional
             Function to format string values
+
+        Returns
+        -------
+        output_h5_dataset_obj: h5py.Dataset
+            Output h5py dataset
         """
 
         path_dataset_in_h5 = self.root_path + '/' + h5_field
@@ -673,22 +711,19 @@ class BaseWriterSingleInput():
 
         if isinstance(data, str):
 
-            self.output_hdf5_obj.create_dataset(
+            return self.output_hdf5_obj.create_dataset(
                 path_dataset_in_h5, data=np.bytes_(data))
-            return
 
         if isinstance(data, bool):
-            self.output_hdf5_obj.create_dataset(
+            return self.output_hdf5_obj.create_dataset(
                 path_dataset_in_h5, data=np.bytes_(str(data)))
-            return
 
         if (isinstance(data, list) and
                 all(isinstance(item, str) for item in data)):
-            self.output_hdf5_obj.create_dataset(
+            return self.output_hdf5_obj.create_dataset(
                 path_dataset_in_h5, data=np.bytes_(data))
-            return
 
-        self.output_hdf5_obj.create_dataset(path_dataset_in_h5, data=data)
+        return self.output_hdf5_obj.create_dataset(path_dataset_in_h5, data=data)
 
     def _copy_group_from_input(self, h5_group, *args, **kwargs):
         """
@@ -735,6 +770,11 @@ class BaseWriterSingleInput():
         skip_if_not_present: bool, optional
             Flag to prevent the execution to stop if the dataset
             is not present from input
+
+        Returns
+        -------
+        output_h5_dataset_obj: h5py.Dataset
+            Output h5py dataset
         """
         if input_h5_field is None:
             input_h5_field = output_h5_field
@@ -743,6 +783,8 @@ class BaseWriterSingleInput():
         input_h5_field_path = \
             input_h5_field_path.replace(
                 '{PRODUCT}', self.input_product_hdf5_group_type)
+
+        input_h5_dataset_obj = None
 
         # check if the dataset is not present in the input product
         if input_h5_field_path not in self.input_hdf5_obj:
@@ -766,22 +808,34 @@ class BaseWriterSingleInput():
             else:
                 data = default
 
-        # othewise, if the dataset is present in the input product,
+        # otherwise, if the dataset is present in the input product,
         # read it as the variable `h5_data_obj`
         else:
-            h5_data_obj = self.input_hdf5_obj[input_h5_field_path]
+            input_h5_dataset_obj = self.input_hdf5_obj[input_h5_field_path]
 
             # check if dataset contains a string. If so, read it using method
             # `asstr()``
-            if h5py.check_string_dtype(h5_data_obj.dtype):
+            if h5py.check_string_dtype(input_h5_dataset_obj.dtype):
                 # use asstr() to read the dataset
-                data = str(h5_data_obj.asstr()[...])
+                data = str(input_h5_dataset_obj.asstr()[...])
 
             # otherwise, read it directly without changing the datatype
             else:
-                data = self.input_hdf5_obj[input_h5_field_path][...]
+                data = input_h5_dataset_obj[...]
 
-        self.set_value(output_h5_field, data=data, **kwargs)
+        output_h5_dataset_obj = self.set_value(output_h5_field, data=data, **kwargs)
+
+        if input_h5_dataset_obj is None:
+            return output_h5_dataset_obj
+
+        # Copy all of the attributes from the input h5 dataset to the output.
+        for key, value in input_h5_dataset_obj.attrs.items():
+            if isinstance(value, str):
+                value = np.bytes_(value)
+
+            output_h5_dataset_obj.attrs[key] = value
+
+        return output_h5_dataset_obj
 
     def copy_from_runconfig(self, h5_field,
                             runconfig_path,
@@ -798,6 +852,11 @@ class BaseWriterSingleInput():
             Path to the runconfig file
         default: scalar
             Default value to be used when the runconfig value is None
+
+        Returns
+        -------
+        output_h5_dataset_obj: h5py.Dataset
+            Output h5py dataset
         """
 
         if not runconfig_path:
@@ -811,7 +870,7 @@ class BaseWriterSingleInput():
         for key in runconfig_path.split('/'):
             data = data[key]
 
-        self.set_value(h5_field, data=data, *args, **kwargs)
+        return self.set_value(h5_field, data=data, *args, **kwargs)
 
     def check_and_decorate_product_using_specs_xml(self, specs_xml_file,
                                                    verbose=False):

@@ -661,7 +661,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             external_orbit = load_orbit_from_xml(self.orbit_file, ref_epoch)
             self.orbit = crop_external_orbit(external_orbit, self.orbit)
 
-
     def populate_identification_l2_specific(self):
         """
         Populate L2 product specific parameters in the
@@ -688,10 +687,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         bounding_polygon_path = \
             (f'{self.root_path}/identification/boundingPolygon')
-
-        if ('epsg' in self.input_hdf5_obj[bounding_polygon_path].attrs.keys()):
-            self.output_hdf5_obj[bounding_polygon_path].attrs['epsg'] = \
-                self.input_hdf5_obj[bounding_polygon_path].attrs['epsg']
 
         self.set_value(
             'identification/listOfFrequencies',

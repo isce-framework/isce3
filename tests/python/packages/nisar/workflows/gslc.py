@@ -10,6 +10,7 @@ from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.products.writers import GslcWriter
 from nisar.products.readers import GSLC, RSLC
 from osgeo import gdal
+import h5py
 
 import iscetest
 
@@ -121,6 +122,21 @@ def test_run():
         for attr in lut_attributes_to_check_list:
             assert (gslc_doppler_centroid_lut.__getattribute__(attr) ==
                     rslc_doppler_centroid_lut.__getattribute__(attr))
+
+        output_h5_obj = h5py.File(sas_output_file, 'r')
+        
+        zero_doppler_time_dataset = \
+            output_h5_obj['//science/LSAR/GSLC/metadata/sourceData/'
+                            'processingInformation/parameters/zeroDopplerTime']
+        
+        assert 'units' in zero_doppler_time_dataset.attrs.keys()
+
+        assert zero_doppler_time_dataset.attrs['units'].decode().startswith(
+            'seconds since ')
+
+        assert zero_doppler_time_dataset.attrs['description'].decode() == \
+            ('Zero doppler time dimension corresponding to source data'
+                ' processing information records')
 
 
 def get_raster_geogrid(dataset_reference):

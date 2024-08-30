@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import h5py
 
 import isce3.ext.isce3 as isce3
 from nisar.workflows import gcov
@@ -120,6 +121,21 @@ def test_run():
             for attr in lut_attributes_to_check_list:
                 assert (gcov_doppler_centroid_lut.__getattribute__(attr) ==
                         rslc_doppler_centroid_lut.__getattribute__(attr))
+                
+            output_h5_obj = h5py.File(sas_output_file, 'r')
+            
+            zero_doppler_time_dataset = \
+                output_h5_obj['//science/LSAR/GCOV/metadata/sourceData/'
+                              'processingInformation/parameters/zeroDopplerTime']
+            
+            assert 'units' in zero_doppler_time_dataset.attrs.keys()
+
+            assert zero_doppler_time_dataset.attrs['units'].decode().startswith(
+                'seconds since ')
+
+            assert zero_doppler_time_dataset.attrs['description'].decode() == \
+                ('Zero doppler time dimension corresponding to source data'
+                 ' processing information records')
 
 
 def get_raster_geogrid(dataset_reference):
