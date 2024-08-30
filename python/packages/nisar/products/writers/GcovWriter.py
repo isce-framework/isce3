@@ -866,7 +866,3 @@ class GcovWriter(BaseL2WriterSingleInput):
             self.set_value(
                 '{PRODUCT}/metadata/orbit/interpMethod',
                 orbit_interp_method_str)
-
-        self.set_value(
-            '{PRODUCT}/metadata/orbit/referenceEpoch',
-            self.orbit.reference_epoch.isoformat_usec())

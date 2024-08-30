@@ -2409,12 +2409,6 @@
 
         <!-- Orbit ephemeris -->
         <string length="0"
-                name="/science/LSAR/GCOV/metadata/orbit/referenceEpoch"
-                shape="scalar">
-                <annotation app="conformance"
-                            lang="en">Reference epoch in the format YYYY-mm-ddTHH:MM:SS.SSS</annotation>
-        </string>
-        <string length="0"
                 name="/science/LSAR/GCOV/metadata/orbit/interpMethod"
                 shape="scalar">
                 <annotation app="conformance"
