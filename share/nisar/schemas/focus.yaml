@@ -203,6 +203,9 @@ runconfig:
         # Whether workflow will terminate if DEM doesn't fully cover radar swath.
         require_full_coverage: bool(required=False)
 
+      # EPSG code of the projection to use for the metdata cube.
+      metadata_cube_epsg: int(min=1024, max=32767, required=False)
+
       # Nominal antenna dimensions to use for BLU, EAP, etc. when no
       # antenna pattern input file is provided or its contents are
       # unsuitable. Each dimension has units of meters and is assumed

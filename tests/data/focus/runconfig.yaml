@@ -50,6 +50,8 @@ runconfig:
 
             dry_troposphere_model: nodelay
 
+            metadata_cube_epsg: 32621
+
             # Scale factor to apply to data before float16 encoding, optional.
             # The largest representable float16 value is 65504.
             # NOTE This is ad-hoc until the processor is radiometrically calibrated.

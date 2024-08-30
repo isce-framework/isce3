@@ -1702,7 +1702,7 @@ def focus(runconfig, runconfig_path=""):
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
-                             epsg=4326, dem=dem,
+                             epsg=cfg.processing.metadata_cube_epsg, dem=dem,
                              **get_geo2rdr_params(cfg, orbit))
 
     # Scratch directory for intermediate outputs

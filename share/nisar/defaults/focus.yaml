@@ -313,6 +313,9 @@ runconfig:
                 # radar swath.
                 require_full_coverage: True
 
+            # EPSG code of the projection to use for the metdata cube.
+            metadata_cube_epsg: 4326
+
             # Nominal antenna dimensions to use for BLU, EAP, etc. when no
             # antenna pattern input file is provided or its contents are
             # unsuitable. Each dimension has units of meters and is assumed
