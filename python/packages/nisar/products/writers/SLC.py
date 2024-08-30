@@ -299,7 +299,8 @@ class SLC(h5py.File):
         if dset_name not in group:
             dset = write_dataset(group, dset_name, np.float32, values,
                 "1-D array in frequency domain for range processing. This is "
-                "used for processing L0b to L1. FFT length=256 (assumed)")
+                "used for processing L0b to L1. FFT length=256 (assumed)",
+                units="1")
             dset.attrs["window_name"] = np.bytes_(window_name)
             dset.attrs["window_shape"] = window_shape
 
@@ -321,7 +322,9 @@ class SLC(h5py.File):
         write_dataset(g, "rfiDetection", np.bytes_, rfiDetection,
             "Algorithm used for radio frequency interference (RFI) detection")
         write_dataset(g, "rfiMitigation", np.bytes_, rfiMitigation,
-            "Algorithm used for radio frequency interference (RFI) mitigation")
+            'Algorithm used for radio frequency interference (RFI) mitigation, '
+            'either "ST-EVD" or "FDNF" (or "disabled" if no RFI mitigation was '
+            'applied)')
         write_dataset(g, "rangeCompression", np.bytes_, rangeCompression,
             "Algorithm for focusing the data in the range direction")
         write_dataset(g, "elevationAntennaPatternCorrection", np.bytes_,
@@ -385,7 +388,8 @@ class SLC(h5py.File):
         if name not in g:
             write_dataset(g, name, np.float32, azimuth_envelope,
                 "1-D array in frequency domain for azimuth processing. This is "
-                "used for processing L0b to L1. FFT length=256 (assumed)")
+                "used for processing L0b to L1. FFT length=256 (assumed)",
+                units="1")
         # TODO ref height
         if "referenceTerrainHeight" not in g:
             n = dop.data.shape[0]
@@ -476,9 +480,9 @@ class SLC(h5py.File):
         d = g.parent.require_dataset("zeroDopplerTimeSpacing", (), float)
         d[()] = t.spacing
         d.attrs["units"] = np.bytes_("seconds")
-        d.attrs["description"] = np.bytes_("Time interval in the along track"
-            " direction for raster layers. This is same as the spacing between"
-            " consecutive entries in the zeroDopplerTime array")
+        d.attrs["description"] = np.bytes_("Time interval in the along-track "
+            "direction for raster layers. This is same as the spacing between "
+            "consecutive entries in the zeroDopplerTime array")
 
         d = g.require_dataset("slantRange", r.shape, r.dtype, data=r)
         d.attrs["units"] = np.bytes_("meters")
@@ -513,7 +517,7 @@ class SLC(h5py.File):
         write_dataset(g, "processedRangeBandwidth", float, range_bandwidth,
             "Processed range bandwidth in hertz", "hertz")
         write_dataset(g, "sceneCenterAlongTrackSpacing", float, daz,
-            "Nominal along track spacing in meters between consecutive lines "
+            "Nominal along-track spacing in meters between consecutive lines "
             "near mid swath of the RSLC image", "meters")
         write_dataset(g, "sceneCenterGroundRangeSpacing", float, dgr,
             "Nominal ground range spacing in meters between consecutive pixels "
@@ -535,7 +539,6 @@ class SLC(h5py.File):
         log.info("Writing orbit to SLC")
         g = self.root.require_group("metadata/orbit")
         orbit.save_to_h5(g)
-        # interpMethod not in L1 spec. Delete it?
         # Add description attributes.  Should these go in saveToH5 method?
         g["time"].attrs["description"] = np.bytes_("Time vector record. This"
             " record contains the time corresponding to position and velocity"
@@ -546,6 +549,8 @@ class SLC(h5py.File):
         g["velocity"].attrs["description"] = np.bytes_("Velocity vector"
             " record. This record contains the platform velocity data with"
             " respect to WGS84 G1762 reference frame")
+        g["interpMethod"].attrs["description"] = np.bytes_(
+            'Orbit interpolation method, either "Hermite" or "Legendre"')
         # Orbit source/type
         g["orbitType"].attrs["description"] = np.bytes_(
             'Orbit product type, either "FOE", "NOE", "MOE", "POE", or'
@@ -703,7 +708,6 @@ class SLC(h5py.File):
             d = g.require_dataset("absoluteOrbitNumber", (), np.uint32)
             d[()] = np.uint32(absolute_orbit_number)
             d.attrs["description"] = np.bytes_("Absolute orbit number")
-            d.attrs["units"] = np.bytes_("1")
 
         def set_string_list(group, key, values, desc):
             if key in group:
@@ -753,7 +757,8 @@ class SLC(h5py.File):
             "L2: Processed instrument data in geocoded coordinates system")
 
         d = set_string(g, "radarBand", self.band[0])
-        d.attrs["description"] = np.bytes_("Acquired frequency band")
+        d.attrs["description"] = np.bytes_('Acquired frequency band, '
+            'either "L" or "S"')
 
         d = set_string(g, "processingType", processing_type)
         d.attrs["description"] = np.bytes_(
@@ -768,7 +773,9 @@ class SLC(h5py.File):
             'composite of data collected in multiple radar modes, '
             '"False" otherwise.')
 
-        d = set_string(g, "processingDateTime", datetime.now().isoformat())
+        # only report to integer seconds
+        now = datetime.now().isoformat()[:19]
+        d = set_string(g, "processingDateTime", now)
         d.attrs["description"] = np.bytes_("Processing UTC date and time in "
             "the format YYYY-mm-ddTHH:MM:SS")
 
@@ -919,9 +926,10 @@ class SLC(h5py.File):
             d = g.require_dataset(f"frequency{frequency}/{pol}/rfiLikelihood",
                 shape=(), dtype=np.float64, data=average_rfi_likelihood)
             d.attrs["description"] = np.bytes_(
-                "Ratio of number of CPIs detected with radio frequency "
-                "interference (RFI) eigenvalues over that of total number of "
-                "CPIs (or NaN if RFI detection was skipped).")
+                "Severity of radio frequency interference (RFI) contamination "
+                "in the data. Value is in the interval [0,1], where 0: lowest "
+                "severity, and 1: highest severity (or NaN if RFI detection "
+                "was skipped)")
             d.attrs["units"] = np.bytes_("1")
 
     def set_inputs(self, *, l0bGranules=[""], orbitFiles=[""],

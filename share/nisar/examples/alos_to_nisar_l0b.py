@@ -234,9 +234,9 @@ ident_descriptions = {
   'isUrgentObservation': 'Flag indicating if observation is nominal ("False") '
                          'or urgent ("True")',
   'listOfFrequencies': 'List of frequency layers available in the product',
-  'lookDirection': 'Look direction can be left or right',
+  'lookDirection': 'Look direction, either "Left" or "Right"',
   'missionId': 'Mission identifier',
-  'orbitPassDirection': 'Orbit direction can be ascending or descending',
+  'orbitPassDirection': 'Orbit direction, either "Ascending" or "Descending"',
   'plannedDatatakeId': 'List of planned datatakes included in the product',
   'plannedObservationId': 'List of planned observations included in the '
                           'product',
@@ -295,7 +295,7 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
     ident.create_dataset("isMixedMode", data=numpy.string_("False"))
     ident.create_dataset("processingCenter", data=numpy.string_("JPL"))
     ident.create_dataset("processingDateTime",
-        data=numpy.string_(datetime.datetime.now().isoformat()))
+        data=numpy.string_(datetime.datetime.now().isoformat()[:19]))
     ident.create_dataset("productLevel", data=numpy.string_("L0B"))
     ident.create_dataset("productSpecificationVersion",
         data=numpy.string_("0.9.0"))
