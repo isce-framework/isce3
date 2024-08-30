@@ -11,6 +11,7 @@
 #pragma once
 
 #include <iostream>
+#include <pyre/journal.h>
 #include <sstream>
 
 // isce3::core
@@ -302,13 +303,19 @@ template<typename H5obj>
 inline void setRefEpoch(H5obj& h5obj, const std::string& datasetPath,
                         const isce3::core::DateTime& refEpoch)
 {
+    if (refEpoch.frac != 0.0) {
+        auto log = pyre::journal::error_t("isce.io.Serialization.setRefEpoch");
+        log << pyre::journal::at(__HERE__) << "Truncating fractional part of "
+            "reference epoch " << std::string(refEpoch) << " while serializing "
+            "dataset " << datasetPath << " to HDF5" << pyre::journal::endl;
+    }
 
     // Open the dataset
     isce3::io::IDataSet dset = h5obj.openDataSet(datasetPath);
 
     // Need to create string representation of DateTime manually
     char buffer[40];
-    snprintf(buffer, 40, "seconds since %04d-%02d-%02d %02d:%02d:%02d",
+    snprintf(buffer, 40, "seconds since %04d-%02d-%02dT%02d:%02d:%02d",
             refEpoch.year, refEpoch.months, refEpoch.days, refEpoch.hours,
             refEpoch.minutes, refEpoch.seconds);
     std::string unitsAttr {buffer};

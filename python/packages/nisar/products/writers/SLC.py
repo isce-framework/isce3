@@ -29,7 +29,7 @@ def time_units(epoch: DateTime) -> str:
         raise ValueError("Reference epoch must have integer seconds.")
     date = "{:04d}-{:02d}-{:02d}".format(epoch.year, epoch.month, epoch.day)
     time = "{:02d}:{:02d}:{:02d}".format(epoch.hour, epoch.minute, epoch.second)
-    return "seconds since " + date + " " + time
+    return "seconds since " + date + "T" + time
 
 
 def assert_same_lut2d_grid(x: np.ndarray, y: np.ndarray, lut: LUT2d):
