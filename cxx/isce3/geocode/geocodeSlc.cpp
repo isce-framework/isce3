@@ -206,8 +206,8 @@ std::tuple<int, int, int, int> computeGeogridRadarIndicesAndMask(
             }
 
             // If not assigned valid pixel center, skip further processing
-            if (mask(blockLine, pixel) == 0)
-                continue;
+            //if (mask(blockLine, pixel) == 0)
+            //    continue;
 
             azimuthFirstLine = std::min(
                     azimuthFirstLine, static_cast<int>(std::floor(azimuthCoord)));
