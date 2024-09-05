@@ -14,6 +14,7 @@ from nisar.products.readers.GenericProduct import (
     get_hdf5_file_product_type,
 )
 
+
 class GenericSingleSourceL2Product(
     GenericProduct,
     family='nisar.productreader.product',
@@ -141,15 +142,73 @@ class GenericSingleSourceL2Product(
     @property
     def sourceDataPath(self) -> str:
         return self.MetadataPath + "/sourceData"
-    
+
     @property
     def sourceDataSwathsPath(self) -> str:
         return self.sourceDataPath + "/swaths"
-    
+
     @property
     def sourceDataProcessingInfoPath(self) -> str:
         return self.sourceDataPath + "/processingInformation"
-    
+
+    def centerFrequencyPath(self, frequency: str) -> str:
+        """
+        Return the path to the center frequency dataset.
+
+        Parameters
+        ----------
+        frequency : "A" or "B"
+            The frequency letter (either "A" or "B").
+
+        Returns
+        -------
+        str
+            The path to the center frequency dataset of this frequency on the product.
+        """
+        return (f"{self.sourceDataSwathsPath}/frequency{frequency}/"
+                "centerFrequency")
+
+    def getCenterFrequency(self, frequency: str) -> np.float64:
+        """
+        Return the value at the center frequency dataset.
+
+        Parameters
+        ----------
+        frequency : "A" or "B"
+            The frequency letter (either "A" or "B").
+
+        Returns
+        -------
+        np.float64
+            The center frequency of this frequency on the product, in Hertz.
+        """
+        dataset_path = self.centerFrequencyPath(frequency=frequency)
+
+        # open H5 with swmr mode enabled
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            # get dataset
+            frequency_dataset: h5py.Dataset = fid[dataset_path]
+            frequency_val = frequency_dataset[()]
+
+        return frequency_val
+
+    def getWavelength(self, frequency: str) -> np.float64:
+        """
+        Return the center wavelength.
+
+        Parameters
+        ----------
+        frequency : "A" or "B"
+            The frequency letter (either "A" or "B").
+
+        Returns
+        -------
+        np.float64
+            The wavelength of this frequency on the product, in meters.
+        """
+        freq = self.getCenterFrequency(frequency=frequency)
+        return speed_of_light / freq
+
     def getSourceRadarGridParameters(
         self,
         frequency: str | None = None,

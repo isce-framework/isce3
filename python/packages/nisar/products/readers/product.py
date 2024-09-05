@@ -2,8 +2,8 @@ from .Base import get_hdf5_file_root_path
 from .Raw import Raw
 from . import (
     GenericProduct,
-    GenericSingleSourceL2Product,
     get_hdf5_file_product_type,
+    GCOV,
     GSLC,
     RSLC,
 )
@@ -43,10 +43,9 @@ def open_product(filename: str, root_path: str = None):
         return RSLC(**kwargs)
     if product_type == 'GSLC':
         return GSLC(**kwargs)
+    if product_type == 'GCOV':
+        return GCOV(**kwargs)
     if product_type == 'RRSD':
         return Raw(**kwargs)
-    if product_type == 'GCOV':
-        kwargs['_ProductType'] = product_type
-        return GenericSingleSourceL2Product(**kwargs)
     kwargs['_ProductType'] = product_type
     return GenericProduct(**kwargs)
