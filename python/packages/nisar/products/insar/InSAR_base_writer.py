@@ -943,9 +943,6 @@ class InSARBaseWriter(h5py.File):
                 "absoluteOrbitNumber",
                 "None",
                 "Absolute orbit number",
-                {
-                    "units": Units.unitless,
-                },
             ),
             DatasetParams(
                 "boundingPolygon",
@@ -968,17 +965,11 @@ class InSARBaseWriter(h5py.File):
                 "frameNumber",
                 "None",
                 "Frame number",
-                {
-                    "units": Units.unitless,
-                },
             ),
             DatasetParams(
                 "trackNumber",
                 "None",
                 "Track number",
-                {
-                    "units": Units.unitless,
-                },
             ),
             DatasetParams(
                 "isDithered",
