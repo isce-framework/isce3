@@ -9,6 +9,9 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path: str()
 
+            # PLACEHOLDER - Data access for the source data (URL or DOI)
+            source_data_access: str(required=False)
+
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
             # If Product SAS and QA SAS are run back-to-back,
             # this field should be identical to `sas_output_file`.
@@ -283,6 +286,16 @@ geocode_options:
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
 
+    # PLACEHOLDER - Fields to populate the product's metadata
+    # required by CEOS Analysis Ready Data (CARD) requirements:
+    # - Estimated geometric accuracy (bias and standard deviation)
+    # in meters in the X- and Y-directions over the coordinate
+    # system defined by the product's EPSG code
+    estimated_geometric_accuracy_bias_x: num(required=False)
+    estimated_geometric_accuracy_bias_y: num(required=False)
+    estimated_geometric_accuracy_stddev_x: num(required=False)
+    estimated_geometric_accuracy_stddev_y: num(required=False)
+
 # AMPCOR options for data-driven GSLC. Based on InSAR workflow runconfig
 ampcor_options:
     # Lines per block to process in batch
@@ -385,6 +398,12 @@ output_options:
 
     # Enable/disable shuffle filtering of GSLC raster (default True)
     shuffle: bool(required=False)
+
+    # PLACEHOLDER - Data access for the output product (URL or DOI)
+    product_data_access: str(required=False)
+
+    # PLACEHOLDER - Data access for the static layers product associated with the output product (URL or DOI)
+    static_layers_data_access: str(required=False)
 
 lut_options:
     # Boolean flag to activate/deactivate model-based solid earth tide corrections

@@ -9,6 +9,9 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path:
 
+            # PLACEHOLDER - Data access for the source data (URL or DOI)
+            source_data_access:
+
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
             # If Product SAS and QA SAS are run back-to-back,
             # this field should be identical to `sas_output_file`.
@@ -59,6 +62,12 @@ runconfig:
             # Ideally at least large enough to hold `chunk_size` amount of
             # uncompressed data as well as its metadata.
             fs_page_size: 4194304
+
+            # PLACEHOLDER - Data access for the output product (URL or DOI)
+            product_data_access:
+
+            # PLACEHOLDER - Data access for the static layers product associated with the output product (URL or DOI)
+            static_layers_data_access:
 
             # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
             output_gcov_terms:
@@ -360,6 +369,16 @@ runconfig:
 
                 # Maximum block size in MB per thread
                 max_block_size:
+
+                # PLACEHOLDER - Fields to populate the product's metadata
+                # required by CEOS Analysis Ready Data (CARD) requirements:
+                # - Estimated geometric accuracy (bias and standard deviation)
+                # in meters in the X- and Y-directions over the coordinate
+                # system defined by the product's EPSG code
+                estimated_geometric_accuracy_bias_x:
+                estimated_geometric_accuracy_bias_y:
+                estimated_geometric_accuracy_stddev_x:
+                estimated_geometric_accuracy_stddev_y:
 
             radar_grid_cubes:
 
