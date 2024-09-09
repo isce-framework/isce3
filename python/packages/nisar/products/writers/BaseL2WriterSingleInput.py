@@ -1,4 +1,4 @@
-from osgeo import gdal
+from osgeo import gdal, gdal_array
 import tempfile
 import numpy as np
 import warnings
@@ -381,6 +381,8 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         Data type of the output H5 datasets
     '''
 
+    info_channel = journal.info("save_hdf5_dataset")
+
     gdal_ds = gdal.Open(ds_filename, gdal.GA_ReadOnly)
     nbands = gdal_ds.RasterCount
     length = gdal_ds.RasterYSize
@@ -405,12 +407,14 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
     stats_obj_list, stats_real_imag_obj_list = \
         _get_stats_obj_list(raster, compute_stats)
 
-    if chunking_enabled and chunk_size is None:
-        chunk_size = [512, 512]
-
     if chunking_enabled:
-        create_dataset_kwargs['chunks'] = \
-            (min(chunk_size[0], length), min(chunk_size[1], width))
+        if chunk_size is None:
+            chunk_size = [512, 512]
+
+        effective_chunk_size = (min(chunk_size[0], length),
+                                min(chunk_size[1], width))
+
+        create_dataset_kwargs['chunks'] = effective_chunk_size
 
     if compression_enabled:
         if compression_type is not None:
@@ -425,10 +429,6 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
 
     for band in range(nbands):
         gdal_band = gdal_ds.GetRasterBand(band+1)
-        data = gdal_band.ReadAsArray()
-
-        if mantissa_nbits is not None:
-            truncate_mantissa(data, mantissa_nbits)
 
         attr_dict = _get_attribute_dict(
             band,
@@ -452,12 +452,80 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         if hdf5_data_type is not None:
             band_data_type = hdf5_data_type
         else:
-            band_data_type = data.dtype
+            band_data_type = \
+                gdal_array.GDALTypeCodeToNumericTypeCode(gdal_band.DataType)
 
-        dset = h5py_obj.require_dataset(h5_ds, data=data,
-                                        shape=data.shape,
-                                        dtype=band_data_type,
-                                        **create_dataset_kwargs)
+        width = int(gdal_ds.RasterXSize)
+        length = int(gdal_ds.RasterYSize)
+
+        block_nbands = 1
+        n_threads = 1
+        # Convert type size from bits to bytes (assuming word size is 8 bits)
+        data_type_size = int(gdal.GetDataTypeSize(gdal_band.DataType)) // 8
+        min_block_size = int(isce3.core.default_min_block_size)
+        max_block_size = int(isce3.core.default_max_block_size)
+
+        ret = isce3.core.get_block_processing_parameters(
+            array_length=length,
+            array_width=width,
+            nbands=block_nbands,
+            type_size=data_type_size,
+            min_block_size=min_block_size,
+            max_block_size=max_block_size,
+            snap=effective_chunk_size[0],
+            n_threads=n_threads)
+
+        n_blocks_y = ret['n_blocks_y']
+        n_blocks_x = ret['n_blocks_x']
+        block_length = ret['block_length']
+        block_width = ret['block_width']
+
+        info_channel.log(f'saving dataset: {h5_ds}')
+        info_channel.log(f'    length: {length}')
+        info_channel.log(f'    width: {width}')
+        info_channel.log(f'    block processing (Y-direction): {n_blocks_y}'
+                         f' blocks of {block_length} lines')
+        info_channel.log(f'    block processing (X-direction): {n_blocks_x}'
+                         f' blocks of {block_width} columns')
+        info_channel.log('    h5 dataset chunk length:'
+                         f' {effective_chunk_size[0]}')
+        info_channel.log('    h5 dataset chunk width:'
+                         f' {effective_chunk_size[1]}')
+
+        # create the output H5 dataset
+        dset = h5py_obj.create_dataset(h5_ds,
+                                       shape=(length, width),
+                                       dtype=band_data_type,
+                                       **create_dataset_kwargs)
+
+        for block_y in range(n_blocks_y):
+
+            offset_y = block_y * block_length
+            this_block_length = min(block_length, length - offset_y)
+
+            for block_x in range(n_blocks_x):
+
+                offset_x = block_x * block_width
+                this_block_width = min(block_width, width - offset_x)
+
+                # read data block from raster
+                data_block = gdal_band.ReadAsArray(
+                    xoff=int(offset_x),
+                    yoff=int(offset_y),
+                    win_xsize=int(this_block_width),
+                    win_ysize=int(this_block_length)
+                )
+
+                # truncate array (if applicable)
+                if mantissa_nbits is not None:
+                    truncate_mantissa(data_block, mantissa_nbits)
+
+                # write data block to HDF5 file
+                block_slice = np.index_exp[
+                    offset_y:offset_y + this_block_length,
+                    offset_x:offset_x + this_block_width
+                ]
+                dset.write_direct(data_block, dest_sel=block_slice)
 
         dset.dims[0].attach_scale(yds)
         dset.dims[1].attach_scale(xds)

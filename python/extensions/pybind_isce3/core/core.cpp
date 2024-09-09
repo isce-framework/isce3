@@ -129,4 +129,6 @@ void addsubmodule_core(py::module & m)
     addbinding_avgLUT2dToLUT1d(m_core);
     addbinding_makeprojection(m_core);
     addbinding_xyzToEnu(m_core);
+    addbinding_get_block_processing_parameters(m_core);
+    addbinding_get_block_processing_parameters_y(m_core);
 }
