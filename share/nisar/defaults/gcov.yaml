@@ -136,6 +136,7 @@ runconfig:
             product_version: 0.1.0
             composite_release_id:
             processing_type:
+            processing_center:
             partial_granule_id:
 
         debug_level_group:

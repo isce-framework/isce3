@@ -572,21 +572,35 @@ class BaseWriterSingleInput():
         """
 
         self.copy_from_input(
-            'identification/absoluteOrbitNumber')
+            'identification/absoluteOrbitNumber',
+            format_function=np.uint32)
 
         self.copy_from_input(
-            'identification/trackNumber')
+            'identification/trackNumber',
+            format_function=np.uint8)
 
         self.copy_from_input(
-            'identification/frameNumber')
+            'identification/frameNumber',
+            format_function=np.uint16)
 
         self.copy_from_input(
             'identification/missionId')
 
-        # TODO: review this
+        processing_center_runconfig = \
+            self.cfg['primary_executable']['processing_center']
+
+        if processing_center_runconfig is None:
+            processing_center = '(NOT SPECIFIED)'
+        elif processing_center_runconfig == 'J':
+            processing_center = 'JPL'
+        elif processing_center_runconfig == 'N':
+            processing_center = 'NRSC'
+        else:
+            processing_center = processing_center_runconfig
+
         self.set_value(
             'identification/processingCenter',
-            'NASA JPL')
+            processing_center)
 
         self.copy_from_runconfig(
             'identification/productType',

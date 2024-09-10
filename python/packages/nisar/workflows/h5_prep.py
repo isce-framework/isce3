@@ -765,7 +765,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     # Create a new single int dataset for projections
     projds = hdf5_obj.require_dataset(projection_ds_name,
                                       shape=(),
-                                      dtype='uint32',
+                                      dtype=np.uint32,
                                       data=epsg_code)
     # Set up osr for wkt
     srs = osr.SpatialReference()

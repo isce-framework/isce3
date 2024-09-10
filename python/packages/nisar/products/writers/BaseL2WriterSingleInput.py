@@ -767,16 +767,25 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         calibration_freq_parameter_list = ['commonDelay',
                                            'faradayRotation']
 
-        # rfiLikelihood and calibration parameters to be copied
-        # from the RSLC specific to each polarization channel
-        calibration_freq_pol_parameter_list = \
-            ['rfiLikelihood',
-             'differentialDelay',
+        # calibration metadata to be copied from the RSLC which are specific to
+        # each polarization channel, but which only exist for
+        # polarizations with a corresponding imagery layer in the RSLC
+        calibration_existing_pols_parameter_list = \
+            ['rfiLikelihood']
+
+        # calibration metadata to be copied from the RSLC
+        # that are specific to each polarization channel
+        # but exist for to all possible polarizations within a given
+        # polarimetric basis
+        # including polarizations without a corresponding image layer
+        # See: `isce3.python.packages.nisar.products.writers.SLC.set_calibration()`
+        calibration_all_pols_parameter_list = \
+            ['differentialDelay',
              'differentialPhase',
              'scaleFactor',
              'scaleFactorSlope']
 
-        for frequency in self.freq_pols_dict.keys():
+        for frequency, pol_list in self.freq_pols_dict.items():
 
             for parameter in calibration_freq_parameter_list:
                 cal_freq_path = (
@@ -786,9 +795,14 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 self.copy_from_input(f'{cal_freq_path}/{parameter}',
                                      default=np.nan)
 
-            # All polarimetric calibration parameters are saved into the output
-            # product regardless of listOfPolarizations. Need to check
-            # if polarizations are in the lexicographic base or compact pol
+            for pol in pol_list:
+                for parameter in calibration_existing_pols_parameter_list:
+                    self.copy_from_input(
+                        f'{cal_freq_path}/{pol}/{parameter}',
+                        default=np.nan)
+
+            # Copy polarimetric calibration parameters associated with all
+            # polarizations for given basis
             product_pols = []
             for pol_list in self.freq_pols_dict.values():
                 product_pols.extend(pol_list)
@@ -806,7 +820,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 raise KeyError(error_msg)
 
             for pol in list_of_all_pols:
-                for parameter in calibration_freq_pol_parameter_list:
+                for parameter in calibration_all_pols_parameter_list:
                     self.copy_from_input(f'{cal_freq_path}/{pol}/{parameter}',
                                          default=np.nan)
 
