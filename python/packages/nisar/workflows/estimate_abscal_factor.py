@@ -130,35 +130,37 @@ def estimate_abscal_factor(
         A list of dicts containing one entry per corner reflector found in the scene.
         The dict of results for each corner reflector consists of the following keys:
 
-        'id':
+        'id': str
           The unique identifier of the corner reflector.
 
-        'absolute_calibration_factor':
+        'absolute_calibration_factor': float
           The absolute radiometric calibration error for the corner reflector (the ratio
           of the measured RCS to the predicted RCS), in linear units.
 
-        'elevation_angle':
+        'elevation_angle': float
           The elevation angle of the corner reflector, in radians. Elevation is measured
           in the cross-track direction w.r.t antenna boresight, increasing toward
           far-range.
 
-        'timestamp':
-          The corner reflector zero-Doppler observation time.
+        'timestamp': str
+          The corner reflector zero-Doppler observation time. A UTC datetime string in
+          ISO 8601 format with nanosecond precision.
 
-        'frequency':
+        'frequency': str
           The frequency sub-band of the data.
 
-        'polarization':
+        'polarization': str
           The transmit and receive polarization of the data.
 
         If the input corner reflectors were instances of `nisar.cal.CornerReflector`,
         the following additional keys are also populated:
 
-        'survey_date':
+        'survey_date': str
           The date (and time) when the corner reflector was surveyed most recently prior
-          to the radar observation.
+          to the radar observation. A UTC datetime string in ISO 8601 format with
+          nanosecond precision.
 
-        'velocity':
+        'velocity': [float, float, float]
           The corner reflector velocity due to tectonic plate motion, as an
           East-North-Up (ENU) vector in meters per second (m/s). The velocity components
           are provided in local ENU coordinates with respect to the WGS 84 reference

@@ -52,8 +52,8 @@ def cmd_line_parse():
 
     # TODO: Implement flattening and change this argument's help string to fit.
     parser.add_argument(
-        "-i", 
-        "--input", 
+        "-i",
+        "--input",
         metavar="GSLC_PATH",
         dest="gslc_filename",
         type=Path,
@@ -191,7 +191,7 @@ def get_relative_heading_on_geo_grid(
         raise ValueError(
             f"Velocity given with length {len(velocity)}. Must be a vector of 3 floats."
         )
-    
+
     # This gives us a rotation matrix that lets us convert ECEF vector into ENU
     # vector by matrix multiplication
     ecef_to_enu_mat = xyz_to_enu(latitude, longitude)
@@ -314,7 +314,7 @@ def analyze_gslc_point_targets_csv(
     source_radar_params: RadarGridParameters = gslc.getSourceRadarGridParameters(freq)
     wavelength = source_radar_params.wavelength
     look_side = source_radar_params.lookside
-    
+
     # Get grid information
     grid_params = gslc.getGeoGridParameters(frequency=freq, polarization=pol)
     x_spacing = grid_params.spacing_x
@@ -398,8 +398,8 @@ def analyze_gslc_point_targets_csv(
 
         attitude = gslc.getAttitude()
 
-        # Get the target's zero-Doppler elevation angle.
-        _, elevation_angle = get_target_observation_time_and_elevation(
+        # Get the target's zero-Doppler UTC time and elevation angle.
+        az_datetime, el_angle = get_target_observation_time_and_elevation(
             target_llh=cr.llh,
             orbit=orbit,
             attitude=attitude,
@@ -413,7 +413,8 @@ def analyze_gslc_point_targets_csv(
                 "id": cr.id,
                 "frequency": freq,
                 "polarization": pol,
-                "elevation_angle": elevation_angle,
+                "elevation_angle": el_angle,
+                "timestamp": az_datetime,
             }
         )
 
@@ -426,9 +427,9 @@ def analyze_gslc_point_targets_csv(
                     "velocity": cr.velocity,
                 }
             )
-        
+
         results.append(perf_dict)
-        
+
     to_json(results, output_file, encoder=CustomJSONEncoder)
 
     return results
@@ -587,13 +588,13 @@ def analyze_gslc_point_target_llh(
         raise RuntimeError(
             "an exception occurred while processing the corner reflector."
         ) from err
-    
+
     # Write dictionary content to a json file if output is requested by user
     to_json(perf_dict, output_file, encoder=CustomJSONEncoder)
 
     if plots and plt is not None:
         plt.show()
-    
+
     return perf_dict
 
 

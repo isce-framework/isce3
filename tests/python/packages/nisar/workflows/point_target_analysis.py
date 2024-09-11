@@ -1,13 +1,44 @@
+from __future__ import annotations
+
 import json
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+import isce3
 import iscetest
+import nisar
 import numpy as np
 import os
 import numpy.testing as npt
 from nisar.workflows.point_target_analysis import process_corner_reflector_csv, slc_pt_performance
 import pytest
+
+
+def within_product_azimuth_bounds(timestamp: str, hdf5_file: str | os.PathLike) -> bool:
+    """
+    Check whether a UTC timestamp is within the azimuth bounds of a NISAR product.
+
+    Parameters
+    ----------
+    timestamp : str
+        The timepoint to check. A UTC datetime in ISO 8601 format.
+    hdf5_file : path-like
+        The file path of the input NISAR product.
+
+    Returns
+    -------
+    bool
+        True if the timestamp was strictly within the zero-Doppler azimuth time bounds
+        of the product; otherwise False.
+    """
+    t = isce3.core.DateTime(timestamp)
+
+    product = nisar.products.readers.open_product(os.fspath(hdf5_file))
+    start_time = product.identification.zdStartTime
+    end_time = product.identification.zdEndTime
+    assert start_time < end_time, "invalid product azimuth bounds"
+
+    return start_time < t < end_time
 
 
 @pytest.mark.parametrize("kwargs", [
@@ -93,6 +124,7 @@ def test_nisar_csv():
             "frequency",
             "polarization",
             "elevation_angle",
+            "timestamp",
             "magnitude",
             "phase",
             "range",
@@ -151,6 +183,10 @@ def test_nisar_csv():
         theta = np.deg2rad(1.0)
         assert -theta <= cr_info["elevation_angle"] <= theta
 
+        # Check that the corner reflector timestamp is within the azimuth bounds of the
+        # product.
+        assert within_product_azimuth_bounds(cr_info["timestamp"], rslc_hdf5)
+
 
 def test_uavsar_csv():
     datadir = Path(iscetest.data) / "abscal"
@@ -197,6 +233,7 @@ def test_uavsar_csv():
             "frequency",
             "polarization",
             "elevation_angle",
+            "timestamp",
             "magnitude",
             "phase",
             "range",
@@ -238,3 +275,7 @@ def test_uavsar_csv():
         # Check that the elevation angle is within +/- 1 degree of antenna boresight.
         theta = np.deg2rad(1.0)
         assert -theta <= cr_info["elevation_angle"] <= theta
+
+        # Check that the corner reflector timestamp is within the azimuth bounds of the
+        # product.
+        assert within_product_azimuth_bounds(cr_info["timestamp"], rslc_hdf5)

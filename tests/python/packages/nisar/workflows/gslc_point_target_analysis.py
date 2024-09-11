@@ -7,6 +7,8 @@ from nisar.workflows.gslc_point_target_analysis import (
 )
 import pytest
 
+from .point_target_analysis import within_product_azimuth_bounds
+
 
 @pytest.mark.parametrize("test_args", [
     (
@@ -50,8 +52,14 @@ def test_point_target_analysis(test_args, kwargs):
     y_offset = performance_dict['y']['offset']
 
     # Compare slant range offset and azimuth offset against default values.
-    # The GSLC offsets tend to be off by about half a pixel 
+    # The GSLC offsets tend to be off by about half a pixel
     npt.assert_(abs(x_offset) < 0.6,
         f'X offset {x_offset} is larger than expected.')
     npt.assert_(abs(y_offset) < 0.6,
         f'Y offset {y_offset} is larger than expected.')
+
+    # A corner reflector timestamp is only produced in the CSV mode of the PTA tool.
+    # Check that it's within the azimuth bounds of the source RSLC product.
+    if func == analyze_gslc_point_targets_csv:
+        timestamp = performance_dict['timestamp']
+        assert within_product_azimuth_bounds(timestamp, gslc_name)
