@@ -1,4 +1,4 @@
-from osgeo import gdal, gdal_array
+from osgeo import gdal, osr, ogr, gdal_array
 import tempfile
 import numpy as np
 import warnings
@@ -753,9 +753,72 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         self.copy_from_input(
             'identification/boundingPolygon')
 
+        # Iterate over the geogrids for each frequency and
+        # store the maximum extents. Y extents are reversed
+        # because the step size in the Y direction is negative
+        geogrids = self.cfg['processing']['geocode']['geogrids']
+
+        # assign output spatial reference (EPSG 4326)
+        bounding_box_srs = isce3.geometry.polygons.get_srs_lonlat()
+        bounding_box_epsg_code = int(srs.GetAuthorityCode(None))
+
+        product_geometry = ogr.Geometry(ogr.wkbMultiPolygon)
+        list_of_frequencies = list(self.freq_pols_dict.keys())
+        for frequency in list_of_frequencies:
+            geogrid = geogrids[frequency]
+
+            frequency_ring = ogr.Geometry(ogr.wkbLinearRing)
+            frequency_ring.AddPoint(geogrid.start_x, geogrid.start_y)
+            frequency_ring.AddPoint(geogrid.start_x, geogrid.end_y)
+            frequency_ring.AddPoint(geogrid.end_x, geogrid.end_y)
+            frequency_ring.AddPoint(geogrid.end_x, geogrid.start_y)
+            frequency_ring.AddPoint(geogrid.start_x, geogrid.start_y)
+
+            frequency_polygon = ogr.Geometry(ogr.wkbPolygon)
+            frequency_polygon.AddGeometry(frequency_ring)
+            geogrid_srs = osr.SpatialReference()
+            geogrid_srs.ImportFromEPSG(geogrid.epsg)
+            frequency_polygon.AssignSpatialReference(geogrid_srs)
+
+            coordinate_transformation = \
+                osr.CoordinateTransformation(geogrid_srs, bounding_box_srs)
+
+            frequency_polygon.Transform(coordinate_transformation)
+
+            product_geometry.AddGeometry(frequency_polygon)
+
+        # Products coordinates (union of the frequencies' geogrids)
+        bbox_start_x, bbox_end_x, bbox_end_y, bbox_start_y =\
+            product_geometry.GetEnvelope()
+        bbox_ring = ogr.Geometry(ogr.wkbLinearRing)
+        bbox_ring.AddPoint(bbox_start_x, bbox_start_y)
+        bbox_ring.AddPoint(bbox_start_x, bbox_end_y)
+        bbox_ring.AddPoint(bbox_end_x, bbox_end_y)
+        bbox_ring.AddPoint(bbox_end_x, bbox_start_y)
+        bbox_ring.AddPoint(bbox_start_x, bbox_start_y)
+        assert not bbox_ring.IsClockwise()
+        # Create polygon
+        bbox_polygon = ogr.Geometry(ogr.wkbPolygon)
+        bbox_polygon.AddGeometry(bbox_ring)
+
+        bounding_box_wkt = bbox_polygon.ExportToWkt()
+
+        self.set_value(
+            'identification/boundingBox',
+            bounding_box_wkt)
+
+        bounding_box_path = \
+            (f'{self.root_path}/identification/boundingBox')
+        self.output_hdf5_obj[bounding_box_path].attrs['epsg'] = \
+            bounding_box_epsg_code
+
         self.set_value(
             'identification/listOfFrequencies',
-            list(self.freq_pols_dict.keys()))
+            list_of_frequencies)
+
+        self.copy_from_input(
+            'identification/platformName',
+            default='(NOT SPECIFIED)')
 
 
     def populate_ceos_analysis_ready_data_parameters_l2_common(self):
