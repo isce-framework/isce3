@@ -531,6 +531,8 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.populate_identification_common()
         self.populate_identification_l2_specific()
         self.populate_data_parameters()
+        self.populate_ceos_analysis_ready_data_parameters_l2_common()
+        self.populate_ceos_analysis_ready_data_parameters()
         self.populate_calibration_information()
         self.populate_source_data()
         self.populate_processing_information_l2_common()
@@ -545,6 +547,18 @@ class GcovWriter(BaseL2WriterSingleInput):
 
         self.check_and_decorate_product_using_specs_xml(specs_xml_file)
 
+    def populate_ceos_analysis_ready_data_parameters(self):
+        # Note: CEOS ARD documentation uses the British spelling "Normalised"
+        # rather than the American (US) spelling "Normalized"
+        self.set_value(
+            'metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
+            'Normalised Radar Backscatter (NRB)')
+
+        self.set_value(
+            'metadata/ceosAnalysisReadyData/'
+            'outputBackscatterDecibelConversionFormula',
+            '10*log10(<GCOV_TERM>)')
+ 
     def populate_data_parameters(self):
         """
         Populate the data group `grids` of the GCOV product

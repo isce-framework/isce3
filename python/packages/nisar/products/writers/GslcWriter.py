@@ -25,6 +25,8 @@ class GslcWriter(BaseL2WriterSingleInput):
         self.populate_identification_common()
         self.populate_identification_l2_specific()
         self.populate_data_parameters()
+        self.populate_ceos_analysis_ready_data_parameters_l2_common()
+        self.populate_ceos_analysis_ready_data_parameters()
         self.populate_calibration_information()
         self.populate_calibration_information_gslc_specific()
         self.populate_source_data()
@@ -38,6 +40,11 @@ class GslcWriter(BaseL2WriterSingleInput):
                           '../products/XML/L2/nisar_L2_GSLC.xml')
 
         self.check_and_decorate_product_using_specs_xml(specs_xml_file)
+
+    def populate_ceos_analysis_ready_data_parameters(self):
+        self.set_value(
+            'metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
+            'Geocoded Single-Look Complex (GSLC)')
 
     def populate_data_parameters(self):
 

@@ -9,9 +9,6 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path:
 
-            # PLACEHOLDER - Data access for the source data (URL or DOI)
-            source_data_access:
-
             # Filename of the input file for QA.
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
             # If Product SAS and QA SAS are run back-to-back,
@@ -24,7 +21,7 @@ runconfig:
             # REQUIRED - Digital elevation model
             dem_file:
 
-            # PLACEHOLDER - Digital elevation model file description, optional
+            # OPTIONAL - Digital elevation model file description, optional
             dem_file_description:
 
             # External orbit file
@@ -102,12 +99,6 @@ runconfig:
 
             # Enable shuffle filtering of GSLC raster
             shuffle: True
-
-            # PLACEHOLDER - Data access for the output product (URL or DOI)
-            product_data_access:
-
-            # PLACEHOLDER - Data access for the static layers product associated with the output product (URL or DOI)
-            static_layers_data_access:
 
         # ADT section - isce3 + pyre workflow
         processing:
@@ -187,16 +178,6 @@ runconfig:
                 bottom_right:
                     y_abs:
                     x_abs:
-
-                # PLACEHOLDER - Fields to populate the product's metadata
-                # required by CEOS Analysis Ready Data (CARD) requirements:
-                # - Estimated geometric accuracy (bias and standard deviation)
-                # in meters in the X- and Y-directions over the coordinate
-                # system defined by the product's EPSG code
-                estimated_geometric_accuracy_bias_x:
-                estimated_geometric_accuracy_bias_y:
-                estimated_geometric_accuracy_stddev_x:
-                estimated_geometric_accuracy_stddev_y:
 
             radar_grid_cubes:
 
@@ -331,6 +312,27 @@ runconfig:
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
+
+        # OPTIONAL - Group containing CEOS Analysis Ready Data (CARD) parameters
+        # to populate the output product's metadata
+        ceos_analysis_ready_data:
+
+            # Data access for the source data (URL or DOI)
+            source_data_access:
+
+            # Data access for the output product (URL or DOI)
+            product_data_access:
+
+            # Data access for the static layers product associated with the output product (URL or DOI)
+            static_layers_data_access:
+
+            # Estimated geometric accuracy (bias and standard deviation)
+            # in meters in the X- and Y-directions over the coordinate
+            # system defined by the product's EPSG code
+            estimated_geometric_accuracy_bias_x:
+            estimated_geometric_accuracy_bias_y:
+            estimated_geometric_accuracy_standard_deviation_x:
+            estimated_geometric_accuracy_standard_deviation_y:
 
         qa:
 

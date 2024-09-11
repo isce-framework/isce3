@@ -760,6 +760,50 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'identification/listOfFrequencies',
             list(self.freq_pols_dict.keys()))
 
+
+    def populate_ceos_analysis_ready_data_parameters_l2_common(self):
+
+        self.copy_from_runconfig(
+            '{PRODUCT}/metadata/ceosAnalysisReadyData/sourceDataAccess',
+            'ceos_analysis_ready_data/source_data_access',
+            default='(NOT SPECIFIED)')
+
+        self.copy_from_runconfig(
+            '{PRODUCT}/metadata/ceosAnalysisReadyData//dataAccess',
+            'ceos_analysis_ready_data/product_data_access',
+            default='(NOT SPECIFIED)')
+
+        self.copy_from_runconfig(
+            '{PRODUCT}/metadata/ceosAnalysisReadyData/staticLayersDataAccess',
+            'ceos_analysis_ready_data/static_layers_data_access',
+            default='(NOT SPECIFIED)')
+
+        ceos_ard_document_identifier = \
+            ('https://ceos.org/ard/files/PFS/SAR/v1.0/CEOS-ARD_PFS'
+             '_Synthetic_Aperture_Radar_v1.0.pdf')
+        self.set_value(
+            '{PRODUCT}/metadata/ceosAnalysisReadyData/'
+            'ceosAnalysisReadyDataDocumentIdentifier',
+            ceos_ard_document_identifier)
+
+        # TODO: add the EPSG code as an attribute of the following
+        # H5 datasets
+        for xy in ['x', 'y']:
+            h5_grp_path = '{PRODUCT}/metadata/ceosAnalysisReadyData/geometricAccuracy'
+            runcfg_prefix = 'ceos_analysis_ready_data/estimated_geometric_accuracy'
+
+            self.copy_from_runconfig(
+                f'{h5_grp_path}/bias/{xy}',
+                f'{runcfg_prefix}_bias_{xy}',
+                format_function=np.float32,
+                default=np.nan)
+
+            self.copy_from_runconfig(
+                f'{h5_grp_path}/standardDeviation/{xy}',
+                f'{runcfg_prefix}_standard_deviation_{xy}',
+                format_function=np.float32,
+                default=np.nan)
+
     def populate_calibration_information(self):
 
         # calibration parameters to be copied from the RSLC
