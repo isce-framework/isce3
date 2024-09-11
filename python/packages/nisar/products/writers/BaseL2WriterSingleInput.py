@@ -753,9 +753,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         self.copy_from_input(
             'identification/boundingPolygon')
 
-        bounding_polygon_path = \
-            (f'{self.root_path}/identification/boundingPolygon')
-
         self.set_value(
             'identification/listOfFrequencies',
             list(self.freq_pols_dict.keys()))

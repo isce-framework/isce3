@@ -460,7 +460,8 @@ def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj,
         #     "Slant range dimension corresponding to the source data
         # processing information records"
         #
-        if flag_warn_if_different and '/sourceData/' not in full_h5_ds_path:
+        if (existing_h5_description and flag_warn_if_different and
+                '/sourceData/' not in full_h5_ds_path):
             warning_channel.log('WARNING existing metadata entry description'
                                 f' for metadata entry {full_h5_ds_path}'
                                 f' "{existing_h5_description}" does not match'
