@@ -1106,6 +1106,43 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     radar_grid_obj.length,
                     format_function=np.uint64)
 
+            # compute azimuth resolution
+            azimuth_bandwidth_path = (
+                f'{self.input_product_path}'
+                f'/swaths/frequency{frequency}/processedAzimuthBandwidth')
+            azimuth_bandwidth = self.input_hdf5_obj[azimuth_bandwidth_path][()]
+
+            along_track_spacing_path = (
+                f'{self.input_product_path}'
+                f'/swaths/frequency{frequency}/sceneCenterAlongTrackSpacing')
+            along_track_spacing = self.input_hdf5_obj[
+                along_track_spacing_path][()]
+
+            zero_doppler_time_spacing_path = (
+                f'{self.input_product_path}'
+                f'/swaths/zeroDopplerTimeSpacing')
+            zero_doppler_time_spacing = self.input_hdf5_obj[
+                zero_doppler_time_spacing_path][()]
+
+            # ground velocity and azimuth resolution computed at the scene center
+            ground_velocity = along_track_spacing / zero_doppler_time_spacing
+            azimuth_resolution = ground_velocity / azimuth_bandwidth
+
+            self.set_value(
+                f'{output_swaths_freq_path}/sceneCenterAlongTrackResolution',
+                azimuth_resolution)
+
+            # compute range resolution
+            range_bandwidth_path = (
+                f'{self.input_product_path}'
+                f'/swaths/frequency{frequency}/processedRangeBandwidth')
+            range_bandwidth = self.input_hdf5_obj[range_bandwidth_path][()]
+            range_resolution = (isce3.core.speed_of_light /
+                                (2 * range_bandwidth))
+            self.set_value(
+                f'{output_swaths_freq_path}/rangeResolution',
+                range_resolution)
+
             self.copy_from_input(
                 f'{output_swaths_freq_path}/rangeBandwidth',
                 f'{input_swaths_freq_path}/processedRangeBandwidth')

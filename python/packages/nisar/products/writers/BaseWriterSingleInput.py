@@ -505,7 +505,20 @@ class BaseWriterSingleInput():
         self.input_product_type = self.input_product_obj.productType
         self.input_product_hdf5_group_type = \
             self.input_product_obj.ProductPath.split('/')[-1]
+
+        # Example:
+        # self.root_path = '/science/LSAR'
         self.root_path = self.input_product_obj.RootPath
+
+        # Example:
+        # self.input_product_path = '/science/LSAR/RSLC'
+        self.input_product_path = (
+            f'//science/{self.input_product_obj.sarBand}SAR/'
+            f'{self.input_product_hdf5_group_type}')
+
+        # Example:
+        # self.output_product_path = '/science/LSAR/GCOV'
+
         self.output_product_path = (
             f'//science/{self.input_product_obj.sarBand}SAR/'
             f'{self.product_type}')
