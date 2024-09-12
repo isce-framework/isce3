@@ -514,15 +514,14 @@ class BaseWriterSingleInput():
         # Example:
         # self.input_product_path = '/science/LSAR/RSLC'
         self.input_product_path = (
-            f'//science/{self.input_product_obj.sarBand}SAR/'
+            f'{self.root_path}/'
             f'{self.input_product_hdf5_group_type}')
 
         # Example:
         # self.output_product_path = '/science/LSAR/GCOV'
 
-        self.output_product_path = (
-            f'//science/{self.input_product_obj.sarBand}SAR/'
-            f'{self.product_type}')
+        self.output_product_path = f'{self.root_path}/{self.product_type}'
+
         self.input_hdf5_obj = h5py.File(self.input_file, mode='r')
         self.output_hdf5_obj = h5py.File(self.output_file, mode='a')
 

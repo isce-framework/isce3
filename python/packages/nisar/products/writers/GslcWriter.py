@@ -51,31 +51,31 @@ class GslcWriter(BaseL2WriterSingleInput):
         for frequency, _ in self.freq_pols_dict.items():
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
-            output_swaths_freq_path = ('{PRODUCT}/grids/'
+            output_grids_freq_path = ('{PRODUCT}/grids/'
                                        f'frequency{frequency}')
             self.copy_from_input(
-                f'{output_swaths_freq_path}/numberOfSubSwaths',
+                f'{output_grids_freq_path}/numberOfSubSwaths',
                 f'{input_swaths_freq_path}/numberOfSubSwaths',
                 skip_if_not_present=True)
 
             self.copy_from_input(
-                f'{output_swaths_freq_path}/rangeBandwidth',
+                f'{output_grids_freq_path}/rangeBandwidth',
                 f'{input_swaths_freq_path}/processedRangeBandwidth')
 
             self.copy_from_input(
-                f'{output_swaths_freq_path}/azimuthBandwidth',
+                f'{output_grids_freq_path}/azimuthBandwidth',
                 f'{input_swaths_freq_path}/processedAzimuthBandwidth')
 
             self.copy_from_input(
-                f'{output_swaths_freq_path}/centerFrequency',
+                f'{output_grids_freq_path}/centerFrequency',
                 f'{input_swaths_freq_path}/processedCenterFrequency')
 
             self.copy_from_input(
-                f'{output_swaths_freq_path}/slantRangeSpacing',
+                f'{output_grids_freq_path}/slantRangeSpacing',
                 f'{input_swaths_freq_path}/slantRangeSpacing')
 
             self.copy_from_input(
-                f'{output_swaths_freq_path}/zeroDopplerTimeSpacing',
+                f'{output_grids_freq_path}/zeroDopplerTimeSpacing',
                 '{PRODUCT}/swaths/zeroDopplerTimeSpacing')
 
     def populate_calibration_information_gslc_specific(self):

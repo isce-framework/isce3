@@ -564,11 +564,15 @@ class GcovWriter(BaseL2WriterSingleInput):
         Populate the data group `grids` of the GCOV product
         """
         for frequency in self.freq_pols_dict.keys():
+
+            input_swaths_freq_path = ('{PRODUCT}/swaths/'
+                                      f'frequency{frequency}')
+            output_grids_freq_path = ('{PRODUCT}/grids/'
+                                       f'frequency{frequency}')
+
             self.copy_from_input(
-                '{PRODUCT}/grids/'
-                f'frequency{frequency}/numberOfSubSwaths',
-                '{PRODUCT}/swaths/'
-                f'frequency{frequency}/numberOfSubSwaths',
+                f'{output_grids_freq_path}/numberOfSubSwaths',
+                f'{input_swaths_freq_path}/numberOfSubSwaths',
                 skip_if_not_present=True)
 
     def populate_processing_information(self):
@@ -580,10 +584,9 @@ class GcovWriter(BaseL2WriterSingleInput):
         parameters_group = \
             '{PRODUCT}/metadata/processingInformation/parameters'
 
-        # TODO review this
         self.set_value(
             f'{parameters_group}/noiseCorrectionApplied',
-            True)
+            False)
 
         self.set_value(
             f'{parameters_group}/preprocessingMultilookingApplied',
@@ -796,10 +799,11 @@ class GcovWriter(BaseL2WriterSingleInput):
                 'outputBackscatterNormalizationConvention',
                 'beta0')
 
+        # CEOS ARD convention is 'Linear amplitude' or 'Linear power'.
         self.set_value(
             f'{parameters_group}/rtc/'
             'outputBackscatterExpressionConvention',
-            'backscatter intensity (linear)')
+            'Linear power')
 
         self.copy_from_runconfig(
             f'{parameters_group}/rtc/memoryMode',

@@ -9,7 +9,9 @@ import isce3
 from isce3.core import crop_external_orbit
 from nisar.products.writers import BaseWriterSingleInput
 from nisar.workflows.h5_prep import set_get_geo_info
+from isce3.core import Ellipsoid
 from isce3.core.types import truncate_mantissa
+from isce3.geometry import compute_incidence_angle
 from nisar.products.readers.orbit import load_orbit_from_xml
 
 
@@ -718,9 +720,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             self.cfg["dynamic_ancillary_file_group"]['orbit_file']
         self.flag_external_orbit_file = self.orbit_file is not None
 
-        orbit_path = (f'{self.root_path}/'
-                        f'{self.input_product_hdf5_group_type}'
-                        '/metadata/orbit')
+        orbit_path = f'{self.input_product_path}/metadata/orbit'
         self.orbit = isce3.core.load_orbit_from_h5_group(
             self.input_hdf5_obj[orbit_path])
 
@@ -760,7 +760,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         # assign output spatial reference (EPSG 4326)
         bounding_box_srs = isce3.geometry.polygons.get_srs_lonlat()
-        bounding_box_epsg_code = int(srs.GetAuthorityCode(None))
+        bounding_box_epsg_code = int(bounding_box_srs.GetAuthorityCode(None))
 
         product_geometry = ogr.Geometry(ogr.wkbMultiPolygon)
         list_of_frequencies = list(self.freq_pols_dict.keys())
@@ -796,7 +796,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         bbox_ring.AddPoint(bbox_end_x, bbox_end_y)
         bbox_ring.AddPoint(bbox_end_x, bbox_start_y)
         bbox_ring.AddPoint(bbox_start_x, bbox_start_y)
-        assert not bbox_ring.IsClockwise()
+
         # Create polygon
         bbox_polygon = ogr.Geometry(ogr.wkbPolygon)
         bbox_polygon.AddGeometry(bbox_ring)
@@ -971,8 +971,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 for pol in pol_list:
 
                     zero_doppler_time_path = (
-                        f'{self.root_path}/'
-                        f'{self.input_product_hdf5_group_type}/metadata/'
+                        f'{self.input_product_path}/metadata/'
                         f'calibrationInformation/frequency{frequency}/{pol}/'
                         'zeroDopplerTime')
 
@@ -1047,10 +1046,21 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'identification/productLevel',
             default='L1')
 
+        # CEOS ARD convention is 'Slant range' or 'Ground range'.
+        self.set_value(
+            '{PRODUCT}/metadata/sourceData/productGeometry',
+            'Slant range')
+
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingDateTime',
             'identification/processingDateTime',
             skip_if_not_present=True)
+
+        # this parameter should be copied from the input RSLC product
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingCenter',
+            'identification/processingCenter',
+            default='(NOT SPECIFIED)')
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
@@ -1148,6 +1158,10 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'identification/zeroDopplerStartTime')
 
         self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/swaths/zeroDopplerEndTime',
+            'identification/zeroDopplerEndTime')
+
+        self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/swaths/zeroDopplerTimeSpacing',
             '{PRODUCT}/swaths/zeroDopplerTimeSpacing')
 
@@ -1158,6 +1172,10 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                        f'swaths/frequency{frequency}')
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
+
+            self.copy_from_input(
+                f'{output_swaths_freq_path}/listOfPolarizations',
+                f'{input_swaths_freq_path}/listOfPolarizations')
 
             if i == 0:
                 self.set_value(
@@ -1204,11 +1222,23 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 range_resolution)
 
             self.copy_from_input(
-                f'{output_swaths_freq_path}/rangeBandwidth',
+                f'{output_swaths_freq_path}/sceneCenterAlongTrackSpacing',
+                f'{input_swaths_freq_path}/sceneCenterAlongTrackSpacing')
+
+            self.copy_from_input(
+                f'{output_swaths_freq_path}/sceneCenterGroundRangeSpacing',
+                f'{input_swaths_freq_path}/sceneCenterGroundRangeSpacing')
+
+            self.copy_from_input(
+                f'{output_swaths_freq_path}/acquiredRangeBandwidth',
+                f'{input_swaths_freq_path}/acquiredRangeBandwidth')
+
+            self.copy_from_input(
+                f'{output_swaths_freq_path}/processedRangeBandwidth',
                 f'{input_swaths_freq_path}/processedRangeBandwidth')
 
             self.copy_from_input(
-                f'{output_swaths_freq_path}/azimuthBandwidth',
+                f'{output_swaths_freq_path}/processedAzimuthBandwidth',
                 f'{input_swaths_freq_path}/processedAzimuthBandwidth')
 
             self.copy_from_input(
@@ -1283,9 +1313,18 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             rfi_mitigation_path != '' and
             'disabled' not in rfi_mitigation_path.lower())
 
+        # populate processing information parameters
+        for xy in ['x', 'y']:
+            parameters_group = \
+                '{PRODUCT}/metadata/processingInformation/parameters'
+            self.copy_from_runconfig(
+                f'{parameters_group}/geocoding/snapToGrid{xy.upper()}',
+                f'processing/geocode/{xy}_snap',
+                default=np.nan,
+                format_function=np.float64)
+
         self.set_value(
-            '{PRODUCT}/metadata/processingInformation/parameters/'
-            'rfiCorrectionApplied',
+            f'{parameters_group}/rfiCorrectionApplied',
             flag_rfi_mitigation_applied)
 
         self.set_value(
