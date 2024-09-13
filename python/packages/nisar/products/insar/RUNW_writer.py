@@ -341,6 +341,4 @@ class RUNWWriter(L1InSARWriter):
         """
         super().add_swaths_to_hdf5()
 
-        # add subswaths and interferogram to swaths group
-        self.add_subswaths_to_swaths_group()
         self.add_interferogram_to_swaths_group()

@@ -145,10 +145,16 @@ class InSARBaseWriter(h5py.File):
         self.sec_orbit = self.sec_rslc.getOrbit()
 
         self.ref_h5py_file_obj = \
-            HDF5OptimizedReader(name=self.ref_h5_slc_file, mode="r", libver="latest", swmr=True)
+            HDF5OptimizedReader(name=self.ref_h5_slc_file,
+                                mode="r",
+                                libver="latest",
+                                swmr=True)
 
         self.sec_h5py_file_obj = \
-            HDF5OptimizedReader(name=self.sec_h5_slc_file, mode="r", libver="latest", swmr=True)
+            HDF5OptimizedReader(name=self.sec_h5_slc_file,
+                                mode="r",
+                                libver="latest",
+                                swmr=True)
 
         # Load the external orbits and crop them
         if self.external_ref_orbit_path is not None:

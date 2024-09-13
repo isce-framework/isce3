@@ -1,5 +1,8 @@
+import os
+
 import numpy as np
 from isce3.core import LUT2d
+from nisar.workflows import geo2rdr, rdr2geo
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
 from nisar.workflows.helpers import get_cfg_freq_pols
 
@@ -7,10 +10,9 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_base_writer import InSARBaseWriter
 from .product_paths import L1GroupsPaths
 from .units import Units
-from .utils import (extract_datetime_from_string,
+from .utils import (extract_datetime_from_string, generate_insar_subswath_mask,
                     get_geolocation_grid_cube_obj,
-                    get_pixel_offsets_dataset_shape, get_pixel_offsets_params,
-                    number_to_ordinal)
+                    get_pixel_offsets_dataset_shape, get_pixel_offsets_params)
 
 
 class L1InSARWriter(InSARBaseWriter):
@@ -357,10 +359,12 @@ class L1InSARWriter(InSARBaseWriter):
             off_length, off_width = get_pixel_offsets_dataset_shape(self.cfg, freq)
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
+            ref_rslc_slant_range = rslc_freq_group["slantRange"][()]
+            ref_rslc_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]
             offset_slant_range = \
-                rslc_freq_group["slantRange"][()][rg_start::rg_skip][:off_width]
+                ref_rslc_slant_range[rg_start::rg_skip][:off_width]
             offset_zero_doppler_time = \
-                rslc_swaths_group["zeroDopplerTime"][()][az_start::az_skip][:off_length]
+                ref_rslc_zero_doppler_time[az_start::az_skip][:off_length]
             offset_zero_doppler_time_spacing = \
                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
             offset_slant_range_spacing = \
@@ -372,6 +376,13 @@ class L1InSARWriter(InSARBaseWriter):
                                                     'seconds since ')
             if time_str is not None:
                 zero_dopp_time_units = time_str
+
+            az_idx = np.arange(
+                len(ref_rslc_zero_doppler_time)
+                )[az_start::az_skip][:off_length]
+            rg_idx = np.arange(
+                len(ref_rslc_slant_range)
+                )[rg_start::rg_skip][:off_width]
 
             ds_offsets_params = [
                 DatasetParams(
@@ -423,6 +434,38 @@ class L1InSARWriter(InSARBaseWriter):
             offset_group = self.require_group(offset_group_name)
             for ds_param in ds_offsets_params:
                 add_dataset_and_attrs(offset_group, ds_param)
+
+            # add the subswath mask layer to the pixel offset group
+            self._create_2d_dataset(offset_group,
+                                    'mask',
+                                    shape=(off_length, off_width),
+                                    dtype=np.uint8,
+                                    description='Subswath mask layer',
+                                    fill_value=255,
+                                    long_name='Valid-samples subswath mask')
+
+            scratch_path = self.cfg['product_path_group']['scratch_path']
+            range_offset_path = \
+                os.path.join(scratch_path,
+                                f'geo2rdr/freq{freq}/range.off')
+            azimuth_offset_path = \
+                os.path.join(scratch_path,
+                                f'geo2rdr/freq{freq}/azimuth.off')
+
+            # If there are no offset products, run the rdr2geo and
+            # geo2rdr to generate the offsets products
+            if ((not os.path.exists(range_offset_path)) or
+                (not os.path.exists(azimuth_offset_path))):
+                rdr2geo.run(self.cfg)
+                geo2rdr.run(self.cfg)
+
+            offset_group['mask'][...] = generate_insar_subswath_mask(self.ref_rslc,
+                                                                     self.sec_rslc,
+                                                                     range_offset_path,
+                                                                     azimuth_offset_path,
+                                                                     freq,
+                                                                     az_idx,
+                                                                     rg_idx)
 
         # add the datasets to pixel offsets group
         self._add_datasets_to_pixel_offset_group()
@@ -545,6 +588,38 @@ class L1InSARWriter(InSARBaseWriter):
             for ds_param in ds_igram_params:
                 add_dataset_and_attrs(igram_group, ds_param)
 
+            # add the subswath mask layer to the interferogram group
+            self._create_2d_dataset(igram_group,
+                                    'mask',
+                                    shape=igram_shape,
+                                    dtype=np.uint8,
+                                    description='Subswath mask layer',
+                                    fill_value=255,
+                                    long_name='Valid-samples subswath mask')
+
+            scratch_path = self.cfg['product_path_group']['scratch_path']
+            range_offset_path = \
+                os.path.join(scratch_path,
+                                f'geo2rdr/freq{freq}/range.off')
+            azimuth_offset_path = \
+                os.path.join(scratch_path,
+                                f'geo2rdr/freq{freq}/azimuth.off')
+
+            # If there are no offset products, run the rdr2geo and
+            # geo2rdr to generate the offsets products
+            if ((not os.path.exists(range_offset_path)) or
+                (not os.path.exists(azimuth_offset_path))):
+                rdr2geo.run(self.cfg)
+                geo2rdr.run(self.cfg)
+
+            igram_group['mask'][...] = generate_insar_subswath_mask(self.ref_rslc,
+                                                                    self.sec_rslc,
+                                                                    range_offset_path,
+                                                                    azimuth_offset_path,
+                                                                    freq,
+                                                                    az_idx,
+                                                                    rg_idx)
+
             # add the interferogram and pixelOffsets groups to the polarization group
             for pol in pol_list:
                 igram_pol_group_name = (
@@ -572,65 +647,6 @@ class L1InSARWriter(InSARBaseWriter):
                         ds_description,
                         units=ds_unit,
                     )
-
-
-    def add_subswaths_to_swaths_group(self):
-        """
-        Add subswaths to the swaths group
-        """
-        for freq, *_ in get_cfg_freq_pols(self.cfg):
-            # Create the swath group
-            swaths_freq_group_name = (
-                f"{self.group_paths.SwathsPath}/frequency{freq}"
-            )
-            swaths_freq_group = self.require_group(swaths_freq_group_name)
-
-            # Sub swaths groups of the RSLC
-            rslc_freq_group = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}/frequency{freq}"
-            ]
-            number_of_subswaths = rslc_freq_group["numberOfSubSwaths"]
-            number_of_subwaths_ds = \
-                swaths_freq_group.require_dataset("numberOfSubSwaths",
-                                                  shape=number_of_subswaths.shape,
-                                                  dtype=np.uint8,
-                                                  data=number_of_subswaths[...])
-            number_of_subwaths_ds.attrs['description'] = \
-                np.bytes_('Number of swaths of continuous imagery, due to transmit gaps')
-            number_of_subwaths_ds.attrs['units'] = Units.unitless
-
-            # valid samples subswath
-            num_of_subswaths = rslc_freq_group["numberOfSubSwaths"][()]
-            for sub in range(num_of_subswaths):
-                subswath = sub + 1
-                # Get RSLC subswath dataset, range looks, and destination
-                # dataset name based on keys in RSLC
-                valid_samples_subswath_name = f"validSamplesSubSwath{subswath}"
-                description = \
-                    "First and last valid sample in each line of" +\
-                    f" {number_to_ordinal(subswath)} subswath"
-
-                if valid_samples_subswath_name in rslc_freq_group.keys():
-                    rslc_freq_subswath_ds = \
-                        rslc_freq_group[valid_samples_subswath_name]
-                    number_of_range_looks =rslc_freq_subswath_ds[()] \
-                            // self.igram_range_looks
-                else:
-                    rslc_freq_subswath_ds = rslc_freq_group["validSamples"]
-                    number_of_range_looks = rslc_freq_subswath_ds[()] // \
-                        self.igram_range_looks
-                    valid_samples_subswath_name = "validSamples"
-
-                # Create subswath dataset and update attributes from RSLC
-                dst_subswath_ds = swaths_freq_group.require_dataset(
-                    name=valid_samples_subswath_name,
-                    data=number_of_range_looks,
-                    shape=number_of_range_looks.shape,
-                    dtype=np.uint32,
-                )
-                dst_subswath_ds.attrs['units'] = Units.unitless
-                dst_subswath_ds.attrs['description'] = np.bytes_(description)
-
 
     def add_swaths_to_hdf5(self):
         """

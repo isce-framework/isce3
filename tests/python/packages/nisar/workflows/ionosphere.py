@@ -2,7 +2,8 @@ import argparse
 import os
 
 import iscetest
-from nisar.workflows import insar, prepare_insar_hdf5
+from nisar.workflows import insar
+from nisar.workflows.h5_prep import get_products_and_paths
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 
@@ -29,7 +30,7 @@ def test_split_main_band_run():
     insar_runcfg.geocode_common_arg_load()
     insar_runcfg.yaml_check()
 
-    out_paths = prepare_insar_hdf5.run(insar_runcfg.cfg)
+    _, out_paths = get_products_and_paths(insar_runcfg.cfg)
     persist = Persistence(restart=True, logfile_path='ionosphere.log')
 
     # No CPU dense offsets. Turn off dense_offsets,
@@ -65,7 +66,7 @@ def test_main_side_band_run():
     insar_runcfg.geocode_common_arg_load()
     insar_runcfg.yaml_check()
 
-    out_paths = prepare_insar_hdf5.run(insar_runcfg.cfg)
+    _, out_paths = get_products_and_paths(insar_runcfg.cfg)
 
     persist = Persistence(restart=True, logfile_path='ionosphere.log')
     # No CPU dense offsets. Turn off dense_offsets,

@@ -2,12 +2,10 @@
 Prepare InSAR HDF5 for
 GUNW, GOFF, RIFG, ROFF, and RUNW
 """
-
 import journal
 from nisar.products.insar import (GOFFWriter, GUNWWriter, RIFGWriter,
                                   ROFFWriter, RUNWWriter)
 from nisar.workflows.h5_prep import get_products_and_paths
-
 
 def prepare_insar_hdf5(cfg, output_hdf5, dst):
     """
@@ -22,6 +20,7 @@ def prepare_insar_hdf5(cfg, output_hdf5, dst):
     dst : str
         the name of the InSAR product
     """
+
     if "RUNW" in dst:
         with RUNWWriter(name = output_hdf5, mode = 'w',
                         runconfig_dict = cfg,
