@@ -716,7 +716,7 @@ runconfig:
             # Enable/Disable gzip compression
             compression_enabled: True
             # Compression level: 1: least compression; 9: best compression
-            compression_level: 5
+            compression_level: 1
             # Chunk size of InSAR raster
             chunk_size: [512, 512]
             # Enable/disable shuffle filter
