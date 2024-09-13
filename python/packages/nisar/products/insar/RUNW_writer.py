@@ -144,9 +144,6 @@ class RUNWWriter(L1InSARWriter):
                 "ionosphereAlgorithm",
                 iono_algorithm,
                 "Algorithm used to estimate ionosphere phase screen",
-                {
-                    "algorithm_type": "Ionosphere estimation",
-                },
             ),
             DatasetParams(
                 "ionosphereFilling",
@@ -154,17 +151,11 @@ class RUNWWriter(L1InSARWriter):
                 "Outliers data filling algorithm"
                 " for ionosphere phase estimation"
                 ,
-                {
-                    "algorithm_type": "Ionosphere estimation",
-                },
             ),
             DatasetParams(
                 "ionosphereFiltering",
                 iono_filtering,
                 f"Filtering algorithm for ionosphere phase screen computation",
-                {
-                    "algorithm_type": "Ionosphere estimation",
-                },
             ),
             DatasetParams(
                 "ionosphereOutliers",
@@ -172,9 +163,6 @@ class RUNWWriter(L1InSARWriter):
                 "Algorithm identifying outliers in unfiltered ionosphere"
                 " phase screen"
                 ,
-                {
-                    "algorithm_type": "Ionosphere estimation",
-                },
             ),
             DatasetParams(
                 "unwrappingErrorCorrection",
@@ -182,9 +170,6 @@ class RUNWWriter(L1InSARWriter):
                 "Algorithm correcting unwrapping errors in sub-band"
                 " unwrapped interferograms"
                 ,
-                {
-                    "algorithm_type": "Ionosphere estimation",
-                },
             ),
         ]
 
@@ -231,25 +216,16 @@ class RUNWWriter(L1InSARWriter):
                 "costMode",
                 cost_mode,
                 "Cost mode algorithm for phase unwrapping",
-                {
-                    "algorithm_type": "Unwrapping",
-                },
             ),
             DatasetParams(
                 "unwrappingAlgorithm",
                 unwrapping_algorithm,
                 "Algorithm used for phase unwrapping",
-                {
-                    "algorithm_type": "Unwrapping",
-                },
             ),
             DatasetParams(
                 "unwrappingInitializer",
                 unwrapping_initializer,
                 "Algorithm used to initialize phase unwrapping",
-                {
-                    "algorithm_type": "Unwrapping",
-                },
             ),
         ]
 
@@ -263,23 +239,13 @@ class RUNWWriter(L1InSARWriter):
                 "wrappedPhaseFilling",
                 phase_filling,
                 "Outliers data filling algorithm for phase unwrapping"
-                " preprocessing"
-                ,
-                {
-                    "algorithm_type": "Unwrapping",
-                },
-            ),
+                " preprocessing"),
             DatasetParams(
                 "wrappedPhaseOutliers",
                 phase_outliers,
                 "Algorithm identifying outliers in the wrapped"
-                " interferogram"
-                ,
-                {
-                    "algorithm_type": "Unwrapping",
-                },
-            ),
-        ]
+                " interferogram")]
+        
         unwrap_prep_group = self.require_group(
             f"{self.group_paths.AlgorithmsPath}/unwrapping/preprocessing")
         for ds_param in ds_params:

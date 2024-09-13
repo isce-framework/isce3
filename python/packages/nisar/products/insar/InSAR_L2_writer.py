@@ -287,34 +287,22 @@ class L2InSARWriter(L1InSARWriter):
                 complex_interpolation,
                 "Geocoding interpolation algorithm for complex-valued"
                 " datasets",
-                {
-                    "algorithm_type": "Geocoding",
-                },
             ),
             DatasetParams(
                 "demInterpolation",
                 dem_interpolation,
                 "DEM interpolation algorithm",
-                {
-                    "algorithm_type": "Geocoding",
-                },
             ),
             DatasetParams(
                 "floatingGeocodingInterpolation",
                 floating_interpolation,
                 "Geocoding interpolation algorithm for floating point"
                 " datasets",
-                {
-                    "algorithm_type": "Geocoding",
-                },
             ),
             DatasetParams(
                 "integerGeocodingInterpolation",
                 integer_interpolation,
                 "Geocoding interpolation algorithm for integer datasets",
-                {
-                    "algorithm_type": "Geocoding",
-                },
             ),
         ]
 

@@ -62,26 +62,17 @@ class ROFFWriter(L1InSARWriter):
                 "coregistrationMethod",
                 coreg_method,
                 "RSLC coregistration method",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
             DatasetParams(
                 "geometryCoregistration",
                 "Range doppler to geogrid then geogrid to range doppler"
                 ,
                 "Geometry coregistration algorithm",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
             DatasetParams(
                 "resampling",
                 "sinc",
                 "Secondary RSLC resampling algorithm",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
         ]
 
@@ -104,11 +95,7 @@ class ROFFWriter(L1InSARWriter):
                 cross_corr = DatasetParams(
                     "crossCorrelationAlgorithm",
                     cross_correlation_domain,
-                    f"Cross-correlation algorithm for layer {layer[-1]}"
-                    ,
-                    {
-                        "algorithm_type": "RSLC coregistration",
-                    },
+                    f"Cross-correlation algorithm for layer {layer[-1]}",
                 )
                 cross_corr_group = \
                     self.require_group(f"{self.group_paths.AlgorithmsPath}/crossCorrelation/{layer}")
