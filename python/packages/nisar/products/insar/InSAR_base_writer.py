@@ -359,10 +359,10 @@ class InSARBaseWriter(h5py.File):
                                   ' radar modes, "False" otherwise')
         ds_params = [
             DatasetParams(
-                "rfiCorrectionApplied",
+                "rfiMitigationApplied",
                 rfi_mitigation_flag,
                 (
-                    "Flag to indicate if RFI correction has been applied"
+                    "Flag to indicate if RFI mitigation has been applied"
                     f" to {rslc_name} RSLC"
                 ),
             ),

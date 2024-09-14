@@ -1313,7 +1313,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
     def populate_processing_information_l2_common(self):
 
-        # Since the flag "rfiCorrectionApplied" is not present in the RSLC
+        # Since the flag "rfiMitigationApplied" is not present in the RSLC
         # metadata, we populate it by reading the name of the
         # RFI mitigation algorithm from the RSLC metadata. The flag
         # is only True if the name of the algorithm is present in the metadata,
@@ -1338,7 +1338,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 format_function=np.float64)
 
         self.set_value(
-            f'{parameters_group}/rfiCorrectionApplied',
+            f'{parameters_group}/rfiMitigationApplied',
             flag_rfi_mitigation_applied)
 
         self.set_value(
