@@ -56,3 +56,65 @@ def compute_incidence_angle(t: float, srange: float, orbit: Orbit,
     # Return incidence angle in radians
     cosalpha = np.abs(enu[2]) / np.linalg.norm(enu)
     return np.arccos(cosalpha)
+
+
+def get_near_and_far_range_incidence_angles(radar_grid, orbit,
+                                            doppler_lut = None,
+                                            dem_interp = None):
+    '''
+    Compute near and far range incidence angles at the mid-azimuth point of the grid.
+    
+    The incidence is the angle between the nadir vector and platform-to-target look vector.
+
+    Parameters
+    ----------
+    radar_grid: isce3.product.RadarGridParameters
+        Radar grid
+    orbit: isce3.core.Orbit
+        Orbit object associated with the radar grid
+
+    Returns
+    -------
+    near_range_inc_angle: float
+        Near range incidence angle in radians
+    far_range_inc_angle: float
+        Far range incidence angle in radians
+    doppler_lut: isce3.core.LUT2d, optional
+        Doppler LUT
+    dem_interp: isce3.geometry.DEMInterpolator, optional
+        DEM interpolator
+    '''
+
+    radar_grid_center_az_time = radar_grid.sensing_time(
+            radar_grid.length // 2)
+    radar_grid_start_range = radar_grid.starting_range
+    radar_grid_end_range = radar_grid.end_range
+
+    if doppler_lut is None:
+        doppler_lut = LUT2d()
+
+    if dem_interp is None:
+        dem_interp = DEMInterpolator()
+
+    ellipsoid = dem_interp.ellipsoid
+
+    # TODO: compute the incidence angle using several azimuth lines and average
+    near_range_inc_angle = compute_incidence_angle(
+            t=radar_grid_center_az_time,
+            srange=radar_grid_start_range,
+            orbit=orbit,
+            doppler_lut=doppler_lut,
+            rdr_grid=radar_grid,
+            dem_interp=dem_interp,
+            ellipsoid=ellipsoid)
+
+    far_range_inc_angle = compute_incidence_angle(
+            t=radar_grid_center_az_time,
+            srange=radar_grid_end_range,
+            orbit=orbit,
+            doppler_lut=doppler_lut,
+            rdr_grid=radar_grid,
+            dem_interp=dem_interp,
+            ellipsoid=ellipsoid)
+
+    return near_range_inc_angle,far_range_inc_angle

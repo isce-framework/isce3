@@ -3,11 +3,37 @@ import numpy as np
 import numpy.testing as npt
 import os
 
+import isce3
 from nisar.products.readers.Raw import open_rrsd
 from isce3.ext.isce3 import geometry as geom
 from isce3.ext.isce3.core import Ellipsoid
 from isce3.ext.isce3.geometry import DEMInterpolator
+from isce3.geometry import get_near_and_far_range_incidence_angles
+from nisar.products.readers import SLC
 import iscetest
+
+
+def test_get_near_and_far_range_incidence_angles():
+    '''
+    Test computation of the near and far range incidence angles
+    using radar grid from envisat.h5
+    '''
+    input_h5_path = os.path.join(iscetest.data, "envisat.h5")
+
+    radar_grid = isce3.product.RadarGridParameters(input_h5_path)
+
+    # init SLC object and extract necessary test params from it
+    rslc = SLC(hdf5file=input_h5_path)
+    orbit = rslc.getOrbit()
+
+    near_range_inc_angle_rad, far_range_inc_angle_rad = \
+        get_near_and_far_range_incidence_angles(radar_grid, orbit)
+
+    near_range_inc_angle_deg = np.rad2deg(near_range_inc_angle_rad)
+    far_range_inc_angle_deg = np.rad2deg(far_range_inc_angle_rad)
+
+    assert np.isclose(near_range_inc_angle_deg, 18.7004, atol=1e-3)
+    assert np.isclose(far_range_inc_angle_deg, 19.5825, atol=1e-3)
 
 
 class TestLookIncAngles:
