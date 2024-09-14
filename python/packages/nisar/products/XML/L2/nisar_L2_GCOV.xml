@@ -21,24 +21,21 @@
                  signed="false"
                  width="32">
           <annotation app="conformance"
-                      lang="en"
-                      units="1">Absolute orbit number</annotation>
+                      lang="en">Absolute orbit number</annotation>
         </integer>
         <integer name="/science/LSAR/identification/trackNumber"
                  shape="scalar"
                  signed="false"
                  width="8">
           <annotation app="conformance"
-                      lang="en"
-                      units="1">Track number</annotation>
+                      lang="en">Track number</annotation>
         </integer>
         <integer name="/science/LSAR/identification/frameNumber"
                  shape="scalar"
                  signed="false"
                  width="16">
           <annotation app="conformance"
-                      lang="en"
-                      units="1">Frame number</annotation>
+                      lang="en">Frame number</annotation>
         </integer>
         <string length="0"
                 name="/science/LSAR/identification/missionId"
@@ -151,6 +148,13 @@
                             epsg="4326"
                             lang="en">OGR compatible WKT representing the bounding polygon of the image. Horizontal coordinates are WGS84 longitude followed by latitude (both in degrees), and the vertical coordinate is the height above the WGS84 ellipsoid in meters. The first point corresponds to the start-time, near-range radar coordinate, and the perimeter is traversed in counterclockwise order on the map. This means the traversal order in radar coordinates differs for left-looking and right-looking sensors. The polygon includes the four corners of the radar grid, with equal numbers of points distributed evenly in radar coordinates along each edge</annotation>
         </string>
+        <string length="0"
+                name="/science/LSAR/identification/boundingBox"
+                shape="scalar">
+                <annotation app="conformance"
+                            epsg="4326"
+                            lang="en">OGR compatible WKT representing the bounding box of the product (the union of the geocoded grid for available frequency A and frequency B image datasets). Horizontal coordinates are WGS84 longitude followed by latitude (both in degrees), and the vertical coordinate is the height above the WGS84 ellipsoid in meters. The first point corresponds to the top left edge of the bounding box. The remaining points are traversed in counterclockwise order on the map. The fifth point closes the bounding box by repeating the first point</annotation>
+        </string>
         <string length="27"
               name="/science/LSAR/identification/processingDateTime"
               shape="scalar">
@@ -162,6 +166,12 @@
               shape="scalar">
               <annotation app="conformance"
                           lang="en">Acquired frequency band, either "L" or "S"</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/platformName"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Name of the platform used to collect the remote sensing data provided in this product</annotation>
         </string>
         <string length="0"
               name="/science/LSAR/identification/instrumentName"
@@ -225,7 +235,6 @@
                       long_name="X coordinates spacing"
                       units="meters">Nominal spacing in meters between consecutive pixels</annotation>
         </real>
-
         <real name="/science/LSAR/GCOV/grids/frequencyA/numberOfLooks"
               shape="realDataFrequencyAShape"
               width="32">
@@ -305,11 +314,10 @@
               width="8">
           <annotation app="conformance"
                       lang="en"
-                      long_name="Valid-samples sub-swath mask"
+                      long_name="Valid-samples subswath mask"
                       valid_min="0"
                       _FillValue="255"
-                      grid_mapping="projection"
-                      units="1">GCOV terms mask</annotation>
+                      grid_mapping="projection">GCOV terms mask</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyA/HHHH"
               shape="realDataFrequencyAShape"
@@ -553,7 +561,7 @@
 
         <!-- Main layers for frequencyB -->
         <!-- Scalars -->
-        <string length="4"
+        <string length="2"
               name="/science/LSAR/GCOV/grids/frequencyB/listOfPolarizations"
               shape="numberOfFrequencyBPolarizations">
           <annotation app="conformance"
@@ -581,7 +589,6 @@
                       long_name="X coordinates spacing"
                       units="meters">Nominal spacing in meters between consecutive pixels</annotation>
         </real>
-
         <integer name="/science/LSAR/GCOV/grids/frequencyB/projection"
                  shape="scalar"
                  signed="false"
@@ -660,11 +667,10 @@
               width="8">
           <annotation app="conformance"
                       lang="en"
-                      long_name="Valid-samples sub-swath mask"
+                      long_name="Valid-samples subswath mask"
                       valid_min="0"
                       _FillValue="255"
-                      grid_mapping="projection"
-                      units="1">GCOV terms mask</annotation>
+                      grid_mapping="projection">GCOV terms mask</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyB/HHHH"
               shape="realDataFrequencyBShape"
@@ -906,6 +912,78 @@
                       units="1">Number of swaths of continuous imagery, due to transmit gaps</annotation>
         </integer>
 
+        <!-- Start of CEOS ARD metadata -->
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/dataAccess"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Location from where this product can be retrieved (URL or DOI)</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/sourceDataAccess"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Location from where the source data product can be retrieved (URL or DOI)</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/staticLayersDataAccess"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Location of the static layers product associated with this product (URL or DOI)</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/outputBackscatterDecibelConversionFormula"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Formula to convert provided backscatter to decibel (dB)</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">CEOS Analysis Ready Data (CARD) product type</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataDocumentIdentifier"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">CEOS Analysis Ready Data (CARD) document identifier</annotation>
+        </string>
+
+       <!-- Geometric accuracy -->
+       <real name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/geometricAccuracy/bias/y"
+             shape="scalar"
+             width="32">
+             <annotation app="conformance"
+                         lang="en"
+                         epsg="EPSG code"
+                         units="meters">An estimate of the localization error bias in the Y/northing direction</annotation>
+       </real>
+       <real name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/geometricAccuracy/bias/x"
+             shape="scalar"
+             width="32">
+             <annotation app="conformance"
+                         lang="en"
+                         epsg="EPSG code"
+                         units="meters">An estimate of the localization error bias in the X/easting direction</annotation>
+       </real>
+       <real name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/geometricAccuracy/standardDeviation/y"
+             shape="scalar"
+             width="32">
+             <annotation app="conformance"
+                         lang="en"
+                         epsg="EPSG code"
+                         units="meters">An estimate of the localization error standard deviation in the Y/northing direction</annotation>
+       </real>
+       <real name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/geometricAccuracy/standardDeviation/x"
+             shape="scalar"
+             width="32">
+             <annotation app="conformance"
+                         lang="en"
+                         epsg="EPSG code"
+                         units="meters">An estimate of the localization error standard deviation in the X/easting direction</annotation>
+       </real>
+
         <!-- Start of Metadata cube -->
         <real name="/science/LSAR/GCOV/metadata/radarGrid/slantRange"
               shape="radarCubeShape"
@@ -921,7 +999,7 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
-                      long_name="Zero-Doppler azimuth time"
+                      long_name="Zero Doppler azimuth time"
                       grid_mapping="projection"
                       units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler azimuth time in seconds</annotation>
         </real>
@@ -1298,7 +1376,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/HV"
               shape="calibrationScaleShape"
@@ -1311,7 +1389,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/VH"
               shape="calibrationScaleShape"
@@ -1324,7 +1402,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/VV"
               shape="calibrationScaleShape"
@@ -1337,7 +1415,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/RH"
               shape="calibrationScaleShape"
@@ -1350,7 +1428,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/RV"
               shape="calibrationScaleShape"
@@ -1363,7 +1441,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/HH"
               shape="calibrationScaleShape"
@@ -1376,7 +1454,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/projection"
                  shape="scalar"
@@ -1425,7 +1503,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/VH"
               shape="calibrationScaleShape"
@@ -1438,7 +1516,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/VV"
               shape="calibrationScaleShape"
@@ -1451,7 +1529,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/RH"
               shape="calibrationScaleShape"
@@ -1464,7 +1542,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/RV"
               shape="calibrationScaleShape"
@@ -1477,7 +1555,7 @@
                       sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Noise equivalent sigma zero</annotation>
+                      units="1">Noise equivalent sigma zero in linear scale</annotation>
         </real>
         <!-- End of noise patterns -->
 
@@ -1989,6 +2067,7 @@
         </real>
 
         <!-- Start of processing information -->
+        <!-- Processing information flags parameters -->
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/noiseCorrectionApplied"
                 shape="scalar">
@@ -2044,10 +2123,10 @@
                             lang="en">Flag to indicate if the azimuth ionospheric correction has been applied</annotation>
         </string>
         <string length="0"
-                name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rfiCorrectionApplied"
+                name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rfiMitigationApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if an RFI correction has been applied</annotation>
+                            lang="en">Flag to indicate if an RFI mitigation has been applied</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/postProcessingFilteringApplied"
@@ -2190,6 +2269,20 @@
                 <annotation app="conformance"
                             lang="en">Flag to indicate if the source data is upsampled for geocoding</annotation>
         </string>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geocoding/snapToGridX"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Snap to the grid along the X direction with the origin set at 0. The X-coordinate of the scene's upper-left corner is a multiple of this value</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geocoding/snapToGridY"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Snap to the grid along the Y direction with the origin set at 0. The Y-coordinate of the scene's upper-left corner is a multiple of this value</annotation>
+        </real>
 
         <!-- geo2rdr parameters -->
         <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geo2rdr/convergenceThreshold"
@@ -2444,7 +2537,7 @@
 
         <!-- Attitude records -->
         <real name="/science/LSAR/GCOV/metadata/attitude/time"
-              shape="orbitListLength"
+              shape="attitudeListLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
@@ -2529,11 +2622,23 @@
           <annotation app="conformance"
                       lang="en">Source data product level. Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
         </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/sourceData/productGeometry"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Source data product geometry, either "Slant range" or "Ground range"</annotation>
+        </string>
         <string  length="27"
               name="/science/LSAR/GCOV/metadata/sourceData/processingDateTime"
               shape="scalar">
               <annotation app="conformance"
                           lang="en">Source data processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS</annotation>
+        </string>
+        <string  length="0"
+              name="/science/LSAR/GCOV/metadata/sourceData/processingCenter"
+              shape="scalar">
+              <annotation app="conformance"
+                          lang="en">Source data processing center</annotation>
         </string>
         <string name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/runConfigurationContents"
               length="0"
@@ -2620,43 +2725,37 @@
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/rangeCompression"
                 shape="scalar">
-          <annotation algorithm_type="range processing"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for focusing the data in the range direction corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/elevationAntennaPatternCorrection"
                 shape="scalar">
-          <annotation algorithm_type="range processing"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for calibrating the antenna pattern corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/rangeSpreadingLossCorrection"
                 shape="scalar">
-          <annotation algorithm_type="range processing"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for calibrating range fading corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/dopplerCentroidEstimation"
                 shape="scalar">
-          <annotation algorithm_type="doppler centroid estimation"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for calculating Doppler centroid corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/azimuthPresumming"
                 shape="scalar">
-          <annotation algorithm_type="azimuth regridding"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for regridding and filling gaps in the raw data in azimuth corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/azimuthCompression"
                 shape="scalar">
-          <annotation algorithm_type="azimuth regridding"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for focusing the data in the azimuth direction corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
@@ -2669,8 +2768,13 @@
                 name="/science/LSAR/GCOV/metadata/sourceData/swaths/zeroDopplerStartTime"
                 shape="scalar">
               <annotation app="conformance"
-                          lang="en"
-                          units="seconds">Azimuth start time of the source data product</annotation>
+                          lang="en">Azimuth start time of the source data product</annotation>
+       </string>
+       <string length="29"
+               name="/science/LSAR/GCOV/metadata/sourceData/swaths/zeroDopplerEndTime"
+               shape="scalar">
+            <annotation app="conformance"
+                        lang="en">Azimuth end time of the source data product</annotation>
        </string>
         <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/zeroDopplerTimeSpacing"
               shape="scalar"
@@ -2687,14 +2791,55 @@
                           lang="en"
                           units="seconds">Number of azimuth lines within the source data product</annotation>
         </integer>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/rangeBandwidth"
+        <string length="2"
+              name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/listOfPolarizations"
+              shape="numberOfSourceDataFrequencyAPolarizations">
+          <annotation app="conformance"
+                      lang="en">List of polarization layers with frequency A within the source data product</annotation>
+        </string>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/sceneCenterAlongTrackResolution"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal along-track resolution in meters of the source data at scene center</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/rangeResolution"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal range resolution in meters of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/sceneCenterAlongTrackSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal along-track spacing in meters between consecutive lines near mid swath of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/sceneCenterGroundRangeSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal ground range spacing in meters between consecutive pixels near mid swath of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/acquiredRangeBandwidth"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Source data acquisition range bandwidth in hertz. In case of mode combination, this corresponds to mode with largest bandwidth</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/processedRangeBandwidth"
               shape="scalar"
               width="64">
           <annotation app="conformance"
                       lang="en"
                       units="hertz">Source data processed range bandwidth in hertz</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/azimuthBandwidth"
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/processedAzimuthBandwidth"
               shape="scalar"
               width="64">
           <annotation app="conformance"
@@ -2730,14 +2875,69 @@
                           lang="en"
                           units="1">Number of slant range samples for each azimuth line within the source data</annotation>
         </integer>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/rangeBandwidth"
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/nearRangeIncidenceAngle"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Near-range incidence angle in degrees at the central azimuth line. The incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyA/farRangeIncidenceAngle"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Far-range incidence angle in degrees at the central azimuth line. The incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
+        </real>
+        <string length="2"
+              name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/listOfPolarizations"
+              shape="numberOfSourceDataFrequencyBPolarizations">
+          <annotation app="conformance"
+                      lang="en">List of polarization layers with frequency B within the source data product</annotation>
+        </string>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/sceneCenterAlongTrackResolution"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal along-track resolution in meters of the source data at scene center</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/rangeResolution"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal range resolution in meters of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/sceneCenterAlongTrackSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal along-track spacing in meters between consecutive lines near mid swath of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/sceneCenterGroundRangeSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal ground range spacing in meters between consecutive pixels near mid swath of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/acquiredRangeBandwidth"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Source data acquisition range bandwidth in hertz. In case of mode combination, this corresponds to mode with largest bandwidth</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/processedRangeBandwidth"
               shape="scalar"
               width="64">
           <annotation app="conformance"
                       lang="en"
                       units="hertz">Source data processed range bandwidth in hertz</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/azimuthBandwidth"
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/processedAzimuthBandwidth"
               shape="scalar"
               width="64">
           <annotation app="conformance"
@@ -2773,6 +2973,20 @@
                           lang="en"
                           units="1">Number of slant range samples for each azimuth line within the source data</annotation>
         </integer>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/nearRangeIncidenceAngle"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Near-range incidence angle in degrees at the central azimuth line. The incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/swaths/frequencyB/farRangeIncidenceAngle"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Far-range incidence angle in degrees at the central azimuth line. The incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
+        </real>
       </nodes>
     </science>
 
@@ -2827,6 +3041,13 @@
            <dimension extent="0"
                       name="numberOfFrequencyACovarianceTerms"/>
     </shape>
+    <shape name="numberOfSourceDataFrequencyAPolarizations"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Number of polarization layers associated with L-SAR frequency A</annotation>
+           <dimension extent="0"
+                      name="numberOfSourceDataFrequencyAPolarizations"/>
+    </shape>
     <shape name="frequencyAWidth"
            order="slowest...fastest">
            <annotation app="conformance"
@@ -2875,6 +3096,13 @@
                        lang="en">Number of covariance terms associated with L-SAR frequency B</annotation>
            <dimension extent="0"
                       name="numberOfFrequencyBCovarianceTerms"/>
+    </shape>
+    <shape name="numberOfSourceDataFrequencyBPolarizations"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Number of polarization layers associated with L-SAR frequency B</annotation>
+           <dimension extent="0"
+                      name="numberOfSourceDataFrequencyBPolarizations"/>
     </shape>
     <shape name="frequencyBWidth"
            order="slowest...fastest">
