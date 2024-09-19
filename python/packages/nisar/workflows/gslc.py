@@ -186,12 +186,13 @@ def run(cfg):
                 mask_data_blk = np.full(geo_blk_shape, 255, dtype=np.ubyte)
 
                 # run geocodeSlc
-                isce3.geocode.geocode_slc(gslc_data_blks, mask_data_blk, rslc_data_blks,
+                isce3.geocode.geocode_slc(gslc_data_blks, rslc_data_blks,
                                           dem_raster, radar_grid, blk_geo_grid,
                                           orbit, native_doppler,
                                           image_grid_doppler, ellipsoid,
                                           threshold_geo2rdr,
                                           iteration_geo2rdr,
+                                          mask_block=mask_data_blk,
                                           radar_grid,
                                           first_azimuth_line=az_first,
                                           first_range_sample=rg_first,
