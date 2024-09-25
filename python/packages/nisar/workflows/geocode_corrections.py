@@ -52,7 +52,7 @@ def _compute_llh_coords(cfg,
                         orbit,
                         scratch_path):
     '''Compute the latitude and longitude of radar grid pixels.
-     Reading done separately as GDAL does not flush buffers before the end of computaton.
+     Reading done separately as GDAL does not flush buffers before the end of computation.
     '''
     # Compute lat and lon for scaled radar grid pixels. To be used for
     # interpolating SET.
@@ -134,7 +134,7 @@ def _get_iono_azimuth_corrections(cfg, slc, frequency, orbit):
         NISAR single look complex (SLC) object containing swath and radar grid
         parameters
     frequency: ['A', 'B']
-        Str identifcation for NISAR SLC frequencies
+        Str identification for NISAR SLC frequencies
     orbit: isce3.core.Orbit
         Object containing orbit associated with SLC
 
@@ -170,7 +170,7 @@ def _get_iono_srange_corrections(cfg, slc, frequency, orbit):
         NISAR single look complex (SLC) object containing swath and radar grid
         parameters
     frequency: ['A', 'B']
-        Str identifcation for NISAR SLC frequencies
+        Str identification for NISAR SLC frequencies
     orbit: isce3.core.Orbit
         Object containing orbit associated with SLC
 
@@ -188,7 +188,7 @@ def _get_iono_srange_corrections(cfg, slc, frequency, orbit):
     doppler = isce3.core.LUT2d()
     radar_grid = slc.getRadarGrid(frequency)
 
-    # DEM file for DEM interpolator and ESPF for ellipsoid
+    # DEM file for DEM interpolator and EPSG for ellipsoid
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
 
     tec_correction = tec_lut2d_from_json_srg(tec_file, center_freq, orbit,
@@ -211,7 +211,7 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
         NISAR single look complex (SLC) object containing swath and radar grid
         parameters
     frequency: ['A', 'B']
-        Str identifcation for NISAR SLC frequencies
+        Str identification for NISAR SLC frequencies
     orbit: isce3.core.Orbit
         Object containing orbit associated with SLC
 
@@ -299,6 +299,7 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
             np.arange(radar_grid_scaled.width) * radar_grid_scaled.range_pixel_spacing
         
         # Check if the last elements in `rg_vec` have truncation error
+        # Turn off the LUT2d's boundary check when the difference was detected.
         for which_lut, low_res_tec_lut2d in zip(('azimuth TEC correction', 'range TEC correction'),
                                                 (low_res_tec_az, low_res_tec_srange)):
             lut2d_far_range = low_res_tec_lut2d.x_start + (low_res_tec_lut2d.width - 1) * low_res_tec_lut2d.x_spacing
@@ -308,9 +309,6 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
                                     f'Difference = ({lut2d_far_range - rg_vec[-1]}). '
                                     'bounds_error in the LUT turned off.')
                 low_res_tec_lut2d.bounds_error=False
-            
-        
-
 
         def _eval_lut2d(lut2d, az_vec, rg_vec, out_shape):
             # Helper function to evaluate low res TEC data to resolution of SET
@@ -350,7 +348,7 @@ def get_offset_luts(cfg, slc, frequency, orbit):
     ----------
     cfg: dict
     frequency: ['A', 'B']
-        Str identifcation for NISAR SLC frequencies
+        Str identification for NISAR SLC frequencies
     slc: nisar.products.readers.SLC
         NISAR single look complex (SLC) object containing swath and radar grid
         parameters
