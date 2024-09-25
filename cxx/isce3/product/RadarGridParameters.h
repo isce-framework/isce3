@@ -199,8 +199,8 @@ class isce3::product::RadarGridParameters {
             double prf = this->prf();
             double dr = rangePixelSpacing();
 
-            if (length() > 1) prf = (ysize - 1.0) / (length() - 1.0) * prf;
-            dr = (width() - 1.0) / (xsize - 1.0) * dr;
+            if (length() > 1) prf = (ysize - 1.0) * prf / (length() - 1.0) ;
+            dr = (width() - 1.0) * dr / (xsize - 1.0) ;
 
             return RadarGridParameters(sensingStart(), wavelength(), prf,
                                        startingRange(), dr, lookSide(),
