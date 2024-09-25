@@ -222,6 +222,8 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
     srange_corrections: isce3.core.LUT2d
         Slant range correction for geocoding. Unit in meters.
     '''
+
+    warning_channel = journal.warning("geocode_corrections.get_az_srg_corrections")
     # Unpack flags and determine which corrections to generate
     correct_set = cfg['processing']['correction_luts']['solid_earth_tides_enabled']
     correct_tec = cfg['dynamic_ancillary_file_group']['tec_file'] is not None
@@ -280,7 +282,6 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
                                 radar_grid.range_pixel_spacing,
                                 1 / radar_grid.prf,
                                 data)
-
     # If only SET range correction generated, return
     # 1. populated slant range LUT2d
     # 2. default LUT2d for azimuth i.e. no corrections in azimuth
@@ -296,6 +297,20 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
             np.arange(radar_grid_scaled.length) / radar_grid_scaled.prf
         rg_vec = radar_grid_scaled.starting_range + \
             np.arange(radar_grid_scaled.width) * radar_grid_scaled.range_pixel_spacing
+        
+        # Check if the last elements in `rg_vec` have truncation error
+        for which_lut, low_res_tec_lut2d in zip(('azimuth TEC correction', 'range TEC correction'),
+                                                (low_res_tec_az, low_res_tec_srange)):
+            lut2d_far_range = low_res_tec_lut2d.x_start + (low_res_tec_lut2d.width - 1) * low_res_tec_lut2d.x_spacing
+            if rg_vec[-1] != lut2d_far_range:
+                warning_channel.log('Truncation error detected between '
+                                    f'far range of scaled radargrid and {which_lut}. '
+                                    f'Difference = ({lut2d_far_range - rg_vec[-1]}). '
+                                    'bounds_error in the LUT turned off.')
+                low_res_tec_lut2d.bounds_error=False
+            
+        
+
 
         def _eval_lut2d(lut2d, az_vec, rg_vec, out_shape):
             # Helper function to evaluate low res TEC data to resolution of SET
