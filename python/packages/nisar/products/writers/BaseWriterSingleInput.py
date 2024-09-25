@@ -1,7 +1,7 @@
 import h5py
 import warnings
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
 import journal
 
@@ -483,7 +483,7 @@ class BaseWriterSingleInput():
     def __init__(self, runconfig):
 
         # set up processing datetime
-        self.processing_datetime = datetime.now()
+        self.processing_datetime = datetime.now(timezone.utc)
 
         # read main parameters from the runconfig
         self.runconfig = runconfig

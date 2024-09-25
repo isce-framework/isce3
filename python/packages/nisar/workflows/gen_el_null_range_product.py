@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 import time
 import argparse as argp
-from datetime import datetime
+from datetime import datetime, timezone
 
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.antenna import AntennaParser
@@ -186,7 +186,7 @@ def gen_el_null_range_product(args):
             dt_utc_last = dt2str(az_datetime[-1])
             # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
             # used as part of CSV product filename
-            dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+            dt_utc_cur = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
 
             # naming convention of CSV file and product spec is defined in Doc:
             # See reference [1]

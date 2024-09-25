@@ -240,7 +240,7 @@ def construct_nisar_hdf5(outh5, ldr):
                                    "JAXA (SLC repackaged at JPL)"))
     ident_group.create_dataset(
         "processingDateTime",
-        data=np.bytes_(datetime.datetime.now().isoformat()))
+        data=np.bytes_(datetime.datetime.now(datetime.timezone.utc).isoformat()))
     ident_group.create_dataset("productLevel", data=np.bytes_("L1"))
     ident_group.create_dataset(
         "productSpecificationVersion",

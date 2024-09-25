@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from isce3.core import DateTime
 import logging
 from numpy import angle, deg2rad, rad2deg, exp, pi
@@ -123,7 +123,7 @@ class RslcCalibration:
     vh: PolChannelParams = field(default_factory=PolChannelParams)
     vv: PolChannelParams = field(default_factory=PolChannelParams)
     notes: str = ""
-    generated_date: datetime = datetime.now()
+    generated_date: datetime = datetime.now(timezone.utc)
     valid_after_date: datetime = datetime(1978, 6, 27)  # before Seasat launch
     valid_before_date: Optional[datetime] = None
     common_delay: float = 0.0  # m

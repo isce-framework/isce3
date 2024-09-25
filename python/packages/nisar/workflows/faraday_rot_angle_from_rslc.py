@@ -7,7 +7,7 @@ import numpy as np
 import time
 import argparse as argp
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import defaultdict
 
 from nisar.products.readers.SLC import SLC
@@ -188,7 +188,7 @@ def faraday_rot_angle_from_rslc(args):
     dt_utc_last = dt2str(fra_prod_ext.az_datetime[-1])
     # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
     # used as part of JSON product filename
-    dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+    dt_utc_cur = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
     # form filename of the JSON product for extended scene
     name_json_ext = (
         f'FaradayRotAngleSLC_{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.json'
