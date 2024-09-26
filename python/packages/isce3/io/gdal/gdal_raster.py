@@ -225,8 +225,15 @@ class GDALRaster(DatasetReader, DatasetWriter):
         _, width = self.shape
         return width
 
-    def __array__(self) -> np.ndarray:
-        return self[:, :]
+    def __array__(
+        self, dtype: DTypeLike | None = None, copy: bool | None = None
+    ) -> np.ndarray:
+        if not copy and (copy is not None):
+            raise ValueError(
+                "Unable to avoid copy while creating an array as requested."
+            )
+        data = self[:, :]
+        return data if (dtype is None) else data.astype(dtype)
 
     def __getitem__(self, key: tuple[slice, slice], /) -> np.ndarray:
         error_channel: Error = journal.error("GDALRaster.__getitem__")

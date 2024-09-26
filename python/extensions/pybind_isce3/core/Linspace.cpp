@@ -62,8 +62,15 @@ void addbinding(py::class_<Linspace<T>>& pyLinspace)
                     return Linspace<T>(first, spacing, len);
                 })
         .def("__len__", &Linspace<T>::size)
-        .def("__array__", [](const Linspace<T>& self, std::optional<py::object> dtype) {
+        .def("__array__", [](const Linspace<T>& self,
+                             std::optional<py::object> dtype,
+                             std::optional<bool> copy) {
 
+                    // copy == False (not None or True)
+                    if (!copy.value_or(true)) {
+                        throw InvalidArgument(ISCE_SRCINFO(), "Unable to avoid "
+                            "copy while creating an array as requested.");
+                    }
                     py::array_t<T> arr(self.size());
                     auto a = arr.mutable_unchecked();
                     for (int i = 0; i < self.size(); ++i) { a(i) = self[i]; }
@@ -71,7 +78,8 @@ void addbinding(py::class_<Linspace<T>>& pyLinspace)
                     using namespace pybind11::literals;
                     return arr.attr("astype")(dtype.value_or(py::dtype::of<T>()), "copy"_a=false);
                 },
-                py::arg("dtype") = py::none())
+                py::arg("dtype") = py::none(),
+                py::arg_v("copy", std::nullopt, "None"))
 
         // operators
         .def(py::self == py::self)
