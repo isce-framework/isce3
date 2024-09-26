@@ -242,10 +242,14 @@ def run(cfg: dict):
                 data[...] = subband_meta_low['center_frequency']
                 data = dst_h5_low[f"{dest_freq_path}/processedRangeBandwidth"]
                 data[...] = subband_meta_low['rg_bandwidth']
+                data = dst_h5_low[f"{dest_freq_path}/listOfPolarizations"]
+                data[...] = pol_list
                 data = dst_h5_high[f"{dest_freq_path}/processedCenterFrequency"]
                 data[...] = subband_meta_high['center_frequency']
                 data = dst_h5_high[f"{dest_freq_path}/processedRangeBandwidth"]
                 data[...] = subband_meta_high['rg_bandwidth']
+                data = dst_h5_high[f"{dest_freq_path}/listOfPolarizations"]
+                data[...] = pol_list
     else:
         info_channel.log('Split spectrum is not needed')
 
