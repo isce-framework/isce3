@@ -59,7 +59,7 @@ class ResampleSlcRunConfig(RunConfig):
                 for pol in pol_list:
                     rg_off = os.path.join(offsets_dir,
                                           'rubbersheet_offsets',
-                                          f'freq{freq}', pol, 'range.off.vrt')
+                                          f'freq{freq}', pol, 'range.off')
                     az_off = rg_off.replace('range', 'azimuth')
                     if not os.path.exists(rg_off) or not os.path.exists(az_off):
                         err_str = f"{rg_off} and {az_off} files do not exists. HH and" \

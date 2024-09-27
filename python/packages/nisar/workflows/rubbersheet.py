@@ -152,7 +152,8 @@ def run(cfg: dict, output_hdf5: str = None):
                     # Sum resampled offsets to geometry offsets
                     sum_off_path = str(out_dir / geo_off)
                     sum_gdal_rasters(str(geo_offset_dir / geo_off),
-                                     resamp_off_path, sum_off_path)
+                                     resamp_off_path, sum_off_path,
+                                     invalid_value=-1e6)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(
