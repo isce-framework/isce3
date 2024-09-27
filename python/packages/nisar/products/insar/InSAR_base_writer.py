@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from itertools import product
 from typing import Any, Optional, Union
 
@@ -1059,7 +1059,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "processingDateTime",
-                datetime.utcnow().replace(microsecond=0).isoformat(),
+                datetime.now(timezone.utc).isoformat()[:19],
                 (
                     "Processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS"
                 ),
