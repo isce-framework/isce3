@@ -192,7 +192,7 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
         minimum_margin_sec = (tec_end - tec_start).total_seconds() / (num_utc -1) / 2
 
         margin_info_msg += (f'IMAGEN TEC margin before sensing start : {tec_margin_start} seconds\n'
-                            f'IMAGEN TEC margin after sensing stop   :   {tec_margin_end} seconds\n'
+                            f'IMAGEN TEC margin after sensing stop   : {tec_margin_end} seconds\n'
                             f'Minimum required margin                : {minimum_margin_sec} seconds\n')
 
         info_channel.log(margin_info_msg)
