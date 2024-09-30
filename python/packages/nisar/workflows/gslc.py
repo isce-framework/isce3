@@ -23,7 +23,7 @@ from nisar.workflows.geocode_corrections import get_az_srg_corrections, get_offs
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.products.writers import GslcWriter
-from nisar.workflows.helpers import validate_fs_page_size, check_radargrid_orbit_tec
+from nisar.workflows.helpers import validate_fs_page_size
 
 def run(cfg):
     '''
@@ -126,9 +126,6 @@ def run(cfg):
             root_ds = f'/science/LSAR/GSLC/grids/frequency{freq}'
             radar_grid = slc.getRadarGrid(freq)
             geo_grid = geogrids[freq]
-
-            # Check the temporal coverages of orbit and the TEC file
-            check_radargrid_orbit_tec(radar_grid, orbit, tec_file)
 
             # get doppler centroid
             native_doppler = slc.getDopplerCentroid(frequency=freq)
