@@ -256,7 +256,7 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
          y_pts_to_interp,
          z_pts_to_interp)= _read_llh(scratch_path)
 
-        # Compute solit earth tides over decimated/scaled radar grid
+        # Compute solid earth tides over decimated/scaled radar grid
         set_rg, _ = solid_earth_tides(radar_grid_scaled,
                                       x_pts_to_interp,
                                       y_pts_to_interp,
@@ -298,8 +298,11 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
         rg_vec = radar_grid_scaled.starting_range + \
             np.arange(radar_grid_scaled.width) * radar_grid_scaled.range_pixel_spacing
         
-        # Check if the last elements in `rg_vec` have truncation error
+        # Check if the last elements in `rg_vec` have truncation error.
         # Turn off the LUT2d's boundary check when the difference was detected.
+        # NOTE: `az_vec` does not need to be checked because IMAGEN TEC is expected to 
+        # cover the sensing start/stop period of the RSLC radargrid with margin.
+        # The TEC data does not have margin at the near/far range the radargrid.
         for which_lut, low_res_tec_lut2d in zip(('azimuth TEC correction', 'range TEC correction'),
                                                 (low_res_tec_az, low_res_tec_srange)):
             lut2d_far_range = low_res_tec_lut2d.x_start + (low_res_tec_lut2d.width - 1) * low_res_tec_lut2d.x_spacing
