@@ -706,7 +706,7 @@ runconfig:
 
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
-                solid_earth_tides_enabled: False
+                solid_earth_tides_enabled: True
 
             # Set of options to enable compression, choose compression level,
             # chunk size and shuffle filter
