@@ -208,10 +208,11 @@ class RunConfig:
         # Check the temporal coverage of radargrid, orbit, and TEC (if provided)
         if self.workflow_name == 'insar':
             input_path = self.cfg['input_file_group']['reference_rslc_file']
+            orbit_path = self.cfg['dynamic_ancillary_file_group']['orbit_files']['reference_orbit_file']
         else:
             input_path = self.cfg['input_file_group']['input_file_path']
+            orbit_path = self.cfg['dynamic_ancillary_file_group']['orbit_file']
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
-        orbit_path = self.cfg['dynamic_ancillary_file_group']['orbit_file']
         tec_path = self.cfg['dynamic_ancillary_file_group']['tec_file']
         
         slc = SLC(hdf5file=input_path)
