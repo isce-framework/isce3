@@ -117,6 +117,12 @@ class InSARBaseWriter(h5py.File):
             self.cfg["processing"]["input_subset"]\
                 ["list_of_frequencies"]
 
+        # Set the topo path for the geo2rdr
+        if 'topo_path' not in self.cfg['processing']['geo2rdr']:
+            self.cfg['processing']['geo2rdr']['topo_path'] = \
+                self.cfg['product_path_group']['scratch_path']
+        self.topo_path =  self.cfg['processing']['geo2rdr']['topo_path']
+
         # Group paths
         self.group_paths = CommonPaths()
 

@@ -473,6 +473,8 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             new_scratch = pathlib.Path(iono_path, f'{iono_method}')
             iono_insar_cfg['product_path_group'][
                 'scratch_path'] = new_scratch
+            iono_insar_cfg['processing']['geo2rdr'][
+                'topo_path'] = new_scratch
             iono_insar_cfg['product_path_group'][
                 'sas_output_file'] = f'{new_scratch}/RUNW.h5'
             iono_insar_cfg['processing']['dense_offsets'][
