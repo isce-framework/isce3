@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from itertools import product
 from typing import Any, Optional, Union
 
@@ -116,6 +116,12 @@ class InSARBaseWriter(h5py.File):
         self.freq_pols = \
             self.cfg["processing"]["input_subset"]\
                 ["list_of_frequencies"]
+
+        # Set the topo path for the geo2rdr
+        if 'topo_path' not in self.cfg['processing']['geo2rdr']:
+            self.cfg['processing']['geo2rdr']['topo_path'] = \
+                self.cfg['product_path_group']['scratch_path']
+        self.topo_path =  self.cfg['processing']['geo2rdr']['topo_path']
 
         # Group paths
         self.group_paths = CommonPaths()
@@ -1059,7 +1065,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "processingDateTime",
-                datetime.utcnow().replace(microsecond=0).isoformat(),
+                datetime.now(timezone.utc).isoformat()[:19],
                 (
                     "Processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS"
                 ),

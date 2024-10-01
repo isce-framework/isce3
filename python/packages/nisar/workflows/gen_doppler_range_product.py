@@ -6,7 +6,7 @@ import os
 import time
 import argparse as argp
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timezone
 
 from nisar.pointing import doppler_lut_from_raw
 from nisar.log import set_logger
@@ -259,7 +259,7 @@ def gen_doppler_range_product(args):
             dt_utc_stop = sec2str(ref_utc, azt_lsp.last)
             # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
             # used as part of CSV product filename
-            dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+            dt_utc_cur = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
 
             # naming convention of CSV file and product spec is defined in Doc:
             # See reference [1]

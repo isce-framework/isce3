@@ -151,6 +151,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
         # raider package
         else:
             import xarray as xr
+            import RAiDER
             from RAiDER.llreader import BoundingBox
             from RAiDER.losreader import Zenith, Raytracing
             from RAiDER.delay import tropo_delay as raider_tropo_delay
@@ -186,6 +187,12 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 # the lat/lon bounds are applied to clip the global
                 # weather model to minimize the data processing
                 hres.setTime(weather_model_time)
+
+                # Workaround for a RAiDER bug in the version of '0.5.2' and '0.5.3'
+                # (see https://github.com/dbekaert/RAiDER/issues/682)
+                if RAiDER.__version__ in ['0.5.2','0.5.3']:
+                    hres._time = hres._time.replace(tzinfo=None)
+
                 hres.set_latlon_bounds(ll_bounds = lat_lon_bounds)
                 hres.set_wmLoc(weather_model_output_dir)
 

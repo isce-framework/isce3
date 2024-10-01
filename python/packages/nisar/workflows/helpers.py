@@ -540,7 +540,8 @@ def validate_fs_page_size(fs_page_size, chunks, itemsize=8):
 
 
 def sum_gdal_rasters(filepath1, filepath2, out_filepath, data_type=np.float64,
-                     driver_name='ENVI', row_blocks=2048, col_blocks=2048):
+                     driver_name='ENVI', row_blocks=2048, col_blocks=2048,
+                     invalid_value=np.nan):
     """
     Sum 2 GDAL memory-mappable rasters block by block and save the result
     to an output file in a GDAL-friendly format
@@ -561,6 +562,10 @@ def sum_gdal_rasters(filepath1, filepath2, out_filepath, data_type=np.float64,
         Number of rows in each block (default: 2048)
     col_blocks: int, optional
         Number of columns in each block (default: 2048)
+    invalid_value: float | numpy.nan, optional
+        The invalid value of the rasters. When this value is encountered
+        in either raster, it will be regarded as invalid and masked over the
+        output data. (default: np.nan)
     """
     error_channel = journal.error('helpers.sum_gdal_rasters').log
 
@@ -624,4 +629,17 @@ def sum_gdal_rasters(filepath1, filepath2, out_filepath, data_type=np.float64,
     ):
         file1_block = file1_reader[out_block_slice].astype(data_type, copy=False)
         file2_block = file2_reader[out_block_slice].astype(data_type, copy=False)
-        out_file_writer[out_block_slice] = file1_block + file2_block
+
+        # Use numpy masked arrays to handle sums where one of the element is a fill_value
+        masked_file1_block = np.ma.masked_equal(file1_block, invalid_value)
+        masked_file2_block = np.ma.masked_equal(file2_block, invalid_value)
+
+        # Perform the sum, with the rule that if either element is masked (invalid), the result will be the fill_value
+        sum_result_masked = np.ma.where(masked_file1_block.mask | masked_file2_block.mask,
+                                        invalid_value, masked_file1_block + masked_file2_block)
+
+        # Convert the masked array to a normal array, filling masked elements with the fill value
+        sum_result = sum_result_masked.filled(invalid_value)
+
+        # Write the result to the output file
+        out_file_writer[out_block_slice] = sum_result

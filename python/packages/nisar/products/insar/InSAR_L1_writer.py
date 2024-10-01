@@ -437,19 +437,18 @@ class L1InSARWriter(InSARBaseWriter):
 
             # add the subswath mask layer to the pixel offset group
             self._create_2d_dataset(offset_group,
-                                    'mask',
+                                    'subSwathMask',
                                     shape=(off_length, off_width),
                                     dtype=np.uint8,
-                                    description='Subswath mask layer',
+                                    description='Mask indicating the location of valid samples within each subswath',
                                     fill_value=255,
-                                    long_name='Valid-samples subswath mask')
+                                    long_name='Valid samples subswath mask')
 
-            scratch_path = self.cfg['product_path_group']['scratch_path']
             range_offset_path = \
-                os.path.join(scratch_path,
+                os.path.join( self.topo_path,
                                 f'geo2rdr/freq{freq}/range.off')
             azimuth_offset_path = \
-                os.path.join(scratch_path,
+                os.path.join( self.topo_path,
                                 f'geo2rdr/freq{freq}/azimuth.off')
 
             # If there are no offset products, run the rdr2geo and
@@ -459,13 +458,14 @@ class L1InSARWriter(InSARBaseWriter):
                 rdr2geo.run(self.cfg)
                 geo2rdr.run(self.cfg)
 
-            offset_group['mask'][...] = generate_insar_subswath_mask(self.ref_rslc,
-                                                                     self.sec_rslc,
-                                                                     range_offset_path,
-                                                                     azimuth_offset_path,
-                                                                     freq,
-                                                                     az_idx,
-                                                                     rg_idx)
+            offset_group['subSwathMask'][...] = \
+                generate_insar_subswath_mask(self.ref_rslc,
+                                             self.sec_rslc,
+                                             range_offset_path,
+                                             azimuth_offset_path,
+                                             freq,
+                                             az_idx,
+                                             rg_idx)
 
         # add the datasets to pixel offsets group
         self._add_datasets_to_pixel_offset_group()
@@ -590,19 +590,18 @@ class L1InSARWriter(InSARBaseWriter):
 
             # add the subswath mask layer to the interferogram group
             self._create_2d_dataset(igram_group,
-                                    'mask',
+                                    'subSwathMask',
                                     shape=igram_shape,
                                     dtype=np.uint8,
-                                    description='Subswath mask layer',
+                                    description='Mask indicating the location of valid samples within each subswath',
                                     fill_value=255,
-                                    long_name='Valid-samples subswath mask')
+                                    long_name='Valid samples subswath mask')
 
-            scratch_path = self.cfg['product_path_group']['scratch_path']
             range_offset_path = \
-                os.path.join(scratch_path,
+                os.path.join(self.topo_path,
                                 f'geo2rdr/freq{freq}/range.off')
             azimuth_offset_path = \
-                os.path.join(scratch_path,
+                os.path.join(self.topo_path,
                                 f'geo2rdr/freq{freq}/azimuth.off')
 
             # If there are no offset products, run the rdr2geo and
@@ -612,13 +611,14 @@ class L1InSARWriter(InSARBaseWriter):
                 rdr2geo.run(self.cfg)
                 geo2rdr.run(self.cfg)
 
-            igram_group['mask'][...] = generate_insar_subswath_mask(self.ref_rslc,
-                                                                    self.sec_rslc,
-                                                                    range_offset_path,
-                                                                    azimuth_offset_path,
-                                                                    freq,
-                                                                    az_idx,
-                                                                    rg_idx)
+            igram_group['subSwathMask'][...] = \
+                generate_insar_subswath_mask(self.ref_rslc,
+                                             self.sec_rslc,
+                                             range_offset_path,
+                                             azimuth_offset_path,
+                                             freq,
+                                             az_idx,
+                                             rg_idx)
 
             # add the interferogram and pixelOffsets groups to the polarization group
             for pol in pol_list:

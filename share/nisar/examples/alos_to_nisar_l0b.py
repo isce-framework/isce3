@@ -295,7 +295,7 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
     ident.create_dataset("isMixedMode", data=numpy.string_("False"))
     ident.create_dataset("processingCenter", data=numpy.string_("JPL"))
     ident.create_dataset("processingDateTime",
-        data=numpy.string_(datetime.datetime.now().isoformat()[:19]))
+        data=numpy.string_(datetime.datetime.now(datetime.timezone.utc).isoformat()[:19]))
     ident.create_dataset("productLevel", data=numpy.string_("L0B"))
     ident.create_dataset("productSpecificationVersion",
         data=numpy.string_("0.9.0"))

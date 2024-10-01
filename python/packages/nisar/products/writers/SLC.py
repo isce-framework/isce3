@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import h5py
 import logging
 import numpy as np
@@ -774,7 +774,7 @@ class SLC(h5py.File):
             '"False" otherwise.')
 
         # only report to integer seconds
-        now = datetime.now().isoformat()[:19]
+        now = datetime.now(timezone.utc).isoformat()[:19]
         d = set_string(g, "processingDateTime", now)
         d.attrs["description"] = np.bytes_("Processing UTC date and time in "
             "the format YYYY-mm-ddTHH:MM:SS")
