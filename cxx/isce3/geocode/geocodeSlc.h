@@ -163,7 +163,6 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
 template<typename AzRgFunc = isce3::core::Poly2d>
 void geocodeSlc(
         std::vector<EArray2dc64>& geoDataBlocks,
-        EArray2duc8 maskBlock,
         EArray2df64 carrierPhaseBlock,
         EArray2df64 flattenPhaseBlock,
         const std::vector<EArray2dc64>& rdrDataBlocks,
@@ -176,6 +175,7 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& imageGridDoppler,
         const isce3::core::Ellipsoid& ellipsoid,
         const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
+        EArray2duc8 maskBlock,
         const size_t& azimuthFirstLine = 0,
         const size_t& rangeFirstPixel = 0,
         const bool flatten = true,

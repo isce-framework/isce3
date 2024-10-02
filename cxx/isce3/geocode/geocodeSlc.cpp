@@ -828,7 +828,6 @@ void geocodeSlc(
 template<typename AzRgFunc>
 void geocodeSlc(
         std::vector<EArray2dc64>& geoDataBlocks,
-        EArray2duc8 maskBlock,
         EArray2df64 carrierPhaseBlock,
         EArray2df64 flattenPhaseBlock,
         const std::vector<EArray2dc64>& rdrDataBlocks,
@@ -841,6 +840,7 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& imageGridDoppler,
         const isce3::core::Ellipsoid& ellipsoid,
         const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
+        EArray2duc8 maskBlock,
         const size_t& azimuthFirstLine, const size_t& rangeFirstPixel,
         const bool flatten, const bool reramp,
         const AzRgFunc& azCarrierPhase,
@@ -871,7 +871,7 @@ void geocodeSlc(
         geoDataBlock.fill(invalidValue);
 
     // Default all mask pixls to invalid mask pixel value, 255.
-    maskBlock.fill(255);
+    //maskBlock.fill(255);
 
     validate_slice(radarGrid, slicedRadarGrid);
 
@@ -1006,7 +1006,6 @@ template void geocodeSlc<AzRgFunc>(                                     \
         isce3::io::Raster* rgOffsetRaster);                             \
 template void geocodeSlc<AzRgFunc>(                                     \
         std::vector<EArray2dc64>& geoDataBlocks,                        \
-        EArray2duc8 maskBlock,                                          \
         EArray2df64 carrierPhaseBlock,                                  \
         EArray2df64 flattenPhaseBlock,                                  \
         const std::vector<EArray2dc64>& rdrDataBlocks,                  \
@@ -1019,6 +1018,7 @@ template void geocodeSlc<AzRgFunc>(                                     \
         const isce3::core::LUT2d<double>& imageGridDoppler,             \
         const isce3::core::Ellipsoid& ellipsoid,                        \
         const double& thresholdGeo2rdr, const int& numiterGeo2rdr,      \
+        EArray2duc8 maskBlock,                                          \
         const size_t& azimuthFirstLine, const size_t& rangeFirstPixel,  \
         const bool flatten,  const bool reramp,                         \
         const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase, \

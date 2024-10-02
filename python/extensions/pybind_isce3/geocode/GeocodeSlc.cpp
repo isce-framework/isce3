@@ -216,7 +216,6 @@ void addbinding_geocodeslc(py::module & m)
         )");
     m.def("_geocode_slc", py::overload_cast<
             std::vector<isce3::geocode::EArray2dc64>&,
-            isce3::geocode::EArray2duc8,
             isce3::geocode::EArray2df64,
             isce3::geocode::EArray2df64,
             const std::vector<isce3::geocode::EArray2dc64>&,
@@ -229,6 +228,7 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::core::LUT2d<double>&,
             const isce3::core::Ellipsoid&,
             const double&, const int&,
+            isce3::geocode::EArray2duc8,
             const size_t&, const size_t&,
             const bool,
             const bool,
@@ -241,7 +241,6 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::product::SubSwaths*>
             (&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("geo_data_blocks"),
-        py::arg("mask_block"),
         py::arg("carrier_phase_block"),
         py::arg("flatten_phase_block"),
         py::arg("rdr_data_blocks"),
@@ -254,6 +253,7 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("image_grid_doppler"),
         py::arg("ellipsoid"),
         py::arg("threshold_geo2rdr"), py::arg("numiter_geo2rdr"),
+        py::arg("mask_block") = nullptr,
         py::arg("azimuth_first_line") = 0, py::arg("range_first_pixel") = 0,
         py::arg("flatten") = true,
         py::arg("reramp") = true,

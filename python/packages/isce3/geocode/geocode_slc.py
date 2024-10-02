@@ -105,11 +105,11 @@ def _output_array_valid(output_array, geo_array, which_output):
 
 
 def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
-                mask_block: np.ndarray,
                 rdr_data_blocks: Union[np.ndarray, list[np.ndarray]],
                 dem_raster, radargrid,
                 geogrid, orbit, native_doppler, image_grid_doppler,
                 ellipsoid, threshold_geo2rdr, num_iter_geo2rdr,
+                mask_block: np.ndarray=None,
                 sliced_radargrid=None, subswaths=None,
                 first_azimuth_line=0,  first_range_sample=0, flatten=True,
                 reramp=True,
@@ -199,6 +199,9 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
     kwargs = {}
     if subswaths is not None:
         kwargs['subswaths'] = subswaths
+    
+    #if mask_block is not None:
+    #    kwargs['mask_block'] = mask_block
 
     # if both geo and radar blocks are np.ndarray, put them into a list
     # to match expected input type of list[np.ndaarray]
@@ -213,11 +216,13 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                                         ['carrier', 'flattening', 'mask']):
         _output_array_valid(output_arr, geo_data_blocks[0], which_output)
 
-    _geocode_slc(geo_data_blocks, mask_block, carrier_phase_block,
+    _geocode_slc(geo_data_blocks, carrier_phase_block,
                  flatten_phase_block, rdr_data_blocks, dem_raster, radargrid,
                  sliced_radargrid, geogrid, orbit, native_doppler,
-                 image_grid_doppler, ellipsoid, threshold_geo2rdr,
-                 num_iter_geo2rdr, first_azimuth_line, first_range_sample,
+                 image_grid_doppler, ellipsoid,
+                 threshold_geo2rdr, num_iter_geo2rdr,
+                 mask_block,
+                 first_azimuth_line, first_range_sample,
                  flatten, reramp, az_carrier, rg_carrier, az_time_correction,
                  srange_correction, flatten_with_corrected_srange,
                  invalid_value, **kwargs)
