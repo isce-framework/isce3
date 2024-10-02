@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 import numpy as np
 
-from isce3.ext.isce3.image.v2 import resample_to_coords
+from isce3.ext.isce3.image.v2 import _resample_to_coords
 from isce3.image.v2.resample_slc import resample_slc_blocks
 from isce3.core import DateTime, LUT2d
 from isce3.product import RadarGridParameters
@@ -101,7 +101,7 @@ class TestResampleSLCV2:
 
         # Perform the interpolation.
         if test_pybind:
-            resample_to_coords(
+            _resample_to_coords(
                 resamp_coregistered_secondary,
                 secondary,
                 range_indices,
@@ -139,7 +139,7 @@ class TestResampleSLCV2:
             )
         except AssertionError as err:
             if test_pybind:
-                error_note = "C++ resample_to_coords pybind"
+                error_note = "C++ _resample_to_coords pybind"
             else:
                 error_note = "Python resample_slc_blocks"
             err.add_note(error_note)
@@ -242,7 +242,7 @@ class TestResampleSLCV2:
 
         # Perform the interpolation.
         if test_pybind:
-            resample_to_coords(
+            _resample_to_coords(
                 resamp_coregistered_secondary,
                 secondary,
                 range_indices,
@@ -280,7 +280,7 @@ class TestResampleSLCV2:
             )
         except AssertionError as err:
             if test_pybind:
-                error_note = "C++ resample_to_coords pybind"
+                error_note = "C++ _resample_to_coords pybind"
             else:
                 error_note = "Python resample_slc_blocks"
             err.add_note(error_note)

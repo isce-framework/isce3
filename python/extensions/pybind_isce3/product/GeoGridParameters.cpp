@@ -54,7 +54,44 @@ void addbinding(py::class_<GeoGridParameters> & pyGeoGridParams)
             .def_property(
                     "epsg",
                     py::overload_cast<>(&GeoGridParameters::epsg, py::const_),
-                    py::overload_cast<int>(&GeoGridParameters::epsg));
+                    py::overload_cast<int>(&GeoGridParameters::epsg))
+            // slice to get subset of GeoGridParameters
+            .def("__getitem__", [](const GeoGridParameters& self, py::tuple key) {
+                    if (key.size() != 2) {
+                        throw std::invalid_argument("require 2 slices");
+                    }
+                    auto islice = key[0].cast<py::slice>();
+                    auto jslice = key[1].cast<py::slice>();
+                    py::ssize_t start, stop, step, slicelen;
+
+                    int epsg = self.epsg();
+
+                    if (!islice.compute(self.length(), &start, &stop, &step, &slicelen))
+                        throw std::invalid_argument("bad row slice");
+                    if (step <= 0)
+                        throw py::index_error("cannot reverse grid");
+                    double start_y = self.startY() + start * self.spacingY();
+                    int length = slicelen;
+                    double spacing_y = self.spacingY() * step;
+
+                    if (!jslice.compute(self.width(), &start, &stop, &step, &slicelen))
+                        throw std::invalid_argument("bad column slice");
+                    if (step <= 0)
+                        throw py::index_error("cannot reverse grid");
+                    double start_x = self.startX() + start * self.spacingX();
+                    int width = slicelen;
+                    double spacing_x = self.spacingX() * step;
+
+                    return GeoGridParameters(
+                        start_x,
+                        start_y,
+                        spacing_x,
+                        spacing_y,
+                        width,
+                        length,
+                        epsg
+                    );
+            });
 }
 
 void addbinding_bbox_to_geogrid(py::module & m)

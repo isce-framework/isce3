@@ -13,7 +13,9 @@ namespace py = pybind11;
 
 void addbindings_resamp(py::module & m)
 {
-    m.def("resample_to_coords",
+    // Write _resample_to_coords as a private function. This will be used by a wrapper
+    // called resample_to_coords that is written in Python.
+    m.def("_resample_to_coords",
         &isce3::image::v2::resampleToCoords,
         py::arg("output_data_block"),
         py::arg("input_data_block"),

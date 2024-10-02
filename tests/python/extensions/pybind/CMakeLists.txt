@@ -43,6 +43,7 @@ signal/crossmultiply.py
 signal/filter2D.py
 signal/multilook.py
 product/generic_product.py
+product/geogridparameters.py
 product/radargridparameters.py
 product/sub_swaths.py
 product/swath.py
