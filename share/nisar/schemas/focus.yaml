@@ -226,6 +226,9 @@ runconfig:
       # Dump height layer to temp file for debug purposes.  Default=False
       debug_dump_height: bool(required=False)
 
+      # If true, fill transmit gaps with zeros to remove loop-back cal pulses.
+      zero_fill_gaps: bool(required=False)
+
       # Processing stage switches, mostly for debug.
       # Any missing stages assumed True
       is_enabled:

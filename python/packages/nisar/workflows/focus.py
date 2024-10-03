@@ -24,7 +24,7 @@ import nisar
 import numpy as np
 import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
-from isce3.focus import make_el_lut
+from isce3.focus import make_el_lut, fill_gaps
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import RadarGridParameters
@@ -1773,6 +1773,9 @@ def focus(runconfig, runconfig_path=""):
             log.info(f"Decoding raw data to memory map {rawfd.name}.")
             raw_mm = np.memmap(rawfd, mode="w+", shape=raw_grid.shape,
                                dtype=np.complex64)
+            if cfg.processing.zero_fill_gaps:
+                log.info("Will fill gaps between sub-swaths with zeros.")
+
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
                 nblock = min(na, rawdata.shape[0] - pulse, raw_mm.shape[0] - i)
@@ -1781,6 +1784,8 @@ def focus(runconfig, runconfig_path=""):
                 z = rawdata[block_in]
                 # Remove NaNs.  TODO could incorporate into gap mask.
                 z[np.isnan(z)] = 0.0
+                if cfg.processing.zero_fill_gaps:
+                    fill_gaps(z, swaths[:, pulse:pulse+nblock, :], 0.0)
                 raw_mm[block_out] = z
 
             raw_clean, rfi_likelihood = process_rfi(cfg, raw_mm, temp)

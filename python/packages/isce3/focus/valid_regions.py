@@ -7,6 +7,7 @@ import isce3
 import numpy as np
 import shapely
 import shapely.affinity  # need explicit import for older versions
+from typing import Iterator
 
 
 @dataclass
@@ -510,3 +511,58 @@ def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
 
     return rasterize_subswath_polygons(slc_polygons, grid,
         threshold=allowed_range_gap)
+
+
+def fill_gaps(data, swaths, value=np.complex64(0)):
+    """
+    Fill transmit gaps in raw data with a specified value.
+
+    Parameters
+    ----------
+    data : numpy.ndarray[numpy.complex64]
+        Raw data array to modify in-place.  Trailing two dimensions have shape
+        (npulse, nsamples).  Typically two dimensional, but array may have extra
+        leading dimensions as in NISAR diagnostic mode 2 (DM2) data.
+    swaths : numpy.ndarray[numpy.uint32]
+        Array of [start, stop) valid data regions, shape = (nswath, npulse, 2)
+        where nswath is the number of valid sub-swaths and npulse is the length
+        of the raw image grid.
+    value : complex, optional
+        Desired fill value.  Defaults to 0.
+
+    Notes
+    -----
+    Transmit gaps may contain recorded loop-back calibration pulses, depending
+    on the instrument mode. These should typically be zeroed-out in the raw data
+    prior to range compression when processing science data.
+    """
+    num_pulses, num_samples = data.shape[-2:]
+    num_swaths = swaths.shape[0]
+    expected_shape = (num_swaths, num_pulses, 2)
+    if swaths.shape != expected_shape:
+        raise ValueError(f"Expected swaths shape {expected_shape} but got "
+            f"shape {swaths.shape}")
+
+    # Get range index slices for the gaps of a single pulse.
+    def get_gap_slices(pulse_swaths: np.ndarray) -> Iterator[slice]:
+        # Gap leading up to first swath.
+        yield slice(None, pulse_swaths[0, 0])
+        # Gaps between swaths.
+        for i in range(num_swaths - 1):
+            gap_start = pulse_swaths[i, 1]      # end of current swath
+            gap_end = pulse_swaths[i + 1, 0]    # start of next swath
+            yield slice(gap_start, gap_end)
+        # Gap after last swath.
+        yield slice(pulse_swaths[-1, 1], None)
+
+    # When PRF is constant (not dithering), gap locations are constant.
+    unique_swaths = np.unique(swaths, axis=1)
+    if unique_swaths.shape[1] == 1:
+        for gap in get_gap_slices(unique_swaths[:, 0, :]):
+            data[..., gap] = value
+        return
+
+    # Otherwise we have to loop over each pulse.
+    for ipulse in range(num_pulses):
+        for gap in get_gap_slices(swaths[:, ipulse, :]):
+            data[..., ipulse, gap] = value

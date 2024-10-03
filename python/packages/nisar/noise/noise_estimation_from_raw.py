@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from isce3.noise import noise_pow_min_var_est, noise_pow_min_eigval_est
+from isce3.focus import fill_gaps
 from nisar.antenna import get_calib_range_line_idx
 from nisar.log import set_logger
 
@@ -443,45 +444,6 @@ def _range_slice_gen(n_rgb, n_blk, min_rgbs=RGB_MIN_NOISE):
         yield slice(i_start, i_stop)
 
 
-def _fill_txgap_invalid_noise(noise, sbsw_valid, is_dither,
-                              invalid_val=INVALID_VALUE):
-    """
-    Helper function to fill in TX gap regions in noise block, in place, with
-    invalid value similar to those such as leading/trailing padding in
-    decoded L0B raw echo.
-
-    This is useful to handle non-mitigated TX gaps in noise-only range lines.
-
-    Parameters
-    ----------
-    noise : np.ndarray
-        2-D array of noise-only range lines.
-        The shape is (range lines, range bins)
-    sbsw_valid : np.ndarray(int)
-        3-D array of valid sub-swath for noise-only range lines with shape
-        (number of valid sub-swaths, noise-only range lines, 2).
-        It will be used to identify tx gaps to be filled in.
-    is_dither : bool
-        Whether it is dithering PRF or fixed one.
-    invalid_val : float, default=INVALID_VALUE
-        Invalid float value such as zero for TX gap regions or other no-echo
-        regions in the decoded raw data.
-
-    """
-    n_sbsw, n_rgl, _ = sbsw_valid.shape
-    n_txgap = n_sbsw - 1
-    for nn in range(n_txgap):
-        if is_dither:
-            for ll in range(n_rgl):
-                g_start = sbsw_valid[nn, ll, 1]
-                g_stop = sbsw_valid[nn + 1, ll, 0]
-                noise[ll, g_start:g_stop] = invalid_val
-        else:  # fixed PRF
-            g_start = sbsw_valid[nn, 0, 1]
-            g_stop = sbsw_valid[nn + 1, 0, 0]
-            noise[:, g_start:g_stop] = invalid_val
-
-
 def _check_noise_validity(
         noise, is_dither, *, perc_invalid=PERC_INVALID_NOISE,
         invalid_val=INVALID_VALUE):
@@ -622,7 +584,7 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
     # fill-in TX gap regions with invalid value for noise-only range lines
     # This is to guarantee TX gap regions are mitigated and filled with
     # a common invalid value!
-    _fill_txgap_invalid_noise(dset_noise, sbsw_ns, is_dither)
+    fill_gaps(dset_noise, sbsw_ns, INVALID_VALUE)
     # get slant range vector
     sr_lsp = raw.getRanges(freq_band, txrx_pol[0])
     # get range block slices
