@@ -39,6 +39,7 @@ set (list_of_exe
      nisar/workflows/gslc.py
      nisar/workflows/gslc_point_target_analysis.py
      nisar/workflows/insar.py
+     nisar/workflows/nisar_l0b_dm1_to_science.py
      nisar/workflows/noise_estimator.py
      nisar/workflows/point_target_analysis.py
      nisar/workflows/pol_channel_imbalance_from_rslc.py

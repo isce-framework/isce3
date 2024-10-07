@@ -174,6 +174,22 @@ D&C pointing products such as Doppler and Null-range products.
   Respective DEM Geotiff raster over the entire scene used in the simulation for the
   first pass.
 
+## dm1_dm2
+
+Subdirectory ***dm1_dm2*** contains REE simulated NISAR *12*-channel
+L-band *DM1*/*DM2* products over Amazon rain forest suitable for
+testing NISAR *DM1/2-L0B-to-science-L0B* workflows.
+The respective REE simulation was done in January 2024 as part of
+pointing calibration exercise with NISAR D&C team.
+
+Here is a brief summary of the files:
+
+- **REE_L0B_ECHO_DM1_240MHZ_RX1.h5**
+  Truncated version of the original file in azimuth direction with `50`
+  range lines for simply channel # `1`. It is *H*-Pol with TX mode `25MHz/25us`.
+  The raw data is real-value passband upsampled to `240 MHz` to look like
+  single-pol version of NISAR flight-like DM1.
+
 ## AbsCal
 
 - **calib_slc_pass1_20mhz.h5**

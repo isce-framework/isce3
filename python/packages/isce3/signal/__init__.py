@@ -1,7 +1,9 @@
 from isce3.ext.isce3.signal import *
 from .fir_filter_func import (cheby_equi_ripple_filter,
                               design_shaped_lowpass_filter,
-                              design_shaped_bandpass_filter)
+                              design_shaped_bandpass_filter,
+                              MultiRateFirFilter,
+                              build_multi_rate_fir_filter)
 from .doppler_est_func import (corr_doppler_est, sign_doppler_est,
                                unwrap_doppler)
 from . import filter_data
