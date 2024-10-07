@@ -802,11 +802,6 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     if epsg_code == 4326:
         # Set up grid mapping
         projds.attrs['longitude_of_prime_meridian'] = 0.0
-        projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(
-            osr.SRS_PP_LATITUDE_OF_ORIGIN)
-        projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(
-            osr.SRS_PP_LONGITUDE_OF_ORIGIN)
-
     else:
         # UTM zones
         if ((epsg_code > 32600 and
@@ -823,12 +818,14 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
         # Polar Stereo North
         elif epsg_code == 3413:
             # Set up grid mapping
+            projds.attrs['latitude_of_projection_origin'] = 90.0
             projds.attrs['standard_parallel'] = 70.0
             projds.attrs['straight_vertical_longitude_from_pole'] = -45.0
 
         # Polar Stereo south
         elif epsg_code == 3031:
             # Set up grid mapping
+            projds.attrs['latitude_of_projection_origin'] = -90.0
             projds.attrs['standard_parallel'] = -71.0
             projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
 
@@ -856,10 +853,13 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
         projds.attrs['false_northing'] = sr.GetProjParm(
             osr.SRS_PP_FALSE_NORTHING)
 
-        projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(
-            osr.SRS_PP_LATITUDE_OF_ORIGIN)
         projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(
             osr.SRS_PP_LONGITUDE_OF_ORIGIN)
+
+        if epsg_code not in [3413, 3031]:
+            projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(
+                osr.SRS_PP_LATITUDE_OF_ORIGIN)
+
 
     if z_vect is not None:
         return zds, yds, xds
