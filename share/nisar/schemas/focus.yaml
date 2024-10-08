@@ -126,6 +126,8 @@ runconfig:
 
       elevation_antenna_pattern: include('eap_options', required=False)
 
+      noise_equivalent_sigma_zero: include('nesz_options', required=False)
+
       radio_frequency_interference: include('rfi_options', required=False)
 
       # Range filter parameters for mixed-mode cases.
@@ -278,6 +280,40 @@ geo2rdr_options:
   # Latest time in search interval, in s past orbit reference epoch
   # null for automatic selection
   time_end: num(required=False)
+
+nesz_options:
+  # supported noise estimator algorithms:
+  # - MEE:  Min Eigenvalue Estimator, Default.
+  # - MVE: Min Variance Estimator
+  algorithm: enum('MEE', 'MVE', required=False)
+  # Number of range blocks. This determines the size
+  # of noise power array as a function of slant range.
+  # If `fill_nan_ends=True`, the size will be `num_range_block+2`.
+  num_range_block: int(min=1, required=False)
+  # Percentage (in [0, 100]) of a range block that can be
+  # corrupted by data gaps before it is considered
+  # invalid and its noise power is set to NaN.
+  threshold_invalid_range_block: num(min=0.0, max=100.0, required=False)
+  # Fill NaN values due to TX gap and add two extra end points
+  # while making sure the product is uniform in slant range.
+  # Set to True for nominal science (recommended) and False
+  # for debugging.
+  fill_nan_ends: bool(required=False)
+  # number of range lines used as coherent processing interval
+  # only in MEE. It is recommended to use a value within [3, 20].
+  cpi: int(min=2, required=False)
+  # Median of  `cpi-1` eigenvalues rather than just min in MEE.
+  # Default is median (recommended).
+  median_ev: bool(required=False)
+  # Difference of noise-only range lines is used in only
+  # MVE (recommended)
+  diff: bool(required=False)
+  # The method in differentiating the noise-only range lines in
+  # only MVE. The supported methods are:
+  # - single: last range line will be subtracted from all.
+  # - mean: averaged over all lines will be subtracted from all.
+  # - diff: consecutive differences will be used in place of all.
+  diff_method: enum('single', 'mean', 'diff', required=False)
 
 rfi_options:
   # Whether to attempt RFI detection and record related metadata.

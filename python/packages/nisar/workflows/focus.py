@@ -9,7 +9,9 @@ import json
 import logging
 import math
 import os
-from nisar.antenna import AntennaPattern
+from nisar.antenna import AntennaPattern, get_calib_range_line_idx
+from nisar.noise.noise_estimation_from_raw import (
+    est_noise_power_in_focus, NeszProduct)
 from nisar.mixed_mode import (PolChannel, PolChannelSet, Band,
     find_overlapping_channel)
 from nisar.products.readers.antenna import AntennaParser
@@ -1804,16 +1806,10 @@ def focus(runconfig, runconfig_path=""):
                                     dop[frequency], fn=regridfd,
                                     L=cfg.processing.nominal_antenna_size.azimuth)
 
-            del raw_clean
 
             # Do range compression.
             rc, rc_grid, shift, deramp_rc = prep_rangecomp(cfg, raw, raw_grid,
                                         channel_in, channel_out, cal)
-
-            fd = temp("_rc.c8")
-            log.info(f"Writing range compressed data to {fd.name}")
-            rcfile = Raster(fd.name, rc.output_size, rc_grid.shape[0], GDT_CFloat32)
-            log.info(f"Range compressed data shape = {rcfile.data.shape}")
 
             # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
@@ -1831,6 +1827,104 @@ def focus(runconfig, runconfig_path=""):
                 pat_ranges = isce3.core.Linspace(rc_grid.slant_ranges[0], spacing, nbins)
                 patterns = antpat.form_pattern(
                     ti, pat_ranges, nearest=not uniform_pri, txrx_pols=[pol])
+
+            fd = temp("_rc.c8")
+            log.info(f"Writing range compressed data to {fd.name}")
+            rcfile = Raster(fd.name, rc.output_size, rc_grid.shape[0], GDT_CFloat32)
+            log.info(f"Range compressed data shape = {rcfile.data.shape}")
+
+            # Compute NESZ if there exist noise-only range lines
+            # get noise only range line indexes within processing interval
+            cal_path_mask = raw.getCalType(
+                channel_in.freq_id, pol[0])[pulse_begin:pulse_end]
+            _, _, _, idx_noise = get_calib_range_line_idx(cal_path_mask)
+            if idx_noise.size == 0:
+                log.warning(
+                    'No noise-only range lines within the specified pulse '
+                    'interval. Skip noise estimation and set NESZ to zero.'
+                )
+                sr_noise = np.array(rc_grid.slant_ranges)
+                pow_noise = np.zeros_like(sr_noise, dtype='f4')
+            else: # there is at least one noise-only range line
+                nrgl_noise = idx_noise.size
+                log.info(f'Number of noise-only range lines is {nrgl_noise}')
+                # create a dedicated memory map for noise data and processing.
+                # set the number of range bins to rangecomp output size.
+                fid_noise = temp("_noise.c8")
+                data_noise = np.memmap(
+                    fid_noise, mode='w+', shape=(nrgl_noise, rc.output_size),
+                    dtype=np.complex64)
+                rc.rangecompress(data_noise, raw_clean[idx_noise])
+                # build and apply antenna pattern correction for noise
+                # pulses if EAP is True
+                if cfg.processing.is_enabled.eap:
+                    log.info('Compensating dynamic antenna pattern for '
+                             'noise-only range lines')
+                    for pp in range(nrgl_noise):
+                        tm = raw_times[idx_noise[pp]]
+                        # get 2-way pattern for noise-only pulse time over
+                        # a coarser slant range vector than that of echo.
+                        # 2-way antenna pattern in EAP correction is slightly
+                        # different for noise-only range lines than for
+                        # re-grided echo range lines in dithering case
+                        # w/ BLU interpolator. This is why the process
+                        # is repeated here for noise estimation.
+                        pat2w = antpat.form_pattern(
+                            tm, pat_ranges, nearest=False, txrx_pols=[pol])
+                        # interpolated pattern to a finer range spacing
+                        pat_int = np.interp(
+                            rc_grid.slant_ranges, pat_ranges, pat2w[pol])
+                        # apply antenna pattern, replace bad value by NaN
+                        mask_zero = np.isclose(abs(pat_int), 0)
+                        mask_non_zero = ~mask_zero
+                        data_noise[pp, mask_non_zero] /= pat_int[mask_non_zero]
+                        data_noise[pp, mask_zero] = complex(np.nan, np.nan)
+
+                if cfg.processing.is_enabled.range_cor:
+                    log.info('Compensating range loss for noise range lines')
+                    data_noise *= np.array(rc_grid.slant_ranges) / ref_range
+
+                # correct for non-unity AZ Reference function given noise
+                # data will not be run through AZ compression.
+                # get SAR duration at the starting slant range and mid noise
+                # range line.
+                tm_mid_noise = raw_times[idx_noise[nrgl_noise // 2]]
+                sar_dur_near = isce3.focus.get_sar_duration(
+                    tm_mid_noise, rc_grid.starting_range, orbit,
+                    isce3.core.Ellipsoid(), azres, rc_grid.wavelength
+                    )
+                n_pulse_sar =  sar_dur_near * rc_grid.prf
+                # Multiply by the number of pulses within a SAR at the nearest
+                # range and apply the encoding scalar from the config file
+                data_noise *= scale * np.sqrt(
+                    n_pulse_sar * np.array(rc_grid.slant_ranges) /
+                    rc_grid.starting_range)
+                # perform noise estimation
+                # get valid subswath for noise-only range lines
+                idx_noise_abs = pulse_begin + np.asarray(idx_noise)
+                sbsw_noise = swaths[:, idx_noise_abs]
+                pow_noise, sr_noise = est_noise_power_in_focus(
+                    data_noise, rc_grid.slant_ranges, sbsw_noise,
+                    not uniform_pri, logger=log,
+                    **vars(cfg.processing.noise_equivalent_sigma_zero)
+                )
+                del data_noise
+            # build NESZ product and dump into RSLC product per
+            # frequency band and polarization
+            # Given NESZ is estimated over entire AZ times, for the sake of
+            # compatability with RSCL spec, the final product
+            # is converted from 1-D into 2-D by simply stacking 1-D
+            # values twice. The AZ time limits is within raw data used in
+            # the noise estimation.
+            azt_lim_noise = raw_times[::raw_times.size - 1]
+            pow_noise_2d = np.vstack([pow_noise, pow_noise])
+            nesz_prod = NeszProduct(
+                pow_noise_2d, sr_noise, azt_lim_noise, grid_epoch, frequency,
+                pol)
+            slc.set_nesz(nesz_prod)
+            del pow_noise_2d, pow_noise, sr_noise
+
+            del raw_clean
 
             # And do radiometric corrections at the same time.
             for pulse in range(0, rc_grid.shape[0], na):

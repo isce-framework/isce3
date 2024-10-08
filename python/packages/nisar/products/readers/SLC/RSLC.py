@@ -6,6 +6,8 @@ import journal
 import pyre
 import re
 
+from nisar.noise import NeszProduct
+from isce3.core import DateTime
 from isce3.core.types import ComplexFloat16Decoder, is_complex32
 
 from .SLCBase import SLCBase
@@ -111,3 +113,70 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
                 raise LookupError(err_str)
 
             return is_complex32(h[slc_path])
+
+
+    def getNESZ(self, frequency=None, pol=None):
+        '''
+        Extract Noise Equivalent Sigma Zero (NESZ) product for a particular
+        frequency band and TxRx polarization.
+
+        Parameters
+        ----------
+        frequency : str, optional
+            Frequency band such as 'A', 'B'.
+            Default is the very first one in lexicographical order.
+        pol : str, optional
+            TxRx polarization such as 'HH', 'HV', etc.
+            Default is the first co-pol in frequency if `frequency`
+            otherwise the very first co-pol in very first frequency
+            band. If no co-pol, the first cross-pol product will
+            be picked.
+
+        Returns
+        -------
+        nisar.noise.NeszProduct
+
+        '''
+        # set frequency and pol
+        if frequency is None:
+            frequency = self._getFirstFrequency()
+        if pol is None:
+            pols = self.polarizations[frequency]
+            co_pol = [p for p in pols if p[0] == p[1] or p[0] in ('L', 'R')]
+            if len(co_pol) == 0:  # no co-pol
+                pol = pols[0]
+            else:  # there exists a co-pol
+                pol = co_pol[0]
+        # set paths
+        grp_path = _join_paths(
+            self.CalibrationInformationPath, f'frequency{frequency}/nes0')
+        sr_path = f'{grp_path}/slantRange'
+        azt_path = f'{grp_path}/zeroDopplerTime'
+        nesz_path = f'{grp_path}/{pol}'
+        # parse all fields for NESZ
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            nesz = fid[nesz_path][:]
+            sr = fid[sr_path][:]
+            azt = fid[azt_path][:]
+            units = fid[azt_path].attrs['units'].decode()
+        # datetime UTC pattern to look for in units to get epoch
+        dt_pat = re.compile(
+            '[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}(?:[.][0-9]{0,9})?'
+        )
+        matches = dt_pat.findall(units)
+        if len(matches) != 1:
+            raise RuntimeError(
+                f"missing epoch in zeroDopplerTime units attribute: {units!r}"
+            )
+        utc_str = matches[0]
+        epoch = DateTime(utc_str)
+        # build and return NESZ product
+        return NeszProduct(nesz, sr, azt, epoch, frequency, pol)
+
+
+def _join_paths(path1: str, path2: str) -> str:
+    """Join two paths to be used in HDF5"""
+    sep = '/'
+    if path1.endswith(sep):
+        sep = ''
+    return path1 + sep + path2

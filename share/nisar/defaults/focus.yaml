@@ -130,6 +130,42 @@ runconfig:
                 # 5 MHz bandwidth has 6 MHz sample rate -> c / 2 / 6e6 spacing
                 spacing: 24.982704833333333
 
+            noise_equivalent_sigma_zero:
+                # supported noise estimator algorithms:
+                # - MEE:  Min Eigenvalue Estimator, Default.
+                # - MVE: Min Variance Estimator
+                algorithm: MEE
+                # Number of range blocks. This determines the size
+                # of noise power array as a function of slant range.
+                # If `fill_nan_ends=True`, the size will be
+                # `num_range_block+2`.
+                num_range_block: 80
+                # Percentage (in [0, 100]) of a range block that can be
+                # corrupted by data gaps before it is considered
+                # invalid and its noise power is set to NaN.
+                threshold_invalid_range_block: 10.0
+                # Fill NaN values due to TX gap and add two extra end points
+                # while making sure the product is uniform in slant range.
+                # Set to True for nominal science (recommended) and False
+                # for debugging.
+                fill_nan_ends: true
+                # number of range lines used as coherent processing interval
+                # only in MEE. It is recommended to use a value within
+                # [3, 20].
+                cpi: 10
+                # Median of  `cpi-1` eigenvalues rather than just min in MEE.
+                # Default is median (recommended).
+                median_ev: True
+                # Difference of noise-only range lines is used in only
+                # MVE (recommended)
+                diff: True
+                # The method in differentiating the noise-only range lines in
+                # only MVE. The supported methods are:
+                # - single: last range line will be subtracted from all.
+                # - mean: averaged over all lines will be subtracted from all.
+                # - diff: consecutive differences will be used in place of all.
+                diff_method: single
+
             radio_frequency_interference:
                 # Whether to attempt RFI detection and record related metadata.
                 # Defaults to True
