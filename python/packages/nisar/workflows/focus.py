@@ -1336,12 +1336,12 @@ def get_calibration(cfg: Struct, bandwidth: Optional[float] = None) -> RslcCalib
 def get_identification_data_from_runconfig(cfg: Struct) -> dict:
     """
     Populate a dict containing the keys
-        {"product_version", "processing_type", "mission_id",
-        "processing_center", "granule_id", "track", "frame"}
+        {"product_version", "processing_type", "composite_release_id",
+        "mission_id", "processing_center", "granule_id", "track", "frame"}
     using data from an RSLC runconfig.
     """
-    keys = ["product_version", "processing_type", "mission_id",
-        "processing_center"]
+    keys = ["product_version", "processing_type", "composite_release_id",
+        "mission_id", "processing_center"]
     exe = vars(cfg.primary_executable)
     d = {key: exe[key] for key in keys}
     # TODO populate fields in partial granule ID

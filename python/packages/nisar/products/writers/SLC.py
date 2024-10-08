@@ -601,7 +601,8 @@ class SLC(h5py.File):
                             product_version: str = "0.1.0",
                             processing_type: str = "CUSTOM",
                             is_dithered: bool = False,
-                            is_mixed_mode: bool = False):
+                            is_mixed_mode: bool = False,
+                            composite_release_id: str = "A10000"):
         """
         Populate identification metadata with a combination of copied values
         from L0B and user data.
@@ -625,6 +626,7 @@ class SLC(h5py.File):
             zeroDopplerStartTime
 
         always populated based on input values:
+            compositeReleaseId
             frameNumber
             granuleId
             isDithered
@@ -772,6 +774,10 @@ class SLC(h5py.File):
         d.attrs["description"] = np.bytes_('"True" if this product is a '
             'composite of data collected in multiple radar modes, '
             '"False" otherwise.')
+
+        d = set_string(g, "compositeReleaseId", composite_release_id)
+        d.attrs["description"] = np.bytes_("Unique version identifier of the "
+            "science data production system")
 
         # only report to integer seconds
         now = datetime.now(timezone.utc).isoformat()[:19]
