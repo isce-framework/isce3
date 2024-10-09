@@ -77,7 +77,7 @@ def make_tec_file(unit_test_params):
         total_tec_rdr_grid = common_tec_coeff * np.cos(inc_angs)
 
         # near and far top TEC = 0 to allow sub orbital TEC = total TEC
-        # create extraplotor/interpolators for near and far
+        # create extrapolator/interpolators for near and far
         total_tec_interp = interpolate.interp1d(t_rdr_grid, total_tec_rdr_grid,
                                                 'linear',
                                                 fill_value="extrapolate")
@@ -101,7 +101,7 @@ def make_tec_file(unit_test_params):
 
 def make_subswaths():
     """
-    A helper funtion that creates a SubSwaths object based on axis, where
+    A helper function that creates a SubSwaths object based on axis, where
     subswath start and stop indices per range line defined by the 30th
     and 70th percentile of the angle of the SLC array values.
 
@@ -199,7 +199,7 @@ def unit_test_params():
     params.dem_path = os.path.join(iscetest.data, "geocode/zeroHeightDEM.geo")
     params.dem_raster = isce3.io.Raster(params.dem_path)
 
-    # half pixel offset and grid size in radians for validataion
+    # half pixel offset and grid size in radians for validation
     params.x0 = np.radians(params.geotrans[0] + params.geotrans[1] / 2.0)
     params.dx = np.radians(params.geotrans[1])
     params.y0 = np.radians(params.geotrans[3] + params.geotrans[5] / 2.0)
@@ -306,7 +306,7 @@ def geocode_slc_test_cases(unit_test_params):
                                     or axis == 'y'):
                 continue
 
-            # redunant to test subswath with flattening disabled and enabled
+            # redundant to test subswath with flattening disabled and enabled
             test_case.subswath_enabled = \
                 test_mode == 'subswath' and not flatten_enabled
 

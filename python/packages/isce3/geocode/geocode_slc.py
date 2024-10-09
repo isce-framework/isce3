@@ -133,8 +133,6 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
     ----------
     geo_data_blocks: list of numpy.ndarray
         List of output arrays containing geocoded SLC
-    mask_block: numpy.ndarray
-        Output array containing masking values of geocoded SLC
     rdr_data_blocks: list of numpy.ndarray
         List of input arrays of the SLC in radar coordinates
     dem_raster: isce3.io.Raster
@@ -155,6 +153,8 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
         Threshold for geo2rdr computations
     num_iter_geo2rdr: int
         Maximum number of iterations for geo2rdr convergence
+    mask_block: numpy.ndarray
+        Output array containing masking values of geocoded SLC
     sliced_radargrid: RadarGridParameters
         Radar grid representing subset of radargrid
     subswaths: SubSwaths or None, default=None
@@ -199,9 +199,6 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
     kwargs = {}
     if subswaths is not None:
         kwargs['subswaths'] = subswaths
-    
-    #if mask_block is not None:
-    #    kwargs['mask_block'] = mask_block
 
     # if both geo and radar blocks are np.ndarray, put them into a list
     # to match expected input type of list[np.ndaarray]

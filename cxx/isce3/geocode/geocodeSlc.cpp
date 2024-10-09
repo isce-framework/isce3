@@ -30,7 +30,7 @@ namespace isce3::geocode {
  * @param[out] rangeIndices     slant range indices, with respect to the radar grid, of the geo grid to be geocoded to
  * @param[out] azimuthIndices   azimuth indices, with respect to the radar grid, of the geo grid to be geocoded to
  * @param[out] uncorrectedSRange    slant range without correction, in meters, indexed by geo grid indices
- * @param[out] mask             subwath mask, with respect to geo grid indices
+ * @param[out] mask             subswath mask, with respect to geo grid indices
  * @param[in] demInterp         interpolator object for the DEM
  * @param[in] geoGrid           geo grid parameters to be geocoded to
  * @param[in] geoBlockLength    length of the geo grid block to be geocoded to
@@ -787,7 +787,7 @@ void geocodeSlc(
                                  azimuthFirstLine, rdrBlockWidth,
                                  rdrBlockLength, band + 1);
 
-            // Remove doppler and carriers as needd
+            // Remove doppler and carriers as needed
             carrierPhaseDeramp(rdrDataBlock, azCarrierPhase, rgCarrierPhase,
                    azimuthFirstLine, rangeFirstPixel, radarGrid);
 
@@ -796,7 +796,7 @@ void geocodeSlc(
                     azimuthFirstLine, rangeFirstPixel, sincInterp.get(),
                     radarGrid, nativeDoppler);
 
-            // Add back doppler and carriers as needd
+            // Add back doppler and carriers as needed
             carrierPhaseRerampAndFlatten(geoDataBlock, carrierPhaseBlock,
                     flattenPhaseBlock, rdrDataBlock, azCarrierPhase,
                     rgCarrierPhase, nativeDoppler, rangeIndices,
@@ -870,8 +870,10 @@ void geocodeSlc(
     for (auto geoDataBlock : geoDataBlocks)
         geoDataBlock.fill(invalidValue);
 
-    // Default all mask pixls to invalid mask pixel value, 255.
-    //maskBlock.fill(255);
+    if(subswaths){
+        // Default all mask pixels to invalid mask pixel value, 255.
+        maskBlock.fill(255);
+    }
 
     validate_slice(radarGrid, slicedRadarGrid);
 
@@ -945,7 +947,7 @@ void geocodeSlc(
         auto rdrDataBlock = *rIt;
 
         // interpolate and carrierPhaseRerampAndFlatten will only modify valid pixels
-        // Remove doppler and carriers as needd
+        // Remove doppler and carriers as needed
         carrierPhaseDeramp(rdrDataBlock, azCarrierPhase, rgCarrierPhase,
                 azimuthFirstLine, rangeFirstPixel, radarGrid);
 
@@ -954,7 +956,7 @@ void geocodeSlc(
                 azimuthFirstLine, rangeFirstPixel, sincInterp.get(),
                 radarGrid, nativeDoppler);
 
-        // Add back doppler and carriers as needd
+        // Add back doppler and carriers as needed
         carrierPhaseRerampAndFlatten(geoDataBlock, carrierPhaseBlock,
                 flattenPhaseBlock, rdrDataBlock, azCarrierPhase,
                 rgCarrierPhase, nativeDoppler, rangeIndices,
