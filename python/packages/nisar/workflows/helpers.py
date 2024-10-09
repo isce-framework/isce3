@@ -189,6 +189,9 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
         tec_margin_start = (sensing_start - tec_start).total_seconds()
         tec_margin_end = (tec_end - sensing_stop).total_seconds()
 
+        # Compute the half the TEC spacing, which is required when computing
+        # azimuth TEC gradient. Note the timing grid for TEC gradient is
+        # shifted by half of the TEC spacing
         minimum_margin_sec = (tec_end - tec_start).total_seconds() / (num_utc -1) / 2
 
         margin_info_msg += (f'IMAGEN TEC margin before sensing start : {tec_margin_start} seconds\n'
@@ -197,7 +200,7 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
 
         info_channel.log(margin_info_msg)
 
-        # Check if the margin looks okay
+        # Check if the margin looks okay when TEC is provided
 
         if orbit_margin_start < minimum_margin_sec:
             error_channel.log('Orbit margin before sensing start is not enough '
@@ -207,12 +210,11 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
             error_channel.log('Orbit margin after sensing stop is not enough '
                             f'({orbit_margin_end} < {minimum_margin_sec})')
 
-
-        if orbit_margin_start < minimum_margin_sec:
+        if tec_margin_start < minimum_margin_sec:
             error_channel.log('IMAGEN TEC margin before sensing start is not enough '
                             f'({tec_margin_start} < {minimum_margin_sec})')
 
-        if orbit_margin_end < minimum_margin_sec:
+        if tec_margin_end < minimum_margin_sec:
             error_channel.log(f'IMAGEN TEC margin after sensing stop is not enough '
                             f'({tec_margin_end} < {minimum_margin_sec})')
 
