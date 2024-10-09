@@ -466,6 +466,8 @@ def run_geocode_slc_array(test_case, unit_test_params, use_mask=True):
         # write output to raster
         ds = gdal.Open(flatten_phase_path, gdal.GA_Update)
         ds.GetRasterBand(1).WriteArray(flatten_phase_data)
+    
+    ds = None
 
 
 def test_run_array_mode(unit_test_params):
