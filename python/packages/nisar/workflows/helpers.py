@@ -164,8 +164,8 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
     orbit_margin_start = (sensing_start - orbit_start).total_seconds()
     orbit_margin_end = (orbit_end - sensing_stop).total_seconds()
 
-    margin_info_msg = (f'Orbit margin before sensing start      :      {orbit_margin_start} seconds\n'
-                       f'Orbit margin after sensing stop        :        {orbit_margin_end} seconds\n')
+    margin_info_msg = (f'Orbit margin before radar sensing start : {orbit_margin_start} seconds\n'
+                       f'Orbit margin after radar sensing stop   : {orbit_margin_end} seconds\n')
 
     if not tec_path:
         info_channel.log('IMAGEN TEC was not provided. '
@@ -174,9 +174,9 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
         info_channel.log(margin_info_msg)
 
         if orbit_margin_start < 0.0:
-            error_channel.log('Not enough orbit data at the sensing start.')
+            error_channel.log('Not enough input orbit data at the radar sensing start.')
         if orbit_margin_end < 0.0:
-            error_channel.log('Not enough orbit data at the sensing end.')
+            error_channel.log('Not enough input orbit data at the radar sensing end.')
 
     else:
         # Load timing information from IMAGEN TEC and check with orbit and sensing
@@ -194,8 +194,8 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
         # shifted by half of the TEC spacing
         minimum_margin_sec = (tec_end - tec_start).total_seconds() / (num_utc -1) / 2
 
-        margin_info_msg += (f'IMAGEN TEC margin before sensing start : {tec_margin_start} seconds\n'
-                            f'IMAGEN TEC margin after sensing stop   : {tec_margin_end} seconds\n'
+        margin_info_msg += (f'IMAGEN TEC margin before radar sensing start : {tec_margin_start} seconds\n'
+                            f'IMAGEN TEC margin after radar sensing stop   : {tec_margin_end} seconds\n'
                             f'Minimum required margin                : {minimum_margin_sec} seconds\n')
 
         info_channel.log(margin_info_msg)
@@ -203,19 +203,19 @@ def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
         # Check if the margin looks okay when TEC is provided
 
         if orbit_margin_start < minimum_margin_sec:
-            error_channel.log('Orbit margin before sensing start is not enough '
+            error_channel.log('Input orbit\'s margin before radar sensing start is not enough '
                             f'({orbit_margin_start} < {minimum_margin_sec})')
 
         if orbit_margin_end < minimum_margin_sec:
-            error_channel.log('Orbit margin after sensing stop is not enough '
+            error_channel.log('Input orbit\'s margin after radar sensing stop is not enough '
                             f'({orbit_margin_end} < {minimum_margin_sec})')
 
         if tec_margin_start < minimum_margin_sec:
-            error_channel.log('IMAGEN TEC margin before sensing start is not enough '
+            error_channel.log('IMAGEN TEC margin before radar sensing start is not enough '
                             f'({tec_margin_start} < {minimum_margin_sec})')
 
         if tec_margin_end < minimum_margin_sec:
-            error_channel.log(f'IMAGEN TEC margin after sensing stop is not enough '
+            error_channel.log(f'IMAGEN TEC margin after radar sensing stop is not enough '
                             f'({tec_margin_end} < {minimum_margin_sec})')
 
 
