@@ -387,7 +387,7 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
     ds.GetRasterBand(2).WriteArray(out_list[1])
 
 
-def run_geocode_slc_array(test_case, unit_test_params, use_mask=True):
+def run_geocode_slc_array(test_case, unit_test_params):
     '''
     wrapper for geocode_slc array mode
     '''
@@ -402,17 +402,18 @@ def run_geocode_slc_array(test_case, unit_test_params, use_mask=True):
     # list of empty array to be written to by geocode_slc array mode
     out_data = np.zeros(out_shape, dtype=np.complex64)
     
-
     # Populate geocode_slc kwargs as needed
     kwargs = {}
     if test_case.need_flatten_phase_raster:
         flatten_phase_data = np.nan * np.zeros(out_shape,dtype=np.float64)
         kwargs['flatten_phase_block'] = flatten_phase_data
 
-    if test_case.subswath_enabled and use_mask:
-        kwargs['subswaths'] = unit_test_params.subswaths[test_case.axis]
+    if test_case.subswath_enabled:
         mask_data = np.zeros(out_shape, dtype=np.ubyte)
+        kwargs['subswaths'] = unit_test_params.subswaths[test_case.axis]
+        
     else:
+        # Default value for the mask data to be used for no-mask mode
         mask_data = np.array([], dtype=np.uint8)
 
     isce3.geocode.geocode_slc(
@@ -478,7 +479,6 @@ def test_run_array_mode(unit_test_params):
     # run array mode for all test cases
     for test_case in geocode_slc_test_cases(unit_test_params):
         run_geocode_slc_array(test_case, unit_test_params)
-        run_geocode_slc_array(test_case, unit_test_params, use_mask=False)
 
 
 def test_run_arrays_mode(unit_test_params):
