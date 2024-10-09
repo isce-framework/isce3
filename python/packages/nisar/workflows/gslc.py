@@ -95,8 +95,14 @@ def run(cfg):
         # Decide what page size to use based on geogrid shape.
         # If user provides the page size, then the workflow takes that value.
         # Otherwise, the workflow decides the pagesize automatically.
-        output_gslc_shape = (geogrids['A'].length,
-                             geogrids['A'].width)
+
+        geogrid_freq_and_size = ((geogrid[0], geogrid[1].length * geogrid[1].width) for
+                                 geogrid in geogrids.items())
+
+        smallest_freq = min(geogrid_freq_and_size, key=lambda x: x[1])[0]
+
+        output_gslc_shape = (geogrids[smallest_freq].length,
+                             geogrids[smallest_freq].width)
         optimal_chunk_size = optimize_chunk_size(output_options['chunk_size'],
                                                  output_gslc_shape)
         
