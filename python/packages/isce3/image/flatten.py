@@ -16,7 +16,6 @@ def flatten_at_coords(
     radar_grid_out: RadarGridParameters,
     radar_grid_in: RadarGridParameters,
     out_rg_first_pixel: int,
-    out: np.ndarray | None = None,
 ) -> np.ndarray:
     """
     Re-flatten a grid of SLC data from its' original grid parameters into a new set
@@ -35,10 +34,6 @@ def flatten_at_coords(
         radar grid parameters of the original grid
     out_rg_first_pixel : int
         range index of the first sample of the alternate grid
-    out : np.ndarray of np.complex64 | None, optional
-        The array to output data to, or None. If given, must be the same size as
-        data_block. Any contents of this array will he overwritten.
-        Defaults to None.
 
     Returns
     -------
@@ -47,20 +42,23 @@ def flatten_at_coords(
         the `out` array.
     """
     error_channel = journal.error("flatten.flatten_at_coords")
-    out_array = out if out is not None else np.full(
-        (radar_grid_out.length, radar_grid_out.width),
-        fill_value=np.nan + 1.0j * np.nan,
-        dtype=np.complex64,
-    )
-    np.copyto(out_array, data_block)
 
-    if out_array.shape != range_indices.shape:
+    if data_block.shape != range_indices.shape:
         err_log = (
-            f"Output block shape {out_array.shape} and range indices block shape "
+            f"Data block shape {data_block.shape} and range indices block shape "
             f"{range_indices.shape} are unequal."
         )
         error_channel.log(err_log)
         raise ValueError(err_log)
+
+    out_array = data_block.copy()
+
+    # Ensure that all of the input data blocks meet the requirements of the
+    # _flatten_at_coords pybind (correct dtype, with flags C_CONTIGUOUS)
+    # These function calls will return conforming copies of the data blocks if they
+    # are not already conforming.
+    out_array = np.require(out_array, dtype=np.complex64, requirements=["C"])
+    range_indices = np.require(range_indices, dtype=np.float64, requirements=["C"])
 
     _flatten_at_coords(
         data_block=out_array,
@@ -78,8 +76,7 @@ def get_flattening_phase_at_coords(
     radar_grid_out: RadarGridParameters,
     radar_grid_in: RadarGridParameters,
     out_rg_first_pixel: int,
-    out: np.ndarray | None = None,
-) -> np.ndarray[np.complex64]:
+) -> np.ndarray:
     """
     Acquire the phase of the given carrier at each given index of a radar scene.
 
@@ -94,10 +91,6 @@ def get_flattening_phase_at_coords(
         radar grid parameters of the original grid
     out_rg_first_pixel : int
         range index of the first sample of the alternate grid
-    out : np.ndarray of np.complex64 | None, optional
-        The array to output data to, or None. If given, must be the same size as
-        data_block. Any contents of this array will he overwritten.
-        Defaults to None.
 
     Returns
     -------
@@ -105,20 +98,17 @@ def get_flattening_phase_at_coords(
         The flattened SLC block. If `out` was given, this will be the same array as
         the `out` array.
     """
-    error_channel = journal.error("flatten.get_flattening_phase_at_coords")
-    out_array = out if out is not None else np.full(
+    out_array = np.full(
         range_indices.shape,
         fill_value=np.nan + 1.0j * np.nan,
         dtype=np.complex64,
     )
 
-    if out_array.shape != range_indices.shape:
-        err_log = (
-            f"Output block shape {out_array.shape} and range indices block shape "
-            f"{range_indices.shape} are unequal."
-        )
-        error_channel.log(err_log)
-        raise ValueError(err_log)
+    # Ensure that all of the input data blocks meet the requirements of the
+    # _get_flattening_phase_at_coords pybind (correct dtype, with flags C_CONTIGUOUS)
+    # These function calls will return conforming copies of the data blocks if they
+    # are not already conforming.
+    range_indices = np.require(range_indices, dtype=np.float64, requirements=["C"])
 
     _get_flattening_phase_at_coords(
         data_block=out_array,
