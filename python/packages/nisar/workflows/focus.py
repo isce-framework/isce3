@@ -623,18 +623,35 @@ def make_output_grid(cfg: Struct,
     log.info(f"Approximate fully focusable time interval is [{dt0}, {dt1}]")
     log.info(f"Approximate fully focusable range interval is [{r0z}, {r1z}]")
 
-    # TODO snap start time to standard interval
-
+    # Save typing when handling defaults.
     p = cfg.processing.output_grid
+
+    # Usually for NISAR grid PRF should be specified as 1520 in the runconfig.
+    # If not then take max() as most conservative choice.
+    prf = p.output_prf if (p.output_prf is not None) else max_prf
+
+    # Snap default start time & range to integer grid.
+    # NOTE Current defaults mean range_snap_interval is never None, but cover
+    # that scenario in case somebody changes the default under our nose.  The
+    # reason for the non-null default is that with a dual-band system like NISAR
+    # you'd want to choose a default range snap based on knowledge of both
+    # subbands, which would require some refactoring.  For example, you'd want
+    # to snap the frequencyA grid to the coarser frequencyB spacing.
+    dt0 = isce3.math.snap_datetime(dt0,
+        p.time_snap_interval if p.time_snap_interval is not None else 1 / prf)
+    t0z = (dt0 - epoch).total_seconds()
+    r0z = isce3.math.snap(r0z,
+        p.range_snap_interval if p.range_snap_interval is not None else dr)
+
+    log.info(f"Snapped default start time to {dt0}")
+    log.info(f"Snapped default start range to {r0z} m")
+
     if p.start_time:
         t0z = (DateTime(p.start_time) - epoch).total_seconds()
     if p.end_time:
         t1z = (DateTime(p.end_time) - epoch).total_seconds()
     r0z = p.start_range if (p.start_range is not None) else r0z
     r1z = p.end_range if (p.end_range is not None) else r1z
-    # Usually for NISAR grid PRF should be specified as 1520 in the runconfig.
-    # If not then take max() as most conservative choice.
-    prf = p.output_prf if (p.output_prf is not None) else max_prf
 
     nr = round((r1z - r0z) / dr)
     nt = round((t1z - t0z) * prf)

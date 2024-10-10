@@ -101,10 +101,25 @@ runconfig:
                 # Defaults to input PRF.
                 output_prf: null
 
-                # Interval for azimuth grid alignment in seconds. See docs.
-                # Typically want 1 second and integer PRF (in Hz). Will not
-                # override user-provided start_time.
-                time_snap_interval: 1.0
+                # Interval for azimuth grid alignment in seconds.
+                # The computed start_time (represented as the number of seconds
+                # since midnight) will be rounded to an integer multiple of this
+                # interval.  For the default value of null, the output pulse
+                # interval (1 / output_prf) is used.  When output_prf is an
+                # integer, this guarantees that adjacent scenes can be aligned
+                # in time with integer shifts.
+                # Irrelevant when start_time is not null.
+                time_snap_interval: null
+
+                # Interval for range grid alignment in meters.
+                # The computed start_range will be rounded to an integer
+                # multiple of this interval.  The default value is equal to
+                # c / 2 / fs_ref which guarantees for NISAR that adjacent
+                # scenes can be aligned in range with integer shifts since the
+                # sample rate for all NISAR modes is an integer multiple of
+                # fs_ref = 6 MHz.
+                # Irrelevant when start_range is not null.
+                range_snap_interval: 24.982704833333333
 
             # Min amount of padding (in seconds) beyond raw data start and stop
             # times to retain when cropping the orbit and attitude data.
