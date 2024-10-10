@@ -2,6 +2,7 @@
 collection of useful functions used across workflows
 '''
 
+import datetime
 import os
 import pathlib
 from collections import defaultdict
@@ -130,6 +131,95 @@ def check_dem(dem_path: str):
         err_str = f'{dem_path} cannot be opened by GDAL'
         error_channel.log(err_str)
         raise ValueError(err_str)
+
+
+def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
+    '''
+    Check if the input orbit and TEC files' temporal coverage is enough.
+    Raise RuntimeError when the coverage is not enough.
+
+    Parameters
+    ----------
+    radar_grid: isce3.product.RadarGridParameters
+        Radar grid of the input RSLC
+    orbit: isce3.core.Orbit
+        Orbit data provided
+    tec: str
+        path to the IMAGEN TEC data
+
+    Raises
+    ------
+    ApplicationError: Raised by `journal.error` instance When
+        the temporal coverage of orbit and / or TEC file is not sufficient.
+    '''
+
+    error_channel = journal.error('helpers.check_radargrid_orbit_tec')
+    info_channel = journal.info('helpers.check_radargrid_orbit_tec')
+
+    radargrid_ref_epoch = datetime.datetime.fromisoformat(radar_grid.ref_epoch.isoformat_usec())
+    sensing_start = radargrid_ref_epoch + datetime.timedelta(seconds=radar_grid.sensing_start)
+    sensing_stop = radargrid_ref_epoch + datetime.timedelta(seconds=radar_grid.sensing_stop)
+
+    orbit_start = datetime.datetime.fromisoformat(orbit.start_datetime.isoformat_usec())
+    orbit_end = datetime.datetime.fromisoformat(orbit.end_datetime.isoformat_usec())
+
+    # Compute the paddings of orbit and TEC w.r.t. radar grid
+    orbit_margin_start = (sensing_start - orbit_start).total_seconds()
+    orbit_margin_end = (orbit_end - sensing_stop).total_seconds()
+
+    margin_info_msg = (f'Orbit margin before radar sensing start : {orbit_margin_start} seconds\n'
+                       f'Orbit margin after radar sensing stop   : {orbit_margin_end} seconds\n')
+
+    if not tec_path:
+        info_channel.log('IMAGEN TEC was not provided. '
+                         'Checking the orbit data and sensing start / stop.')
+        
+        info_channel.log(margin_info_msg)
+
+        if orbit_margin_start < 0.0:
+            error_channel.log('Not enough input orbit data at the radar sensing start.')
+        if orbit_margin_end < 0.0:
+            error_channel.log('Not enough input orbit data at the radar sensing end.')
+
+    else:
+        # Load timing information from IMAGEN TEC and check with orbit and sensing
+        with open(tec_path, 'r') as jin:
+            imagen_dict = json.load(jin)
+            num_utc = len(imagen_dict['utc'])
+            tec_start = datetime.datetime.fromisoformat(imagen_dict['utc'][0])
+            tec_end = datetime.datetime.fromisoformat(imagen_dict['utc'][-1])
+
+        tec_margin_start = (sensing_start - tec_start).total_seconds()
+        tec_margin_end = (tec_end - sensing_stop).total_seconds()
+
+        # Compute the half the TEC spacing, which is required when computing
+        # azimuth TEC gradient. Note the timing grid for TEC gradient is
+        # shifted by half of the TEC spacing
+        minimum_margin_sec = (tec_end - tec_start).total_seconds() / (num_utc -1) / 2
+
+        margin_info_msg += (f'IMAGEN TEC margin before radar sensing start : {tec_margin_start} seconds\n'
+                            f'IMAGEN TEC margin after radar sensing stop   : {tec_margin_end} seconds\n'
+                            f'Minimum required margin                : {minimum_margin_sec} seconds\n')
+
+        info_channel.log(margin_info_msg)
+
+        # Check if the margin looks okay when TEC is provided
+
+        if orbit_margin_start < minimum_margin_sec:
+            error_channel.log('Input orbit\'s margin before radar sensing start is not enough '
+                            f'({orbit_margin_start} < {minimum_margin_sec})')
+
+        if orbit_margin_end < minimum_margin_sec:
+            error_channel.log('Input orbit\'s margin after radar sensing stop is not enough '
+                            f'({orbit_margin_end} < {minimum_margin_sec})')
+
+        if tec_margin_start < minimum_margin_sec:
+            error_channel.log('IMAGEN TEC margin before radar sensing start is not enough '
+                            f'({tec_margin_start} < {minimum_margin_sec})')
+
+        if tec_margin_end < minimum_margin_sec:
+            error_channel.log(f'IMAGEN TEC margin after radar sensing stop is not enough '
+                            f'({tec_margin_end} < {minimum_margin_sec})')
 
 
 def check_log_dir_writable(log_file_path: str):
