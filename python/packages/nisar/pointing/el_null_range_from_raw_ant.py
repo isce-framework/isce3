@@ -15,6 +15,7 @@ from isce3.antenna import ElNullRangeEst, ant2rgdop
 from isce3.geometry import DEMInterpolator
 from isce3.core import speed_of_light
 from nisar.log import set_logger
+from isce3.focus import fill_gaps
 
 
 @dataclass(frozen=True)
@@ -355,6 +356,10 @@ def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
         # get a pair of echo for a subset of range lines
         echo_left = raw_dset[nn, s_rgl, :]
         echo_right = raw_dset[nn + 1, s_rgl, :]
+        # zero out TX gap regions if any
+        sbsw_valid = valid_sbsw_all[:, s_rgl]
+        fill_gaps(echo_left, sbsw_valid)
+        fill_gaps(echo_right, sbsw_valid)
         # if requested, apply inverse of slow-time averaged
         # caltone coeffs to echo pairs (left, right)
         if apply_caltone:
