@@ -34,7 +34,7 @@ def modulate(
     radar_grid : RadarGridParameters
         Parameters for the given radar grid corresponding to `slc_data_block`.
     conjugate : bool, optional
-        If True, modulate the conjugate of the phase, by default False
+        If True, modulate the conjugate of the phase. Defaults to False.
     fill_value: complex
         The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined
         here as any pixels that cannot be evaluated by the carrier_phase function.
@@ -44,8 +44,7 @@ def modulate(
     Returns
     -------
     np.ndarray of np.complex64
-        The modulated SLC block. If `out` was given, this will be the same array as
-        the `out` array.
+        The modulated SLC block.
     """
     out_arr = slc_data_block.copy()
     out_arr = np.require(out_arr, dtype=np.complex64, requirements=["C", "W"])
@@ -90,7 +89,7 @@ def modulate_at_coords(
         Range index of each output coordinate pixel in the given radar coordinate
         system. Must be the same shape as phase_data_block.
     conjugate : bool, optional
-        If True, modulate the conjugate of the phase, by default False
+        If True, modulate the conjugate of the phase. Defaults to False.
     fill_value: complex
         The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined
         here as any pixels that cannot be evaluated by the carrier_phase function.
@@ -100,8 +99,7 @@ def modulate_at_coords(
     Returns
     -------
     np.ndarray of np.complex64
-        The modulated SLC block. If `out` was given, this will be the same array as
-        the `out` array.
+        The modulated SLC block.
     """
     error_channel = journal.error("modulate.modulate_at_coords")
 
@@ -115,7 +113,7 @@ def modulate_at_coords(
 
     if azimuth_indices.shape != slc_data_block.shape:
         err_log = (
-            f"Inputs block shape {azimuth_indices.shape} and SLC data block shape "
+            f"Indices block shapes {azimuth_indices.shape} and SLC data block shape "
             f"{slc_data_block.shape} are unequal."
         )
         error_channel.log(err_log)
@@ -160,7 +158,7 @@ def get_modulation_phase(
     radar_grid : RadarGridParameters
         Parameters for the given radar grid corresponding to the output block.
     conjugate : bool, optional
-        If True, get the conjugate of the phase, by default False
+        If True, get the conjugate of the phase. Defaults to False.
     fill_value: complex
         The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined
         here as any pixels that cannot be evaluated by the carrier_phase function.
@@ -170,8 +168,7 @@ def get_modulation_phase(
     Returns
     -------
     np.ndarray of np.complex64
-        The carrier phase, in the form of complex unit vectors. If `out` was given, this
-        will be the same array as the `out` array.
+        The carrier phase, in the form of complex unit vectors.
     """
     out_arr = np.full(
         (radar_grid.length, radar_grid.width),
@@ -214,21 +211,17 @@ def get_modulation_phase_at_coords(
         Range index of each output coordinate pixel in the given radar coordinate
         system. Must be the same shape as phase_data_block.
     conjugate : bool, optional
-        If True, get the conjugate of the phase, by default False
+        If True, get the conjugate of the phase. Defaults to False.
     fill_value: complex
         The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined
         here as any pixels that cannot be evaluated by the carrier_phase function.
         Poly2d functions do not have out-of-bounds pixels, but LUT2d functions may.
         Defaults to NaN + j*NaN.
-    out : np.ndarray[np.complex64] | None, optional
-        The output phase array to modify. Anything in this array will be overwritten.
-        Defaults to None
 
     Returns
     -------
     np.ndarray of np.complex64
-        The carrier phase, in the form of complex unit vectors. If `out` was given, this
-        will be the same array as the `out` array.
+        The carrier phase, in the form of complex unit vectors.
     """
     error_channel = journal.error("modulate.get_modulation_phase_at_coords")
 
