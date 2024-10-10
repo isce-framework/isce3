@@ -401,7 +401,6 @@ def run_geocode_slc_array(test_case, unit_test_params):
 
     # list of empty array to be written to by geocode_slc array mode
     out_data = np.zeros(out_shape, dtype=np.complex64)
-    mask_data = np.zeros(out_shape, dtype=np.ubyte)
     
     # Populate geocode_slc kwargs as needed
     kwargs = {}
@@ -411,10 +410,12 @@ def run_geocode_slc_array(test_case, unit_test_params):
 
     if test_case.subswath_enabled:
         kwargs['subswaths'] = unit_test_params.subswaths[test_case.axis]
-
+        mask_data = np.zeros(out_shape, dtype=np.ubyte)
+    else:
+        mask_data = np.array([], dtype=np.uint8)
+    
     isce3.geocode.geocode_slc(
         geo_data_blocks=out_data,
-        mask_block=mask_data,
         rdr_data_blocks=in_data,
         dem_raster=unit_test_params.dem_raster,
         radargrid=test_case.radargrid,
@@ -425,6 +426,7 @@ def run_geocode_slc_array(test_case, unit_test_params):
         ellipsoid=isce3.core.Ellipsoid(),
         threshold_geo2rdr=1.0e-9,
         num_iter_geo2rdr=25,
+        mask_block=mask_data,
         first_azimuth_line=0,
         first_range_sample=0,
         flatten=test_case.flatten_enabled,
@@ -473,6 +475,8 @@ def test_run_array_mode(unit_test_params):
     '''
     # run array mode for all test cases
     for test_case in geocode_slc_test_cases(unit_test_params):
+        print(test_case)
+        print("RUN: run_geocode_slc_array")
         run_geocode_slc_array(test_case, unit_test_params)
 
 
