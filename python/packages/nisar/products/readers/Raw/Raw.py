@@ -247,7 +247,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         _, az_time = self.getPulseTimes(frequency, tx)
         return (az_time.size - 1) / (az_time[-1] - az_time[0])
 
-    def isDithered(self, frequency='A', tx=None):
+    def isDithered(self, frequency='A', tx=None, tol=1e-8, num_ignore=0):
         """Whether or not PRF is dithering.
 
         That is more than one PRF value within entire azimuth duration.
@@ -262,6 +262,14 @@ class RawBase(Base, family='nisar.productreader.raw'):
             (linear), vertical (linear), left circular, right circular
             Default is the first pol under `frequency`.
 
+        tol : float, optional
+            Tolerance for PRI comparisons in seconds.  Default is less than
+            NISAR's 100 ns clock tics.
+
+        num_ignore : int, optional
+            The dataset is only considered dithered when more than num_ignore
+            consecutive PRIs are not equal.
+
         Returns
         -------
         bool
@@ -271,9 +279,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
         if tx is None:
             tx = self.polarizations[frequency][0][0]
         _, az_time = self.getPulseTimes(frequency, tx)
-        tm_diff = np.diff(az_time)
-        return not np.isclose(tm_diff.min(), tm_diff.max())
-        
+        pri = np.diff(az_time)
+        is_unequal = np.abs(np.diff(pri)) > tol
+        return np.sum(is_unequal) > num_ignore
+
 
     def getCenterFrequency(self, frequency: str = 'A', tx: str = None):
         if tx is None:
@@ -707,21 +716,37 @@ class RawBase(Base, family='nisar.productreader.raw'):
         # Otherwise the TX gaps split the swath into sub-swaths.
         bboxes = []
         for swath in self.getSubSwaths(frequency, tx=tx):
-            # Get unique start/stop pairs within the current swath.
-            swath = np.unique(swath, axis=0)
-            if len(swath) > 1:
+            # For fixed PRF the gap locations should be constant (one unique
+            # pair of [start, stop) indices).
+            if len(np.unique(swath, axis=0)) > 1:
                 log.warning("Variable raw subswaths detected!  Only "
                     "the swath bounds at the azimuth midpoint will be used.")
+
             # XXX Careful because radar can transition from constant PRF to
             # XXX dithered PRF, so the pulses in the air at the end will cause
             # XXX variations in the gap locations at the end.
             imid = swath.shape[0] // 2
+            istart, iend = swath[imid, :]
+
             r = np.array(grid.slant_ranges)
-            rmin = r[swath[imid, 0]]
-            rmax = r[swath[imid, 1] - 1]
+            n = len(r)
+
+            # This transition can also force the introduction of a mostly
+            # empty subswath that's only needed at the end (e.g., only two
+            # gaps except dithering introduces a third).
+            # XXX Empty subswaths should be detectable by istart==iend, but
+            # XXX currently L0B can be populated with weird stuff like
+            # XXX [istart, fillValue) or [fillValue, n) where istart < n and
+            # XXX fillValue > n.  So handle that until L0B writer is fixed.
+            istart = min(istart, n)
+            iend = min(iend, n)
+            if istart >= iend:
+                log.warning(f"Excluding subswath with bounds {swath[imid, :]}.")
+                continue
+
             bbox = RadarBoundingBox(
-                RadarPoint(times[0], rmin),
-                RadarPoint(times[-1], rmax))
+                RadarPoint(times[0], r[istart]),
+                RadarPoint(times[-1], r[iend - 1]))
             bboxes.append(bbox)
         return bboxes
 
