@@ -237,9 +237,8 @@ def resample_slc_blocks(
                     )
 
                 for carrier in phase_carriers:
-                    modulate(
+                    input_block = modulate(
                         slc_data_block=input_block,
-                        out=input_block,
                         carrier_phase=carrier,
                         radar_grid=block_grid,
                         conjugate=True,
@@ -269,9 +268,8 @@ def resample_slc_blocks(
                     )
 
                 for carrier in phase_carriers:
-                    modulate_at_coords(
+                    output_block = modulate_at_coords(
                         slc_data_block=output_block,
-                        out=output_block,
                         carrier_phase=carrier,
                         radar_grid=block_grid,
                         azimuth_indices=azimuth_index_grid,
@@ -458,7 +456,7 @@ def resample_to_coords(
         raise ValueError(err_log)
 
     # Ensure that all of the input data blocks meet the requirements of the
-    # _resample_to_coords pybind (correct dtype, with flags C_CONTIGUOUS and WRITABLE)
+    # _resample_to_coords pybind (correct dtype, with flag C_CONTIGUOUS)
     # These function calls will return conforming copies of the data blocks if they
     # are not already conforming.
     input_data_block = np.require(

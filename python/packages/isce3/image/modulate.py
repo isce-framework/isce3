@@ -20,7 +20,6 @@ def modulate(
     radar_grid: RadarGridParameters,
     conjugate: bool = False,
     fill_value: np.complex64 = np.nan + 1.j * np.nan,
-    out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
     """
     Evaluate and modulate or demodulate the phase carrier onto the given SLC data block.
@@ -41,9 +40,6 @@ def modulate(
         here as any pixels that cannot be evaluated by the carrier_phase function.
         Poly2d functions do not have out-of-bounds pixels, but LUT2d functions may.
         Defaults to NaN + j*NaN.
-    out : np.ndarray of np.complex64 | None, optional
-        The array to output data to, or None. If given, must be the same size as
-        slc_data_block. Any contents of this array will he overwritten, by default None
 
     Returns
     -------
@@ -51,22 +47,18 @@ def modulate(
         The modulated SLC block. If `out` was given, this will be the same array as
         the `out` array.
     """
-    out_array = out if out is not None else np.full(
-        (radar_grid.length, radar_grid.width),
-        fill_value=np.nan + 1.0j * np.nan,
-        dtype=np.complex64,
-    )
-    np.copyto(out_array, slc_data_block)
+    out_arr = slc_data_block.copy()
+    out_arr = np.require(out_arr, dtype=np.complex64, requirements=["C", "W"])
 
     _modulate(
-        slc_data_block=out_array,
+        slc_data_block=out_arr,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
         conjugate=conjugate,
         fill_value=fill_value,
     )
     
-    return out_array
+    return out_arr
 
 
 def modulate_at_coords(
@@ -77,7 +69,6 @@ def modulate_at_coords(
     range_indices: np.ndarray[np.float64],
     conjugate: bool = False,
     fill_value: np.complex64 = np.nan + 1.j * np.nan,
-    out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
     """
     Evaluate and modulate or demodulate the phase carrier onto the given SLC data block
@@ -105,9 +96,6 @@ def modulate_at_coords(
         here as any pixels that cannot be evaluated by the carrier_phase function.
         Poly2d functions do not have out-of-bounds pixels, but LUT2d functions may.
         Defaults to NaN + j*NaN.
-    out : np.ndarray of np.complex64 | None, optional
-        The array to output data to, or None. If given, must be the same size as
-        slc_data_block. Any contents of this array will he overwritten, by default None
 
     Returns
     -------
@@ -116,32 +104,35 @@ def modulate_at_coords(
         the `out` array.
     """
     error_channel = journal.error("modulate.modulate_at_coords")
-    
-    out_array = out if out is not None else np.full(
-        (radar_grid.length, radar_grid.width),
-        fill_value=np.nan + 1.0j * np.nan,
-        dtype=np.complex64,
-    )
-    np.copyto(out_array, slc_data_block)
 
-    if out_array.shape != azimuth_indices.shape:
+    if azimuth_indices.shape != range_indices.shape:
         err_log = (
-            f"Output block shape {out_array.shape} and azimuth indices block shape "
-            f"{azimuth_indices.shape} are unequal."
+            f"Azimuth indices block shape {azimuth_indices.shape} and range indices "
+            f"block shape {range_indices.shape} are unequal."
         )
         error_channel.log(err_log)
         raise ValueError(err_log)
 
-    if out_array.shape != range_indices.shape:
+    if azimuth_indices.shape != slc_data_block.shape:
         err_log = (
-            f"Output block shape {out_array.shape} and range indices block shape "
-            f"{azimuth_indices.shape} are unequal."
+            f"Inputs block shape {azimuth_indices.shape} and SLC data block shape "
+            f"{slc_data_block.shape} are unequal."
         )
         error_channel.log(err_log)
         raise ValueError(err_log)
+
+    out_arr = slc_data_block.copy()
+    out_arr = np.require(out_arr, dtype=np.complex64, requirements=["C", "W"])
+
+    # Ensure that all of the index data blocks meet the requirements of the
+    # _modulate_at_coords pybind (correct dtype, with flag C_CONTIGUOUS)
+    # These function calls will return conforming copies of the data blocks if they
+    # are not already conforming.
+    range_indices = np.require(range_indices, dtype=np.float64, requirements=["C"])
+    azimuth_indices = np.require(azimuth_indices, dtype=np.float64, requirements=["C"])
 
     _modulate_at_coords(
-        slc_data_block=out_array,
+        slc_data_block=out_arr,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
         azimuth_indices=azimuth_indices,
@@ -150,7 +141,7 @@ def modulate_at_coords(
         fill_value=fill_value,
     )
     
-    return out_array
+    return out_arr
 
 
 def get_modulation_phase(
@@ -158,7 +149,6 @@ def get_modulation_phase(
     radar_grid: RadarGridParameters,
     conjugate: bool = False,
     fill_value: np.complex64 = np.nan + 1.j * np.nan,
-    out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
     """
     Acquire the phase of the given carrier of a radar scene.
@@ -176,9 +166,6 @@ def get_modulation_phase(
         here as any pixels that cannot be evaluated by the carrier_phase function.
         Poly2d functions do not have out-of-bounds pixels, but LUT2d functions may.
         Defaults to NaN + j*NaN.
-    out : np.ndarray[np.complex64] | None, optional
-        The output phase array to modify. Anything in this array will be overwritten.
-        Defaults to None
 
     Returns
     -------
@@ -186,21 +173,21 @@ def get_modulation_phase(
         The carrier phase, in the form of complex unit vectors. If `out` was given, this
         will be the same array as the `out` array.
     """
-    out_array = out if out is not None else np.full(
+    out_arr = np.full(
         (radar_grid.length, radar_grid.width),
-        fill_value=np.nan + 1.0j * np.nan,
+        fill_value=fill_value,
         dtype=np.complex64,
     )
 
     _get_modulation_phase(
-        out=out_array,
+        out=out_arr,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
         conjugate=conjugate,
         fill_value=fill_value,
     )
     
-    return out_array
+    return out_arr
 
 
 def get_modulation_phase_at_coords(
@@ -210,7 +197,6 @@ def get_modulation_phase_at_coords(
     range_indices: np.ndarray[np.float64],
     conjugate: bool = False,
     fill_value: np.complex64 = np.nan + 1.j * np.nan,
-    out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
     """
     Acquire the phase of the given carrier at each given index of a radar scene.
@@ -245,30 +231,26 @@ def get_modulation_phase_at_coords(
         will be the same array as the `out` array.
     """
     error_channel = journal.error("modulate.get_modulation_phase_at_coords")
-    out_array = out if out is not None else np.full(
-        azimuth_indices.shape,
-        fill_value=np.nan + 1.0j * np.nan,
-        dtype=np.complex64,
-    )
 
-    if out_array.shape != azimuth_indices.shape:
+    if azimuth_indices.shape != range_indices.shape:
         err_log = (
-            f"Output block shape {out_array.shape} and azimuth indices block shape "
-            f"{azimuth_indices.shape} are unequal."
+            f"Azimuth indices block shape {azimuth_indices.shape} and range indices "
+            f"block shape {range_indices.shape} are unequal."
         )
         error_channel.log(err_log)
         raise ValueError(err_log)
 
-    if out_array.shape != range_indices.shape:
-        err_log = (
-            f"Output block shape {out_array.shape} and range indices block shape "
-            f"{azimuth_indices.shape} are unequal."
-        )
-        error_channel.log(err_log)
-        raise ValueError(err_log)
+    out_arr = np.full(azimuth_indices.shape, fill_value=fill_value, dtype=np.complex64)
+
+    # Ensure that all of the index data blocks meet the requirements of the
+    # _get_modulation_phase_at_coords pybind (correct dtype, with flag C_CONTIGUOUS)
+    # These function calls will return conforming copies of the data blocks if they
+    # are not already conforming.
+    range_indices = np.require(range_indices, dtype=np.float64, requirements=["C"])
+    azimuth_indices = np.require(azimuth_indices, dtype=np.float64, requirements=["C"])
 
     _get_modulation_phase_at_coords(
-        out=out_array,
+        out=out_arr,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
         azimuth_indices=azimuth_indices,
@@ -277,4 +259,4 @@ def get_modulation_phase_at_coords(
         fill_value=fill_value,
     )
     
-    return out_array
+    return out_arr
