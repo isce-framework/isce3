@@ -387,7 +387,7 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
     ds.GetRasterBand(2).WriteArray(out_list[1])
 
 
-def run_geocode_slc_array(test_case, unit_test_params):
+def run_geocode_slc_array_subswath(test_case, unit_test_params):
     '''
     wrapper for geocode_slc array mode
     '''
@@ -401,6 +401,7 @@ def run_geocode_slc_array(test_case, unit_test_params):
 
     # list of empty array to be written to by geocode_slc array mode
     out_data = np.zeros(out_shape, dtype=np.complex64)
+    mask_data = np.zeros(out_shape, dtype=np.ubyte)
     
     # Populate geocode_slc kwargs as needed
     kwargs = {}
@@ -410,9 +411,6 @@ def run_geocode_slc_array(test_case, unit_test_params):
 
     if test_case.subswath_enabled:
         kwargs['subswaths'] = unit_test_params.subswaths[test_case.axis]
-        mask_data = np.zeros(out_shape, dtype=np.ubyte)
-    else:
-        mask_data = np.array([], dtype=np.uint8)
     
     isce3.geocode.geocode_slc(
         geo_data_blocks=out_data,
@@ -421,7 +419,7 @@ def run_geocode_slc_array(test_case, unit_test_params):
         radargrid=test_case.radargrid,
         geogrid=unit_test_params.geogrid,
         orbit=unit_test_params.orbit,
-        native_doppler= unit_test_params.native_doppler,
+        native_doppler=unit_test_params.native_doppler,
         image_grid_doppler=unit_test_params.img_doppler,
         ellipsoid=isce3.core.Ellipsoid(),
         threshold_geo2rdr=1.0e-9,
@@ -467,6 +465,84 @@ def run_geocode_slc_array(test_case, unit_test_params):
         ds = gdal.Open(flatten_phase_path, gdal.GA_Update)
         ds.GetRasterBand(1).WriteArray(flatten_phase_data)
 
+    ds = None
+
+
+def run_geocode_slc_array(test_case, unit_test_params):
+    '''
+    wrapper for geocode_slc array mode without subswath mask
+    '''
+    # extract test specific params
+    out_shape = (unit_test_params.geogrid.width,
+                 unit_test_params.geogrid.length)
+
+    # load input as list of arrays
+    ds = gdal.Open(test_case.input_path, gdal.GA_ReadOnly)
+    in_data = ds.GetRasterBand(1).ReadAsArray()
+
+    # list of empty array to be written to by geocode_slc array mode
+    out_data = np.zeros(out_shape, dtype=np.complex64)
+     
+    # Populate geocode_slc kwargs as needed
+    kwargs = {}
+    if test_case.need_flatten_phase_raster:
+        flatten_phase_data = np.nan * np.zeros(out_shape,dtype=np.float64)
+        kwargs['flatten_phase_block'] = flatten_phase_data
+
+    isce3.geocode.geocode_slc(
+        geo_data_blocks=out_data,
+        rdr_data_blocks=in_data,
+        dem_raster=unit_test_params.dem_raster,
+        radargrid=test_case.radargrid,
+        geogrid=unit_test_params.geogrid,
+        orbit=unit_test_params.orbit,
+        native_doppler= unit_test_params.native_doppler,
+        image_grid_doppler=unit_test_params.img_doppler,
+        ellipsoid=isce3.core.Ellipsoid(),
+        threshold_geo2rdr=1.0e-9,
+        num_iter_geo2rdr=25,
+        first_azimuth_line=0,
+        first_range_sample=0,
+        flatten=test_case.flatten_enabled,
+        az_time_correction=test_case.az_time_correction,
+        srange_correction=test_case.srange_correction,
+        **kwargs)
+
+    # output file name for geocodeSlc array mode
+    output_path = test_case.output_path.replace('geocode_slc_mode', 'array')
+    Path(output_path).touch()
+
+    # set geotransform in output raster
+    out_raster = isce3.io.Raster(output_path, unit_test_params.geogrid.width,
+                                 unit_test_params.geogrid.length, 1,
+                                 gdal.GDT_CFloat32,  "ENVI")
+    out_raster.set_geotransform(unit_test_params.geotrans)
+    del out_raster
+
+    # write output to raster
+    ds = gdal.Open(output_path, gdal.GA_Update)
+    ds.GetRasterBand(1).WriteArray(out_data)
+
+    # create flatten phase raster if not geocoding with flattening enabled
+    if test_case.need_flatten_phase_raster:
+        flatten_phase_path = \
+            test_case.flatten_phase_path.replace('geocode_slc_mode', 'array')
+        # flatten phase output file name for geocodeSlc array mode
+        Path(flatten_phase_path).touch()
+
+        # set geotransform in flatten phase output raster
+        flatten_raster = isce3.io.Raster(flatten_phase_path,
+                                         unit_test_params.geogrid.width,
+                                         unit_test_params.geogrid.length, 1,
+                                         gdal.GDT_Float64,  "ENVI")
+        del flatten_raster
+
+        # write output to raster
+        ds = gdal.Open(flatten_phase_path, gdal.GA_Update)
+        ds.GetRasterBand(1).WriteArray(flatten_phase_data)
+
+    ds = None
+
 
 def test_run_array_mode(unit_test_params):
     '''
@@ -476,9 +552,11 @@ def test_run_array_mode(unit_test_params):
     # run array mode for all test cases
     for test_case in geocode_slc_test_cases(unit_test_params):
         print(test_case)
-        print("RUN: run_geocode_slc_array")
-        run_geocode_slc_array(test_case, unit_test_params)
-
+        if test_case.test_mode == 'subswath':
+            run_geocode_slc_array_subswath(test_case, unit_test_params)
+        else:
+            run_geocode_slc_array(test_case, unit_test_params)
+    print("ALL array mode run completed")
 
 def test_run_arrays_mode(unit_test_params):
     '''
@@ -491,7 +569,6 @@ def test_run_arrays_mode(unit_test_params):
         if test_case.flatten_enabled:
             continue
         run_geocode_slc_arrays(test_case, unit_test_params)
-
 
 def test_run_arrays_exceptions(unit_test_params):
     '''
