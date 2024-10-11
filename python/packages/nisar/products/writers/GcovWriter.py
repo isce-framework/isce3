@@ -551,7 +551,7 @@ class GcovWriter(BaseL2WriterSingleInput):
         # Note: CEOS ARD documentation uses the British spelling "Normalised"
         # rather than the American (US) spelling "Normalized"
         self.set_value(
-            'metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
+            '{PRODUCT}/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
             'Normalised Radar Backscatter (NRB)')
 
         self.set_value(
