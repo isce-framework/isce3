@@ -389,7 +389,9 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
 
 def run_geocode_slc_array_subswath(test_case, unit_test_params):
     '''
-    wrapper for geocode_slc array mode
+    wrapper for geocode_slc array mode with subswath mask and with the optional argument
+    to return the geocoded mask.
+    This interface is used for NISAR GSLC. 
     '''
     # extract test specific params
     out_shape = (unit_test_params.geogrid.width,
