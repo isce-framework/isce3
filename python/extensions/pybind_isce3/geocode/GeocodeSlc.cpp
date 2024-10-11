@@ -277,8 +277,6 @@ void addbinding_geocodeslc(py::module & m)
         ----------
         geo_data_blocks: list of numpy.ndarray
             List of output arrays containing geocoded SLC
-        mask_block: numpy.ndarray
-            Output array containing masking values of geocoded SLC
         carrier_phase_block: numpy.ndarray
             Output array containing geocoded carrier phase
         flatten_phase_block: numpy.ndarray
@@ -305,6 +303,10 @@ void addbinding_geocodeslc(py::module & m)
             Threshold for geo2rdr computations
         numiter_geo2rdr: int
             Maximum number of iterations for geo2rdr convergence
+        mask_block: numpy.ndarray
+            Geocoded subswath labels. Each valid pixel is assigned the ID of the subswath
+            that contained the pixel's center. Invalid pixels are assigned 255. If no
+            subswaths mask was specified, each valid pixel is assigned to subswath 1.
         azimuth_first_line: int
             FIrst line of radar data block with respect to larger radar data raster, else 0
         range_first_pixel: int

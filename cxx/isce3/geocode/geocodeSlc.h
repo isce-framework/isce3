@@ -145,6 +145,9 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
  * \param[in]  ellipsoid        ellipsoid object
  * \param[in]  thresholdGeo2rdr threshold for geo2rdr computations
  * \param[in]  numiterGeo2rdr   maximum number of iterations for Geo2rdr convergence
+ * \param[out] maskBlock        Geocoded subswath labels. Each valid pixel is assigned the ID of the subswath
+ *                              that contained the pixel's center. Invalid pixels are assigned 255. If no
+ *                              subswaths mask was specified, each valid pixel is assigned to subswath 1.
  * \param[in]  azimuthFirstLine if applicable, first line of radar data block
  *                              with respect to larger radar data raster, else 0
  * \param[in]  rangeFirstPixel  if applicable, first pixel of radar data block
