@@ -923,10 +923,14 @@ class InSARBaseWriter(h5py.File):
         else:
             processing_type = np.bytes_('Undefined')
 
-        # processing center (JPL, NRSC, or Others)
-        # if it is None, 'JPL' will be applied
+        # Adopt same logic as RSLC, GSLC, GCOV
+        # If no condition is met, assign string from runconfig
         if processing_center is None:
-            processing_center = "JPL"
+            processing_center = '(NOT SPECIFIED)'
+        elif processing_center == 'J':
+            processing_center = 'JPL'
+        elif processing_center == 'N':
+            processing_center = 'NRSC'
 
         # If the CRID identifier is None, assign a dummy crid "A10000"
         if crid is None:
