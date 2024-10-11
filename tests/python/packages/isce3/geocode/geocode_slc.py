@@ -465,12 +465,12 @@ def run_geocode_slc_array_subswath(test_case, unit_test_params):
         ds = gdal.Open(flatten_phase_path, gdal.GA_Update)
         ds.GetRasterBand(1).WriteArray(flatten_phase_data)
 
-    ds = None
-
 
 def run_geocode_slc_array(test_case, unit_test_params):
     '''
-    wrapper for geocode_slc array mode without subswath mask
+    wrapper for geocode_slc array mode without subswath mask.
+    This interface does not return a geocoded output mask and has been used for
+    geocoding Sentinel-1 SLC in COMPASS repository. 
     '''
     # extract test specific params
     out_shape = (unit_test_params.geogrid.width,
@@ -540,8 +540,6 @@ def run_geocode_slc_array(test_case, unit_test_params):
         # write output to raster
         ds = gdal.Open(flatten_phase_path, gdal.GA_Update)
         ds.GetRasterBand(1).WriteArray(flatten_phase_data)
-
-    ds = None
 
 
 def test_run_array_mode(unit_test_params):
