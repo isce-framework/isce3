@@ -814,11 +814,21 @@ class InSARBaseWriter(h5py.File):
         """
         Write metadata datasets and attributes common to all InSAR products to HDF5
         """
+        rslc_start_times = []
         for group, h5py_file_obj, orbit_to_save in zip(['reference', 'secondary'],
                                                        [self.ref_h5py_file_obj,
                                                         self.sec_h5py_file_obj],
                                                        [self.ref_orbit,
                                                         self.sec_orbit]):
+            # Get RSLCs start times to compute temporal baseline
+            start_time = h5py_file_obj[f'{self.ref_rslc.IdentificationPath}/' \
+                                       f'zeroDopplerStartTime'][()].decode('UTF-8')
+            date_format = "%Y-%m-%dT%H:%M:%S"
+            if '.' in start_time:
+                # Add the fractional seconds part to the format
+                date_format += ".%f"
+            rslc_start_times.append(datetime.strptime(start_time, date_format))
+
             # Create metadata group, copy over attitude group, and open newly create attitude group
             dst_attitude_group = self.require_group(
                 f'{self.group_paths.MetadataPath}/attitude/{group}')
@@ -882,6 +892,15 @@ class InSARBaseWriter(h5py.File):
             dst_orbit_group['interpMethod'].attrs['description'] = np.bytes_(
                 'Orbit interpolation method, either "Hermite" or "Legendre"'
             )
+
+        # Compute the temporal baseline using the RSLC start times
+        temp_baseline = (rslc_start_times[1] - rslc_start_times[0]).days
+        temp_baseline_dst_params = DatasetParams("temporalBaseline", np.uint16(temp_baseline),
+                                                 "Time interval between reference and secondary RSLCs",
+                                                 {"units": Units.days})
+        dst_orbit_group = self.require_group(f'{self.group_paths.MetadataPath}/orbit')
+        add_dataset_and_attrs(dst_orbit_group, temp_baseline_dst_params)
+
 
     def add_identification_to_hdf5(self):
         """

@@ -18,4 +18,5 @@ class Units:
     hertz: np.bytes_ = np.bytes_('hertz')
     rad_per_second: np.bytes_ = np.bytes_('radians / second')
     meter_per_second: np.bytes_ = np.bytes_('meters / second')
+    days: np.bytes_ = np.bytes_('days')
 
