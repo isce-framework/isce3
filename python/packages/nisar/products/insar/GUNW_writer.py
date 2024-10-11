@@ -155,6 +155,20 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
             f"{self.group_paths.ParametersPath}/unwrappedInterferogram"
         self.move(old_igram_group_name, new_igram_group_name)
 
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
+            number_of_azimuth_looks = \
+                self[f'{new_igram_group_name}/frequency{freq}/numberOfAzimuthLooks']
+            number_of_slant_range_looks = \
+                self[f'{new_igram_group_name}/frequency{freq}/numberOfRangeLooks']
+            number_of_azimuth_looks.attrs['description'] = \
+                np.bytes_('Number of looks applied in the'
+                          ' along-track direction to form the'
+                          ' unwrapped interferogram')
+            number_of_slant_range_looks.attrs['description'] = \
+                np.bytes_('Number of looks applied in the'
+                          ' slant range direction to form the'
+                          ' unwrapped interferogram')
+
         # the wrappedInterfergram group under the processingInformation/parameters
         # group is copied from the RIFG product, but the name in RIFG product is
         # 'interferogram', while in GUNW its name is 'wrappedInterferogram'. Here

@@ -56,7 +56,7 @@ class L1InSARWriter(InSARBaseWriter):
         # Pull the heights and espg from the radar_grid_cubes group
         # in the runconfig
         radar_grid_cfg = self.cfg["processing"]["radar_grid_cubes"]
-        heights = np.array(radar_grid_cfg["heights"])
+        heights = np.array(radar_grid_cfg["heights"]).astype(np.float64)
         epsg = radar_grid_cfg["output_epsg"]
 
         # Retrieve the group
@@ -437,12 +437,22 @@ class L1InSARWriter(InSARBaseWriter):
 
             # add the subswath mask layer to the pixel offset group
             self._create_2d_dataset(offset_group,
-                                    'subSwathMask',
+                                    'mask',
                                     shape=(off_length, off_width),
                                     dtype=np.uint8,
-                                    description='Mask indicating the location of valid samples within each subswath',
+                                    description=("Mask indicating the subswaths of valid samples in the reference RSLC"
+                                                 " and geometrically-coregistered secondary RSLC."
+                                                 " Each pixel value is a two-digit number:"
+                                                 " the least significant digit represents the"
+                                                 " subswath number of that pixel in the secondary RSLC,"
+                                                 " and the most significant digit represents"
+                                                 " the subswath number of that pixel in the reference RSLC."
+                                                 " A value of '0' in either digit indicates an invalid sample"
+                                                 " in the corresponding RSLC"),
                                     fill_value=255,
                                     long_name='Valid samples subswath mask')
+            offset_group['mask'].attrs['valid_min'] = 0
+            offset_group['mask'].attrs['valid_max'] = 55
 
             range_offset_path = \
                 os.path.join( self.topo_path,
@@ -458,7 +468,7 @@ class L1InSARWriter(InSARBaseWriter):
                 rdr2geo.run(self.cfg)
                 geo2rdr.run(self.cfg)
 
-            offset_group['subSwathMask'][...] = \
+            offset_group['mask'][...] = \
                 generate_insar_subswath_mask(self.ref_rslc,
                                              self.sec_rslc,
                                              range_offset_path,
@@ -590,12 +600,22 @@ class L1InSARWriter(InSARBaseWriter):
 
             # add the subswath mask layer to the interferogram group
             self._create_2d_dataset(igram_group,
-                                    'subSwathMask',
+                                    'mask',
                                     shape=igram_shape,
                                     dtype=np.uint8,
-                                    description='Mask indicating the location of valid samples within each subswath',
+                                    description=("Mask indicating the subswaths of valid samples in the reference RSLC"
+                                                 " and geometrically-coregistered secondary RSLC."
+                                                 " Each pixel value is a two-digit number:"
+                                                 " the least significant digit represents the"
+                                                 " subswath number of that pixel in the secondary RSLC,"
+                                                 " and the most significant digit represents"
+                                                 " the subswath number of that pixel in the reference RSLC."
+                                                 " A value of '0' in either digit indicates an invalid sample"
+                                                 " in the corresponding RSLC"),
                                     fill_value=255,
                                     long_name='Valid samples subswath mask')
+            igram_group['mask'].attrs['valid_min'] = 0
+            igram_group['mask'].attrs['valid_max'] = 55
 
             range_offset_path = \
                 os.path.join(self.topo_path,
@@ -611,7 +631,7 @@ class L1InSARWriter(InSARBaseWriter):
                 rdr2geo.run(self.cfg)
                 geo2rdr.run(self.cfg)
 
-            igram_group['subSwathMask'][...] = \
+            igram_group['mask'][...] = \
                 generate_insar_subswath_mask(self.ref_rslc,
                                              self.sec_rslc,
                                              range_offset_path,

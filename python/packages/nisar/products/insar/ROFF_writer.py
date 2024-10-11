@@ -207,11 +207,15 @@ class ROFFWriter(L1InSARWriter):
                 pixeloffsets_group,
                 "rangeBandwidth",
             )
+            pixeloffsets_group['rangeBandwidth'].attrs['description'] = \
+                np.bytes_(f'Processed slant range bandwidth for frequency {freq} pixel offsets layers')
             swath_frequency_group.copy(
                 "processedAzimuthBandwidth",
                 pixeloffsets_group,
                 "azimuthBandwidth",
             )
+            pixeloffsets_group['azimuthBandwidth'].attrs['description'] = \
+                np.bytes_(f'Processed azimuth bandwidth for frequency {freq} pixel offsets layers')
 
             for layer in proc_cfg["offsets_product"]:
                 if layer.startswith("layer"):
@@ -379,6 +383,5 @@ class ROFFWriter(L1InSARWriter):
                                     dtype=list_of_layers.dtype,
                                     data=list_of_layers)
 
-        freq_group['listOfLayers'].attrs['units'] = Units.unitless
         freq_group['listOfLayers'].attrs['description'] =\
             np.bytes_('List of pixel offsets layers')

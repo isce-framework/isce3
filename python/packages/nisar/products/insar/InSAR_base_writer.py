@@ -451,12 +451,15 @@ class InSARBaseWriter(h5py.File):
             rslc_frequency_group['zeroDopplerTimeSpacing'].attrs['units'] = Units.second
 
             # Copy the zero-Dopper information from the source RSLC to the RSLC group
-            id_group.copy('zeroDopplerStartTime', rslc_frequency_group)
+            for doppler_time, start_stop in zip(['zeroDopplerStartTime',
+                                                 'zeroDopplerEndTime'],
+                                                ['start', 'stop']):
+                id_group.copy(doppler_time, rslc_frequency_group)
+                # Update the description attributes of the zeroDopplerTime
+                ds_zerodopp = rslc_frequency_group[doppler_time]
+                ds_zerodopp.attrs['description'] = \
+                    np.bytes_(f"Azimuth {start_stop} time of the {rslc_name} RSLC product")
 
-            # Update the description attributes of the zeroDopplerTime
-            ds_zerodopp = rslc_frequency_group[f"zeroDopplerStartTime"]
-            ds_zerodopp.attrs['description'] = \
-                np.bytes_(f"Azimuth start time of the {rslc_name} RSLC product")
 
             rg_names_to_be_created = [
                 DatasetParams(
@@ -825,8 +828,16 @@ class InSARBaseWriter(h5py.File):
                                        f'zeroDopplerStartTime'][()].decode('UTF-8')
             date_format = "%Y-%m-%dT%H:%M:%S"
             if '.' in start_time:
+                #  Split the date into the main part and the fractional seconds
+                main_part, microseconds = start_time.split('.')
+                # The '.%f' can only account for the six digtis, or it will
+                # raise the ValueError: unconverted data remains: xxx
+                microseconds = (microseconds + "000000")[:6]
                 # Add the fractional seconds part to the format
                 date_format += ".%f"
+                # Update the datatime string to have the six digits microseconds
+                start_time = f"{main_part}.{microseconds}"
+
             rslc_start_times.append(datetime.strptime(start_time, date_format))
 
             # Create metadata group, copy over attitude group, and open newly create attitude group
@@ -855,10 +866,6 @@ class InSARBaseWriter(h5py.File):
 
             dst_attitude_group["quaternions"].attrs["units"] = \
                 Units.unitless
-            dst_attitude_group["quaternions"].attrs["eulerAngles"] = \
-                Units.radian
-            dst_attitude_group["quaternions"].attrs["angularVelocity"] = \
-                Units.rad_per_second
 
             dst_orbit_group = self.require_group(f'{self.group_paths.MetadataPath}/orbit/{group}')
             orbit_to_save.save_to_h5(dst_orbit_group)
@@ -952,6 +959,14 @@ class InSARBaseWriter(h5py.File):
                     "ogr_geometry": "polygon",
                     "epsg": "4326",
                 },
+            ),
+            DatasetParams(
+                "platformName",
+                "(NOT SPECIFIED)",
+                (
+                    "Name of the platform used to collect the remote sensing"
+                    " data provided in this product"
+                ),
             ),
             DatasetParams(
                 "diagnosticModeFlag",
