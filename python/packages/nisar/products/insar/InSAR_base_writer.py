@@ -922,11 +922,6 @@ class InSARBaseWriter(h5py.File):
         # Datasets that need to be copied from the RSLC
         id_ds_names_need_to_copy = [
             DatasetParams(
-                "absoluteOrbitNumber",
-                "None",
-                "Absolute orbit number",
-            ),
-            DatasetParams(
                 "boundingPolygon",
                 "None",
                 descriptions.bounding_polygon,
@@ -999,13 +994,13 @@ class InSARBaseWriter(h5py.File):
                 ds_name.value = slc_val
             add_dataset_and_attrs(dst_id_group, ds_name)
 
-        # Copy the zero-Doppler information from both reference and secondary RSLC
-        for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
-            ref_id_group.copy(ds_name, dst_id_group,
-                              f"referenceZ{ds_name[1:]}")
+        # Copy datasets from reference and secondary RSLCs
+        datasets_to_copy = ["zeroDopplerStartTime", "zeroDopplerEndTime", "absoluteOrbitNumber"]
+        cap = lambda x: f"{x[0].upper()}{x[1:]}"
 
-            sec_id_group.copy(ds_name, dst_id_group,
-                              f"secondaryZ{ds_name[1:]}")
+        for ds_name in datasets_to_copy:
+            ref_id_group.copy(ds_name, dst_id_group, f"reference{cap(ds_name)}")
+            sec_id_group.copy(ds_name, dst_id_group, f"secondary{cap(ds_name)}")
 
         # Update the description attributes of the zeroDoppler
         for prod in list(product(['reference', 'secondary'],
@@ -1016,6 +1011,12 @@ class InSARBaseWriter(h5py.File):
             time_in_description = 'stop' if start_or_stop == 'End' else 'start'
             ds.attrs['description'] = \
                 f"Azimuth {time_in_description} time of {rslc_name} RSLC product"
+
+        # Update the description for the absolute orbit numbers
+        for rslc_name in ['reference', 'secondary']:
+            ds = dst_id_group[f"{rslc_name}AbsoluteOrbitNumber"]
+            ds.attrs['description'] = \
+            f'Absolute orbit number for the {rslc_name} RSLC'
 
         # Granule ID follows the NISAR filename convention. The partial granule ID
         # has placeholders (curly brackets) which will be filled by the InSAR SAS
