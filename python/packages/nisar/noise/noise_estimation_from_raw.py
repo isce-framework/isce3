@@ -664,13 +664,20 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
             continue
         # run noise estimator per range block
         if algorithm == 'MEE':
+            if nrgl_valid < 2:
+                # skip a range block if not enough number of valid noise-only
+                # range lines needed for MEE.
+                warn(f'Number of valid range lines {nrgl_valid} is less '
+                     'than 2 for "MEE". Skip noise est for range block '
+                     f'# {nn + 1} -> {rg_slice}!')
+                continue
             if cpi is None:
                 # if not set, set CPI to max possible value equal or
                 # greater than 3 with at least two CPI blocks if possible.
                 cpi = min(max(
-                    min(len(idx_valid), 3),
-                    np.ceil(len(idx_valid) / max_num_cpi_blocks).astype(int)
-                ), MAX_CPI_LEN)
+                    min(nrgl_valid, 3),
+                    np.ceil(nrgl_valid / max_num_cpi_blocks).astype(int)
+                    ), MAX_CPI_LEN)
             elif cpi > MAX_CPI_LEN:
                 logger.warning(
                     f'Too large CPI value! It exceeds max {MAX_CPI_LEN}!'
@@ -805,6 +812,12 @@ def est_noise_power_in_focus(
     logger.info('Number of noise-only range (lines, bins) '
                 f'-> ({nrgls}, {nrgbs})')
     logger.info(f'Noise estimation algorithm -> {algorithm}')
+    # check to make sure there are more than 1 range line for MEE
+    if algorithm == 'MEE' and nrgls < 2:
+        raise ValueError(
+            'Number of noise-only range lines is less than 2 in "MEE"!'
+            'Use algorithm="MVE" instead!'
+        )
     # fill-in TX gap regions with invalid value for noise-only range lines
     # This is to guarantee TX gap regions are mitigated and filled with
     # a common invalid value!
@@ -848,10 +861,12 @@ def est_noise_power_in_focus(
         # run noise estimator per range block
         if algorithm == 'MEE':
             if nrgl_valid < 2:
-                raise ValueError(
-                    f'Number of noise-only range lines {nrgl_valid} '
-                    'is less than 2 in "MEE"! Use algorithm="MVE" instead!'
-                )
+                # skip a range block if not enough number of valid noise-only
+                # range lines needed for MEE.
+                warn(f'Number of valid range lines {nrgl_valid} is less '
+                     'than 2 for "MEE". Skip noise est for range block '
+                     f'# {nn + 1} -> {rg_slice}!')
+                continue
             if cpi > nrgl_valid:
                 logger.warning(
                     f'CPI={cpi} is larger than valid noise-only range lines '
