@@ -215,7 +215,7 @@ TEST(GeocodeTest, TestGeocodeSlc)
                     rdrDataVec, demRaster, radarGrid, radarGrid, geoGrid, orbit,
                     nativeDoppler, imageGridDoppler, ellipsoid,
                     thresholdGeo2rdr, numiterGeo2rdr,
-                    maskArr2dRef,
+                    &maskArr2dRef,
                     0, 0, flatten, reramp);
             isce3::io::Raster geocodedSlcArr(filePrefix + "_array.bin",
                     geoGridWidth, geoGridLength, 1, GDT_CFloat32, "ENVI");

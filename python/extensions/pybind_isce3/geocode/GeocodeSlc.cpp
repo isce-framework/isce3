@@ -228,7 +228,7 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::core::LUT2d<double>&,
             const isce3::core::Ellipsoid&,
             const double&, const int&,
-            isce3::geocode::EArray2duc8,
+            isce3::geocode::EArray2duc8*,
             const size_t&, const size_t&,
             const bool,
             const bool,
