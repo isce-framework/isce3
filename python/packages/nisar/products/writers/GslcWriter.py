@@ -43,7 +43,7 @@ class GslcWriter(BaseL2WriterSingleInput):
 
     def populate_ceos_analysis_ready_data_parameters(self):
         self.set_value(
-            'metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
+            '{PRODUCT}/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
             'Geocoded Single-Look Complex (GSLC)')
 
     def populate_data_parameters(self):
