@@ -5,21 +5,11 @@ from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
 import journal
 
+from nisar.products.granule_id import get_polarization_code, format_datetime
 from nisar.products.readers import open_product
 from nisar.h5 import cp_h5_meta_data
 
 DATE_TIME_METADATA_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
-
-pol_mode_dict = {
-    'SH': ['HH'],
-    'SV': ['VV'],
-    'DH': ['HH', 'HV'],
-    'DV': ['VV', 'VH'],
-    'CL': ['LH', 'LV'],
-    'CR': ['RH', 'RV'],
-    'FP': ['HH', 'HV', 'VV'],  # Note: FP (full-pol) is updated to QP
-    'QP': ['HH', 'HV', 'VV', 'VH']
-}
 
 
 def get_granule_id_single_input(input_obj, partial_granule_id, freq_pols_dict):
@@ -94,19 +84,14 @@ def get_granule_id_single_input(input_obj, partial_granule_id, freq_pols_dict):
             warning_channel.log(warning_msg)
         mode_str += mode
 
-        for freq_pol_mode, pol_list in pol_mode_dict.items():
-            if set(freq_pols_dict[freq]) == set(pol_list):
-
-                # Store polarization mode for given frequency.
-                # "FP" (full-pol) does not exist in NISAR modes
-                # and therefore it is substituted by "QP"
-                pol_mode_str += freq_pol_mode.replace('FP', 'QP')
-                break
-        else:
+        pols = freq_pols_dict[freq]
+        pols_code = get_polarization_code(pols, default="XX")
+        if pols_code == "XX":   # pol set not found
             error_msg = ('Could not find polarization mode for input'
-                         f' set of polarizations: {freq_pols_dict[freq]}')
+                         f' set of polarizations: {pols}')
             error_channel.log(error_msg)
             raise NotImplementedError(error_msg)
+        pol_mode_str += pols_code
 
     # mode_str should have 4 characters
     if len(mode_str) != 4:
@@ -125,10 +110,8 @@ def get_granule_id_single_input(input_obj, partial_granule_id, freq_pols_dict):
         raise RuntimeError(error_msg)
 
     # start and end time
-    start_datetime = str(input_obj.identification.zdStartTime).split('.')[0]
-    start_datetime = start_datetime.replace('-', '').replace(':', '')
-    end_datetime = str(input_obj.identification.zdEndTime).split('.')[0]
-    end_datetime = end_datetime.replace('-', '').replace(':', '')
+    start_datetime = format_datetime(input_obj.identification.zdStartTime)
+    end_datetime = format_datetime(input_obj.identification.zdEndTime)
     if len(start_datetime) != 15:
         error_msg = ("Expected exactly 15 characters for the starting datetime"
                      f", but {len(start_datetime)} characters were found: "

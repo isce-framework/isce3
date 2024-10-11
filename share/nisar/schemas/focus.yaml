@@ -80,8 +80,12 @@ runconfig:
       relative_orbit_number: int(min=1, max=173)
       frame_number: int(min=1, max=176)
       orbit_direction: enum('Descending', 'Ascending')
+      # The polygon for the reference track/frame in a GeoJSON formatted string.
+      # If empty the coverage indicator in the granule_id will be 'X'.
       track_frame_polygon: str(required=False)
-      full_coverage_threshold_percent: num(min=0.0, required=False)
+      # Minimum frame coverage required to be considered "full frame".
+      # (Also only relevant to the granule ID in the output product.)
+      full_coverage_threshold_percent: num(min=0.0, max=100.0, required=False)
     worker:
       # Whether or not to use GPU, optional. Defaults to True if available.
       gpu_enabled: bool(required=False)

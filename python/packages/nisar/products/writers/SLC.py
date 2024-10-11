@@ -5,6 +5,7 @@ import numpy as np
 from numpy.linalg import norm
 from numpy.testing import assert_allclose
 import os
+from shapely import Polygon
 from typing import Optional
 import isce3
 from isce3.core import LUT2d, DateTime, Orbit, Attitude, Quaternion, Ellipsoid
@@ -13,7 +14,9 @@ from isce3.geometry import DEMInterpolator
 from isce3.product import get_radar_grid_nominal_ground_spacing
 from nisar.h5 import set_string
 from isce3.core.types import complex32
+from nisar.mixed_mode import PolChannelSet
 from nisar.products import descriptions
+from nisar.products.granule_id import get_polarization_code, format_datetime
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.rslc_cal import RslcCalibration
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
@@ -253,6 +256,88 @@ def require_lut_axes(group, epoch, t, r, kind):
             "Slant range dimension corresponding to " + kind, "meters")
 
     return t, r
+
+
+def fill_partial_granule_id(partial_granule_id: str, output_mode: PolChannelSet,
+                            start_datetime: DateTime, end_datetime: DateTime,
+                            frame_polygon: Polygon, image_polygon: Polygon,
+                            coverage_threshold: float = 0.75):
+    """
+    Fill in the replacement fields in a partial granule_id.
+
+    Parameters
+    ----------
+    partial_granule_id : str
+        String containing substrings from the set
+        {"{MODE}", "{POLE}", "{StartDateTime}", "{EndDateTime}", "{C}"}
+    output_mode : nisar.mixed_mode.PolChannelSet
+        Object describing the mode of the output product.
+    start_datetime : isce3.core.DateTime
+        Zero-Doppler start time of the output product.
+    end_datetime : isce3.core.DateTime
+        Zero-Doppler end time of the output product.
+    frame_polygon : shapely.Polygon
+        Polygon corresponding to the desired image area (track & frame).
+    image_polygon : shapely.Polygon
+        Polygon of actual image footprint.
+    coverage_threshold : float, optional
+        Fraction of frame that must be imaged to be considered full coverage.
+        The value should fall in the range [0, 1]
+
+    Returns
+    -------
+    granule_id : str
+        The input string with all its substring keywords replaced with their
+        values as specified in the NISAR file naming conventions,
+        JPL D-102255B section 3.7.
+
+    Notes
+    -----
+    If polarization or coverage characters cannot be determined for any reason
+    they will be filled with X's.
+    """
+    if not (0 <= coverage_threshold <= 1.0):
+        raise ValueError(f"{coverage_threshold=} is not in range [0, 1]")
+    MODE = ""  # bandwidth string for A & B
+    POLE = ""  # polarization string for A & B
+    freqs = {pol_channel.freq_id for pol_channel in output_mode}
+    for freq in ("A", "B"):
+        if freq not in freqs:
+            MODE += "00"
+            POLE += "NA"
+            continue
+        # Polarimetric channels for current frequency ID.
+        pol_channels = {x for x in output_mode if x.freq_id == freq}
+        # All bandwidths should be equal, but we might have bw=0 for noise.
+        maxbw = max(pol_channel.band.width for pol_channel in pol_channels)
+        # Two characters (leading zero) for bandwidth in MHz.
+        MODE += f"{round(maxbw * 1e-6):02d}"
+        # Two characters for set of polarizations.
+        POLE += get_polarization_code(x.pol for x in pol_channels)
+
+    # In order to gracefully handle the case where a user didn't provide a valid
+    # frame polygon, catch errors and fill the coverage indicator with "X".
+    try:
+        overlap = isce3.geometry.compute_polygon_overlap(frame_polygon,
+            image_polygon)
+        # Full/Partial coverage indicator, see JPL D-102255B section 4.3
+        coverage = "F" if overlap >= coverage_threshold else "P"
+    except:
+        log.warning("Could not determine coverage indicator given "
+            f"{frame_polygon=} and {image_polygon=}")
+        coverage = "X"
+
+    replacements = {
+        "{MODE}": MODE,
+        "{POLE}": POLE,
+        "{StartDateTime}": format_datetime(start_datetime),
+        "{EndDateTime}": format_datetime(end_datetime),
+        "{C}": coverage
+    }
+    granule_id = partial_granule_id
+    for key, value in replacements.items():
+        granule_id = granule_id.replace(key, value)
+    return granule_id
 
 
 class SLC(h5py.File):

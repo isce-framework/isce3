@@ -19,6 +19,8 @@ runconfig:
 
         primary_executable:
             product_type: RSLC
+            # Not a valid granule ID, just checking template replacement.
+            partial_granule_id: RSLC_{MODE}_{POLE}_{StartDateTime}_{EndDateTime}_{C}
 
         worker:
             gpu_enabled: False

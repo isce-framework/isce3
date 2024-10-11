@@ -70,11 +70,18 @@ runconfig:
             processing_type: CUSTOM
             mission_id: null  # null to get from first L0B input
             processing_center: JPL
-            partial_granule_id: "None"
+            partial_granule_id: (NOT SPECIFIED)
 
         geometry:
             relative_orbit_number: 1
             frame_number: 1
+            # The polygon for the reference track/frame in a GeoJSON formatted
+            # string.  If empty the coverage indicator in the granule_id will
+            # be 'X'.
+            track_frame_polygon: '{"type": "Polygon", "coordinates": [[]]}'
+            # Minimum frame coverage required to be considered "full frame".
+            # (Also only relevant to the granule ID in the output product.)
+            full_coverage_threshold_percent: 75.0
 
         worker:
             # Whether or not to use GPU, optional. Defaults to True if available.
