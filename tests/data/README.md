@@ -184,6 +184,31 @@ pointing calibration exercise with NISAR D&C team.
 
 Here is a brief summary of the files:
 
+- **REE_L0B_ECHO_DM2.h5**
+
+  Truncated version of the original file in azimuth direction with simply `50`
+  range lines. It is *H*-Pol with TX mode `25MHz/25us` with swath `~260 km`.
+
+- **REE_ANTPAT_CUTS_DM2.h5**
+
+  Individual antenna EL/AZ-cut patterns for both *H*/*V* polarization over
+  all `12` channels.
+
+- **NISAR_ANC_L_PR_FOE_20240912T151522_20240119T221330_20240119T221340.xml**
+
+  Orbit/ephemris product covering `10` seconds simulation interval.
+
+- **NISAR_ANC_L_PR_FRP_20240912T151522_20240119T221330_20240119T221340.xml**
+
+  Atttitude/Radar pointing product covering `10` seconds simulation interval.
+
+- **FIXED_HEIGHT_DM2.tif**
+
+  Geotiff DEM raster with fixed height equal to `-88.0` meters corresponding
+  to the mean topogrpahy used in the simulation. The latitude coverage is
+  `(2.5, 3.5)` degrees while the longitude coverage is `(-56.5, -59.0)` degrees,
+  both within bounding polygon of the original non-truncated footprint.
+
 - **REE_L0B_ECHO_DM1_240MHZ_RX1.h5**
   Truncated version of the original file in azimuth direction with `50`
   range lines for simply channel # `1`. It is *H*-Pol with TX mode `25MHz/25us`.

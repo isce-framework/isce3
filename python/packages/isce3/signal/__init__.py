@@ -12,4 +12,8 @@ from . import rfi_detection_evd
 from . import rfi_freq_null
 from . import rfi_mitigation_evd
 from . import rfi_process_evd
-from .multi_channel_analysis import form_single_tap_dbf_echo
+from .multi_channel_analysis import (
+    form_single_tap_dbf_echo,
+    dbf_onetap_from_dm2,
+    dbf_onetap_from_dm2_seamless
+    )

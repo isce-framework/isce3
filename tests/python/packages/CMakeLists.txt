@@ -69,6 +69,7 @@ nisar/workflows/resample_slc_v2.py
 nisar/workflows/unwrap.py
 nisar/workflows/point_target_analysis.py
 nisar/workflows/nisar_l0b_dm1_to_science.py
+nisar/workflows/nisar_l0b_dm2_to_dbf.py
 nisar/workflows/noise_estimator.py
 nisar/workflows/pol_channel_imbalance_from_rslc.py
 nisar/workflows/geocode_corrections.py

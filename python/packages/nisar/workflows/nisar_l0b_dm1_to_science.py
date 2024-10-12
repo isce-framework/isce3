@@ -20,6 +20,7 @@ from nisar.products.readers.Raw import Raw
 from nisar.log import set_logger
 from isce3.core import Linspace, speed_of_light
 from isce3.signal import build_multi_rate_fir_filter
+from nisar.workflows.helpers import build_uniform_quantizer_lut_l0b, slice_gen
 
 
 def cmd_line_parser():
@@ -72,52 +73,6 @@ def cmd_line_parser():
                      help='Number of bits representing full dynamic'
                      ' range of valid encoded echo samples.')
     return prs.parse_args()
-
-
-def slice_gen(n_smp: int, n_smp_blk: int) -> slice:
-    """slice generator.
-
-    Parameters
-    ----------
-    n_smp : int
-        Total number of samples
-    n_smp_blk : int
-        Number of samples per full block
-
-    Yields
-    ------
-    slice
-        slice object for each block.
-        The last block can be partial and have less
-        number of samples than `n_smp_blk`!
-
-    """
-    n_blk = int(np.ceil(n_smp / n_smp_blk))
-    for n in range(n_blk):
-        i_start = n * n_smp_blk
-        i_stop = min(n_smp, i_start + n_smp_blk)
-        yield slice(i_start, i_stop)
-
-
-def build_uniform_quantizer_lut_l0b(
-        nbits: int, bad_val: float = 0.0, twos_complement: bool = True
-) -> np.ndarray:
-    """Build uniform quantizer LUT used in place of BFPQLUT in L0B product"""
-    # get size of BFPQLUT to be power of 2!
-    nbits_pow2 = 2 ** int(np.ceil(np.log2(nbits)))
-    size_lut = 2 ** nbits_pow2
-    len_decoder_lut = 2**nbits
-    len_decoder_lut_h = len_decoder_lut // 2
-    bfpq_uq = np.full(size_lut, bad_val, dtype='f4')
-    # 2s complement sign representation of unsigned integer
-    bfpq_uq[:len_decoder_lut_h] = np.arange(0.5, len_decoder_lut_h, dtype='f4')
-    if twos_complement:
-        bfpq_uq[:-len_decoder_lut_h - 1:-1] = -bfpq_uq[:len_decoder_lut_h]
-    else:  # signed magnitude representation
-        size_lut_h = size_lut // 2
-        bfpq_uq[size_lut_h: size_lut_h + len_decoder_lut_h] = (
-            -bfpq_uq[:len_decoder_lut_h])
-    return bfpq_uq
 
 
 def range_filtering_per_az_block(echo, coefs_fft, flt, n_cpu):
