@@ -223,7 +223,7 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
         'flatten': flatten,
         'reramp': reramp,
         'az_carrier': az_carrier,
-        'rg_carrier': rg_carrier, 
+        'rg_carrier': rg_carrier,
         'az_time_correction': az_time_correction,
         'srange_correction': srange_correction,
         'flatten_with_corrected_srange': flatten_with_corrected_srange,
@@ -231,10 +231,12 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
         #'subswaths': subswaths
     }
 
-    if subswaths is not None and mask_block is not None:
+    if subswaths is not None:
         kwargs['subswaths'] = subswaths
+
+    if mask_block is not None:
         kwargs['mask_block'] = mask_block
-        
+
     # if both geo and radar blocks are np.ndarray, put them into a list
     # to match expected input type of list[np.ndarray]
     if geo_io_checks.is_array and rdr_io_checks.is_array:
@@ -247,7 +249,7 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                                          mask_block],
                                         ['carrier', 'flattening', 'mask']):
         _output_array_valid(output_arr, geo_data_blocks[0], which_output)
-    
+
     _geocode_slc(**kwargs)
 
     # TODO delete the string below when it is no longer needed.
@@ -271,7 +273,7 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                  flatten=flatten,
                  reramp=reramp,
                  az_carrier=az_carrier,
-                 rg_carrier=rg_carrier, 
+                 rg_carrier=rg_carrier,
                  az_time_correction=az_time_correction,
                  srange_correction=srange_correction,
                  flatten_with_corrected_srange=flatten_with_corrected_srange,
