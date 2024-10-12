@@ -16,6 +16,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <vector>
+#include <optional>
 
 namespace py = pybind11;
 
@@ -228,7 +229,7 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::core::LUT2d<double>&,
             const isce3::core::Ellipsoid&,
             const double&, const int&,
-            isce3::geocode::EArray2duc8*,
+            std::optional<isce3::geocode::EArray2duc8>,
             const size_t&, const size_t&,
             const bool,
             const bool,
@@ -253,7 +254,7 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("image_grid_doppler"),
         py::arg("ellipsoid"),
         py::arg("threshold_geo2rdr"), py::arg("numiter_geo2rdr"),
-        py::arg("mask_block") = nullptr,
+        py::arg("mask_block") = std::nullopt,
         py::arg("azimuth_first_line") = 0, py::arg("range_first_pixel") = 0,
         py::arg("flatten") = true,
         py::arg("reramp") = true,

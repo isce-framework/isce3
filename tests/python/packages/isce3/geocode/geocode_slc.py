@@ -391,7 +391,7 @@ def run_geocode_slc_array_subswath(test_case, unit_test_params):
     '''
     wrapper for geocode_slc array mode with subswath mask and with the optional argument
     to return the geocoded mask.
-    This interface is used for NISAR GSLC. 
+    This interface is used for NISAR GSLC.
     '''
     # extract test specific params
     out_shape = (unit_test_params.geogrid.width,
@@ -472,7 +472,7 @@ def run_geocode_slc_array(test_case, unit_test_params):
     '''
     wrapper for geocode_slc array mode without subswath mask.
     This interface does not return a geocoded output mask and has been used for
-    geocoding Sentinel-1 SLC in COMPASS repository. 
+    geocoding Sentinel-1 SLC in COMPASS repository.
     '''
     # extract test specific params
     out_shape = (unit_test_params.geogrid.width,
@@ -484,7 +484,7 @@ def run_geocode_slc_array(test_case, unit_test_params):
 
     # list of empty array to be written to by geocode_slc array mode
     out_data = np.zeros(out_shape, dtype=np.complex64)
-     
+
     # Populate geocode_slc kwargs as needed
     kwargs = {}
     if test_case.need_flatten_phase_raster:

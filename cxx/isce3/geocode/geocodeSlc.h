@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <vector>
+#include <optional>
 #include <isce3/core/EMatrix.h>
 #include <isce3/core/forward.h>
 #include <isce3/core/LUT2d.h>
@@ -178,7 +179,7 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& imageGridDoppler,
         const isce3::core::Ellipsoid& ellipsoid,
         const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
-        EArray2duc8* maskBlock = nullptr,
+        std::optional<isce3::geocode::EArray2duc8> maskBlock = std::nullopt,
         const size_t& azimuthFirstLine = 0,
         const size_t& rangeFirstPixel = 0,
         const bool flatten = true,
