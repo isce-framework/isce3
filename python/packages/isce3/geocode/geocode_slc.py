@@ -212,7 +212,6 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                                         ['carrier', 'flattening', 'mask']):
         _output_array_valid(output_arr, geo_data_blocks[0], which_output)
 
-    # TODO delete the string below when it is no longer needed.
     _geocode_slc(geo_data_blocks=geo_data_blocks,
                  carrier_phase_block=carrier_phase_block,
                  flatten_phase_block=flatten_phase_block,
