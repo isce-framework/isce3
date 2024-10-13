@@ -249,7 +249,7 @@ def geocode_slc_test_cases(unit_test_params):
     for axis, flatten_enabled in itertools.product('xy', [True, False]):
         test_case.axis = axis
         test_case.flatten_enabled = flatten_enabled
-        for test_mode in ['', 'rg', 'az', 'rg_az', 'tec', 'subswath']:
+        for test_mode in ['', 'rg', 'az', 'rg_az', 'tec', 'subswath', 'legacy']:
             test_case.test_mode = test_mode
 
             # create radar and apply positive offsets in range and azimuth
@@ -387,7 +387,7 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
     ds.GetRasterBand(2).WriteArray(out_list[1])
 
 
-def run_geocode_slc_array_subswath(test_case, unit_test_params):
+def run_geocode_slc_array(test_case, unit_test_params):
     '''
     wrapper for geocode_slc array mode with subswath mask and with the optional argument
     to return the geocoded mask.
@@ -416,17 +416,17 @@ def run_geocode_slc_array_subswath(test_case, unit_test_params):
 
     isce3.geocode.geocode_slc(
         geo_data_blocks=out_data,
+        mask_block=mask_data,
         rdr_data_blocks=in_data,
         dem_raster=unit_test_params.dem_raster,
         radargrid=test_case.radargrid,
         geogrid=unit_test_params.geogrid,
         orbit=unit_test_params.orbit,
-        native_doppler=unit_test_params.native_doppler,
+        native_doppler= unit_test_params.native_doppler,
         image_grid_doppler=unit_test_params.img_doppler,
         ellipsoid=isce3.core.Ellipsoid(),
         threshold_geo2rdr=1.0e-9,
         num_iter_geo2rdr=25,
-        mask_block=mask_data,
         first_azimuth_line=0,
         first_range_sample=0,
         flatten=test_case.flatten_enabled,
@@ -468,9 +468,9 @@ def run_geocode_slc_array_subswath(test_case, unit_test_params):
         ds.GetRasterBand(1).WriteArray(flatten_phase_data)
 
 
-def run_geocode_slc_array(test_case, unit_test_params):
+def run_geocode_slc_array_legacy(test_case, unit_test_params):
     '''
-    wrapper for geocode_slc array mode without subswath mask.
+    wrapper for geocode_slc array mode without subswath and mask as parameters.
     This interface does not return a geocoded output mask and has been used for
     geocoding Sentinel-1 SLC in COMPASS repository.
     '''
@@ -551,12 +551,10 @@ def test_run_array_mode(unit_test_params):
     '''
     # run array mode for all test cases
     for test_case in geocode_slc_test_cases(unit_test_params):
-        print(test_case)
-        if test_case.test_mode == 'subswath':
-            run_geocode_slc_array_subswath(test_case, unit_test_params)
+        if test_case.test_mode == 'legacy':
+            run_geocode_slc_array_legacy(test_case, unit_test_params)
         else:
             run_geocode_slc_array(test_case, unit_test_params)
-    print("ALL array mode run completed")
 
 def test_run_arrays_mode(unit_test_params):
     '''

@@ -199,44 +199,6 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
     if sliced_radargrid is None:
         sliced_radargrid = radargrid
 
-    # Pass the parameters with kwargs for better manifestation
-    # Exclude `subswaths` and `mask_block` which will be provided only when
-    # both of them are not None
-    kwargs = {
-        'geo_data_blocks': geo_data_blocks,
-        'carrier_phase_block': carrier_phase_block,
-        'flatten_phase_block': flatten_phase_block,
-        'rdr_data_blocks': rdr_data_blocks,
-        'dem_raster': dem_raster,
-        'radargrid': radargrid,
-        'sliced_radar_grid': sliced_radargrid,
-        'geogrid': geogrid,
-        'orbit': orbit,
-        'native_doppler': native_doppler,
-        'image_grid_doppler':image_grid_doppler,
-        'ellipsoid': ellipsoid,
-        'threshold_geo2rdr': threshold_geo2rdr,
-        'numiter_geo2rdr': num_iter_geo2rdr,
-        #'mask_block': mask_block,
-        'azimuth_first_line': first_azimuth_line,
-        'range_first_pixel': first_range_sample,
-        'flatten': flatten,
-        'reramp': reramp,
-        'az_carrier': az_carrier,
-        'rg_carrier': rg_carrier,
-        'az_time_correction': az_time_correction,
-        'srange_correction': srange_correction,
-        'flatten_with_corrected_srange': flatten_with_corrected_srange,
-        'invalid_value': invalid_value,
-        #'subswaths': subswaths
-    }
-
-    if subswaths is not None:
-        kwargs['subswaths'] = subswaths
-
-    if mask_block is not None:
-        kwargs['mask_block'] = mask_block
-
     # if both geo and radar blocks are np.ndarray, put them into a list
     # to match expected input type of list[np.ndarray]
     if geo_io_checks.is_array and rdr_io_checks.is_array:
@@ -250,10 +212,8 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                                         ['carrier', 'flattening', 'mask']):
         _output_array_valid(output_arr, geo_data_blocks[0], which_output)
 
-    _geocode_slc(**kwargs)
-
     # TODO delete the string below when it is no longer needed.
-    '''_geocode_slc(geo_data_blocks=geo_data_blocks,
+    _geocode_slc(geo_data_blocks=geo_data_blocks,
                  carrier_phase_block=carrier_phase_block,
                  flatten_phase_block=flatten_phase_block,
                  rdr_data_blocks=rdr_data_blocks,
@@ -278,4 +238,4 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                  srange_correction=srange_correction,
                  flatten_with_corrected_srange=flatten_with_corrected_srange,
                  invalid_value=invalid_value,
-                 subswaths=subswaths)'''
+                 subswaths=subswaths)
