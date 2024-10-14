@@ -545,6 +545,11 @@ def fill_gaps(data, swaths, value=np.complex64(0)):
 
     # Get range index slices for the gaps of a single pulse.
     def get_gap_slices(pulse_swaths: np.ndarray) -> Iterator[slice]:
+        # Use simply subswaths w/ valid values prior to tx gap slice
+        pulse_swaths = np.asarray(
+            [swath for swath in pulse_swaths if swath[1] > swath[0]]
+        )
+        num_swaths = pulse_swaths.shape[0]
         # Gap leading up to first swath.
         yield slice(None, pulse_swaths[0, 0])
         # Gaps between swaths.
@@ -554,7 +559,6 @@ def fill_gaps(data, swaths, value=np.complex64(0)):
             yield slice(gap_start, gap_end)
         # Gap after last swath.
         yield slice(pulse_swaths[-1, 1], None)
-
     # When PRF is constant (not dithering), gap locations are constant.
     unique_swaths = np.unique(swaths, axis=1)
     if unique_swaths.shape[1] == 1:
