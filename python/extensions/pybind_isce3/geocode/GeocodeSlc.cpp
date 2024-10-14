@@ -304,7 +304,7 @@ void addbinding_geocodeslc(py::module & m)
             Threshold for geo2rdr computations
         numiter_geo2rdr: int
             Maximum number of iterations for geo2rdr convergence
-        mask_block: numpy.ndarray
+        mask_block: numpy.ndarray or None
             Geocoded subswath labels. Each valid pixel is assigned the ID of the subswath
             that contained the pixel's center. Invalid pixels are assigned 255. If no
             subswaths mask was specified, each valid pixel is assigned to subswath 1.

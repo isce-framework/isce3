@@ -158,8 +158,8 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
         Threshold for geo2rdr computations
     num_iter_geo2rdr: int
         Maximum number of iterations for geo2rdr convergence
-    mask_block: numpy.ndarray
-        Output array containing masking values of geocoded SLC
+    mask_block: numpy.ndarray or None
+        Optional output array containing masking values of geocoded SLC
     sliced_radargrid: RadarGridParameters
         Radar grid representing subset of radargrid
     subswaths: SubSwaths or None, default=None
