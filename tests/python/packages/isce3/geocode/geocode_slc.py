@@ -77,7 +77,7 @@ def make_tec_file(unit_test_params):
         total_tec_rdr_grid = common_tec_coeff * np.cos(inc_angs)
 
         # near and far top TEC = 0 to allow sub orbital TEC = total TEC
-        # create extraplotor/interpolators for near and far
+        # create extrapolator/interpolators for near and far
         total_tec_interp = interpolate.interp1d(t_rdr_grid, total_tec_rdr_grid,
                                                 'linear',
                                                 fill_value="extrapolate")
@@ -101,7 +101,7 @@ def make_tec_file(unit_test_params):
 
 def make_subswaths():
     """
-    A helper funtion that creates a SubSwaths object based on axis, where
+    A helper function that creates a SubSwaths object based on axis, where
     subswath start and stop indices per range line defined by the 30th
     and 70th percentile of the angle of the SLC array values.
 
@@ -199,7 +199,7 @@ def unit_test_params():
     params.dem_path = os.path.join(iscetest.data, "geocode/zeroHeightDEM.geo")
     params.dem_raster = isce3.io.Raster(params.dem_path)
 
-    # half pixel offset and grid size in radians for validataion
+    # half pixel offset and grid size in radians for validation
     params.x0 = np.radians(params.geotrans[0] + params.geotrans[1] / 2.0)
     params.dx = np.radians(params.geotrans[1])
     params.y0 = np.radians(params.geotrans[3] + params.geotrans[5] / 2.0)
@@ -249,7 +249,7 @@ def geocode_slc_test_cases(unit_test_params):
     for axis, flatten_enabled in itertools.product('xy', [True, False]):
         test_case.axis = axis
         test_case.flatten_enabled = flatten_enabled
-        for test_mode in ['', 'rg', 'az', 'rg_az', 'tec', 'subswath']:
+        for test_mode in ['', 'rg', 'az', 'rg_az', 'tec', 'subswath', 'legacy']:
             test_case.test_mode = test_mode
 
             # create radar and apply positive offsets in range and azimuth
@@ -306,7 +306,7 @@ def geocode_slc_test_cases(unit_test_params):
                                     or axis == 'y'):
                 continue
 
-            # redunant to test subswath with flattening disabled and enabled
+            # redundant to test subswath with flattening disabled and enabled
             test_case.subswath_enabled = \
                 test_mode == 'subswath' and not flatten_enabled
 
@@ -389,7 +389,9 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
 
 def run_geocode_slc_array(test_case, unit_test_params):
     '''
-    wrapper for geocode_slc array mode
+    wrapper for geocode_slc array mode with subswath mask and with the optional argument
+    to return the geocoded mask.
+    This interface is used for NISAR GSLC.
     '''
     # extract test specific params
     out_shape = (unit_test_params.geogrid.width,
@@ -466,6 +468,82 @@ def run_geocode_slc_array(test_case, unit_test_params):
         ds.GetRasterBand(1).WriteArray(flatten_phase_data)
 
 
+def run_geocode_slc_array_legacy(test_case, unit_test_params):
+    '''
+    wrapper for geocode_slc array mode without subswath and mask as parameters.
+    This interface does not return a geocoded output mask and has been used for
+    geocoding Sentinel-1 SLC in COMPASS repository.
+    '''
+    # extract test specific params
+    out_shape = (unit_test_params.geogrid.width,
+                 unit_test_params.geogrid.length)
+
+    # load input as list of arrays
+    ds = gdal.Open(test_case.input_path, gdal.GA_ReadOnly)
+    in_data = ds.GetRasterBand(1).ReadAsArray()
+
+    # list of empty array to be written to by geocode_slc array mode
+    out_data = np.zeros(out_shape, dtype=np.complex64)
+
+    # Populate geocode_slc kwargs as needed
+    kwargs = {}
+    if test_case.need_flatten_phase_raster:
+        flatten_phase_data = np.nan * np.zeros(out_shape,dtype=np.float64)
+        kwargs['flatten_phase_block'] = flatten_phase_data
+
+    isce3.geocode.geocode_slc(
+        geo_data_blocks=out_data,
+        rdr_data_blocks=in_data,
+        dem_raster=unit_test_params.dem_raster,
+        radargrid=test_case.radargrid,
+        geogrid=unit_test_params.geogrid,
+        orbit=unit_test_params.orbit,
+        native_doppler= unit_test_params.native_doppler,
+        image_grid_doppler=unit_test_params.img_doppler,
+        ellipsoid=isce3.core.Ellipsoid(),
+        threshold_geo2rdr=1.0e-9,
+        num_iter_geo2rdr=25,
+        first_azimuth_line=0,
+        first_range_sample=0,
+        flatten=test_case.flatten_enabled,
+        az_time_correction=test_case.az_time_correction,
+        srange_correction=test_case.srange_correction,
+        **kwargs)
+
+    # output file name for geocodeSlc array mode
+    output_path = test_case.output_path.replace('geocode_slc_mode', 'array')
+    Path(output_path).touch()
+
+    # set geotransform in output raster
+    out_raster = isce3.io.Raster(output_path, unit_test_params.geogrid.width,
+                                 unit_test_params.geogrid.length, 1,
+                                 gdal.GDT_CFloat32,  "ENVI")
+    out_raster.set_geotransform(unit_test_params.geotrans)
+    del out_raster
+
+    # write output to raster
+    ds = gdal.Open(output_path, gdal.GA_Update)
+    ds.GetRasterBand(1).WriteArray(out_data)
+
+    # create flatten phase raster if not geocoding with flattening enabled
+    if test_case.need_flatten_phase_raster:
+        flatten_phase_path = \
+            test_case.flatten_phase_path.replace('geocode_slc_mode', 'array')
+        # flatten phase output file name for geocodeSlc array mode
+        Path(flatten_phase_path).touch()
+
+        # set geotransform in flatten phase output raster
+        flatten_raster = isce3.io.Raster(flatten_phase_path,
+                                         unit_test_params.geogrid.width,
+                                         unit_test_params.geogrid.length, 1,
+                                         gdal.GDT_Float64,  "ENVI")
+        del flatten_raster
+
+        # write output to raster
+        ds = gdal.Open(flatten_phase_path, gdal.GA_Update)
+        ds.GetRasterBand(1).WriteArray(flatten_phase_data)
+
+
 def test_run_array_mode(unit_test_params):
     '''
     run geocodeSlc array bindings with same parameters as C++ test to make sure
@@ -473,8 +551,10 @@ def test_run_array_mode(unit_test_params):
     '''
     # run array mode for all test cases
     for test_case in geocode_slc_test_cases(unit_test_params):
-        run_geocode_slc_array(test_case, unit_test_params)
-
+        if test_case.test_mode == 'legacy':
+            run_geocode_slc_array_legacy(test_case, unit_test_params)
+        else:
+            run_geocode_slc_array(test_case, unit_test_params)
 
 def test_run_arrays_mode(unit_test_params):
     '''
@@ -487,7 +567,6 @@ def test_run_arrays_mode(unit_test_params):
         if test_case.flatten_enabled:
             continue
         run_geocode_slc_arrays(test_case, unit_test_params)
-
 
 def test_run_arrays_exceptions(unit_test_params):
     '''

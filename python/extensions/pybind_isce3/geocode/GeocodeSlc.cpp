@@ -16,6 +16,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <vector>
+#include <optional>
 
 namespace py = pybind11;
 
@@ -216,7 +217,6 @@ void addbinding_geocodeslc(py::module & m)
         )");
     m.def("_geocode_slc", py::overload_cast<
             std::vector<isce3::geocode::EArray2dc64>&,
-            isce3::geocode::EArray2duc8,
             isce3::geocode::EArray2df64,
             isce3::geocode::EArray2df64,
             const std::vector<isce3::geocode::EArray2dc64>&,
@@ -229,6 +229,7 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::core::LUT2d<double>&,
             const isce3::core::Ellipsoid&,
             const double&, const int&,
+            std::optional<isce3::geocode::EArray2duc8>,
             const size_t&, const size_t&,
             const bool,
             const bool,
@@ -241,7 +242,6 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::product::SubSwaths*>
             (&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("geo_data_blocks"),
-        py::arg("mask_block"),
         py::arg("carrier_phase_block"),
         py::arg("flatten_phase_block"),
         py::arg("rdr_data_blocks"),
@@ -254,6 +254,7 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("image_grid_doppler"),
         py::arg("ellipsoid"),
         py::arg("threshold_geo2rdr"), py::arg("numiter_geo2rdr"),
+        py::arg("mask_block") = std::nullopt,
         py::arg("azimuth_first_line") = 0, py::arg("range_first_pixel") = 0,
         py::arg("flatten") = true,
         py::arg("reramp") = true,
@@ -277,8 +278,6 @@ void addbinding_geocodeslc(py::module & m)
         ----------
         geo_data_blocks: list of numpy.ndarray
             List of output arrays containing geocoded SLC
-        mask_block: numpy.ndarray
-            Output array containing masking values of geocoded SLC
         carrier_phase_block: numpy.ndarray
             Output array containing geocoded carrier phase
         flatten_phase_block: numpy.ndarray
@@ -305,6 +304,10 @@ void addbinding_geocodeslc(py::module & m)
             Threshold for geo2rdr computations
         numiter_geo2rdr: int
             Maximum number of iterations for geo2rdr convergence
+        mask_block: numpy.ndarray or None
+            Geocoded subswath labels. Each valid pixel is assigned the ID of the subswath
+            that contained the pixel's center. Invalid pixels are assigned 255. If no
+            subswaths mask was specified, each valid pixel is assigned to subswath 1.
         azimuth_first_line: int
             FIrst line of radar data block with respect to larger radar data raster, else 0
         range_first_pixel: int

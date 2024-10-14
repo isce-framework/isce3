@@ -30,7 +30,7 @@ namespace isce3::geocode {
  * @param[out] rangeIndices     slant range indices, with respect to the radar grid, of the geo grid to be geocoded to
  * @param[out] azimuthIndices   azimuth indices, with respect to the radar grid, of the geo grid to be geocoded to
  * @param[out] uncorrectedSRange    slant range without correction, in meters, indexed by geo grid indices
- * @param[out] mask             subwath mask, with respect to geo grid indices
+ * @param[out] mask             subswath mask, with respect to geo grid indices
  * @param[in] demInterp         interpolator object for the DEM
  * @param[in] geoGrid           geo grid parameters to be geocoded to
  * @param[in] geoBlockLength    length of the geo grid block to be geocoded to
@@ -56,7 +56,7 @@ std::tuple<int, int, int, int> computeGeogridRadarIndicesAndMask(
         isce3::core::Matrix<double>& rangeIndices,
         isce3::core::Matrix<double>& azimuthIndices,
         isce3::core::Matrix<double>& uncorrectedSRange,
-        EArray2duc8 mask,
+        std::optional<isce3::geocode::EArray2duc8> mask,
         const isce3::geometry::DEMInterpolator& demInterp,
         const isce3::product::GeoGridParameters& geoGrid,
         const size_t geoBlockLength,
@@ -169,28 +169,28 @@ std::tuple<int, int, int, int> computeGeogridRadarIndicesAndMask(
                     || (intAzIndex >= (radarGrid.length() - chipHalf)))
                 corners_in_radar_grid = false;
 
-            // if subswaths provided (not nullptr), check for masking otherwise
-            // not masked (subswath 1 assigned). Masking can be checked by determining if
-            // subswaths.getSampleSubSwath returns 0 (i.e. the coordinate
+            // if both subswaths and mask are valid (not nullptr for subswaths, mask.has_value() is true),
+            // check for masking otherwise not masked (subswath 1 assigned) only when mask is a valid instance.
+            // Masking can be checked by determining if subswaths.getSampleSubSwath returns 0 (i.e. the coordinate
             // is not inside of a subswath) or something else (i.e. the number of
             // the subswath that the coordinate is in.)
-            if (subswaths) {
+            if (subswaths && mask) {
                 // Check if interpolation center in a subswath
                 // Cast as unsigned char for later assignment
-                mask(blockLine, pixel)  =
+                mask.value()(blockLine, pixel)  =
                     static_cast<unsigned char>(
                             subswaths->getSampleSubSwath(intAzIndex, intRgIndex));
 
                 // If interpolation center in subswath, check if any chip
                 // pixels outside a subswath by checking all combinations of
                 // interpolation center +/- half_chip
-                if (mask(blockLine, pixel) != 0) {
+                if (mask.value()(blockLine, pixel) != 0) {
                     const std::vector<int> chipExtents = {-chipHalf, chipHalf};
                     for (const int& azExtent : chipExtents) {
                         for (const int& rgExtent : chipExtents) {
                             if (subswaths->getSampleSubSwath(intAzIndex + azExtent,
                                                              intRgIndex + rgExtent) == 0) {
-                                mask(blockLine, pixel) = 0;
+                                mask.value()(blockLine, pixel) = 0;
                                 break;
                             }
                         }
@@ -201,8 +201,10 @@ std::tuple<int, int, int, int> computeGeogridRadarIndicesAndMask(
                 // If no subswaths and all corners in radar grid, label as subswath 1
                 // If any corners not in radar grid, interpolation not performed.
                 // Leave mask label as invalid (default) i.e. not partial.
-                if (corners_in_radar_grid)
-                    mask(blockLine, pixel) = 1;
+                if (corners_in_radar_grid && mask){
+                        mask.value()(blockLine, pixel) = 1;
+                }
+
             }
 
             azimuthFirstLine = std::min(
@@ -672,7 +674,8 @@ void geocodeSlc(
         auto maskArr2d = isce3::core::EArray2D<unsigned char>(geoBlockLength,
                                                               geoGrid.width());
         maskArr2d.fill(0);
-        auto maskArr2dRef = EArray2duc8(maskArr2d);
+        auto maskArr2dRef = isce3::geocode::EArray2duc8(maskArr2d);
+        auto maskArr2RefOpt = std::make_optional(maskArr2dRef);
 
         // selectively use uncorrected slant range - initialized to invalid
         // values
@@ -693,7 +696,7 @@ void geocodeSlc(
                 rangeIndices,
                 azimuthIndices,
                 uncorrectedSRange,
-                maskArr2dRef,
+                maskArr2RefOpt,
                 demInterp,
                 geoGrid,
                 geoBlockLength,
@@ -787,7 +790,7 @@ void geocodeSlc(
                                  azimuthFirstLine, rdrBlockWidth,
                                  rdrBlockLength, band + 1);
 
-            // Remove doppler and carriers as needd
+            // Remove doppler and carriers as needed
             carrierPhaseDeramp(rdrDataBlock, azCarrierPhase, rgCarrierPhase,
                    azimuthFirstLine, rangeFirstPixel, radarGrid);
 
@@ -796,7 +799,7 @@ void geocodeSlc(
                     azimuthFirstLine, rangeFirstPixel, sincInterp.get(),
                     radarGrid, nativeDoppler);
 
-            // Add back doppler and carriers as needd
+            // Add back doppler and carriers as needed
             carrierPhaseRerampAndFlatten(geoDataBlock, carrierPhaseBlock,
                     flattenPhaseBlock, rdrDataBlock, azCarrierPhase,
                     rgCarrierPhase, nativeDoppler, rangeIndices,
@@ -828,7 +831,6 @@ void geocodeSlc(
 template<typename AzRgFunc>
 void geocodeSlc(
         std::vector<EArray2dc64>& geoDataBlocks,
-        EArray2duc8 maskBlock,
         EArray2df64 carrierPhaseBlock,
         EArray2df64 flattenPhaseBlock,
         const std::vector<EArray2dc64>& rdrDataBlocks,
@@ -841,6 +843,7 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& imageGridDoppler,
         const isce3::core::Ellipsoid& ellipsoid,
         const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
+        std::optional<isce3::geocode::EArray2duc8> maskBlock,
         const size_t& azimuthFirstLine, const size_t& rangeFirstPixel,
         const bool flatten, const bool reramp,
         const AzRgFunc& azCarrierPhase,
@@ -870,8 +873,8 @@ void geocodeSlc(
     for (auto geoDataBlock : geoDataBlocks)
         geoDataBlock.fill(invalidValue);
 
-    // Default all mask pixls to invalid mask pixel value, 255.
-    maskBlock.fill(255);
+    if(maskBlock.has_value())
+        maskBlock.value().fill(255);
 
     validate_slice(radarGrid, slicedRadarGrid);
 
@@ -945,7 +948,7 @@ void geocodeSlc(
         auto rdrDataBlock = *rIt;
 
         // interpolate and carrierPhaseRerampAndFlatten will only modify valid pixels
-        // Remove doppler and carriers as needd
+        // Remove doppler and carriers as needed
         carrierPhaseDeramp(rdrDataBlock, azCarrierPhase, rgCarrierPhase,
                 azimuthFirstLine, rangeFirstPixel, radarGrid);
 
@@ -954,7 +957,7 @@ void geocodeSlc(
                 azimuthFirstLine, rangeFirstPixel, sincInterp.get(),
                 radarGrid, nativeDoppler);
 
-        // Add back doppler and carriers as needd
+        // Add back doppler and carriers as needed
         carrierPhaseRerampAndFlatten(geoDataBlock, carrierPhaseBlock,
                 flattenPhaseBlock, rdrDataBlock, azCarrierPhase,
                 rgCarrierPhase, nativeDoppler, rangeIndices,
@@ -1006,7 +1009,6 @@ template void geocodeSlc<AzRgFunc>(                                     \
         isce3::io::Raster* rgOffsetRaster);                             \
 template void geocodeSlc<AzRgFunc>(                                     \
         std::vector<EArray2dc64>& geoDataBlocks,                        \
-        EArray2duc8 maskBlock,                                          \
         EArray2df64 carrierPhaseBlock,                                  \
         EArray2df64 flattenPhaseBlock,                                  \
         const std::vector<EArray2dc64>& rdrDataBlocks,                  \
@@ -1019,6 +1021,7 @@ template void geocodeSlc<AzRgFunc>(                                     \
         const isce3::core::LUT2d<double>& imageGridDoppler,             \
         const isce3::core::Ellipsoid& ellipsoid,                        \
         const double& thresholdGeo2rdr, const int& numiterGeo2rdr,      \
+        std::optional<isce3::geocode::EArray2duc8> maskBlock,           \
         const size_t& azimuthFirstLine, const size_t& rangeFirstPixel,  \
         const bool flatten,  const bool reramp,                         \
         const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase, \
