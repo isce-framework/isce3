@@ -6,9 +6,8 @@ import datetime
 import os
 import pathlib
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
-
 import h5py
 import isce3
 import journal
@@ -553,6 +552,7 @@ def get_cfg_freq_pols(cfg):
         else:
             yield freq, pol_list, pol_list
 
+
 def get_ground_track_velocity_product(ref_rslc : SLC,
                                       slant_range : np.ndarray,
                                       zero_doppler_time : np.ndarray,
@@ -583,12 +583,12 @@ def get_ground_track_velocity_product(ref_rslc : SLC,
         ground track velocity output file
     """
     # NOTE: the prod_geometry_args dataclass is defined here
-    # to avoid the usage of the parser comand line
+    # to avoid the usage of the parser command line
     @dataclass
     class GroundtrackVelocityGenerationParams:
         """
         Parameters to generate the ground track velocity.
-        Defination of each parameter can be found in the
+        Definition of each parameter can be found in the
         get_product_geometry.py
         """
         threshold_rdr2geo = None
@@ -663,7 +663,7 @@ def validate_fs_page_size(fs_page_size, chunks, itemsize=8):
     max_size = 1024**3
     if not (min_size <= fs_page_size <= max_size):
         warn(f"File space page size not in interval [{min_size}, {max_size}]")
-            
+
     # HDF5 docs say powers of two work best for FAPL page size.  Assume same
     # holds true for FCPL page size.
     if (fs_page_size <= 0) or (fs_page_size & (fs_page_size - 1) != 0):
@@ -673,6 +673,63 @@ def validate_fs_page_size(fs_page_size, chunks, itemsize=8):
     # sure how much storage is required for HDF5 metadata.
     if not (fs_page_size > np.prod(chunks) * itemsize):
         warn("File space page size is not larger than a chunk of data.")
+
+
+def _as_np_bytes_if_needed(val):
+    '''
+    If type str encountered, convert and return as np.string_. Otherwise return
+    as is.
+    '''
+    val = np.bytes_(val) if isinstance(val, str) else val
+    return val
+
+
+@dataclass
+class HDF5DatasetParams:
+    '''
+    Convenience dataclass for passing parameters to be written to h5py.Dataset
+    '''
+    # Dataset name
+    name: str
+    # Data to be stored in Dataset
+    value: object
+    # Description attribute of Dataset
+    description: str
+    # Other attributes to be written to Dataset
+    attr_dict: dict = field(default_factory=dict)
+
+
+def add_dataset_and_attrs(group, meta_item):
+    '''Write dataset parameters stored in HDF5DatasetParams object to h5py group.
+
+    Parameters
+    ----------
+    group: h5py.Group
+        h5py group where dataset and associated parameters are to be written
+    meta_item: HDF5DatasetParams
+        HDF5DatasetParams dataclass object containing dataset parameters
+    '''
+    # Ensure it is clear to write by deleting pre-existing Dataset
+    if meta_item.name in group:
+        del group[meta_item.name]
+
+    # Convert to be written dataset value, if necessary
+    val = _as_np_bytes_if_needed(meta_item.value)
+    try:
+        if val is None:
+            # Assume NaN is valid dataset value if None is provided
+            group[meta_item.name] = np.nan
+        else:
+            group[meta_item.name] = val
+    except TypeError as exc:
+        raise TypeError(f'unable to write {meta_item.name}') from exc
+
+    # Write data and attributes
+    val_ds = group[meta_item.name]
+    desc = _as_np_bytes_if_needed(meta_item.description)
+    val_ds.attrs['description'] = desc
+    for key, val in meta_item.attr_dict.items():
+        val_ds.attrs[key] = _as_np_bytes_if_needed(val)
 
 
 def sum_gdal_rasters(filepath1, filepath2, out_filepath, data_type=np.float64,
