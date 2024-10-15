@@ -91,6 +91,12 @@ def init_argparse():
         required=False,
         help="The filepath to the orbit file for the workflow.",
     )
+    filepath_group.add_argument(
+        "--scratch-path",
+        type=Path,
+        required=False,
+        help="The scratch path to put in the runconfig.",
+    )
     geometry_group.add_argument(
         "-e",
         "--epsg",
@@ -396,6 +402,7 @@ def dumpconfig_gslc_gcov(
     *,
     orbit_file: os.PathLike | None = None,
     output_file: os.PathLike | None = None,
+    scratch_path: os.PathLike | None = None,
     source_runconfig_file: os.PathLike | None = None,
     epsg: int | None = None,
     a_spacing: Sequence[Decimal | float] | None = None,
@@ -442,6 +449,10 @@ def dumpconfig_gslc_gcov(
     output_file : path-like or None, optional
         The filepath of the output product, or None. If None, the workflow will output
         to {workflow}.h5 in the local directory. Defaults to None.
+    scratch_path : path-like or None, optional
+        The scratch path to put in the runconfig. If None, the workflow will output
+        to the base runconfig scratch location (either the default runconfig or whatever
+        has been passed to source_runconfig_file). Defaults to None.
     source_runconfig_file : path-like or None, optional
         The filepath of the runconfig to base the output on, or None. If None, the
         default runconfig for the workflow will be used. Defaults to None.
@@ -595,6 +606,10 @@ def dumpconfig_gslc_gcov(
     if output_file is not None:
         output_file = Path(output_file).expanduser().resolve()
         product_path_group["sas_output_file"] = os.fspath(output_file)
+    
+    if scratch_path is not None:
+        scratch_path = Path(scratch_path).expanduser().resolve()
+        product_path_group["scratch_path"] = os.fspath(scratch_path)
     
     geocode_group = groups["processing"]["geocode"]
     radar_grid_cubes_group = groups["processing"]["radar_grid_cubes"]
