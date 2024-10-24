@@ -25,6 +25,7 @@ def is_complex32(dataset: h5py.Dataset) -> bool:
     try:
         dtype = dataset.dtype
     except TypeError as e:
+        import re
         regex = re.compile(r"^data type '([<>|=])?c4' not understood$")
         errmsg = str(e)
         if regex.match(errmsg):
