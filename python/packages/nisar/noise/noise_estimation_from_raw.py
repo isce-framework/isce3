@@ -396,7 +396,7 @@ def est_noise_power_from_raw(
                 # get noise product
                 ns_prod = _noise_product_rng_blocks(
                     raw, dset_noise, idx_rgl_ns, freq_band, 2 * rx_pol,
-                    is_dither, algorithm, cpi, num_rng_block, 0.5, diff,
+                    algorithm, cpi, num_rng_block, 0.5, diff,
                     diff_method, median_ev, remove_mean,
                     perc_invalid_rngblk, logger
                 )
@@ -419,7 +419,7 @@ def est_noise_power_from_raw(
                 # get noise product
                 ns_prod = _noise_product_rng_blocks(
                     raw, dset_noise, idx_rgl_ns, freq_band, txrx_pol,
-                    is_dither, algorithm, cpi, num_rng_block, 1.0, diff,
+                    algorithm, cpi, num_rng_block, 1.0, diff,
                     diff_method, median_ev, remove_mean,
                     perc_invalid_rngblk, logger
                 )
@@ -494,7 +494,7 @@ def _range_slice_gen(n_rgb, n_blk, min_rgbs=RGB_MIN_NOISE):
 
 
 def _check_noise_validity(
-        noise, is_dither, *, perc_invalid=PERC_INVALID_NOISE,
+        noise, *, perc_invalid=PERC_INVALID_NOISE,
         invalid_val=INVALID_VALUE):
     """
     Helper function to check whether some noise-only range lines within a
@@ -511,8 +511,6 @@ def _check_noise_validity(
     noise : np.ndarray
         2-D array of noise-only range lines for a single range block.
         The shape is (range lines, range bins)
-    is_dither : bool
-        Whether it is dithering PRF or a fixed one.
     perc_invalid : float, default=PERC_INVALID_NOISE
         Percentage of range bins being masked by invalid values that make the
         corresponding range line invalid if above this threshold.
@@ -530,31 +528,24 @@ def _check_noise_validity(
 
     Notes
     -----
-    If PRF is fixed, then simply the first range line is checked for validity.
-    It is assumed the number of non-tx-gap trailing or leading zeros which can
-    vary over range lines is way smaller than those of tx gaps!
-    This assumption can be ignored by setting `is_dither` to True!
+    Given possibility of the first few range lines being filled with invalid
+    values (e.g., zero), every noise-only range line is checked for validity
+    regardless of PRF pattern (fixed or dithering)!
 
     """
     nrgls, nrgbs = noise.shape
     ratio_invalid = perc_invalid / 100
     valid_lines = []
-    if is_dither:  # check every range line
-        for line in range(nrgls):
-            n_bad = np.isclose(noise[line], invalid_val, equal_nan=True).sum()
-            ratio_bad = n_bad / nrgbs
-            if ratio_bad <= ratio_invalid:
-                valid_lines.append(line)
-    else:  # just check out the first range line
-        n_bad = np.isclose(noise[0], invalid_val, equal_nan=True).sum()
+    for line in range(nrgls):
+        n_bad = np.isclose(noise[line], invalid_val, equal_nan=True).sum()
         ratio_bad = n_bad / nrgbs
         if ratio_bad <= ratio_invalid:
-            valid_lines = list(range(nrgls))
+            valid_lines.append(line)
     return len(valid_lines) != 0, valid_lines
 
 
 def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
-                              txrx_pol, is_dither, algorithm, cpi,
+                              txrx_pol, algorithm, cpi,
                               num_rng_block, scalar, diff, diff_method,
                               median_ev, remove_mean, perc_invalid_rngblk,
                               logger):
@@ -571,8 +562,6 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
         frequency band char
     txrx_pol : str
         TxRx polarization such as {'HH', 'VV', 'HV', ...}.
-    is_dither : bool
-        Whether the PRF is dithered or not.
     algorithm : str, {'MEE', 'MVE'}
         Noise estimator algorithm.
     cpi : int
@@ -656,7 +645,7 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
         # check the validity of the noise data given TX gaps and other
         # invalid range bins.
         flag_valid, idx_valid = _check_noise_validity(
-            noise_rng_blk, is_dither, perc_invalid=perc_invalid_rngblk)
+            noise_rng_blk, perc_invalid=perc_invalid_rngblk)
         nrgl_valid = len(idx_valid)
         logger.info('Number of valid noise-only '
                     f'range lines -> {nrgl_valid}')
@@ -712,7 +701,7 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
 
 
 def est_noise_power_in_focus(
-        dset_noise, slant_range, subswath_noise, is_dither,
+        dset_noise, slant_range, subswath_noise,
         algorithm='MEE', *, cpi=10, num_range_block=80,
         diff=True, diff_method='single', median_ev=True,
         remove_mean=False,
@@ -734,8 +723,6 @@ def est_noise_power_in_focus(
         3-D array representing valid [start,stop) range bins of subswath
         for noise-only range lines with shape
         (number of subswaths, number of noise-only range lines, 2)
-    is_dither : bool
-        Whether the PRF is dithered or not.
     algorithm : {'MEE', 'MVE'}
         MVE: min var estimator based on maximum likelihood (ML) [1]_.
         MEE: min eigenvalue estimator based on eigenvalue decomposition (EVD)
@@ -850,7 +837,6 @@ def est_noise_power_in_focus(
         # invalid range bins.
         flag_valid, idx_valid = _check_noise_validity(
             noise_rng_blk,
-            is_dither,
             perc_invalid=threshold_invalid_range_block
         )
         nrgl_valid = len(idx_valid)
