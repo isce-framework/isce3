@@ -129,3 +129,16 @@ jobs:
           cd build
           export GDAL_MEM_ENABLE_OPEN=YES
           ctest --output-on-failure ${{ env.ctest-exclude }}
+
+      - name: Install documentation dependencies
+        # Make sure we just run this step once
+        if: matrix.os.label == 'Linux' && matrix.deps.label == 'Latest' && matrix.build-type == 'Release'
+        run: |
+          micromamba install pdoc doxygen sphinx
+          export PYTHONPATH="$PYTHONPATH:$ISCE3_PREFIX/packages"
+          sphinx-build -q -b html -c build/doc/sphinx -d build/docs-output doc/sphinx build/doc/sphinx/html
+          doxygen build/doc/doxygen/Doxyfile
+
+          # XXX pdoc breaks on unimportable CUDA extension for CPU-only builds
+          rm -r install/isce3/cuda
+          pdoc -o build/docs-output/api/python --math install/packages/isce3
