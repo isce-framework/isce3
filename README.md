@@ -37,7 +37,7 @@ https://isce-framework.github.io/isce3/tutorial_tutorial.html)
  - [Python API Reference](
 https://isce-framework.github.io/isce3/sphinx/html/index.html)
  | [C++ API Reference](
-https://isce-framework.github.io/isce3/annotated.html)
+https://isce-framework.github.io/isce3/api/cxx/annotated.html)
  - [Examples](https://github.com/isce-framework/isce3/tree/develop/share)
 
 ## Contributing
