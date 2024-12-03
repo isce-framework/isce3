@@ -144,6 +144,7 @@ jobs:
           pdoc -o build/docs-output/api/python --math install/packages/isce3
 
       - name: Deploy documentation
+        if: matrix.os.label == 'Linux' && matrix.deps.label == 'Latest' && matrix.build-type == 'Release'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
