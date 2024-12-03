@@ -136,7 +136,7 @@ jobs:
         run: |
           micromamba install pdoc doxygen sphinx
           export PYTHONPATH="$PYTHONPATH:$ISCE3_PREFIX/packages"
-          sphinx-build -q -b html -c build/doc/sphinx -d build/docs-output doc/sphinx build/doc/sphinx/html
+          sphinx-build -q -b html -c build/doc/sphinx doc/sphinx build/docs-output
           doxygen build/doc/doxygen/Doxyfile
 
           # XXX pdoc breaks on unimportable CUDA extension for CPU-only builds
