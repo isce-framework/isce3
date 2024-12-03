@@ -142,3 +142,9 @@ jobs:
           # XXX pdoc breaks on unimportable CUDA extension for CPU-only builds
           rm -r install/packages/isce3/cuda
           pdoc -o build/docs-output/api/python --math install/packages/isce3
+
+      - name: Deploy documentation
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/docs-output
