@@ -130,7 +130,7 @@ jobs:
           export GDAL_MEM_ENABLE_OPEN=YES
           ctest --output-on-failure ${{ env.ctest-exclude }}
 
-      - name: Install documentation dependencies
+      - name: Build documentation
         # Make sure we just run this step once
         if: matrix.os.label == 'Linux' && matrix.deps.label == 'Latest' && matrix.build-type == 'Release'
         run: |
