@@ -140,5 +140,5 @@ jobs:
           doxygen build/doc/doxygen/Doxyfile
 
           # XXX pdoc breaks on unimportable CUDA extension for CPU-only builds
-          rm -r install/isce3/cuda
+          rm -r install/packages/isce3/cuda
           pdoc -o build/docs-output/api/python --math install/packages/isce3
