@@ -135,6 +135,10 @@ jobs:
         if: matrix.os.label == 'Linux' && matrix.deps.label == 'Latest' && matrix.build-type == 'Release'
         run: |
           micromamba install pdoc doxygen sphinx
+
+          # XXX Manually create doxygen output dir, why doesn't CREATE_SUBDIRS in the config work?
+          mkdir -p build/docs-output/api/cxx/
+
           doxygen build/doc/doxygen/Doxyfile
           export PYTHONPATH="$PYTHONPATH:$ISCE3_PREFIX/packages"
           sphinx-build -q -b html -c build/doc/sphinx doc/sphinx build/docs-output
