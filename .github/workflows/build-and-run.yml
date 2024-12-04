@@ -135,9 +135,9 @@ jobs:
         if: matrix.os.label == 'Linux' && matrix.deps.label == 'Latest' && matrix.build-type == 'Release'
         run: |
           micromamba install pdoc doxygen sphinx
+          doxygen build/doc/doxygen/Doxyfile
           export PYTHONPATH="$PYTHONPATH:$ISCE3_PREFIX/packages"
           sphinx-build -q -b html -c build/doc/sphinx doc/sphinx build/docs-output
-          doxygen build/doc/doxygen/Doxyfile
 
           # XXX pdoc breaks on unimportable CUDA extension for CPU-only builds
           rm -r install/packages/isce3/cuda
