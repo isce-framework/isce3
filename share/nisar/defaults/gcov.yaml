@@ -293,7 +293,7 @@ runconfig:
                 # Save the mask layer
                 save_mask: True
 
-                # Save interpolated DEM used to compute GCOV
+                # PLACEHOLDER - Save interpolated DEM used to compute GCOV
                 save_dem: False
 
                 # PLACEHOLDER - Save the layover shadow mask

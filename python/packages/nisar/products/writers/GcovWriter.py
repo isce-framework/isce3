@@ -80,7 +80,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
         read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
                                         output_terrain_radiometry)
     save_mask = geocode_dict['save_mask']
-    save_dem = geocode_dict['save_dem']
 
     min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
     max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
@@ -225,28 +224,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
         out_geo_rtc_gamma0_to_sigma0_obj = None
 
     # create a NamedTemporaryFile and an ISCE3 Raster object to
-    # temporarily hold the interpolated DEM layer
-    if save_dem:
-        temp_interpolated_dem = tempfile.NamedTemporaryFile(
-            dir=raster_scratch_dir,
-            suffix=secondary_layers_file_extension)
-        if (output_mode ==
-                isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
-            interpolated_dem_width = geogrid.width + 1
-            interpolated_dem_length = geogrid.length + 1
-        else:
-            interpolated_dem_width = geogrid.width
-            interpolated_dem_length = geogrid.length
-        out_geo_dem_obj = isce3.io.Raster(
-            temp_interpolated_dem.name,
-            interpolated_dem_width,
-            interpolated_dem_length, 1,
-            gdal.GDT_Float32, secondary_layer_files_raster_files_format)
-    else:
-        temp_interpolated_dem = None
-        out_geo_dem_obj = None
-
-    # create a NamedTemporaryFile and an ISCE3 Raster object to
     # temporarily hold the mask layer
     if save_mask:
         temp_mask_file = tempfile.NamedTemporaryFile(
@@ -304,9 +281,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
     if save_mask:
         out_mask_obj.close_dataset()
         del out_mask_obj
-
-    if save_dem:
-        del out_geo_dem_obj
 
     if flag_fullcovariance:
         # out_off_diag_terms_obj.close_dataset()
@@ -369,36 +343,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
                      hdf5_obj, root_ds,
                      yds, xds,
                      'rtcGammaToSigmaFactor',
-                     **output_secondary_layers_kwargs)
-
-    # save interpolated DEM
-    if save_dem:
-
-        '''
-        The DEM is interpolated over the geogrid pixels vertices
-        rather than the pixels centers.
-        '''
-        if (output_mode ==
-                isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
-            dem_geogrid = isce3.product.GeoGridParameters(
-                start_x=geogrid.start_x - geogrid.spacing_x / 2,
-                start_y=geogrid.start_y - geogrid.spacing_y / 2,
-                spacing_x=geogrid.spacing_x,
-                spacing_y=geogrid.spacing_y,
-                width=int(geogrid.width) + 1,
-                length=int(geogrid.length) + 1,
-                epsg=geogrid.epsg)
-            yds_dem, xds_dem = \
-                set_get_geo_info(hdf5_obj, root_ds, dem_geogrid)
-        else:
-            yds_dem = yds
-            xds_dem = xds
-
-        save_dataset(temp_interpolated_dem.name, hdf5_obj,
-                     root_ds, yds_dem, xds_dem,
-                     'interpolatedDem',
-                     long_name='Interpolated DEM',
-                     units='1',
                      **output_secondary_layers_kwargs)
 
     # save GCOV off-diagonal elements
