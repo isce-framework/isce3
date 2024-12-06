@@ -824,6 +824,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         # can be correctly estimated
 
         # Create geogrids' bbox ring
+        # We choose the counter-clockwise orientation because this
+        # defines the exterior of the polygon according to the OpenGIS
+        # Standards:
+        # OpenGIS Implementation Standard for Geographic
+        # information - Simple feature access - Part 1: Common
+        # architecture, v1.2.1, 2011-05-28 (page 26)
         geogrids_bbox_ring = ogr.Geometry(ogr.wkbLinearRing)
         geogrids_bbox_ring.AddPoint(start_x, start_y)
         geogrids_bbox_ring.AddPoint(start_x, end_y)
@@ -831,12 +837,19 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         geogrids_bbox_ring.AddPoint(end_x, start_y)
         geogrids_bbox_ring.AddPoint(start_x, start_y)
 
-        # Assign georeference to the geogrids' bbox ring
+        # Create geogrids' bbox polygon
+        geogrids_bbox_polygon = ogr.Geometry(ogr.wkbPolygon)
+        geogrids_bbox_polygon.AddGeometry(geogrids_bbox_ring)
+
+        # Assign georeference to the geogrids' bbox polygon
         geogrid_srs = osr.SpatialReference()
         geogrid_srs.ImportFromEPSG(epsg_code)
-        geogrids_bbox_ring.AssignSpatialReference(geogrid_srs)
+        geogrids_bbox_polygon.AssignSpatialReference(geogrid_srs)
+        assert geogrids_bbox_polygon.IsValid()
 
-        bounding_box_wkt = geogrids_bbox_ring.ExportToWkt()
+        # Create a well-known text (WKT) representation of the geogrids'
+        # bbox polygon and save it as the H5 Dataset `boundingBox``
+        bounding_box_wkt = geogrids_bbox_polygon.ExportToWkt()
 
         self.set_value(
             '{PRODUCT}/metadata/ceosAnalysisReadyData/boundingBox',
