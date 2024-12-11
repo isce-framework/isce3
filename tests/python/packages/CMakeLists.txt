@@ -13,6 +13,7 @@ isce3/core/resample_block_generators.py
 isce3/focus/valid_regions.py
 isce3/focus/notch.py
 isce3/geocode/geocode_slc.py
+isce3/geometry/bounding_radar_grid.py
 isce3/geometry/polygons.py
 isce3/image/resample_slc.py
 isce3/io/gdal/gdal_raster.py
