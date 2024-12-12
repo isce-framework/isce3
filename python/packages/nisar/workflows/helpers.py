@@ -94,6 +94,66 @@ def slice_gen(n_smp: int, n_smp_blk: int) -> slice:
         yield slice(i_start, i_stop)
 
 
+def copols_or_desired_pols_from_raw(
+        raw: 'nisar.products.readers.Raw',
+        freq_band: str | None = None,
+        txrx_pol:str | None = None
+        ) -> dict[str, list[str]]:
+    """
+    Get list of transmit-receive polarization names of either all co-pol
+    datasets (default) or requested ones from Raw which fulfill either
+    parameter `freq_band` and/or `txrx_pol` if provided.
+
+    The output is in the form of a dict with key=frequency_band and
+    value=list of txrx_pols.
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+        Raw parser of L0B product.
+    freq_band : str, optional
+        Frequency band character "A" or "B".
+        If None will cover all available bands in `raw`.
+    txrx_pol : str, optional
+        Transmit-receive polarization. If None will cover all
+        co-pol products under `freq_band`.
+
+    Returns
+    -------
+    dict
+        A dictionary with `freq_band` as keys and list of `txrx_pol`
+        as values.
+
+    """
+    # get list of frequency bands
+    if freq_band is None:
+        freqs = list(raw.polarizations)
+    else:
+        # go with desired frequency band
+        if freq_band not in raw.polarizations:
+            raise ValueError('Wrong frequency band! The available bands -> '
+                             f'{list(raw.polarizations)}')
+        freqs = [freq_band]
+
+    frq_pol = dict()
+    for frq in freqs:
+        pols = raw.polarizations[frq]
+        if txrx_pol is None:
+            # get all co-pols if pol is not provided
+            co_pols = [pol for pol in pols if (pol[0] == pol[1] or
+                                               pol[0] in ['L', 'R'])]
+            if co_pols:
+                frq_pol[frq] = co_pols
+        else:
+            # get all pols over all bands that match the desired one
+            if txrx_pol in pols:
+                frq_pol[frq] = [txrx_pol]
+    # check if the dict empty (it simply occurs if txrx_pol is provided!)
+    if not frq_pol:
+        raise ValueError(f'Wrong TxRx Pol over frequency bands {freqs}!')
+    return frq_pol
+
+
 def deep_update(original, update, flag_none_is_valid=True):
     '''
     update default runconfig key with user supplied dict

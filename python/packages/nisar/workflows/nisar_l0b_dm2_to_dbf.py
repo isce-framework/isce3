@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 import os
 import time
+import tempfile
 
 import numpy as np
 import h5py
@@ -22,7 +23,7 @@ from isce3.geometry import DEMInterpolator
 from isce3.io import Raster
 from nisar.log import set_logger
 from isce3.signal import dbf_onetap_from_dm2, dbf_onetap_from_dm2_seamless
-from isce3.focus import fill_gaps
+from isce3.focus import fill_gaps, form_linear_chirp
 from nisar.workflows.helpers import build_uniform_quantizer_lut_l0b, slice_gen
 
 
@@ -158,7 +159,8 @@ def cmd_line_parser():
                      )
     prs.add_argument('-o', '--out-path', type=str, default='.',
                      dest='out_path',
-                     help=('Output path for PNG plots if `--plot`')
+                     help=('Output path for temporary files and '
+                           'PNG plots if `--plot`')
                      )
     prs.add_argument('-p', '--product-name', type=str, dest='prod_name',
                      help=('Product science L0B HDF5 file and path name. '
@@ -415,34 +417,50 @@ def nisar_l0b_dm2_to_dbf(args):
             # due to non-mitigated strong TX Cal loop-back chirps.
             sbsw = raw.getSubSwaths(freq_band, txrx_pol[0])
 
+            # create a temp file for memmap of multi-channel complex
+            # decoded echo to avoid possible memory allocation issue
+            fid_tmp = tempfile.NamedTemporaryFile(
+                suffix=f'_dm2_freq{freq_band}_pol{txrx_pol}.c8',
+                dir=out_path)
+            # form a numpy 3-D memmap AZ block shared by all AZ blocks
+            num_rgl = rgl_slices[0].stop - rgl_slices[0].start
+            dset_azblk = np.memmap(
+                fid_tmp, mode='w+',
+                shape=(num_chanl, num_rgl, sr.size),
+                dtype=dset.dtype)
             # loop over AZ blocks
             for n_blk, rgl_slice in enumerate(rgl_slices, start=1):
                 logger.info(f'Processing AZ block # {n_blk} ...')
-
+                num_rgl = rgl_slice.stop - rgl_slice.start
+                # fill in 3-D memmap complex array with decoded echo,
+                # one channel at a time to avoid memory issue!
+                for cc in range(num_chanl):
+                    dset_azblk[cc, :num_rgl] = dset[cc, rgl_slice, :]
                 # fill in TX gap regions with zeros in place
-                dset_azblk = dset[:, rgl_slice, :]
-                fill_gaps(dset_azblk, sbsw[:, rgl_slice])
+                fill_gaps(dset_azblk[:, :num_rgl], sbsw[:, rgl_slice])
 
                 # mid AZ time at the center of the AZ block
                 azt_mid = azt_raw[rgl_slice].mean()
 
                 if args.no_rgcomp:  # simply peform mosaicking
                     echo_dbf = dbf_onetap_from_dm2(
-                        dset_azblk, azt_mid, el_trans, az_trans,
+                        dset_azblk[:, :num_rgl], azt_mid, el_trans, az_trans,
                         sr, orbit, attitude, dem, cal_coefs=amp_cal
                     )
                 else:  # perform range conv and deconv while mosaicking
                     logger.info('Perform range convolution and deconvolution!')
-                    chirp_ref = raw.getChirp(freq_band, txrx_pol[0])
+                    # For NISAR modes with zero bandwidth (no TX), the chirp
+                    # slope is assumed to be `-fs / (1.2 * pw)`.
+                    fs, slope, pw = _get_chirp_parameters(
+                        raw, freq_band, txrx_pol[0])
+                    chirp_ref = np.asarray(form_linear_chirp(slope, pw, fs))
                     echo_dbf = dbf_onetap_from_dm2_seamless(
-                        dset_azblk, chirp_ref, azt_mid, el_trans,
+                        dset_azblk[:, :num_rgl], chirp_ref, azt_mid, el_trans,
                         az_trans, sr, orbit, attitude, dem, n_cpu,
                         ped_win=args.win_ped, cal_coefs=amp_cal)
                     # scale echo by sqrt(BW * PW) to remove compression gain
-                    # and to preserve input dynamic range.
-                    _, _, rate, pw = raw.getChirpParameters(
-                        freq_band, txrx_pol[0])
-                    scalar_cg = np.sqrt(abs(rate) * pw ** 2)
+                    # and to preserve input dynamic range
+                    scalar_cg = np.sqrt(abs(slope) * pw ** 2)
                     logger.info('Remove compression amp gain (linear)'
                                 f' -> {scalar_cg}.')
                     echo_dbf /= scalar_cg
@@ -484,11 +502,57 @@ def nisar_l0b_dm2_to_dbf(args):
                 dset_prod_out.write_direct(echo_dbf.astype(
                     'uint16').view(dset.dtype_storage), dest_sel=rgl_slice)
 
+            # destroy memmap and close the temp file
+            del dset_azblk, fid_tmp
+
     # close in/out HDF5 files
     fid_in.close()
     fid_out.close()
 
     logger.info(f'Elapsed time (sec) -> {time.time() - tic:.1f}')
+
+
+def _get_chirp_parameters(raw, freq_band, txrx_pol, slope_sign=-1):
+    """
+    Get baseband chirp parameters from Raw for a desired
+    frequency band and polarization.
+
+    This function extracts chirp parameters from the input L0B product when
+    possible. However, in the case of a no-transmit (noise-only) channel, the
+    chirp slope parameter in the product metadata will be zero. In this case,
+    the function estimates the chirp slope of the nominal Tx waveform by
+    assuming an oversampling ratio of 1.2 for NISAR products.
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+        Raw parser of L0B product.
+    freq_band : str
+        Frequency band character "A" or "B".
+    txrx_pol : str
+        Transmit-receive polarization such as "HH", "HV", etc.
+    slope_sign : {-1, 1}
+        Sign of the chirp slope. Default is down chirp (-1).
+        This is simply used if the chirp slope or bandwidth is
+        set to zero for some NISAR modes.
+        In this case, the chirp slope is assumed to be
+        `slope_sign * fs / (1.2 * pw)` where `fs` and `pw` are
+        the chirp sampling rate and pulsewidth, respectively.
+
+    Returns
+    -------
+    fs : float
+        Chirp sampling rate in Hz
+    slope : float
+        Chirp slope in Hz/seconds
+    pw : float
+        Chirp pulsewidth in seconds
+
+    """
+    _, fs, slope, pw = raw.getChirpParameters(freq_band, txrx_pol[0])
+    if np.isclose(slope, 0.0):
+        slope = slope_sign * fs / (1.2 * pw)
+    return fs, slope, pw
 
 
 if __name__ == '__main__':

@@ -17,8 +17,7 @@ from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.products.readers.attitude import load_attitude_from_xml
 from isce3.io import Raster
 from isce3.geometry import DEMInterpolator
-from nisar.workflows.gen_el_null_range_product import (
-    copol_or_desired_product_from_raw)
+from nisar.workflows.helpers import copols_or_desired_pols_from_raw
 
 
 def cmd_line_parser():
@@ -147,7 +146,7 @@ def gen_doppler_range_product(args):
 
     # logic for frequency band and TxRx polarization choices.
     # form a new dict "frq_pol" with key=freq_band and value=[txrx_pol]
-    frq_pol = copol_or_desired_product_from_raw(
+    frq_pol = copols_or_desired_pols_from_raw(
         raw_obj, args.freq_band, args.txrx_pol)
     logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
 
@@ -204,6 +203,12 @@ def gen_doppler_range_product(args):
     # polarizations
     for freq_band in frq_pol:
         for txrx_pol in frq_pol[freq_band]:
+            # check if the product is so-called noise-only (NO TX).
+            # If no TX then skip that product.
+            if raw_obj.is_tx_off(freq_band, txrx_pol):
+                logger.warning(
+                    f'Skip no-TX product ({freq_band},{txrx_pol})!')
+                continue
             # generate Doppler LUT2d from Raw L0B
             dop_lut, ref_utc, mask_rgb, corr_coef, txrx_pol, centerfreq, _ = \
                 doppler_lut_from_raw(raw_obj, orbit=orbit, attitude=attitude,
