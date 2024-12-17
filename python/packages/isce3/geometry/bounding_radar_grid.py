@@ -134,27 +134,27 @@ def get_radar_grid_containing_az_rg_pts(
         return int(np.ceil(num / den))
 
     # Compute the number of azimuth and range samples needed to span the peak-to-peak
-    # range of the points with the desired sample spacing.
-    num_az = ceil_divide(az_max - az_min, az_spacing)
-    num_rg = ceil_divide(rg_max - rg_min, rg_spacing)
-
-    # Get the azimuth & range coordinates of the first row & column of the radar grid.
+    # range of the points with the desired sample spacing, plus one additional sample.
     #
-    # NOTE: Each pixel in a radar grid is an area element. The coordinates associated
-    # with each pixel represent the location of the pixel's center point. Thus, the
-    # radar grid contains a (azimuth or range) coordinate x if x is within the interval
-    # [x0 - dx/2, x0 + n*dx - dx/2], where x0 is the coordinate of the first pixel, dx
-    # is the pixel spacing, and n is the number of pixels. (See
-    # https://github-fn.jpl.nasa.gov/isce-3/isce/issues/584#issuecomment-11771.)
-    az_start = az_min + 0.5 * az_spacing
-    rg_start = rg_min + 0.5 * rg_spacing
+    # NOTE: According to ISCE3 conventions, radar grid pixel coordinates are referenced
+    # to the location of the center of the pixel, so there's a half-pixel offset between
+    # the coordinates of the boundary pixels and the outer extents of the radar grid
+    # (see https://github-fn.jpl.nasa.gov/isce-3/isce/issues/584#issuecomment-11771.)
+    # This distinction between 'pixels' and 'points' is not well-documented for users,
+    # though, and sometimes causes confusion. We choose to ignore the half-pixel shift
+    # here and simply add an extra row & column to the radar grid to compensate. This
+    # expansion of the radar grid is unlikely to cause harm and ensures that all points
+    # are contained within the radar grid regardless of the grid coordinate convention,
+    # while also ensuring that the radar grid dimensions are always >= 1.
+    num_az = ceil_divide(az_max - az_min, az_spacing) + 1
+    num_rg = ceil_divide(rg_max - rg_min, rg_spacing) + 1
 
     # Construct the radar grid.
     radar_grid = isce3.product.RadarGridParameters(
-        sensing_start=az_start,
+        sensing_start=az_min,
         wavelength=wavelength,
         prf=1.0 / az_spacing,
-        starting_range=rg_start,
+        starting_range=rg_min,
         range_pixel_spacing=rg_spacing,
         lookside=look_side,
         length=num_az,
