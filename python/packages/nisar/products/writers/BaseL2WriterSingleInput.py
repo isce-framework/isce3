@@ -713,6 +713,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         super().__init__(runconfig, *args, **kwargs)
 
+        self.freq_pols_dict = self.cfg['processing']['input_subset'][
+            'list_of_frequencies']
+
         # if provided, load an external orbit from the runconfig file;
         # othewise, load the orbit from the RSLC metadata
         self.orbit_file = \
@@ -727,6 +730,21 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             ref_epoch = self.input_product_obj.getRadarGrid().ref_epoch
             external_orbit = load_orbit_from_xml(self.orbit_file, ref_epoch)
             self.orbit = crop_external_orbit(external_orbit, self.orbit)
+
+    @property
+    def frequencies(self) -> list[str]:
+        """
+        The frequency subbands of the output product in the same order as the
+        runconfig
+        """
+        return list(self.freq_pols_dict.keys())
+
+    @property
+    def first_sorted_frequency(self) -> str:
+        """
+        The first frequency of the output product in alphabetical order
+        """
+        return sorted(self.frequencies)[0]
 
     def populate_identification_l2_specific(self):
         """
@@ -1420,6 +1438,14 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'dynamic_ancillary_file_group/dem_file_description',
             default='(NOT SPECIFIED)')
 
+        # geocode referenceTerrainHeight
+        ds_name_list = ['referenceTerrainHeight']
+        self.geocode_lut(
+            '{PRODUCT}/metadata/processingInformation/parameters',
+            frequency=self.first_sorted_frequency,
+            output_ds_name_list=ds_name_list,
+            skip_if_not_present=True)
+
         # geocode dopplerCentroid LUT
         ds_name_list = ['dopplerCentroid']
         for frequency in self.freq_pols_dict.keys():
@@ -1449,7 +1475,10 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             same path of the output dataset `output_h5_group` will
             be used
         frequency: str, optional
-            Frequency sub-band
+            Frequency sub-band, used to read the sub-band wavelength.
+            The sub-band wavelength is only used in geocoding 
+            (during geo2rdr) if the dataset (LUT) is not in the 
+            zero-Doppler geometry
         output_ds_name_list: str, list
             List of LUT datasets to geocode
         input_ds_name_list: list
@@ -1541,6 +1570,43 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                output_h5_group_path,
                                skip_if_not_present,
                                compute_stats):
+        """
+        Geocode look-up tables (LUTs) from the input product in
+        radar coordinates to the output product in map coordinates
+        using runconfig parameters associated with that
+        metadata group, either 'calibrationInformation'
+        or 'processingInformation'
+
+        Parameters
+        ----------
+        frequency: str, optional
+            Frequency sub-band, used to read the sub-band wavelength.
+            The sub-band wavelength is only used in geocoding 
+            (during geo2rdr) if the dataset (LUT) is not in the 
+            zero-Doppler geometry
+        input_ds_name_list: list
+            List of LUT datasets to geocode
+        output_ds_name_list: str, list
+            List of output LUT datasets
+        metadata_group: str
+            Metadata group, either 'calibrationInformation'
+            or 'processingInformation'
+        input_h5_group_path: str
+            Path of the input group
+        output_h5_group_path: str
+            Path of the output group
+        skip_if_not_present: bool, optional
+            Flag to prevent the execution to stop if the dataset
+            is not present from input
+        compute_stats: bool, optional
+            Flag that indicates if statistics should be computed for the
+            output raster layer. Defaults to False.
+
+        Returns
+        -------
+        success: bool
+           Flag that indicates if the geocoding the LUT group was successful
+        """
 
         error_channel = journal.error('geocode_metadata_group')
 
@@ -1657,7 +1723,22 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         for var in input_ds_name_list:
             raster_ref = (f'HDF5:"{self.input_file}":/'
                           f'{input_h5_group_path}/{var}')
-            temp_raster = isce3.io.Raster(raster_ref)
+
+            # Read `raster_ref` catching/handling potential problems:
+            # - Dataset does not exist;
+            # - Dataset is a 1-D vector instead of a 2-D array.
+            try:
+                temp_raster = isce3.io.Raster(raster_ref)
+            except:
+                not_found_msg = ('Failed to create GDAL dataset from'
+                                 f' reference: {raster_ref}')
+                if skip_if_not_present:
+                    warnings.warn(not_found_msg)
+                    return False
+
+                error_channel.log(not_found_msg)
+                raise KeyError(not_found_msg)
+
             input_raster_list.append(temp_raster)
 
         if len(input_ds_name_list) == 1:
