@@ -879,25 +879,25 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         self.output_hdf5_obj[bounding_box_path].attrs['epsg'] = epsg_code
 
-        # TODO: add the EPSG code as an attribute of the following
-        # H5 datasets
         for xy in ['x', 'y']:
             h5_grp_path = ('{PRODUCT}/metadata/ceosAnalysisReadyData/'
                            'geometricAccuracy')
             runcfg_prefix = ('ceos_analysis_ready_data/'
                              'estimated_geometric_accuracy')
 
-            self.copy_from_runconfig(
+            bias_dataset = self.copy_from_runconfig(
                 f'{h5_grp_path}/bias/{xy}',
                 f'{runcfg_prefix}_bias_{xy}',
                 format_function=np.float32,
                 default=np.nan)
+            bias_dataset.attrs['epsg'] = epsg_code
 
-            self.copy_from_runconfig(
+            standard_deviation_dataset = self.copy_from_runconfig(
                 f'{h5_grp_path}/standardDeviation/{xy}',
                 f'{runcfg_prefix}_standard_deviation_{xy}',
                 format_function=np.float32,
                 default=np.nan)
+            standard_deviation_dataset.attrs['epsg'] = epsg_code
 
     def populate_calibration_information(self):
 
