@@ -45,7 +45,7 @@ def cmdLineParse():
                         dest='bbox', default=None, nargs='+',
                         help='Spatial bounding box in latitude/longitude (WSEN, decimal degrees)')
     parser.add_argument('-v', '--version', type=str, action='store',
-                        default='1.1', dest='version',
+                        default='1.2', dest='version',
                         help='DEM version in the form of major_number.minor_number')
     return parser.parse_args()
 
@@ -348,7 +348,7 @@ def download_dem(polys, epsgs, outfile, version):
         Path to the output DEM file to be staged
     version: str
         DEM version. This is contained in the filepath to
-        the DEM VRTs (e.g., s3://nisar-dem/v1.0/EPSG4326/<EPSG4326_FILES>).
+        the DEM VRTs (e.g., s3://nisar-dem/v1.2/EPSG4326/<EPSG4326_FILES>).
         DEM version is in the form of major_version.minor_version
     """
 
@@ -532,7 +532,7 @@ def check_dem_overlap(DEMFilepath, polys):
     return perc_area
 
 
-def check_aws_connection(version='1.1'):
+def check_aws_connection(version='1.2'):
     """Check connection to AWS s3://nisar-dem bucket
        Throw exception if no connection is established
 
