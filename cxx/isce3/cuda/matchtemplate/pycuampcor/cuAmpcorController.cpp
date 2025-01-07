@@ -12,16 +12,30 @@
 #include "cudaUtil.h"
 #include "cuAmpcorChunk.h"
 #include "cuAmpcorUtil.h"
+#include <cuda_runtime.h>
 #include <iostream>
 
 // constructor
 cuAmpcorController::cuAmpcorController()
 {
     // create a new set of parameters
-    param.reset(new cuAmpcorParameter());
+    param = new cuAmpcorParameter();
 }
 
+// destructor
+cuAmpcorController::~cuAmpcorController()
+{
+    delete param;
+}
 
+bool cuAmpcorController::isDoublePrecision()
+{
+#ifdef CUAMPCOR_DOUBLE
+    return true;
+#else
+    return false;
+#endif
+}
 /**
  *  Run ampcor
  *
@@ -40,43 +54,45 @@ void cuAmpcorController::runAmpcor()
     std::cout << "Opening secondary image " << param->secondaryImageName << "...\n";
     GDALImage *secondaryImage = new GDALImage(param->secondaryImageName, 1, param->mmapSizeInGB);
 
-    cuArrays<float2> *offsetImage, *offsetImageRun;
-    cuArrays<float> *snrImage, *snrImageRun;
-    cuArrays<float3> *covImage, *covImageRun;
-    cuArrays<float> *corrImage, *corrImageRun;
+    cuArrays<real2_type> *offsetImage, *offsetImageRun;
+    cuArrays<real_type> *snrImage, *snrImageRun;
+    cuArrays<real3_type> *covImage, *covImageRun;
+    cuArrays<real_type> *peakValueImage, *peakValueImageRun;
 
     // nWindowsDownRun is defined as numberChunk * numberWindowInChunk
     // It may be bigger than the actual number of windows
     int nWindowsDownRun = param->numberChunkDown * param->numberWindowDownInChunk;
     int nWindowsAcrossRun = param->numberChunkAcross * param->numberWindowAcrossInChunk;
 
-    offsetImageRun = new cuArrays<float2>(nWindowsDownRun, nWindowsAcrossRun);
+    offsetImageRun = new cuArrays<real2_type>(nWindowsDownRun, nWindowsAcrossRun);
     offsetImageRun->allocate();
 
-    snrImageRun = new cuArrays<float>(nWindowsDownRun, nWindowsAcrossRun);
+    snrImageRun = new cuArrays<real_type>(nWindowsDownRun, nWindowsAcrossRun);
     snrImageRun->allocate();
 
-    covImageRun = new cuArrays<float3>(nWindowsDownRun, nWindowsAcrossRun);
+    covImageRun = new cuArrays<real3_type>(nWindowsDownRun, nWindowsAcrossRun);
     covImageRun->allocate();
 
-    corrImageRun = new cuArrays<float>(nWindowsDownRun, nWindowsAcrossRun);
-    corrImageRun->allocate();
+    peakValueImageRun = new cuArrays<real_type>(nWindowsDownRun, nWindowsAcrossRun);
+    peakValueImageRun->allocate();
 
     // Offset fields.
-    offsetImage = new cuArrays<float2>(param->numberWindowDown, param->numberWindowAcross);
+    offsetImage = new cuArrays<real2_type>(param->numberWindowDown, param->numberWindowAcross);
     offsetImage->allocate();
 
     // SNR.
-    snrImage = new cuArrays<float>(param->numberWindowDown, param->numberWindowAcross);
+    snrImage = new cuArrays<real_type>(param->numberWindowDown, param->numberWindowAcross);
     snrImage->allocate();
 
     // Variance.
-    covImage = new cuArrays<float3>(param->numberWindowDown, param->numberWindowAcross);
+    covImage = new cuArrays<real3_type>(param->numberWindowDown, param->numberWindowAcross);
     covImage->allocate();
 
-    // Cross-correlation peak
-    corrImage = new cuArrays<float>(param->numberWindowDown, param->numberWindowAcross);
-    corrImage->allocate();
+    // Correlation surface peak value
+    peakValueImage = new cuArrays<real_type>(param->numberWindowDown, param->numberWindowAcross);
+    peakValueImage->allocate();
+
+
 
     // set up the cuda streams
     cudaStream_t streams[param->nStreams];
@@ -87,8 +103,8 @@ void cuAmpcorController::runAmpcor()
         // create each stream
         checkCudaErrors(cudaStreamCreate(&streams[ist]));
         // create the chunk processor for each stream
-        chunk[ist]= new cuAmpcorChunk(param.get(), referenceImage, secondaryImage,
-            offsetImageRun, snrImageRun, covImageRun, corrImageRun,
+        chunk[ist]= new cuAmpcorChunk(param, referenceImage, secondaryImage,
+            offsetImageRun, snrImageRun, covImageRun, peakValueImageRun,
             streams[ist]);
 
     }
@@ -131,17 +147,17 @@ void cuAmpcorController::runAmpcor()
     cuArraysCopyExtract(offsetImageRun, offsetImage, make_int2(0,0), streams[0]);
     cuArraysCopyExtract(snrImageRun, snrImage, make_int2(0,0), streams[0]);
     cuArraysCopyExtract(covImageRun, covImage, make_int2(0,0), streams[0]);
-    cuArraysCopyExtract(corrImageRun, corrImage, make_int2(0,0), streams[0]);
+    cuArraysCopyExtract(peakValueImageRun, peakValueImage, make_int2(0,0), streams[0]);
 
     /* save the offsets and gross offsets */
     // copy the offset to host
     offsetImage->allocateHost();
     offsetImage->copyToHost(streams[0]);
     // construct the gross offset
-    cuArrays<float2> *grossOffsetImage = new cuArrays<float2>(param->numberWindowDown, param->numberWindowAcross);
+    cuArrays<real2_type> *grossOffsetImage = new cuArrays<real2_type>(param->numberWindowDown, param->numberWindowAcross);
     grossOffsetImage->allocateHost();
     for(int i=0; i< param->numberWindows; i++)
-        grossOffsetImage->hostData[i] = make_float2(param->grossOffsetDown[i], param->grossOffsetAcross[i]);
+        grossOffsetImage->hostData[i] = make_real2(param->grossOffsetDown[i], param->grossOffsetAcross[i]);
 
     // check whether to merge gross offset
     if (param->mergeGrossOffset)
@@ -158,25 +174,24 @@ void cuAmpcorController::runAmpcor()
     // save the snr/cov images
     snrImage->outputToFile(param->snrImageName, streams[0]);
     covImage->outputToFile(param->covImageName, streams[0]);
-
-    // save the cross-correlation peak
-    corrImage->outputToFile(param->corrImageName, streams[0]);
+    peakValueImage->outputToFile(param->peakValueImageName, streams[0]);
 
     // Delete arrays.
     delete offsetImage;
     delete snrImage;
     delete covImage;
-    delete corrImage;
+    delete peakValueImage;
 
     delete offsetImageRun;
     delete snrImageRun;
     delete covImageRun;
-    delete corrImageRun;
+    delete peakValueImageRun;
 
     for (int ist=0; ist<param->nStreams; ist++)
     {
-        checkCudaErrors(cudaStreamDestroy(streams[ist]));
+        // cufftplan etc are stream dependent, need to be deleted before stream is destroyed
         delete chunk[ist];
+        checkCudaErrors(cudaStreamDestroy(streams[ist]));
     }
 
     delete referenceImage;
