@@ -1,6 +1,85 @@
 import xml.etree.ElementTree as ET
-from isce3.core import DateTime, StateVector, Orbit
+import isce3
+from isce3.core import DateTime, StateVector, Orbit, crop_external_orbit
 import journal
+
+
+def load_orbit(nisar_product, orbit_file, orbit_file_ref_epoch=None):
+    '''
+    Load the orbit from a NISAR product object or from an external file
+    (if provided)
+
+    Parameters
+    ----------
+    nisar_product: nisar.products.readers.Base
+        NISAR product object (e.g., RSLC) containing orbit ephemeris
+    orbit_file: str or None
+        Optional external orbit file
+    orbit_file_ref_epoch: isce3.core.DateTime or None
+        Optional reference epoch to be used as a reference for external orbit
+        files (e.g., the reference epoch from the radar grid). If `None`,
+        the reference epoch for the input NISAR product will be used instead
+
+    Returns
+    -------
+    orbit: isce3.core.Orbit
+        ISCE3 orbit object containing orbit ephemeris
+    '''
+
+    warning_channel = journal.warning("load_orbit")
+
+    # load the orbit from the RSLC metadata
+    orbit = nisar_product.getOrbit()
+
+    if orbit_file_ref_epoch is None:
+        orbit_file_ref_epoch = orbit.reference_epoch
+
+    # if an external orbit file has been provided, load it
+    # based on existing orbit within `nisar_product`
+    if orbit_file is not None:
+        external_orbit = load_orbit_from_xml(orbit_file,
+                                             orbit_file_ref_epoch)
+
+        # Apply 2 mins of padding before / after sensing period when
+        # cropping the external orbit.
+        # 2 mins of margin is based on the number of IMAGEN TEC samples
+        # required for TEC computation, with few more safety margins for
+        # possible needs in the future.
+        #
+        # `7` in the line below is came from the default value for `npad`
+        # in `crop_external_orbit()`. See:
+        # .../isce3/python/isce3/core/crop_external_orbit.py
+        npad = max(int(120.0 / external_orbit.spacing), 7)
+        orbit = crop_external_orbit(external_orbit, orbit, npad=npad)
+
+    elif orbit.reference_epoch != orbit_file_ref_epoch:
+        warning_channel.log('The reference epoch provided to load_orbit() does'
+                            ' not match with the orbit reference epoch of the'
+                            ' input NISAR product. The orbit reference epoch'
+                            ' of the NISAR product will be updated to match'
+                            ' the input reference epoch.')
+        orbit.update_reference_epoch(orbit_file_ref_epoch)
+
+    # ensure that the orbit reference epoch has not fractional part
+    # otherwise, trancate it to seconds precision
+    orbit_reference_epoch = orbit.reference_epoch
+    if orbit_reference_epoch.frac != 0:
+        warning_channel.log('the orbit reference epoch is not an'
+                            ' integer number. Truncating it'
+                            ' to seconds precision and'
+                            ' updating the orbit ephemeris'
+                            ' accordingly.')
+
+        epoch = isce3.core.DateTime(orbit_reference_epoch.year,
+                                    orbit_reference_epoch.month,
+                                    orbit_reference_epoch.day,
+                                    orbit_reference_epoch.hour,
+                                    orbit_reference_epoch.minute,
+                                    orbit_reference_epoch.second)
+
+        orbit.update_reference_epoch(epoch)
+
+    return orbit
 
 
 def load_orbit_from_xml(f, epoch: DateTime = None) -> Orbit:

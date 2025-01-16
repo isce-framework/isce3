@@ -6,12 +6,11 @@ import journal
 import os
 
 import isce3
-from isce3.core import crop_external_orbit
 from nisar.products.writers import BaseWriterSingleInput
 from nisar.workflows.h5_prep import set_get_geo_info
 from isce3.core.types import truncate_mantissa
 from isce3.geometry import get_near_and_far_range_incidence_angles
-from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.readers.orbit import load_orbit
 
 
 LEXICOGRAPHIC_BASE_POLS = ['HH', 'HV', 'VH', 'VV']
@@ -709,27 +708,27 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
     Base L2 writer class that can be used for NISAR L2 products
     """
 
-    def __init__(self, runconfig, *args, **kwargs):
+    def __init__(self, runconfig, *args, orbit=None, **kwargs):
 
         super().__init__(runconfig, *args, **kwargs)
 
         self.freq_pols_dict = self.cfg['processing']['input_subset'][
             'list_of_frequencies']
 
-        # if provided, load an external orbit from the runconfig file;
-        # othewise, load the orbit from the RSLC metadata
+        # This orbit file will be saved in the product metadata. It is assumed that
+        # the same orbit file was used in the SAS workflow processing.
         self.orbit_file = \
             self.cfg["dynamic_ancillary_file_group"]['orbit_file']
-        self.flag_external_orbit_file = self.orbit_file is not None
 
-        orbit_path = f'{self.input_product_path}/metadata/orbit'
-        self.orbit = isce3.core.load_orbit_from_h5_group(
-            self.input_hdf5_obj[orbit_path])
-
-        if self.flag_external_orbit_file:
+        # if the orbit has not been provided, i.e., `orbit is None`,
+        # load it from the input RSLC or from the external file (if provided)
+        # using load_orbit()
+        if orbit is not None:
+            self.orbit = orbit
+        else:
             ref_epoch = self.input_product_obj.getRadarGrid().ref_epoch
-            external_orbit = load_orbit_from_xml(self.orbit_file, ref_epoch)
-            self.orbit = crop_external_orbit(external_orbit, self.orbit)
+            self.orbit = load_orbit(self.input_product_obj, self.orbit_file,
+                                    ref_epoch)
 
     @property
     def frequencies(self) -> list[str]:
