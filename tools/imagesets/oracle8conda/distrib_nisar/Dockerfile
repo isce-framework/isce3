@@ -12,7 +12,7 @@ RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/SoilMoisture \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/QualityAssurance \
  && cd /opt/QualityAssurance && git checkout v12.0.0 && rm -rf .git \
- && cd /opt/SoilMoisture && git checkout v0.2.0 && rm -rf .git
+ && cd /opt/SoilMoisture && git checkout v0.2.1 && rm -rf .git
 
 FROM $distrib_img
 
