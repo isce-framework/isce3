@@ -101,7 +101,7 @@ def run(cfg: dict):
             ampcor.grossOffsetImageName = str(out_dir / 'gross_offset')
             ampcor.snrImageName = str(out_dir / 'snr')
             ampcor.covImageName = str(out_dir / 'covariance')
-            ampcor.corrImageName = str(out_dir / 'correlation_peak')
+            ampcor.peakValueImageName = str(out_dir / 'correlation_peak')
 
             # Create empty ENVI datasets. PyCuAmpcor will overwrite the
             # binary files. Note, use gdal to pass interleave option
