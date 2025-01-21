@@ -1,60 +1,35 @@
 /*
- * @file  cuAmpcorChunk.h
- * @brief Ampcor processor for a batch of windows
+ * @file  cuAmpcorProcessorROIPAC.h
+ * @brief Ampcor processor for a batch of windows with ROIPAC workflow
  *
  *
  */
 
-#ifndef __CUAMPCORCHUNK_H
-#define __CUAMPCORCHUNK_H
+#ifndef __CUAMPCORPROCESSORROIPAC_H
+#define __CUAMPCORPROCESSORROIPAC_H
 
-#include "GDALImage.h"
-#include "data_types.h"
-#include "cuArrays.h"
-#include "cuAmpcorParameter.h"
-#include "cuOverSampler.h"
-#include "cuSincOverSampler.h"
-#include "cuCorrFrequency.h"
-#include "cuCorrNormalizer.h"
+#include "cuAmpcorProcessor.h"
 
 
 /**
  * cuAmpcor processor for a chunk (a batch of windows)
  */
-class cuAmpcorChunk{
+class cuAmpcorProcessorROIPAC : public cuAmpcorProcessor{
 private:
-    int idxChunkDown;     ///< index of the chunk in total batches, down
-    int idxChunkAcross;   ///< index of the chunk in total batches, across
-    int idxChunk;         ///<
-    int nWindowsDown;     ///< number of windows in one chunk, down
-    int nWindowsAcross;   ///< number of windows in one chunk, across
-
-    int devId;            ///< GPU device ID to use
-    cudaStream_t stream;  ///< CUDA stream to use
-
-    GDALImage *referenceImage;  ///< reference image object
-    GDALImage *secondaryImage;  ///< secondary image object
-    cuAmpcorParameter *param;   ///< reference to the (global) parameters
-    cuArrays<real2_type> *offsetImage; ///< output offsets image
-    cuArrays<real_type> *snrImage;     ///< snr image
-    cuArrays<real3_type> *covImage;    ///< cov image
-    cuArrays<real_type> *peakValueImage;     ///< peak value image
 
     // local variables and workers
     // gpu buffer to load images from file
-    // image_complex_type uses original image type,
-    //    convert to complex_type when copied to c_referenceBatchRaw
     cuArrays<image_complex_type> * c_referenceChunkRaw, * c_secondaryChunkRaw;
     cuArrays<image_real_type> * r_referenceChunkRaw, * r_secondaryChunkRaw;
 
     // windows raw (not oversampled) data, complex and real
-    cuArrays<complex_type> * c_referenceBatchRaw, * c_secondaryBatchRaw;
+    cuArrays<complex_type> * c_referenceBatchRaw, * c_secondaryBatchRaw, * c_secondaryBatchZoomIn;
     cuArrays<real_type> * r_referenceBatchRaw, * r_secondaryBatchRaw;
 
     // windows oversampled data
     cuArrays<complex_type> * c_referenceBatchOverSampled, * c_secondaryBatchOverSampled;
     cuArrays<real_type> * r_referenceBatchOverSampled, * r_secondaryBatchOverSampled;
-    cuArrays<real_type> * r_corrBatch, * r_corrBatchZoomIn, * r_corrBatchZoomInOverSampled;
+    cuArrays<real_type> * r_corrBatchRaw, * r_corrBatchZoomIn, * r_corrBatchZoomInOverSampled, * r_corrBatchZoomInAdjust;
 
     // offset data
     cuArrays<int> *ChunkOffsetDown, *ChunkOffsetAcross;
@@ -85,6 +60,7 @@ private:
     // SNR estimation
     cuArrays<real_type> *r_corrBatchRawZoomIn;
     cuArrays<real_type> *r_corrBatchSum;
+    cuArrays<int> *i_corrBatchZoomInValid, *i_corrBatchValidCount;
     cuArrays<real_type> *r_snrValue;
 
     // Variance estimation
@@ -92,23 +68,21 @@ private:
 
 public:
     // constructor
-    cuAmpcorChunk(cuAmpcorParameter *param_,
+    cuAmpcorProcessorROIPAC(cuAmpcorParameter *param_,
         GDALImage *reference_, GDALImage *secondary_,
-        cuArrays<real2_type> *offsetImage_, cuArrays<real_type> *snrImage_,
+        cuArrays<complex_type> *offsetImage_, cuArrays<real_type> *snrImage_,
         cuArrays<real3_type> *covImage_, cuArrays<real_type> *peakValueImage_,
         cudaStream_t stream_);
     // destructor
-    ~cuAmpcorChunk();
+    ~cuAmpcorProcessorROIPAC() override;
 
     // local methods
-    void setIndex(int idxDown_, int idxAcross_);
     void loadReferenceChunk();
     void loadSecondaryChunk();
-    void getRelativeOffset(int *rStartPixel, const int *oStartPixel, int diff);
     // run the given chunk
-    void run(int, int);
+    void run(int, int) override;
 };
 
 
 
-#endif
+#endif //__CUAMPCORPROCESSORROIPAC_H

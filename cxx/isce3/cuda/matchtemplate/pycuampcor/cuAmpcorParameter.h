@@ -36,6 +36,7 @@ public:
     int deviceID;       ///< Targeted GPU device ID: use -1 to auto select
     int nStreams;       ///< Number of streams to asynchonize data transfers and compute kernels
     int derampMethod;   ///< Method for deramping 0=None, 1=average
+    int workflow;       ///< Workflow 0=ROIPAC, 1=GrIMP
 
     // chip or window size for raw data
     int windowSizeHeightRaw;        ///< Template window height (original size)
@@ -79,9 +80,16 @@ public:
     int2 corrZoomInOversampledSize; // corrZoomInSize * oversamplingFactor
 
     int corrStatWindowSize;     ///< correlation surface size used to estimate snr
-    // int corrRawZoomInHeight;    ///< correlation surface height used for oversampling
-    // int corrRawZoomInWidth;     ///< correlation surface width used for oversampling
+
     float thresholdSNR;      ///< Threshold of Signal noise ratio to remove noisy data
+
+        // parameters used in the first pass in ROIPAC workflow
+    // @TODO move them to workflow specific files
+    int searchWindowSizeHeightRawZoomIn;
+    int searchWindowSizeWidthRawZoomIn;
+    int corrRawZoomInHeight;    ///< correlation surface height used for oversampling
+    int corrRawZoomInWidth;     ///< correlation surface width used for oversampling
+
 
     //reference image
     std::string referenceImageName;    ///< reference SLC image name
@@ -134,6 +142,9 @@ public:
     int maxReferenceChunkHeight, maxReferenceChunkWidth; ///< max reference chunk size
     int maxSecondaryChunkHeight, maxSecondaryChunkWidth; ///< max secondary chunk size
 
+    int referenceLoadingOffsetDown, referenceLoadingOffsetAcross; ///< reference loading offset, depending on workflow (e.g, matching secondary)
+    int secondaryLoadingOffsetDown, secondaryLoadingOffsetAcross; ///< secondary loading offset, depending on workflow (e.g., with extra pads)
+
     std::string grossOffsetImageName;  ///< gross offset output filename
     std::string offsetImageName;       ///< Offset fields output filename
     std::string snrImageName;          ///< Output SNR filename
@@ -164,6 +175,8 @@ public:
     void checkPixelInImageRange();
     // Process other parameters after Python Input
     void setupParameters();
+    void _setupParameters_ROIPAC();
+    void _setupParameters_GrIMP();
 
 };
 

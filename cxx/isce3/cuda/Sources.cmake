@@ -28,9 +28,11 @@ geometry/Topo.cpp
 geometry/utilities.cu
 image/gpuResampSlc.cu
 image/ResampSlc.cpp
-matchtemplate/pycuampcor/cuAmpcorChunk.cpp
 matchtemplate/pycuampcor/cuAmpcorController.cpp
 matchtemplate/pycuampcor/cuAmpcorParameter.cpp
+matchtemplate/pycuampcor/cuAmpcorProcessor.cpp
+matchtemplate/pycuampcor/cuAmpcorProcessorGrIMP.cpp
+matchtemplate/pycuampcor/cuAmpcorProcessorROIPAC.cpp
 matchtemplate/pycuampcor/cuArrays.cpp
 matchtemplate/pycuampcor/cuArraysCopy.cu
 matchtemplate/pycuampcor/cuArraysPadding.cu
