@@ -264,7 +264,7 @@ class GenericSingleSourceL2Product(
         lookside = LookSide.Right if lookside_str.title() == "Right" else LookSide.Left
         ref_epoch = self.getOrbit().reference_epoch
         sensing_start_delta = DateTime(sensing_start) - ref_epoch
-        
+
         return RadarGridParameters(
             sensing_start=sensing_start_delta.total_seconds(),
             wavelength=wavelength,

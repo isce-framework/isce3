@@ -42,6 +42,7 @@ nisar/products/readers/GSLC.py
 nisar/products/readers/instrument_parser.py
 nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
+nisar/products/readers/rslc.py
 nisar/products/readers/rslc_cal.py
 nisar/workflows/crossmul.py
 nisar/workflows/estimate_abscal_factor.py

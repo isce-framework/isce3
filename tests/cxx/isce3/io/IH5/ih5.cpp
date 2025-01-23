@@ -45,7 +45,7 @@ TEST_F(IH5Test, findInFile) {
     // - Group and Dataset
     // - return absolute path
     std::vector<std::string> list = file.find(searchedName);
-    ASSERT_EQ(list.size(), 4);
+    ASSERT_EQ(list.size(), 5);
     for (auto i:list)
        ASSERT_TRUE(i[0] == root);
 
@@ -58,7 +58,7 @@ TEST_F(IH5Test, findInFile) {
     // - Group and Dataset
     // - return ABSOLUTE path
     list = file.find(searchedName, startName);
-    ASSERT_EQ(list.size(), 3);
+    ASSERT_EQ(list.size(), 4);
     for (auto i:list)
        ASSERT_TRUE(i[0] == root);
 
@@ -70,7 +70,7 @@ TEST_F(IH5Test, findInFile) {
     // - Group and Dataset
     // - return RELATIVE path
     list = file.find(searchedName, startName, "BOTH", "RELATIVE");
-    ASSERT_EQ(list.size(), 3);
+    ASSERT_EQ(list.size(), 4);
     for (auto i:list)
        ASSERT_FALSE(i[0] == root);
 
@@ -82,7 +82,7 @@ TEST_F(IH5Test, findInFile) {
     // - Dataset only
     // - return relative path
     list = file.find(searchedName, startName, "DATASET", "RELATIVE");
-    ASSERT_EQ(list.size(), 2);
+    ASSERT_EQ(list.size(), 3);
     for (auto i:list)
        ASSERT_FALSE(i[0] == root);
 
@@ -129,7 +129,7 @@ TEST_F(IH5Test, findInGroup) {
     // - Group and Dataset
     // - return absolute path from Group location
     std::vector<std::string> list = group.find(searchedName);
-    ASSERT_EQ(list.size(), 3);
+    ASSERT_EQ(list.size(), 4);
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'c' || i[0] == 'n');
 
@@ -141,7 +141,7 @@ TEST_F(IH5Test, findInGroup) {
     // - Group and Dataset
     // - return ABSOLUTE path (i.e., from group root, not file root "/")
     list = group.find(searchedName, startName);
-    ASSERT_EQ(list.size(), 3);
+    ASSERT_EQ(list.size(), 4);
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'c');
 
@@ -153,7 +153,7 @@ TEST_F(IH5Test, findInGroup) {
     // - Group and Dataset
     // - return RELATIVE path (i.e., from startName, not from group root)
     list = group.find(searchedName, startName, "BOTH", "RELATIVE");
-    ASSERT_EQ(list.size(), 3);
+    ASSERT_EQ(list.size(), 4);
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'f');
 
@@ -165,7 +165,7 @@ TEST_F(IH5Test, findInGroup) {
     // - Dataset only
     // - return relative path
     list = group.find(searchedName, startName, "DATASET", "RELATIVE");
-    ASSERT_EQ(list.size(), 2);
+    ASSERT_EQ(list.size(), 3);
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'f');
 //    for (auto i:list) {
@@ -208,7 +208,7 @@ TEST_F(IH5Test, findRegularExpression) {
     // - Group and Dataset
     // - return absolute path
     std::vector<std::string> list = file.find(searchedName);
-    ASSERT_EQ(list.size(), 6);
+    ASSERT_EQ(list.size(), 7);
     for (auto i:list)
        ASSERT_TRUE(i[0] == '/');
 
