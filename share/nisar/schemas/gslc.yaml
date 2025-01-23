@@ -64,7 +64,7 @@ runconfig:
             product_version: str('^\d+\.\d+\.\d+$', required=False)
             product_doi: str(required=False)
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
-            processing_type: enum('PR', 'UR', required=False)
+            processing_type: enum('PR', 'UR', 'OD', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
             urgent_request_id: list(str(), required=False)
             processing_center: str(required=False)
