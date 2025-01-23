@@ -929,6 +929,8 @@ class InSARBaseWriter(h5py.File):
             processing_type = np.bytes_('Nominal')
         elif processing_type == 'UR':
             processing_type = np.bytes_('Urgent')
+        elif processing_type == 'OD':
+            processing_type = np.bytes_('Custom')
         else:
             processing_type = np.bytes_('Undefined')
 
