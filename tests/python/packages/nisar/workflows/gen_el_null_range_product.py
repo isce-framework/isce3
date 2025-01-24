@@ -26,7 +26,8 @@ class TestGenElNullRangeProduct:
         antenna_file=os.path.join(iscetest.data, ant_filename),
         freq_band=None, txrx_pol=None, dem_file=None, apply_caltone=False,
         az_block_dur=2.0, out_path='.', ref_height=-100.0,
-        orbit_file=None, attitude_file=None, plot=False, polyfit_deg=6
+        orbit_file=None, attitude_file=None, plot=False, polyfit_deg=6,
+        exclude_nulls=None
     )
 
     def test_correct_args(self):
@@ -48,4 +49,9 @@ class TestGenElNullRangeProduct:
             iscetest.data, self.orbit_filename)
         self.args.attitude_file = os.path.join(
             iscetest.data, self.attitude_filename)
+        gen_el_null_range_product(self.args)
+
+    def test_exclude_nulls(self):
+        # exclude null # 2
+        self.args.exclude_nulls = [2]
         gen_el_null_range_product(self.args)

@@ -22,8 +22,8 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
                          orbit=None, attitude=None, ant=None,
                          dem=None, num_rgb_avg=8, az_block_dur=4.0,
                          time_interval=2.0, dop_method='CDE', subband=False,
-                         polyfit_deg=3, polyfit=False, out_path='.',
-                         plot=False, logger=None):
+                         polyfit_deg=3, polyfit=False, exclude_beams=None,
+                         out_path='.', plot=False, logger=None):
     """Generates 2-D Doppler LUT as a function of slant range and azimuth time.
 
     It generates Doppler map in isce3.core.LUT2d format.
@@ -100,6 +100,12 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
         If is True, then polyfitted Doppler product with degree "polyfit_deg"
         will be used in place of estimated one as a function of slant range per
         azimuth block.
+    exclude_beams : list of int, optional
+        List of excluded beam numbers from the polyfit simply in DM2 case.
+        Ignored if the input product is not DM2.
+        The beam number is in the range [1, N], where N is the number
+        of beams or RX channels. By default, all beams are included
+        in the polyfitting of Doppler over entire swath of DM2 products.
     out_path : str, default='.'
         Ouput directory for dumping PNG files, if `plot` is True.
     plot : bool, default=False
@@ -254,6 +260,19 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
             f'EL angles @ beams transitions -> {np.rad2deg(el_trans)} (deg)')
         logger.info('AZ angle for all beams transitions -> '
                     f'{np.rad2deg(az_trans)} (deg)')
+        # check list of beams to be excluded from polyfit if any for DM2
+        if exclude_beams is not None:
+            exclude_beams = set(exclude_beams)
+            logger.info('Beams to be excluded in DM2 Doppler polyftting '
+                        f'-> {exclude_beams}')
+            if not exclude_beams.issubset(list_rx_active):
+                logger.warning(
+                    f'Excluded beams {exclude_beams} is out of range of '
+                    f'active RX channels {list_rx_active}!'
+                    )
+                exclude_beams.intersection_update(list_rx_active)
+                logger.warning(
+                        f'Updated list of excluded beams -> {exclude_beams}')
         # initialize DEM object if None
         if dem is None:
             dem = DEMInterpolator()
@@ -455,18 +474,29 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
         pos_mid, vel_mid = orbit.interpolate(az_time_blk[n_azblk])
 
         # get decoded raw echoes of one azimuth block and for all range bins
+        mask_bad = False
         if is_multi_chanl:
-            echo = form_single_tap_dbf_echo(raw_dset, slice_line,
-                                            el_trans, az_trans,
-                                            pos_mid, vel_mid, quat_mid,
-                                            sr_lsp, dem)
+            echo, rgb_limits = form_single_tap_dbf_echo(
+                raw_dset, slice_line, el_trans, az_trans,
+                pos_mid, vel_mid, quat_mid, sr_lsp, dem
+                )
+            if exclude_beams is not None:
+                mask_bad = np.zeros(rgb_limits[-1], dtype='bool')
+                for n_b in exclude_beams:
+                    rgb_slice = slice(rgb_limits[n_b - 1], rgb_limits[n_b])
+                    mask_bad[rgb_slice] = True
+                    logger.info(
+                        f'For AZ block # {n_azblk + 1}, exclude slant ranges '
+                        f'(m, m) within -> ({sr_lsp[rgb_slice.start] :.3f}, '
+                        f'{sr_lsp[rgb_slice.stop - 1]:.3f}) '
+                        )
         else:  # single channel
             echo = raw_dset[slice_line]
 
         # create a mask for invalid/bad range bins for any reason
         # invalid values are either nan or zero but this does not include
         # TX gaps that may be filled with TX chirp!
-        mask_bad = (np.isnan(echo) | np.isclose(echo, 0)).sum(axis=0) > 0
+        mask_bad |= (np.isnan(echo) | np.isclose(echo, 0)).sum(axis=0) > 0
 
         # build a mask array of range bins assuming fixed PRF within
         # each azimuth block. This is needed in case the TX gaps are filled
@@ -580,7 +610,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
             _plot_save_dop(n_azblk, slrg_per_blk, dop_cnt,
                            az_time_blk[n_azblk], epoch_utc_str, out_path,
                            freq_band, txrx_pol, polyfit_deg,
-                           mask_rgb_avg_all[n_azblk])
+                           mask_rgb_avg_all[n_azblk], prf)
 
         # calculate absolute doppler and its ambiguity number to be added
         # to estimated ambiguous doppler centroid for final LUT2d
@@ -605,7 +635,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
     dop_lut = LUT2d(slrg_per_blk, az_time_blk, dop_cnt_map)
 
     # given estimation of invalid range bins from polyfit,
-    # set the mask to be all True after polyeval!
+    # set the mask to be all True after polyval!
     if polyfit:
         mask_rgb_avg_all[:] = True
 
@@ -755,11 +785,12 @@ def _plot_subband_filters(samprate: float, centerfreq: float,
 def _plot_save_dop(n_azblk: int, slrg_per_blk: np.ndarray, dop_cnt: np.ndarray,
                    az_time: float, epoch_utc_str: str, out_path: str,
                    freq_band: str, txrx_pol: str, polyfit_deg: int,
-                   mask_valid_rgb: np.ndarray):
+                   mask_valid_rgb: np.ndarray, prf: float):
     """Plot Doppler as a function Slant range and save it as PNG file"""
     fig = plt.figure(n_azblk, figsize=(8, 7))
     ax = fig.add_subplot(111)
     # only polyfit over the valid range blocks!
+    dop_cnt = unwrap_doppler(dop_cnt, prf)
     pf_coeff_dop_rg = np.polyfit(slrg_per_blk[mask_valid_rgb],
                                  dop_cnt[mask_valid_rgb], polyfit_deg)
     pv_dop_rg = np.polyval(pf_coeff_dop_rg, slrg_per_blk)
@@ -779,8 +810,8 @@ def _plot_save_dop(n_azblk: int, slrg_per_blk: np.ndarray, dop_cnt: np.ndarray,
             bbox=plt_props)
     ax.grid(True)
     ax.set_title(
-        'Doppler Centroids from Raw Echo\n@ azimuth-time = '
-        f'{az_time:.3f} sec\nsince {epoch_utc_str}'
+        'Doppler Centroids  (unwrapped ambiguous) from Raw Echo\n@ '
+        f'azimuth-time = {az_time:.3f} sec\nsince {epoch_utc_str}'
     )
     ax.set_ylabel("Doppler (Hz)")
     ax.set_xlabel("Slant Range (Km)")

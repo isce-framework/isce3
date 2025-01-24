@@ -9,6 +9,8 @@ import time
 import argparse as argp
 from datetime import datetime, timezone
 
+import numpy as np
+
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.antenna import AntennaParser
 from isce3.geometry import DEMInterpolator
@@ -94,7 +96,13 @@ def cmd_line_parser():
     prs.add_argument('--deg', type=int, dest='polyfit_deg',
                      default=6, help='Degree of the polyfit used for'
                      ' smoothing and location estimation of echo null.')
-
+    prs.add_argument('--exclude-nulls', type=int, nargs='*',
+                     dest='exclude_nulls',
+                     help=('List of excluded nulls, in the range [1, N-1], '
+                           'where N is the number beams or RX channels. '
+                           'The respective quality factors are simply '
+                           'set to zero!')
+                     )
     return prs.parse_args()
 
 
@@ -169,6 +177,9 @@ def gen_el_null_range_product(args):
         raw_obj, args.freq_band, args.txrx_pol)
     logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
 
+    exclude_nulls = args.exclude_nulls
+    if exclude_nulls is not None:
+        exclude_nulls = set(exclude_nulls)
     # loop over all desired frequency bands and their respective desired
     # polarizations
     for freq_band in frq_pol:
@@ -185,6 +196,18 @@ def gen_el_null_range_product(args):
                  orbit=orbit, attitude=attitude, freq_band=freq_band,
                  txrx_pol=txrx_pol, **kwargs
             )
+            # check the excluded nulls whose quality factor will be zeroed out
+            list_nulls = np.unique(null_num)
+            logger.info(f'List of nulls -> {list_nulls}')
+            if exclude_nulls is not None:
+                logger.info('List of excluded nulls w/ zero quality '
+                            f'factors -> {exclude_nulls}')
+                if not exclude_nulls.issubset(list_nulls):
+                    logger.warning(f'Excluded nulls {exclude_nulls} is out '
+                                   f'of range of {list_nulls}.')
+                    exclude_nulls.intersection_update(list_nulls)
+                    logger.warning(
+                        f'Updated list of excluded nulls -> {exclude_nulls}')
             # get the first and last utc azimuth time w/o fractional seconds
             # in "%Y%m%dT%H%M%S" format to be used as part of CSV product
             # filename.
@@ -210,12 +233,17 @@ def gen_el_null_range_product(args):
                               ' (deg),Quality Factor\n')
                 # report null-only product (null # > 0) w/ quality checking
                 # afterwards
-                for nn in range(null_num.size):
+                for nn, null_val in enumerate(null_num):
+                    quality_factor = 1 - pow_ratio[nn]
+                    # Simply zero out quality factors for excluded nulls.
+                    if exclude_nulls is not None:
+                        if null_val in exclude_nulls:
+                            quality_factor *= 0
                     fid_csv.write(
                         '{:s},{:1s},{:d},{:.3f},{:.3f},{:.3f}\n'.format(
                             az_datetime[nn].isoformat_usec(), sar_band_char,
                             null_num[nn], sr_echo[nn], el_ant[nn],
-                            1 - pow_ratio[nn])
+                            quality_factor)
                     )
                     # report possible invalid items/Rows
                     # add three for header line + null_zero + 0-based index to
