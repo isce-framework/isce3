@@ -10,8 +10,8 @@ RUN apk add git
 ARG GIT_OAUTH_TOKEN
 RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/SoilMoisture \
- && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/QualityAssurance \
- && cd /opt/QualityAssurance && git checkout v12.0.0 && rm -rf .git \
+ && git clone https://github.com/isce-framework/nisarqa.git \
+ && cd /opt/nisarqa && git checkout v13.0.0 && rm -rf .git \
  && cd /opt/SoilMoisture && git checkout v0.2.1 && rm -rf .git
 
 FROM $distrib_img
@@ -21,11 +21,11 @@ COPY soilmoisture-spec-file.txt /tmp/spec-file.txt
 RUN conda create -n SoilMoisture --file /tmp/spec-file.txt && conda clean -ay
 
 # copy the repo from the intermediate image
-COPY --from=0 /opt/QualityAssurance /opt/QualityAssurance
+COPY --from=0 /opt/nisarqa /opt/nisarqa
 COPY --from=0 /opt/SoilMoisture /opt/SoilMoisture
 
 # install
-RUN cd /opt/QualityAssurance && pip install --no-deps .
+RUN cd /opt/nisarqa && pip install --no-deps .
 RUN cd /opt/SoilMoisture/src && conda run -n SoilMoisture make install
 
 # Add image labels following Open Containers Initiative specifications
