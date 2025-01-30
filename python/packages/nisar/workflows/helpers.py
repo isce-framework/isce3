@@ -1,7 +1,7 @@
 '''
 collection of useful functions used across workflows
 '''
-
+from __future__ import annotations
 import datetime
 import os
 import pathlib
