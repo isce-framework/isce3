@@ -137,7 +137,7 @@ def run(cfg):
             rslc_datasets = []
             gslc_datasets = []
 
-#            stats_complex_list = [stats_complex()] * len(pol_list)
+            stats_complex_list = [stats_complex()] * len(pol_list)
 
             for polarization in pol_list:
                 # check the datatype of RSLC
@@ -202,8 +202,8 @@ def run(cfg):
                                           subswaths=sub_swaths)
 
                 # update the numbers for stats computation
-#                for i, gslc_data_blk in enumerate(gslc_data_blks):
-#                    stats_complex_list[i].accumulate_complex(gslc_data_blk)
+                for i, gslc_data_blk in enumerate(gslc_data_blks):
+                    stats_complex_list[i].accumulate_complex(gslc_data_blk)
 
                 # write geocoded blocks to respective HDF5 datasets
                 for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
@@ -229,8 +229,8 @@ def run(cfg):
                 gslc_raster = isce3.io.Raster(f"IH5:::ID={gslc_dataset.id.id}".encode("utf-8"), update=True)
                 compute_stats_complex_data(gslc_raster, gslc_dataset)
 
-#                stats_complex_list[i].update_stat_complex()
-#                write_stats_complex_data(gslc_dataset, stats_complex_list[i])
+                stats_complex_list[i].update_stat_complex()
+                write_stats_complex_data(gslc_dataset, stats_complex_list[i])
 
 
 
