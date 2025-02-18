@@ -3,6 +3,9 @@ import numpy as np
 from osgeo import gdal
 
 class stats:
+    '''
+    A class to accumulator and stat computation
+    '''
     def __init__(self):
         self.min: float=np.inf
         self.max: float=-np.inf
@@ -24,6 +27,10 @@ class stats:
         array: np.ndarray
             input array
         '''
+        # Skip the accumulation when all values in the array is NaN
+        if np.alltrue(np.isnan()):
+            return
+
         self.num_sample += np.sum(~np.isnan(array))
         self.sum_sample += np.nansum(array)
         self.sq_sum_sample += np.nansum(array**2)
@@ -40,6 +47,9 @@ class stats:
 
 
 class stats_complex(stats):
+    '''
+    A class to accumulator and stat computation for complex numbers
+    '''
 
     def __init__(self):
         self.imag = stats()
@@ -48,7 +58,6 @@ class stats_complex(stats):
     def accumulate_complex(self, array):
         self.real.accumulate(array.real)
         self.imag.accumulate(array.imag)
-
 
     def update_stat_complex(self):
         self.real.update_stat()
