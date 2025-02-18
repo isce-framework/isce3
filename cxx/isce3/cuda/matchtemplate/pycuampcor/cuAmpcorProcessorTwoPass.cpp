@@ -1,4 +1,4 @@
-#include "cuAmpcorProcessorROIPAC.h"
+#include "cuAmpcorProcessorTwoPass.h"
 
 #include "cuAmpcorUtil.h"
 #include <cufft.h>
@@ -9,7 +9,7 @@
  * @param[in] idxDown_  index of the chunk along Down/Azimuth direction
  * @param[in] idxAcross_ index of the chunk along Across/Range direction
  */
-void cuAmpcorProcessorROIPAC::run(int idxDown_, int idxAcross_)
+void cuAmpcorProcessorTwoPass::run(int idxDown_, int idxAcross_)
 {
     // set chunk index
     setIndex(idxDown_, idxAcross_);
@@ -174,11 +174,11 @@ void cuAmpcorProcessorROIPAC::run(int idxDown_, int idxAcross_)
 #endif
 
     // oversample the correlation surface
-    if(param->oversamplingMethod) {
-        // sinc interpolator only computes (-i_sincwindow, i_sincwindow)*oversamplingfactor
+    if(param->corrSurfaceOverSamplingMethod) {
+        // sinc interpolator only computes (-i_sincwindow, i_sincwindow)*oversampling factor
         // we need the max loc as the center if shifted
         corrSincOverSampler->execute(r_corrBatchZoomInAdjust, r_corrBatchZoomInOverSampled,
-            maxLocShift, param->oversamplingFactor*param->rawDataOversamplingFactor
+            maxLocShift, param->corrSurfaceOverSamplingFactor*param->rawDataOversamplingFactor
             );
     }
     else {
@@ -202,7 +202,7 @@ void cuAmpcorProcessorROIPAC::run(int idxDown_, int idxAcross_)
     // determine the final offset from non-oversampled (pixel) and oversampled (sub-pixel)
     // = (Init-HalfsearchRange) + ZoomIn/(2*ovs)
     cuSubPixelOffset2Pass(offsetInit, offsetZoomIn, offsetFinal,
-        param->oversamplingFactor, param->rawDataOversamplingFactor,
+        param->corrSurfaceOverSamplingFactor, param->rawDataOversamplingFactor,
         param->halfSearchRangeDownRaw, param->halfSearchRangeAcrossRaw,
         stream);
 
@@ -218,7 +218,7 @@ void cuAmpcorProcessorROIPAC::run(int idxDown_, int idxAcross_)
 
 }
 
-void cuAmpcorProcessorROIPAC::loadReferenceChunk()
+void cuAmpcorProcessorTwoPass::loadReferenceChunk()
 {
 
     // we first load the whole chunk of image from cpu to a gpu buffer c(r)_referenceChunkRaw
@@ -247,7 +247,7 @@ void cuAmpcorProcessorROIPAC::loadReferenceChunk()
         ChunkOffsetAcross->copyToDevice(stream);
 
         // check whether the image is complex (e.g., SLC) or real( e.g. TIFF)
-        if(referenceImage->isComplex())
+        if(param->referenceImageDataType==2)
         {
             // allocate a gpu buffer to load data from cpu/file
             // try allocate/deallocate the buffer on the fly to save gpu memory 07/09/19
@@ -291,7 +291,7 @@ void cuAmpcorProcessorROIPAC::loadReferenceChunk()
     } // end of if all pixels out of range
 }
 
-void cuAmpcorProcessorROIPAC::loadSecondaryChunk()
+void cuAmpcorProcessorTwoPass::loadSecondaryChunk()
 {
     // get the chunk size to be loaded to gpu
     int height =  param->secondaryChunkHeight[idxChunk]; // number of pixels along height
@@ -311,7 +311,7 @@ void cuAmpcorProcessorROIPAC::loadSecondaryChunk()
         getRelativeOffset(ChunkOffsetAcross->hostData, param->secondaryStartPixelAcross, param->secondaryChunkStartPixelAcross[idxChunk]);
         ChunkOffsetAcross->copyToDevice(stream);
 
-        if(secondaryImage->isComplex())
+        if(param->secondaryImageDataType==2)
         {
             c_secondaryChunkRaw = new cuArrays<complex_type> (param->maxSecondaryChunkHeight, param->maxSecondaryChunkWidth);
             c_secondaryChunkRaw->allocate();
@@ -359,7 +359,7 @@ void cuAmpcorProcessorROIPAC::loadSecondaryChunk()
 }
 
 /// constructor
-cuAmpcorProcessorROIPAC::cuAmpcorProcessorROIPAC(cuAmpcorParameter *param_, GDALImage *reference_, GDALImage *secondary_,
+cuAmpcorProcessorTwoPass::cuAmpcorProcessorTwoPass(cuAmpcorParameter *param_, SlcImage *reference_, SlcImage *secondary_,
     cuArrays<real2_type> *offsetImage_, cuArrays<real_type> *snrImage_, cuArrays<real3_type> *covImage_, cuArrays<real_type> *peakValueImage_,
     cudaStream_t stream_)
     : cuAmpcorProcessor(param_, reference_, secondary_, offsetImage_, snrImage_, covImage_, peakValueImage_, stream_)
@@ -456,8 +456,8 @@ cuAmpcorProcessorROIPAC::cuAmpcorProcessorROIPAC(cuAmpcorParameter *param_, GDAL
 
 
     r_corrBatchZoomInOverSampled = new cuArrays<real_type> (
-        param->zoomWindowSize * param->oversamplingFactor,
-        param->zoomWindowSize * param->oversamplingFactor,
+        param->zoomWindowSize * param->corrSurfaceOverSamplingFactor,
+        param->zoomWindowSize * param->corrSurfaceOverSamplingFactor,
         param->numberWindowDownInChunk,
         param->numberWindowAcrossInChunk);
     r_corrBatchZoomInOverSampled->allocate();
@@ -522,13 +522,13 @@ cuAmpcorProcessorROIPAC::cuAmpcorProcessorROIPAC(cuAmpcorParameter *param_, GDAL
 
     // end of new arrays
 
-    if(param->oversamplingMethod) {
-        corrSincOverSampler = new cuSincOverSamplerR2R(param->oversamplingFactor, stream);
+    if(param->corrSurfaceOverSamplingMethod) {
+        corrSincOverSampler = new cuSincOverSamplerR2R(param->corrSurfaceOverSamplingFactor, stream);
     }
     else {
         corrOverSampler= new cuOverSamplerR2R(param->zoomWindowSize, param->zoomWindowSize,
-            (param->zoomWindowSize)*param->oversamplingFactor,
-            (param->zoomWindowSize)*param->oversamplingFactor,
+            (param->zoomWindowSize)*param->corrSurfaceOverSamplingFactor,
+            (param->zoomWindowSize)*param->corrSurfaceOverSamplingFactor,
             param->numberWindowDownInChunk*param->numberWindowAcrossInChunk,
             stream);
     }
@@ -563,12 +563,12 @@ cuAmpcorProcessorROIPAC::cuAmpcorProcessorROIPAC(cuAmpcorParameter *param_, GDAL
 }
 
 // destructor
-cuAmpcorProcessorROIPAC::~cuAmpcorProcessorROIPAC()
+cuAmpcorProcessorTwoPass::~cuAmpcorProcessorTwoPass()
 {
     corrNormalizerOverSampled.release();
     corrNormalizerRaw.release();
 
-    if(param->oversamplingMethod) {
+    if(param->corrSurfaceOverSamplingMethod) {
         delete corrSincOverSampler;
     }
     else {

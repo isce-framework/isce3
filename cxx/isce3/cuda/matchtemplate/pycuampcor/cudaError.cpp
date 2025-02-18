@@ -15,20 +15,8 @@
 #endif
 #endif
 
-template<>
-void check(cudaError_t result, char const *const func, const char *const file, int const line)
-{
-    if (result) {
-        fprintf(stderr, "CUDA error at %s:%d code=%d(%s: %s) \n",
-                file, line, static_cast<unsigned int>(result), func, cudaGetErrorString(result));
-        DEVICE_RESET
-        // Make sure we call CUDA Device Reset before exiting
-        exit(EXIT_FAILURE);
-    }
-}
-
-template<>
-void check(cufftResult_t result, char const *const func, const char *const file, int const line)
+template<typename T >
+void check(T result, char const *const func, const char *const file, int const line)
 {
     if (result) {
         fprintf(stderr, "CUDA error at %s:%d code=%d(%s) \n",
@@ -39,6 +27,8 @@ void check(cufftResult_t result, char const *const func, const char *const file,
     }
 }
 
+template void check(cudaError_t, char const *const, const char *const, int const);
+template void check(cufftResult_t, char const *const, const char *const, int const);
 
 void __getLastCudaError(const char *errorMessage, const char *file, const int line)
 {

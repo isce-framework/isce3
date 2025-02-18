@@ -1,4 +1,4 @@
-#include "cuAmpcorProcessorGrIMP.h"
+#include "cuAmpcorProcessorOnePass.h"
 
 #include "cuAmpcorUtil.h"
 #include <cufft.h>
@@ -9,7 +9,7 @@
  * @param[in] idxDown_  index of the chunk along Down/Azimuth direction
  * @param[in] idxAcross_ index of the chunk along Across/Range direction
  */
-void cuAmpcorProcessorGrIMP::run(int idxDown_, int idxAcross_)
+void cuAmpcorProcessorOnePass::run(int idxDown_, int idxAcross_)
 {
     // set chunk index
     setIndex(idxDown_, idxAcross_);
@@ -81,7 +81,7 @@ void cuAmpcorProcessorGrIMP::run(int idxDown_, int idxAcross_)
     // find the maximum location of the correlation surface, in a rectangle area {range} from {start}
     int extraPadSize = param->halfZoomWindowSizeRaw*param->rawDataOversamplingFactor;
     int2 start = make_int2(extraPadSize, extraPadSize);
-    int2 range = make_int2(r_corrBatch->height-extraPadSize, r_corrBatch->width-extraPadSize);
+    int2 range = make_int2(r_corrBatch->height-2*extraPadSize, r_corrBatch->width-2*extraPadSize);
     cuArraysMaxloc2D(r_corrBatch, start, range, offsetInit, r_maxval, stream);
 
 #ifdef CUAMPCOR_DEBUG
@@ -101,7 +101,7 @@ void cuAmpcorProcessorGrIMP::run(int idxDown_, int idxAcross_)
 
     // statistics of correlation surface
     // estimate variance on r_corrBatch
-    cuEstimateVariance(r_corrBatch, offsetInit, r_maxval, r_referenceBatchOverSampled->size, param->oversamplingFactor, r_covValue, stream);
+    cuEstimateVariance(r_corrBatch, offsetInit, r_maxval, r_referenceBatchOverSampled->size, param->corrSurfaceOverSamplingFactor, r_covValue, stream);
 
     // snr on the extracted surface r_corrBatchZoomIn
     cuArraysSumSquare(r_corrBatchZoomIn, r_corrBatchSum, stream);
@@ -114,11 +114,11 @@ void cuAmpcorProcessorGrIMP::run(int idxDown_, int idxAcross_)
 #endif
 
     // oversample the correlation surface
-    if(param->oversamplingMethod) {
+    if(param->corrSurfaceOverSamplingMethod) {
         // sinc interpolator only computes (-i_sincwindow, i_sincwindow)*oversamplingfactor
         // we need the max loc as the center if shifted
         corrSincOverSampler->execute(r_corrBatchZoomIn, r_corrBatchZoomInOverSampled,
-             maxLocShift, param->oversamplingFactor*param->rawDataOversamplingFactor
+             maxLocShift, param->corrSurfaceOverSamplingFactor*param->rawDataOversamplingFactor
             );
 
     }
@@ -144,8 +144,8 @@ void cuAmpcorProcessorGrIMP::run(int idxDown_, int idxAcross_)
     cuSubPixelOffset(offsetInit, offsetZoomIn, offsetFinal,
         make_int2(param->corrWindowSize.x/2, param->corrWindowSize.y/2), // init offset origin
         param->rawDataOversamplingFactor, // init offset factor
-        make_int2(param->corrZoomInSize.x/2*param->oversamplingFactor, param->corrZoomInSize.y/2*param->oversamplingFactor),
-        param->rawDataOversamplingFactor*param->oversamplingFactor,
+        make_int2(param->corrZoomInSize.x/2*param->corrSurfaceOverSamplingFactor, param->corrZoomInSize.y/2*param->corrSurfaceOverSamplingFactor),
+        param->rawDataOversamplingFactor*param->corrSurfaceOverSamplingFactor,
         stream);
 
 #ifdef CUAMPCOR_DEBUG
@@ -167,7 +167,7 @@ void cuAmpcorProcessorGrIMP::run(int idxDown_, int idxAcross_)
 
 
 /// constructor
-cuAmpcorProcessorGrIMP::cuAmpcorProcessorGrIMP(cuAmpcorParameter *param_, GDALImage *reference_, GDALImage *secondary_,
+cuAmpcorProcessorOnePass::cuAmpcorProcessorOnePass(cuAmpcorParameter *param_, SlcImage *reference_, SlcImage *secondary_,
     cuArrays<real2_type> *offsetImage_, cuArrays<real_type> *snrImage_, cuArrays<real3_type> *covImage_, cuArrays<real_type> *peakValueImage_,
     cudaStream_t stream_)
     : cuAmpcorProcessor(param_, reference_, secondary_, offsetImage_, snrImage_, covImage_, peakValueImage_, stream_)
@@ -277,8 +277,8 @@ cuAmpcorProcessorGrIMP::cuAmpcorProcessorGrIMP(cuAmpcorParameter *param_, GDALIm
 
     // end of new arrays
 
-    if(param->oversamplingMethod) {
-        corrSincOverSampler = new cuSincOverSamplerR2R(param->oversamplingFactor, stream);
+    if(param->corrSurfaceOverSamplingMethod) {
+        corrSincOverSampler = new cuSincOverSamplerR2R(param->corrSurfaceOverSamplingFactor, stream);
     }
     else {
         corrOverSampler= new cuOverSamplerR2R(
@@ -308,7 +308,7 @@ cuAmpcorProcessorGrIMP::cuAmpcorProcessorGrIMP(cuAmpcorParameter *param_, GDALIm
 #endif
 }
 
-void cuAmpcorProcessorGrIMP::loadReferenceChunk()
+void cuAmpcorProcessorOnePass::loadReferenceChunk()
 {
 
     // we first load the whole chunk of image from cpu to a gpu buffer c(r)_referenceChunkRaw
@@ -370,7 +370,7 @@ void cuAmpcorProcessorGrIMP::loadReferenceChunk()
 #endif
 
         // check whether the image is complex (e.g., SLC) or real( e.g. TIFF)
-        if(referenceImage->isComplex())
+        if(param->referenceImageDataType==2)
         {
             // allocate a gpu buffer to load data from cpu/file
             // try allocate/deallocate the buffer on the fly to save gpu memory 07/09/19
@@ -413,7 +413,7 @@ void cuAmpcorProcessorGrIMP::loadReferenceChunk()
     } // end of if all pixels out of range
 }
 
-void cuAmpcorProcessorGrIMP::loadSecondaryChunk()
+void cuAmpcorProcessorOnePass::loadSecondaryChunk()
 {
     // get the chunk size to be loaded to gpu
     int height =  param->secondaryChunkHeight[idxChunk]; // number of pixels along height
@@ -433,7 +433,7 @@ void cuAmpcorProcessorGrIMP::loadSecondaryChunk()
         getRelativeOffset(ChunkOffsetAcross->hostData, param->secondaryStartPixelAcross, param->secondaryChunkStartPixelAcross[idxChunk]);
         ChunkOffsetAcross->copyToDevice(stream);
 
-        if(secondaryImage->isComplex())
+        if(param->secondaryImageDataType==2)
         {
             c_secondaryChunkRaw = new cuArrays<image_complex_type> (param->maxSecondaryChunkHeight, param->maxSecondaryChunkWidth);
             c_secondaryChunkRaw->allocate();
@@ -481,11 +481,11 @@ void cuAmpcorProcessorGrIMP::loadSecondaryChunk()
 }
 
 // destructor
-cuAmpcorProcessorGrIMP::~cuAmpcorProcessorGrIMP()
+cuAmpcorProcessorOnePass::~cuAmpcorProcessorOnePass()
 {
     corrNormalizerOverSampled.release();
 
-    if(param->oversamplingMethod) {
+    if(param->corrSurfaceOverSamplingMethod) {
         delete corrSincOverSampler;
     }
     else {

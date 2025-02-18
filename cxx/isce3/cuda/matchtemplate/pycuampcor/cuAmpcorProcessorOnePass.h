@@ -1,12 +1,12 @@
 /*
- * @file  cuAmpcorProcessorGrIMP.h
- * @brief Ampcor processor for a batch of windows with GrIMP workflow
+ * @file  cuAmpcorProcessorOnePass.h
+ * @brief Ampcor processor for a batch of windows with OnePass workflow
  *
  *
  */
 
-#ifndef __CUAMPCORPROCESSORGRIMP_H
-#define __CUAMPCORPROCESSORGRIMP_H
+#ifndef __CUAMPCORPROCESSOROnePass_H
+#define __CUAMPCORPROCESSOROnePass_H
 
 #include "cuAmpcorProcessor.h"
 
@@ -14,7 +14,7 @@
 /**
  * cuAmpcor processor for a chunk (a batch of windows)
  */
-class cuAmpcorProcessorGrIMP : public cuAmpcorProcessor {
+class cuAmpcorProcessorOnePass : public cuAmpcorProcessor {
 
 private:
 
@@ -70,13 +70,13 @@ private:
 
 public:
     // constructor
-    cuAmpcorProcessorGrIMP(cuAmpcorParameter *param_,
-        GDALImage *reference_, GDALImage *secondary_,
+    cuAmpcorProcessorOnePass(cuAmpcorParameter *param_,
+        SlcImage *reference_, SlcImage *secondary_,
         cuArrays<real2_type> *offsetImage_, cuArrays<real_type> *snrImage_,
         cuArrays<real3_type> *covImage_, cuArrays<real_type> *peakValueImage_,
         cudaStream_t stream_);
     // destructor
-    ~cuAmpcorProcessorGrIMP() override;
+    ~cuAmpcorProcessorOnePass() override;
 
     // run the given chunk
     void run(int, int) override;
@@ -85,4 +85,4 @@ public:
     void loadSecondaryChunk();
 };
 
-#endif //__CUAMPCORPROCESSORGRIMP_H
+#endif //__CUAMPCORPROCESSOROnePass_H

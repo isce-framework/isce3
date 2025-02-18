@@ -1,12 +1,12 @@
 /*
- * @file  cuAmpcorProcessorROIPAC.h
- * @brief Ampcor processor for a batch of windows with ROIPAC workflow
+ * @file  cuAmpcorProcessorTwoPass.h
+ * @brief Ampcor processor for a batch of windows with TwoPass workflow
  *
  *
  */
 
-#ifndef __CUAMPCORPROCESSORROIPAC_H
-#define __CUAMPCORPROCESSORROIPAC_H
+#ifndef __CUAMPCORPROCESSORTwoPass_H
+#define __CUAMPCORPROCESSORTwoPass_H
 
 #include "cuAmpcorProcessor.h"
 
@@ -14,7 +14,7 @@
 /**
  * cuAmpcor processor for a chunk (a batch of windows)
  */
-class cuAmpcorProcessorROIPAC : public cuAmpcorProcessor{
+class cuAmpcorProcessorTwoPass : public cuAmpcorProcessor{
 private:
 
     // local variables and workers
@@ -68,13 +68,13 @@ private:
 
 public:
     // constructor
-    cuAmpcorProcessorROIPAC(cuAmpcorParameter *param_,
-        GDALImage *reference_, GDALImage *secondary_,
+    cuAmpcorProcessorTwoPass(cuAmpcorParameter *param_,
+        SlcImage *reference_, SlcImage *secondary_,
         cuArrays<complex_type> *offsetImage_, cuArrays<real_type> *snrImage_,
         cuArrays<real3_type> *covImage_, cuArrays<real_type> *peakValueImage_,
         cudaStream_t stream_);
     // destructor
-    ~cuAmpcorProcessorROIPAC() override;
+    ~cuAmpcorProcessorTwoPass() override;
 
     // local methods
     void loadReferenceChunk();
@@ -85,4 +85,4 @@ public:
 
 
 
-#endif //__CUAMPCORPROCESSORROIPAC_H
+#endif //__CUAMPCORPROCESSORTwoPass_H

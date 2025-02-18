@@ -37,9 +37,11 @@ PYBIND11_MODULE(PyCuAmpcor, m)
         .DEF_PARAM(str, referenceImageName)
         .DEF_PARAM(int, referenceImageHeight)
         .DEF_PARAM(int, referenceImageWidth)
+        .DEF_PARAM(int, referenceImageDataType)
         .DEF_PARAM(str, secondaryImageName)
         .DEF_PARAM(int, secondaryImageHeight)
         .DEF_PARAM(int, secondaryImageWidth)
+        .DEF_PARAM(int, secondaryImageDataType)
 
         .DEF_PARAM(int, numberWindowDown)
         .DEF_PARAM(int, numberWindowAcross)
@@ -68,8 +70,8 @@ PYBIND11_MODULE(PyCuAmpcor, m)
         .DEF_PARAM_RENAME(int, referenceStartPixelAcrossStatic, referenceStartPixelAcross0)
         .DEF_PARAM_RENAME(int, referenceStartPixelDownStatic,   referenceStartPixelDown0)
 
-        .DEF_PARAM_RENAME(int, corrSurfaceOverSamplingMethod, oversamplingMethod)
-        .DEF_PARAM_RENAME(int, corrSurfaceOverSamplingFactor, oversamplingFactor)
+        .DEF_PARAM(int, corrSurfaceOverSamplingMethod)
+        .DEF_PARAM(int, corrSurfaceOverSamplingFactor)
 
         .DEF_PARAM_RENAME(int, mmapSize, mmapSizeInGB)
 

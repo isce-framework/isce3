@@ -25,7 +25,7 @@ cuAmpcorParameter::cuAmpcorParameter()
     algorithm = 0; //0 freq; 1 time
     deviceID = 0;
     nStreams = 1;
-    derampMethod = 1;
+    derampMethod = 0;
     workflow = 0;
 
     windowSizeWidthRaw = 64;
@@ -37,15 +37,17 @@ cuAmpcorParameter::cuAmpcorParameter()
     skipSampleDownRaw = 64;
     rawDataOversamplingFactor = 2; //antialiasing
     zoomWindowSize = 16;  // correlation surface oversampling zoom
-    oversamplingFactor = 16; // correlation surface oversampling
-    oversamplingMethod = 0;
+    corrSurfaceOverSamplingFactor = 16; // correlation surface oversampling
+    corrSurfaceOverSamplingMethod = 0;
 
     referenceImageName = "reference.slc";
     referenceImageWidth = 1000;
     referenceImageHeight = 1000;
+    referenceImageDataType = 2; // complex
     secondaryImageName = "secondary.slc";
     secondaryImageWidth = 1000;
     secondaryImageHeight = 1000;
+    secondaryImageDataType = 2; // complex
     offsetImageName = "DenseOffset.bip";
     grossOffsetImageName = "GrossOffset.bip";
     snrImageName = "snr.bip";
@@ -78,10 +80,10 @@ void cuAmpcorParameter::setupParameters()
     //
     switch (workflow) {
         case 0:
-            _setupParameters_ROIPAC();
+            _setupParameters_TwoPass();
             break;
         case 1:
-            _setupParameters_GrIMP();
+            _setupParameters_OnePass();
             break;
         default:
             throw std::invalid_argument("Unsupported workflow");
@@ -100,7 +102,7 @@ void cuAmpcorParameter::setupParameters()
     allocateArrays();
 }
 
-void cuAmpcorParameter::_setupParameters_ROIPAC()
+void cuAmpcorParameter::_setupParameters_TwoPass()
 {
     // Size to extract the raw correlation surface for snr/cov
     corrRawZoomInHeight = std::min(corrStatWindowSize, 2*halfSearchRangeDownRaw+1);
@@ -141,7 +143,7 @@ void cuAmpcorParameter::_setupParameters_ROIPAC()
 
 }
 
-void cuAmpcorParameter::_setupParameters_GrIMP()
+void cuAmpcorParameter::_setupParameters_OnePass()
 {
 
     // template window size (after antialiasing oversampling)
@@ -189,8 +191,8 @@ void cuAmpcorParameter::_setupParameters_GrIMP()
                                std::min(zoomWindowSize+1, corrWindowSize.y));
 
     // oversampled correlation surface size
-    corrZoomInOversampledSize = make_int2(corrZoomInSize.x * oversamplingFactor,
-                                              corrZoomInSize.y * oversamplingFactor);
+    corrZoomInOversampledSize = make_int2(corrZoomInSize.x * corrSurfaceOverSamplingFactor,
+                                              corrZoomInSize.y * corrSurfaceOverSamplingFactor);
     fprintf(stderr, "zoomWindowSize is (%d, %d)!\n",
             corrZoomInSize.x, corrZoomInSize.y );
 

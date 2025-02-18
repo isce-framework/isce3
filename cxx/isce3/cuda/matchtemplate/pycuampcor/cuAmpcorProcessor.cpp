@@ -1,23 +1,24 @@
 #include "cuAmpcorProcessor.h"
-#include "cuAmpcorProcessorROIPAC.h"
-#include "cuAmpcorProcessorGrIMP.h"
+#include "cuAmpcorProcessorTwoPass.h"
+#include "cuAmpcorProcessorOnePass.h"
 
+#include <stdexcept>
 
 // Factory method implementation
 // create the batch processor for a given {workflow}
 std::unique_ptr<cuAmpcorProcessor> cuAmpcorProcessor::create(int workflow,
     cuAmpcorParameter *param_,
-    GDALImage *reference_, GDALImage *secondary_,
+    SlcImage *reference_, SlcImage *secondary_,
     cuArrays<real2_type> *offsetImage_, cuArrays<real_type> *snrImage_,
     cuArrays<real3_type> *covImage_, cuArrays<real_type> *peakValueImage_,
     cudaStream_t stream_)
 {
     if (workflow == 0) {
-        return std::unique_ptr<cuAmpcorProcessor>(new cuAmpcorProcessorROIPAC(
+        return std::unique_ptr<cuAmpcorProcessor>(new cuAmpcorProcessorTwoPass(
             param_, reference_, secondary_, offsetImage_,
             snrImage_, covImage_, peakValueImage_, stream_));
     } else if (workflow == 1) {
-        return std::unique_ptr<cuAmpcorProcessor>(new cuAmpcorProcessorGrIMP(
+        return std::unique_ptr<cuAmpcorProcessor>(new cuAmpcorProcessorOnePass(
             param_, reference_, secondary_, offsetImage_,
             snrImage_, covImage_, peakValueImage_, stream_));
     } else {
@@ -27,7 +28,7 @@ std::unique_ptr<cuAmpcorProcessor> cuAmpcorProcessor::create(int workflow,
 
 // constructor
 cuAmpcorProcessor::cuAmpcorProcessor(cuAmpcorParameter *param_,
-        GDALImage *reference_, GDALImage *secondary_,
+        SlcImage *reference_, SlcImage *secondary_,
         cuArrays<real2_type> *offsetImage_, cuArrays<real_type> *snrImage_,
         cuArrays<real3_type> *covImage_, cuArrays<real_type> *peakValueImage_,
         cudaStream_t stream_)
