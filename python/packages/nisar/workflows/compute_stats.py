@@ -1,6 +1,7 @@
 import isce3
 import numpy as np
 from osgeo import gdal
+from types import SimpleNamespace
 
 class stats:
     def __init__(self):
@@ -64,7 +65,23 @@ def compute_stats_complex_data(raster, h5_ds):
     h5_ds: h5py.File
         h5py file
     """
-    stats_obj = isce3.math.compute_raster_stats_real_imag(raster)[0]
+    # stats_obj = isce3.math.compute_raster_stats_real_imag(raster)[0]
+    gslc_arr = h5_ds[()]
+
+    stats_obj = SimpleNamespace()
+    stats_obj.real = SimpleNamespace()
+    stats_obj.imag = SimpleNamespace()
+
+    stats_obj.real.min = np.nanmin(gslc_arr.real)
+    stats_obj.real.max = np.nanmax(gslc_arr.real)
+    stats_obj.real.mean = np.nanmean(gslc_arr.real)
+    stats_obj.real.sample_stddev = np.nanstd(gslc_arr.real)
+
+    stats_obj.imag.min = np.nanmin(gslc_arr.imag)
+    stats_obj.imag.max = np.nanmax(gslc_arr.imag)
+    stats_obj.imag.mean = np.nanmean(gslc_arr.imag)
+    stats_obj.imag.sample_stddev = np.nanstd(gslc_arr.imag)
+
     write_stats_complex_data(h5_ds, stats_obj)
 
 
