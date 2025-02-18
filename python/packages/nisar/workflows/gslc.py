@@ -15,7 +15,7 @@ from isce3.io import HDF5OptimizedReader, optimize_chunk_size, compute_page_size
 
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit
-from nisar.workflows.compute_stats import compute_stats_complex_data
+from nisar.workflows.compute_stats import compute_stats_complex_data, stats_complex, write_stats_complex_data
 from nisar.workflows.h5_prep import (add_radar_grid_cubes_to_hdf5,
                                      prep_gslc_dataset)
 from nisar.workflows.geocode_corrections import AzSrgCorrections
@@ -136,6 +136,9 @@ def run(cfg):
             # initialize source/rslc and destination/gslc datasets
             rslc_datasets = []
             gslc_datasets = []
+
+            stats_complex_list = [stats_complex()] * len(pol_list)
+
             for polarization in pol_list:
                 # check the datatype of RSLC
                 is_complex32 = slc.is_dataset_complex32(freq, polarization)
@@ -166,6 +169,7 @@ def run(cfg):
                 # init input/rslc and output/gslc blocks for each polarization
                 gslc_data_blks = []
                 rslc_data_blks = []
+
                 for rslc_dataset in rslc_datasets:
                     # extract RSLC data block/array
                     if is_complex32:
@@ -188,7 +192,7 @@ def run(cfg):
                                           image_grid_doppler, ellipsoid,
                                           threshold_geo2rdr,
                                           iteration_geo2rdr,
-                                          sliced_radargrid=radar_grid,                                           
+                                          sliced_radargrid=radar_grid,
                                           mask_block=mask_data_blk,
                                           first_azimuth_line=az_first,
                                           first_range_sample=rg_first,
@@ -196,6 +200,10 @@ def run(cfg):
                                           az_time_correction=az_correction,
                                           srange_correction=srg_correction,
                                           subswaths=sub_swaths)
+
+                # update the numbers for stats computation
+                for i, gslc_data_blk in enumerate(gslc_data_blks):
+                    stats_complex_list[i].accumulate_complex(gslc_data_blk)
 
                 # write geocoded blocks to respective HDF5 datasets
                 for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
@@ -217,9 +225,14 @@ def run(cfg):
                 mask_dataset.write_direct(mask_data_blk, dest_sel=geo_blk_slice)
 
             # loop over polarizations and compute statistics
-            for gslc_dataset in gslc_datasets:
+            for i, gslc_dataset in enumerate(gslc_datasets):
                 gslc_raster = isce3.io.Raster(f"IH5:::ID={gslc_dataset.id.id}".encode("utf-8"), update=True)
                 compute_stats_complex_data(gslc_raster, gslc_dataset)
+
+                stats_complex_list[i].update_stat_complex()
+                write_stats_complex_data(gslc_dataset, stats_complex_list[i])
+
+
 
         cube_geogrid = isce3.product.GeoGridParameters(
             start_x=radar_grid_cubes_geogrid.start_x,
