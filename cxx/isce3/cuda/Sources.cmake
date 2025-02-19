@@ -31,8 +31,8 @@ image/ResampSlc.cpp
 matchtemplate/pycuampcor/cuAmpcorController.cpp
 matchtemplate/pycuampcor/cuAmpcorParameter.cpp
 matchtemplate/pycuampcor/cuAmpcorProcessor.cpp
-matchtemplate/pycuampcor/cuAmpcorProcessorGrIMP.cpp
-matchtemplate/pycuampcor/cuAmpcorProcessorROIPAC.cpp
+matchtemplate/pycuampcor/cuAmpcorProcessorOnePass.cpp
+matchtemplate/pycuampcor/cuAmpcorProcessorTwoPass.cpp
 matchtemplate/pycuampcor/cuArrays.cpp
 matchtemplate/pycuampcor/cuArraysCopy.cu
 matchtemplate/pycuampcor/cuArraysPadding.cu
@@ -48,7 +48,7 @@ matchtemplate/pycuampcor/cuOverSampler.cpp
 matchtemplate/pycuampcor/cuSincOverSampler.cu
 matchtemplate/pycuampcor/cudaError.cpp
 matchtemplate/pycuampcor/cudaUtil.cpp
-matchtemplate/pycuampcor/GDALImage.cpp
+matchtemplate/pycuampcor/SlcImage.cpp
 product/SubSwaths.cu
 signal/gpuAzimuthFilter.cu
 signal/gpuCrossMul.cu
