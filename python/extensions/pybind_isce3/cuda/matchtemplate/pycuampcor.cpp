@@ -70,8 +70,8 @@ void addbinding_pycuampcor(pybind11::module& m)
         .DEF_PARAM_RENAME(int, referenceStartPixelAcrossStatic, referenceStartPixelAcross0)
         .DEF_PARAM_RENAME(int, referenceStartPixelDownStatic,   referenceStartPixelDown0)
 
-        .DEF_PARAM_RENAME(int, corrSurfaceOverSamplingMethod, oversamplingMethod)
-        .DEF_PARAM_RENAME(int, corrSurfaceOverSamplingFactor, oversamplingFactor)
+        .DEF_PARAM(int, corrSurfaceOverSamplingMethod)
+        .DEF_PARAM(int, corrSurfaceOverSamplingFactor)
 
         .DEF_PARAM_RENAME(int, mmapSize, mmapSizeInGB)
 
