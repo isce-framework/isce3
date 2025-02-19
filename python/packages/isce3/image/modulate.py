@@ -6,15 +6,15 @@ import numpy as np
 from isce3.core import LUT2d
 from isce3.core.poly2d import Poly2d
 from isce3.ext.isce3.image.modulate import (
-    _get_modulation_phase,
-    _get_modulation_phase_at_coords,
-    _modulate,
-    _modulate_at_coords,
+    _get_carrier_phase,
+    _get_carrier_phase_at_coords,
+    _modulate_carrier_phase,
+    _modulate_carrier_phase_at_coords,
 )
 from isce3.product import RadarGridParameters
 
 
-def modulate(
+def modulate_carrier_phase(
     slc_data_block: np.ndarray[np.complex64],
     carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
@@ -49,7 +49,7 @@ def modulate(
     out_arr = slc_data_block.copy()
     out_arr = np.require(out_arr, dtype=np.complex64, requirements=["C", "W"])
 
-    _modulate(
+    _modulate_carrier_phase(
         slc_data_block=out_arr,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
@@ -60,7 +60,7 @@ def modulate(
     return out_arr
 
 
-def modulate_at_coords(
+def modulate_carrier_phase_at_coords(
     slc_data_block: np.ndarray[np.complex64],
     carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
@@ -101,7 +101,7 @@ def modulate_at_coords(
     np.ndarray of np.complex64
         The modulated SLC block.
     """
-    error_channel = journal.error("modulate.modulate_at_coords")
+    error_channel = journal.error("modulate.modulate_carrier_phase_at_coords")
 
     if azimuth_indices.shape != range_indices.shape:
         err_log = (
@@ -123,13 +123,13 @@ def modulate_at_coords(
     out_arr = np.require(out_arr, dtype=np.complex64, requirements=["C", "W"])
 
     # Ensure that all of the index data blocks meet the requirements of the
-    # _modulate_at_coords pybind (correct dtype, with flag C_CONTIGUOUS)
+    # _modulate_carrier_phase_at_coords pybind (correct dtype, with flag C_CONTIGUOUS)
     # These function calls will return conforming copies of the data blocks if they
     # are not already conforming.
     range_indices = np.require(range_indices, dtype=np.float64, requirements=["C"])
     azimuth_indices = np.require(azimuth_indices, dtype=np.float64, requirements=["C"])
 
-    _modulate_at_coords(
+    _modulate_carrier_phase_at_coords(
         slc_data_block=out_arr,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
@@ -142,7 +142,7 @@ def modulate_at_coords(
     return out_arr
 
 
-def get_modulation_phase(
+def get_carrier_phase(
     carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
     conjugate: bool = False,
@@ -176,7 +176,7 @@ def get_modulation_phase(
         dtype=np.complex64,
     )
 
-    _get_modulation_phase(
+    _get_carrier_phase(
         out=out_arr,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
@@ -187,7 +187,7 @@ def get_modulation_phase(
     return out_arr
 
 
-def get_modulation_phase_at_coords(
+def get_carrier_phase_at_coords(
     carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
     azimuth_indices: np.ndarray[np.float64],
@@ -223,7 +223,7 @@ def get_modulation_phase_at_coords(
     np.ndarray of np.complex64
         The carrier phase, in the form of complex unit vectors.
     """
-    error_channel = journal.error("modulate.get_modulation_phase_at_coords")
+    error_channel = journal.error("modulate.get_carrier_phase_at_coords")
 
     if azimuth_indices.shape != range_indices.shape:
         err_log = (
@@ -236,13 +236,13 @@ def get_modulation_phase_at_coords(
     out_arr = np.full(azimuth_indices.shape, fill_value=fill_value, dtype=np.complex64)
 
     # Ensure that all of the index data blocks meet the requirements of the
-    # _get_modulation_phase_at_coords pybind (correct dtype, with flag C_CONTIGUOUS)
+    # _get_carrier_phase_at_coords pybind (correct dtype, with flag C_CONTIGUOUS)
     # These function calls will return conforming copies of the data blocks if they
     # are not already conforming.
     range_indices = np.require(range_indices, dtype=np.float64, requirements=["C"])
     azimuth_indices = np.require(azimuth_indices, dtype=np.float64, requirements=["C"])
 
-    _get_modulation_phase_at_coords(
+    _get_carrier_phase_at_coords(
         out=out_arr,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,

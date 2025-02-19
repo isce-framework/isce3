@@ -17,14 +17,14 @@ template<typename AzRgFunc = isce3::core::Poly2d>
 void addbindings_modulate(py::module & m)
 {
     m.def(
-        "_get_modulation_phase",
+        "_get_carrier_phase",
         py::overload_cast<
             isce3::image::modulate::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
             const isce3::product::RadarGridParameters&,
             const bool,
             const std::complex<float>
-        >(&isce3::image::modulate::getModulationPhase<AzRgFunc>),
+        >(&isce3::image::modulate::getCarrierPhase<AzRgFunc>),
         py::arg("out"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
@@ -56,7 +56,7 @@ void addbindings_modulate(py::module & m)
 
 
     m.def(
-        "_get_modulation_phase_at_coords",
+        "_get_carrier_phase_at_coords",
         py::overload_cast<
             isce3::image::modulate::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
@@ -65,7 +65,7 @@ void addbindings_modulate(py::module & m)
             const isce3::image::modulate::ConstArrayRef2D<double>,
             const bool,
             const std::complex<float>
-        >(&isce3::image::modulate::_getModulationPhaseAtCoords<AzRgFunc>),
+        >(&isce3::image::modulate::_getCarrierPhaseAtCoords<AzRgFunc>),
         py::arg("out"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
@@ -105,14 +105,14 @@ void addbindings_modulate(py::module & m)
 
 
     m.def(
-        "_modulate",
+        "_modulate_carrier_phase",
         py::overload_cast<
             isce3::image::modulate::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
             const isce3::product::RadarGridParameters&,
             const bool,
             const std::complex<float>
-        >(&isce3::image::modulate::modulate<AzRgFunc>),
+        >(&isce3::image::modulate::modulateCarrierPhase<AzRgFunc>),
         py::arg("slc_data_block"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
@@ -145,7 +145,7 @@ void addbindings_modulate(py::module & m)
 
 
     m.def(
-        "_modulate_at_coords",
+        "_modulate_carrier_phase_at_coords",
         py::overload_cast<
             isce3::image::modulate::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
@@ -154,7 +154,7 @@ void addbindings_modulate(py::module & m)
             const isce3::image::modulate::ConstArrayRef2D<double>,
             const bool,
             const std::complex<float>
-        >(&isce3::image::modulate::_modulateAtCoords<AzRgFunc>),
+        >(&isce3::image::modulate::_modulateCarrierPhaseAtCoords<AzRgFunc>),
         py::arg("slc_data_block"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),

@@ -35,7 +35,7 @@ using ConstArrayRef2D = Eigen::Ref<const Array2D<T, Options>>;
  * do not have out-of-bounds pixels, but LUT2d functions may. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
-void getModulationPhase(
+void getCarrierPhase(
     ArrayRef2D<std::complex<float>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
@@ -73,7 +73,7 @@ void getModulationPhase(
  * do not have out-of-bounds pixels, but LUT2d functions may. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
-void _getModulationPhaseAtCoords(
+void _getCarrierPhaseAtCoords(
     ArrayRef2D<std::complex<float>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
@@ -103,7 +103,7 @@ void _getModulationPhaseAtCoords(
  * do not have out-of-bounds pixels, but LUT2d functions may. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
-void modulate(
+void modulateCarrierPhase(
     ArrayRef2D<std::complex<float>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
@@ -142,7 +142,7 @@ void modulate(
  * do not have out-of-bounds pixels, but LUT2d functions may. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
-void _modulateAtCoords(
+void _modulateCarrierPhaseAtCoords(
     ArrayRef2D<std::complex<float>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,

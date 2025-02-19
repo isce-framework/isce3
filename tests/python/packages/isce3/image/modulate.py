@@ -5,10 +5,10 @@ import pytest
 import numpy as np
 
 from isce3.image.modulate import (
-    get_modulation_phase,
-    get_modulation_phase_at_coords,
-    modulate,
-    modulate_at_coords,
+    get_carrier_phase,
+    get_carrier_phase_at_coords,
+    modulate_carrier_phase,
+    modulate_carrier_phase_at_coords,
 )
 from isce3.core import DateTime, LUT2d
 from isce3.product import RadarGridParameters
@@ -112,10 +112,10 @@ def generate_carrier_lut(
 @pytest.mark.parametrize(
     "function",
     [
-        "get_modulation_phase",
-        "get_modulation_phase_at_coords",
-        "modulate",
-        "modulate_at_coords"
+        "get_carrier_phase",
+        "get_carrier_phase_at_coords",
+        "modulate_carrier_phase",
+        "modulate_carrier_phase_at_coords"
     ]
 )
 class TestModulate:
@@ -188,7 +188,7 @@ class TestModulate:
         }
 
         # Perform the interpolation.
-        if function in ["get_modulation_phase", "modulate"]:
+        if function in ["get_carrier_phase", "modulate_carrier_phase"]:
             az_indices, rg_indices = np.indices((az_length, rg_width), dtype=np.float64)
             
             # Create the expected output signal. For this test, a simple phase ramp in
@@ -201,9 +201,9 @@ class TestModulate:
                 rg_frequency=rg_freq,
             )
 
-            if function == "get_modulation_phase":
-                signal = get_modulation_phase(**kwargs)
-            elif function == "modulate":
+            if function == "get_carrier_phase":
+                signal = get_carrier_phase(**kwargs)
+            elif function == "modulate_carrier_phase":
                 # A dummy SLC of 1 + 0j to modulate - this will give the carrier
                 # phase.
                 input_slc = np.full(
@@ -212,9 +212,12 @@ class TestModulate:
                     dtype=np.complex64,
                 )
                 kwargs["slc_data_block"] = input_slc
-                signal = modulate(**kwargs)
+                signal = modulate_carrier_phase(**kwargs)
 
-        elif function in ["get_modulation_phase_at_coords", "modulate_at_coords"]:
+        elif function in [
+            "get_carrier_phase_at_coords",
+            "modulate_carrier_phase_at_coords"
+        ]:
             # Set the offsets at random positions with a range of -1.5 to 1.5 with a
             # flat probability distribution. This ensures that the difference in phase
             # and potential edge effects near the ends of an image are detectable.
@@ -222,7 +225,8 @@ class TestModulate:
             az_offsets = np.random.random(out_shape) * mag_offset - mag_offset/2
             rg_offsets = np.random.random(out_shape) * mag_offset - mag_offset/2
 
-            # Add the offsets to these indices to get the indices in the ground truth grid.
+            # Add the offsets to these indices to get the indices in the ground truth
+            # grid.
             rows, cols = np.indices(out_shape)
             azimuth_indices = np.array(az_offsets + rows, dtype=np.float64)
             range_indices = np.array(rg_offsets + cols, dtype=np.float64)
@@ -240,9 +244,9 @@ class TestModulate:
             kwargs["azimuth_indices"] = azimuth_indices
             kwargs["range_indices"] = range_indices
 
-            if function == "get_modulation_phase_at_coords":
-                signal = get_modulation_phase_at_coords(**kwargs)
-            elif function == "modulate_at_coords":
+            if function == "get_carrier_phase_at_coords":
+                signal = get_carrier_phase_at_coords(**kwargs)
+            elif function == "modulate_carrier_phase_at_coords":
                 # A dummy SLC of 1 + 0j to modulate - this will give the carrier
                 # phase.
                 input_slc = np.full(
@@ -251,7 +255,7 @@ class TestModulate:
                     dtype=np.complex64,
                 )
                 kwargs["slc_data_block"] = input_slc
-                signal = modulate_at_coords(**kwargs)
+                signal = modulate_carrier_phase_at_coords(**kwargs)
 
         # If conjugate is True, the ground-truth array is currently the conjugate
         # of the output array (we hope) and must be conjugated for validation.
