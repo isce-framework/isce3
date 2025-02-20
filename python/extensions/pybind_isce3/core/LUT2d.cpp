@@ -133,6 +133,8 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
         .def_property_readonly("y_start",   &LUT2d<T>::yStart)
         .def_property_readonly("x_spacing", &LUT2d<T>::xSpacing)
         .def_property_readonly("y_spacing", &LUT2d<T>::ySpacing)
+        .def_property_readonly("x_axis", &LUT2d<T>::xAxis)
+        .def_property_readonly("y_axis", &LUT2d<T>::yAxis)
         .def_property_readonly("length",    &LUT2d<T>::length)
         .def_property_readonly("width",     &LUT2d<T>::width)
         .def_property_readonly("interp_method",

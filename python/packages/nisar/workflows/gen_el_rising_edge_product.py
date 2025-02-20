@@ -19,8 +19,7 @@ from nisar.pointing import el_rising_edge_from_raw_ant
 from nisar.log import set_logger
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.products.readers.attitude import load_attitude_from_xml
-from nisar.workflows.gen_el_null_range_product import (
-    copol_or_desired_product_from_raw)
+from nisar.workflows.helpers import copols_or_desired_pols_from_raw
 
 
 def cmd_line_parser():
@@ -165,7 +164,7 @@ def gen_el_rising_edge_product(args):
 
     # logic for frequency band and TxRx polarization choices.
     # form a new dict "frq_pol" with key=freq_band and value=[txrx_pol]
-    frq_pol = copol_or_desired_product_from_raw(
+    frq_pol = copols_or_desired_pols_from_raw(
         raw, freq_band=args.freq_band, txrx_pol=args.txrx_pol)
     logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
 
@@ -178,6 +177,12 @@ def gen_el_rising_edge_product(args):
     # polarizations
     for freq_band in frq_pol:
         for txrx_pol in frq_pol[freq_band]:
+            # check if the product is so-called noise-only (NO TX).
+            # If no TX then skip that product.
+            if raw.is_tx_off(freq_band, txrx_pol):
+                logger.warning(
+                    f'Skip no-TX product ({freq_band},{txrx_pol})!')
+                continue
             # EL rising edge process
             (el_ofs, az_dtm, el_fl, sr_fl, lka_fl, msk, cvg, pf_echo,
              pf_ant, pf_wgt) = el_rising_edge_from_raw_ant(

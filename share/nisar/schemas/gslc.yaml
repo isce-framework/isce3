@@ -38,6 +38,8 @@ runconfig:
             # When refernce_gslc is empty, only the model driven correction will be applied.
             reference_gslc: list(str(), min=1, required=False)
 
+            corner_reflector_file: str(required=False)
+
         product_path_group:
             # Directory where PGE will place results
             product_path: str()
@@ -203,10 +205,13 @@ qa_options:
     workflows: include('workflows_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('qa_reports_options', required=False)
+    point_target_analyzer: include('point_target_analyzer_options', required=False)
+
 
 workflows_options:
     validate: bool(required=False)
     qa_reports: bool(required=False)
+    point_target_analyzer: bool(required=False)
 
 qa_validation_options:
     metadata_cubes_fail_if_all_nan: bool(required=False)
@@ -224,8 +229,15 @@ qa_reports_options:
     histogram:
         decimation_ratio: list(int(min=1), min=2, max=2, required=False)
         backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+        phase_histogram_y_axis_range: list(any(num(), null()), min=2, max=2, required=False)
         phs_in_radians: bool(required=False)
         tile_shape: list(int(min=-1), min=2, max=2, required=False)
+
+point_target_analyzer_options:
+    nchip: int(min=1, required=False)
+    upsample_factor: int(min=1, required=False)
+    peak_find_domain: enum('time', 'frequency', required=False)
+    num_sidelobes: int(min=2, required=False)
 
 dem_download_options:
     # s3 bucket / curl URL / local file

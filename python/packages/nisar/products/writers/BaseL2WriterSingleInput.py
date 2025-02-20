@@ -6,12 +6,11 @@ import journal
 import os
 
 import isce3
-from isce3.core import crop_external_orbit
 from nisar.products.writers import BaseWriterSingleInput
 from nisar.workflows.h5_prep import set_get_geo_info
 from isce3.core.types import truncate_mantissa
 from isce3.geometry import get_near_and_far_range_incidence_angles
-from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.readers.orbit import load_orbit
 
 
 LEXICOGRAPHIC_BASE_POLS = ['HH', 'HV', 'VH', 'VV']
@@ -709,24 +708,42 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
     Base L2 writer class that can be used for NISAR L2 products
     """
 
-    def __init__(self, runconfig, *args, **kwargs):
+    def __init__(self, runconfig, *args, orbit=None, **kwargs):
 
         super().__init__(runconfig, *args, **kwargs)
 
-        # if provided, load an external orbit from the runconfig file;
-        # othewise, load the orbit from the RSLC metadata
+        self.freq_pols_dict = self.cfg['processing']['input_subset'][
+            'list_of_frequencies']
+
+        # This orbit file will be saved in the product metadata. It is assumed that
+        # the same orbit file was used in the SAS workflow processing.
         self.orbit_file = \
             self.cfg["dynamic_ancillary_file_group"]['orbit_file']
-        self.flag_external_orbit_file = self.orbit_file is not None
 
-        orbit_path = f'{self.input_product_path}/metadata/orbit'
-        self.orbit = isce3.core.load_orbit_from_h5_group(
-            self.input_hdf5_obj[orbit_path])
-
-        if self.flag_external_orbit_file:
+        # if the orbit has not been provided, i.e., `orbit is None`,
+        # load it from the input RSLC or from the external file (if provided)
+        # using load_orbit()
+        if orbit is not None:
+            self.orbit = orbit
+        else:
             ref_epoch = self.input_product_obj.getRadarGrid().ref_epoch
-            external_orbit = load_orbit_from_xml(self.orbit_file, ref_epoch)
-            self.orbit = crop_external_orbit(external_orbit, self.orbit)
+            self.orbit = load_orbit(self.input_product_obj, self.orbit_file,
+                                    ref_epoch)
+
+    @property
+    def frequencies(self) -> list[str]:
+        """
+        The frequency subbands of the output product in the same order as the
+        runconfig
+        """
+        return list(self.freq_pols_dict.keys())
+
+    @property
+    def first_sorted_frequency(self) -> str:
+        """
+        The first frequency of the output product in alphabetical order
+        """
+        return sorted(self.frequencies)[0]
 
     def populate_identification_l2_specific(self):
         """
@@ -824,6 +841,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         # can be correctly estimated
 
         # Create geogrids' bbox ring
+        # We choose the counter-clockwise orientation because this
+        # defines the exterior of the polygon according to the OpenGIS
+        # Standards:
+        # OpenGIS Implementation Standard for Geographic
+        # information - Simple feature access - Part 1: Common
+        # architecture, v1.2.1, 2011-05-28 (page 26)
         geogrids_bbox_ring = ogr.Geometry(ogr.wkbLinearRing)
         geogrids_bbox_ring.AddPoint(start_x, start_y)
         geogrids_bbox_ring.AddPoint(start_x, end_y)
@@ -831,12 +854,19 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         geogrids_bbox_ring.AddPoint(end_x, start_y)
         geogrids_bbox_ring.AddPoint(start_x, start_y)
 
-        # Assign georeference to the geogrids' bbox ring
+        # Create geogrids' bbox polygon
+        geogrids_bbox_polygon = ogr.Geometry(ogr.wkbPolygon)
+        geogrids_bbox_polygon.AddGeometry(geogrids_bbox_ring)
+
+        # Assign georeference to the geogrids' bbox polygon
         geogrid_srs = osr.SpatialReference()
         geogrid_srs.ImportFromEPSG(epsg_code)
-        geogrids_bbox_ring.AssignSpatialReference(geogrid_srs)
+        geogrids_bbox_polygon.AssignSpatialReference(geogrid_srs)
+        assert geogrids_bbox_polygon.IsValid()
 
-        bounding_box_wkt = geogrids_bbox_ring.ExportToWkt()
+        # Create a well-known text (WKT) representation of the geogrids'
+        # bbox polygon and save it as the H5 Dataset `boundingBox``
+        bounding_box_wkt = geogrids_bbox_polygon.ExportToWkt()
 
         self.set_value(
             '{PRODUCT}/metadata/ceosAnalysisReadyData/boundingBox',
@@ -848,25 +878,25 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         self.output_hdf5_obj[bounding_box_path].attrs['epsg'] = epsg_code
 
-        # TODO: add the EPSG code as an attribute of the following
-        # H5 datasets
         for xy in ['x', 'y']:
             h5_grp_path = ('{PRODUCT}/metadata/ceosAnalysisReadyData/'
                            'geometricAccuracy')
             runcfg_prefix = ('ceos_analysis_ready_data/'
                              'estimated_geometric_accuracy')
 
-            self.copy_from_runconfig(
+            bias_dataset = self.copy_from_runconfig(
                 f'{h5_grp_path}/bias/{xy}',
                 f'{runcfg_prefix}_bias_{xy}',
                 format_function=np.float32,
                 default=np.nan)
+            bias_dataset.attrs['epsg'] = epsg_code
 
-            self.copy_from_runconfig(
+            standard_deviation_dataset = self.copy_from_runconfig(
                 f'{h5_grp_path}/standardDeviation/{xy}',
                 f'{runcfg_prefix}_standard_deviation_{xy}',
                 format_function=np.float32,
                 default=np.nan)
+            standard_deviation_dataset.attrs['epsg'] = epsg_code
 
     def populate_calibration_information(self):
 
@@ -1205,7 +1235,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             near_range_inc_angle_rad, far_range_inc_angle_rad = \
                 get_near_and_far_range_incidence_angles(radar_grid_obj,
                                                         self.orbit)
-            
+
             near_range_inc_angle_deg = np.rad2deg(near_range_inc_angle_rad)
             far_range_inc_angle_deg = np.rad2deg(far_range_inc_angle_rad)
 
@@ -1407,6 +1437,14 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'dynamic_ancillary_file_group/dem_file_description',
             default='(NOT SPECIFIED)')
 
+        # geocode referenceTerrainHeight
+        ds_name_list = ['referenceTerrainHeight']
+        self.geocode_lut(
+            '{PRODUCT}/metadata/processingInformation/parameters',
+            frequency=self.first_sorted_frequency,
+            output_ds_name_list=ds_name_list,
+            skip_if_not_present=True)
+
         # geocode dopplerCentroid LUT
         ds_name_list = ['dopplerCentroid']
         for frequency in self.freq_pols_dict.keys():
@@ -1436,7 +1474,10 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             same path of the output dataset `output_h5_group` will
             be used
         frequency: str, optional
-            Frequency sub-band
+            Frequency sub-band, used to read the sub-band wavelength.
+            The sub-band wavelength is only used in geocoding 
+            (during geo2rdr) if the dataset (LUT) is not in the 
+            zero-Doppler geometry
         output_ds_name_list: str, list
             List of LUT datasets to geocode
         input_ds_name_list: list
@@ -1528,6 +1569,43 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                output_h5_group_path,
                                skip_if_not_present,
                                compute_stats):
+        """
+        Geocode look-up tables (LUTs) from the input product in
+        radar coordinates to the output product in map coordinates
+        using runconfig parameters associated with that
+        metadata group, either 'calibrationInformation'
+        or 'processingInformation'
+
+        Parameters
+        ----------
+        frequency: str, optional
+            Frequency sub-band, used to read the sub-band wavelength.
+            The sub-band wavelength is only used in geocoding 
+            (during geo2rdr) if the dataset (LUT) is not in the 
+            zero-Doppler geometry
+        input_ds_name_list: list
+            List of LUT datasets to geocode
+        output_ds_name_list: str, list
+            List of output LUT datasets
+        metadata_group: str
+            Metadata group, either 'calibrationInformation'
+            or 'processingInformation'
+        input_h5_group_path: str
+            Path of the input group
+        output_h5_group_path: str
+            Path of the output group
+        skip_if_not_present: bool, optional
+            Flag to prevent the execution to stop if the dataset
+            is not present from input
+        compute_stats: bool, optional
+            Flag that indicates if statistics should be computed for the
+            output raster layer. Defaults to False.
+
+        Returns
+        -------
+        success: bool
+           Flag that indicates if the geocoding the LUT group was successful
+        """
 
         error_channel = journal.error('geocode_metadata_group')
 
@@ -1644,7 +1722,22 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         for var in input_ds_name_list:
             raster_ref = (f'HDF5:"{self.input_file}":/'
                           f'{input_h5_group_path}/{var}')
-            temp_raster = isce3.io.Raster(raster_ref)
+
+            # Read `raster_ref` catching/handling potential problems:
+            # - Dataset does not exist;
+            # - Dataset is a 1-D vector instead of a 2-D array.
+            try:
+                temp_raster = isce3.io.Raster(raster_ref)
+            except:
+                not_found_msg = ('Failed to create GDAL dataset from'
+                                 f' reference: {raster_ref}')
+                if skip_if_not_present:
+                    warnings.warn(not_found_msg)
+                    return False
+
+                error_channel.log(not_found_msg)
+                raise KeyError(not_found_msg)
+
             input_raster_list.append(temp_raster)
 
         if len(input_ds_name_list) == 1:

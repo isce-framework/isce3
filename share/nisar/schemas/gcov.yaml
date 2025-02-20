@@ -212,6 +212,7 @@ qa_reports_options:
     histogram:
         decimation_ratio: list(int(min=1), min=2, max=2, required=False)
         backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+        phase_histogram_y_axis_range: list(any(num(), null()), min=2, max=2, required=False)
         phs_in_radians: bool(required=False)
         tile_shape: list(int(min=-1), min=2, max=2, required=False)
 

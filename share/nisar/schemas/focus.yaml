@@ -444,9 +444,9 @@ qa_options:
 workflows_options:
   validate: bool(required=False)
   qa_reports: bool(required=False)
-  absolute_radiometric_calibration: bool(required=False)
-  nes0: bool(required=False)
   point_target_analyzer: bool(required=False)
+  absolute_radiometric_calibration: bool(required=False)
+  noise_equivalent_backscatter: bool(required=False)
 
 qa_validation_options:
   metadata_cubes_fail_if_all_nan: bool(required=False)
@@ -464,6 +464,7 @@ qa_reports_options:
   histogram:
     decimation_ratio: list(int(min=1), min=2, max=2, required=False)
     backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+    phase_histogram_y_axis_range: list(any(num(), null()), min=2, max=2, required=False)
     phs_in_radians: bool(required=False)
     tile_shape: list(int(min=-1), min=2, max=2, required=False)
   range_spectra:

@@ -244,16 +244,22 @@ def test_geocode_cov():
                 # `~ sub_swath_expected_exp_within_quantile` should include
                 # `sub_swath_mask_array``.
 
-                # first, check the mask and assert that there are no
-                # points marked as sub-swath 1 outside of the selected area.
+                # first, check the mask and ensure that there are no
+                # points marked as sub-swath 1 outside the selected area.
                 assert np.sum(
                     (sub_swath_mask_array == 1) &
                     (~sub_swath_expected_exp_within_quantile_relaxed)) == 0
 
-                # then, we check the geocoded array and assert that there are
-                # valid points inside the selected area
+                # similarly, we check the geocoded array and ensure that there
+                # are no valid points outside of the selected area
                 assert np.sum((np.isfinite(geo_arr)) &
-                              (~sub_swath_expected_exp_within_quantile)) == 0
+                              (~sub_swath_expected_exp_within_quantile_relaxed
+                               )) == 0
+
+                # finally, we check the geocoded array and ensure that there
+                # are valid points inside the selected area
+                assert np.sum((np.isfinite(geo_arr)) &
+                              (sub_swath_expected_exp_within_quantile)) > 0
 
                 print('    ...done')
 

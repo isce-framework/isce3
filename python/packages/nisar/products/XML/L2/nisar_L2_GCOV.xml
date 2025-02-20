@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.2.0 -->
+<!-- product specification version is 1.2.1 -->
 <algorithm name="L2_GeocodedCovariance"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GCOV_template">
@@ -1047,6 +1047,7 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      _FillValue="nan"
                       long_name="Slant range"
                       grid_mapping="projection"
                       units="meters">Slant range in meters</annotation>
@@ -1725,7 +1726,7 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          units="1">Crosstalk in V-recieve channel expressed as ratio rxH / rxV</annotation>
+                          units="1">Crosstalk in V-receive channel expressed as ratio rxH / rxV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
 

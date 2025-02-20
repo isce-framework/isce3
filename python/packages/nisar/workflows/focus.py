@@ -27,7 +27,7 @@ import nisar
 import numpy as np
 import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
-from isce3.focus import make_el_lut, fill_gaps, Notch
+from isce3.focus import make_los_luts, fill_gaps, make_cal_luts, Notch
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import RadarGridParameters
@@ -1629,8 +1629,9 @@ def focus(runconfig, runconfig_path=""):
                                 side, orbit, fc_ref, dop_ref, max_chirplen, dem)
 
     wvl_ref = isce3.core.speed_of_light / fc_ref
-    el_lut = make_el_lut(orbit, attitude, side, dop_ref, wvl_ref, dem,
-                         get_rdr2geo_params(cfg))
+    el_lut, inc_lut, _ = make_los_luts(orbit, attitude, side, dop_ref, wvl_ref,
+                                       dem, get_rdr2geo_params(cfg))
+    beta0_lut, sigma0_lut, gamma0_lut = make_cal_luts(inc_lut)
 
     # Frequency A/B specific setup for output grid, doppler, and blocks.
     ogrid, dop, blocks_bounds = dict(), dict(), dict()
@@ -1735,7 +1736,8 @@ def focus(runconfig, runconfig_path=""):
         # add calibration section for each polarization
         for pol in pols:
             slc.add_calibration_section(frequency, pol, og.sensing_times,
-                                        orbit.reference_epoch, og.slant_ranges)
+                                        orbit.reference_epoch, og.slant_ranges,
+                                        beta0_lut, sigma0_lut, gamma0_lut)
 
 
     freq = next(iter(get_bands(common_mode)))
@@ -1778,6 +1780,11 @@ def focus(runconfig, runconfig_path=""):
         deramp_ac = get_range_deramp(ogrid[frequency])
         writer = BackgroundWriter(scale * deramp_ac, acdata,
             cfg.output.data_type, mantissa_nbits=cfg.output.mantissa_nbits)
+
+        # store noise powers and its azimuth times in containers
+        # over all Raw files for a common band and pol.
+        azt_noise_all = []
+        pow_noise_all = []
 
         for raw in rawlist:
             channel_in = find_overlapping_channel(raw, channel_out)
@@ -1874,12 +1881,24 @@ def focus(runconfig, runconfig_path=""):
             cal_path_mask = raw.getCalType(
                 channel_in.freq_id, pol[0])[pulse_begin:pulse_end]
             _, _, _, idx_noise = get_calib_range_line_idx(cal_path_mask)
+
+            # form output slant range vector for all noise products
+            if cfg.processing.noise_equivalent_backscatter.fill_nan_ends:
+                nrgb_noise = cfg.processing.noise_equivalent_backscatter.num_range_block + 2
+            else:
+                log.warning('Noise powers will be non-uniform in range '
+                            'with possible NaN values!')
+                nrgb_noise = cfg.processing.noise_equivalent_backscatter.num_range_block
+            sr_noise = np.linspace(
+                    ogrid[frequency].slant_ranges.first,
+                    ogrid[frequency].slant_ranges.last,
+                    num=nrgb_noise
+                    )
             if idx_noise.size == 0:
                 log.warning(
                     'No noise-only range lines within the specified pulse '
                     'interval. Skip noise estimation and set noise equivalent '
                     'backscatter to zero.')
-                sr_noise = np.array(rc_grid.slant_ranges)
                 pow_noise = np.zeros_like(sr_noise, dtype='f4')
             else: # there is at least one noise-only range line
                 nrgl_noise = idx_noise.size
@@ -1939,26 +1958,24 @@ def focus(runconfig, runconfig_path=""):
                 # get valid subswath for noise-only range lines
                 idx_noise_abs = pulse_begin + np.asarray(idx_noise)
                 sbsw_noise = swaths[:, idx_noise_abs]
-                pow_noise, sr_noise = est_noise_power_in_focus(
+                pow_noise, sr_noise_rc = est_noise_power_in_focus(
                     data_noise, rc_grid.slant_ranges, sbsw_noise,
-                    not uniform_pri, logger=log,
+                    logger=log,
                     **vars(cfg.processing.noise_equivalent_backscatter)
                 )
+                # regrid noise power to match common output grid in range.
+                # Use linear interpolation given small changes in slant range
+                # and smoothed noise power if `fill_nan_end`.
+                pow_noise[...] = np.interp(sr_noise, sr_noise_rc, pow_noise)
                 del data_noise
-            # build NESZ product and dump into RSLC product per
-            # frequency band and polarization
-            # Given NESZ is estimated over entire AZ times, for the sake of
-            # compatability with RSLC spec, the final product
-            # is converted from 1-D into 2-D by simply stacking 1-D
-            # values twice. The AZ time limits is within raw data used in
-            # the noise estimation.
-            azt_lim_noise = raw_times[::raw_times.size - 1]
-            pow_noise_2d = np.vstack([pow_noise, pow_noise])
-            noise_prod = NoiseEquivalentBackscatterProduct(
-                pow_noise_2d, sr_noise, azt_lim_noise, grid_epoch, frequency,
-                pol)
-            slc.set_noise(noise_prod)
-            del pow_noise_2d, pow_noise, sr_noise
+            # store noise power and its AZ time for a particular Raw
+            # over a particular AZ interval.
+            # Use the very first and last AZ time stamp of the Raw.
+            # Note that there is only one unique vector of noise power
+            # as a function of slant range per a Raw file. Thus,
+            # the noise power shall be repeated twice per L0B!
+            azt_noise_all.extend(raw_times[::raw_times.size - 1])
+            pow_noise_all.extend(2 * [pow_noise])
 
             del raw_clean
 
@@ -2029,6 +2046,16 @@ def focus(runconfig, runconfig_path=""):
         log.info(f"Image statistics {frequency} {pol} = {writer.stats}")
         slc.write_stats(frequency, pol, writer.stats)
         slc.set_rfi_results(rfi_results)
+
+        # Dump the noise product for a certain band and pol over entire
+        # AZ times covering all Raw files.
+        noise_prod = NoiseEquivalentBackscatterProduct(
+            np.asarray(pow_noise_all), sr_noise, np.asarray(azt_noise_all),
+            grid_epoch, frequency, pol
+            )
+        # dump the noise product into RSLC product
+        slc.set_noise(noise_prod)
+        del pow_noise_all, azt_noise_all, sr_noise
 
     log.info("All done!")
 

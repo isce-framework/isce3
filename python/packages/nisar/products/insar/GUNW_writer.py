@@ -217,9 +217,6 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
 
-            rslc_freq_group.copy("numberOfSubSwaths",
-                                 grids_freq_group)
-
             unwrapped_geogrids = geogrids[freq]
             wrapped_geogrids = wrapped_igram_geogrids[freq]
 
@@ -281,7 +278,6 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     fill_value=255,
                 )
             ds_group['mask'].attrs['valid_min'] = 0
-            ds_group['mask'].attrs['valid_max'] = 155
             ds_group['mask'].attrs['percentage_water'] = 0.0
 
             for pol in pol_list:

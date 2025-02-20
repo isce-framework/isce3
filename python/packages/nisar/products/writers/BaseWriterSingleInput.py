@@ -9,7 +9,7 @@ from nisar.products.granule_id import get_polarization_code, format_datetime
 from nisar.products.readers import open_product
 from nisar.h5 import cp_h5_meta_data
 
-DATE_TIME_METADATA_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+DATE_TIME_METADATA_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 
 def get_granule_id_single_input(input_obj, partial_granule_id, freq_pols_dict):
@@ -505,7 +505,7 @@ class BaseWriterSingleInput():
 
         self.output_product_path = f'{self.root_path}/{self.product_type}'
 
-        self.input_hdf5_obj = h5py.File(self.input_file, mode='r')
+        self.input_hdf5_obj = h5py.File(self.input_file, mode='r', swmr=True)
         self.output_hdf5_obj = h5py.File(self.output_file, mode='a')
 
     def populate_metadata(self):
@@ -722,8 +722,11 @@ class BaseWriterSingleInput():
 
         # if `data` is a numpy fixed-length string, remove trailing null
         # characters
+        # NOTE: It is necessary to check the object's shape to determine
+        # whether it is a single string or a list of strings. If it is a
+        # list of string, then it will be kept as it is.
         if ((isinstance(data, np.bytes_) or isinstance(data, np.ndarray))
-                and (data.dtype.char == 'S')):
+                and (data.dtype.char == 'S') and (data.shape == ())):
             data = np.bytes_(data)
             try:
                 data = data.decode()
@@ -847,7 +850,10 @@ class BaseWriterSingleInput():
 
             # check if dataset contains a string. If so, read it using method
             # `asstr()``
-            if h5py.check_string_dtype(input_h5_dataset_obj.dtype):
+            # NOTE: It is necessary to check the object's shape to determine
+            # whether it is a single string or a list of strings. If it is a
+            # list of string, then it will be kept as it is.
+            if h5py.check_string_dtype(input_h5_dataset_obj.dtype) and input_h5_dataset_obj.shape == ():
                 # use asstr() to read the dataset
                 data = str(input_h5_dataset_obj.asstr()[...])
 

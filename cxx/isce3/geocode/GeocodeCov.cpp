@@ -3300,7 +3300,7 @@ void Geocode<T>::_runBlock(
             }
 
             // ignoring boundary or low-sampled area elements
-            if (std::isnan(nlooks) ||
+            if (std::isnan(nlooks) || nlooks == 0 ||
                 nlooks < isce3::core::AREA_PROJECTION_MIN_VALID_SAMPLES_RATIO *
                                  std::abs(w_total) ||
                 (!std::isnan(min_nlooks) &&

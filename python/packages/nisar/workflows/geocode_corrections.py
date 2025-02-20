@@ -464,7 +464,8 @@ class AzSrgCorrections:
                     HDF5DatasetParams(name=f'{az_rg_str}Ionosphere',
                                       value=az_rg_corr["TEC"],
                                       description=f'2D lookup table of {az_or_los} {what_correction}{derived_from}',
-                                      attr_dict={'units': units}))
+                                      attr_dict={'units': units,
+                                                 '_FillValue': np.nan}))
             if "SET" in az_rg_corr:
                 what_correction = 'solid Earth tides timing correction'
                 derived_from = ''
@@ -472,7 +473,8 @@ class AzSrgCorrections:
                     HDF5DatasetParams(name=f'{az_rg_str}SolidEarthTides',
                                       value=az_rg_corr["SET"],
                                       description=f'2D lookup table of {az_or_los} {what_correction}{derived_from}',
-                                      attr_dict={'units': units}))
+                                      attr_dict={'units': units,
+                                                 '_FillValue': np.nan}))
         for meta_item in correction_items:
             add_dataset_and_attrs(correction_group, meta_item)
 

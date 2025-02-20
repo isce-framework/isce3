@@ -6,7 +6,7 @@ from nisar.products.readers.Raw import Raw
 from nisar.antenna import TxTrmInfo, RxTrmInfo, TxBMF, RxDBF
 from nisar.antenna.beamformer import get_pulse_index
 from nisar.workflows.focus import make_doppler_lut
-from isce3.focus import make_el_lut
+from isce3.focus import make_los_luts
 from isce3.antenna import ant2rgdop
 
 import isce3
@@ -174,10 +174,10 @@ class TestElevationBeamformer:
         look_min = 0,
         look_max = math.pi / 2,
     )
-    el_lut = make_el_lut(orbit, attitude,
-                         _raw.identification.lookDirection,
-                         dop, wavelength, dem_interp,
-                         rdr2geo_params)
+    el_lut, _, _ = make_los_luts(orbit, attitude,
+                                 _raw.identification.lookDirection,
+                                 dop, wavelength, dem_interp,
+                                 rdr2geo_params)
 
     # Parse Tx-related Cal stuff used only for Tx BMF test cases
     _tx_chanl = _raw.getListOfTxTRMs(freq_band, txrx_pol[0])

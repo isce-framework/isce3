@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.2.0 -->
+<!-- product specification version is 1.2.1 -->
 <algorithm name="L2_GeocodedSlc"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GSLC_template">
@@ -928,6 +928,8 @@
                           REFERENCE_LIST="HDF5 internal attribute"
                           CLASS="HDF5 internal attribute"
                           NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/yCoordinates"
@@ -950,6 +952,7 @@
                           REFERENCE_LIST="HDF5 internal attribute"
                           CLASS="HDF5 internal attribute"
                           NAME="HDF5 internal attribute"
+                          standard_name = "height_above_reference_ellipsoid"
                           units="meters">Height values above WGS84 Ellipsoid corresponding to the radar grid</annotation>
         </real>
 
@@ -1287,8 +1290,6 @@
                           NAME="HDF5 internal attribute"
                           long_name="Y coordinates of projection"
                           standard_name="projection_y_coordinate"
-                          _FillValue="nan"
-                          grid_mapping="projection"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/xCoordinates"
@@ -1301,8 +1302,6 @@
                           NAME="HDF5 internal attribute"
                           long_name="X coordinates of projection"
                           standard_name="projection_x_coordinate"
-                          _FillValue="nan"
-                          grid_mapping="projection"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/HH"
@@ -1311,6 +1310,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1321,6 +1324,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1331,6 +1338,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1341,6 +1352,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1351,6 +1366,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1361,6 +1380,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1415,6 +1438,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1425,6 +1452,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1435,6 +1466,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1445,6 +1480,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1455,6 +1494,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1465,6 +1508,10 @@
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
@@ -1503,7 +1550,7 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          units="1">Crosstalk in V-recieve channel expressed as ratio rxH / rxV</annotation>
+                          units="1">Crosstalk in V-receive channel expressed as ratio rxH / rxV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
 

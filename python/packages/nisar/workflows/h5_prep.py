@@ -552,7 +552,7 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
 
         # create geocoded SLC datasets for polarizations of current frequency
         for polarization in pol_list:
-            long_name = f'geocoded single-look complex image {polarization}'
+            long_name = f'Geocoded single-look complex image {polarization}'
             descr = f'Focused SLC image ({polarization})'
             _create_datasets(dst_grp, shape, ctype, polarization,
                              descr=descr, units='', grids="projection",
@@ -560,11 +560,11 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
                              fill_value=complex_fill_value, **gslc_output_options)
 
         # create geocoded mask for geocoded SLC datasets
-        long_name = f'geocoded mask of single-look complex image'
+        long_name = f'Geocoded mask of single-look complex image'
         descr = f'GSLC mask'
         gslc_output_options['fillvalue'] = 255
         _create_datasets(dst_grp, shape, np.ubyte, 'mask',
-                         descr=descr, units='', grids="projection",
+                         descr=descr, units=None, grids="projection",
                          long_name=long_name, yds=yds, xds=xds,
                          fill_value=255, valid_min=0,
                          **gslc_output_options)
@@ -641,7 +641,7 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
         ds.attrs["_FillValue"] = fill_value
 
     if valid_min is not None:
-        ds.attrs["_valid_min"] = valid_min
+        ds.attrs["valid_min"] = valid_min
 
 
 def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
@@ -910,7 +910,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Zero-Doppler azimuth time',
-        descr='Zero Doppler azimuth time in seconds',
+        descr='Zero Doppler azimuth time in seconds since UTC epoch',
         units=az_coord_units, **create_dataset_kwargs)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,

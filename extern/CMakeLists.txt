@@ -30,7 +30,12 @@ macro(getpackage_fftw)
 endmacro()
 
 macro(getpackage_gdal)
-    find_package(GDAL 3.0 REQUIRED)
+    # GDAL>=3.0 is nominally required but we deliberately omit the minimum version
+    # constraint here.
+    # GDAL's compatibility is listed as 'same minor version', which is too limited.
+    # We can work around this by specifying a version range, but this requires choosing
+    # an upper bound, which also seems overly restrictive.
+    find_package(GDAL CONFIG REQUIRED)
 endmacro()
 
 macro(getpackage_googletest)

@@ -150,7 +150,7 @@ runconfig:
             workflows:
                 validate: True
                 qa_reports: True
-                absolute_radiometric_calibration: True
-                nes0: True
-                point_target_analyzer: True
+                point_target_analyzer: true
+                absolute_radiometric_calibration: true
+                noise_equivalent_backscatter: true
 

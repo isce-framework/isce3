@@ -10,6 +10,7 @@
 #include <Eigen/Dense>
 #include <valarray>
 #include "Constants.h"
+#include "Linspace.h"
 #include "Matrix.h"
 #include "Utilities.h"
 
@@ -62,6 +63,11 @@ class isce3::core::LUT2d {
         inline size_t length() const { return _data.length(); }
         // Get LUT width (number of samples)
         inline size_t width() const { return _data.width(); }
+        // Coordinate axes
+        inline Linspace<double> xAxis() const {
+            return Linspace<double>(xStart(), xSpacing(), width()); }
+        inline Linspace<double> yAxis() const {
+            return Linspace<double>(yStart(), ySpacing(), length()); }
         // Get the reference value
         inline T refValue() const { return _refValue; }
         // Get flag for having data

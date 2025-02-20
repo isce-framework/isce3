@@ -256,17 +256,9 @@ void _compareArrays(isce3::core::Matrix<T>& topo_array,
 }
 
 template<class T>
-void _compareCubeLayer(std::string topo_file, std::string cube_file,
+void _compareCubeLayer(isce3::io::Raster& topo_raster, isce3::io::Raster& cube_raster,
                        int layer_counter, bool flag_geo = false)
 {
-
-    std::cout << "evaluating: " << cube_file << " (band: " << layer_counter + 1
-              << ")" << std::endl;
-    std::cout << "     reference: " << topo_file << std::endl;
-
-    isce3::io::Raster topo_raster(topo_file);
-    isce3::io::Raster cube_raster(cube_file);
-
     ASSERT_TRUE(topo_raster.width() == cube_raster.width());
     ASSERT_TRUE(topo_raster.length() == cube_raster.length());
 
@@ -530,39 +522,42 @@ TEST(radarGridCubeTest, testRadarGridCube)
 
         bool flag_geo = true;
 
-        // Create slantRange file for geocoding
-        std::cout << "creating temporary slant-range file" << std::endl;
-        std::string temp_slant_range_file = "tempSlantRange.rdr";
-        isce3::io::Raster temp_slant_range_raster(
-                temp_slant_range_file, radar_grid.width(), radar_grid.length(),
-                1, GDT_Float64, "ENVI");
-        isce3::core::Matrix<double> slant_range_array(radar_grid.length(),
-                                                      radar_grid.width());
-        // Create zeroDopplerAzimuthTime for geocoding
-        std::cout << "creating temporary azimuth time file" << std::endl;
-        std::string temp_azimuth_time_file = "tempZeroDopplerAzimuthTime.rdr";
-        isce3::io::Raster temp_azimuth_time_raster(
-                temp_azimuth_time_file, radar_grid.width(), radar_grid.length(),
-                1, GDT_Float64, "ENVI");
-        isce3::core::Matrix<double> azimuth_time_array(radar_grid.length(),
-                                                       radar_grid.width());
+        {
+            // Create slantRange file for geocoding
+            std::cout << "creating temporary slant-range file" << std::endl;
+            std::string temp_slant_range_file = "tempSlantRange.rdr";
+            isce3::io::Raster temp_slant_range_raster(
+                    temp_slant_range_file, radar_grid.width(), radar_grid.length(),
+                    1, GDT_Float64, "ENVI");
+            isce3::core::Matrix<double> slant_range_array(radar_grid.length(),
+                                                          radar_grid.width());
+            // Create zeroDopplerAzimuthTime for geocoding
+            std::cout << "creating temporary azimuth time file" << std::endl;
+            std::string temp_azimuth_time_file = "tempZeroDopplerAzimuthTime.rdr";
+            isce3::io::Raster temp_azimuth_time_raster(
+                    temp_azimuth_time_file, radar_grid.width(), radar_grid.length(),
+                    1, GDT_Float64, "ENVI");
+            isce3::core::Matrix<double> azimuth_time_array(radar_grid.length(),
+                                                           radar_grid.width());
 
-        for (int i = 0; i < radar_grid.length(); ++i) {
-            for (int j = 0; j < radar_grid.width(); ++j) {
-                slant_range_array(i, j) = radar_grid.startingRange() +
-                                          j * radar_grid.rangePixelSpacing();
-                azimuth_time_array(i, j) = radar_grid.sensingStart() +
-                                           i * radar_grid.azimuthTimeInterval();
+            for (int i = 0; i < radar_grid.length(); ++i) {
+                for (int j = 0; j < radar_grid.width(); ++j) {
+                    slant_range_array(i, j) = radar_grid.startingRange() +
+                                              j * radar_grid.rangePixelSpacing();
+                    azimuth_time_array(i, j) = radar_grid.sensingStart() +
+                                               i * radar_grid.azimuthTimeInterval();
+                }
             }
+
+            temp_slant_range_raster.setBlock(slant_range_array.data(), 0, 0,
+                                             radar_grid.width(),
+                                             radar_grid.length(), 1);
+
+            temp_azimuth_time_raster.setBlock(azimuth_time_array.data(), 0, 0,
+                                              radar_grid.length(),
+                                              radar_grid.width(), 1);
         }
 
-        temp_slant_range_raster.setBlock(slant_range_array.data(), 0, 0,
-                                         radar_grid.width(),
-                                         radar_grid.length(), 1);
-
-        temp_azimuth_time_raster.setBlock(azimuth_time_array.data(), 0, 0,
-                                          radar_grid.length(),
-                                          radar_grid.width(), 1);
         // DEM for UAVSAR (NISAR) Winipeg
         int epsg_dem = epsg;
         double dem_x0, dem_y0, dem_dx, dem_dy;
@@ -647,12 +642,19 @@ TEST(radarGridCubeTest, testRadarGridCube)
                                 output_mode);
             }
 
-            _compareCubeLayer<float>("incGeo.bin", "incidenceAngle.rdr",
+
+            auto inc_angle_ref_raster = isce3::io::Raster("incGeo.bin");
+            _compareCubeLayer<float>(inc_angle_ref_raster, incidence_angle_raster,
                                      layer_counter, flag_geo);
-            _compareCubeLayer<double>("tempSlantRangeGeo.bin", "slantRange.rdr",
+
+            auto slant_range_ref_raster = isce3::io::Raster("tempSlantRangeGeo.bin");
+            _compareCubeLayer<double>(slant_range_ref_raster, slant_range_raster,
                                       layer_counter, flag_geo);
-            _compareCubeLayer<double>("tempZeroDopplerAzimuthTimeGeo.bin",
-                                      "zeroDopplerAzimuthTime.rdr",
+
+            auto azimuth_time_ref_raster =
+                    isce3::io::Raster("tempZeroDopplerAzimuthTimeGeo.bin");
+            _compareCubeLayer<double>(azimuth_time_ref_raster,
+                                      azimuth_time_raster,
                                       layer_counter, flag_geo);
         }
     }
@@ -764,11 +766,16 @@ TEST(metadataCubesTest, testMetadataCubes) {
         std::cout << "... done running topo for height: "
                   << heights[layer_counter] << std::endl;
 
-        _compareCubeLayer<float>("inc.rdr", "incidenceAngle.bin",
+        auto inc_angle_ref_raster = isce3::io::Raster("inc.rdr");
+        _compareCubeLayer<float>(inc_angle_ref_raster, incidence_angle_raster,
                                   layer_counter);
-        _compareCubeLayer<double>("x.rdr", "coordinateX.bin",
+
+        auto x_ref_raster = isce3::io::Raster("x.rdr");
+        _compareCubeLayer<double>(x_ref_raster, coordinate_x_raster,
                                   layer_counter);
-        _compareCubeLayer<double>("y.rdr", "coordinateY.bin",
+
+        auto y_ref_raster = isce3::io::Raster("y.rdr");
+        _compareCubeLayer<double>(y_ref_raster, coordinate_y_raster,
                                   layer_counter);
 
         /*

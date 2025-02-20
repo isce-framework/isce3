@@ -311,7 +311,7 @@ class InSARBaseWriter(h5py.File):
             # Should those also be updated in the crossmul module?
             doppler_centroid_group.copy("dopplerCentroid", common_group)
             common_group["dopplerCentroid"].attrs['description'] = \
-                np.bytes_("Common Doppler centroid used for processing interferogram")
+                np.bytes_("2D LUT of common Doppler centroid between reference and secondary RSLCs")
             common_group["dopplerCentroid"].attrs['units'] = \
                 Units.hertz
 
@@ -321,7 +321,7 @@ class InSARBaseWriter(h5py.File):
                 "dopplerBandwidth",
             )
             common_group["dopplerBandwidth"].attrs['description'] = \
-                np.bytes_("Common Doppler Bandwidth used for processing interferogram")
+                np.bytes_("Common Doppler bandwidth between reference and secondary RSLCs")
             common_group["dopplerBandwidth"].attrs['units'] = Units.hertz
 
     def add_RSLC_to_procinfo_params_group(self, rslc_name: str):
@@ -458,8 +458,8 @@ class InSARBaseWriter(h5py.File):
                 # Update the description attributes of the zeroDopplerTime
                 ds_zerodopp = rslc_frequency_group[doppler_time]
                 ds_zerodopp.attrs['description'] = \
-                    np.bytes_(f"Azimuth {start_stop} time of the {rslc_name} RSLC product")
-
+                    np.bytes_(f"Azimuth {start_stop} time (in UTC) of the {rslc_name}"
+                              " RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss")
 
             rg_names_to_be_created = [
                 DatasetParams(
@@ -921,7 +921,7 @@ class InSARBaseWriter(h5py.File):
         partial_granule_id = primary_exec_cfg.get("partial_granule_id")
         product_type = self.product_info.ProductType.lower()
         product_version = primary_exec_cfg["product_version"].get(f'{product_type}_version')
-        product_doi = primary_exec_cfg["product_doi"].get(f'{product_type}_version')
+        product_doi = primary_exec_cfg["product_doi"].get(f'{product_type}_doi')
         crid = primary_exec_cfg.get("composite_release_id")
 
         # Determine processingType
@@ -929,6 +929,8 @@ class InSARBaseWriter(h5py.File):
             processing_type = np.bytes_('Nominal')
         elif processing_type == 'UR':
             processing_type = np.bytes_('Urgent')
+        elif processing_type == 'OD':
+            processing_type = np.bytes_('Custom')
         else:
             processing_type = np.bytes_('Undefined')
 
@@ -1034,14 +1036,43 @@ class InSARBaseWriter(h5py.File):
                 ds_name.value = slc_val
             add_dataset_and_attrs(dst_id_group, ds_name)
 
+        # copy the isFullFrame from the reference RSLC since the secondary RSLC will be
+        # coregistrated to align with the reference RSLC. If there is no isFullFrame dataset in the RSLC,
+        # we assume it is partial frame.
+        # Note: handle 'isFullFrame' here because we need to populate the correct
+        # *Percentage attributes from the reference and secondary RSLCs, if available.
+        # (i.e., they are not fixed attributes)
+        ds_name = "isFullFrame"
+        if ds_name in ref_id_group:
+            ref_id_group.copy(ds_name, dst_id_group)
+        else:
+            ds = DatasetParams(
+                ds_name,
+                "False",
+                '"True" if the product fully covers a NISAR frame,'
+                ' "False" if partial coverage',
+                {'frameCoveragePercentage':np.nan,
+                 'thresholdPercentage':75.0}
+            )
+            add_dataset_and_attrs(dst_id_group, ds)
+
         # Copy datasets from reference and secondary RSLCs
-        datasets_to_copy = ["zeroDopplerStartTime", "zeroDopplerEndTime", "absoluteOrbitNumber"]
+        datasets_to_copy = ["zeroDopplerStartTime",
+                            "zeroDopplerEndTime",
+                            "absoluteOrbitNumber",
+                            "isJointObservation"]
         cap = lambda x: f"{x[0].upper()}{x[1:]}"
 
         for ds_name in datasets_to_copy:
-            ref_id_group.copy(ds_name, dst_id_group, f"reference{cap(ds_name)}")
-            sec_id_group.copy(ds_name, dst_id_group, f"secondary{cap(ds_name)}")
+            # Check if the dataset in the reference and secondary RSLC
+            # identification group to deal with the case that
+            # the old product spec of the RSLC that does not have 'isJointObservation'
+            if ds_name in ref_id_group:
+                ref_id_group.copy(ds_name, dst_id_group,  f"reference{cap(ds_name)}")
+            if ds_name in sec_id_group:
+                sec_id_group.copy(ds_name, dst_id_group,  f"secondary{cap(ds_name)}")
 
+        # Copy the the
         # Update the description attributes of the zeroDoppler
         for prod in list(product(['reference', 'secondary'],
                                  ['Start', 'End'])):
@@ -1052,11 +1083,27 @@ class InSARBaseWriter(h5py.File):
             ds.attrs['description'] = \
                 f"Azimuth {time_in_description} time (in UTC) of {rslc_name} RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss"
 
-        # Update the description for the absolute orbit numbers
         for rslc_name in ['reference', 'secondary']:
+             # Update the description for the absolute orbit numbers
             ds = dst_id_group[f"{rslc_name}AbsoluteOrbitNumber"]
             ds.attrs['description'] = \
             f'Absolute orbit number for the {rslc_name} RSLC'
+
+            #  Update the description for the isJointObservation
+            #  If there is no isJointObservation in the identification group,
+            #  we will create a new one
+            ds_name = f"{rslc_name}IsJointObservation"
+            description = '"True" if any portion' +\
+                f' of the {rslc_name} RSLC was acquired in a joint observation mode ' +\
+                '(e.g., L-band and S-band simultaneously), "False" otherwise'
+            if ds_name in dst_id_group:
+                ds = dst_id_group[ds_name]
+                ds.attrs['description'] = np.bytes_(description)
+            else:
+                add_dataset_and_attrs(dst_id_group, DatasetParams(
+                    ds_name,
+                    "False",
+                    description))
 
         # Granule ID follows the NISAR filename convention. The partial granule ID
         # has placeholders (curly brackets) which will be filled by the InSAR SAS
@@ -1121,7 +1168,8 @@ class InSARBaseWriter(h5py.File):
                 'Acquired frequency band, either "L" or "S"'
             ),
              DatasetParams(
-                "productDoi", product_doi, "Digital Object Identifier (DOI) for the product"
+                "productDoi", str(product_doi),
+                "Digital Object Identifier (DOI) for the product"
             ),
             DatasetParams(
                 "productLevel",

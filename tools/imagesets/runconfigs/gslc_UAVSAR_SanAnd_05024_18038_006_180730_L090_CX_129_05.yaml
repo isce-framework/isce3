@@ -141,3 +141,4 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
+                point_target_analyzer: true

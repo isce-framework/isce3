@@ -90,10 +90,19 @@ def troposphere_delay_check(cfg):
                 try:
                     # The HRES weather model file with ECMWF NetCDF format
                     if weather_model_type == 'HRES':
-                        import xarray as xr
-                        ds = xr.open_dataset(weather_model_file)
-                        # Get the datetime of the weather model file
-                        weather_model_date = ds.time.values.astype('datetime64[s]').astype(datetime)[0]
+                        from netCDF4 import Dataset, num2date
+                        # Open the NetCDF file
+                        with Dataset(weather_model_file, mode='r') as ds:
+                            if 'time' in ds.variables:
+                                time = ds.variables['time']
+                                # Get calendar attribute if available
+                                calendar = getattr(time, 'calendar', 'standard')
+                                dates = num2date(time[:], units=time.units , calendar=calendar)
+                                weather_model_date = datetime.fromisoformat(dates[0].isoformat())
+                            else:
+                                err_str = f"{weather_model_file} does not have the 'time' variable"
+                                error_channel.log(err_str)
+                                raise ValueError(err_str)
                     # The other weather model files with RAiDER NetCDF format
                     else:
                         with HDF5OptimizedReader(name=weather_model_file, mode='r', libver='latest', swmr=True) as f:

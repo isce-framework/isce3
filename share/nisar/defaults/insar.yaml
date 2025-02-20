@@ -883,6 +883,48 @@ runconfig:
                         # Default: False
                         zero_is_invalid: false
 
+                    correlation_surface_peak:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 95.0
+                        near_zero_threshold: 95.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
                     browse_png:
 
                         # The image to use as the basis for the browse image PNG. Options:
@@ -1195,6 +1237,48 @@ runconfig:
                         # fill value is zero, then zeros will still be included in the total.
                         # Default: False
                         zero_is_invalid: false
+
+                    correlation_surface_peak:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 95.0
+                        near_zero_threshold: 95.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
 
                     browse_png:
 
@@ -1558,6 +1642,48 @@ runconfig:
                         # Default: False
                         zero_is_invalid: false
 
+                    correlation_surface_peak:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 99.0
+                        near_zero_threshold: 99.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
                     browse_png:
 
                         # The image to use as the basis for the browse image PNG. Options:
@@ -1705,15 +1831,17 @@ runconfig:
 
                     az_and_rg_variance:
 
-                        # The vmin and vmax values to generate the plots
-                        # for the az and slant range variance layers for ROFF and GOFF.
+                        # The vmin and vmax values to generate the plots for the
+                        # az and slant range offset variance layers for ROFF and GOFF.
                         # The square root of these layers (i.e. the standard deviation
-                        # of the offsets) is clipped to this interval,
-                        # which (in turn) is used for the interval of the colorbar.
-                        # If None, the interval is computed using the min and max
-                        # of the square root of these layers.
-                        # Default: (0.0, 0.1)
-                        colorbar_min_max: [0.0, 0.1]
+                        # of the offsets) is computed, clipped to this interval, and
+                        # then plotted using this interval for the colorbar.
+                        # If None, the interval is computed by:
+                        # If the variance layers' units are 'meters^2': [0.0, 10.0]
+                        # Else-if the variance layers' units are 'pixels^2': [0.0, 0.1]
+                        # Otherwise: [0.0, max(sqrt(<az var layer>), sqrt(<rg var layer>))]
+                        # Default: None
+                        colorbar_min_max:
 
                         # *** Threshold Percentage Parameters ***
                         # Check for malformed datasets using these threshold percentages.
@@ -1971,15 +2099,17 @@ runconfig:
 
                     az_and_rg_variance:
 
-                        # The vmin and vmax values to generate the plots
-                        # for the az and slant range variance layers for ROFF and GOFF.
+                        # The vmin and vmax values to generate the plots for the
+                        # az and slant range offset variance layers for ROFF and GOFF.
                         # The square root of these layers (i.e. the standard deviation
-                        # of the offsets) is clipped to this interval,
-                        # which (in turn) is used for the interval of the colorbar.
-                        # If None, the interval is computed using the min and max
-                        # of the square root of these layers.
-                        # Default: (0.0, 0.1)
-                        colorbar_min_max: [0.0, 0.1]
+                        # of the offsets) is computed, clipped to this interval, and
+                        # then plotted using this interval for the colorbar.
+                        # If None, the interval is computed by:
+                        # If the variance layers' units are 'meters^2': [0.0, 10.0]
+                        # Else-if the variance layers' units are 'pixels^2': [0.0, 0.1]
+                        # Otherwise: [0.0, max(sqrt(<az var layer>), sqrt(<rg var layer>))]
+                        # Default: None
+                        colorbar_min_max:
 
                         # *** Threshold Percentage Parameters ***
                         # Check for malformed datasets using these threshold percentages.

@@ -6,6 +6,7 @@ import journal
 import logging
 import pyre
 import re
+import numpy as np
 
 from nisar.noise import NoiseEquivalentBackscatterProduct
 from isce3.core import DateTime
@@ -118,7 +119,6 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
 
             return is_complex32(h[slc_path])
 
-
     def getNoiseEquivalentBackscatter(self, frequency=None, pol=None):
         '''
         Extract noise equivalent backscatter product for a particular
@@ -155,7 +155,7 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
                 pol = co_pol[0]
 
         # Save typing...
-        cal, freq  = self.CalibrationInformationPath, f'frequency{frequency}'
+        cal, freq = self.CalibrationInformationPath, f'frequency{frequency}'
 
         # Set paths relative to cal group. Support three product spec versions.
         # Keys correspond to the first tag of the NISAR PIX repo that implements
@@ -195,7 +195,10 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
             sr = fid[paths["range"]][:]
             azt_dset = fid[paths["time"]]
             azt = azt_dset[:]
-            units = azt_dset.attrs['units'].decode()
+            units = azt_dset.attrs['units']
+            # This attribute should be `bytes`, but may be stored as `str` in nonconforming legacy NISAR products.
+            if not isinstance(units, str):
+                units = units.decode()
 
         # datetime UTC pattern to look for in units to get epoch
         dt_pat = re.compile(
@@ -210,7 +213,122 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
         epoch = DateTime(utc_str)
         # build and return noise product
         return NoiseEquivalentBackscatterProduct(noise, sr, azt, epoch,
-            frequency, pol)
+                                                 frequency, pol)
+
+    def getResampledNoiseEquivalentBackscatter(
+            self,
+            sensing_times,
+            slant_ranges=None,
+            frequency=None,
+            pol=None,
+            range_interpolator=np.interp,
+            range_interpolator_kwargs=None):
+        '''
+        Extract noise equivalent backscatter product for a particular
+        frequency band and TxRx polarization resampled over given
+        `sensing_times` and `slant_ranges`. It's conceptually the same as
+        as noise equivalent sigma zero (NESZ) but agnostic with respect to the
+        area normalization convention.
+
+        Parameters
+        ----------
+        sensing_times: array_like
+            Azimuth sensing times for the output noise product in seconds
+            with respect to the reference epoch
+        slant_range: array_like or None
+            Slant-range distances for the output noise product in meters.
+            If `None`, the slant-range distances of the noise equivalent
+            backscatter look-up table (LUT) in the RSLC metadata will be
+            used.
+        frequency : str or None
+            Frequency band such as 'A', 'B'.
+            Default is the very first one in lexicographical order.
+        pol : str or None
+            TxRx polarization such as 'HH', 'HV', etc.
+            Default is the first co-pol in frequency if `frequency`
+            otherwise the very first co-pol in very first frequency
+            band. If no co-pol, the first cross-pol product will
+            be picked.
+        range_interpolator: callable, optional
+            Range 1-D interpolator. A function that uses the input `X` and `Y`
+            data points to interpolate the new `Y_new` values at the `X_new`
+            positions as:
+            ```
+            Y_new = range_interpolator(X_new, X, Y,
+                                       **range_interpolator_kwargs)
+            ```
+            Defaults to `numpy.interp`
+        range_interpolator_kwargs: dict or None
+            Keyword arguments represented as a Python dictionary to be
+            passed to the `range_interpolator` callable. Defaults to `None`
+
+        Returns
+        -------
+        nisar.noise.NoiseEquivalentBackscatterProduct
+            Resampled NoiseEquivalentBackscatterProduct
+
+        '''
+
+        noise_product = self.getNoiseEquivalentBackscatter(frequency=frequency,
+                                                           pol=pol)
+        az_orig = noise_product.az_time
+        n_az_orig = len(az_orig)
+
+        if range_interpolator_kwargs is None:
+            range_interpolator_kwargs = {}
+        if slant_ranges is None:
+            slant_ranges = noise_product.slant_range
+
+        # ensure that `sensing_times` and `slant_range` are numpy arrays
+        sensing_times = np.asarray(sensing_times)
+        slant_ranges = np.asarray(slant_ranges)
+
+        # create array that will store the resampled noise power
+        resampled_noise_power_linear = np.zeros((sensing_times.size,
+                                                 slant_ranges.size),
+                                                dtype=np.float64)
+
+        # Perform nearest neighbor interpolation in azimuth and user-defined
+        # interpolation (defaults to linear interpolation) along range. For
+        # each azimuth coordinate in the output radar grid, find the nearest
+        # azimuth coordinate in the input noise product, and interpolate
+        # noise product samples along that azimuth line.
+
+        # The array `az_times_distance` measures the distance of the new
+        # azimuth times `sensing_times` with respect to the original azimuth
+        # times `az_orig`. We locate the indices with minimum distances to
+        # find the nearest neighbor azimuth time
+
+        az_times_distance = np.zeros((n_az_orig, sensing_times.size),
+                                     dtype=np.float64)
+
+        for i in range(n_az_orig):
+            az_times_distance[i, :] = np.absolute(sensing_times - az_orig[i])
+
+        nearest_az_times = np.argmin(az_times_distance, axis=0)
+
+        for i in range(n_az_orig):
+            # compute the azimuth indices (lines) that will receive the
+            # the current resampled line `i`. If there's no line to receive
+            # the update, skip resampling, and continue to the next line `i+1`
+            indices = np.where(nearest_az_times == i)[0]
+            if indices.size == 0:
+                continue
+
+            new_slant_range_line = \
+                range_interpolator(slant_ranges,
+                                   noise_product.slant_range,
+                                   noise_product.power_linear[i, :],
+                                   **range_interpolator_kwargs)
+            resampled_noise_power_linear[indices, :] = new_slant_range_line
+
+        return NoiseEquivalentBackscatterProduct(
+            resampled_noise_power_linear,
+            np.array(slant_ranges),
+            np.array(sensing_times),
+            noise_product.ref_epoch,
+            noise_product.freq_band,
+            noise_product.txrx_pol)
 
 
 def _h5join(*paths: str) -> str:

@@ -49,6 +49,11 @@ def form_single_tap_dbf_echo(raw_dset, slice_line, el_trans,
     -------
     np.ndarray(complex64)
         2-D complex composite echo data with shape (range lines, range bins)
+    np.ndarray(int)
+        1-D array of range bin limits for all beams (channels) in ascending
+        order with size `channels + 1`.
+        For instance, the respective [start, stop] range bins for channel
+        `i` are indices `[i - 1, i]`.
 
     Raises
     ------
@@ -77,7 +82,7 @@ def form_single_tap_dbf_echo(raw_dset, slice_line, el_trans,
         slice_rgb = slice(*rgb_limits[cc:cc+2])
         # get decoded raw echo
         echo[:, slice_rgb] = raw_dset[cc, slice_line, slice_rgb]
-    return echo
+    return echo, rgb_limits
 
 
 def dbf_onetap_from_dm2(

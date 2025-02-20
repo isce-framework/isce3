@@ -440,7 +440,7 @@ def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
             null_filename = Path(out_path).joinpath(null_plt_name)
             _plot_null_pow_patterns(
                 pow_pat_null, pair_num, null_filename, az_time_mid,
-                ref_epoch_echo)
+                ref_epoch_echo, echo_null.el_angle)
 
     # return tuple of np.ndarray
     return (np.asarray(null_num, dtype='uint8'),
@@ -581,7 +581,7 @@ def _pow2db(p):
 
 
 def _plot_null_pow_patterns(pow_pat_null, null_num, null_file, az_time,
-                            epoch):
+                            epoch, ela_null):
     """Plot null power patterns for echo and antenna.
 
     Parameters
@@ -596,6 +596,8 @@ def _plot_null_pow_patterns(pow_pat_null, null_num, null_file, az_time,
         block whose null to be plotted.
     epoch : str
         Reference epoch UTC time.
+    ela_null : float
+        EL angle of the null in radians.
 
     """
     el_deg = np.rad2deg(pow_pat_null.el)
@@ -608,19 +610,30 @@ def _plot_null_pow_patterns(pow_pat_null, null_num, null_file, az_time,
     idx_min = np.nanargmin(pow_pat_null.ant)
     pow_ant = _pow2db(pow_pat_null.ant)
 
-    plt.figure(figsize=(8, 6))
-    plt.plot(el_deg, pow_ant, 'b--',
-             el_deg, _pow2db(pow_pat_null.echo), 'r',
-             linewidth=2)
-    plt.axvline(x=el_deg[idx_min], color='g', linestyle='-.', linewidth=2)
-    plt.legend(['ANT', 'ECHO', 'Ref Null Loc'], loc='best')
-    plt.xticks(ticks=np.arange(min_el, max_el + d_el, d_el))
-    plt.xlim([min_el, max_el])
-    plt.xlabel('Elevation (deg)')
-    plt.ylabel('Norm. Magnitude (dB)')
-    plt.title(f'EL Null Power Pattern, Echo v.s. Ant \n'
-              f'for Null # {null_num} @ AZ-Time={az_time:.3f} sec\n'
-              f'since {epoch}')
-    plt.grid(True)
-    plt.savefig(null_file)
+    # get the EL angle offset between antenna (ANT) and echo null (ECHO)
+    # in milli-degrees
+    el_ofs = (np.rad2deg(ela_null) - el_deg[idx_min]) * 1e3
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111)
+    ax.plot(el_deg, pow_ant, 'b--',
+            el_deg, _pow2db(pow_pat_null.echo), 'r',
+            linewidth=2)
+    ax.axvline(x=el_deg[idx_min], color='g', linestyle='-.', linewidth=2)
+    ax.legend(['ANT', 'ECHO', 'Ref Null Loc'], loc='best')
+    ax.set_xticks(ticks=np.arange(min_el, max_el + d_el, d_el))
+    ax.set_xlim([min_el, max_el])
+    ax.set_xlabel('Elevation (deg)')
+    ax.set_ylabel('Norm. Magnitude (dB)')
+    ax.set_title(f'EL Null Power Pattern, Echo v.s. Ant \n'
+                 f'for Null # {null_num} @ AZ-Time={az_time:.3f} '
+                 f'sec\n since {epoch}')
+    ax.grid(True)
+    plt_textstr = '\n'.join((
+        'EL Offset:',
+        r'$\mathrm{\Delta_{EL}}$=%.1f $\mathit{mdeg}$' % el_ofs))
+    plt_props = dict(boxstyle='round', facecolor='orange', alpha=0.5)
+    ax.text(0.11, 0.5, plt_textstr, transform=ax.transAxes, fontsize=10,
+            horizontalalignment='center', verticalalignment='center',
+            bbox=plt_props)
+    fig.savefig(null_file)
     plt.close()

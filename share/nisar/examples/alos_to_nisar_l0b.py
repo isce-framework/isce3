@@ -148,8 +148,8 @@ def set_h5_orbit(group: h5py.Group, orbit: isce3.core.Orbit):
     # acceleration not used/contained in Orbit object
     dset = group.create_dataset("acceleration",
                                 data=numpy.zeros_like(orbit.velocity))
-    dset.attrs["units"] = numpy.string_("meters per second squared")
-    dset.attrs["description"] = numpy.string_("GPS state vector acceleration")
+    dset.attrs["units"] = numpy.bytes_("meters per second squared")
+    dset.attrs["description"] = numpy.bytes_("GPS state vector acceleration")
 
 
 def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
@@ -190,30 +190,30 @@ def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
     # Write to HDF5.  isce3.core.Quaternion.save_to_h5 doesn't really cut it,
     # so don't bother constructing it.
     ds = group.create_dataset("angularVelocity", data=numpy.zeros((len(qs), 3)))
-    ds.attrs["description"] = numpy.string_(
+    ds.attrs["description"] = numpy.bytes_(
         "Attitude angular velocity vectors (wx, wy, wz)")
-    ds.attrs["units"] = numpy.string_("radians per second")
+    ds.attrs["units"] = numpy.bytes_("radians per second")
 
-    ds = group.create_dataset("attitudeType", data=numpy.string_("Custom"))
-    ds.attrs["description"] = numpy.string_(
+    ds = group.create_dataset("attitudeType", data=numpy.bytes_("Custom"))
+    ds.attrs["description"] = numpy.bytes_(
         'Attitude type, either "FRP", "NRP", "PRP, or "Custom", where "FRP"'
         ' stands for Forecast Radar Pointing, "NRP" is Near Real-time'
         ' Pointing, and "PRP" is Precise Radar Pointing')
 
     ds = group.create_dataset("eulerAngles", data=numpy.array(rpys))
-    ds.attrs["description"] = numpy.string_(
+    ds.attrs["description"] = numpy.bytes_(
         "Attitude Euler angles (roll, pitch, yaw)")
-    ds.attrs["units"] = numpy.string_("degrees")
+    ds.attrs["units"] = numpy.bytes_("degrees")
 
     ds = group.create_dataset("quaternions", data=numpy.array(qs))
-    ds.attrs["description"] = numpy.string_("Attitude quaternions (q0, q1, q2, q3)")
-    ds.attrs["units"] = numpy.string_("unitless")
+    ds.attrs["description"] = numpy.bytes_("Attitude quaternions (q0, q1, q2, q3)")
+    ds.attrs["units"] = numpy.bytes_("unitless")
 
     ds = group.create_dataset("time", data=numpy.array(times))
-    ds.attrs["description"] = numpy.string_(
+    ds.attrs["description"] = numpy.bytes_(
         "Time vector record. This record contains the time corresponding to"
         " attitude and quaternion records")
-    ds.attrs["units"] = numpy.string_(
+    ds.attrs["units"] = numpy.bytes_(
         f"seconds since {orbit.reference_epoch.isoformat()}")
 
 
@@ -270,43 +270,43 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
     """
     # scalar
     ident.create_dataset('diagnosticModeFlag', data=numpy.uint8(0))
-    ident.create_dataset('isGeocoded', data=numpy.string_("False"))
-    ident.create_dataset('listOfFrequencies', data=numpy.string_(["A"]))
-    ident.create_dataset('lookDirection', data = numpy.string_("Right"))
-    ident.create_dataset('missionId', data=numpy.string_("ALOS"))
+    ident.create_dataset('isGeocoded', data=numpy.bytes_("False"))
+    ident.create_dataset('listOfFrequencies', data=numpy.bytes_(["A"]))
+    ident.create_dataset('lookDirection', data = numpy.bytes_("Right"))
+    ident.create_dataset('missionId', data=numpy.bytes_("ALOS"))
     direction = "Ascending" if ldr.summary.TimeDirectionIndicatorAlongLine[0] == "A" else "Descending"
-    ident.create_dataset('orbitPassDirection', data=numpy.string_(direction))
-    ident.create_dataset('processingType', data=numpy.string_("repackaging"))
-    ident.create_dataset('productType', data=numpy.string_("RRSD"))
-    ident.create_dataset('productVersion', data=numpy.string_("0.1.0"))
+    ident.create_dataset('orbitPassDirection', data=numpy.bytes_(direction))
+    ident.create_dataset('processingType', data=numpy.bytes_("repackaging"))
+    ident.create_dataset('productType', data=numpy.bytes_("RRSD"))
+    ident.create_dataset('productVersion', data=numpy.bytes_("0.1.0"))
     ident.create_dataset('absoluteOrbitNumber', data=numpy.array(0, dtype='u4'))
-    ident.create_dataset("isUrgentObservation", data=numpy.string_("False"))
+    ident.create_dataset("isUrgentObservation", data=numpy.bytes_("False"))
     ident.create_dataset("isJointObservation", data=numpy.bytes_("False"))
     # shape = numberOfObservations
-    ident.create_dataset("plannedObservationId", data=numpy.string_(["0"]))
+    ident.create_dataset("plannedObservationId", data=numpy.bytes_(["0"]))
     # shape = numberOfDatatakes
-    ident.create_dataset("plannedDatatakeId", data=numpy.string_(["0"]))
+    ident.create_dataset("plannedDatatakeId", data=numpy.bytes_(["0"]))
     # Will override these three later.
-    ident.create_dataset("boundingPolygon", data=numpy.string_("POLYGON EMPTY"))
-    ident.create_dataset("zeroDopplerStartTime", data=numpy.string_(
+    ident.create_dataset("boundingPolygon", data=numpy.bytes_("POLYGON EMPTY"))
+    ident.create_dataset("zeroDopplerStartTime", data=numpy.bytes_(
         "2007-01-01 00:00:00.0000000"))
-    ident.create_dataset("zeroDopplerEndTime", data=numpy.string_(
+    ident.create_dataset("zeroDopplerEndTime", data=numpy.bytes_(
         "2007-01-01 00:00:01.0000000"))
     # fields added to spec in 2023
-    ident.create_dataset("granuleId", data=numpy.string_("None"))
-    ident.create_dataset("instrumentName", data=numpy.string_("PALSAR"))
-    ident.create_dataset("isDithered", data=numpy.string_("False"))
-    ident.create_dataset("isMixedMode", data=numpy.string_("False"))
-    ident.create_dataset("processingCenter", data=numpy.string_("JPL"))
+    ident.create_dataset("granuleId", data=numpy.bytes_("None"))
+    ident.create_dataset("instrumentName", data=numpy.bytes_("PALSAR"))
+    ident.create_dataset("isDithered", data=numpy.bytes_("False"))
+    ident.create_dataset("isMixedMode", data=numpy.bytes_("False"))
+    ident.create_dataset("processingCenter", data=numpy.bytes_("JPL"))
     ident.create_dataset("processingDateTime",
-        data=numpy.string_(datetime.datetime.now(datetime.timezone.utc).isoformat()[:19]))
-    ident.create_dataset("productLevel", data=numpy.string_("L0B"))
+        data=numpy.bytes_(datetime.datetime.now(datetime.timezone.utc).isoformat()[:19]))
+    ident.create_dataset("productLevel", data=numpy.bytes_("L0B"))
     ident.create_dataset("productSpecificationVersion",
-        data=numpy.string_("0.9.0"))
-    ident.create_dataset("radarBand", data=numpy.string_("L"))
+        data=numpy.bytes_("0.9.0"))
+    ident.create_dataset("radarBand", data=numpy.bytes_("L"))
     
     for name, desc in ident_descriptions.items():
-        ident[name].attrs["description"] = numpy.string_(desc)
+        ident[name].attrs["description"] = numpy.bytes_(desc)
 
 
 def constructNISARHDF5(args, ldr):
@@ -322,7 +322,7 @@ def constructNISARHDF5(args, ldr):
         ##Start populating metadata parts
         rrsd = lsar.create_group('RRSD')
         inps = rrsd.create_group('metadata/processingInformation/inputs')
-        inps.create_dataset('l0aGranules', data=numpy.string_([os.path.basename(args.indir)]))
+        inps.create_dataset('l0aGranules', data=numpy.bytes_([os.path.basename(args.indir)]))
 
         #Start populating telemetry
         orbit_group = rrsd.create_group('lowRateTelemetry/orbit')
@@ -407,13 +407,13 @@ def addImagery(h5file, ldr, imgfile, pol, gap_width_usec=0.0, gap_location=0.5):
     #If this is first pol being written, add common information as well
     if freqA not in fid:
         freqA = fid.create_group(freqA)
-        freqA.create_dataset("listOfTxPolarizations", data=numpy.string_([txP]),
+        freqA.create_dataset("listOfTxPolarizations", data=numpy.bytes_([txP]),
             maxshape=(2,))
     else:
         freqA = fid[freqA]
 
     txPolList = freqA["listOfTxPolarizations"]
-    if not numpy.string_(txP) in txPolList:
+    if not numpy.bytes_(txP) in txPolList:
         assert len(txPolList) == 1
         txPolList.resize((2,))
         txPolList[1] = txP
@@ -590,8 +590,8 @@ def finalizeIdentification(h5file: str):
         del ident["zeroDopplerStartTime"]
         del ident["zeroDopplerEndTime"]
         def additem(name, value, description):
-            ds = ident.create_dataset(name, data=numpy.string_(value))
-            ds.attrs["description"] = numpy.string_(description)
+            ds = ident.create_dataset(name, data=numpy.bytes_(value))
+            ds.attrs["description"] = numpy.bytes_(description)
         additem("boundingPolygon", poly, descriptions.bounding_polygon)
         additem("zeroDopplerStartTime", t0, "Azimuth start time of product")
         additem("zeroDopplerEndTime", t1, "Azimuth stop time of product")

@@ -133,6 +133,35 @@ class RawBase(Base, family='nisar.productreader.raw'):
         fc = self.getCenterFrequency(frequency, tx)
         return fc, fs, K, T
 
+    def is_tx_off(self, frequency, pol):
+        """
+        Check whether the transmit (TX) is off for a particular frequency band
+        and polarization in the raw (L0B) product.
+
+        Parameters
+        ----------
+        frequency : str
+            Frequency band character such as "A" or "B".
+        pol : str
+            Transmit-Receive polarization such as "HH", "HV", etc.
+
+        Returns
+        -------
+        bool
+            True if no-transmit for the specified frequency band
+            and polarization; otherwise False.
+
+        Notes
+        -----
+        If both RF center frequency and bandwidth of the TX chirp is zero
+        then it is assumed no transmit signal!
+
+        """
+        # check if the TX chirp bandwidth or its RF center frequency
+        # is zero or not.
+        fc, _, rate, pw = self.getChirpParameters(frequency, pol[0])
+        return np.isclose(abs(rate * pw), 0) and np.isclose(fc, 0)
+
     def getRangeBandwidth(self, frequency: str = 'A', tx: str = 'H'):
         """Get RF bandwidth of a desired TX frequency band and pol.
 

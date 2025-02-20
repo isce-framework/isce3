@@ -14,7 +14,6 @@ import journal
 import numpy as np
 
 import isce3
-from isce3.core import crop_external_orbit
 from isce3.core.types import complex32, read_complex_dataset
 from nisar.products.readers import SLC
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
@@ -23,7 +22,7 @@ from isce3.atmosphere.tec_product import (tec_lut2d_from_json_srg,
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 import nisar.workflows.helpers as helpers
-from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.readers.orbit import load_orbit
 from nisar.products.writers.BaseL2WriterSingleInput import get_file_extension
 from nisar.products.writers.GcovWriter import GcovWriter, run_geocode_cov
 
@@ -361,6 +360,8 @@ def _run(cfg, raster_scratch_dir):
     zero_doppler = isce3.core.LUT2d()
     native_doppler = slc.getDopplerCentroid()
 
+    orbit = None
+
     # the variable `complex_type` will hold the complex data type
     # to be used for off-diagonal terms (if full covariance GCOV)
     complex_type = None
@@ -461,25 +462,9 @@ def _run(cfg, raster_scratch_dir):
 
         info_channel.log('Preparing multi-band raster for geocoding')
 
-        # if provided, load an external orbit from the runconfig file;
-        # othewise, load the orbit from the RSLC metadata
-        orbit = slc.getOrbit()
-        if orbit_file is not None:
-            external_orbit = load_orbit_from_xml(orbit_file,
-                                                 radar_grid.ref_epoch)
-
-            # Apply 2 mins of padding before / after sensing period when
-            # cropping the external orbit.
-            # 2 mins of margin is based on the number of IMAGEN TEC samples
-            # required for TEC computation, with few more safety margins for
-            # possible needs in the future.
-            #
-            # `7` in the line below is came from the default value for `npad`
-            # in `crop_external_orbit()`. See:
-            # .../isce3/python/isce3/core/crop_external_orbit.py
-            npad = max(int(120.0 / external_orbit.spacing), 7)
-            orbit = crop_external_orbit(external_orbit, orbit,
-                                        npad=npad)
+        # load the orbit, if it has not been loaded yet
+        if orbit is None:
+            orbit = load_orbit(slc, orbit_file, radar_grid.ref_epoch)
 
         # get azimuth ionospheric delay LUTs (if applicable)
         center_freq = \
@@ -590,7 +575,7 @@ def _run(cfg, raster_scratch_dir):
                 compression_level=radar_grid_cubes_compression_level,
                 shuffle_filter=radar_grid_cubes_shuffle_filter)
 
-    return output_files_list
+    return output_files_list, orbit
 
 
 if __name__ == "__main__":
@@ -608,9 +593,9 @@ if __name__ == "__main__":
     if os.path.isfile(sas_output_file):
         os.remove(sas_output_file)
 
-    output_files_list = run(gcov_runconfig.cfg)
+    output_files_list, orbit = run(gcov_runconfig.cfg)
 
-    with GcovWriter(runconfig=gcov_runconfig) as gcov_obj:
+    with GcovWriter(runconfig=gcov_runconfig, orbit=orbit) as gcov_obj:
         gcov_obj.populate_metadata()
 
     info_channel.log('output file(s):')

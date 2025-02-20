@@ -52,9 +52,12 @@ runconfig:
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
             antenna_pattern: null
 
-            # Locations of the corner reflectors in the input product.
-            # Only required if `absolute_radiometric_calibration` or
-            # `point_target_analyzer` runconfig params are set to True for QA.
+            # File containing the locations of the corner reflectors
+            # in the input product.
+            # Required for `absolute_radiometric_calibration` and/or
+            # `point_target_analyzer` QA-CalTools workflows to generate results.
+            # If a file is not provided, or if the corner file has no useful data
+            # for the given input product, then no results will be generated.
             corner_reflector_file: null
 
         product_path_group:
@@ -482,17 +485,17 @@ runconfig:
                 # Default: True
                 qa_reports: true
 
+                # Flag to run Point Target Analyzer calibration tool.
+                # Default: True
+                point_target_analyzer: true
+
                 # Flag to run Absolute Radiometric Calibration calibration tool.
                 # Default: True
                 absolute_radiometric_calibration: true
 
-                # Flag to run Noise Equivalent Sigma 0 Tool (nes0) Tool calibration tool.
+                # Flag to run Noise Equivalent Backscatter calibration tool.
                 # Default: True
-                nes0: true
-
-                # Flag to run Point Target Analyzer calibration tool.
-                # Default: True
-                point_target_analyzer: true
+                noise_equivalent_backscatter: true
 
             validation:
 
@@ -504,7 +507,9 @@ runconfig:
                 metadata_cubes_fail_if_all_nan: true
 
             qa_reports:
+
                 backscatter_img:
+
                     # True to compute backscatter in linear units when generating
                     # the backscatter image for the browse images and graphical
                     # summary PDF. False for decibel units.
@@ -570,6 +575,7 @@ runconfig:
                     tile_shape: [1024, 1024]
 
                 histogram:
+
                     # Step size to decimate the input array for computing
                     # the backscatter and phase histograms.
                     # For example, [2,3] means every 2nd azimuth line and
@@ -583,8 +589,19 @@ runconfig:
                     # Default: (-80.0, 20.0)
                     backscatter_histogram_bin_edges_range: [-80.0, 20.0]
 
+                    # The range for the phase histograms' y-axis.
+                    # Format: [<min of range>, <max of range>]
+                    # Examples: None, [0.0, None], [None, 0.7], [-0.2, 1.2], [None, None]
+                    # If the min or max is set to None, then that limit is set dynamically
+                    # based on the range of phase histogram density values.
+                    # If None, this is equivalent to [None, None].
+                    # Default: (0.0, 0.5)
+                    phase_histogram_y_axis_range: [0.0, 0.5]
+
                     # True to compute phase histogram in radians units,
                     # False for degrees units.
+                    # Note: If False, suggest adjusting `phase_histogram_y_axis_range`
+                    # appropriately for degrees rather than radians.
                     # Default: True
                     phs_in_radians: true
 
@@ -640,67 +657,8 @@ runconfig:
                     # Default: 256
                     tile_width: 256
 
-            absolute_radiometric_calibration:
-                # The width, in samples, of the square block of image data
-                # centered around the target position to extract for oversampling
-                # and peak finding. Must be >= 1.
-                # Default: 64
-                nchip: 64
-
-                # The upsampling ratio. Must be >= 1.
-                # Default: 32
-                upsample_factor: 32
-
-                # Option controlling how the target peak position is
-                # estimated. Valid options are 'time' or 'freq'.
-
-                # 'time':
-                # The peak location is found in the time domain by detecting the
-                # maximum value within a square block of image data around the
-                # expected target location. The signal data is upsampled to
-                # improve precision.
-
-                # 'freq':
-                # The peak location is found by estimating the phase ramp in the
-                # frequency domain. This mode is useful when the target is
-                # well-focused, has high SNR, and is the only target in the
-                # neighborhood (often the case in point target simulations).
-                # Default: time
-                peak_find_domain: time
-
-                # The width, in *oversampled* samples, of the square
-                # sub-block of image data centered around the target position to
-                # extract for fitting a quadratic polynomial to the peak. Note
-                # that this is the size in samples *after upsampling*.
-                # Must be >= 3.
-                # Default: 5
-                nfit: 5
-
-                # Method to use for estimating the target signal power.
-                # Valid options are 'box' or 'integrated'.
-
-                # 'box':
-                # Measures power using the rectangular box method, which assumes
-                # that the target response can be approximated by a 2-D
-                # rectangular function. The total power is estimated by
-                # multiplying the peak power by the 3dB response widths in
-                # along-track and cross-track directions.
-
-                # 'integrated':
-                # Measures power using the integrated power method. The total
-                # power is measured by summing the power of bins whose power
-                # exceeds a predefined minimum power threshold.
-                # Default: box
-                power_method: box
-
-                # The minimum power threshold, measured in dB below the
-                # peak power, for estimating the target signal power using the
-                # integrated power method. This parameter is ignored if
-                # `power_method` is not 'integrated'.
-                # Default: 3.0
-                power_threshold: 3.0
-
             point_target_analyzer:
+
                 # The width, in samples, of the square block of image data
                 # centered around the target position to extract for oversampling
                 # and peak finding. Must be >= 1.
@@ -790,3 +748,64 @@ runconfig:
                 # & azimuth focusing.
                 # Default: 0.0
                 window_parameter: 0.0
+
+            absolute_radiometric_calibration:
+
+                # The width, in samples, of the square block of image data
+                # centered around the target position to extract for oversampling
+                # and peak finding. Must be >= 1.
+                # Default: 64
+                nchip: 64
+
+                # The upsampling ratio. Must be >= 1.
+                # Default: 32
+                upsample_factor: 32
+
+                # Option controlling how the target peak position is
+                # estimated. Valid options are 'time' or 'freq'.
+
+                # 'time':
+                # The peak location is found in the time domain by detecting the
+                # maximum value within a square block of image data around the
+                # expected target location. The signal data is upsampled to
+                # improve precision.
+
+                # 'freq':
+                # The peak location is found by estimating the phase ramp in the
+                # frequency domain. This mode is useful when the target is
+                # well-focused, has high SNR, and is the only target in the
+                # neighborhood (often the case in point target simulations).
+                # Default: time
+                peak_find_domain: time
+
+                # The width, in *oversampled* samples, of the square
+                # sub-block of image data centered around the target position to
+                # extract for fitting a quadratic polynomial to the peak. Note
+                # that this is the size in samples *after upsampling*.
+                # Must be >= 3.
+                # Default: 5
+                nfit: 5
+
+                # Method to use for estimating the target signal power.
+                # Valid options are 'box' or 'integrated'.
+
+                # 'box':
+                # Measures power using the rectangular box method, which assumes
+                # that the target response can be approximated by a 2-D
+                # rectangular function. The total power is estimated by
+                # multiplying the peak power by the 3dB response widths in
+                # along-track and cross-track directions.
+
+                # 'integrated':
+                # Measures power using the integrated power method. The total
+                # power is measured by summing the power of bins whose power
+                # exceeds a predefined minimum power threshold.
+                # Default: box
+                power_method: box
+
+                # The minimum power threshold, measured in dB below the
+                # peak power, for estimating the target signal power using the
+                # integrated power method. This parameter is ignored if
+                # `power_method` is not 'integrated'.
+                # Default: 3.0
+                power_threshold: 3.0
