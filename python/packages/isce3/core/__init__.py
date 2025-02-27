@@ -4,6 +4,9 @@ from . import gpu_check
 from .crop_external_orbit import crop_external_orbit
 from .transform_xy_to_latlon import transform_xy_to_latlon
 from .llh import LLH
+from .orbit import (
+    AmbiguousOrbitPassDirection, OrbitPassDirection, get_orbit_pass_direction
+)
 from .poly2d import fit_bivariate_polynomial
 from . import rdr_geo_block_generator
 from .block_param_generator import BlockParam
