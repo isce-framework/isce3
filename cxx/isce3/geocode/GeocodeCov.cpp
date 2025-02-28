@@ -486,9 +486,9 @@ void Geocode<T>::geocodeInterp(
                     input_terrain_radiometry, output_terrain_radiometry,
                     rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
                     rtc_geogrid_upsampling, rtc_min_value_db,
-                    out_geo_rdr, out_geo_grid,
-                    rtc_sigma0_raster, rtc_memory_mode,
-                    dem_interp_method, _threshold,
+                    out_geo_rdr, out_geo_grid, rtc_sigma0_raster,
+                    az_time_correction, slant_range_correction,
+                    rtc_memory_mode, dem_interp_method, _threshold,
                     _numiter, 1.0e-8, min_block_size, max_block_size);
 
         } else {
@@ -2028,9 +2028,9 @@ void Geocode<T>::geocodeAreaProj(
                     input_terrain_radiometry, output_terrain_radiometry,
                     rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
                     rtc_geogrid_upsampling, rtc_min_value_db,
-                    out_geo_rdr, out_geo_grid,
-                    rtc_sigma0_raster, rtc_memory_mode,
-                    dem_interp_method, _threshold,
+                    out_geo_rdr, out_geo_grid, rtc_sigma0_raster,
+                    az_time_correction, slant_range_correction,
+                    rtc_memory_mode, dem_interp_method, _threshold,
                     _numiter, 1.0e-8, min_block_size, max_block_size);
         } else {
             info << "reading pre-computed RTC..." << pyre::journal::newline;

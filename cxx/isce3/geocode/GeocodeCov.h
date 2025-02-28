@@ -85,9 +85,9 @@ public:
      * gamma0 to sigma0 (in geo-coordinates).
      * @param[in]  phase_screen_raster Phase screen to be removed before
      * geocoding
-     * \param[in]  az_time_correction     geo2rdr azimuth additive correction, in
+     * @param[in]  az_time_correction     Azimuth additive correction, in
      * seconds, as a function of azimuth and range
-     * \param[in]  slant_range_correction  geo2rdr slant range additive correction,
+     * @param[in]  slant_range_correction  Slant range additive correction,
      * in meters, as a function of azimuth and range
      * @param[in]  input_rtc           Input RTC area factor (in slant-range geometry).
      * @param[out] output_rtc          Output RTC area factor (in slant-range geometry).
@@ -188,9 +188,9 @@ public:
      * @param[in]  flatten             Flatten the geocoded SLC
      * @param[in]  phase_screen_raster Phase screen to be removed before
      * geocoding
-     * \param[in]  az_time_correction     geo2rdr azimuth additive correction, in
+     * @param[in]  az_time_correction     Azimuth additive correction, in
      * seconds, as a function of azimuth and range
-     * \param[in]  slant_range_correction  geo2rdr slant range additive correction,
+     * @param[in]  slant_range_correction  Slant range additive correction,
      * in meters, as a function of azimuth and range
      * @param[in]  input_rtc           Input RTC area factor (in slant-range geometry).
      * @param[out] output_rtc          Output RTC area factor (in slant-range geometry).
@@ -289,9 +289,9 @@ public:
      * geo-coordinates).
      * @param[out] out_geo_rtc_gamma0_to_sigma0 Output RTC area factor 
      * gamma0 to sigma0 (in geo-coordinates).
-     * \param[in]  az_time_correction     geo2rdr azimuth additive correction, in
+     * @param[in]  az_time_correction     Azimuth additive correction, in
      * seconds, as a function of azimuth and range
-     * \param[in]  slant_range_correction  geo2rdr slant range additive correction,
+     * @param[in]  slant_range_correction  Slant range additive correction,
      * in meters, as a function of azimuth and range
      * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
      * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).

@@ -90,6 +90,38 @@ void _clip_min_max(std::complex<T>& radar_value, float clip_min, float clip_max)
         radar_value *= clip_max / std::abs(radar_value);
 }
 
+
+static int _geo2rdrWrapper(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
+        const Orbit& orbit, const LUT2d<double>& doppler, double& aztime,
+        double& slantRange, double wavelength, LookSide side,
+        const isce3::core::LUT2d<double>& az_time_correction,
+        const isce3::core::LUT2d<double>& slant_range_correction,
+        double threshold, int maxIter, double deltaRange)
+{
+    // run geo2rdr()
+    int flag_converged = isce3::geometry::geo2rdr(inputLLH, ellipsoid, orbit,
+        doppler, aztime, slantRange, wavelength, side, threshold,
+        maxIter, deltaRange);
+
+    if (!flag_converged) {
+        return flag_converged;
+    }
+
+    // apply timing corrections
+    if (az_time_correction.contains(aztime, slantRange)) {
+        const auto aztimeCor = az_time_correction.eval(aztime, slantRange);
+        aztime += aztimeCor;
+    }
+
+    if (slant_range_correction.contains(aztime, slantRange)) {
+        const auto srangeCor = slant_range_correction.eval(aztime, slantRange);
+        slantRange += srangeCor;
+    }
+
+    return flag_converged;
+}
+
+
 template<typename T>
 void _applyRtc(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
         isce3::io::Raster& output_raster, float rtc_min_value,
@@ -271,6 +303,8 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
         double geogrid_upsampling, float rtc_min_value_db,
         double abs_cal_factor, float clip_min, float clip_max,
         isce3::io::Raster* out_sigma,
+        const isce3::core::LUT2d<double>& az_time_correction,
+        const isce3::core::LUT2d<double>& slant_range_correction,
         isce3::io::Raster* input_rtc, isce3::io::Raster* output_rtc,
         isce3::core::MemoryModeBlocksY rtc_memory_mode)
 {
@@ -314,6 +348,7 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
                 input_terrain_radiometry, output_terrain_radiometry,
                 rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
                 geogrid_upsampling, rtc_min_value_db, out_sigma,
+                az_time_correction, slant_range_correction,
                 rtc_memory_mode);
     } else {
         info << "reading pre-computed RTC..." << pyre::journal::endl;
@@ -408,6 +443,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
         rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
         isce3::io::Raster* out_sigma,
+        const isce3::core::LUT2d<double>& az_time_correction,
+        const isce3::core::LUT2d<double>& slant_range_correction,
         isce3::core::MemoryModeBlocksY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range, const long long min_block_size,
@@ -442,7 +479,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
             input_terrain_radiometry, output_terrain_radiometry, rtc_area_mode,
             rtc_algorithm, rtc_area_beta_mode,
             geogrid_upsampling, rtc_min_value_db,
-            nullptr, nullptr, out_sigma, rtc_memory_mode,
+            nullptr, nullptr, out_sigma, az_time_correction,
+            slant_range_correction, rtc_memory_mode,
             interp_method, threshold, num_iter, delta_range, min_block_size,
             max_block_size);
 }
@@ -460,6 +498,8 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         double geogrid_upsampling, float rtc_min_value_db,
         isce3::io::Raster* out_geo_rdr,
         isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_sigma,
+        const isce3::core::LUT2d<double>& az_time_correction,
+        const isce3::core::LUT2d<double>& slant_range_correction,
         isce3::core::MemoryModeBlocksY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range, const long long min_block_size,
@@ -474,7 +514,8 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
                 output_terrain_radiometry, rtc_area_mode,
                 rtc_area_beta_mode, geogrid_upsampling,
                 rtc_min_value_db, out_geo_rdr, out_geo_grid,
-                out_sigma, rtc_memory_mode, interp_method, threshold, num_iter,
+                out_sigma, az_time_correction, slant_range_correction,
+                rtc_memory_mode, interp_method, threshold, num_iter,
                 delta_range, min_block_size, max_block_size);
     } else if (
         rtc_area_beta_mode == rtcAreaBetaMode::PROJECTION_ANGLE) {
@@ -486,7 +527,9 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         computeRtcBilinearDistribution(dem_raster, output_raster, radar_grid,
                 orbit, input_dop, geogrid, input_terrain_radiometry,
                 output_terrain_radiometry, rtc_area_mode,
-                geogrid_upsampling, rtc_min_value_db, out_sigma);
+                geogrid_upsampling, rtc_min_value_db, out_sigma,
+                threshold, num_iter, delta_range,
+                az_time_correction, slant_range_correction);
     }
 }
 
@@ -684,7 +727,10 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
         rtcAreaMode rtc_area_mode,
         double upsample_factor, float rtc_min_value_db,
-        isce3::io::Raster* out_sigma)
+        isce3::io::Raster* out_sigma,
+        double threshold, int num_iter, double delta_range,
+        const isce3::core::LUT2d<double>& az_time_correction,
+        const isce3::core::LUT2d<double>& slant_range_correction)
 {
 
     pyre::journal::info_t info("isce.geometry.computeRtcBilinearDistribution");
@@ -803,8 +849,10 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
             // Compute facet-central LLH vector
             const Vec3 inputLLH = dem_interp.proj()->inverse(inputDEM);
             // Should incorporate check on return status here
-            int converged = geo2rdr(inputLLH, ellps, orbit, input_dop, a, r,
-                    radar_grid.wavelength(), side, 1e-8, 100, 1e-8);
+            int converged = _geo2rdrWrapper(inputLLH, ellps, orbit, input_dop,
+                    a, r, radar_grid.wavelength(), side, az_time_correction,
+                    slant_range_correction, threshold, num_iter, delta_range);
+
             if (!converged)
                 continue;
 
@@ -1057,6 +1105,8 @@ void _RunBlock(const int jmax, const int block_size,
         double delta_range, isce3::core::Matrix<float>& out_gamma_array,
         isce3::core::Matrix<float>& out_beta_array,
         isce3::core::Matrix<float>& out_sigma_array,
+        const isce3::core::LUT2d<double>& az_time_correction,
+        const isce3::core::LUT2d<double>& slant_range_correction,
         isce3::core::ProjectionBase* proj, rtcAreaMode rtc_area_mode,
         rtcAreaBetaMode rtc_area_beta_mode,
         rtcInputTerrainRadiometry input_terrain_radiometry,
@@ -1154,8 +1204,9 @@ void _RunBlock(const int jmax, const int block_size,
 
         dem11 = getDemCoords(dem_x1, dem_y1, dem_interp_block, proj);
         // course
-        int converged = geo2rdr(dem_interp_block.proj()->inverse(dem11),
+        int converged = _geo2rdrWrapper(dem_interp_block.proj()->inverse(dem11),
                 ellipsoid, orbit, dop, a11, r11, radar_grid.wavelength(), side,
+                az_time_correction, slant_range_correction,
                 threshold, num_iter, delta_range);
         if (!converged) {
             a11 = radar_grid.sensingMid();
@@ -1169,9 +1220,11 @@ void _RunBlock(const int jmax, const int block_size,
            different results for these elements when compared to
            the single-block solution.
         */
-        geo2rdr(dem_interp_block.proj()->inverse(dem11), ellipsoid, orbit, dop,
-                a11, r11, radar_grid.wavelength(), side, threshold, num_iter,
-                delta_range);
+        _geo2rdrWrapper(dem_interp_block.proj()->inverse(dem11), ellipsoid,
+                 orbit, dop, a11, r11, radar_grid.wavelength(), side,
+                 az_time_correction, slant_range_correction,
+                 threshold, num_iter,
+                 delta_range);
 
         a_last[jj] = a11;
         r_last[jj] = r11;
@@ -1195,8 +1248,9 @@ void _RunBlock(const int jmax, const int block_size,
                                                          geogrid_upsampling;
         dem11 = getDemCoords(dem_x1_0, dem_y1, dem_interp_block, proj);
 
-        int converged = geo2rdr(dem_interp_block.proj()->inverse(dem11),
+        int converged = _geo2rdrWrapper(dem_interp_block.proj()->inverse(dem11),
                 ellipsoid, orbit, dop, a11, r11, radar_grid.wavelength(), side,
+                az_time_correction, slant_range_correction,
                 threshold, num_iter, delta_range);
         if (!converged) {
             a11 = std::numeric_limits<double>::quiet_NaN();
@@ -1249,9 +1303,10 @@ void _RunBlock(const int jmax, const int block_size,
 
             dem11 = getDemCoords(dem_x1, dem_y1, dem_interp_block, proj);
 
-            int converged = geo2rdr(dem_interp_block.proj()->inverse(dem11),
+            int converged = _geo2rdrWrapper(dem_interp_block.proj()->inverse(dem11),
                     ellipsoid, orbit, dop, a11, r11, radar_grid.wavelength(),
-                    side, threshold, num_iter, delta_range);
+                    side, az_time_correction, slant_range_correction,
+                    threshold, num_iter, delta_range);
             if (!converged) {
                 a11 = std::numeric_limits<double>::quiet_NaN();
                 r11 = std::numeric_limits<double>::quiet_NaN();
@@ -1341,9 +1396,10 @@ void _RunBlock(const int jmax, const int block_size,
             double a_c = (a00 + a01 + a10 + a11) / 4.0;
             double r_c = (r00 + r01 + r10 + r11) / 4.0;
 
-            converged = geo2rdr(dem_interp_block.proj()->inverse(dem_c),
+            converged = _geo2rdrWrapper(dem_interp_block.proj()->inverse(dem_c),
                     ellipsoid, orbit, dop, a_c, r_c, radar_grid.wavelength(),
-                    side, threshold, num_iter, delta_range);
+                    side, az_time_correction, slant_range_correction, threshold,
+                    num_iter, delta_range);
 
             if (!converged) {
                 a_c = std::numeric_limits<double>::quiet_NaN();
@@ -1551,7 +1607,10 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
         rtcAreaMode rtc_area_mode, rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
         isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_grid,
-        isce3::io::Raster* out_sigma, isce3::core::MemoryModeBlocksY rtc_memory_mode,
+        isce3::io::Raster* out_sigma,
+        const isce3::core::LUT2d<double>& az_time_correction,
+        const isce3::core::LUT2d<double>& slant_range_correction,
+        isce3::core::MemoryModeBlocksY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range, const long long min_block_size,
         const long long max_block_size)
@@ -1653,7 +1712,9 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
                 dem_raster, out_geo_rdr, out_geo_grid, start, pixazm, dr, r0,
                 xbound, ybound, geogrid, radar_grid, input_dop, ellipsoid,
                 orbit, threshold, num_iter, delta_range, out_gamma_array,
-                out_beta_array, out_sigma_array, proj.get(), rtc_area_mode,
+                out_beta_array, out_sigma_array,
+                az_time_correction, slant_range_correction,
+                proj.get(), rtc_area_mode,
                 rtc_area_beta_mode, input_terrain_radiometry,
                 output_terrain_radiometry);
         }
