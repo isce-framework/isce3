@@ -189,11 +189,11 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         (in geo-coordinates).
                     phase_screen_raster: isce3.io.Raster, optional
                         Phase screen to be removed before geocoding
-                    az_time_correction: LUT2d
-                        geo2rdr azimuth additive correction, in seconds,
+                    az_time_correction: isce3.core.LUT2d
+                        Azimuth additive correction, in seconds,
                         as a function of azimuth and range
-                    slant_range_correction: LUT2d
-                        geo2rdr slant range additive correction, in meters,
+                    slant_range_correction: isce3.core.LUT2d
+                        Slant range additive correction, in meters,
                         as a function of azimuth and range
                     in_rtc: isce3.io.Raster, optional
                         Input RTC area factor (in slant-range).

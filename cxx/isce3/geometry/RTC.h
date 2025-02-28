@@ -11,6 +11,7 @@
 
 #include <isce3/core/Constants.h>
 #include <isce3/core/blockProcessing.h>
+#include <isce3/core/LUT2d.h>
 #include <isce3/error/ErrorCode.h>
 
 namespace isce3 { namespace geometry {
@@ -83,6 +84,10 @@ enum rtcAreaBetaMode {
  * @param[in]  clip_max            Clip maximum output values
  * @param[out] out_sigma           Output sigma surface area
  * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
+ * @param[in]  az_time_correction     Azimuth additive correction, in
+ * seconds, as a function of azimuth and range
+ * @param[in]  slant_range_correction  Slant range additive correction,
+ * in meters, as a function of azimuth and range
  * @param[in]  input_rtc           Raster containing pre-computed RTC area
  * factor
  * @param[out] output_rtc          Output RTC area normalization factor
@@ -105,6 +110,8 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
         float clip_min = std::numeric_limits<float>::quiet_NaN(),
         float clip_max = std::numeric_limits<float>::quiet_NaN(),
         isce3::io::Raster* out_sigma = nullptr,
+        const isce3::core::LUT2d<double>& az_time_correction = {},
+        const isce3::core::LUT2d<double>& slant_range_correction = {},
         isce3::io::Raster* input_rtc = nullptr,
         isce3::io::Raster* output_rtc = nullptr,
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
@@ -132,6 +139,10 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
  * be set to NaN..
  * @param[out] out_sigma           Output sigma surface area
  * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
+ * @param[in]  az_time_correction     Azimuth additive correction, in
+ * seconds, as a function of azimuth and range
+ * @param[in]  slant_range_correction  Slant range additive correction,
+ * in meters, as a function of azimuth and range
  * @param[in]  rtc_memory_mode     Select memory mode
  * @param[in]  interp_method       Interpolation Method
  * @param[in]  threshold           Azimuth time threshold for convergence (s)
@@ -154,6 +165,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         isce3::io::Raster* out_sigma = nullptr,
+        const isce3::core::LUT2d<double>& az_time_correction = {},
+        const isce3::core::LUT2d<double>& slant_range_correction = {},
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
                 isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
@@ -189,13 +202,17 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
- * be set to NaN..
+ * be set to NaN
  * @param[out] out_geo_rdr    Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels vertices will be saved.
  * @param[out] out_geo_grid        Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels center will be saved.
  * @param[out] out_sigma           Output sigma surface area
  * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
+ * @param[in]  az_time_correction     Azimuth additive correction, in
+ * seconds, as a function of azimuth and range
+ * @param[in]  slant_range_correction  Slant range additive correction,
+ * in meters, as a function of azimuth and range
  * @param[in]  rtc_memory_mode     Select memory mode
  * @param[in]  interp_method       Interpolation Method
  * @param[in]  threshold           Azimuth time threshold for convergence (s)
@@ -222,6 +239,8 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_sigma = nullptr,
+        const isce3::core::LUT2d<double>& az_time_correction = {},
+        const isce3::core::LUT2d<double>& slant_range_correction = {},
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
                 isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
@@ -246,9 +265,17 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
- * be set to NaN.
+ * be set to NaN
  * @param[out] out_sigma           Output sigma surface area
  * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
+ * @param[in]  threshold            Azimuth time threshold for convergence (s)
+ * @param[in]  num_iter             Maximum number of Newton-Raphson iterations
+ * @param[in]  delta_range          Step size used for computing derivative of
+ * doppler
+ * @param[in]  az_time_correction     Azimuth additive correction, in
+ * seconds, as a function of azimuth and range
+ * @param[in]  slant_range_correction  Slant range additive correction,
+ * in meters, as a function of azimuth and range
  * */
 void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster,
@@ -262,7 +289,10 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
-        isce3::io::Raster* out_sigma = nullptr);
+        isce3::io::Raster* out_sigma = nullptr,
+        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8,
+        const isce3::core::LUT2d<double>& az_time_correction = {},
+        const isce3::core::LUT2d<double>& slant_range_correction = {});
 
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor using the area projection algorithms
@@ -291,6 +321,10 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * (range and azimuth) of the geogrid pixels center will be saved.
  * @param[out] out_sigma           Output sigma surface area
  * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
+  * @param[in]  az_time_correction Azimuth additive correction, in
+ * seconds, as a function of azimuth and range
+ * @param[in]  slant_range_correction Slant range additive correction,
+ * in meters, as a function of azimuth and range
  * @param[in] rtc_memory_mode      Select memory mode
  * @param[in] interp_method        Interpolation Method
  * @param[in] threshold            Azimuth time threshold for convergence (s)
@@ -316,6 +350,8 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
         isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_sigma = nullptr,
+        const isce3::core::LUT2d<double>& az_time_correction = {},
+        const isce3::core::LUT2d<double>& slant_range_correction = {},
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
                 isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
