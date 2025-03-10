@@ -529,9 +529,9 @@ class GcovWriter(BaseL2WriterSingleInput):
         parameters_group = \
             '{PRODUCT}/metadata/processingInformation/parameters'
 
-        self.set_value(
+        self.copy_from_runconfig(
             f'{parameters_group}/noiseCorrectionApplied',
-            False)
+            'processing/noise_correction/apply_correction')
 
         self.set_value(
             f'{parameters_group}/preprocessingMultilookingApplied',
