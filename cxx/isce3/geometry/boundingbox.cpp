@@ -163,8 +163,9 @@ static void _addMarginToBoundingBox(isce3::geometry::BoundingBox& bbox,
         // If there is a dateline crossing
         if ((bbox.MaxX - bbox.MinX) > 180.0) {
             double maxx = bbox.MinX + 360.0;
-            bbox.MinX = bbox.MaxX;
-            bbox.MaxX = maxx;
+            bbox.MaxX = (maxx > bbox.MaxX) ? maxx : bbox.MaxX;
+            bbox.MinX = (maxx > bbox.MaxX) ? bbox.MaxX : maxx;
+
         }
 
         // Check for north pole
@@ -203,7 +204,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBox(
             try {
                 perimeter = getGeoPerimeter(radarGrid, orbit, proj, doppler,
                                             constDEM, pointsPerEdge, threshold);
-                                            
+
             } catch (const isce3::except::OutOfRange&) {
                 continue;
             }
