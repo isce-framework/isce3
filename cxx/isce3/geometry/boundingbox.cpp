@@ -204,7 +204,6 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBox(
             try {
                 perimeter = getGeoPerimeter(radarGrid, orbit, proj, doppler,
                                             constDEM, pointsPerEdge, threshold);
-
             } catch (const isce3::except::OutOfRange&) {
                 continue;
             }

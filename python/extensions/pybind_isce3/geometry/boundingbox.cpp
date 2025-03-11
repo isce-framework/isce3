@@ -97,7 +97,7 @@ void addbinding_boundingbox(py::module& m)
             py::arg("geogrid_expansion_threshold") = 100,
             R"(
     Compute the bounding box of a geocoded grid in the radar coordinates. An
-    exception is raised if any corners fails to convergers or any computed
+    exception is raised if any corners fails to converge or any computed
     bounding box index is overlaps or is out of bounds.
 
     Parameters
@@ -127,7 +127,7 @@ void addbinding_boundingbox(py::module& m)
     Returns
     -------
     RadarGridBoundingBox
-        Radar grid bouding box object with indices for:
+        Radar grid bounding box object with indices for:
         first_azimuth_line,last_azimuth_line, first_range_sample,
         last_range_sample
     )")
@@ -148,7 +148,7 @@ void addbinding_boundingbox(py::module& m)
             py::arg("geogrid_expansion_threshold") = 100,
             R"(
     Compute the bounding box of a geocoded grid in the radar coordinates. An
-    exception is raised if any corners fails to convergers or any computed
+    exception is raised if any corners fails to converge or any computed
     bounding box index is overlaps or is out of bounds.
 
     Parameters
@@ -177,7 +177,7 @@ void addbinding_boundingbox(py::module& m)
     Returns
     -------
     _: RadarGridBoundingBox
-        Radar grid bouding box object with indices for:
+        Radar grid bounding box object with indices for:
         first_azimuth_line,last_azimuth_line, first_range_sample,
         last_range_sample
     )");
