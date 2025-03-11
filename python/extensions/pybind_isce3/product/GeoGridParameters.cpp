@@ -109,7 +109,7 @@ void addbinding_bbox_to_geogrid(py::module & m)
             py::arg("pts_per_edge") = 11,
             py::arg("threshold") = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
             py::arg("height_threshold") = 100, R"(
-    Create a GeoGridParameters object by using spacing and ESPG from a DEM, and
+    Create a GeoGridParameters object by using spacing and EPSG from a DEM, and
     by estimating a bounding box with a radar grid. Spacing adjustable via scalar.
 
     Arguments:
@@ -139,7 +139,7 @@ void addbinding_bbox_to_geogrid(py::module & m)
             py::arg("pts_per_edge") = 11,
             py::arg("threshold") = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
             py::arg("height_threshold") = 100, R"(
-    Create a GeoGridParameters object by using spacing and ESPG from a DEM, and
+    Create a GeoGridParameters object by using spacing and EPSG from a DEM, and
     by estimating a bounding box with a radar grid. Spacing adjustable via scalar.
 
     Arguments:
