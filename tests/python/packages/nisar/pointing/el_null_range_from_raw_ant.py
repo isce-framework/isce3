@@ -18,6 +18,8 @@ def test_el_null_range_from_raw_ant():
     ant_file = 'REE_ANTPAT_CUTS_BEAM4.h5'
     az_block_dur = 0.75  # (sec)
     txrx_pol = 'VV'
+    sample_delays = np.zeros(3, dtype=int)
+    imbalances = np.ones(3, dtype='c8')
 
     # build object and scalar used for validations:
 
@@ -60,7 +62,9 @@ def test_el_null_range_from_raw_ant():
     (null_num, sr_echo, el_ant, mag_ratio, az_dt, null_flag, mask_valid,
      pol, wvl) = el_null_range_from_raw_ant(
          raw_obj, ant_obj, dem_interp=dem_interp_obj, freq_band='A',
-         txrx_pol=txrx_pol, az_block_dur=az_block_dur
+         txrx_pol=txrx_pol, az_block_dur=az_block_dur,
+         sample_delays_wrt_left=sample_delays,
+         imbalances_right2left=imbalances
     )
 
     # Validate output size

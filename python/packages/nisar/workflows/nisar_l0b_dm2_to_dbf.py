@@ -205,6 +205,24 @@ def cmd_line_parser():
                            'provided, will be used in place of inverse of '
                            'caltones!')
                      )
+    prs.add_argument('--sample-delays', type=int, nargs='*',
+                     help=('Relative integer sample delays of RX channels '
+                           'wrt the first one in ascending RX order for '
+                           'either the selected frequency band ("A" or "B") '
+                           'or the very first of two ("A") if split spectrum. '
+                           'The number of delays shall be equal to the total '
+                           'number of RX channels minus one, excluding the '
+                           'very first channel.')
+                     )
+    prs.add_argument('--sample-delays2', type=int, nargs='*',
+                     help=('Relative integer sample delays of RX channels '
+                           'wrt the first one in ascending RX order for '
+                           'the second frequency band ("B") if split spectrum '
+                           'and both bands are processed. The number of '
+                           'delays shall be equal to the total number of RX '
+                           'channels minus one, excluding the very first '
+                           'channel.')
+                     )
     return prs.parse_args()
 
 
@@ -270,6 +288,26 @@ def nisar_l0b_dm2_to_dbf(args):
     # get ref epoch and build AZ slice generator
     epoch, azt_raw = raw.getPulseTimes(freq_band, txrx_pol[0])
     n_rgl_tot = azt_raw.size
+
+    # check the size of the sample delays and reverse the sign
+    dset = raw.getRawDataset(freq_band, txrx_pol)
+    size_delay = dset.shape[0] - 1
+    sample_delays_all = [args.sample_delays, args.sample_delays2]
+    for nn, (sample_delays, name_delay) in enumerate(
+        zip(sample_delays_all, ["sample-delays", "sample-delays2"])
+    ):
+        if sample_delays is not None:
+            if len(sample_delays) != size_delay:
+                raise ValueError(
+                    f'Size of "{name_delay}"={len(sample_delays)} must '
+                    f'be {size_delay}!'
+                )
+            # reverse the sign for compensation of delays
+            sample_delays_all[nn] = - np.asarray(sample_delays)
+            logger.info(
+                f'The amount of delay correction wrt RX # 1 for {name_delay} '
+                f'-> {sample_delays_all[nn]}'
+            )
 
     # parse orbit and attitude and check epoch
     if args.orbit_file is None:
@@ -348,7 +386,7 @@ def nisar_l0b_dm2_to_dbf(args):
     rgl_slices = list(slice_gen(n_rgl_tot, args.num_rgl))
     logger.info(f'Number of AZ blocks -> {len(rgl_slices)}')
 
-    for freq_band in frq_pol:
+    for freq_band, sample_delays in zip(frq_pol, sample_delays_all):
         # group path for frequency band
         band_path = raw.BandPath(freq_band) + '/'
 
@@ -438,6 +476,10 @@ def nisar_l0b_dm2_to_dbf(args):
                     dset_azblk[cc, :num_rgl] = dset[cc, rgl_slice, :]
                 # fill in TX gap regions with zeros in place
                 fill_gaps(dset_azblk[:, :num_rgl], sbsw[:, rgl_slice])
+
+                # Adjust the relative integer sample delays in place
+                # over all channels within an AZ block
+                _adjust_delays_in_place(dset_azblk[:, :num_rgl], sample_delays)
 
                 # mid AZ time at the center of the AZ block
                 azt_mid = azt_raw[rgl_slice].mean()
@@ -553,6 +595,30 @@ def _get_chirp_parameters(raw, freq_band, txrx_pol, slope_sign=-1):
     if np.isclose(slope, 0.0):
         slope = slope_sign * fs / (1.2 * pw)
     return fs, slope, pw
+
+
+def _adjust_delays_in_place(dset, sample_delays):
+    """
+    Adjust relative sample delays over all RX channels except
+    the very first channel in place.
+
+    Parameters
+    ----------
+    dset : array of complex float
+        3-D array of raw decoded data with shape
+        (RX channels, range lines, range bins) to be modified in place.
+    sample_delays : array of int or None
+        Array-like signed integers representing relative sample delay of
+        RX channels wrt the very first one to be compensated in range
+        direction. The order of channels is ascending.
+        The size of array shall be `RX channels - 1`.
+        If None, no delay adjustment will be applied.
+
+    """
+    if sample_delays is not None:
+        for cc, delay in enumerate(sample_delays, start=1):
+            if delay != 0:
+                dset[cc] = np.roll(dset[cc], shift=delay, axis=-1)
 
 
 if __name__ == '__main__':

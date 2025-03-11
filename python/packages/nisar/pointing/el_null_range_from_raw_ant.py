@@ -46,13 +46,22 @@ class AntElPair:
     az_ang_cut: float
 
 
-def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
-                               freq_band='A', txrx_pol=None,
-                               orbit=None, attitude=None,
-                               az_block_dur=3.0,
-                               apply_caltone=False, logger=None,
-                               plot=False, out_path='.',
-                               polyfit_deg=6):
+def el_null_range_from_raw_ant(
+        raw, ant,
+        *,
+        dem_interp=None,
+        freq_band='A',
+        txrx_pol=None,
+        orbit=None,
+        attitude=None,
+        az_block_dur=3.0,
+        apply_caltone=False,
+        imbalances_right2left=None,
+        sample_delays_wrt_left=None,
+        logger=None,
+        plot=False,
+        out_path='.',
+        polyfit_deg=6):
     """
     Get estimated null locations in elevation (EL) direction as a function
     of slant range and azimuth time from multi-channel raw echo
@@ -91,10 +100,35 @@ def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
         PRI (pulse repetition interval).
     apply_caltone : bool, default=False
         Apply caltone coefficients to RX channels prior to Null formation.
+    imbalances_right2left : sequence or array of complex float, optional
+        array-like channel imbalances represented as complex ratio of right
+        to left RX channel over all null pairs in ascending order.
+        The size of the array shall be equal to the number of nulls, that is
+        the number of RX channels minus 1.
+        E.g, the value for index `i` represents imbalance ratio of RX channel
+        `i+2` to RX channel `i+1`.
+        This accounts for either as a substitute of caltone if
+        `apply_caltone=False` or as a secondary channel balancing on top
+        of caltone if `apply_caltone=True`.
+        Zero or NaN values will be ignored in the channel balancing!
+        This ratio shall be multiplied to the left channel of
+        each pair of nulls to balance the RX channels.
+        Alternatively, the right channels can be multiplied by its inverse.
+    sample_delays_wrt_left : sequence or array of int, optional
+        array-like signed integers with the size equals to total number of RX
+        channels minus one, that is the total number of nulls.
+        Each value represents relative sample delay of right channel wrt to
+        the left one of each pair of adjacent RX channels in ascending order
+        at the range sampling rate specified by `freq_band`. E.g, index `i`
+        of sample delay array represents the amount of relative delays of
+        RX channel `i+2` wrt RX channel `i+1` in number of samples.
+        The negative of these delays shall be applied to the right channel
+        to compensate for the relative delays between two of each null pair.
+        Alternatively, the left channels can be compensated by the same delays.
     logger : logging.Logger, optional
         If not provided a logger with StreamHandler will be set.
     plot : bool, default=False
-        If True, it will generate one PNG plot per null and per azimuith block
+        If True, it will generate one PNG plot per null and per azimuth block
         to compare null echo data (measured) versus that of antenna one
         (reference) in EL.
     out_path : str, default='.'
@@ -196,6 +230,39 @@ def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
     logger.info('Shape of the echo data (channels, pulses, ranges) -> '
                 f'({num_channels, num_rgls, num_rgbs})')
 
+    # number of nulls
+    num_nulls = num_channels - 1
+    logger.info(f'Number of nulls -> {num_nulls}')
+
+    # check and set relative sample delays
+    if sample_delays_wrt_left is None:
+        sample_delays_wrt_left = np.zeros(num_nulls, dtype=int)
+    elif len(sample_delays_wrt_left) != num_nulls:
+        raise ValueError(
+            'The size of "sample_delays_wrt_left"='
+            f'{len(sample_delays_wrt_left)} must be {num_nulls}!'
+        )
+    logger.info('Input sample delays of all pairs wrt their left channel -> '
+                f'{sample_delays_wrt_left}')
+    # get sample delays wrt to the first RX channel and negate the sign
+    # for compensation applied to the right channel of each pair!
+    # This is to preserve a common starting slant range assumed for the
+    # very first RX.
+    sample_delays_wrt_first = np.zeros(num_channels, dtype=int)
+    sample_delays_wrt_first[1:] = - np.cumsum(sample_delays_wrt_left)
+    logger.info('Sample delays wrt the first RX to be applied to all '
+                f'RX channels -> {sample_delays_wrt_first}')
+
+    # check and set channel imbalance ratios for all nulls
+    if imbalances_right2left is None:
+        imbalances_right2left = np.ones(num_nulls, dtype='c8')
+    elif len(imbalances_right2left) != num_nulls:
+        raise ValueError('The size of "imbalances_right2left"='
+                         f'len(imbalances_right2left) must be {num_nulls}'
+                         )
+    logger.info('Imbalance RX channel ratios right to left of null pairs -> '
+                f'{imbalances_right2left}')
+
     # get mean PRF and check for dithering
     prf = raw.getNominalPRF(freq_band, txrx_pol[0])
     dithered = raw.isDithered(freq_band, txrx_pol[0])
@@ -238,10 +305,6 @@ def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
     if rx_beam_tags.intersection(ant.rx_beams) != rx_beam_tags:
         raise RuntimeError(
             f'Missing one or more of {rx_beam_tags} in antenna object!')
-
-    # number of nulls
-    num_nulls = num_channels - 1
-    logger.info(f'Number of nulls -> {num_nulls}')
 
     # build DEM object if not provided
     if dem_interp is None:
@@ -364,11 +427,12 @@ def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
         # caltone coeffs to echo pairs (left, right)
         if apply_caltone:
             # calibrate left RX channel
-            cal_coef_avg_left = caltone[s_rgl, nn].mean()
+            cal_coef_avg_left = np.nanmean(caltone[s_rgl, nn])
+            # avoid applying averaged caltone if nan or zero!
             if abs(cal_coef_avg_left) > 0.0:
                 echo_left *= (1./cal_coef_avg_left)
             # calibrate right RX channel
-            cal_coef_avg_right = caltone[s_rgl, nn + 1].mean()
+            cal_coef_avg_right = np.nanmean(caltone[s_rgl, nn + 1])
             if abs(cal_coef_avg_right) > 0.0:
                 echo_right *= (1./cal_coef_avg_right)
             # get mid azimuth time within desired range lines in seconds
@@ -402,6 +466,16 @@ def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
             rgl_mid_sub = s_rgl.start + (s_rgl.stop - s_rgl.start) // 2
             rgb_valid_sbsw = valid_sbsw_all[:, rgl_mid_sub, :]
             mask_valid.append(_is_null_valid(rgb_p2p, rgb_valid_sbsw))
+
+        # adjust range delay of channel pairs wrt the first RX
+        # (common reference) prior to forming the null while
+        # preserving the starting slant range.
+        _adjust_delay_in_place(echo_left, sample_delays_wrt_first[nn])
+        _adjust_delay_in_place(echo_right, sample_delays_wrt_first[nn + 1])
+
+        # Balance out the pair of RX channels by scaling the left ones.
+        if abs(imbalances_right2left[nn]) > 0:
+            echo_left *= imbalances_right2left[nn]
 
         # estimate null locations in both Echo and Antenna domain
         tm_null, echo_null, ant_null, flag_null, pow_pat_null = \
@@ -573,6 +647,40 @@ def _is_null_valid(rgb_p2p, rgb_valid_sbsw):
     for start_stop in rgb_valid_sbsw:
         flag |= rgb_null_region.issubset(range(*start_stop))
     return flag
+
+
+def _adjust_delay_in_place(echo, delay):
+    """
+    Delay adjustment of echo in place.
+
+    Parameters
+    ----------
+    echo : array of complex
+        2-D array of complex echo with shape (range lines, range bins)
+        of a single RX channel to be modified in place.
+    delay : int
+        Integer sample delay to be applied in range direction (axis=-1)
+
+    Notes
+    -----
+    The newly introduced lead/lag samples will be filled with the
+    first/last available value from the original data to avoid
+    introducing amplitude drops or overshoots in the null pattern.
+
+    """
+    if delay != 0:
+        echo[...] = np.roll(echo, delay, axis=-1)
+        # To avoid introducing undesired amplitude drops or
+        # overshoots in null pattern, take the following
+        # steps for lag/lead.
+        # For positive delay, fill in the first few samples of
+        # rolled array with the very first one from original data
+        if delay > 0:
+            echo[:, :delay] = echo[:, delay][:, np.newaxis]
+        # For negative delay, fill in the last few samples of
+        # rolled array with the very last one from original data
+        else:
+            echo[:, delay:] = echo[:, delay - 1][:, np.newaxis]
 
 
 def _pow2db(p):

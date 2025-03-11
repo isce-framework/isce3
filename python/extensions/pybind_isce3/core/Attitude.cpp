@@ -27,13 +27,24 @@ void addbinding(pybind11::class_<Attitude>& pyAttitude)
         },
         "De-serialize Attitude from h5py.Group object",
         py::arg("h5py_group"))
-        .def("save_to_h5", [](const Attitude& self, py::object h5py_group) {
+        .def("save_to_h5", [](const Attitude& self, py::object h5py_group,
+                              const bool ensureEpochIntegerSeconds) {
                 auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
                 isce3::io::IGroup group(id);
-                isce3::core::saveToH5(group, self);
+                isce3::core::saveToH5(group, self, ensureEpochIntegerSeconds);
             },
-            "Serialize Attitude to h5py.Group object.",
-            py::arg("h5py_group"))
+            R"(Serialize Attitude to h5py.Group object.
+
+             Parameters
+             ----------
+             h5py_group: h5py.Group
+                H5 group (h5py.Group) object
+             ensure_epoch_integer_seconds: bool
+                Ensure that the orbit reference epoch has integer seconds precision
+                (NISAR specs requirement)
+            )",
+            py::arg("h5py_group"),
+            py::arg("ensure_epoch_integer_seconds") = true)
 
         // add a function rather than just a settable property since
         // self.time is also modified

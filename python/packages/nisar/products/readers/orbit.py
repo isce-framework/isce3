@@ -60,24 +60,12 @@ def load_orbit(nisar_product, orbit_file, orbit_file_ref_epoch=None):
                             ' the input reference epoch.')
         orbit.update_reference_epoch(orbit_file_ref_epoch)
 
-    # ensure that the orbit reference epoch has not fractional part
-    # otherwise, trancate it to seconds precision
+    # If the orbit reference epoch has a fractional part print a warning
     orbit_reference_epoch = orbit.reference_epoch
     if orbit_reference_epoch.frac != 0:
-        warning_channel.log('the orbit reference epoch is not an'
-                            ' integer number. Truncating it'
-                            ' to seconds precision and'
-                            ' updating the orbit ephemeris'
-                            ' accordingly.')
-
-        epoch = isce3.core.DateTime(orbit_reference_epoch.year,
-                                    orbit_reference_epoch.month,
-                                    orbit_reference_epoch.day,
-                                    orbit_reference_epoch.hour,
-                                    orbit_reference_epoch.minute,
-                                    orbit_reference_epoch.second)
-
-        orbit.update_reference_epoch(epoch)
+        warning_channel.log('The orbit reference epoch has fractional'
+                            ' non-integer second precision, which does'
+                            ' not align with NISAR product specifications.')
 
     return orbit
 

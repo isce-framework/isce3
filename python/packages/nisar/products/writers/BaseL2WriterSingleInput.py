@@ -1068,7 +1068,32 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 "orbit")
 
         # Save the orbit into the HDF5 file
-        self.orbit.save_to_h5(orbit_hdf5_group)
+        # NISAR products' specifications require that the orbit reference
+        # epoch has integer precision, i.e., without fractional part.
+        # However, products generated from other software (e.g.,
+        # JPL SimulationTools) may contain orbit reference epoch with
+        # fractional precision. If that happens, the function below
+        # will raise a RuntimeError
+        try:
+            self.orbit.save_to_h5(orbit_hdf5_group)
+        except RuntimeError:
+
+            # If a RuntimeError is raised, try again disabling requirement
+            # for orbit reference epoch precision in seconds
+            self.orbit.save_to_h5(orbit_hdf5_group,
+                                  ensure_epoch_integer_seconds=False)
+
+            # If this time, the orbit serialization is successful, print a
+            # warning message to the user explaining that the orbit reference
+            # epoch is saved with a fractional part, which is inconsistent
+            # with NISAR product specifications.
+            warning_channel = journal.warning(
+                "BaseL2WriterSingleInput.populate_orbit")
+            warning_channel.log(
+                'The orbit reference epoch is not an integer, which is'
+                ' inconsistent with NISAR product specifications. Conformance'
+                ' will be disregarded, and the orbit reference epoch will be'
+                ' saved with its fractional part.')
 
     def populate_attitude(self):
         # RSLC products with product specification version prior to v1.1.0 may

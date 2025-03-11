@@ -1,33 +1,69 @@
 #!/usr/bin/env python3
+import pytest
 import copy
-from isce3.core import TimeDelta
+from isce3.core import TimeDelta, load_orbit_from_h5_group
 import numpy.testing as npt
+import h5py
+import tempfile
+import isce3
+
 
 def load_h5():
-    from isce3.core import load_orbit_from_h5_group
     from iscetest import data
     from os import path
-    import h5py
     f = h5py.File(path.join(data, "envisat.h5"), 'r')
     return load_orbit_from_h5_group(f["/science/LSAR/SLC/metadata/orbit"])
 
-o = load_h5();
 
 def test_save():
-    import h5py
-    import tempfile
     o = load_h5()
     _, name = tempfile.mkstemp()
     with h5py.File(name, "w") as h5:
         g = h5.create_group("/orbit")
         o.save_to_h5(g)
 
+
+# Test orbit serialization with a reference epoch without integer second
+# precision
+def test_save_fractional():
+    orbit = load_h5()
+    _, name = tempfile.mkstemp()
+
+    orbit_reference_epoch = orbit.reference_epoch
+
+    # Ensure that orbit reference epoch has decimal precision (0.5 sec)
+    epoch = isce3.core.DateTime(orbit_reference_epoch.year,
+                                orbit_reference_epoch.month,
+                                orbit_reference_epoch.day,
+                                orbit_reference_epoch.hour,
+                                orbit_reference_epoch.minute,
+                                orbit_reference_epoch.second + 0.5)
+
+    orbit.update_reference_epoch(epoch)
+
+    with h5py.File(name, 'w') as h5:
+        g = h5.create_group('/orbit')
+
+        # First assert that an exception is raised if
+        # `ensure_epoch_integer_seconds` is `False`
+        with pytest.raises(RuntimeError):
+            orbit.save_to_h5(g, ensure_epoch_integer_seconds=True)
+
+        orbit.save_to_h5(g, ensure_epoch_integer_seconds=False)
+
+    with h5py.File(name, 'r') as h5:
+        new_orbit = load_orbit_from_h5_group(h5['/orbit'])
+
+    assert epoch == new_orbit.reference_epoch
+
+
 # Test that accessors exist
 def test_props():
-    o = load_h5();
+    o = load_h5()
     o.time
     o.position
     o.velocity
+
 
 # Test that loaded data is valid
 def test_members():
@@ -55,6 +91,7 @@ def test_members():
     assert(all(velocity > car))
     assert(all(velocity < light))
 
+
 def test_update_epoch():
     orbit = load_h5()
     i = -1
@@ -68,6 +105,7 @@ def test_update_epoch():
     new_timestamp = orbit.reference_epoch + TimeDelta(orbit.time[i])
     assert (new_timestamp - old_timestamp).total_seconds() < 1e-9
 
+
 def test_copy():
     orbit = load_h5()
     # only modifiable attribute via python is epoch
@@ -76,12 +114,14 @@ def test_copy():
         o.update_reference_epoch(epoch)
         assert o.reference_epoch != orbit.reference_epoch
 
+
 def test_contains():
     orbit = load_h5()
     assert not orbit.contains(orbit.start_time - 1.0)
     assert not orbit.contains(orbit.end_time + 1.0)
     mid = 0.5 * (orbit.start_time + orbit.end_time)
     assert orbit.contains(mid)
+
 
 def test_crop():
     orbit = load_h5()
