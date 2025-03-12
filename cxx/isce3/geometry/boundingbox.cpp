@@ -233,7 +233,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBox(
         }
 
         // Merge with other bboxes
-        bbox.Merge(xylim);
+        bbox.Merge2(xylim, proj->code());
     }
 
     _addMarginToBoundingBox(bbox, margin, proj);
@@ -397,7 +397,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
     }
 
     // Both limits are valid
-    bbox_min.Merge(bbox_max);
+    bbox_min.Merge2(bbox_max, proj->code());
 
     if (!_isValid(bbox_min)) {
         // if result is invalid
