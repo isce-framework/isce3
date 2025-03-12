@@ -8,6 +8,7 @@
 
 #include <ogr_geometry.h>
 #include <cmath>
+#include <algorithm>
 
 namespace isce3 { namespace geometry {
     /** Same as GDAL's OGRLinearRing structure. See: https://gdal.org/doxygen/classOGRLinearRing.html */
@@ -30,16 +31,12 @@ namespace isce3 { namespace geometry {
             }
 
             // compute the "wrapped" x coordinates
-            double minx_wrapped_this = std::fmod(MinX + one_cycle, one_cycle);
-            double maxx_wrapped_this = std::fmod(MaxX + one_cycle, one_cycle);
+            auto wrap = [one_cycle](double angle) { return std::fmod(angle + one_cycle, one_cycle); };
 
-            double minx_wrapped_other = std::fmod(other.MinX + one_cycle, one_cycle);
-            double maxx_wrapped_other = std::fmod(other.MaxX + one_cycle, one_cycle);
-
-            MinX = (minx_wrapped_this < minx_wrapped_other) ? minx_wrapped_this : minx_wrapped_other;
-            MaxX = (maxx_wrapped_this > maxx_wrapped_other) ? maxx_wrapped_this : maxx_wrapped_other;
-            MinY = (MinY < other.MinY) ? MinY : other.MinY;
-            MaxY = (MaxY > other.MaxY) ? MaxY : other.MaxY;
+            MinX = std::min(wrap(MinX), wrap(other.MinX));
+            MaxX = std::max(wrap(MaxX), wrap(other.MaxX));
+            MinY = std::min(MinY, other.MinY);
+            MaxY = std::max(MaxY, other.MaxY);
 
             return;
             }
