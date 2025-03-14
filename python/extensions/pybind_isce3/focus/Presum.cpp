@@ -96,7 +96,7 @@ auto get_unique_ids(const py::array_t<int64_t>& ids)
     // avoid compiler warning about narrowing cast: since nu <= n there's no
     // way it can overflow
     const auto nu = static_cast<py::ssize_t>(unique_ids.size());
-    auto retval = py::array_t<int64_t>({nu}, unique_ids.data());
+    auto retval = py::array_t<int64_t>(py::array::ShapeContainer{nu}, unique_ids.data());
     // It's not very well documented whether the above actually makes a copy,
     // so convince ourselves with some assertions.
     assert(retval.data() != unique_ids.data());
