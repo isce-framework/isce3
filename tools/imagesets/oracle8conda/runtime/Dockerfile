@@ -38,16 +38,33 @@ ENV PROJ_LIB=$conda_prefix/share/proj
 ENV MPLCONFIGDIR=/tmp
 
 ENV CUDA_VERSION_MAJOR 11
-ENV CUDA_VERSION_MINOR 4
+ENV CUDA_VERSION_MINOR 8
 ENV CUDA_PKG_VERSION "${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}"
 
 RUN yum install -y \
         cuda-cudart-$CUDA_PKG_VERSION \
-        libcufft-$CUDA_PKG_VERSION \
  && yum clean all \
  && rm -rf /var/cache/yum
+
+# The libcufft-11-8 RPM is missing SHA256 digests, so the usual `yum install` command
+# fails on some machines with 'package <...> does not verify: no digest'. See
+# https://forums.developer.nvidia.com/t/unable-to-install-cuda-rpms-and-libraries-in-rhel8-fips-mode-no-digest/230008
+# for details. Yum doesn't appear to support an equivalent to
+# `rpm --install --nodigest`, so we need this roundabout approach of using yum to
+# download the RPM(s) and then using rpm to install the package(s). This seems to be
+# resolved in CUDA 12, so we could revert this when we upgrade from CUDA 11.
+RUN yum install -y --downloadonly --destdir /tmp \
+        libcufft-$CUDA_PKG_VERSION \
+ && rpm --install --nodigest /tmp/*.rpm \
+ && rm /tmp/*.rpm
 
 # https://github.com/NVIDIA/nvidia-container-runtime#environment-variables-oci-spec
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV NVIDIA_REQUIRE_CUDA "cuda>=${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}"
+
+# Specify the minimum driver version required on the host. The CUDA runtime libraries
+# installed within the container are backwards compatible with older drivers within the
+# same major version family. However, a newer driver may still be required if the GPU
+# architecture is different from the architectures that we target when compiling ISCE3
+# within the container image.
+ENV NVIDIA_REQUIRE_CUDA "cuda>=${CUDA_VERSION_MAJOR}"
