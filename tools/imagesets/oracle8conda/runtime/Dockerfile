@@ -12,12 +12,12 @@ RUN yum update -y \
  && echo 'skip_missing_names_on_install=False' >> /etc/yum.conf \
  && rm -rf /var/cache/yum
 
-# install latest miniconda
+# install latest miniforge
 ARG conda_prefix
-RUN curl -sSL https://repo.anaconda.com/miniconda/Miniconda3-py312_24.7.1-0-Linux-x86_64.sh \
-        -o miniconda.sh \
- && bash miniconda.sh -b -p $conda_prefix \
- && rm miniconda.sh
+RUN curl -sSL https://github.com/conda-forge/miniforge/releases/download/24.11.3-2/Miniforge3-Linux-x86_64.sh \
+        -o Miniforge3.sh \
+ && bash Miniforge3.sh -b -p $conda_prefix \
+ && rm Miniforge3.sh
 ENV PATH="$conda_prefix/bin:$PATH"
 
 # use the libmamba solver, which is faster and has better diagnostics
@@ -36,6 +36,10 @@ ENV GDAL_DATA=$conda_prefix/share/gdal
 ENV GDAL_DRIVER_PATH=$conda_prefix/lib/gdalplugins
 ENV PROJ_LIB=$conda_prefix/share/proj
 ENV MPLCONFIGDIR=/tmp
+
+# In GDAL>=3.10, constructing a "MEM" raster from a pointer address is disallowed by
+# default for security reasons. See https://gdal.org/en/stable/drivers/raster/mem.html.
+ENV GDAL_MEM_ENABLE_OPEN=YES
 
 ENV CUDA_VERSION_MAJOR 11
 ENV CUDA_VERSION_MINOR 8
