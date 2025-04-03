@@ -81,19 +81,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
                                         output_terrain_radiometry)
     save_mask = geocode_dict['save_mask']
 
-    min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
-    max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
-
-    # optional keyword arguments , i.e. arguments that may or may not be
-    # included in the call to geocode()
-    optional_geo_kwargs = {}
-
-    # read min/max block size converting MB to B
-    if min_block_size_mb is not None:
-        optional_geo_kwargs['min_block_size'] = min_block_size_mb * (2**20)
-    if max_block_size_mb is not None:
-        optional_geo_kwargs['max_block_size'] = max_block_size_mb * (2**20)
-
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']
     threshold = geo2rdr_dict['threshold']
