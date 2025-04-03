@@ -2,6 +2,7 @@ import textwrap
 import xml.etree.ElementTree as ET
 from collections.abc import Generator
 from contextlib import contextmanager
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import h5py
@@ -65,6 +66,30 @@ def partial_gcov_product_spec() -> ProductSpec:
     return ProductSpec(tree)
 
 
+@contextmanager
+def temporary_xml_file(contents: str) -> Generator[Path, None, None]:
+    """
+    Create a temporary XML file with the specified contents.
+
+    The file is automatically removed from the file system upon exiting the context
+    manager.
+
+    Parameters
+    ----------
+    contents : str
+        A string in XML syntax.
+
+    Yields
+    ------
+    Path
+        The XML file path.
+    """
+    with NamedTemporaryFile(suffix=".xml") as tmp_file:
+        path = Path(tmp_file.name)
+        path.write_text(contents)
+        yield path
+
+
 class TestProductSpec:
     def test_get_global_attrs(self, gcov_product_spec: ProductSpec):
         assert gcov_product_spec.global_attrs == dict(
@@ -78,6 +103,21 @@ class TestProductSpec:
             ),
             contact="nisar-sds-ops@jpl.nasa.gov",
         )
+
+    def test_version(self):
+        xml_contents = textwrap.dedent(
+            """\
+            <?xml version="1.0"?>
+            <!-- product specification version is 1.2.0 -->
+            <algorithm name="L1_SingleLookComplex"
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="../../SDS/pix/schema.xsd">
+            </algorithm>
+            """
+        )
+        with temporary_xml_file(xml_contents) as xml_path:
+            product_spec = ProductSpec.from_file(xml_path)
+            assert product_spec.version == "1.2.0"
 
     def test_get_dataset_spec(self, gcov_product_spec: ProductSpec):
         name = "/science/LSAR/identification/absoluteOrbitNumber"

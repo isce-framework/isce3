@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterator
 from functools import cached_property
@@ -270,6 +271,36 @@ class DatasetSpec:
         }
 
 
+def get_product_spec_version(xml_path: str | os.PathLike) -> str:
+    """
+    Get the product specification version by parsing the XML file.
+
+    Parameters
+    ----------
+    xml_path : path-like
+        The path to a NISAR product specification XML file.
+
+    Returns
+    -------
+    str
+        The product specification version as a string in '<MAJOR>.<MINOR>.<PATCH>'
+        format.
+    """
+    xml_path = Path(xml_path)
+    xml = xml_path.read_text()
+
+    regex = re.compile(
+        r"^<!-- product specification version is (?P<version>\d+\.\d+\.\d+) -->$",
+        flags=re.MULTILINE,
+    )
+    if (match := regex.search(xml)) is not None:
+        return match["version"]
+
+    raise RuntimeError(
+        f"unable to parse product specification version string from xml file {xml_path}"
+    )
+
+
 class ProductSpec:
     """
     NISAR product specification.
@@ -279,12 +310,14 @@ class ProductSpec:
 
     Attributes
     ----------
+    version : str
+        The product specification version string.
     global_attrs : dict
         A dict of global attributes found in the specification document. The contents of
         the dict are attributes that the root HDF5 Group is expected to contain.
     """
 
-    def __init__(self, tree: ET.ElementTree):
+    def __init__(self, tree: ET.ElementTree, version: str = "0.0.0"):
         """
         Create a new `ProductSpec` object.
 
@@ -292,8 +325,11 @@ class ProductSpec:
         ----------
         element : xml.etree.ElementTree.ElementTree
             The XML element tree containing the product specification.
+        version : str, optional
+            The product specification version string. Defaults to '0.0.0'.
         """
         self._tree = tree
+        self.version = version
 
     @classmethod
     def from_file(cls: type[ProductSpecT], xml_path: str | os.PathLike) -> ProductSpecT:
@@ -306,7 +342,8 @@ class ProductSpec:
             The path to the XML file.
         """
         tree = ET.parse(xml_path)
-        return cls(tree)
+        version = get_product_spec_version(xml_path)
+        return cls(tree, version)
 
     @cached_property
     def global_attrs(self) -> dict[str, str]:
