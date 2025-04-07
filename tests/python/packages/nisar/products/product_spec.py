@@ -119,6 +119,26 @@ class TestProductSpec:
             product_spec = ProductSpec.from_file(xml_path)
             assert product_spec.version == "1.2.0"
 
+    @pytest.mark.parametrize("bad_version_string", ["1.2", "1.2.x", "1.2.3-rc1"])
+    def test_bad_version_string(self, bad_version_string: str):
+        xml_contents = textwrap.dedent(
+            f"""\
+            <?xml version="1.0"?>
+            <!-- product specification version is {bad_version_string} -->
+            <algorithm name="L1_SingleLookComplex"
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="../../SDS/pix/schema.xsd">
+            </algorithm>
+            """
+        )
+        with temporary_xml_file(xml_contents) as xml_path:
+            regex = (
+                "^unable to parse product specification version string from xml file"
+                f" {xml_path}"
+            )
+            with pytest.raises(RuntimeError, match=regex):
+                ProductSpec.from_file(xml_path)
+
     def test_get_dataset_spec(self, gcov_product_spec: ProductSpec):
         name = "/science/LSAR/identification/absoluteOrbitNumber"
         dataset_spec = gcov_product_spec.get_dataset_spec(name)
