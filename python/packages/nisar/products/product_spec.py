@@ -323,7 +323,7 @@ class ProductSpec:
 
         Parameters
         ----------
-        element : xml.etree.ElementTree.ElementTree
+        tree : xml.etree.ElementTree.ElementTree
             The XML element tree containing the product specification.
         version : str, optional
             The product specification version string. Defaults to '0.0.0'.
