@@ -317,7 +317,7 @@ class ProductSpec:
         the dict are attributes that the root HDF5 Group is expected to contain.
     """
 
-    def __init__(self, tree: ET.ElementTree, version: str = "0.0.0"):
+    def __init__(self, tree: ET.ElementTree, version: str):
         """
         Create a new `ProductSpec` object.
 
@@ -325,8 +325,8 @@ class ProductSpec:
         ----------
         tree : xml.etree.ElementTree.ElementTree
             The XML element tree containing the product specification.
-        version : str, optional
-            The product specification version string. Defaults to '0.0.0'.
+        version : str
+            The product specification version string.
         """
         self._tree = tree
         self.version = version
