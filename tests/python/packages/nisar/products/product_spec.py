@@ -27,8 +27,9 @@ def gcov_product_spec() -> ProductSpec:
 @pytest.fixture
 def partial_gcov_product_spec() -> ProductSpec:
     xml = textwrap.dedent(
-        """
+        """\
         <?xml version="1.0"?>
+        <!-- product specification version is 1.2.0 -->
         <algorithm name="L2_GeocodedCovariance"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
           <product template="L2_GCOV_template">
@@ -59,11 +60,9 @@ def partial_gcov_product_spec() -> ProductSpec:
             </science>
           </product>
         </algorithm>
-        """.strip()
+        """
     )
-    element = ET.fromstring(xml)
-    tree = ET.ElementTree(element)
-    return ProductSpec(tree)
+    return ProductSpec.from_string(xml)
 
 
 @contextmanager
@@ -132,10 +131,7 @@ class TestProductSpec:
             """
         )
         with temporary_xml_file(xml_contents) as xml_path:
-            regex = (
-                "^unable to parse product specification version string from xml file"
-                f" {xml_path}"
-            )
+            regex = "^unable to parse product specification version string from xml$"
             with pytest.raises(RuntimeError, match=regex):
                 ProductSpec.from_file(xml_path)
 
@@ -158,8 +154,9 @@ class TestProductSpec:
 
     def test_duplicate_dataset_specs(self):
         xml = textwrap.dedent(
-            """
+            """\
             <?xml version="1.0"?>
+            <!-- product specification version is 1.2.0 -->
             <algorithm name="L2_GeocodedCovariance"
                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
               <product template="L2_GCOV_template">
@@ -183,11 +180,9 @@ class TestProductSpec:
                 </science>
               </product>
             </algorithm>
-            """.strip()
+            """
         )
-        element = ET.fromstring(xml)
-        tree = ET.ElementTree(element)
-        product_spec = ProductSpec(tree)
+        product_spec = ProductSpec.from_string(xml)
 
         name = "/science/LSAR/identification/absoluteOrbitNumber"
         with pytest.raises(ValueError, match="^multiple xml elements found matching"):

@@ -271,14 +271,14 @@ class DatasetSpec:
         }
 
 
-def get_product_spec_version(xml_path: str | os.PathLike) -> str:
+def get_product_spec_version(xml_string: str) -> str:
     """
-    Get the product specification version by parsing the XML file.
+    Get the product specification version by parsing the XML contents.
 
     Parameters
     ----------
-    xml_path : path-like
-        The path to a NISAR product specification XML file.
+    xml_string : str
+        The contents of a NISAR product specification XML file.
 
     Returns
     -------
@@ -286,19 +286,14 @@ def get_product_spec_version(xml_path: str | os.PathLike) -> str:
         The product specification version as a string in '<MAJOR>.<MINOR>.<PATCH>'
         format.
     """
-    xml_path = Path(xml_path)
-    xml = xml_path.read_text()
-
     regex = re.compile(
         r"^<!-- product specification version is (?P<version>\d+\.\d+\.\d+) -->$",
         flags=re.MULTILINE,
     )
-    if (match := regex.search(xml)) is not None:
+    if (match := regex.search(xml_string)) is not None:
         return match["version"]
 
-    raise RuntimeError(
-        f"unable to parse product specification version string from xml file {xml_path}"
-    )
+    raise RuntimeError("unable to parse product specification version string from xml")
 
 
 class ProductSpec:
@@ -332,6 +327,22 @@ class ProductSpec:
         self.version = version
 
     @classmethod
+    def from_string(cls: type[ProductSpecT], xml_string: str) -> ProductSpecT:
+        """
+        Create a new `ProductSpec` from an XML file.
+
+        Parameters
+        ----------
+        xml_string : str
+            The contents of a NISAR product specification XML file.
+        """
+        # `ET.fromstring` (and `ET.parse`) skip over comments, so we need to parse the
+        # version string separately from the other XML contents.
+        tree = ET.fromstring(xml_string)
+        version = get_product_spec_version(xml_string)
+        return cls(tree, version)
+
+    @classmethod
     def from_file(cls: type[ProductSpecT], xml_path: str | os.PathLike) -> ProductSpecT:
         """
         Create a new `ProductSpec` from an XML file.
@@ -341,9 +352,8 @@ class ProductSpec:
         xml_path : path-like
             The path to the XML file.
         """
-        tree = ET.parse(xml_path)
-        version = get_product_spec_version(xml_path)
-        return cls(tree, version)
+        xml_string = Path(xml_path).read_text()
+        return cls.from_string(xml_string)
 
     @cached_property
     def global_attrs(self) -> dict[str, str]:
