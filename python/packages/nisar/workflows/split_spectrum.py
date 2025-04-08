@@ -3,15 +3,16 @@
 import os
 import pathlib
 import time
-
 import h5py
 import isce3
 import journal
 import numpy as np
+from scipy.fft import next_fast_len
+
 from isce3.io import HDF5OptimizedReader
 from isce3.splitspectrum import splitspectrum
 from nisar.h5 import cp_h5_meta_data
-from nisar.products.readers import SLC
+from nisar.products.readers import RSLC
 
 from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
 from nisar.products.insar.product_paths import CommonPaths
@@ -20,7 +21,7 @@ from nisar.workflows.yaml_argparse import YamlArgparse
 
 def prep_subband_h5(src_rslc_hdf5: str,
                     sub_band_hdf5: str,
-                    iono_freq_pols : dict):
+                    iono_freq_pols: dict):
     '''Prepare subband HDF5 with source/full HDF5
 
     Parameters
@@ -32,13 +33,14 @@ def prep_subband_h5(src_rslc_hdf5: str,
     iono_freq_pols : dict
         list of polarizations for frequency A and B for ionosphere processing
     '''
-    src_slc = SLC(hdf5file=src_rslc_hdf5)
+    src_slc = RSLC(hdf5file=src_rslc_hdf5)
 
     # Instantiate product obj to avoid product hard-coded paths
     product_obj = CommonPaths()
 
-    with HDF5OptimizedReader(name=src_rslc_hdf5, mode='r', libver='latest', swmr=True) as src_h5, \
-        h5py.File(sub_band_hdf5, 'w') as dst_h5:
+    with HDF5OptimizedReader(name=src_rslc_hdf5, mode='r',
+                             libver='latest', swmr=True) as src_h5, \
+            h5py.File(sub_band_hdf5, 'w') as dst_h5:
 
         # copy non-frequency metadata
         metadata_path = src_slc.MetadataPath
@@ -100,7 +102,6 @@ def run(cfg: dict):
 
     info_channel = journal.info("split_spectrum.run")
     info_channel.log("starting split_spectrum")
-
     t_all = time.time()
 
     # Check split spectrum method
@@ -123,23 +124,29 @@ def run(cfg: dict):
                 low_band_output = f"{split_band_path}/sec_low_band_slc.h5"
                 high_band_output = f"{split_band_path}/sec_high_band_slc.h5"
             # Open RSLC product
-            slc_product = SLC(hdf5file=hdf5_str)
+            slc_product = RSLC(hdf5file=hdf5_str)
             # meta data extraction
-            meta_data = splitspectrum.bandpass_meta_data.load_from_slc(
+            meta_data = splitspectrum.BandpassMetaData.load_from_slc(
                 slc_product=slc_product,
                 freq=freq)
             bandwidth_half = 0.5 * meta_data.rg_bandwidth
             low_frequency_slc = meta_data.center_freq - bandwidth_half
             high_frequency_slc = meta_data.center_freq + bandwidth_half
 
-            # first and second elements are the frequency ranges for low and high sub-bands, respectively.
-            low_subband_frequencies = np.array(
-                [low_frequency_slc, low_frequency_slc + low_band_bandwidth])
-            high_subband_frequencies = np.array(
-                [high_frequency_slc - high_band_bandwidth, high_frequency_slc])
+            # first and second elements are the frequency ranges
+            # for low and high sub-bands, respectively.
+            low_subband_frequencies = np.array([
+                low_frequency_slc,
+                low_frequency_slc + low_band_bandwidth
+                ])
+            high_subband_frequencies = np.array([
+                high_frequency_slc - high_band_bandwidth,
+                high_frequency_slc
+                ])
 
-            low_band_center_freq = low_frequency_slc + low_band_bandwidth/2
-            high_band_center_freq = high_frequency_slc - high_band_bandwidth/2
+            low_band_center_freq = low_frequency_slc + (low_band_bandwidth / 2)
+            high_band_center_freq = high_frequency_slc - \
+                (high_band_bandwidth / 2)
             # Specify split-spectrum parameters
             split_spectrum_parameters = splitspectrum.SplitSpectrum(
                 rg_sample_freq=meta_data.rg_sample_freq,
@@ -155,59 +162,58 @@ def run(cfg: dict):
             prep_subband_h5(hdf5_str, low_band_output, iono_freq_pol)
             prep_subband_h5(hdf5_str, high_band_output, iono_freq_pol)
 
-            with HDF5OptimizedReader(name=hdf5_str, mode='r', libver='latest', swmr=True) as src_h5, \
-                    HDF5OptimizedReader(name=low_band_output, mode='r+') as dst_h5_low, \
-                    HDF5OptimizedReader(name=high_band_output, mode='r+') as dst_h5_high:
+            with HDF5OptimizedReader(name=low_band_output, mode='r+') as dst_h5_low, \
+                 HDF5OptimizedReader(name=high_band_output, mode='r+') as dst_h5_high:
 
                 # Copy HDF5 metadata for low high band
                 for pol in pol_list:
                     raster_str = f'HDF5:{hdf5_str}:/{slc_product.slcPath(freq, pol)}'
                     slc_raster = isce3.io.Raster(raster_str)
-                    rows = slc_raster.length
-                    cols = slc_raster.width
+                    rows, cols = slc_raster.length, slc_raster.width
                     nblocks = int(np.ceil(rows / blocksize))
-                    fft_size = cols
+                    fft_size = next_fast_len(cols)
 
-                    for block in range(0, nblocks):
+                    reader = slc_product.getSlcDatasetAsNativeComplex(
+                        freq, pol)
+
+                    dest_pol_path = f"{dest_freq_path}/{pol}"
+                    for block in range(nblocks):
                         info_channel.log(f" split_spectrum block: {block}")
                         row_start = block * blocksize
-                        if ((row_start + blocksize) > rows):
-                            block_rows_data = rows - row_start
-                        else:
-                            block_rows_data = blocksize
+                        row_end = min(row_start + blocksize, rows)
+                        target_slc_image = reader[row_start:row_end, :]
 
-                        dest_pol_path = f"{dest_freq_path}/{pol}"
-
-                        target_slc_image = isce3.core.types.read_c4_dataset_as_c8(
-                            src_h5[dest_pol_path],
-                            np.s_[row_start: row_start + block_rows_data, :])
-
-                        subband_slc_low, subband_meta_low = \
+                        subband_slc_low, subband_meta_low = (
                             split_spectrum_parameters.bandpass_shift_spectrum(
-                            slc_raster=target_slc_image,
-                            low_frequency=low_subband_frequencies[0],
-                            high_frequency=low_subband_frequencies[1],
-                            new_center_frequency=low_band_center_freq,
-                            fft_size=fft_size,
-                            window_shape=window_shape,
-                            window_function=window_function,
-                            resampling=False
+                                slc_raster=target_slc_image,
+                                low_frequency=low_subband_frequencies[0],
+                                high_frequency=low_subband_frequencies[1],
+                                new_center_frequency=low_band_center_freq,
+                                fft_size=fft_size,
+                                window_shape=window_shape,
+                                window_function=window_function,
+                                resampling=False
+                            )
                         )
 
-                        subband_slc_high, subband_meta_high = \
+                        subband_slc_high, subband_meta_high = (
                             split_spectrum_parameters.bandpass_shift_spectrum(
-                            slc_raster=target_slc_image,
-                            low_frequency=high_subband_frequencies[0],
-                            high_frequency=high_subband_frequencies[1],
-                            new_center_frequency=high_band_center_freq,
-                            fft_size=fft_size,
-                            window_shape=window_shape,
-                            window_function=window_function,
-                            resampling=False
+                                slc_raster=target_slc_image,
+                                low_frequency=high_subband_frequencies[0],
+                                high_frequency=high_subband_frequencies[1],
+                                new_center_frequency=high_band_center_freq,
+                                fft_size=fft_size,
+                                window_shape=window_shape,
+                                window_function=window_function,
+                                resampling=False
+                            )
                         )
+
                         if block == 0:
-                            del dst_h5_low[dest_pol_path]
-                            del dst_h5_high[dest_pol_path]
+                            if dest_pol_path in dst_h5_low:
+                                del dst_h5_low[dest_pol_path]
+                            if dest_pol_path in dst_h5_high:
+                                del dst_h5_high[dest_pol_path]
                             # Initialize the raster with updated shape in HDF5
                             dst_h5_low.create_dataset(dest_pol_path,
                                                       [rows, cols],
@@ -221,21 +227,22 @@ def run(cfg: dict):
                         # Write bandpassed SLC to HDF5
                         dst_h5_low[dest_pol_path].write_direct(
                             subband_slc_low,
-                            dest_sel=np.s_[
-                                row_start: row_start + block_rows_data, :])
+                            dest_sel=np.s_[row_start:row_end, :]
+                        )
 
                         dst_h5_high[dest_pol_path].write_direct(
                             subband_slc_high,
-                            dest_sel=np.s_[
-                                row_start: row_start + block_rows_data, :])
+                            dest_sel=np.s_[row_start:row_end, :]
+                        )
 
-                    dst_h5_low[dest_pol_path].attrs[
-                        'description'] = f"Split-spectrum SLC image ({pol})"
-                    dst_h5_low[dest_pol_path].attrs['units'] = f""
-
-                    dst_h5_high[dest_pol_path].attrs[
-                        'description'] = f"Split-spectrum SLC image ({pol})"
-                    dst_h5_high[dest_pol_path].attrs['units'] = f""
+                    dst_h5_low[dest_pol_path].attrs['description'] = (
+                        f"Split-spectrum SLC image ({pol})"
+                    )
+                    dst_h5_low[dest_pol_path].attrs['units'] = ""
+                    dst_h5_high[dest_pol_path].attrs['description'] = (
+                        f"Split-spectrum SLC image ({pol})"
+                    )
+                    dst_h5_high[dest_pol_path].attrs['units'] = ""
 
                 # update meta information for bandpass SLC
                 data = dst_h5_low[f"{dest_freq_path}/processedCenterFrequency"]
@@ -256,6 +263,7 @@ def run(cfg: dict):
     t_all_elapsed = time.time() - t_all
     info_channel.log(
         f"successfully ran split_spectrum in {t_all_elapsed:.3f} seconds")
+
 
 if __name__ == "__main__":
     '''

@@ -31,5 +31,11 @@ def test_LUT2d():
 
     n_pts = d_refs.shape[0]
     assert error/n_pts < 0.058, f'pybind LUT2d failed: {error} > 0.058'
-    
-# end of file
+
+    # check that we can set ref_value
+    lut = isce.core.LUT2d()
+    assert lut.ref_value == 0.0
+    lut.ref_value = 1.0
+    assert lut.ref_value == 1.0
+    lut = isce.core.LUT2d(2.0)
+    assert lut.ref_value == 2.0

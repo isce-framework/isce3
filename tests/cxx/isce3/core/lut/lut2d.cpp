@@ -147,6 +147,25 @@ TEST(LUT2dTest, Contains)
     }
 }
 
+TEST(LUT2dTest, RefValue)
+{
+    using T = double;
+    {
+        // default ctor sets to zero
+        auto lut = isce3::core::LUT2d<T>();
+        EXPECT_EQ(lut.refValue(), 0.0);
+
+        // setter should update value
+        lut.refValue(1.0);
+        EXPECT_EQ(lut.refValue(), 1.0);
+    }
+    {
+        // scalar paramter ctor sets value
+        auto lut = isce3::core::LUT2d<T>(2.0);
+        EXPECT_EQ(lut.refValue(), 2.0);
+    }
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

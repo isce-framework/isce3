@@ -10,6 +10,8 @@
 #include <isce3/geometry/RTC.h>
 #include <isce3/io/Raster.h>
 
+#include <pybind_isce3/core/Constants.h>
+
 namespace py = pybind11;
 
 using isce3::core::parseDataInterpMethod;
@@ -40,9 +42,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
             .def_property("data_interpolator",
                     py::overload_cast<>(
                             &Geocode<T>::dataInterpolator, py::const_),
-                    [](Geocode<T>& self, std::string& method) {
+                    [](Geocode<T>& self, py::object method) {
                         // get interp method
-                        auto data_interpolator = parseDataInterpMethod(method);
+                        auto data_interpolator = duck_method(method);
 
                         // set interp method
                         self.dataInterpolator(data_interpolator);

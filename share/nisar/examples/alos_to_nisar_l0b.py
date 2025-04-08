@@ -324,6 +324,10 @@ def constructNISARHDF5(args, ldr):
         inps = rrsd.create_group('metadata/processingInformation/inputs')
         inps.create_dataset('l0aGranules', data=numpy.bytes_([os.path.basename(args.indir)]))
 
+        algos = rrsd.create_group('metadata/processingInformation/algorithms')
+        dset = algos.create_dataset("softwareVersion", data=numpy.bytes_(isce3.__version__))
+        dset.attrs["description"] = numpy.bytes_("Software version used for processing")
+
         #Start populating telemetry
         orbit_group = rrsd.create_group('lowRateTelemetry/orbit')
         orbit = get_alos_orbit(ldr)

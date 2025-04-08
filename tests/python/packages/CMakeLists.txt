@@ -45,6 +45,7 @@ nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
 nisar/products/readers/rslc.py
 nisar/products/readers/rslc_cal.py
+nisar/products/product_spec.py
 nisar/workflows/crossmul.py
 nisar/workflows/estimate_abscal_factor.py
 nisar/workflows/faraday_rot_angle_from_rslc.py

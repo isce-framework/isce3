@@ -447,10 +447,6 @@ def _run(cfg, raster_scratch_dir):
 
     orbit = None
 
-    # the variable `complex_type` will hold the complex data type
-    # to be used for off-diagonal terms (if full covariance GCOV)
-    complex_type = None
-
     for frequency, input_pol_list in freq_pols.items():
 
         # do no processing if no polarizations specified for current frequency
@@ -578,8 +574,6 @@ def _run(cfg, raster_scratch_dir):
         optional_geo_kwargs['abs_cal_factor'] = abs_cal_factor
         optional_geo_kwargs['clip_min'] = clip_min
         optional_geo_kwargs['clip_max'] = clip_max
-        optional_geo_kwargs['geogrid_upsampling'] = geogrid_upsampling
-        optional_geo_kwargs['abs_cal_factor'] = abs_cal_factor
         optional_geo_kwargs['flag_upsample_radar_grid'] = \
             flag_upsample_radar_grid
 

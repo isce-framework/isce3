@@ -111,5 +111,8 @@ def test_methods():
     dem = DEMInterpolator(method="biCUBic")
     assert dem.interp_method == DataInterpMethod.BICUBIC
 
+    dem.interp_method = "bilinear"
+    assert dem.interp_method == DataInterpMethod.BILINEAR
+
     with pytest.raises(ValueError):
         dem = DEMInterpolator(method="TigerKing")

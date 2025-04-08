@@ -243,7 +243,7 @@ def get_approx_el_bounds(slant_range, az, pos_ecef, quat, dem=DEMInterpolator(),
     # Warn if range is small relative to Earth surface bounds.  For example,
     # the 20 km difference between equatorial and polar radii would be a
     # problem for an airborne radar flying at 10 km altitude.
-    if slant_range / (amax - amin) < 2:
+    if (amax > amin) and (slant_range / (amax - amin) < 2):
         warn(f"Range ({slant_range} m) is small relative to "
             f"surface variation ({amax - amin} m).")
 

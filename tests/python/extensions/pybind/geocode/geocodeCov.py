@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import os
 import numpy as np
 from osgeo import gdal
+import pytest
 from scipy import ndimage
 import iscetest
 import isce3.ext.isce3 as isce
 import isce3
+from isce3.core import DataInterpMethod
 from nisar.products.readers import SLC
 
 geocode_modes = {'interp': isce.geocode.GeocodeOutputMode.INTERP,
@@ -262,6 +266,20 @@ def test_geocode_cov():
                               (sub_swath_expected_exp_within_quantile)) > 0
 
                 print('    ...done')
+
+
+@pytest.mark.parametrize(
+    "interpolator",
+    [
+        "bicubic",
+        "BICUBIC",
+        DataInterpMethod.BICUBIC,
+    ],
+)
+def test_set_interp_method(interpolator: str | DataInterpMethod):
+    geocode = isce3.geocode.GeocodeFloat32()
+    geocode.data_interpolator = interpolator
+    assert geocode.data_interpolator == DataInterpMethod.BICUBIC
 
 
 if __name__ == "__main__":
