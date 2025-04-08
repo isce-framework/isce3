@@ -646,7 +646,7 @@ def run(cfg: dict, runw_hdf5: str):
     # pull center frequency from frequency A, which is used for all method
     base_ref_slc_str = orig_ref_str
     base_ref_slc = SLC(hdf5file=base_ref_slc_str)
-    ref_meta_data_a = splitspectrum.bandpass_meta_data.load_from_slc(
+    ref_meta_data_a = splitspectrum.BandpassMetaData.load_from_slc(
         slc_product=base_ref_slc,
         freq='A')
     f0 = ref_meta_data_a.center_freq
@@ -658,10 +658,10 @@ def run(cfg: dict, runw_hdf5: str):
         high_ref_slc = SLC(hdf5file=high_ref_slc_str)
         low_ref_slc = SLC(hdf5file=low_ref_slc_str)
 
-        high_sub_meta_data = splitspectrum.bandpass_meta_data.load_from_slc(
+        high_sub_meta_data = splitspectrum.BandpassMetaData.load_from_slc(
             slc_product=high_ref_slc,
             freq='A')
-        low_sub_meta_data = splitspectrum.bandpass_meta_data.load_from_slc(
+        low_sub_meta_data = splitspectrum.BandpassMetaData.load_from_slc(
             slc_product=low_ref_slc,
             freq='A')
         f0_low = low_sub_meta_data.center_freq
@@ -673,7 +673,7 @@ def run(cfg: dict, runw_hdf5: str):
 
     if iono_method in iono_method_sideband:
         # pull center frequency from frequency B
-        ref_meta_data_b = splitspectrum.bandpass_meta_data.load_from_slc(
+        ref_meta_data_b = splitspectrum.BandpassMetaData.load_from_slc(
             slc_product=base_ref_slc,
             freq='B')
         f1 = ref_meta_data_b.center_freq

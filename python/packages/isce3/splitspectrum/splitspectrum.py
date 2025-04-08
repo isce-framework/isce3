@@ -3,7 +3,7 @@ import math
 from dataclasses import dataclass
 import journal
 import numpy as np
-from scipy.fft import fft, ifft, fftfreq
+from scipy.fft import fft, ifft, fftfreq, next_fast_len
 from scipy.signal import resample
 
 import isce3
@@ -11,7 +11,7 @@ from nisar.workflows.focus import cosine_window
 
 
 @dataclass(frozen=True)
-class bandpass_meta_data:
+class BandpassMetaData:
     # slant range spacing
     rg_pxl_spacing: float
     # wavelength
@@ -36,7 +36,7 @@ class bandpass_meta_data:
             frequency band
         Returns
         -------
-        meta_data : bandpass_meta_data
+        meta_data : BandpassMetaData
             bandpass meta data object
         """
         rdr_grid = slc_product.getRadarGrid(freq)
@@ -83,8 +83,8 @@ def check_range_bandwidth_overlap(ref_slc, sec_slc, pols):
     mode = dict()
 
     for freq, pol_list in pols.items():
-        ref_meta_data = bandpass_meta_data.load_from_slc(ref_slc, freq)
-        sec_meta_data = bandpass_meta_data.load_from_slc(sec_slc, freq)
+        ref_meta_data = BandpassMetaData.load_from_slc(ref_slc, freq)
+        sec_meta_data = BandpassMetaData.load_from_slc(sec_slc, freq)
 
         ref_wvl = ref_meta_data.wavelength
         sec_wvl = sec_meta_data.wavelength
@@ -151,7 +151,6 @@ class SplitSpectrum:
                                 fft_size=None,
                                 resampling=True
                                 ):
-
         """Bandpass SLC for a given bandwidth and shift the bandpassed
         spectrum to a new center frequency
 
@@ -187,51 +186,57 @@ class SplitSpectrum:
             dict containing meta data of bandpassed slc
             center_frequency, rg_bandwidth, range_spacing, slant_range
         """
-
-        rg_sample_freq = self.rg_sample_freq
-        rg_bandwidth = self.rg_bandwidth
-        diff_frequency = self.center_frequency - new_center_frequency
-        height, width = slc_raster.shape
-        slc_raster = np.asanyarray(slc_raster, dtype='complex')
-
+        error_channel = journal.error(
+            'splitspectrum.bandpass_shift_spectrum')
         slc_bp = self.bandpass_spectrum(
-                          slc_raster=slc_raster,
-                          low_frequency=low_frequency,
-                          high_frequency=high_frequency,
-                          window_function=window_function,
-                          window_shape=window_shape,
-                          fft_size=fft_size,
-                          )
+            slc_raster=slc_raster,
+            low_frequency=low_frequency,
+            high_frequency=high_frequency,
+            window_function=window_function,
+            window_shape=window_shape,
+            fft_size=fft_size,
+            )
 
         # demodulate the SLC to be baseband to new center frequency
         # if fft_size > width, then crop the spectrum from 0 to width
-        slc_demodulate = self.demodulate_slc(slc_bp[:, :width],
-                                             diff_frequency,
-                                             rg_sample_freq)
+        diff_frequency = self.center_frequency - new_center_frequency
+        height, width = slc_raster.shape
+
+        slc_raster = np.asanyarray(slc_raster, dtype=np.complex128)
+
+        slc_demodulate = self.demodulate_slc(
+            slc_bp[:, :width],
+            diff_frequency,
+            self.rg_sample_freq
+        )
 
         # update metadata with new parameters
-        meta = dict()
         new_bandwidth = high_frequency - low_frequency
         new_rg_sample_freq = np.abs(new_bandwidth) * \
             self.sampling_bandwidth_ratio
+        meta = {
+            'center_frequency': new_center_frequency,
+            'rg_bandwidth': new_bandwidth,
+            'rg_sample_freq': new_rg_sample_freq
+        }
 
-        meta['center_frequency'] = new_center_frequency
-        meta['rg_bandwidth'] = new_bandwidth
-        meta['rg_sample_freq'] = new_rg_sample_freq
-
-        # Resampling changes the spacing and slant range
+        # Resampling is required when the output bandpassed SLC needs to be
+        # downsampled, for example, to match frequency A with frequency B 
+        # after bandpassing frequency A. This process modifies the pixel s
+        # pacing and the corresponding slant range.
         if resampling:
-            # due to the precision of the floating point, the resampling
-            # scaling factor may be not integer.
-            resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
+            resampling_scale_factor = self.rg_sample_freq / new_rg_sample_freq
 
             # convert to integer
-            if rg_sample_freq % new_rg_sample_freq == 0:
-                resampling_scale_factor = np.round(resampling_scale_factor)
-            else:
+            # Due to floating-point precision limits, the computed
+            # resampling scale factor may not be exactly an integer.
+            if self.rg_sample_freq % new_rg_sample_freq > 1e-7:
                 err_msg = 'Resampling scaling factor ' \
                           f'{resampling_scale_factor} must be an integer.'
+                error_channel.log(err_msg)
                 raise ValueError(err_msg)
+
+            resampling_scale_factor = np.round(resampling_scale_factor)
 
             sub_width = int(width / resampling_scale_factor)
 
@@ -294,27 +299,30 @@ class SplitSpectrum:
         """
         error_channel = journal.error('splitspectrum.bandpass_spectrum')
 
+        height, width = slc_raster.shape
+        slc_raster = np.asanyarray(slc_raster, dtype='complex')
+
+        if high_frequency < low_frequency:
+            raise ValueError("low_frequency cannot exceed high_frequency.")
+
+        # If fft_size is not specified, use scipy's next_fast_len to determine
+        # the optimal size. This typically results in faster FFT computation
+        # than using the next power of 2, as it selects lengths that are highly
+        # composite (products of small prime factors).
+        if fft_size is None:
+            fft_size = next_fast_len(width)
+
+        if fft_size < width:
+            msg = f"Requested fft_size={fft_size} < number of range bins={width}."
+            error_channel.log(msg)
+            raise ValueError(msg)
+
         rg_sample_freq = self.rg_sample_freq
         rg_bandwidth = self.rg_bandwidth
         center_frequency = self.center_frequency
-        height, width = slc_raster.shape
-        slc_raster = np.asanyarray(slc_raster, dtype='complex')
-        new_bandwidth = high_frequency - low_frequency
-        new_rg_sample_freq = self.sampling_bandwidth_ratio * new_bandwidth
-        resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
 
-        if new_bandwidth < 0:
-            err_str = "Low frequency is higher than high frequency"
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-        if fft_size is None:
-            fft_size = width
-
-        if fft_size < width:
-            err_str = "FFT size is smaller than number of range bins"
-            error_channel.log(err_str)
-            raise ValueError(err_str)
+        padded_slc = np.zeros((height, fft_size), dtype='complex')
+        padded_slc[:, :width] = slc_raster
 
         # construct window to be deconvolved
         # from the original SLC in freq domain
@@ -339,19 +347,24 @@ class SplitSpectrum:
             window_shape=window_shape
             )
 
+        new_bandwidth = high_frequency - low_frequency
+        new_rg_sample_freq = self.sampling_bandwidth_ratio * new_bandwidth
+        resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
+
         # remove the windowing effect from the spectrum
-        spectrum_target = fft(slc_raster, n=fft_size, workers=-1)
+        spectrum_target = fft(padded_slc, n=fft_size, workers=-1)
         spectrum_target = np.divide(spectrum_target,
                                     window_target,
                                     out=np.zeros_like(spectrum_target),
                                     where=window_target != 0)
 
-        # apply new bandpass window to spectrum
-        slc_bandpassed = ifft(spectrum_target
-                              * window_bandpass
-                              * np.sqrt(resampling_scale_factor),
-                              n=fft_size,
-                              workers=-1)
+        filtered_spectrum = (spectrum_target *
+                             window_bandpass *
+                             np.sqrt(resampling_scale_factor))
+
+        slc_bandpassed_full = ifft(filtered_spectrum, n=fft_size, workers=-1)
+
+        slc_bandpassed = slc_bandpassed_full[:, :width]
 
         return slc_bandpassed
 
@@ -438,7 +451,8 @@ class SplitSpectrum:
         filter_1d : np.ndarray
             one dimensional bandpass filter in frequency domain
         '''
-        error_channel = journal.error('splitspectrum.get_range_bandpass_window')
+        error_channel = journal.error(
+            'splitspectrum.get_range_bandpass_window')
         # construct the frequency bin [Hz]
         frequency = self.freq_spectrum(
                     cfrequency=center_frequency,
@@ -448,7 +462,7 @@ class SplitSpectrum:
 
         window_kind = window_function.lower()
 
-        # Windowing effect will appear from freq_low to freq_high 
+        # Windowing effect will appear from freq_low to freq_high
         # for given frequency bin
         if window_kind == 'tukey':
             if not (0 <= window_shape <= 1):
