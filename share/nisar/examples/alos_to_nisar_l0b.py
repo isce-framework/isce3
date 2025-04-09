@@ -293,11 +293,12 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
     ident.create_dataset("zeroDopplerEndTime", data=numpy.string_(
         "2007-01-01 00:00:01.0000000"))
     # fields added to spec in 2023
-    ident.create_dataset("granuleId", data=numpy.string_("None"))
-    ident.create_dataset("instrumentName", data=numpy.string_("PALSAR"))
-    ident.create_dataset("isDithered", data=numpy.string_("False"))
-    ident.create_dataset("isMixedMode", data=numpy.string_("False"))
-    ident.create_dataset("processingCenter", data=numpy.string_("JPL"))
+    ident.create_dataset("granuleId", data=numpy.bytes_("None"))
+    ident.create_dataset('platformName', data=numpy.bytes_("ALOS-1"))
+    ident.create_dataset("instrumentName", data=numpy.bytes_("PALSAR"))
+    ident.create_dataset("isDithered", data=numpy.bytes_("False"))
+    ident.create_dataset("isMixedMode", data=numpy.bytes_("False"))
+    ident.create_dataset("processingCenter", data=numpy.bytes_("JPL"))
     ident.create_dataset("processingDateTime",
         data=numpy.string_(datetime.datetime.now(datetime.timezone.utc).isoformat()[:19]))
     ident.create_dataset("productLevel", data=numpy.string_("L0B"))
