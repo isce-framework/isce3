@@ -96,7 +96,7 @@ runconfig:
 
             dem_interpolation_method: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
-            # Noise correction options (for ISRO)
+            # Noise correction options
             noise_correction: include('noise_correction_options', required=False)
 
         # Group containing CEOS Analysis Ready Data (CARD) parameters
@@ -239,10 +239,10 @@ dem_download_options:
             y: num(required=False)
 
 pre_process_options:
-    # Number of looks in azimuth
+    # PLACEHOLDER Number of looks in azimuth
     azimuth_looks: int(min=1, required=False)
 
-    # Number of looks in slant range
+    # PLACEHOLDER Number of looks in slant range
     range_looks: int(min=1, required=False)
 
 rtc_options:
@@ -423,6 +423,7 @@ noise_correction_options:
     # Enable/disable noise correction
     apply_correction: bool(required=False)
 
+    # PLACEHOLDER
     correction_type: str(required=False)
 
 worker_options:

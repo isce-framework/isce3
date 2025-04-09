@@ -420,12 +420,12 @@ runconfig:
 
             dem_interpolation_method: biquintic
 
-            # OPTIONAL - if noise correction desired (for ISRO)
+            # OPTIONAL
             noise_correction:
-                # OPTIONAL -
+                # Enable/disable noise correction
                 apply_correction: False
 
-                # OPTIONAL -
+                # PLACEHOLDER
                 correction_type:
 
         # OPTIONAL - Group containing CEOS Analysis Ready Data (CARD) parameters

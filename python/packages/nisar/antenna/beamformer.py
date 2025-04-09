@@ -683,6 +683,10 @@ def get_calib_range_line_idx(cal_path_mask):
     Each rangeline contains either of calibration measurments HCAL,
     BCAL or LCAL.
 
+    In case of corrupted range line with unknown Cal Path type, the
+    respective calibration path type is flagged as INVALID to avoid
+    using it for any of the three valid types.
+
     It also reports noise-only (no transmit) range line indexes.
 
     Parameters
@@ -703,9 +707,12 @@ def get_calib_range_line_idx(cal_path_mask):
     """
     rng_lines_idx = np.arange(cal_path_mask.size, dtype='uint32')
     hcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.HPA]
-    lcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.LNA]
-    bcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.BYPASS]
-    noise_lines_idx = rng_lines_idx[cal_path_mask != CalPath.HPA]
+    lna_mask = (cal_path_mask == CalPath.LNA)
+    lcal_lines_idx = rng_lines_idx[lna_mask]
+    byp_mask = (cal_path_mask == CalPath.BYPASS)
+    bcal_lines_idx = rng_lines_idx[byp_mask]
+    # Noise-only range lines are those tagged as either LNA or BYPASS.
+    noise_lines_idx = rng_lines_idx[lna_mask | byp_mask]
 
     return hcal_lines_idx, bcal_lines_idx, lcal_lines_idx, noise_lines_idx
 

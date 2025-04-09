@@ -14,6 +14,8 @@
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
 
+#include <pybind_isce3/core/Constants.h>
+
 namespace py = pybind11;
 
 using DEMInterp = isce3::geometry::DEMInterpolator;
@@ -63,8 +65,9 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
             .def_property_readonly("have_stats", &DEMInterp::haveStats)
             .def_property("interp_method",
                     py::overload_cast<>(&DEMInterp::interpMethod, py::const_),
-                    py::overload_cast<isce3::core::dataInterpMethod>(
-                            &DEMInterp::interpMethod))
+                    [](DEMInterp& self, py::object method) {
+                        self.interpMethod(duck_method(method));
+                    })
 
             .def("compute_min_max_mean_height",
                     [](DEMInterp& self) {

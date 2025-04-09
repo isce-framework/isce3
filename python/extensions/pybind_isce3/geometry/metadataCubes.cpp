@@ -105,7 +105,7 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("coordinate_x_raster") = nullptr,
             py::arg("coordinate_y_raster") = nullptr,
             py::arg("incidence_angle_raster") = nullptr,
-            py::arg("lo_unit_vector_x_raster") = nullptr,
+            py::arg("los_unit_vector_x_raster") = nullptr,
             py::arg("los_unit_vector_y_raster") = nullptr,
             py::arg("along_track_unit_vector_x_raster") = nullptr,
             py::arg("along_track_unit_vector_y_raster") = nullptr,

@@ -131,8 +131,12 @@ inline void loadFromH5(isce3::io::IGroup & group, Orbit & orbit)
  *
  * @param[in] group         HDF5 group object.
  * @param[in] orbit         Orbit object to be saved.
+ * @param[in] ensureEpochIntegerSeconds   Ensure that the
+ * orbit reference epoch has integer seconds precision
+ * (NISAR specs requirement)
  */
-inline void saveToH5(isce3::io::IGroup & group, const Orbit & orbit)
+inline void saveToH5(isce3::io::IGroup & group, const Orbit & orbit,
+                     const bool ensureEpochIntegerSeconds = true)
 {
     // convert times to vector, get flattened position, velocity
     std::vector<double> time(orbit.size());
@@ -174,7 +178,8 @@ inline void saveToH5(isce3::io::IGroup & group, const Orbit & orbit)
 
     // serialize
     isce3::io::saveToH5(group, "time", time);
-    isce3::io::setRefEpoch(group, "time", orbit.referenceEpoch());
+    isce3::io::setRefEpoch(group, "time", orbit.referenceEpoch(),
+                           ensureEpochIntegerSeconds);
     isce3::io::saveToH5(group, "position", pos, dims, "meters");
     isce3::io::saveToH5(group, "velocity", vel, dims, "meters / second");
     isce3::io::saveToH5(group, "orbitType", orbit_type);
@@ -231,7 +236,17 @@ inline void loadFromH5(isce3::io::IGroup& group, Attitude& att)
     att = isce3::core::Attitude(time, quat, epoch);
 }
 
-inline void saveToH5(isce3::io::IGroup & group, const Attitude& att)
+/**
+ * \brief Save attitude data to HDF5 product.
+ *
+ * @param[in] group         HDF5 group object.
+ * @param[in] att           Attitude object to be saved.
+ * @param[in] ensureEpochIntegerSeconds   Ensure that the
+ * orbit reference epoch has integer seconds precision
+ * (NISAR specs requirement)
+ */
+inline void saveToH5(isce3::io::IGroup & group, const Attitude& att,
+                       const bool ensureEpochIntegerSeconds = true)
 {
     // Flatten quaternion vector.
     int n = att.size();
@@ -248,7 +263,8 @@ inline void saveToH5(isce3::io::IGroup & group, const Attitude& att)
     }
     // Save to disk.
     isce3::io::saveToH5(group, "time", att.time());
-    isce3::io::setRefEpoch(group, "time", att.referenceEpoch());
+    isce3::io::setRefEpoch(group, "time", att.referenceEpoch(),
+                           ensureEpochIntegerSeconds);
     std::array<size_t, 2> dims = {static_cast<size_t>(n), 4};
     isce3::io::saveToH5(group, "quaternions", qflat, dims);
     // TODO convert and save EulerAngles
@@ -310,13 +326,17 @@ inline void loadCalGrid(isce3::io::IGroup & group, const std::string & dsetName,
  * @param[in] dsetName      Dataset name within group
  * @param[in] lut           LUT2d to be saved.
  * @param[in] units         Units of LUT2d data.
+ * @param[in] ensureEpochIntegerSeconds   Ensure that the
+ * orbit reference epoch has integer seconds precision
+ * (NISAR specs requirement)
  */
 template <typename T>
 inline void saveCalGrid(isce3::io::IGroup & group,
                         const std::string & dsetName,
                         const isce3::core::LUT2d<T> & lut,
                         const isce3::core::DateTime & refEpoch,
-                        const std::string & units = "")
+                        const std::string & units = "",
+                        const bool ensureEpochIntegerSeconds = true)
 {
     // Generate uniformly spaced X (slant range) coordinates
     const double x0 = lut.xStart();
@@ -331,7 +351,8 @@ inline void saveCalGrid(isce3::io::IGroup & group,
     // Save coordinates
     isce3::io::saveToH5(group, "slantRange", x, "meters");
     isce3::io::saveToH5(group, "zeroDopplerTime", y);
-    isce3::io::setRefEpoch(group, "zeroDopplerTime", refEpoch);
+    isce3::io::setRefEpoch(group, "zeroDopplerTime", refEpoch,
+                           ensureEpochIntegerSeconds);
 
     // Save LUT2d data
     isce3::io::saveToH5(group, dsetName, lut.data(), units);

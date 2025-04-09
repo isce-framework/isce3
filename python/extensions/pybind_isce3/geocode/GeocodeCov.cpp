@@ -10,6 +10,8 @@
 #include <isce3/geometry/RTC.h>
 #include <isce3/io/Raster.h>
 
+#include <pybind_isce3/core/Constants.h>
+
 namespace py = pybind11;
 
 using isce3::core::parseDataInterpMethod;
@@ -40,9 +42,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
             .def_property("data_interpolator",
                     py::overload_cast<>(
                             &Geocode<T>::dataInterpolator, py::const_),
-                    [](Geocode<T>& self, std::string& method) {
+                    [](Geocode<T>& self, py::object method) {
                         // get interp method
-                        auto data_interpolator = parseDataInterpMethod(method);
+                        auto data_interpolator = duck_method(method);
 
                         // set interp method
                         self.dataInterpolator(data_interpolator);
@@ -189,11 +191,11 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         (in geo-coordinates).
                     phase_screen_raster: isce3.io.Raster, optional
                         Phase screen to be removed before geocoding
-                    az_time_correction: LUT2d
-                        geo2rdr azimuth additive correction, in seconds,
+                    az_time_correction: isce3.core.LUT2d
+                        Azimuth additive correction, in seconds,
                         as a function of azimuth and range
-                    slant_range_correction: LUT2d
-                        geo2rdr slant range additive correction, in meters,
+                    slant_range_correction: isce3.core.LUT2d
+                        Slant range additive correction, in meters,
                         as a function of azimuth and range
                     in_rtc: isce3.io.Raster, optional
                         Input RTC area factor (in slant-range).

@@ -1,6 +1,5 @@
 #include "LUT2d.h"
 
-#include <isce3/core/Constants.h>
 #include <isce3/core/DateTime.h>
 #include <isce3/core/Matrix.h>
 #include <isce3/core/Serialization.h>
@@ -13,23 +12,11 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 
+#include "Constants.h"
+
 namespace py = pybind11;
 
 using isce3::core::LUT2d;
-
-static dataInterpMethod duck_method(py::object method)
-{
-    using isce3::core::dataInterpMethod;
-    using isce3::core::parseDataInterpMethod;
-    if (py::isinstance<py::str>(method)) {
-        return parseDataInterpMethod(py::str(method));
-    } else if (py::isinstance<dataInterpMethod>(method)) {
-        return method.cast<dataInterpMethod>();
-    } else {
-        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-                                            "invalid type for interp method");
-    }
-}
 
 template<typename T>
 void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
@@ -37,6 +24,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
 
     pyLUT2d
         .def(py::init<>())
+        .def(py::init<const T&>())
         .def(py::init([](double xstart, double ystart,
                     double dx, double dy,
                     py::array_t<T, py::array::c_style | py::array::forcecast> & py_data,
@@ -128,7 +116,9 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
             py::arg("y"),
             py::arg("x"))
         .def_property_readonly("have_data", &LUT2d<T>::haveData)
-        .def_property_readonly("ref_value", &LUT2d<T>::refValue)
+        .def_property("ref_value",
+            py::overload_cast<>(&LUT2d<T>::refValue, py::const_),
+            py::overload_cast<const T&>(&LUT2d<T>::refValue))
         .def_property_readonly("x_start",   &LUT2d<T>::xStart)
         .def_property_readonly("y_start",   &LUT2d<T>::yStart)
         .def_property_readonly("x_spacing", &LUT2d<T>::xSpacing)

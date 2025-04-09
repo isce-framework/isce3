@@ -252,7 +252,7 @@ runconfig:
                    B:
                 # Options for split_main_band method
                 split_range_spectrum:
-                    lines_per_block: 1000
+                    lines_per_block: 2048
                     # Bandwidth for lower sub-band SLC in Hz
                     # If unspecified, it is automatically set by the workflow
                     low_band_bandwidth:

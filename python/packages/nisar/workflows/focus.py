@@ -407,41 +407,17 @@ def make_doppler_lut(rawfiles: list[str],
         t = [tmin, tmax]
 
     t = convert_epoch(t, epoch_in, epoch)
-    dop = np.zeros((len(t), len(r)))
-
-    # Using the default EL bounds [-45, 45] deg can cause trouble when looking
-    # near nadir, as this large interval can span both sides of the left-right
-    # ambiguity.  So solve the problem on the sphere a few times using bounding
-    # cases.
-    log.info("Attempting to find reasonable EL search bounds.")
-    ti = t[len(t) // 2]
-    rdr_xyz, _ = orbit.interpolate(ti)
-    qi = attitude.interpolate(ti)
-    el0, el1 = isce3.antenna.get_approx_el_bounds(r[0], az, rdr_xyz, qi, dem)
-    el2, el3 = isce3.antenna.get_approx_el_bounds(r[-1], az, rdr_xyz, qi, dem)
-    el_min, el_max = min(el0, el2), max(el1, el3)
-    log.info(f"Preliminary EL bounds are [{np.rad2deg(el_min) :.3f}, "
-        f"{np.rad2deg(el_max) :.3f}] deg")
-
-    for i, ti in enumerate(t):
-        rdr_xyz, v = orbit.interpolate(ti)
-        qi = attitude.interpolate(ti)
-        for j, rj in enumerate(r):
-            # For very long observations the geometry may change enough that
-            # the bounds become invalid.  If that happens, recalculate.
-            try:
-                tgt_xyz = isce3.antenna.range_az_to_xyz(rj, az, rdr_xyz, qi,
-                    dem, el_min=el_min, el_max=el_max)
-            except RuntimeError:
-                el0, el1 = isce3.antenna.get_approx_el_bounds(rj, az, rdr_xyz,
-                    qi, dem)
-                el_min, el_max = min(el0, el_min), max(el1, el_max)
-                log.info(f"Updating EL bounds to [{np.rad2deg(el_min) :.3f}, "
-                         f"{np.rad2deg(el_max) :.3f}] deg")
-                tgt_xyz = isce3.antenna.range_az_to_xyz(rj, az, rdr_xyz, qi,
-                    dem, el_min=el_min, el_max=el_max)
-            dop[i,j] = los2doppler(tgt_xyz - rdr_xyz, v, wvl)
-    lut = LUT2d(np.asarray(r), t, dop, interp_method, False)
+    lut = isce3.geometry.make_doppler_lut_from_attitude(
+        az_time=t,
+        slant_range=r,
+        orbit=orbit,
+        attitude=attitude,
+        wavelength=wvl,
+        dem=dem,
+        az_angle=az,
+        interp_method=interp_method,
+        bounds_error=False,
+    )
     return fc, lut
 
 

@@ -47,6 +47,8 @@ def test_nisar_l0b_dm2_to_dbf(no_rgcomp, calib, plot, prod_name):
         win_ped=1.0,
         calib=calib,
         amp_cal=None,
-        prod_name=prod_name
+        prod_name=prod_name,
+        sample_delays=11 * [0],
+        sample_delays2=None
     )
     nisar_l0b_dm2_to_dbf(args)
