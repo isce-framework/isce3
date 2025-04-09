@@ -40,7 +40,7 @@ GeoGridParameters::GeoGridParameters(
         throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
     if (length <= 0) {
-        std::string errmsg = "Geogrid width (" + std::to_string(length) +
+        std::string errmsg = "Geogrid length (" + std::to_string(length) +
                              ") has to be larger than 0.";
         throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
