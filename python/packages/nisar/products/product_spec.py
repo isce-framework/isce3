@@ -316,12 +316,16 @@ class ProductSpec:
         """
         Create a new `ProductSpec` object.
 
+        This constructor typically shouldn't be called directly. Instead, the
+        `from_file` and `from_string` methods provide convenient ways to create
+        `ProductSpec` objects from XML files and strings.
+
         Parameters
         ----------
         tree : xml.etree.ElementTree.ElementTree
             The XML element tree containing the product specification.
         version : str
-            The product specification version string.
+            The product specification version string (for example, '1.2.3').
         """
         self._tree = tree
         self.version = version
@@ -334,7 +338,8 @@ class ProductSpec:
         Parameters
         ----------
         xml_string : str
-            The contents of a NISAR product specification XML file.
+            The contents of a NISAR product specification XML file. Must be a string in
+            XML syntax conforming to the NISAR product specification XML format.
         """
         # `ET.fromstring` (and `ET.parse`) skip over comments, so we need to parse the
         # version string separately from the other XML contents.
@@ -350,7 +355,8 @@ class ProductSpec:
         Parameters
         ----------
         xml_path : path-like
-            The path to the XML file.
+            The path to the XML file. Must be a valid XML file conforming to the NISAR
+            product specification XML format.
         """
         xml_string = Path(xml_path).read_text()
         return cls.from_string(xml_string)
