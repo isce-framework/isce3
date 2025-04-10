@@ -18,7 +18,7 @@ conda install -c conda-forge isce3-cpu
 Alternatively, if you have a NVIDIA GPU with CUDA support and the CUDA driver installed, you can use the GPU-enabled package for faster processing:
 
 ```bash
-conda install -c conda-forge isce3-gpu
+conda install -c conda-forge isce3-cuda
 ```
 
 If you need to build ISCE3 from source, please refer to our more in-depth [build instructions](buildinstall.md).
