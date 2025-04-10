@@ -77,9 +77,20 @@ scikit-build-core, you can build using CMake directly.
 
 ```bash
 mkdir build && cd build
-cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=./install
+export CUDAHOSTCXX=$CXX
+export CUDACXX=/usr/local/cuda/bin/nvcc
+cmake .. -GNinja -DWITH_CUDA=ON -DCMAKE_INSTALL_PREFIX=./install
 ninja install
 ```
+
+| Environment variable | Description                 |
+|----------------------|-----------------------------|
+| CUDACXX              | Path to CUDA compiler |
+| CUDAHOSTCXX          | Host compiler used for CUDA code, should match $CXX |
+
+| CMake option       | Description                 |
+|--------------------|-----------------------------|
+| -DWITH_CUDA=ON/OFF | Enable/disable CUDA support |
 
 After installing, make sure to run the unit tests to check that ISCE3
 is behaving as expected:
