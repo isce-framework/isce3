@@ -25,35 +25,13 @@ If you don't have such an environment already, we recommend using
 [miniforge](https://github.com/conda-forge/miniforge) to install all of these
 packages to a self-contained conda environment.
 
-Create an environment for ISCE3 and activate it:
+Using our list of dependencies from `environment.yml`, create an environment
+for ISCE3 and activate it:
 
 ```bash
-conda create -n isce3
+conda env create -f environment.yml
 conda activate isce3
 ```
-
-Create a file called `requirements.txt` containing the following:
-
-```
-eigen
-fftw
-gdal
-h5py
-hdf5
-numpy
-pybind11
-pyre
-pysolid
-python
-ruamel_yaml
-scipy
-shapely
-yamale
-cmake
-pkgconfig
-```
-
-Then run `conda install -y --file requirements.txt` to install them.
 
 Now that you have all the prerequisites, it is time to run the build.
 Pip should handle detecting your python installation and the prerequisites you just installed.
