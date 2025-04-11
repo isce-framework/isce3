@@ -7,7 +7,7 @@ from nisar.antenna.pattern import (TimingFinder, AntennaPattern, AntennaParser,
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.instrument import InstrumentParser
 from nisar.workflows.focus import make_doppler_lut
-from isce3.focus import make_el_lut
+from isce3.focus import make_los_luts
 import numpy as np
 import numpy.testing as npt
 from pathlib import Path
@@ -64,10 +64,10 @@ def test_pattern():
         look_min = 0,
         look_max = math.pi / 2,
     )
-    el_lut = make_el_lut(orbit, attitude,
-                         raw.identification.lookDirection,
-                         dop, wavelength, dem,
-                         rdr2geo_params)
+    el_lut, _, _ = make_los_luts(orbit, attitude,
+                                 raw.identification.lookDirection,
+                                 dop, wavelength, dem,
+                                 rdr2geo_params)
 
     for lut in (None, el_lut):
         ap = AntennaPattern(raw, dem, ant, ins, orbit, attitude, el_lut=lut)

@@ -85,7 +85,7 @@ class L2InSARWriter(L1InSARWriter):
         # seconds since ref epoch
         ref_epoch = radar_grid.ref_epoch
         ref_epoch_str = ref_epoch.isoformat()
-        az_coord_units = f'seconds since {ref_epoch_str}'
+        az_coord_units = f'seconds since {ref_epoch_str[:19]}'
 
         create_dataset_kwargs = {}
         create_dataset_kwargs['chunk_size'] = chunk_size
@@ -104,7 +104,7 @@ class L2InSARWriter(L1InSARWriter):
             cube_group, 'secondaryZeroDopplerAzimuthTime', np.float64, cube_shape,
             zds=zds, yds=yds, xds=xds,
             long_name='zero-Doppler azimuth time',
-            descr='Zero doppler azimuth time of the secondary RSLC image',
+            descr='Zero Doppler azimuth time in seconds since UTC epoch of the reference RSLC image',
             units=az_coord_units, **create_dataset_kwargs)
 
         isce3.geometry.make_radar_grid_cubes(radar_grid, geogrid, heights,
@@ -287,34 +287,22 @@ class L2InSARWriter(L1InSARWriter):
                 complex_interpolation,
                 "Geocoding interpolation algorithm for complex-valued"
                 " datasets",
-                {
-                    "algorithm_type": "Geocoding",
-                },
             ),
             DatasetParams(
                 "demInterpolation",
                 dem_interpolation,
                 "DEM interpolation algorithm",
-                {
-                    "algorithm_type": "Geocoding",
-                },
             ),
             DatasetParams(
                 "floatingGeocodingInterpolation",
                 floating_interpolation,
                 "Geocoding interpolation algorithm for floating point"
                 " datasets",
-                {
-                    "algorithm_type": "Geocoding",
-                },
             ),
             DatasetParams(
                 "integerGeocodingInterpolation",
                 integer_interpolation,
                 "Geocoding interpolation algorithm for integer datasets",
-                {
-                    "algorithm_type": "Geocoding",
-                },
             ),
         ]
 

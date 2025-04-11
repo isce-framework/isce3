@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <vector>
+#include <optional>
 #include <isce3/core/EMatrix.h>
 #include <isce3/core/forward.h>
 #include <isce3/core/LUT2d.h>
@@ -145,6 +146,9 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
  * \param[in]  ellipsoid        ellipsoid object
  * \param[in]  thresholdGeo2rdr threshold for geo2rdr computations
  * \param[in]  numiterGeo2rdr   maximum number of iterations for Geo2rdr convergence
+ * \param[out] maskBlock        Geocoded subswath labels. Each valid pixel is assigned the ID of the subswath
+ *                              that contained the pixel's center. Invalid pixels are assigned 255. If no
+ *                              subswaths mask was specified, each valid pixel is assigned to subswath 1.
  * \param[in]  azimuthFirstLine if applicable, first line of radar data block
  *                              with respect to larger radar data raster, else 0
  * \param[in]  rangeFirstPixel  if applicable, first pixel of radar data block
@@ -163,7 +167,6 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
 template<typename AzRgFunc = isce3::core::Poly2d>
 void geocodeSlc(
         std::vector<EArray2dc64>& geoDataBlocks,
-        EArray2duc8 maskBlock,
         EArray2df64 carrierPhaseBlock,
         EArray2df64 flattenPhaseBlock,
         const std::vector<EArray2dc64>& rdrDataBlocks,
@@ -176,6 +179,7 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& imageGridDoppler,
         const isce3::core::Ellipsoid& ellipsoid,
         const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
+        std::optional<isce3::geocode::EArray2duc8> maskBlock = std::nullopt,
         const size_t& azimuthFirstLine = 0,
         const size_t& rangeFirstPixel = 0,
         const bool flatten = true,

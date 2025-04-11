@@ -234,7 +234,9 @@ def test_estimate_abscal_factor(bandwidth):
 
 # Treat warnings as test failures (internally, the AbsCal tool catches errors during
 # processing of each corner reflector and converts them into warnings).
-@pytest.mark.filterwarnings("error")
+@pytest.mark.filterwarnings(
+    "error:an exception occurred while processing corner reflector"
+)
 def test_nisar_corner_reflector_csv():
     datadir = Path(iscetest.data) / "abscal"
     cr_csv = datadir / "ree_corner_reflectors_nisar.csv"

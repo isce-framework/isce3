@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <pyre/journal.h>
 
 #include <isce3/except/Error.h>
 
@@ -86,6 +87,68 @@ int RangeComp::firstValidSample() const
     }
 
     throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unexpected range compression mode");
+}
+
+void RangeComp::applyNotch(double frequency, double bandwidth)
+{
+    if (frequency < 0.0) {
+        // map [-0.5, 0.5) to [0, 1) for FFTW order
+        frequency += 1.0;
+    }
+    const double center_bin = frequency * fftSize();
+    const long center_bin_idx = std::lround(center_bin);
+
+    if ((center_bin_idx < 0) or (center_bin_idx >= fftSize())) {
+        std::string msg = "notch frequency " + std::to_string(frequency) +
+            " is outside the valid interval [-0.5, 0.5)";
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), msg);
+    }
+    if ((bandwidth < 0.0) or (bandwidth > 1.0)) {
+        std::string msg = "notch bandwidth " + std::to_string(bandwidth) +
+            " is outside the valid interval [0, 1]";
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), msg);
+    }
+
+    pyre::journal::debug_t log("isce.focus.RangeComp");
+
+    if (bandwidth == 0.0) {
+        // set only nearest FFT bin to zero
+        log << "Setting FFT bin " << center_bin_idx << " to zero"
+            << pyre::journal::endl;
+        _reffn[center_bin_idx] = 0.0;
+    } else {
+        // use a cosine taper
+        const auto halfwidth = 0.5 * bandwidth * fftSize();
+        if (halfwidth < 1.0) {
+            pyre::journal::warning_t warn("isce.focus.RangeComp");
+            warn << "Notch bandwidth is less than two FFT bins so it may not be"
+                << " effective.  Consider setting bandwidth=0 to zero-out the "
+                << "nearest FFT bin." << pyre::journal::endl;
+        }
+
+        const auto imin = static_cast<long>(std::ceil(center_bin - halfwidth));
+        const auto imax = static_cast<long>(std::floor(center_bin + halfwidth));
+        log << "Applying notch across " << imax - imin + 1 << " FFT bins" <<
+            pyre::journal::newline;
+
+        for (auto i = imin; i <= imax; ++i) {
+            const float w = 0.5 - 0.5 * std::cos(M_PI * (center_bin - i) /
+                halfwidth);
+            // FFT is periodic, so wrap frequency bin as needed.  Unlike Python,
+            // C++ modulo takes sign of dividend, so i gotta be positive :-D
+            const auto ipos = i >= 0 ? i : i + fftSize();
+            const auto bin = ipos % fftSize();
+            _reffn[bin] *= w;
+
+            // std::format would be nice but it's C++20 so hack with sprintf
+            constexpr auto fmt = "Setting FFT bin %ld to %.8g";
+            auto bufsize = 1 + std::snprintf(nullptr, 0, fmt, bin, w);
+            auto msg = std::vector<char>(bufsize);
+            std::snprintf(msg.data(), bufsize, fmt, bin, w);
+            log << msg.data() << pyre::journal::newline;
+        }
+        log << pyre::journal::endl;
+    }
 }
 
 void RangeComp::rangecompress(std::complex<float> * out,

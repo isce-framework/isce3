@@ -38,10 +38,11 @@ def test_raw():
     dm_flag = raw.identification.diagnosticModeFlag
     rd, wd, wl = raw.getRdWdWl(freq, pol)
     list_rx_trm = raw.getListOfRxTRMs(freq, pol)
+    is_tx_off = raw.is_tx_off(freq, pol)
 
     # Verify assumptions.
     npt.assert_equal(orbit.reference_epoch, attitude.reference_epoch)
-    npt.assert_equal(side, "right")
+    npt.assert_equal(side, "Right")
     npt.assert_equal(raw.isDithered(freq, tx), False)
     npt.assert_equal(raw.sarBand, 'L')
     npt.assert_equal(ds.ndim, 2)
@@ -56,6 +57,11 @@ def test_raw():
                 msg='Shape mismatch between RD, WD, and WL arrays')
     npt.assert_equal(rd_shape, (num_rgl, list_rx_trm.size),
                      err_msg='Wrong shape for RD/WD/WL!')
+    # check whether TX is off
+    npt.assert_equal(
+        is_tx_off, False,
+        err_msg=f'TX is not off for frequency {freq} and pol {pol}!'
+    )
 
     # Check quaternion convention.
     # RCS frame has Y-axis nearly parallel to velocity (for small rotations).

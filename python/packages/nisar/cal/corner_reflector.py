@@ -161,17 +161,17 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
     dtype = np.dtype(
         [
             ("id", np.object_),
-            ("lat", np.float_),
-            ("lon", np.float_),
-            ("height", np.float_),
-            ("az", np.float_),
-            ("el", np.float_),
-            ("side_length", np.float_),
+            ("lat", np.float64),
+            ("lon", np.float64),
+            ("height", np.float64),
+            ("az", np.float64),
+            ("el", np.float64),
+            ("side_length", np.float64),
             ("survey_date", np.object_),
             ("validity", np.int_),
-            ("vel_e", np.float_),
-            ("vel_n", np.float_),
-            ("vel_u", np.float_),
+            ("vel_e", np.float64),
+            ("vel_n", np.float64),
+            ("vel_u", np.float64),
         ]
     )
 

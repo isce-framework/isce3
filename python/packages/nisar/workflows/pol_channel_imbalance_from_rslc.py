@@ -7,7 +7,7 @@ import numpy as np
 import time
 import argparse as argp
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from scipy.interpolate import interp1d
 try:
     import matplotlib.pyplot as plt
@@ -86,7 +86,7 @@ def cr_llh_from_csv(filename, epoch=None, az_heading=None,
 
         else:  # NISAR format
             if epoch is None:
-                epoch = DateTime(datetime.now())
+                epoch = DateTime(datetime.now(timezone.utc))
             crs = parse_and_filter_corner_reflector_csv(
                 filename, epoch, CRValidity.RAD_POL)
 
@@ -345,7 +345,7 @@ def pol_channel_imbalance_from_rslc(args):
     dt_utc_last = dt2str(imb_prod_slc.az_datetime[-1])
     # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
     # used as part of JSON product filename
-    dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+    dt_utc_cur = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
     # form filename of the JSON product
     name_json = (
         f'PolChannelImbSlc_{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.json'

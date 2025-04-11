@@ -59,6 +59,10 @@ def test_point():
     # from default ctor.
     xyz = isce3.geometry.rdr2geo_bracket(t, r, orbit, grid.lookside, 0.0, 0.0)
 
+    # Verify look side parsing
+    with pytest.raises(ValueError):
+        isce3.geometry.rdr2geo_bracket(t, r, orbit, "Foot", 0.0, 0.0)
+
 
 @pytest.fixture(scope="module")
 def unit_test_params():

@@ -21,7 +21,7 @@ runconfig:
             # REQUIRED - Digital elevation model
             dem_file:
 
-            # PLACEHOLDER - Digital elevation model file description, optional
+            # OPTIONAL - Digital elevation model file description, optional
             dem_file_description:
 
             # External orbit file
@@ -38,6 +38,15 @@ runconfig:
             # data driven approch.
             # When refernce_gslc is empty, only the model driven correction will be applied.
             reference_gslc:
+
+            # File containing the locations of the corner reflectors
+            # in the input product.
+            # Required for `point_target_analyzer` QA-CalTools workflow to
+            # generate results. If a file is not provided, or if the corner
+            # file has no useful data for the given input product, then no
+            # results will be generated.
+            # Default: None
+            corner_reflector_file:
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
@@ -57,8 +66,10 @@ runconfig:
         primary_executable:
             product_type: GSLC
             product_version: 0.1.0
+            product_doi:
             composite_release_id:
             processing_type:
+            processing_center:
             partial_granule_id:
 
         debug_level_group:
@@ -312,6 +323,27 @@ runconfig:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
 
+        # OPTIONAL - Group containing CEOS Analysis Ready Data (CARD) parameters
+        # to populate the output product's metadata
+        ceos_analysis_ready_data:
+
+            # Data access for the source data (URL or DOI)
+            source_data_access:
+
+            # Data access for the output product (URL or DOI)
+            product_data_access:
+
+            # Data access for the static layers product associated with the output product (URL or DOI)
+            static_layers_data_access:
+
+            # Estimated geometric accuracy (bias and standard deviation)
+            # in meters in the X- and Y-directions over the coordinate
+            # system defined by the product's EPSG code
+            estimated_geometric_accuracy_bias_x:
+            estimated_geometric_accuracy_bias_y:
+            estimated_geometric_accuracy_standard_deviation_x:
+            estimated_geometric_accuracy_standard_deviation_y:
+
         qa:
 
             workflows:
@@ -326,6 +358,10 @@ runconfig:
                 # on the input file, etc..
                 # Default: True
                 qa_reports: true
+
+                # Flag to run Point Target Analyzer calibration tool.
+                # Default: True
+                point_target_analyzer: true
 
             validation:
 
@@ -419,8 +455,19 @@ runconfig:
                     # Default: (-80.0, 20.0)
                     backscatter_histogram_bin_edges_range: [-80.0, 20.0]
 
+                    # The range for the phase histograms' y-axis.
+                    # Format: [<min of range>, <max of range>]
+                    # Examples: None, [0.0, None], [None, 0.7], [-0.2, 1.2], [None, None]
+                    # If the min or max is set to None, then that limit is set dynamically
+                    # based on the range of phase histogram density values.
+                    # If None, this is equivalent to [None, None].
+                    # Default: (0.0, 0.5)
+                    phase_histogram_y_axis_range: [0.0, 0.5]
+
                     # True to compute phase histogram in radians units,
                     # False for degrees units.
+                    # Note: If False, suggest adjusting `phase_histogram_y_axis_range`
+                    # appropriately for degrees rather than radians.
                     # Default: True
                     phs_in_radians: true
 
@@ -432,3 +479,38 @@ runconfig:
                     # -1 to indicate all rows / all columns (respectively).
                     # Default: (1024, -1)
                     tile_shape: [1024, -1]
+
+            point_target_analyzer:
+
+                # The width, in samples, of the square block of image data
+                # centered around the target position to extract for oversampling
+                # and peak finding. Must be >= 1.
+                # Default: 64
+                nchip: 64
+
+                # The upsampling ratio. Must be >= 1.
+                # Default: 32
+                upsample_factor: 32
+
+                # Option controlling how the target peak position is
+                # estimated. Valid options are 'time' or 'frequency'.
+
+                # 'time':
+                # The peak location is found in the time domain by detecting the
+                # maximum value within a square block of image data around the
+                # expected target location. The signal data is upsampled to
+                # improve precision.
+
+                # 'frequency':
+                # The peak location is found by estimating the phase ramp in the
+                # frequency domain. This mode is useful when the target is
+                # well-focused, has high SNR, and is the only target in the
+                # neighborhood (often the case in point target simulations).
+                # Default: time
+                peak_find_domain: time
+
+                # The number of sidelobes, including the main lobe, to
+                # use for computing the integrated sidelobe ratio (ISLR).
+                # Must be > 1.
+                # Default: 10
+                num_sidelobes: 10

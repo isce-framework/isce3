@@ -28,14 +28,14 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['bandpass_insar']:
         bandpass_insar.run(cfg)
 
-    if run_steps['prepare_insar_hdf5']:
-        prepare_insar_hdf5.run(cfg)
-
     if run_steps['rdr2geo']:
         rdr2geo.run(cfg)
 
     if run_steps['geo2rdr']:
         geo2rdr.run(cfg)
+
+    if run_steps['prepare_insar_hdf5']:
+        prepare_insar_hdf5.run(cfg)
 
     if run_steps['coarse_resample']:
         resample_slc_v2.run(cfg, 'coarse')

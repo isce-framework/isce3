@@ -33,6 +33,23 @@ def get_scalar_or_first(group, key, typeconv = lambda x: x):
     return typeconv(value)
 
 
+def parse_bool(s: np.bytes_) -> bool:
+    """
+    Parse a NISAR string representing a boolean value.
+
+    Parameters
+    ----------
+    s : np.bytes_
+        Byte string
+
+    Returns
+    -------
+    bool
+        True if s equals b'True' (any capitalization), False otherwise
+    """
+    return s.decode("utf-8").lower() == "true"
+
+
 def get_list_from_scalar_or_list(group, key, typeconv = lambda x: x):
     """
     Get a list from an HDF5 dataset that may be either a scalar or list
@@ -81,15 +98,16 @@ class Identification(object):
         self.diagnosticModeName = None
 
         ###Information from mission planning
+        self.isJointObservation = None
         self.isUrgentObservation = None
         self.plannedDatatake = None
         self.plannedObservation = None
-        
-        
-        
+
+
+
         import h5py
 
-        #Any logging context 
+        #Any logging context
         if context is None:
             context = { 'info': journal.info('nisar.reader'),
                         'debug': journal.debug('nisar.reader'),
@@ -100,11 +118,11 @@ class Identification(object):
         #User has an open HDF5 file and is looking into it
         if isinstance(inobj, h5py.Group):
             self.unpack(inobj[path])
-        #User provides HDF5 file and path inside it 
+        #User provides HDF5 file and path inside it
         elif isinstance(inobj, str):
             with h5py.File(inobj, 'r') as fid:
                 self.unpack(fid, path)
-        
+
 
     def unpack(self, h5grp):
         '''
@@ -113,10 +131,10 @@ class Identification(object):
         from nisar.h5 import extractScalar, bytestring, extractWithIterator
         import isce3
 
-        self.missionId = extractScalar(h5grp, 'missionId', 
+        self.missionId = extractScalar(h5grp, 'missionId',
                                       bytestring, self.context['info'],
                                       'Mission could not be identified')
-        self.productType = extractScalar(h5grp, 'productType', 
+        self.productType = extractScalar(h5grp, 'productType',
                                       bytestring, self.context['error'],
                                       'Product type could not be determined')
         self.absoluteOrbitNumber = extractScalar(h5grp, 'absoluteOrbitNumber',
@@ -207,9 +225,17 @@ class Identification(object):
         is_urgent = get_scalar_or_first(h5grp, "isUrgentObservation")
         if isinstance(is_urgent, np.bool_):
             warn("isUrgentObservation is boolean but expected string")
-            self.isUrgentObservation = str(is_urgent)
+            self.isUrgentObservation = bool(is_urgent)
         else:
-            self.isUrgentObservation = bytestring(is_urgent)
+            self.isUrgentObservation = parse_bool(is_urgent)
+
+        # isJointObservation was added in spec v1.2.0.  That's after the bool
+        # type confusion was resolved, so just assume string.
+        try:
+            self.isJointObservation = parse_bool(h5grp["isJointObservation"][()])
+        except KeyError:
+            warn("Could not find isJointObservation in product identification.")
+            # leave as None
 
         ###Processing type info to be added
 

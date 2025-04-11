@@ -36,8 +36,10 @@ def geocode_insar_cfg_check(cfg):
     goff_datasets = ['along_track_offset', 'snr',
                      'along_track_offset_variance',
                      'correlation_surface_peak', 'cross_offset_variance',
-                     'slant_range_offset', 'slant_range_offset_variance']
-    wrapped_datasets = ['coherence_magnitude', 'wrapped_interferogram']
+                     'slant_range_offset', 'slant_range_offset_variance',
+                     'mask']
+    wrapped_datasets = ['coherence_magnitude', 'wrapped_interferogram',
+                        'mask']
 
     # insert both geocode datasets in dict keyed on datasets name
     geocode_datasets = {'gunw_datasets': gunw_datasets,

@@ -69,24 +69,27 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         radar_grid_cubes_heights = proc_cfg["radar_grid_cubes"]["heights"]
 
         radar_grid = self[self.group_paths.RadarGridPath]
-        descrs = ["Solid Earth tides phase along slant range direction",
-                  'Solid Earth tides phase in along-track direction']
+        descrs = ["Solid Earth tides phase along slant range direction at heights"+\
+            f" of {radar_grid_cubes_heights[0]} and {radar_grid_cubes_heights[-1]} meters"]
         product_names = ['slantRangeSolidEarthTidesPhase']
-
+        cube_shapes = [[2,radar_grid_cubes_geogrid.length,
+                        radar_grid_cubes_geogrid.width]]
+        tropo_cube_shape = [len(radar_grid_cubes_heights),
+                            radar_grid_cubes_geogrid.length,
+                            radar_grid_cubes_geogrid.width]
         # Add the troposphere datasets to the radarGrid cube
         if tropo_cfg['enabled']:
             for delay_type in ['wet', 'hydrostatic', 'comb']:
                 if tropo_cfg[f'enable_{delay_type}_product']:
-                    descrs.append(f"{delay_type.capitalize()} component "
-                                  "of the troposphere phase screen")
                     if delay_type == 'comb':
+                        descrs.append("Combined (wet + hydrostatic) component "
+                                    "of the troposphere phase screen")
                         product_names.append(f'combinedTroposphericPhaseScreen')
                     else:
+                        descrs.append(f"{delay_type.capitalize()} component "
+                                    "of the troposphere phase screen")
                         product_names.append(f'{delay_type}TroposphericPhaseScreen')
-
-        cube_shape = [len(radar_grid_cubes_heights),
-                      radar_grid_cubes_geogrid.length,
-                      radar_grid_cubes_geogrid.width]
+                    cube_shapes.append(tropo_cube_shape)
 
         # Retrieve the x, y, and z coordinates from the radargrid cube
         # Since the radargrid cube has been added, it is safe to
@@ -108,7 +111,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
             create_dataset_kwargs['shuffle'] = \
                 self.hdf5_optimizer_config.shuffle_filter
 
-        for product_name, descr in zip(product_names,descrs):
+        for product_name, descr, cube_shape in zip(product_names,descrs,cube_shapes):
             if product_name not in radar_grid:
                 if self.hdf5_optimizer_config.chunk_size is not None:
                     ds_chunk_size = \
@@ -128,7 +131,8 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 ds.attrs['description'] = np.bytes_(descr)
                 ds.attrs['units'] = Units.radian
                 ds.attrs['grid_mapping'] = np.bytes_('projection')
-                ds.dims[0].attach_scale(zds)
+                if product_name not in ['slantRangeSolidEarthTidesPhase']:
+                    ds.dims[0].attach_scale(zds)
                 ds.dims[1].attach_scale(yds)
                 ds.dims[2].attach_scale(xds)
 
@@ -154,6 +158,20 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         new_igram_group_name = \
             f"{self.group_paths.ParametersPath}/unwrappedInterferogram"
         self.move(old_igram_group_name, new_igram_group_name)
+
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
+            number_of_azimuth_looks = \
+                self[f'{new_igram_group_name}/frequency{freq}/numberOfAzimuthLooks']
+            number_of_slant_range_looks = \
+                self[f'{new_igram_group_name}/frequency{freq}/numberOfRangeLooks']
+            number_of_azimuth_looks.attrs['description'] = \
+                np.bytes_('Number of looks applied in the'
+                          ' along-track direction to form the'
+                          ' unwrapped interferogram')
+            number_of_slant_range_looks.attrs['description'] = \
+                np.bytes_('Number of looks applied in the'
+                          ' slant range direction to form the'
+                          ' unwrapped interferogram')
 
         # the wrappedInterfergram group under the processingInformation/parameters
         # group is copied from the RIFG product, but the name in RIFG product is
@@ -203,9 +221,6 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
 
-            rslc_freq_group.copy("numberOfSubSwaths",
-                                 grids_freq_group)
-
             unwrapped_geogrids = geogrids[freq]
             wrapped_geogrids = wrapped_igram_geogrids[freq]
 
@@ -230,32 +245,44 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
             pixeloffsets_group_name = \
                 f"{grids_freq_group_name}/pixelOffsets"
 
-            unwrapped_group = self.require_group(unwrapped_group_name)
+            # Create the mask layer for each group
+            for ds_group_name, ds_geogrid in zip([unwrapped_group_name,
+                                                  wrapped_group_name,
+                                                  pixeloffsets_group_name],
+                                                 [unwrapped_geogrids,
+                                                  wrapped_geogrids,
+                                                  unwrapped_geogrids]):
 
-            # set the geo information for the mask
-            yds, xds = set_get_geo_info(
-                self,
-                unwrapped_group_name,
-                unwrapped_geogrids,
-            )
+                ds_group = self.require_group(ds_group_name)
 
-            # Create mask only if layover shadow mask is created
-            # or if we have a water mask assigned from runconfig
-            if pcfg['rdr2geo']['write_layover_shadow'] or \
-                    self.cfg['dynamic_ancillary_file_group']['water_mask_file'] is not None:
+                # set the geo information for the mask
+                yds, xds = set_get_geo_info(
+                    self,
+                    ds_group_name,
+                    ds_geogrid,
+                )
+
                 self._create_2d_dataset(
-                    unwrapped_group,
+                    ds_group,
                     "mask",
-                    unwrapped_shape,
+                    (ds_geogrid.length,
+                     ds_geogrid.width),
                     np.uint8,
-                    "Byte layer with flags for various channels"
-                    " (e.g. layover/shadow, data quality)"
-                    ,
-                    Units.dn,
-                    grids_val,
+                    ("Combination of water mask and a mask of subswaths of valid samples"
+                     " in the reference RSLC and geometrically-coregistered secondary RSLC."
+                     " Each pixel value is a three-digit number:"
+                     " the most significant digit represents the water flag of that pixel in the reference RSLC,"
+                     " where 1 is water and 0 is non-water;"
+                     " the second digit represents the subswath number of that pixel in the reference RSLC;"
+                     " the least-significant digit represents the subswath number of that pixel in the secondary RSLC."
+                     " A value of '0' in either subswath digit indicates an invalid sample in the corresponding RSLC"),
+                    grid_mapping=grids_val,
                     xds=xds,
                     yds=yds,
+                    fill_value=255,
                 )
+            ds_group['mask'].attrs['valid_min'] = 0
+            ds_group['mask'].attrs['percentage_water'] = 0.0
 
             for pol in pol_list:
                 unwrapped_pol_name = f"{unwrapped_group_name}/{pol}"

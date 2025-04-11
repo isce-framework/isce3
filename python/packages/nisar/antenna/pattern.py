@@ -168,7 +168,7 @@ class AntennaPattern:
         self.el_lut = el_lut
 
         # get pols
-        channels = PolChannelSet.from_raw(raw).regularized()
+        channels = PolChannelSet.from_raw(raw)
         freqs = tuple({chan.freq_id for chan in channels})
         self.freq_band = "A" if "A" in freqs else freqs[0]
         self.txrx_pols = tuple({chan.pol for chan in channels})

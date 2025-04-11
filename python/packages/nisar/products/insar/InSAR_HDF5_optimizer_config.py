@@ -3,12 +3,12 @@ from dataclasses import dataclass
 import journal
 import numpy as np
 from isce3.io import compute_page_size, optimize_chunk_size
-from nisar.workflows.helpers import get_cfg_freq_pols
+from nisar.workflows.helpers import (get_cfg_freq_pols,
+                                     get_pixel_offsets_dataset_shape)
 
 from .utils import (compute_number_of_elements,
                     get_geolocation_grid_cube_shape,
-                    get_interferogram_dataset_shape,
-                    get_pixel_offsets_dataset_shape, get_radar_grid_cube_shape,
+                    get_interferogram_dataset_shape, get_radar_grid_cube_shape,
                     get_unwrapped_interferogram_dataset_shape)
 
 # Float 32 data type size

@@ -80,20 +80,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
         read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
                                         output_terrain_radiometry)
     save_mask = geocode_dict['save_mask']
-    save_dem = geocode_dict['save_dem']
-
-    min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
-    max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
-
-    # optional keyword arguments , i.e. arguments that may or may not be
-    # included in the call to geocode()
-    optional_geo_kwargs = {}
-
-    # read min/max block size converting MB to B
-    if min_block_size_mb is not None:
-        optional_geo_kwargs['min_block_size'] = min_block_size_mb * (2**20)
-    if max_block_size_mb is not None:
-        optional_geo_kwargs['max_block_size'] = max_block_size_mb * (2**20)
 
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']
@@ -225,28 +211,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
         out_geo_rtc_gamma0_to_sigma0_obj = None
 
     # create a NamedTemporaryFile and an ISCE3 Raster object to
-    # temporarily hold the interpolated DEM layer
-    if save_dem:
-        temp_interpolated_dem = tempfile.NamedTemporaryFile(
-            dir=raster_scratch_dir,
-            suffix=secondary_layers_file_extension)
-        if (output_mode ==
-                isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
-            interpolated_dem_width = geogrid.width + 1
-            interpolated_dem_length = geogrid.length + 1
-        else:
-            interpolated_dem_width = geogrid.width
-            interpolated_dem_length = geogrid.length
-        out_geo_dem_obj = isce3.io.Raster(
-            temp_interpolated_dem.name,
-            interpolated_dem_width,
-            interpolated_dem_length, 1,
-            gdal.GDT_Float32, secondary_layer_files_raster_files_format)
-    else:
-        temp_interpolated_dem = None
-        out_geo_dem_obj = None
-
-    # create a NamedTemporaryFile and an ISCE3 Raster object to
     # temporarily hold the mask layer
     if save_mask:
         temp_mask_file = tempfile.NamedTemporaryFile(
@@ -305,9 +269,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
         out_mask_obj.close_dataset()
         del out_mask_obj
 
-    if save_dem:
-        del out_geo_dem_obj
-
     if flag_fullcovariance:
         # out_off_diag_terms_obj.close_dataset()
         del out_off_diag_terms_obj
@@ -353,6 +314,7 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
                      hdf5_obj, root_ds,
                      yds, xds,
                      'mask',
+                     fill_value=255,
                      compute_stats=False)
 
     # save rtc
@@ -368,36 +330,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
                      hdf5_obj, root_ds,
                      yds, xds,
                      'rtcGammaToSigmaFactor',
-                     **output_secondary_layers_kwargs)
-
-    # save interpolated DEM
-    if save_dem:
-
-        '''
-        The DEM is interpolated over the geogrid pixels vertices
-        rather than the pixels centers.
-        '''
-        if (output_mode ==
-                isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
-            dem_geogrid = isce3.product.GeoGridParameters(
-                start_x=geogrid.start_x - geogrid.spacing_x / 2,
-                start_y=geogrid.start_y - geogrid.spacing_y / 2,
-                spacing_x=geogrid.spacing_x,
-                spacing_y=geogrid.spacing_y,
-                width=int(geogrid.width) + 1,
-                length=int(geogrid.length) + 1,
-                epsg=geogrid.epsg)
-            yds_dem, xds_dem = \
-                set_get_geo_info(hdf5_obj, root_ds, dem_geogrid)
-        else:
-            yds_dem = yds
-            xds_dem = xds
-
-        save_dataset(temp_interpolated_dem.name, hdf5_obj,
-                     root_ds, yds_dem, xds_dem,
-                     'interpolatedDem',
-                     long_name='Interpolated DEM',
-                     units='1',
                      **output_secondary_layers_kwargs)
 
     # save GCOV off-diagonal elements
@@ -531,6 +463,8 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.populate_identification_common()
         self.populate_identification_l2_specific()
         self.populate_data_parameters()
+        self.populate_ceos_analysis_ready_data_parameters_l2_common()
+        self.populate_ceos_analysis_ready_data_parameters()
         self.populate_calibration_information()
         self.populate_source_data()
         self.populate_processing_information_l2_common()
@@ -545,16 +479,32 @@ class GcovWriter(BaseL2WriterSingleInput):
 
         self.check_and_decorate_product_using_specs_xml(specs_xml_file)
 
+    def populate_ceos_analysis_ready_data_parameters(self):
+        # Note: CEOS ARD documentation uses the British spelling "Normalised"
+        # rather than the American (US) spelling "Normalized"
+        self.set_value(
+            '{PRODUCT}/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
+            'Normalised Radar Backscatter (NRB)')
+
+        self.set_value(
+            '{PRODUCT}/metadata/ceosAnalysisReadyData/'
+            'outputBackscatterDecibelConversionFormula',
+            '10*log10(<GCOV_TERM>)')
+
     def populate_data_parameters(self):
         """
         Populate the data group `grids` of the GCOV product
         """
         for frequency in self.freq_pols_dict.keys():
+
+            input_swaths_freq_path = ('{PRODUCT}/swaths/'
+                                      f'frequency{frequency}')
+            output_grids_freq_path = ('{PRODUCT}/grids/'
+                                       f'frequency{frequency}')
+
             self.copy_from_input(
-                '{PRODUCT}/grids/'
-                f'frequency{frequency}/numberOfSubSwaths',
-                '{PRODUCT}/swaths/'
-                f'frequency{frequency}/numberOfSubSwaths',
+                f'{output_grids_freq_path}/numberOfSubSwaths',
+                f'{input_swaths_freq_path}/numberOfSubSwaths',
                 skip_if_not_present=True)
 
     def populate_processing_information(self):
@@ -566,10 +516,9 @@ class GcovWriter(BaseL2WriterSingleInput):
         parameters_group = \
             '{PRODUCT}/metadata/processingInformation/parameters'
 
-        # TODO review this
-        self.set_value(
+        self.copy_from_runconfig(
             f'{parameters_group}/noiseCorrectionApplied',
-            True)
+            'processing/noise_correction/apply_correction')
 
         self.set_value(
             f'{parameters_group}/preprocessingMultilookingApplied',
@@ -618,9 +567,10 @@ class GcovWriter(BaseL2WriterSingleInput):
             f'{parameters_group}/validSamplesSubSwathMaskingApplied',
             'processing/geocode/apply_valid_samples_sub_swath_masking')
 
-        self.copy_from_runconfig(
+        # Shadow masking has not been implemented yet, so it's always `False`
+        self.set_value(
             f'{parameters_group}/shadowMaskingApplied',
-            'processing/geocode/apply_shadow_masking')
+            False)
 
         self.copy_from_runconfig(
             f'{parameters_group}/polarimetricSymmetrizationApplied',
@@ -782,10 +732,11 @@ class GcovWriter(BaseL2WriterSingleInput):
                 'outputBackscatterNormalizationConvention',
                 'beta0')
 
+        # CEOS ARD convention is 'Linear amplitude' or 'Linear power'.
         self.set_value(
             f'{parameters_group}/rtc/'
             'outputBackscatterExpressionConvention',
-            'backscatter intensity (linear)')
+            'Linear power')
 
         self.copy_from_runconfig(
             f'{parameters_group}/rtc/memoryMode',
@@ -866,7 +817,3 @@ class GcovWriter(BaseL2WriterSingleInput):
             self.set_value(
                 '{PRODUCT}/metadata/orbit/interpMethod',
                 orbit_interp_method_str)
-
-        self.set_value(
-            '{PRODUCT}/metadata/orbit/referenceEpoch',
-            self.orbit.reference_epoch.isoformat_usec())

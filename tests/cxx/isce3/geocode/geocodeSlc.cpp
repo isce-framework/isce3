@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <optional>
 
 #include <gtest/gtest.h>
 
@@ -205,16 +206,19 @@ TEST(GeocodeTest, TestGeocodeSlc)
                                                                   geoGridWidth);
             maskArr2d.fill(0);
             auto maskArr2dRef = isce3::geocode::EArray2duc8(maskArr2d);
+            auto maskArr2dRefOpt = std::make_optional(maskArr2dRef);
 
             // create empty array for carrier and flattening phases
             // empty arrays do not affect processing
             auto dummy = isce3::core::EArray2D<double>();
 
             // geocodeSlc in array mode and write array to raster
-            isce3::geocode::geocodeSlc(geoDataVec, maskArr2dRef, dummy, dummy,
+            isce3::geocode::geocodeSlc(geoDataVec, dummy, dummy,
                     rdrDataVec, demRaster, radarGrid, radarGrid, geoGrid, orbit,
                     nativeDoppler, imageGridDoppler, ellipsoid,
-                    thresholdGeo2rdr, numiterGeo2rdr, 0, 0, flatten, reramp);
+                    thresholdGeo2rdr, numiterGeo2rdr,
+                    maskArr2dRefOpt,
+                    0, 0, flatten, reramp);
             isce3::io::Raster geocodedSlcArr(filePrefix + "_array.bin",
                     geoGridWidth, geoGridLength, 1, GDT_CFloat32, "ENVI");
             geocodedSlcArr.setBlock(geoDataArr.data(), 0, 0, geoGridWidth,

@@ -91,6 +91,8 @@ void addbinding_apply_rtc(pybind11::module& m)
             py::arg("clip_min") = std::numeric_limits<float>::quiet_NaN(),
             py::arg("clip_max") = std::numeric_limits<float>::quiet_NaN(),
             py::arg("out_sigma") = nullptr,
+            py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+            py::arg("slant_range_correction") = isce3::core::LUT2d<double>(),
             py::arg("input_rtc") = nullptr, py::arg("output_rtc") = nullptr,
             py::arg("rtc_memory_mode") =
                     isce3::core::MemoryModeBlocksY::AutoBlocksY,
@@ -140,6 +142,12 @@ void addbinding_apply_rtc(pybind11::module& m)
               out_sigma : isce3.io.Raster, optional
                   Output sigma surface area (rtc_area_mode = AREA) or area
                   factor (rtc_area_mode = AREA_FACTOR) raster
+              az_time_correction: isce3.core.LUT2d
+                  Azimuth additive correction, in seconds,
+                  as a function of azimuth and range
+              slant_range_correction: isce3.core.LUT2d
+                  Slant range additive correction, in meters,
+                  as a function of azimuth and range
               input_rtc : isce3.io.Raster, optional
                   Raster containing pre-computed RTC area factor
               output_rtc : isce3.io.Raster, optional
@@ -160,6 +168,8 @@ void addbinding_compute_rtc(pybind11::module& m)
                     rtcOutputTerrainRadiometry, rtcAreaMode,
                     rtcAlgorithm, rtcAreaBetaMode,
                     double, float, isce3::io::Raster*,
+                    const isce3::core::LUT2d<double>&,
+                    const isce3::core::LUT2d<double>&,
                     isce3::core::MemoryModeBlocksY,
                     isce3::core::dataInterpMethod, double, int, double,
                     const long long, const long long>(
@@ -180,6 +190,8 @@ void addbinding_compute_rtc(pybind11::module& m)
             py::arg("rtc_min_value_db") =
                     std::numeric_limits<float>::quiet_NaN(),
             py::arg("out_sigma") = nullptr,
+            py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+            py::arg("slant_range_correction") = isce3::core::LUT2d<double>(),
             py::arg("rtc_memory_mode") =
                     isce3::core::MemoryModeBlocksY::AutoBlocksY,
             py::arg("interp_method") =
@@ -220,10 +232,16 @@ void addbinding_compute_rtc(pybind11::module& m)
                  Geogrid upsampling
              rtc_min_value_db : float, optional
                  Minimum value for the RTC area factor. Radar
-              data with RTC area factor below this limit are ignored.
+                 data with RTC area factor below this limit are ignored.
              out_sigma : isce3.io.Raster, optional
                  Output sigma surface area (rtc_area_mode = AREA) or area
                  factor (rtc_area_mode = AREA_FACTOR) raster
+             az_time_correction: isce3.core.LUT2d
+                 Azimuth additive correction, in seconds,
+                 as a function of azimuth and range
+             slant_range_correction: isce3.core.LUT2d
+                 Slant range additive correction, in meters,
+                 as a function of azimuth and range
              rtc_memory_mode : isce3.core.MemoryModeBlocksY, optional
                  Select memory mode
              interp_method : isce3.core.DataInterpMethod, optional
@@ -255,6 +273,8 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     rtcAlgorithm, rtcAreaBetaMode,
                     double, float, isce3::io::Raster*,
                     isce3::io::Raster*, isce3::io::Raster*,
+                    const isce3::core::LUT2d<double>&,
+                    const isce3::core::LUT2d<double>&,
                     isce3::core::MemoryModeBlocksY,
                     isce3::core::dataInterpMethod, double, int, double,
                     const long long, const long long>(
@@ -279,6 +299,8 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     std::numeric_limits<float>::quiet_NaN(),
             py::arg("out_geo_rdr") = nullptr,
             py::arg("out_geo_grid") = nullptr, py::arg("out_sigma") = nullptr,
+            py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+            py::arg("slant_range_correction") = isce3::core::LUT2d<double>(),
             py::arg("rtc_memory_mode") =
                     isce3::core::MemoryModeBlocksY::AutoBlocksY,
             py::arg("interp_method") =
@@ -343,6 +365,12 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
              out_sigma : isce3.io.Raster, optional
                  Output sigma surface area (rtc_area_mode = AREA) or area
                  factor (rtc_area_mode = AREA_FACTOR) raster
+             az_time_correction: isce3.core.LUT2d
+                 Azimuth additive correction, in seconds,
+                 as a function of azimuth and range
+             slant_range_correction: isce3.core.LUT2d
+                 Slant range additive correction, in meters,
+                 as a function of azimuth and range
              rtc_memory_mode : isce3.core.MemoryModeBlocksY, optional
                  Select memory mode
              interp_method : isce3.core.DataInterpMethod, optional

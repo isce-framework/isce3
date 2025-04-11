@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.1.2 -->
+<!-- product specification version is 1.2.1 -->
 <algorithm name="L2_GeocodedSlc"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GSLC_template">
@@ -21,24 +21,21 @@
                  signed="false"
                  width="32">
           <annotation app="conformance"
-                      lang="en"
-                      units="1">Absolute orbit number</annotation>
+                      lang="en">Absolute orbit number</annotation>
         </integer>
         <integer name="/science/LSAR/identification/trackNumber"
                  shape="scalar"
                  signed="false"
-                 width="8">
+                 width="32">
           <annotation app="conformance"
-                      lang="en"
-                      units="1">Track number</annotation>
+                      lang="en">Track number</annotation>
         </integer>
         <integer name="/science/LSAR/identification/frameNumber"
                  shape="scalar"
                  signed="false"
                  width="16">
           <annotation app="conformance"
-                      lang="en"
-                      units="1">Frame number</annotation>
+                      lang="en">Frame number</annotation>
         </integer>
         <string length="0"
                 name="/science/LSAR/identification/missionId"
@@ -65,6 +62,12 @@
                       lang="en">Unique granule identification name</annotation>
         </string>
         <string length="0"
+                name="/science/LSAR/identification/productDoi"
+                shape="scalar">
+           <annotation app="conformance"
+                       lang="en">Digital Object Identifier (DOI) for the product</annotation>
+        </string>
+        <string length="0"
                 name="/science/LSAR/identification/productVersion"
                 shape="scalar">
           <annotation app="conformance"
@@ -88,17 +91,17 @@
           <annotation app="conformance"
                       lang="en">Orbit direction, either "Ascending" or "Descending"</annotation>
         </string>
-        <string length="27"
+        <string length="29"
                 name="/science/LSAR/identification/zeroDopplerStartTime"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Azimuth start time of the product</annotation>
+                      lang="en">Azimuth start time (in UTC) of the product in the format YYYY-mm-ddTHH:MM:SS.sssssssss</annotation>
         </string>
-        <string length="27"
+        <string length="29"
                 name="/science/LSAR/identification/zeroDopplerEndTime"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Azimuth stop time of the product</annotation>
+                      lang="en">Azimuth stop time (in UTC) of the product in the format YYYY-mm-ddTHH:MM:SS.sssssssss</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/plannedDatatakeId"
@@ -151,17 +154,23 @@
                             epsg="4326"
                             lang="en">OGR compatible WKT representing the bounding polygon of the image. Horizontal coordinates are WGS84 longitude followed by latitude (both in degrees), and the vertical coordinate is the height above the WGS84 ellipsoid in meters. The first point corresponds to the start-time, near-range radar coordinate, and the perimeter is traversed in counterclockwise order on the map. This means the traversal order in radar coordinates differs for left-looking and right-looking sensors. The polygon includes the four corners of the radar grid, with equal numbers of points distributed evenly in radar coordinates along each edge</annotation>
         </string>
-        <string length="27"
+        <string length="19"
               name="/science/LSAR/identification/processingDateTime"
               shape="scalar">
               <annotation app="conformance"
-                          lang="en">Processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS</annotation>
+                          lang="en">Processing date and time (in UTC) in the format YYYY-mm-ddTHH:MM:SS</annotation>
         </string>
         <string length="0"
               name="/science/LSAR/identification/radarBand"
               shape="scalar">
               <annotation app="conformance"
                           lang="en">Acquired frequency band, either "L" or "S"</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/platformName"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Name of the platform used to collect the remote sensing data provided in this product</annotation>
         </string>
         <string length="0"
               name="/science/LSAR/identification/instrumentName"
@@ -187,11 +196,25 @@
                 <annotation app="conformance"
                             lang="en">"True" if this product is a composite of data collected in multiple radar modes, "False" otherwise.</annotation>
         </string>
+        <string length="0"
+                name="/science/LSAR/identification/isFullFrame"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en"
+                            frameCoveragePercentage="Percentage of NISAR frame containing processed data"
+                            thresholdPercentage="Threshold percentage used to determine if the product is full frame or partial frame">"True" if the product fully covers a NISAR frame, "False" if partial coverage</annotation>
+        </string>
         <string length="6"
                 name="/science/LSAR/identification/compositeReleaseId"
                 shape="scalar">
                 <annotation app="conformance"
                             lang="en">Unique version identifier of the science data production system</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/isJointObservation"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">"True" if any portion of this product was acquired in a joint observation mode (e.g., L-band and S-band simultaneously), "False" otherwise</annotation>
         </string>
         <!-- End of product identification -->
 
@@ -208,6 +231,7 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      long_name="Y coordinates spacing"
                       units="meters">Nominal spacing in meters between consecutive lines</annotation>
         </real>
         <real name="/science/LSAR/GSLC/grids/frequencyA/xCoordinateSpacing"
@@ -215,6 +239,7 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      long_name="X coordinates spacing"
                       units="meters">Nominal spacing in meters between consecutive pixels</annotation>
         </real>
         <real name="/science/LSAR/GSLC/grids/frequencyA/rangeBandwidth"
@@ -266,6 +291,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -278,6 +305,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/grids/frequencyA/yCoordinates"
@@ -285,26 +317,44 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
 
         <!-- 2D CF compliant rasters -->
         <!-- Number of layers in actual product will depend on list of available polarizations above -->
         <integer name="/science/LSAR/GSLC/grids/frequencyA/mask"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               signed="false"
               width="8">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      grid_mapping="projection"
+                      long_name="Valid samples subswath mask"
                       valid_min="0"
-                      _FillValue="255"
-                      units="1">GSLC mask</annotation>
+                      _FillValue="255">Mask indicating the subswath number representing valid GSLC samples. Each GSLC pixel is assumed valid if all the pixels in the interpolation window are fully focused in the input RSLC. A value of `0` indicates that at least one RSLC pixel in the interpolation window is partially focused or invalid. Pixels outside of the radar acquisition extent are filled with the value `255`.</annotation>
         </integer>
         <real name="/science/LSAR/GSLC/grids/frequencyA/HH"
               shape="complexDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image HH"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (HH)</annotation>
           <annotation app="io" kwd="complex" />
@@ -314,6 +364,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image HV"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (HV)</annotation>
           <annotation app="io" kwd="complex" />
@@ -323,6 +384,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image VH"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (VH)</annotation>
           <annotation app="io" kwd="complex" />
@@ -332,6 +404,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image VV"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (VV)</annotation>
           <annotation app="io" kwd="complex" />
@@ -341,6 +424,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image RH"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (RH)</annotation>
           <annotation app="io" kwd="complex" />
@@ -350,6 +444,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image RV"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (RV)</annotation>
           <annotation app="io" kwd="complex" />
@@ -365,7 +470,7 @@
                       lang="en"
                       units="1">Number of swaths of continuous imagery, due to transmit gaps</annotation>
         </integer>
-        
+
         <!-- Main layers for frequencyB -->
         <!-- Scalars -->
         <string length="2"
@@ -379,6 +484,7 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      long_name="Y coordinates spacing"
                       units="meters">Nominal spacing in meters between consecutive lines</annotation>
         </real>
         <real name="/science/LSAR/GSLC/grids/frequencyB/xCoordinateSpacing"
@@ -386,6 +492,7 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      long_name="X coordinates spacing"
                       units="meters">Nominal spacing in meters between consecutive pixels</annotation>
         </real>
         <real name="/science/LSAR/GSLC/grids/frequencyB/rangeBandwidth"
@@ -437,6 +544,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -449,6 +558,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/grids/frequencyB/yCoordinates"
@@ -456,26 +570,44 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
 
         <!-- 2D CF compliant rasters -->
         <!-- Number of layers in actual product will depend on list of available polarizations above -->
         <integer name="/science/LSAR/GSLC/grids/frequencyB/mask"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               signed="false"
               width="8">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      grid_mapping="projection"
+                      long_name="Valid samples subswath mask"
                       valid_min="0"
-                      _FillValue="255"
-                      units="1">GSLC mask</annotation>
+                      _FillValue="255">Mask indicating the subswath number representing valid GSLC samples. Each GSLC pixel is assumed valid if all the pixels in the interpolation window are fully focused in the input RSLC. A value of `0` indicates that at least one RSLC pixel in the interpolation window is partially focused or invalid. Pixels outside of the radar acquisition extent are filled with the value `255`.</annotation>
         </integer>
         <real name="/science/LSAR/GSLC/grids/frequencyB/HH"
               shape="complexDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image HH"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (HH)</annotation>
           <annotation app="io" kwd="complex" />
@@ -485,6 +617,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image HV"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (HV)</annotation>
           <annotation app="io" kwd="complex" />
@@ -494,6 +637,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image VH"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (VH)</annotation>
           <annotation app="io" kwd="complex" />
@@ -503,6 +657,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image VV"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (VV)</annotation>
           <annotation app="io" kwd="complex" />
@@ -512,6 +677,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image RH"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (RH)</annotation>
           <annotation app="io" kwd="complex" />
@@ -521,6 +697,17 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                      max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                      mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                      sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
+                      min_real_value="Minimum value of the real part of the numeric data points"
+                      max_real_value="Maximum value of the real part of the numeric data points"
+                      mean_real_value="Arithmetic average of the real part of the numeric data points"
+                      sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                      long_name="Geocoded single-look complex image RVH"
+                      grid_mapping='projection'
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (RV)</annotation>
           <annotation app="io" kwd="complex" />
@@ -536,22 +723,87 @@
                       lang="en"
                       units="1">Number of swaths of continuous imagery, due to transmit gaps</annotation>
         </integer>
-        
+
+        <!-- Start of CEOS ARD metadata -->
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/ceosAnalysisReadyData/boundingBox"
+                shape="scalar">
+                <annotation app="conformance"
+                            epsg="EPSG code"
+                            lang="en">OGR compatible WKT representing the bounding box of the product (the union of the geocoded grid for available frequency A and frequency B image datasets). Horizontal coordinates are X and Y directions of the geocoded grid coordinate system, and the vertical coordinate is the height above the WGS84 ellipsoid in meters. The first point corresponds to the top left edge of the bounding box. The remaining points are traversed in counterclockwise order on the map. The fifth point closes the bounding box by repeating the first point</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/ceosAnalysisReadyData/staticLayersDataAccess"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Location of the static layers product associated with this product (URL or DOI)</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">CEOS Analysis Ready Data (CARD) product type</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataDocumentIdentifier"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">CEOS Analysis Ready Data (CARD) document identifier</annotation>
+        </string>
+
+       <!-- Geometric accuracy -->
+       <real name="/science/LSAR/GSLC/metadata/ceosAnalysisReadyData/geometricAccuracy/bias/y"
+             shape="scalar"
+             width="32">
+             <annotation app="conformance"
+                         lang="en"
+                         epsg="EPSG code"
+                         units="meters">An estimate of the localization error bias in the Y/northing direction</annotation>
+       </real>
+       <real name="/science/LSAR/GSLC/metadata/ceosAnalysisReadyData/geometricAccuracy/bias/x"
+             shape="scalar"
+             width="32">
+             <annotation app="conformance"
+                         lang="en"
+                         epsg="EPSG code"
+                         units="meters">An estimate of the localization error bias in the X/easting direction</annotation>
+       </real>
+       <real name="/science/LSAR/GSLC/metadata/ceosAnalysisReadyData/geometricAccuracy/standardDeviation/y"
+             shape="scalar"
+             width="32">
+             <annotation app="conformance"
+                         lang="en"
+                         epsg="EPSG code"
+                         units="meters">An estimate of the localization error standard deviation in the Y/northing direction</annotation>
+       </real>
+       <real name="/science/LSAR/GSLC/metadata/ceosAnalysisReadyData/geometricAccuracy/standardDeviation/x"
+             shape="scalar"
+             width="32">
+             <annotation app="conformance"
+                         lang="en"
+                         epsg="EPSG code"
+                         units="meters">An estimate of the localization error standard deviation in the X/easting direction</annotation>
+       </real>
+
         <!-- Start of Metadata cube -->
         <real name="/science/LSAR/GSLC/metadata/radarGrid/zeroDopplerAzimuthTime"
               shape="radarCubeShape"
               width="64">
           <annotation app="conformance"
                       lang="en"
-                      long_name="Zero-Doppler azimuth time"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      _FillValue="nan"
+                      long_name="Zero Doppler azimuth time"
                       grid_mapping="projection"
-                      units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler azimuth time in seconds</annotation>
+                      units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler azimuth time in seconds since UTC epoch</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/slantRange"
               shape="radarCubeShape"
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      _FillValue="nan"
                       long_name="Slant range"
                       grid_mapping="projection"
                       units="meters">Slant range in meters</annotation>
@@ -561,6 +813,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       valid_max="90.0"
                       valid_min="0.0"
                       _FillValue="nan"
@@ -573,6 +826,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       valid_max="1.0"
                       valid_min="-1.0"
                       _FillValue="nan"
@@ -585,6 +839,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       valid_max="1.0"
                       valid_min="-1.0"
                       _FillValue="nan"
@@ -599,6 +854,7 @@
                       lang="en"
                       valid_max="1.0"
                       valid_min="-1.0"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       long_name="Along-track unit vector X"
@@ -611,6 +867,7 @@
                       lang="en"
                       valid_max="1.0"
                       valid_min="-1.0"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       long_name="Along-track unit vector Y"
@@ -623,6 +880,7 @@
                       lang="en"
                       valid_max="90.0"
                       valid_min="0.0"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       long_name="Elevation angle"
@@ -633,6 +891,7 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       long_name="Ground track velocity"
@@ -652,6 +911,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -664,6 +925,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/yCoordinates"
@@ -671,20 +937,22 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
-        </real>
-        <real name="/science/LSAR/GSLC/metadata/radarGrid/groundTrackVelocity"
-              shape="radarGridShape"
-              width="64">
-              <annotation app="conformance"
-                          lang="en"
-                          units="meters / second">Absolute value of the platform velocity scaled at the target height</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/heightAboveEllipsoid"
               shape="radarCubeHeight"
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          standard_name = "height_above_reference_ellipsoid"
                           units="meters">Height values above WGS84 Ellipsoid corresponding to the radar grid</annotation>
         </real>
 
@@ -703,6 +971,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -713,6 +983,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/geometry/xCoordinates"
@@ -720,6 +995,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/geometry/beta0"
@@ -727,6 +1007,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">2D LUT to convert DN to beta 0 assuming as a function of geographical location</annotation>
@@ -736,6 +1017,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">2D LUT to convert DN to sigma 0 assuming as a function of geographical location</annotation>
@@ -745,6 +1027,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="1">2D LUT to convert DN to gamma 0 as a function of geographical location</annotation>
@@ -766,30 +1049,43 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
                         lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
         </integer>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/yCoordinates"	
-              shape="calibrationLength"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">Y coordinates in specified projection</annotation>	
-        </real>	
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/xCoordinates"	
-              shape="calibrationWidth"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">X coordinates in specified projection</annotation>	
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/HH"
               shape="antennaPatternComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -800,6 +1096,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -810,6 +1107,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -820,6 +1118,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -830,6 +1129,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -840,6 +1140,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -858,30 +1159,43 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
                         lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
         </integer>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/yCoordinates"	
-              shape="calibrationLength"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">Y coordinates in specified projection</annotation>	
-        </real>	
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/xCoordinates"	
-              shape="calibrationWidth"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">X coordinates in specified projection</annotation>	
-        </real>    
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>
+        </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/HH"
               shape="antennaPatternComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -892,6 +1206,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -902,6 +1217,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -912,6 +1228,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -922,6 +1239,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -932,6 +1250,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
@@ -941,7 +1260,7 @@
 
         <!-- Start of noise pattern -->
         <!-- Ideally corresponds to number of available polarizations -->
-        <integer name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/projection"
+        <integer name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/projection"
                  shape="scalar"
                  signed="false"
                  width="32">
@@ -954,84 +1273,122 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
                         lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
         </integer>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/yCoordinates"	
-              shape="calibrationLength"	
-              width="64">	
-              <annotation app="conformance"	
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
                           lang="en"
-                          _FillValue="nan"
-                          grid_mapping="projection"	
-                          units="meters">Y coordinates in specified projection</annotation>	
-        </real>	
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/xCoordinates"	
-              shape="calibrationWidth"	
-              width="64">	
-              <annotation app="conformance"	
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
                           lang="en"
-                          _FillValue="nan"
-                          grid_mapping="projection"		
-                          units="meters">X coordinates in specified projection</annotation>	
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/HH"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/HH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/HV"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/HV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/VH"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/VH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/VV"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/VV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/RH"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/RH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/RV"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/noiseEquivalentBackscatter/RV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <integer name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/projection"
+        <integer name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/projection"
                  shape="scalar"
                  signed="false"
                  width="32">
@@ -1044,78 +1401,120 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
                         lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
         </integer>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/yCoordinates"	
-              shape="calibrationLength"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">Y coordinates in specified projection</annotation>	
-        </real>	
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/xCoordinates"	
-              shape="calibrationWidth"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">X coordinates in specified projection</annotation>	
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/HH"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/HH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/HV"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/HV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/VH"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/VH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/VV"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/VV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/RH"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/RH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/RV"
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/noiseEquivalentBackscatter/RV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
                       _FillValue="nan"
-                      grid_mapping="projection"	
-                      units="1">Noise equivalent sigma zero</annotation>
+                      grid_mapping="projection"
+                      units="1">Noise equivalent backscatter in linear scale (units of DN^2)</annotation>
         </real>
         <!-- End of noise patterns -->
 
@@ -1151,7 +1550,7 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          units="1">Crosstalk in V-recieve channel expressed as ratio rxH / rxV</annotation>
+                          units="1">Crosstalk in V-receive channel expressed as ratio rxH / rxV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
 
@@ -1632,66 +2031,61 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      spacing="">1-D array in frequency domain for azimuth processing. This is used for processing L0b to L1. FFT length=256 (assumed)</annotation>
+                      units="1">1-D array in frequency domain for azimuth processing. This is used for processing L0b to L1. FFT length=256 (assumed)</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/processingInformation/parameters/rangeChirpWeighting"
               shape="chirpWeightingFrequencyLength"
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      spacing="">1-D array in frequency domain for range processing. This is used for processing L0b to L1. FFT length=256 (assumed)</annotation>
+                      window_shape="Parameter that controls the shape of the apodization window"
+                      window_name='Name of the apodization window, e.g., "Kaiser"'
+                      units="1">1-D array in frequency domain for range processing. This is used for processing L0b to L1. FFT length=256 (assumed)</annotation>
         </real>
 
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/dryTroposphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en"
-                            units="1">Flag to indicate if the dry tropospheric correction has been applied to improve geolocation</annotation>
+                            lang="en">Flag to indicate if the dry tropospheric correction has been applied to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/wetTroposphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en"
-                            units="1">Flag to indicate if the wet tropospheric correction has been applied to improve geolocation</annotation>
+                            lang="en">Flag to indicate if the wet tropospheric correction has been applied to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/rangeIonosphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en"
-                            units="1">Flag to indicate if the range ionospheric correction has been applied to improve geolocation</annotation>
+                            lang="en">Flag to indicate if the range ionospheric correction has been applied to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/azimuthIonosphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en"
-                            units="1">Flag to indicate if the azimuth ionospheric correction has been applied to improve geolocation</annotation>
+                            lang="en">Flag to indicate if the azimuth ionospheric correction has been applied to improve geolocation</annotation>
         </string>
         <string length="0"
-                name="/science/LSAR/GSLC/metadata/processingInformation/parameters/rfiCorrectionApplied"
+                name="/science/LSAR/GSLC/metadata/processingInformation/parameters/rfiMitigationApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en"
-                            units="1">Flag to indicate if the input RSLC was corrected for RFI </annotation>
+                            lang="en">Flag to indicate if an RFI mitigation has been applied</annotation>
         </string>
 
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/ellipsoidalFlatteningApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en"
-                            units="1">Flag to indicate if the GSLC phase has been flattened with respect to a zero height ellipsoid</annotation>
+                            lang="en">Flag to indicate if the GSLC phase has been flattened with respect to a zero height ellipsoid</annotation>
         </string>
 
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/topographicFlatteningApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en"
-                            units="1">Flag to indicate if the GSLC phase has been flattened with respect to topographic height using a DEM</annotation>
+                            lang="en">Flag to indicate if the GSLC phase has been flattened with respect to topographic height using a DEM</annotation>
         </string>
 
         <!-- Terrain height dependent parameters -->
@@ -1717,6 +2111,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -1727,6 +2123,8 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/processingInformation/parameters/xCoordinates"
@@ -1734,6 +2132,8 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
 
@@ -1750,6 +2150,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -1760,6 +2162,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/processingInformation/parameters/frequencyA/xCoordinates"
@@ -1767,6 +2174,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/processingInformation/parameters/frequencyA/dopplerCentroid"
@@ -1774,6 +2186,7 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="hertz">2D LUT of Doppler centroid for frequency A</annotation>
@@ -1792,6 +2205,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -1802,6 +2217,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/processingInformation/parameters/frequencyB/xCoordinates"
@@ -1809,6 +2229,11 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/processingInformation/parameters/frequencyB/dopplerCentroid"
@@ -1816,9 +2241,129 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
                       units="hertz">2D LUT of Doppler centroid for frequency B</annotation>
+        </real>
+
+        <!-- Timing correction LUTs -->
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/azimuthIonosphere"
+              shape="timingCorrectionShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      _FillValue="nan"
+                      units="seconds">2D lookup table of azimuth ionosphere timing correction derived from Total Electron Content data</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/slantRangeIonosphere"
+              shape="timingCorrectionShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      _FillValue="nan"
+                      units="meters">2D lookup table of line-of-sight ionosphere timing correction derived from Total Electron Content data</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/slantRangeSolidEarthTides"
+              shape="timingCorrectionShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      _FillValue="nan"
+                      units="meters">2D lookup table of line-of-sight solid Earth tides timing correction</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/slantRange"
+              shape="timingCorrectionWidth"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Slant range dimension corresponding to the timing correction lookup tables</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/slantRangeSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Slant range spacing of the timing correction lookup tables</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/zeroDopplerTime"
+              shape="timingCorrectionLength"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time dimension since UTC epoch corresponding to the timing correction lookup tables</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/zeroDopplerTimeSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="seconds">Time interval in the along-track direction of the timing correction lookup tables</annotation>
+        </real>
+
+                <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/azimuthIonosphere"
+              shape="timingCorrectionShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      _FillValue="nan"
+                      units="seconds">2D lookup table of azimuth ionosphere timing correction derived from Total Electron Content data</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/slantRangeIonosphere"
+              shape="timingCorrectionShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      _FillValue="nan"
+                      units="meters">2D lookup table of line-of-sight ionosphere timing correction derived from Total Electron Content data</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/slantRangeSolidEarthTides"
+              shape="timingCorrectionShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      _FillValue="nan"
+                      units="meters">2D lookup table of line-of-sight solid Earth tides timing correction</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/slantRange"
+              shape="timingCorrectionWidth"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Slant range dimension corresponding to the timing correction lookup tables</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/slantRangeSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Slant range spacing of the timing correction lookup tables</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/zeroDopplerTime"
+              shape="timingCorrectionLength"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time dimension since UTC epoch corresponding to the timing correction lookup tables</annotation>
+        </real>
+
+        <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/zeroDopplerTimeSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="seconds">Time interval in the along-track direction of the timing correction lookup tables</annotation>
         </real>
 
         <!-- Orbit ephemeris -->
@@ -1827,7 +2372,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Time vector record. This record contains the time corresponding to position and velocity records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Time vector record. This record contains the time since UTC epoch corresponding to position and velocity records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/orbit/position"
               shape="orbitShape"
@@ -1855,14 +2400,14 @@
                 <annotation app="conformance"
                             lang="en">Orbit interpolation method, either "Hermite" or "Legendre"</annotation>
        </string>
-                
+
         <!-- Attitude records -->
         <real name="/science/LSAR/GSLC/metadata/attitude/time"
-              shape="orbitListLength"
+              shape="attitudeListLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Time vector record. This record contains the time corresponding to attitude and quaternion records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Time vector record. This record contains the time since UTC epoch corresponding to attitude and quaternion records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/attitude/quaternions"
               shape="attitudeQuaternionShape"
@@ -1894,7 +2439,7 @@
         </string>
 
         <!-- Versions of various algorithm modules used -->
-        <string length="27"
+        <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/algorithms/softwareVersion"
                 shape="scalar">
                 <annotation app="conformance"
@@ -1902,13 +2447,13 @@
         </string>
 
         <!-- Versions of various algorithm modules used -->
-        <string length="27"
+        <string length="0"
               name="/science/LSAR/GSLC/metadata/processingInformation/algorithms/demInterpolation"
               shape="scalar">
           <annotation app="conformance"
                       lang="en">DEM interpolation method</annotation>
         </string>
-        <string length="27"
+        <string length="0"
               name="/science/LSAR/GSLC/metadata/processingInformation/algorithms/geocoding"
               shape="scalar">
           <annotation app="conformance"
@@ -1950,6 +2495,12 @@
 
         <!-- Source data (RSLC) information -->
         <string length="0"
+                 name="/science/LSAR/GSLC/metadata/sourceData/productDoi"
+                 shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Digital Object Identifier (DOI) of the source product</annotation>
+        </string>
+        <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/productVersion"
                 shape="scalar">
           <annotation app="conformance"
@@ -1967,11 +2518,35 @@
           <annotation app="conformance"
                       lang="en">Source data product level. Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
         </string>
-        <string  length="27"
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/productGeometry"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Source data product geometry, either "Slant range" or "Ground range"</annotation>
+        </string>
+        <string length="19"
               name="/science/LSAR/GSLC/metadata/sourceData/processingDateTime"
               shape="scalar">
               <annotation app="conformance"
-                          lang="en">Source data processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS</annotation>
+                          lang="en">Source data processing date and time (in UTC) in the format YYYY-mm-ddTHH:MM:SS</annotation>
+        </string>
+        <string  length="0"
+              name="/science/LSAR/GSLC/metadata/sourceData/processingCenter"
+              shape="scalar">
+              <annotation app="conformance"
+                          lang="en">Source data processing center</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/productType"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Product type of the source data</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/granuleId"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Unique granule identification name of the source data</annotation>
         </string>
         <string name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/runConfigurationContents"
               length="0"
@@ -1991,7 +2566,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"
@@ -2005,7 +2580,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyA/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"
@@ -2026,7 +2601,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyB/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"
@@ -2057,43 +2632,37 @@
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/rangeCompression"
                 shape="scalar">
-          <annotation algorithm_type="range processing"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for focusing the data in the range direction corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/elevationAntennaPatternCorrection"
                 shape="scalar">
-          <annotation algorithm_type="range processing"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for calibrating the antenna pattern corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/rangeSpreadingLossCorrection"
                 shape="scalar">
-          <annotation algorithm_type="range processing"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for calibrating range fading corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/dopplerCentroidEstimation"
                 shape="scalar">
-          <annotation algorithm_type="doppler centroid estimation"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for calculating Doppler centroid corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/azimuthPresumming"
                 shape="scalar">
-          <annotation algorithm_type="azimuth regridding"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for regridding and filling gaps in the raw data in azimuth corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/azimuthCompression"
                 shape="scalar">
-          <annotation algorithm_type="azimuth regridding"
-                      app="conformance"
+          <annotation app="conformance"
                       lang="en">Algorithm for focusing the data in the azimuth direction corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
@@ -2102,12 +2671,17 @@
                 <annotation app="conformance"
                             lang="en">Software version used for processing the source data</annotation>
         </string>
-        <string length="27"
+        <string length="29"
                 name="/science/LSAR/GSLC/metadata/sourceData/swaths/zeroDopplerStartTime"
                 shape="scalar">
               <annotation app="conformance"
-                          lang="en"
-                          units="seconds">Azimuth start time of the source data product</annotation>
+                          lang="en">Azimuth start time (in UTC) of the source data product in the format YYYY-mm-ddTHH:MM:SS.sssssssss</annotation>
+       </string>
+       <string length="29"
+               name="/science/LSAR/GSLC/metadata/sourceData/swaths/zeroDopplerEndTime"
+               shape="scalar">
+            <annotation app="conformance"
+                        lang="en">Azimuth stop time (in UTC) of the source data product in the format YYYY-mm-ddTHH:MM:SS.sssssssss</annotation>
        </string>
         <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/zeroDopplerTimeSpacing"
               shape="scalar"
@@ -2124,14 +2698,55 @@
                           lang="en"
                           units="seconds">Number of azimuth lines within the source data product</annotation>
         </integer>
-        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/rangeBandwidth"
+        <string length="2"
+              name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/listOfPolarizations"
+              shape="numberOfSourceDataFrequencyAPolarizations">
+          <annotation app="conformance"
+                      lang="en">List of polarization layers with frequency A within the source data product</annotation>
+        </string>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/sceneCenterAlongTrackResolution"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal along-track resolution in meters of the source data at scene center</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/rangeResolution"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal range resolution in meters of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/sceneCenterAlongTrackSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal along-track spacing in meters between consecutive lines near mid swath of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/sceneCenterGroundRangeSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal ground range spacing in meters between consecutive pixels near mid swath of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/acquiredRangeBandwidth"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Source data acquisition range bandwidth in hertz. In case of mode combination, this corresponds to mode with largest bandwidth</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/processedRangeBandwidth"
               shape="scalar"
               width="64">
           <annotation app="conformance"
                       lang="en"
                       units="hertz">Source data processed range bandwidth in hertz</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/azimuthBandwidth"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/processedAzimuthBandwidth"
               shape="scalar"
               width="64">
           <annotation app="conformance"
@@ -2167,14 +2782,69 @@
                           lang="en"
                           units="1">Number of slant range samples for each azimuth line within the source data</annotation>
         </integer>
-        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/rangeBandwidth"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/nearRangeIncidenceAngle"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Near-range incidence angle in degrees at the central azimuth line. The incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/farRangeIncidenceAngle"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Far-range incidence angle in degrees at the central azimuth line. The incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
+        </real>
+        <string length="2"
+              name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/listOfPolarizations"
+              shape="numberOfSourceDataFrequencyBPolarizations">
+          <annotation app="conformance"
+                      lang="en">List of polarization layers with frequency B within the source data product</annotation>
+        </string>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/sceneCenterAlongTrackResolution"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal along-track resolution in meters of the source data at scene center</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/rangeResolution"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal range resolution in meters of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/sceneCenterAlongTrackSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal along-track spacing in meters between consecutive lines near mid swath of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/sceneCenterGroundRangeSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Nominal ground range spacing in meters between consecutive pixels near mid swath of the source data</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/acquiredRangeBandwidth"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Source data acquisition range bandwidth in hertz. In case of mode combination, this corresponds to mode with largest bandwidth</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/processedRangeBandwidth"
               shape="scalar"
               width="64">
           <annotation app="conformance"
                       lang="en"
                       units="hertz">Source data processed range bandwidth in hertz</annotation>
         </real>
-        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/azimuthBandwidth"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/processedAzimuthBandwidth"
               shape="scalar"
               width="64">
           <annotation app="conformance"
@@ -2210,6 +2880,20 @@
                           lang="en"
                           units="1">Number of slant range samples for each azimuth line within the source data</annotation>
         </integer>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/nearRangeIncidenceAngle"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Near-range incidence angle in degrees at the central azimuth line. The incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/farRangeIncidenceAngle"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Far-range incidence angle in degrees at the central azimuth line. The incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
+        </real>
       </nodes>
     </science>
 
@@ -2249,15 +2933,6 @@
                       name="numberOfFrequencies"/>
     </shape>
 
-    <!-- Unifying dimension across all rasters -->
-    <shape name="yCoordinateLength"
-           order="slowest...fastest">
-           <annotation app="conformance"
-                       lang="en">Number of lines in all L-SAR imagery datasets</annotation>
-           <dimension extent="0"
-                      name="yCoordinateLength"/>
-    </shape>
-
     <!-- Frequency A related shapes -->
     <shape name="numberOfFrequencyAPolarizations"
            order="slowest...fastest">
@@ -2274,6 +2949,13 @@
                       name="frequencyAWidth"/>
 
     </shape>
+    <shape name="numberOfSourceDataFrequencyAPolarizations"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Number of polarization layers associated with L-SAR frequency A</annotation>
+           <dimension extent="0"
+                      name="numberOfSourceDataFrequencyAPolarizations"/>
+    </shape>
     <shape name="frequencyALength"
            order="slowest...fastest">
            <annotation app="conformance"
@@ -2284,12 +2966,21 @@
     <shape name="complexDataFrequencyAShape"
            order="slowest...fastest">
            <annotation app="conformance"
-                       lang="en">Shape associated with L-SAR frequency A imagery datasets</annotation> 
+                       lang="en">Shape associated with L-SAR frequency A imagery datasets</annotation>
            <dimension extent="0"
-                      name="yCoordinateLength"/>
+                      name="frequencyALength"/>
            <dimension extent="0"
                       name="frequencyAWidth"/>
            <dimension name="complex" extent="2"/>
+    </shape>
+    <shape name="realDataFrequencyAShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape associated with L-SAR frequency A real-valued raster layers</annotation>
+           <dimension extent="0"
+                      name="frequencyALength"/>
+           <dimension extent="0"
+                      name="frequencyAWidth"/>
     </shape>
 
     <!-- Frequency B related shapes -->
@@ -2299,6 +2990,13 @@
                        lang="en">Number of polarization layers associated with L-SAR frequency B</annotation>
            <dimension extent="0"
                       name="numberOfFrequencyBPolarizations"/>
+    </shape>
+    <shape name="numberOfSourceDataFrequencyBPolarizations"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Number of polarization layers associated with L-SAR frequency B</annotation>
+           <dimension extent="0"
+                      name="numberOfSourceDataFrequencyBPolarizations"/>
     </shape>
     <shape name="frequencyBWidth"
            order="slowest...fastest">
@@ -2319,10 +3017,19 @@
            <annotation app="conformance"
                        lang="en">Shape associated with L-SAR frequency B imagery datasets</annotation>
            <dimension extent="0"
-                      name="yCoordinateLength"/>
+                      name="frequencyBLength"/>
            <dimension extent="0"
                       name="frequencyBWidth"/>
-           <dimension name="complex" extent="2"/> 
+           <dimension name="complex" extent="2"/>
+    </shape>
+    <shape name="realDataFrequencyBShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape associated with L-SAR frequency B real-valued raster layers</annotation>
+           <dimension extent="0"
+                      name="frequencyBLength"/>
+           <dimension extent="0"
+                      name="frequencyBWidth"/>
     </shape>
 
     <!-- Geolocation cube related shapes -->
@@ -2366,7 +3073,7 @@
                        lang="en">Width dimension of the metadata cube</annotation>
            <dimension extent="0"
                       name="radarCubeWidth"/>
-    </shape>  
+    </shape>
 
     <!-- Processing parameters related shapes -->
     <shape name="dopplerCentroidLength"
@@ -2374,14 +3081,14 @@
            <annotation app="conformance"
                        lang="en">Length dimension of Doppler centroid grid</annotation>
            <dimension extent="0"
-                      name="dopplerCentroidTimeLength"/>
+                      name="dopplerCentroidLength"/>
     </shape>
     <shape name="dopplerCentroidWidth"
            order="slowest...fastest">
            <annotation app="conformance"
                        lang="en">Length dimension of Doppler centroid grid</annotation>
            <dimension extent="0"
-                      name="dopplerCentroidSlantRangeWidth"/>
+                      name="dopplerCentroidWidth"/>
     </shape>
     <shape name="dopplerCentroidShape"
            order="slowest...fastest">
@@ -2431,6 +3138,30 @@
                        lang="en">Shape of crosstalk datasets</annotation>
            <dimension name="complex" extent="2"/>
     </shape>
+    <shape name="timingCorrectionLength"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Length of timing correction LUTs</annotation>
+           <dimension extent="0"
+                      name="timingCorrectionLength"/>
+    </shape>
+    <shape name="timingCorrectionWidth"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Width of timing correction LUTs</annotation>
+           <dimension extent="0"
+                      name="timingCorrectionWidth"/>
+    </shape>
+    <shape name="timingCorrectionShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape of timing correction LUTs</annotation>
+           <dimension extent="0"
+                      name="timingCorrectionLength"/>
+           <dimension extent="0"
+                      name="timingCorrectionWidth"/>
+    </shape>
+
     <!-- Source data related shape -->
     <shape name="sourceDataDopplerCentroidTimeLength"
            order="slowest...fastest">

@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import os
 import numpy as np
 from osgeo import gdal
+import pytest
 from scipy import ndimage
 import iscetest
 import isce3.ext.isce3 as isce
 import isce3
+from isce3.core import DataInterpMethod
 from nisar.products.readers import SLC
 
 geocode_modes = {'interp': isce.geocode.GeocodeOutputMode.INTERP,
@@ -244,18 +248,38 @@ def test_geocode_cov():
                 # `~ sub_swath_expected_exp_within_quantile` should include
                 # `sub_swath_mask_array``.
 
-                # first, check the mask and assert that there are no
-                # points marked as sub-swath 1 outside of the selected area.
+                # first, check the mask and ensure that there are no
+                # points marked as sub-swath 1 outside the selected area.
                 assert np.sum(
                     (sub_swath_mask_array == 1) &
                     (~sub_swath_expected_exp_within_quantile_relaxed)) == 0
 
-                # then, we check the geocoded array and assert that there are
-                # valid points inside the selected area
+                # similarly, we check the geocoded array and ensure that there
+                # are no valid points outside of the selected area
                 assert np.sum((np.isfinite(geo_arr)) &
-                              (~sub_swath_expected_exp_within_quantile)) == 0
+                              (~sub_swath_expected_exp_within_quantile_relaxed
+                               )) == 0
+
+                # finally, we check the geocoded array and ensure that there
+                # are valid points inside the selected area
+                assert np.sum((np.isfinite(geo_arr)) &
+                              (sub_swath_expected_exp_within_quantile)) > 0
 
                 print('    ...done')
+
+
+@pytest.mark.parametrize(
+    "interpolator",
+    [
+        "bicubic",
+        "BICUBIC",
+        DataInterpMethod.BICUBIC,
+    ],
+)
+def test_set_interp_method(interpolator: str | DataInterpMethod):
+    geocode = isce3.geocode.GeocodeFloat32()
+    geocode.data_interpolator = interpolator
+    assert geocode.data_interpolator == DataInterpMethod.BICUBIC
 
 
 if __name__ == "__main__":

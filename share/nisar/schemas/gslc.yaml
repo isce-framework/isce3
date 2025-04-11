@@ -20,7 +20,7 @@ runconfig:
             # REQUIRED - Digital elevation model
             dem_file: str()
 
-            # PLACEHOLDER - Digital elevation model file description, optional
+            # OPTIONAL - Digital elevation model file description, optional
             dem_file_description: str(required=False)
 
             # External orbit file
@@ -37,6 +37,8 @@ runconfig:
             # data driven approch.
             # When refernce_gslc is empty, only the model driven correction will be applied.
             reference_gslc: list(str(), min=1, required=False)
+
+            corner_reflector_file: str(required=False)
 
         product_path_group:
             # Directory where PGE will place results
@@ -60,8 +62,9 @@ runconfig:
         primary_executable:
             product_type: enum('GSLC')
             product_version: str('^\d+\.\d+\.\d+$', required=False)
+            product_doi: str(required=False)
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
-            processing_type: enum('PR', 'UR', required=False)
+            processing_type: enum('PR', 'UR', 'OD', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
             urgent_request_id: list(str(), required=False)
             processing_center: str(required=False)
@@ -110,6 +113,10 @@ runconfig:
 
         # Output options for GSLC raster (e.g. compression, chunking, shuffle filter)
         output: include('output_options', required=False)
+
+        # Group containing CEOS Analysis Ready Data (CARD) parameters
+        # to populate the output product's metadata
+        ceos_analysis_ready_data: include('ceos_analysis_ready_data_options', required=False)
 
         # Worker options (e.g. enable/disable GPU processing, select GPU device ID)
         worker: include('worker_options', required=False)
@@ -198,10 +205,13 @@ qa_options:
     workflows: include('workflows_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('qa_reports_options', required=False)
+    point_target_analyzer: include('point_target_analyzer_options', required=False)
+
 
 workflows_options:
     validate: bool(required=False)
     qa_reports: bool(required=False)
+    point_target_analyzer: bool(required=False)
 
 qa_validation_options:
     metadata_cubes_fail_if_all_nan: bool(required=False)
@@ -219,8 +229,15 @@ qa_reports_options:
     histogram:
         decimation_ratio: list(int(min=1), min=2, max=2, required=False)
         backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+        phase_histogram_y_axis_range: list(any(num(), null()), min=2, max=2, required=False)
         phs_in_radians: bool(required=False)
         tile_shape: list(int(min=-1), min=2, max=2, required=False)
+
+point_target_analyzer_options:
+    nchip: int(min=1, required=False)
+    upsample_factor: int(min=1, required=False)
+    peak_find_domain: enum('time', 'frequency', required=False)
+    num_sidelobes: int(min=2, required=False)
 
 dem_download_options:
     # s3 bucket / curl URL / local file
@@ -282,6 +299,25 @@ geocode_options:
 
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
+
+ceos_analysis_ready_data_options:
+
+    # Data access for the source data (URL or DOI)
+    source_data_access: str(required=False)
+
+    # Data access for the output product (URL or DOI)
+    product_data_access: str(required=False)
+
+    # Data access for the static layers product associated with the output product (URL or DOI)
+    static_layers_data_access: str(required=False)
+
+    # Estimated geometric accuracy (bias and standard deviation)
+    # in meters in the X- and Y-directions over the coordinate
+    # system defined by the product's EPSG code
+    estimated_geometric_accuracy_bias_x: num(required=False)
+    estimated_geometric_accuracy_bias_y: num(required=False)
+    estimated_geometric_accuracy_standard_deviation_x: num(required=False)
+    estimated_geometric_accuracy_standard_deviation_y: num(required=False)
 
 # AMPCOR options for data-driven GSLC. Based on InSAR workflow runconfig
 ampcor_options:

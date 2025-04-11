@@ -42,7 +42,8 @@ class TestGenDopplerRangeProduct:
         freq_band='A', txrx_pol='HH', num_rgb_avg=32, ref_height=0.0,
         dop_method='CDE', az_block_dur=0.8753, time_interval=0.2918,
         subband=False, polyfit=False, polyfit_deg=3, dem_file=None,
-        plot=True, out_path='.', orbit_file=None, attitude_file=None,
+        plot=True, out_path='.', orbit_file=None,
+        attitude_file=None, exclude_beams=None,
         antenna_file=os.path.join(iscetest.data, ant_alos1))
 
     # set input arguments for DBF NISAR case
@@ -50,7 +51,8 @@ class TestGenDopplerRangeProduct:
         filename_l0b=os.path.join(iscetest.data, sub_dir, l0b_nisar),
         freq_band=None, txrx_pol='VV', num_rgb_avg=16, ref_height=0.0,
         dop_method='CDE', az_block_dur=1.0, time_interval=0.5, dem_file=None,
-        subband=False, polyfit=True, polyfit_deg=3, plot=False, out_path='.',
+        subband=False, polyfit=True, polyfit_deg=3, plot=False,
+        out_path='.', exclude_beams=None,
         orbit_file=os.path.join(iscetest.data, sub_dir, orb_nisar),
         attitude_file=os.path.join(iscetest.data, sub_dir, att_nisar),
         antenna_file=os.path.join(iscetest.data, sub_dir, ant_nisar))
@@ -60,7 +62,7 @@ class TestGenDopplerRangeProduct:
         filename_l0b=os.path.join(iscetest.data, subdir_dm2, l0b_dm2),
         freq_band=None, txrx_pol=None, num_rgb_avg=8, ref_height=0.0,
         dop_method='CDE', az_block_dur=2.5, time_interval=0.11,
-        subband=False, polyfit=True, polyfit_deg=3,
+        subband=False, polyfit=True, polyfit_deg=3, exclude_beams=[3],
         plot=False, out_path='.', orbit_file=None, attitude_file=None,
         antenna_file=os.path.join(iscetest.data, subdir_dm2, ant_dm2),
         dem_file=os.path.join(iscetest.data, subdir_dm2, dem_dm2))

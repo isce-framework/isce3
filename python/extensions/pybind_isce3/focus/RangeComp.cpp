@@ -95,5 +95,24 @@ void addbinding(py::class_<RangeComp>& pyRangeComp)
         .def_property_readonly("mode", &RangeComp::mode)
         .def_property_readonly("output_size", &RangeComp::outputSize)
         .def_property_readonly("first_valid_sample", &RangeComp::firstValidSample)
+
+        .def("apply_notch", &RangeComp::applyNotch,
+            py::arg("frequency"), py::arg("bandwidth") = 0.0, R"(
+     Apply a notch to the baseband frequency-domain representation of the
+     chirp reference function.
+     
+     Parameters
+     ----------
+     frequency : float
+        Center frequency of the notch normalized by the sample rate, so should
+        be in interval [-0.5, 0.5)
+     bandwidth : float, default=0.0
+        Total width for the notch taper.  If zero, then only the nearest FFT bin
+        will be set to zero.
+            )")
+
+        .def("get_chirp_spectrum", [](const RangeComp& self) {
+            return buf_t(self.fftSize(), self.chirp_spectrum());
+        })
         ;
 }

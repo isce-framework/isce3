@@ -19,6 +19,11 @@ runconfig:
 
         primary_executable:
             product_type: RSLC
+            # Not a valid granule ID, just checking template replacement.
+            partial_granule_id: RSLC_{MODE}_{POLE}_{StartDateTime}_{EndDateTime}_{C}
+            # Not a valid DOI // but it better be filled out // rather than
+            # just ignored by the workflow.
+            product_doi: https://youtu.be/dQw4w9WgXcQ
 
         worker:
             gpu_enabled: False
@@ -49,6 +54,8 @@ runconfig:
                     azimuth: 64
 
             dry_troposphere_model: nodelay
+
+            metadata_cube_epsg: 32621
 
             # Scale factor to apply to data before float16 encoding, optional.
             # The largest representable float16 value is 65504.

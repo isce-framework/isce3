@@ -79,6 +79,25 @@ public:
     int firstValidSample() const;
 
     /**
+     * Apply a notch to the baseband frequency-domain representation of the
+     * chirp reference function.
+     * 
+     * \param[in] frequency Center frequency of the notch normalized by the
+     *                      sample rate, so should be in interval [-0.5, 0.5)
+     * \param[in] bandwidth Total width for the notch taper.  If zero, then
+     *                      only the nearest FFT bin will be set to zero.
+     */
+    void applyNotch(double frequency, double bandwidth = 0.0);
+
+    /**
+     * Get a pointer to the frequency spectrum of the chirp that will be used
+     * for range compression.  Its length is equal to fftSize().
+     */
+    const std::complex<float>* chirp_spectrum() const {
+        return _reffn.data();
+    }
+
+    /**
      * Perform pulse compression on a batch of input signals
      *
      * Computes the frequency domain convolution of the input with the reference

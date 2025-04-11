@@ -45,10 +45,6 @@ runconfig:
                     x:
                     y:
 
-            pre_process:   #{optional} do we need this step. Should bandpass filter from 40MHz/20MHz be included
-                azimuth_looks: 1  # {optional} Number of looks in azimuth
-                range_looks: 1    # {optional} Number of looks in range
-
             rtc:                                # {optional} RTC options
                 output_type: gamma0               # {optional} Choices: “None” (to turn off RTC) or “gamma0”
                 algorithm_type: area_projection   # {optional} Choices: "area_projection" (default) and "bilinear_distribution"

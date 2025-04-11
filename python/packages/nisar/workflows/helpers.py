@@ -1,13 +1,13 @@
 '''
 collection of useful functions used across workflows
 '''
-
+from __future__ import annotations
+import datetime
 import os
 import pathlib
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
-
 import h5py
 import isce3
 import journal
@@ -18,6 +18,7 @@ from isce3.product import RadarGridParameters
 from nisar.products.readers import SLC
 from nisar.workflows.get_product_geometry import \
     get_geolocation_grid as compute_geogrid_geometry
+from nisar.workflows.h5_prep import get_off_params
 from osgeo import gdal, gdal_array
 from pathlib import Path
 
@@ -45,6 +46,112 @@ class JsonNumpyEncoder(json.JSONEncoder):
             return bool(obj)
 
         return super().default(obj)
+
+
+def build_uniform_quantizer_lut_l0b(
+        nbits: int, bad_val: float = 0.0, twos_complement: bool = True
+) -> np.ndarray:
+    """Build uniform quantizer LUT used in place of BFPQLUT in L0B product"""
+    # get size of BFPQLUT to be power of 2!
+    nbits_pow2 = 2 ** int(np.ceil(np.log2(nbits)))
+    size_lut = 2 ** nbits_pow2
+    len_decoder_lut = 2**nbits
+    len_decoder_lut_h = len_decoder_lut // 2
+    bfpq_uq = np.full(size_lut, bad_val, dtype='f4')
+    # 2s complement sign representation of unsigned integer
+    bfpq_uq[:len_decoder_lut_h] = np.arange(0.5, len_decoder_lut_h, dtype='f4')
+    if twos_complement:
+        bfpq_uq[:-len_decoder_lut_h - 1:-1] = -bfpq_uq[:len_decoder_lut_h]
+    else:  # signed magnitude representation
+        size_lut_h = size_lut // 2
+        bfpq_uq[size_lut_h: size_lut_h + len_decoder_lut_h] = (
+            -bfpq_uq[:len_decoder_lut_h])
+    return bfpq_uq
+
+
+def slice_gen(n_smp: int, n_smp_blk: int) -> slice:
+    """slice generator.
+
+    Parameters
+    ----------
+    n_smp : int
+        Total number of samples
+    n_smp_blk : int
+        Number of samples per full block
+
+    Yields
+    ------
+    slice
+        slice object for each block.
+        The last block can be partial and have less
+        number of samples than `n_smp_blk`!
+
+    """
+    n_blk = int(np.ceil(n_smp / n_smp_blk))
+    for n in range(n_blk):
+        i_start = n * n_smp_blk
+        i_stop = min(n_smp, i_start + n_smp_blk)
+        yield slice(i_start, i_stop)
+
+
+def copols_or_desired_pols_from_raw(
+        raw: 'nisar.products.readers.Raw',
+        freq_band: str | None = None,
+        txrx_pol:str | None = None
+        ) -> dict[str, list[str]]:
+    """
+    Get list of transmit-receive polarization names of either all co-pol
+    datasets (default) or requested ones from Raw which fulfill either
+    parameter `freq_band` and/or `txrx_pol` if provided.
+
+    The output is in the form of a dict with key=frequency_band and
+    value=list of txrx_pols.
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+        Raw parser of L0B product.
+    freq_band : str, optional
+        Frequency band character "A" or "B".
+        If None will cover all available bands in `raw`.
+    txrx_pol : str, optional
+        Transmit-receive polarization. If None will cover all
+        co-pol products under `freq_band`.
+
+    Returns
+    -------
+    dict
+        A dictionary with `freq_band` as keys and list of `txrx_pol`
+        as values.
+
+    """
+    # get list of frequency bands
+    if freq_band is None:
+        freqs = list(raw.polarizations)
+    else:
+        # go with desired frequency band
+        if freq_band not in raw.polarizations:
+            raise ValueError('Wrong frequency band! The available bands -> '
+                             f'{list(raw.polarizations)}')
+        freqs = [freq_band]
+
+    frq_pol = dict()
+    for frq in freqs:
+        pols = raw.polarizations[frq]
+        if txrx_pol is None:
+            # get all co-pols if pol is not provided
+            co_pols = [pol for pol in pols if (pol[0] == pol[1] or
+                                               pol[0] in ['L', 'R'])]
+            if co_pols:
+                frq_pol[frq] = co_pols
+        else:
+            # get all pols over all bands that match the desired one
+            if txrx_pol in pols:
+                frq_pol[frq] = [txrx_pol]
+    # check if the dict empty (it simply occurs if txrx_pol is provided!)
+    if not frq_pol:
+        raise ValueError(f'Wrong TxRx Pol over frequency bands {freqs}!')
+    return frq_pol
 
 
 def deep_update(original, update, flag_none_is_valid=True):
@@ -130,6 +237,95 @@ def check_dem(dem_path: str):
         err_str = f'{dem_path} cannot be opened by GDAL'
         error_channel.log(err_str)
         raise ValueError(err_str)
+
+
+def check_radargrid_orbit_tec(radar_grid, orbit, tec_path):
+    '''
+    Check if the input orbit and TEC files' temporal coverage is enough.
+    Raise RuntimeError when the coverage is not enough.
+
+    Parameters
+    ----------
+    radar_grid: isce3.product.RadarGridParameters
+        Radar grid of the input RSLC
+    orbit: isce3.core.Orbit
+        Orbit data provided
+    tec: str
+        path to the IMAGEN TEC data
+
+    Raises
+    ------
+    ApplicationError: Raised by `journal.error` instance When
+        the temporal coverage of orbit and / or TEC file is not sufficient.
+    '''
+
+    error_channel = journal.error('helpers.check_radargrid_orbit_tec')
+    info_channel = journal.info('helpers.check_radargrid_orbit_tec')
+
+    radargrid_ref_epoch = datetime.datetime.fromisoformat(radar_grid.ref_epoch.isoformat_usec())
+    sensing_start = radargrid_ref_epoch + datetime.timedelta(seconds=radar_grid.sensing_start)
+    sensing_stop = radargrid_ref_epoch + datetime.timedelta(seconds=radar_grid.sensing_stop)
+
+    orbit_start = datetime.datetime.fromisoformat(orbit.start_datetime.isoformat_usec())
+    orbit_end = datetime.datetime.fromisoformat(orbit.end_datetime.isoformat_usec())
+
+    # Compute the paddings of orbit and TEC w.r.t. radar grid
+    orbit_margin_start = (sensing_start - orbit_start).total_seconds()
+    orbit_margin_end = (orbit_end - sensing_stop).total_seconds()
+
+    margin_info_msg = (f'Orbit margin before radar sensing start : {orbit_margin_start} seconds\n'
+                       f'Orbit margin after radar sensing stop   : {orbit_margin_end} seconds\n')
+
+    if not tec_path:
+        info_channel.log('IMAGEN TEC was not provided. '
+                         'Checking the orbit data and sensing start / stop.')
+
+        info_channel.log(margin_info_msg)
+
+        if orbit_margin_start < 0.0:
+            error_channel.log('Not enough input orbit data at the radar sensing start.')
+        if orbit_margin_end < 0.0:
+            error_channel.log('Not enough input orbit data at the radar sensing end.')
+
+    else:
+        # Load timing information from IMAGEN TEC and check with orbit and sensing
+        with open(tec_path, 'r') as jin:
+            imagen_dict = json.load(jin)
+            num_utc = len(imagen_dict['utc'])
+            tec_start = datetime.datetime.fromisoformat(imagen_dict['utc'][0])
+            tec_end = datetime.datetime.fromisoformat(imagen_dict['utc'][-1])
+
+        tec_margin_start = (sensing_start - tec_start).total_seconds()
+        tec_margin_end = (tec_end - sensing_stop).total_seconds()
+
+        # Compute the half the TEC spacing, which is required when computing
+        # azimuth TEC gradient. Note the timing grid for TEC gradient is
+        # shifted by half of the TEC spacing
+        minimum_margin_sec = (tec_end - tec_start).total_seconds() / (num_utc -1) / 2
+
+        margin_info_msg += (f'IMAGEN TEC margin before radar sensing start : {tec_margin_start} seconds\n'
+                            f'IMAGEN TEC margin after radar sensing stop   : {tec_margin_end} seconds\n'
+                            f'Minimum required margin                : {minimum_margin_sec} seconds\n')
+
+        info_channel.log(margin_info_msg)
+
+        # Check if the margin looks okay when TEC is provided
+
+        if orbit_margin_start < minimum_margin_sec:
+            error_channel.log('Input orbit\'s margin before radar sensing start is not enough '
+                            f'({orbit_margin_start} < {minimum_margin_sec})')
+
+        if orbit_margin_end < minimum_margin_sec:
+            error_channel.log('Input orbit\'s margin after radar sensing stop is not enough '
+                            f'({orbit_margin_end} < {minimum_margin_sec})')
+
+        if tec_margin_start < minimum_margin_sec:
+            error_channel.log('IMAGEN TEC margin before radar sensing start is not enough '
+                            f'({tec_margin_start} < {minimum_margin_sec})')
+
+        if tec_margin_end < minimum_margin_sec:
+            error_channel.log(f'IMAGEN TEC margin after radar sensing stop is not enough '
+                            f'({tec_margin_end} < {minimum_margin_sec})')
 
 
 def check_log_dir_writable(log_file_path: str):
@@ -375,6 +571,165 @@ def complex_raster_path_from_h5(slc, freq, pol, hdf5_path, lines_per_block,
 
     return raster_path, file_path
 
+def get_pixel_offsets_params(cfg : dict):
+    """
+    Get the pixel offsets parameters from the runconfig dictionary
+
+    Parameters
+    ----------
+    cfg : dict
+        InSAR runconfig dictionray
+
+    Returns
+    ----------
+    is_roff : boolean
+        Offset product or not
+    margin : int
+        Margin
+    rg_start : int
+        Start range
+    az_start : int
+        Start azimuth
+    rg_skip : int
+        Pixels skiped across range
+    az_skip : int
+        Pixels skiped across the azimth
+    rg_search : int
+        Window size across range
+    az_search : int
+        Window size across azimuth
+    rg_chip : int
+        Fine window size across range
+    az_chip : int
+        Fine window size across azimuth
+    ovs_factor : int
+        Oversampling factor
+    """
+    proc_cfg = cfg["processing"]
+
+    # pull the offset parameters
+    is_roff = proc_cfg["offsets_product"]["enabled"]
+    (margin, rg_gross, az_gross,
+        rg_start, az_start,
+        rg_skip, az_skip, ovs_factor) = \
+            [get_off_params(proc_cfg, param, is_roff)
+            for param in ["margin", "gross_offset_range",
+                        "gross_offset_azimuth",
+                        "start_pixel_range","start_pixel_azimuth",
+                        "skip_range", "skip_azimuth",
+                        "correlation_surface_oversampling_factor"]]
+
+    rg_search, az_search, rg_chip, az_chip = \
+        [get_off_params(proc_cfg, param, is_roff,
+                        pattern="layer",
+                        get_min=True,) for param in \
+                            ["half_search_range",
+                                "half_search_azimuth",
+                                "window_range",
+                                "window_azimuth"]]
+    # Adjust margin
+    margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
+
+    # Compute slant range/azimuth vectors of offset grids
+    if rg_start is None:
+        rg_start = margin + rg_search
+    if az_start is None:
+        az_start = margin + az_search
+
+    return (is_roff,  margin, rg_start, az_start,
+            rg_skip, az_skip, rg_search, az_search,
+            rg_chip, az_chip, ovs_factor)
+
+def get_pixel_offsets_dataset_shape(cfg : dict, freq : str):
+    """
+    Get the pixel offsets dataset shape at a given frequency
+
+    Parameters
+    ---------
+    cfg : dict
+        InSAR runconfig dictionary
+    freq: str
+        frequency ('A' or 'B')
+
+    Returns
+    ----------
+    tuple
+        (off_length, off_width):
+    """
+    proc_cfg = cfg["processing"]
+    is_roff,  margin, _, _,\
+    rg_skip, az_skip, rg_search, az_search,\
+    rg_chip, az_chip, _ = get_pixel_offsets_params(cfg)
+
+    ref_h5_slc_file = cfg["input_file_group"]["reference_rslc_file"]
+    ref_rslc = SLC(hdf5file=ref_h5_slc_file)
+
+    radar_grid = ref_rslc.getRadarGrid(freq)
+    slc_lines, slc_cols = (radar_grid.length, radar_grid.width)
+
+    off_length = get_off_params(proc_cfg, "offset_length", is_roff)
+    off_width = get_off_params(proc_cfg, "offset_width", is_roff)
+    if off_length is None:
+        margin_az = 2 * margin + 2 * az_search + az_chip
+        off_length = (slc_lines - margin_az) // az_skip
+    if off_width is None:
+        margin_rg = 2 * margin + 2 * rg_search + rg_chip
+        off_width = (slc_cols - margin_rg) // rg_skip
+
+    # shape of offset product
+    return (off_length, off_width)
+
+def get_offset_radar_grid(cfg, radar_grid_slc):
+    ''' Create radar grid object for offset datasets
+
+    Parameters
+    ----------
+    cfg : dict
+        Dictionary containing processing parameters
+    radar_grid_slc : SLC
+        Object containing SLC properties
+    '''
+    proc_cfg = cfg["processing"]
+    is_roff,  margin, rg_start, az_start,\
+    rg_skip, az_skip, rg_search, az_search,\
+    rg_chip, az_chip, _ = get_pixel_offsets_params(cfg)
+
+    slc_lines, slc_cols = (radar_grid_slc.length, radar_grid_slc.width)
+
+    off_length = get_off_params(proc_cfg, "offset_length", is_roff)
+    off_width = get_off_params(proc_cfg, "offset_width", is_roff)
+
+    if off_length is None:
+        margin_az = 2 * margin + 2 * az_search + az_chip
+        off_length = (slc_lines - margin_az) // az_skip
+    if off_width is None:
+        margin_rg = 2 * margin + 2 * rg_search + rg_chip
+        off_width = (slc_cols - margin_rg) // rg_skip
+
+    # the starting range/sensing start of the pixel offsets radar grid
+    # to be at the center of the matching window
+    offset_starting_range = radar_grid_slc.starting_range + \
+                            (rg_start + rg_chip//2)\
+                            * radar_grid_slc.range_pixel_spacing
+    offset_sensing_start = radar_grid_slc.sensing_start + \
+                           (az_start + az_chip//2)\
+                           / radar_grid_slc.prf
+    # Range spacing for offsets
+    offset_range_spacing = radar_grid_slc.range_pixel_spacing * rg_skip
+    offset_prf = radar_grid_slc.prf / az_skip
+
+    # Create offset radar grid
+    radar_grid = isce3.product.RadarGridParameters(offset_sensing_start,
+                                                   radar_grid_slc.wavelength,
+                                                   offset_prf,
+                                                   offset_starting_range,
+                                                   offset_range_spacing,
+                                                   radar_grid_slc.lookside,
+                                                   off_length,
+                                                   off_width,
+                                                   radar_grid_slc.ref_epoch)
+    return radar_grid
+
 
 def get_cfg_freq_pols(cfg):
     '''
@@ -417,6 +772,7 @@ def get_cfg_freq_pols(cfg):
         else:
             yield freq, pol_list, pol_list
 
+
 def get_ground_track_velocity_product(ref_rslc : SLC,
                                       slant_range : np.ndarray,
                                       zero_doppler_time : np.ndarray,
@@ -447,12 +803,12 @@ def get_ground_track_velocity_product(ref_rslc : SLC,
         ground track velocity output file
     """
     # NOTE: the prod_geometry_args dataclass is defined here
-    # to avoid the usage of the parser comand line
+    # to avoid the usage of the parser command line
     @dataclass
     class GroundtrackVelocityGenerationParams:
         """
         Parameters to generate the ground track velocity.
-        Defination of each parameter can be found in the
+        Definition of each parameter can be found in the
         get_product_geometry.py
         """
         threshold_rdr2geo = None
@@ -527,7 +883,7 @@ def validate_fs_page_size(fs_page_size, chunks, itemsize=8):
     max_size = 1024**3
     if not (min_size <= fs_page_size <= max_size):
         warn(f"File space page size not in interval [{min_size}, {max_size}]")
-            
+
     # HDF5 docs say powers of two work best for FAPL page size.  Assume same
     # holds true for FCPL page size.
     if (fs_page_size <= 0) or (fs_page_size & (fs_page_size - 1) != 0):
@@ -539,8 +895,66 @@ def validate_fs_page_size(fs_page_size, chunks, itemsize=8):
         warn("File space page size is not larger than a chunk of data.")
 
 
+def _as_np_bytes_if_needed(val):
+    '''
+    If type str encountered, convert and return as np.string_. Otherwise return
+    as is.
+    '''
+    val = np.bytes_(val) if isinstance(val, str) else val
+    return val
+
+
+@dataclass
+class HDF5DatasetParams:
+    '''
+    Convenience dataclass for passing parameters to be written to h5py.Dataset
+    '''
+    # Dataset name
+    name: str
+    # Data to be stored in Dataset
+    value: object
+    # Description attribute of Dataset
+    description: str
+    # Other attributes to be written to Dataset
+    attr_dict: dict = field(default_factory=dict)
+
+
+def add_dataset_and_attrs(group, meta_item):
+    '''Write dataset parameters stored in HDF5DatasetParams object to h5py group.
+
+    Parameters
+    ----------
+    group: h5py.Group
+        h5py group where dataset and associated parameters are to be written
+    meta_item: HDF5DatasetParams
+        HDF5DatasetParams dataclass object containing dataset parameters
+    '''
+    # Ensure it is clear to write by deleting pre-existing Dataset
+    if meta_item.name in group:
+        del group[meta_item.name]
+
+    # Convert to be written dataset value, if necessary
+    val = _as_np_bytes_if_needed(meta_item.value)
+    try:
+        if val is None:
+            # Assume NaN is valid dataset value if None is provided
+            group[meta_item.name] = np.nan
+        else:
+            group[meta_item.name] = val
+    except TypeError as exc:
+        raise TypeError(f'unable to write {meta_item.name}') from exc
+
+    # Write data and attributes
+    val_ds = group[meta_item.name]
+    desc = _as_np_bytes_if_needed(meta_item.description)
+    val_ds.attrs['description'] = desc
+    for key, val in meta_item.attr_dict.items():
+        val_ds.attrs[key] = _as_np_bytes_if_needed(val)
+
+
 def sum_gdal_rasters(filepath1, filepath2, out_filepath, data_type=np.float64,
-                     driver_name='ENVI', row_blocks=2048, col_blocks=2048):
+                     driver_name='ENVI', row_blocks=2048, col_blocks=2048,
+                     invalid_value=np.nan):
     """
     Sum 2 GDAL memory-mappable rasters block by block and save the result
     to an output file in a GDAL-friendly format
@@ -561,6 +975,10 @@ def sum_gdal_rasters(filepath1, filepath2, out_filepath, data_type=np.float64,
         Number of rows in each block (default: 2048)
     col_blocks: int, optional
         Number of columns in each block (default: 2048)
+    invalid_value: float | numpy.nan, optional
+        The invalid value of the rasters. When this value is encountered
+        in either raster, it will be regarded as invalid and masked over the
+        output data. (default: np.nan)
     """
     error_channel = journal.error('helpers.sum_gdal_rasters').log
 
@@ -624,4 +1042,17 @@ def sum_gdal_rasters(filepath1, filepath2, out_filepath, data_type=np.float64,
     ):
         file1_block = file1_reader[out_block_slice].astype(data_type, copy=False)
         file2_block = file2_reader[out_block_slice].astype(data_type, copy=False)
-        out_file_writer[out_block_slice] = file1_block + file2_block
+
+        # Use numpy masked arrays to handle sums where one of the element is a fill_value
+        masked_file1_block = np.ma.masked_equal(file1_block, invalid_value)
+        masked_file2_block = np.ma.masked_equal(file2_block, invalid_value)
+
+        # Perform the sum, with the rule that if either element is masked (invalid), the result will be the fill_value
+        sum_result_masked = np.ma.where(masked_file1_block.mask | masked_file2_block.mask,
+                                        invalid_value, masked_file1_block + masked_file2_block)
+
+        # Convert the masked array to a normal array, filling masked elements with the fill value
+        sum_result = sum_result_masked.filled(invalid_value)
+
+        # Write the result to the output file
+        out_file_writer[out_block_slice] = sum_result

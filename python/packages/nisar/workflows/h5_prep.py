@@ -259,7 +259,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
 
         # Assign product specification version
         dst_h5[f'{ident_path}/productSpecificationVersion'] = \
-            np.bytes_('0.9.0')
+            np.bytes_('1.2.1')
 
         # Assign granule ID
         dst_h5[f'{ident_path}/granuleId'] = \
@@ -354,7 +354,8 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                             'azimuthChirpWeighting',
                             'effectiveVelocity', 'rangeChirpWeighting']
         else:
-            exclude_args = ['nes0', 'elevationAntennaPattern']
+            exclude_args = ['noiseEquivalentBackscatter', 'nes0',
+                            'elevationAntennaPattern']
 
         cp_h5_meta_data(src_h5, dst_h5,
                         f'{src_meta_path}/processingInformation/parameters',
@@ -363,7 +364,8 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         # Copy calibrationInformation group
         exclude_args = []
         if is_insar:
-            exclude_args = ['nes0', 'elevationAntennaPattern']
+            exclude_args = ['noiseEquivalentBackscatter', 'nes0',
+                            'elevationAntennaPattern']
         for freq in freq_pols.keys():
             if dst in ['ROFF', 'GOFF']:
                 cal_path = f'{dst_meta_path}/calibrationInformation'
@@ -550,7 +552,7 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
 
         # create geocoded SLC datasets for polarizations of current frequency
         for polarization in pol_list:
-            long_name = f'geocoded single-look complex image {polarization}'
+            long_name = f'Geocoded single-look complex image {polarization}'
             descr = f'Focused SLC image ({polarization})'
             _create_datasets(dst_grp, shape, ctype, polarization,
                              descr=descr, units='', grids="projection",
@@ -558,11 +560,11 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
                              fill_value=complex_fill_value, **gslc_output_options)
 
         # create geocoded mask for geocoded SLC datasets
-        long_name = f'geocoded mask of single-look complex image'
+        long_name = f'Geocoded mask of single-look complex image'
         descr = f'GSLC mask'
         gslc_output_options['fillvalue'] = 255
         _create_datasets(dst_grp, shape, np.ubyte, 'mask',
-                         descr=descr, units='', grids="projection",
+                         descr=descr, units=None, grids="projection",
                          long_name=long_name, yds=yds, xds=xds,
                          fill_value=255, valid_min=0,
                          **gslc_output_options)
@@ -639,7 +641,7 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
         ds.attrs["_FillValue"] = fill_value
 
     if valid_min is not None:
-        ds.attrs["_valid_min"] = valid_min
+        ds.attrs["valid_min"] = valid_min
 
 
 def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
@@ -765,7 +767,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     # Create a new single int dataset for projections
     projds = hdf5_obj.require_dataset(projection_ds_name,
                                       shape=(),
-                                      dtype='uint32',
+                                      dtype=np.uint32,
                                       data=epsg_code)
     # Set up osr for wkt
     srs = osr.SpatialReference()
@@ -802,11 +804,6 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     if epsg_code == 4326:
         # Set up grid mapping
         projds.attrs['longitude_of_prime_meridian'] = 0.0
-        projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(
-            osr.SRS_PP_LATITUDE_OF_ORIGIN)
-        projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(
-            osr.SRS_PP_LONGITUDE_OF_ORIGIN)
-
     else:
         # UTM zones
         if ((epsg_code > 32600 and
@@ -815,16 +812,22 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                  epsg_code < 32761)):
             # Set up grid mapping
             projds.attrs['utm_zone_number'] = epsg_code % 100
+            projds.attrs["longitude_of_central_meridian"] = srs.GetProjParm(
+                osr.SRS_PP_CENTRAL_MERIDIAN)
+            projds.attrs["scale_factor_at_central_meridian"] = srs.GetProjParm(
+                osr.SRS_PP_SCALE_FACTOR)
 
         # Polar Stereo North
         elif epsg_code == 3413:
             # Set up grid mapping
+            projds.attrs['latitude_of_projection_origin'] = 90.0
             projds.attrs['standard_parallel'] = 70.0
             projds.attrs['straight_vertical_longitude_from_pole'] = -45.0
 
         # Polar Stereo south
         elif epsg_code == 3031:
             # Set up grid mapping
+            projds.attrs['latitude_of_projection_origin'] = -90.0
             projds.attrs['standard_parallel'] = -71.0
             projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
 
@@ -852,10 +855,13 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
         projds.attrs['false_northing'] = sr.GetProjParm(
             osr.SRS_PP_FALSE_NORTHING)
 
-        projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(
-            osr.SRS_PP_LATITUDE_OF_ORIGIN)
         projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(
             osr.SRS_PP_LONGITUDE_OF_ORIGIN)
+
+        if epsg_code not in [3413, 3031]:
+            projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(
+                osr.SRS_PP_LATITUDE_OF_ORIGIN)
+
 
     if z_vect is not None:
         return zds, yds, xds
@@ -891,7 +897,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
 
     # seconds since ref epoch
     ref_epoch = radar_grid.ref_epoch
-    ref_epoch_str = ref_epoch.isoformat()
+    ref_epoch_str = ref_epoch.isoformat().replace('.000000000', '')
     az_coord_units = f'seconds since {ref_epoch_str}'
 
     slant_range_raster = _get_raster_from_hdf5_ds(
@@ -904,7 +910,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Zero-Doppler azimuth time',
-        descr='Zero Doppler azimuth time in seconds',
+        descr='Zero Doppler azimuth time in seconds since UTC epoch',
         units=az_coord_units, **create_dataset_kwargs)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
@@ -1182,7 +1188,7 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
 
     # seconds since ref epoch
     ref_epoch = radar_grid.ref_epoch
-    ref_epoch_str = ref_epoch.isoformat()
+    ref_epoch_str = ref_epoch.isoformat().replace('.000000000', '')
     az_coord_units = f'seconds since {ref_epoch_str}'
 
     coordinates_list = []
@@ -1210,7 +1216,7 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     coordinates_list.append(rg_dataset)
 
     # Zero-doppler time
-    descr = "Zero Doppler time values corresponding to the geolocation grid"
+    descr = "Zero Doppler time since UTC epoch values corresponding to the geolocation grid"
     az_dataset_name = os.path.join(root_ds, 'zeroDopplerTime')
     if az_dataset_name in hdf5_obj:
         del hdf5_obj[az_dataset_name]

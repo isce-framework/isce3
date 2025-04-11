@@ -2,12 +2,9 @@ from datetime import datetime
 
 import h5py
 import journal
-import numpy as np
+import nisar
 from nisar.products.readers import SLC
-
-# Constants for date and time formats
-ZERO_DOPPLER_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
-INSAR_FILENAME_TIME_FORMAT = '%Y%m%dT%H%M%S'
+import numpy as np
 
 # InSAR range bandwidth (BW, units: MHz) mapping (Reference BW, Secondary BW) => InSAR BW in filename
 # The last 00 indicates a nonexistent frequencyB (as per InSAR processing baseline)
@@ -37,18 +34,6 @@ INSAR_RG_BW_MAPPING = {
     (77, 77): 7700,
     (77, 20): 2000,
     (77, 40): 4000,
-}
-
-# InSAR polarization (Pol) (InSAR Pol content) => InSAR Pol code in filename
-INSAR_POL_MAPPING = {
-    ('HH'): 'SH',
-    ('VV'): 'SV',
-    ('HH', 'HV'): 'DH',
-    ('VV', 'VH'): 'DV',
-    ('LH', 'LV'): 'CL',
-    ('RH', 'RV'): 'CR',
-    ('HH', 'HV', 'VH', 'VH'): 'QP',
-    ('HH', 'VV'): 'QD'
 }
 
 
@@ -141,36 +126,8 @@ def get_slc_start_end_time(slc_path, time_type='start'):
         error_journal.log(err_str)
         raise ValueError(err_str)
 
-    # Remove fractional seconds from extracted time
-    extracted_time = str(extracted_time).split('.')[0]
-    date_obj = datetime.strptime(extracted_time, ZERO_DOPPLER_TIME_FORMAT)
-    product_time = date_obj.strftime(INSAR_FILENAME_TIME_FORMAT)
+    return nisar.products.granule_id.format_datetime(extracted_time)
 
-    return product_time
-
-
-def get_insar_polarization_code(polarizations):
-    '''
-    Determine the InSAR polarization code based on the
-    polarization content of the InSAR product for frequencyA.
-    It returns None if no matching code is found (i.e., the
-    list of polarization is not in the baseline InSAR processing)
-
-    Parameters
-    ----------
-    polarizations: list
-        FrequencyA list of polarization of the InSAR product
-
-    Returns
-    -------
-    str:
-        InSAR polarization code.
-    '''
-    for key_polarizations, code in INSAR_POL_MAPPING.items():
-        if set(key_polarizations) == set(polarizations):
-            return code
-
-    return None
 
 def get_radar_band(slc_path, freq='A'):
     '''
@@ -267,7 +224,7 @@ def get_insar_granule_id(ref_slc_path, sec_slc_path, partial_granule_id,
                   f'in data production: {insar_pols}'
         warning_channel.log(err_str)
 
-    insar_pol_mode = get_insar_polarization_code(insar_pols)
+    insar_pol_mode = nisar.products.granule_id.get_polarization_code(insar_pols)
     ref_start_time = get_slc_start_end_time(ref_slc_path, time_type='start')
     ref_end_time = get_slc_start_end_time(ref_slc_path, time_type='end')
     sec_start_time = get_slc_start_end_time(sec_slc_path, time_type='start')

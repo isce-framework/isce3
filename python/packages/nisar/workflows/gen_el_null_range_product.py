@@ -7,7 +7,9 @@ from __future__ import annotations
 import os
 import time
 import argparse as argp
-from datetime import datetime
+from datetime import datetime, timezone
+
+import numpy as np
 
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.antenna import AntennaParser
@@ -17,6 +19,7 @@ from nisar.pointing import el_null_range_from_raw_ant
 from nisar.log import set_logger
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.products.readers.attitude import load_attitude_from_xml
+from nisar.workflows.helpers import copols_or_desired_pols_from_raw
 
 
 def cmd_line_parser():
@@ -93,7 +96,45 @@ def cmd_line_parser():
     prs.add_argument('--deg', type=int, dest='polyfit_deg',
                      default=6, help='Degree of the polyfit used for'
                      ' smoothing and location estimation of echo null.')
-
+    prs.add_argument('--exclude-nulls', type=int, nargs='*',
+                     dest='exclude_nulls',
+                     help=('List of excluded nulls, in the range [1, N-1], '
+                           'where N is the number beams or RX channels. '
+                           'The respective quality factors are simply '
+                           'set to zero!')
+                     )
+    prs.add_argument('--sample-delays', type=int, nargs='*',
+                     help=('Relative integer sample delays of right RX '
+                           'channel wrt left one in ascending RX order for '
+                           'all null pairs of either the selected frequency '
+                           'band ("A" or "B") or the very first of two ("A") '
+                           'if split spectrum. The number of delays shall be '
+                           'equal to the total number of nulls.')
+                     )
+    prs.add_argument('--sample-delays2', type=int, nargs='*',
+                     help=('Relative integer sample delays of right RX '
+                           'channel wrt left one in ascending RX order for '
+                           'all null pairs of the second band ("B") if split '
+                           'spectrum and both bands are processed. The number '
+                           'of delays shall be equal to the total number of '
+                           'nulls.')
+                     )
+    prs.add_argument('--amp-ratio-imbalances', type=float, nargs='*',
+                     help=('Amplitude ratio (linear) of right to left RX '
+                           'channels of all null pairs in ascending RX order. '
+                           'The size shall be equal to the number of nulls. '
+                           'This will be applied to all processed frequency '
+                           'bands. This is an external and separate '
+                           'correction from that of caltone.')
+                     )
+    prs.add_argument('--phase-diff-imbalances', type=float, nargs='*',
+                     help=('Phase difference (degrees) of right and left RX '
+                           'channels of all null pairs in ascending order. '
+                           'The size shall be equal to the number of nulls. '
+                           'This will be applied to all processed frequency '
+                           'bands. This is an external and separate '
+                           'correction from that of caltone.')
+                     )
     return prs.parse_args()
 
 
@@ -164,21 +205,67 @@ def gen_el_null_range_product(args):
 
     # logic for frequency band and TxRx polarization choices.
     # form a new dict "frq_pol" with key=freq_band and value=[txrx_pol]
-    frq_pol = copol_or_desired_product_from_raw(
+    frq_pol = copols_or_desired_pols_from_raw(
         raw_obj, args.freq_band, args.txrx_pol)
     logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
 
+    # check whether there are more than one frequency band
+    # when "sample_delays2" is provided.
+    if args.sample_delays2 is not None and len(frq_pol) == 1:
+        logger.warning('Input "sample-delays2" will be ignored given '
+                       'simply one frequency band will be processed!')
+
+    exclude_nulls = args.exclude_nulls
+    if exclude_nulls is not None:
+        exclude_nulls = set(exclude_nulls)
+
+    # build complex imbalance ratio only if either of
+    # amp or phase is provided
+    rx_imbalances = None
+    if args.amp_ratio_imbalances is not None:
+        rx_imbalances = np.asarray(args.amp_ratio_imbalances, dtype='c8')
+    if args.phase_diff_imbalances is not None:
+        imb_phs = np.exp(1j * np.deg2rad(args.phase_diff_imbalances))
+        if rx_imbalances is None:
+            rx_imbalances = imb_phs
+        else:
+            if imb_phs.size != rx_imbalances.size:
+                raise ValueError(
+                    f'Size mismatch between amplitude {rx_imbalances.size} '
+                    f'and phase {imb_phs.size} imbalances.'
+                )
+            rx_imbalances *= imb_phs
+
     # loop over all desired frequency bands and their respective desired
     # polarizations
-    for freq_band in frq_pol:
+    sample_delays_all = [args.sample_delays, args.sample_delays2]
+    for freq_band, sample_delays in zip(sorted(frq_pol), sample_delays_all):
         for txrx_pol in frq_pol[freq_band]:
-
+            # check if the product is so-called noise-only (NO TX).
+            # If no TX then skip that product.
+            if raw_obj.is_tx_off(freq_band, txrx_pol):
+                logger.warning(
+                    f'Skip no-TX product ({freq_band},{txrx_pol})!')
+                continue
             (null_num, sr_echo, el_ant, pow_ratio, az_datetime, null_flag,
              mask_valid, _, wavelength) = el_null_range_from_raw_ant(
                  raw_obj, ant_obj, dem_interp=dem_interp_obj, logger=logger,
                  orbit=orbit, attitude=attitude, freq_band=freq_band,
-                 txrx_pol=txrx_pol, **kwargs
+                 txrx_pol=txrx_pol, sample_delays_wrt_left=sample_delays,
+                 imbalances_right2left=rx_imbalances, **kwargs
             )
+            # check the excluded nulls whose quality factor will be zeroed out
+            list_nulls = np.unique(null_num)
+            logger.info(f'List of nulls -> {list_nulls}')
+            if exclude_nulls is not None:
+                logger.info('List of excluded nulls w/ zero quality '
+                            f'factors -> {exclude_nulls}')
+                if not exclude_nulls.issubset(list_nulls):
+                    logger.warning(f'Excluded nulls {exclude_nulls} is out '
+                                   f'of range of {list_nulls}.')
+                    exclude_nulls.intersection_update(list_nulls)
+                    logger.warning(
+                        f'Updated list of excluded nulls -> {exclude_nulls}')
             # get the first and last utc azimuth time w/o fractional seconds
             # in "%Y%m%dT%H%M%S" format to be used as part of CSV product
             # filename.
@@ -186,7 +273,7 @@ def gen_el_null_range_product(args):
             dt_utc_last = dt2str(az_datetime[-1])
             # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
             # used as part of CSV product filename
-            dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+            dt_utc_cur = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
 
             # naming convention of CSV file and product spec is defined in Doc:
             # See reference [1]
@@ -204,12 +291,17 @@ def gen_el_null_range_product(args):
                               ' (deg),Quality Factor\n')
                 # report null-only product (null # > 0) w/ quality checking
                 # afterwards
-                for nn in range(null_num.size):
+                for nn, null_val in enumerate(null_num):
+                    quality_factor = 1 - pow_ratio[nn]
+                    # Simply zero out quality factors for excluded nulls.
+                    if exclude_nulls is not None:
+                        if null_val in exclude_nulls:
+                            quality_factor *= 0
                     fid_csv.write(
                         '{:s},{:1s},{:d},{:.3f},{:.3f},{:.3f}\n'.format(
                             az_datetime[nn].isoformat_usec(), sar_band_char,
                             null_num[nn], sr_echo[nn], el_ant[nn],
-                            1 - pow_ratio[nn])
+                            quality_factor)
                     )
                     # report possible invalid items/Rows
                     # add three for header line + null_zero + 0-based index to
@@ -232,45 +324,6 @@ def gen_el_null_range_product(args):
 def dt2str(dt: 'isce3.core.DateTime', fmt: str = '%Y%m%dT%H%M%S') -> str:
     """isce3 DateTime to a desired string format."""
     return datetime.fromisoformat(dt.isoformat().split('.')[0]).strftime(fmt)
-
-
-def copol_or_desired_product_from_raw(
-        raw: Raw, freq_band: str | None = None, txrx_pol: str | None = None
-        ) -> dict:
-    """
-    Fetch either all co-pol products from Raw (default) or desired ones which
-    fulfill either parameter (`freq_band` and/or `txrx_pol`) if provided. The
-    output is in the form of a dict with key=freq_band and value=[TxRx_pol].
-    """
-    # get list of frequency bands
-    if freq_band is None:
-        freqs = list(raw.polarizations)
-    else:
-        # go with desired frequency band
-        if freq_band not in raw.polarizations:
-            raise ValueError('Wrong frequency band! The available bands -> '
-                             f'{list(raw.polarizations)}')
-        freqs = [freq_band]
-
-    frq_pol = dict()
-    for frq in freqs:
-        pols = raw.polarizations[frq]
-        if txrx_pol is None:
-            # get all co-pols if pol is not provided
-            co_pols = [pol for pol in pols if (pol[0] == pol[1] or
-                                               pol[0] in ['L', 'R'])]
-            if co_pols:
-                frq_pol[frq] = co_pols
-        else:
-            # get all pols over all bands that match the desired one
-            if txrx_pol in pols:
-                frq_pol[frq] = [txrx_pol]
-
-    # check if the dict empty (it simply occurs if txrx_pol is provided!)
-    if not frq_pol:
-        raise ValueError(f'Wrong TxRx Pol over frequency bands {freqs}!')
-
-    return frq_pol
 
 
 if __name__ == "__main__":

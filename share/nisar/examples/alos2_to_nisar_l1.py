@@ -31,7 +31,8 @@ ALL_POLARIZATIONS_SET = set(['HH', 'HV', 'VV', 'VH', 'RH', 'RV'])
 
 CALIBRATION_FIELD_DICT = {
     'elevationAntennaPattern': 'Complex two-way elevation antenna pattern',
-    'nes0': 'Noise equivalent sigma zero'
+    'noiseEquivalentBackscatter': ('Noise equivalent backscatter in '
+                                    'linear scale (units of DN^2)')
 }
 
 
@@ -210,9 +211,9 @@ def construct_nisar_hdf5(outh5, ldr):
     ident_group.create_dataset('listOfFrequencies', data=np.bytes_(["A"]))
     ident_group.create_dataset('missionId', data=np.bytes_("ALOS-2"))
     if ldr.summary.TimeDirectionIndicatorAlongLine[0] == "A":
-        direction = "ascending"
+        direction = "Ascending"
     else:
-        direction = "descending"
+        direction = "Descending"
     ident_group.create_dataset('orbitPassDirection',
                                data=np.bytes_(direction))
     ident_group.create_dataset('processingType',
@@ -225,6 +226,7 @@ def construct_nisar_hdf5(outh5, ldr):
     ident_group.create_dataset('frameNumber', data=np.array(0,
                                                             dtype=np.uint16))
     ident_group.create_dataset("isUrgentObservation", data=np.bytes_("False"))
+    ident_group.create_dataset("isJointObservation", data=np.bytes_("False"))
 
     ident_group.create_dataset("plannedObservationId", data=np.bytes_(["0"]))
     # shape = numberOfDatatakes
@@ -232,6 +234,7 @@ def construct_nisar_hdf5(outh5, ldr):
 
     # fields added to spec in 2023
     ident_group.create_dataset("granuleId", data=np.bytes_("None"))
+    ident_group.create_dataset('platformName', data=np.bytes_("ALOS-2"))
     ident_group.create_dataset("instrumentName", data=np.bytes_("PALSAR-2"))
     ident_group.create_dataset("isDithered", data=np.bytes_("False"))
     ident_group.create_dataset("isMixedMode", data=np.bytes_("False"))
@@ -240,7 +243,7 @@ def construct_nisar_hdf5(outh5, ldr):
                                    "JAXA (SLC repackaged at JPL)"))
     ident_group.create_dataset(
         "processingDateTime",
-        data=np.bytes_(datetime.datetime.now().isoformat()))
+        data=np.bytes_(datetime.datetime.now(datetime.timezone.utc).isoformat()))
     ident_group.create_dataset("productLevel", data=np.bytes_("L1"))
     ident_group.create_dataset(
         "productSpecificationVersion",
@@ -376,10 +379,10 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata, filenames,
         product_id = leader_fie.split('-')[3]
 
         if product_id[3] == 'L':
-            lookside = 'left'
+            lookside = 'Left'
         else:
-            lookside = 'right'
-        metadata['Look Direction'] = lookside.upper()
+            lookside = 'Right'
+        metadata['Look Direction'] = lookside
 
         if verbose:
             print('parameters from metadata:')
@@ -789,7 +792,7 @@ def update_calibration_information(fid, metadata, pol_list, frequency):
 
     for calibration_field, description in CALIBRATION_FIELD_DICT.items():
 
-        if calibration_field == 'nes0':
+        if calibration_field == 'noiseEquivalentBackscatter':
             data = np.full((calibration_zero_doppler_time_vector.size,
                             calibration_slantrange_vector.size),
                            metadata['NESZ'],

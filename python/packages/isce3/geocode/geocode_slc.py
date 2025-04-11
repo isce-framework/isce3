@@ -94,8 +94,13 @@ def _io_valid(geo_io_checks, rdr_io_checks):
 
 def _output_array_valid(output_array, geo_array, which_output):
     '''
-    Compare geo output array shape and output array shpae to see if they match
+    Compare geo output array shape and output array shape to see if they match
     '''
+
+    # Skip the size check when the output array is not provided
+    if output_array is None:
+        return
+
     # default output_array has size==0
     if output_array.size:
         if output_array.shape != geo_array.shape:
@@ -105,11 +110,11 @@ def _output_array_valid(output_array, geo_array, which_output):
 
 
 def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
-                mask_block: np.ndarray,
                 rdr_data_blocks: Union[np.ndarray, list[np.ndarray]],
                 dem_raster, radargrid,
                 geogrid, orbit, native_doppler, image_grid_doppler,
                 ellipsoid, threshold_geo2rdr, num_iter_geo2rdr,
+                mask_block=None,
                 sliced_radargrid=None, subswaths=None,
                 first_azimuth_line=0,  first_range_sample=0, flatten=True,
                 reramp=True,
@@ -133,8 +138,6 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
     ----------
     geo_data_blocks: list of numpy.ndarray
         List of output arrays containing geocoded SLC
-    mask_block: numpy.ndarray
-        Output array containing masking values of geocoded SLC
     rdr_data_blocks: list of numpy.ndarray
         List of input arrays of the SLC in radar coordinates
     dem_raster: isce3.io.Raster
@@ -155,6 +158,8 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
         Threshold for geo2rdr computations
     num_iter_geo2rdr: int
         Maximum number of iterations for geo2rdr convergence
+    mask_block: numpy.ndarray or None
+        Optional output array containing masking values of geocoded SLC
     sliced_radargrid: RadarGridParameters
         Radar grid representing subset of radargrid
     subswaths: SubSwaths or None, default=None
@@ -194,14 +199,8 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
     if sliced_radargrid is None:
         sliced_radargrid = radargrid
 
-    # if subswaths not passed in, pass in emtpy kwarg.
-    # else pass in subswaths in kwarg
-    kwargs = {}
-    if subswaths is not None:
-        kwargs['subswaths'] = subswaths
-
     # if both geo and radar blocks are np.ndarray, put them into a list
-    # to match expected input type of list[np.ndaarray]
+    # to match expected input type of list[np.ndarray]
     if geo_io_checks.is_array and rdr_io_checks.is_array:
         geo_data_blocks = [geo_data_blocks]
         rdr_data_blocks = [rdr_data_blocks]
@@ -213,11 +212,29 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                                         ['carrier', 'flattening', 'mask']):
         _output_array_valid(output_arr, geo_data_blocks[0], which_output)
 
-    _geocode_slc(geo_data_blocks, mask_block, carrier_phase_block,
-                 flatten_phase_block, rdr_data_blocks, dem_raster, radargrid,
-                 sliced_radargrid, geogrid, orbit, native_doppler,
-                 image_grid_doppler, ellipsoid, threshold_geo2rdr,
-                 num_iter_geo2rdr, first_azimuth_line, first_range_sample,
-                 flatten, reramp, az_carrier, rg_carrier, az_time_correction,
-                 srange_correction, flatten_with_corrected_srange,
-                 invalid_value, **kwargs)
+    _geocode_slc(geo_data_blocks=geo_data_blocks,
+                 carrier_phase_block=carrier_phase_block,
+                 flatten_phase_block=flatten_phase_block,
+                 rdr_data_blocks=rdr_data_blocks,
+                 dem_raster=dem_raster,
+                 radargrid=radargrid,
+                 sliced_radar_grid=sliced_radargrid,
+                 geogrid=geogrid,
+                 orbit=orbit,
+                 native_doppler=native_doppler,
+                 image_grid_doppler=image_grid_doppler,
+                 ellipsoid=ellipsoid,
+                 threshold_geo2rdr=threshold_geo2rdr,
+                 numiter_geo2rdr=num_iter_geo2rdr,
+                 mask_block=mask_block,
+                 azimuth_first_line=first_azimuth_line,
+                 range_first_pixel=first_range_sample,
+                 flatten=flatten,
+                 reramp=reramp,
+                 az_carrier=az_carrier,
+                 rg_carrier=rg_carrier,
+                 az_time_correction=az_time_correction,
+                 srange_correction=srange_correction,
+                 flatten_with_corrected_srange=flatten_with_corrected_srange,
+                 invalid_value=invalid_value,
+                 subswaths=subswaths)

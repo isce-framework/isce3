@@ -7,7 +7,8 @@
 #include <cassert>
 #include <cctype>
 #include <string>
-#include <pyre/journal.h>
+
+#include <isce3/except/Error.h>
 
 using isce3::core::LookSide;
 
@@ -21,12 +22,9 @@ LookSide isce3::core::parseLookSide(const std::string & inputLook)
     if (look.compare(0, 5, "right") == 0) {
         return LookSide::Right;
     } else if (look.compare(0, 4, "left") != 0) {
-        pyre::journal::error_t error("isce.core");
-        error
-            << pyre::journal::at(__HERE__)
-            << "Could not successfully set look direction with \""
-            << look << "\". Must be \"right\" or \"left\"."
-            << pyre::journal::endl;
+        std::string msg = "Expected look side string in {'left', 'right'} "
+            "but got '" + look + "'";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), msg);
     }
     return LookSide::Left;
 }

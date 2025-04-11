@@ -7,7 +7,7 @@ import journal
 import numpy as np
 from isce3.core import SINC_HALF, LUT2d
 from isce3.core.resample_block_generators import get_blocks, get_blocks_by_offsets
-from isce3.ext.isce3.image.v2 import resample_to_coords
+from isce3.ext.isce3.image.v2 import _resample_to_coords
 from isce3.io.dataset import DatasetReader, DatasetWriter
 from isce3.product import RadarGridParameters
 
@@ -169,14 +169,6 @@ def resample_slc_blocks(
 
         block_processing_timer += perf_counter()
 
-        # Get the shape of the output block.
-        az_slice, rg_slice = out_block_slice
-        out_block_length = az_slice.stop - az_slice.start
-        out_block_width = rg_slice.stop - rg_slice.start
-        out_block_shape = (out_block_length, out_block_width)
-
-        # The set of resampled processing blocks
-        output_blocks: list[np.ndarray] = []
         # The set of input processing blocks
         input_blocks: list[np.ndarray] = []
 
@@ -185,11 +177,12 @@ def resample_slc_blocks(
         block_slc_read_timer -= perf_counter()
         for input_slc in input_slcs:
             input_blocks.append(np.array(input_slc[in_slices], dtype=np.complex64))
-            output_block = np.full(
-                out_block_shape, fill_value=fill_value, dtype=np.complex64
-            )
-            output_blocks.append(output_block)
         block_slc_read_timer += perf_counter()
+
+        # The set of resampled processing blocks. Initialize to a list of None.
+        # These will eventually be replaced by the resampled blocks output by
+        # the algorithm.
+        output_blocks: list[np.ndarray | None] = [None for _ in input_blocks]
 
         # Get the first positions in azimuth and range on both the resampled block
         # and input block.
@@ -204,33 +197,17 @@ def resample_slc_blocks(
             rg_offsets=rg_offsets_block,
         )
 
-        # First, check that the indices arrays and input array have equal shapes.
-        # We know at this point that output_blocks[0].shape is the size of all the
-        # other output_blocks because it has already passed dataset_shapes_consistent.
-        if (
-            output_blocks[0].shape != azimuth_index_grid.shape
-            or output_blocks[0].shape != range_index_grid.shape
-        ):
-            err_log = (
-                "Output block, azimuth indices block, and range indices block must "
-                "be the same shape. Shapes: "
-                f"Output block: {output_blocks[0].shape} "
-                f"Azimuth indices: {azimuth_index_grid.shape} "
-                f"Range indices: {range_index_grid.shape}"
-            )
-            error_channel.log(err_log)
-            raise ValueError(err_log)
-
         # Run the resampling algorithm on the given blocks.
-        for output_block, input_block in zip(output_blocks, input_blocks):
+        for i in range(len(input_blocks)):
+            input_block = input_blocks[i]
             if not quiet:
                 info_channel.log(
                     f"interpolating to output SLC for block {out_block_slice}..."
                 )
                 # Reporting input block shape for debugging
                 info_channel.log(f"Input block: {in_slices}")
-            resample_to_coords(
-                output_block,
+
+            output_blocks[i] = resample_to_coords(
                 input_block,
                 range_index_grid,
                 azimuth_index_grid,
@@ -367,3 +344,81 @@ def offsets_to_indices(
     rg_indices += rg_offsets + rg_grid_offset
 
     return az_indices, rg_indices
+
+
+def resample_to_coords(
+    input_data_block: np.ndarray,
+    range_input_indices: np.ndarray,
+    azimuth_input_indices: np.ndarray,
+    input_radar_grid: RadarGridParameters,
+    native_doppler: LUT2d,
+    fill_value: np.complex64 = (np.nan + 1.0j * np.nan),
+) -> np.ndarray:
+    """
+    Interpolate input SLC block into the index values of the output block.
+
+    Parameters
+    ----------
+    input_data_block : numpy.ndarray (complex64)
+        Input SLC array in secondary coordinates.
+    range_input_indices : numpy.ndarray (float64)
+        The range (radar-coordinates x) index of the output pixels in the input
+        grid.
+    azimuth_input_indices : numpy.ndarray (float64)
+        The azimuth (radar-coordinates y) index of the output pixels in the input
+        grid.
+    input_radar_grid : isce3.product.RadarGridParameters
+        Radar grid parameters of the input SLC data.
+    native_doppler : isce3.core.LUT2d
+        2D LUT describing the native doppler of the input SLC image, in Hz.
+    fill_value : complex
+        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+
+    Returns
+    -------
+    resampled_block : numpy.ndarray (complex64)
+        The resampled data.
+    """
+    error_channel = journal.error("resample_slc.resample_to_coords")
+
+    # First, check that the indices arrays have equal shapes.
+    if azimuth_input_indices.shape != range_input_indices.shape:
+        err_log = (
+            "Azimuth indices block and range indices block must "
+            "be the same shape. Shapes: "
+            f"Azimuth indices: {azimuth_input_indices.shape} "
+            f"Range indices: {range_input_indices.shape}"
+        )
+        error_channel.log(err_log)
+        raise ValueError(err_log)
+
+    # Ensure that all of the input data blocks meet the requirements of the
+    # _resample_to_coords pybind (correct dtype, with flags C_CONTIGUOUS and WRITABLE)
+    # These function calls will return conforming copies of the data blocks if they
+    # are not already conforming.
+    input_data_block = np.require(
+        input_data_block, dtype=np.complex64, requirements=["C"]
+    )
+    range_input_indices = np.require(
+        range_input_indices, dtype=np.float64, requirements=["C"]
+    )
+    azimuth_input_indices = np.require(
+        azimuth_input_indices, dtype=np.float64, requirements=["C"]
+    )
+    
+    # The shape of the output block is the same as that of the indices shapes.
+    output_block = np.full(
+        range_input_indices.shape, fill_value=fill_value, dtype=np.complex64
+    )
+
+    _resample_to_coords(
+        output_data_block=output_block,
+        input_data_block=input_data_block,
+        range_input_indices=range_input_indices,
+        azimuth_input_indices=azimuth_input_indices,
+        in_radar_grid=input_radar_grid,
+        native_doppler=native_doppler,
+        fill_value=fill_value,
+    )
+
+    return output_block

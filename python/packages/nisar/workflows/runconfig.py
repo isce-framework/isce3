@@ -13,7 +13,7 @@ import isce3
 from nisar.products.readers import SLC
 from nisar.workflows import geogrid
 import nisar.workflows.helpers as helpers
-
+from nisar.products.readers.orbit import load_orbit_from_xml
 
 class RunConfig:
     def __init__(self, args, workflow_name=''):
@@ -203,6 +203,33 @@ class RunConfig:
                     error_channel.log(err_str)
                     raise ValueError(err_str)
 
+
+    def check_temporal_coverage(self):
+        # Check the temporal coverage of radargrid, orbit, and TEC (if provided)
+        if self.workflow_name == 'insar':
+            input_path = self.cfg['input_file_group']['reference_rslc_file']
+            orbit_path = self.cfg['dynamic_ancillary_file_group']['orbit_files']['reference_orbit_file']
+        else:
+            input_path = self.cfg['input_file_group']['input_file_path']
+            orbit_path = self.cfg['dynamic_ancillary_file_group']['orbit_file']
+        freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
+        tec_path = self.cfg['dynamic_ancillary_file_group']['tec_file']
+        
+        slc = SLC(hdf5file=input_path)
+
+        if orbit_path is not None:
+            # slc will get first radar grid whose frequency is available.
+            # orbit has not frequency dependency.
+            orbit = load_orbit_from_xml(orbit_path,
+                                        slc.getRadarGrid().ref_epoch)
+        else:
+            orbit = slc.getOrbit()
+
+        for freq, _ in freq_pols.items():
+            radar_grid = slc.getRadarGrid(freq)
+            helpers.check_radargrid_orbit_tec(radar_grid, orbit, tec_path)
+
+
     def prep_geocode_cfg(self):
         '''
         check geocode config and initialize as needed
@@ -336,6 +363,7 @@ class RunConfig:
         '''
         self.prep_paths()
         self.prep_frequency_and_polarizations()
+        self.check_temporal_coverage()
         self.prep_geocode_cfg()
         self.prep_geocode_metadata('radar_grid_cubes',
                                    workflow_name=self.workflow_name,

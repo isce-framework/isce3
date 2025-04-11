@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from itertools import product
 from typing import Any, Optional, Union
 
@@ -117,6 +117,12 @@ class InSARBaseWriter(h5py.File):
             self.cfg["processing"]["input_subset"]\
                 ["list_of_frequencies"]
 
+        # Set the topo path for the geo2rdr
+        if 'topo_path' not in self.cfg['processing']['geo2rdr']:
+            self.cfg['processing']['geo2rdr']['topo_path'] = \
+                self.cfg['product_path_group']['scratch_path']
+        self.topo_path =  self.cfg['processing']['geo2rdr']['topo_path']
+
         # Group paths
         self.group_paths = CommonPaths()
 
@@ -135,20 +141,26 @@ class InSARBaseWriter(h5py.File):
 
         # Pull the radargrid of reference and secondary RSLC
         freq = "A" if "A" in self.freq_pols else "B"
-        ref_radargrid = self.ref_rslc.getRadarGrid(freq)
-        sec_radargrid = self.sec_rslc.getRadarGrid(freq)
+        self.ref_radargrid = self.ref_rslc.getRadarGrid(freq)
+        self.sec_radargrid = self.sec_rslc.getRadarGrid(freq)
 
-        self.ref_orbit_epoch = ref_radargrid.ref_epoch
-        self.sec_orbit_epoch = sec_radargrid.ref_epoch
+        self.ref_orbit_epoch = self.ref_radargrid.ref_epoch
+        self.sec_orbit_epoch = self.sec_radargrid.ref_epoch
 
         self.ref_orbit = self.ref_rslc.getOrbit()
         self.sec_orbit = self.sec_rslc.getOrbit()
 
         self.ref_h5py_file_obj = \
-            HDF5OptimizedReader(name=self.ref_h5_slc_file, mode="r", libver="latest", swmr=True)
+            HDF5OptimizedReader(name=self.ref_h5_slc_file,
+                                mode="r",
+                                libver="latest",
+                                swmr=True)
 
         self.sec_h5py_file_obj = \
-            HDF5OptimizedReader(name=self.sec_h5_slc_file, mode="r", libver="latest", swmr=True)
+            HDF5OptimizedReader(name=self.sec_h5_slc_file,
+                                mode="r",
+                                libver="latest",
+                                swmr=True)
 
         # Load the external orbits and crop them
         if self.external_ref_orbit_path is not None:
@@ -299,7 +311,7 @@ class InSARBaseWriter(h5py.File):
             # Should those also be updated in the crossmul module?
             doppler_centroid_group.copy("dopplerCentroid", common_group)
             common_group["dopplerCentroid"].attrs['description'] = \
-                np.bytes_("Common Doppler centroid used for processing interferogram")
+                np.bytes_("2D LUT of common Doppler centroid between reference and secondary RSLCs")
             common_group["dopplerCentroid"].attrs['units'] = \
                 Units.hertz
 
@@ -309,7 +321,7 @@ class InSARBaseWriter(h5py.File):
                 "dopplerBandwidth",
             )
             common_group["dopplerBandwidth"].attrs['description'] = \
-                np.bytes_("Common Doppler Bandwidth used for processing interferogram")
+                np.bytes_("Common Doppler bandwidth between reference and secondary RSLCs")
             common_group["dopplerBandwidth"].attrs['units'] = Units.hertz
 
     def add_RSLC_to_procinfo_params_group(self, rslc_name: str):
@@ -353,10 +365,10 @@ class InSARBaseWriter(h5py.File):
                                   ' radar modes, "False" otherwise')
         ds_params = [
             DatasetParams(
-                "rfiCorrectionApplied",
+                "rfiMitigationApplied",
                 rfi_mitigation_flag,
                 (
-                    "Flag to indicate if RFI correction has been applied"
+                    "Flag to indicate if RFI mitigation has been applied"
                     f" to {rslc_name} RSLC"
                 ),
             ),
@@ -439,12 +451,15 @@ class InSARBaseWriter(h5py.File):
             rslc_frequency_group['zeroDopplerTimeSpacing'].attrs['units'] = Units.second
 
             # Copy the zero-Dopper information from the source RSLC to the RSLC group
-            id_group.copy('zeroDopplerStartTime', rslc_frequency_group)
-
-            # Update the description attributes of the zeroDopplerTime
-            ds_zerodopp = rslc_frequency_group[f"zeroDopplerStartTime"]
-            ds_zerodopp.attrs['description'] = \
-                np.bytes_(f"Azimuth start time of the {rslc_name} RSLC product")
+            for doppler_time, start_stop in zip(['zeroDopplerStartTime',
+                                                 'zeroDopplerEndTime'],
+                                                ['start', 'stop']):
+                id_group.copy(doppler_time, rslc_frequency_group)
+                # Update the description attributes of the zeroDopplerTime
+                ds_zerodopp = rslc_frequency_group[doppler_time]
+                ds_zerodopp.attrs['description'] = \
+                    np.bytes_(f"Azimuth {start_stop} time (in UTC) of the {rslc_name}"
+                              " RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss")
 
             rg_names_to_be_created = [
                 DatasetParams(
@@ -528,9 +543,6 @@ class InSARBaseWriter(h5py.File):
                 "coregistrationMethod",
                 coreg_method,
                 "RSLC coregistration method",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
             DatasetParams(
                 "crossCorrelation",
@@ -539,50 +551,32 @@ class InSARBaseWriter(h5py.File):
                     "Cross-correlation algorithm for"
                     " sub-pixel offsets computation"
                 ),
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
             DatasetParams(
                 "crossCorrelationFilling",
                 outlier_filling_method,
                 "Outliers data filling algorithm for"
                 " cross-correlation offsets",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
             DatasetParams(
                 "crossCorrelationFilterKernel",
                 filter_kernel_algorithm,
                 "Filtering algorithm for cross-correlation offsets",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
             DatasetParams(
                 "crossCorrelationOutliers",
                 culling_metric,
                 "Outliers identification algorithm",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
             DatasetParams(
                 "geometryCoregistration",
                 "Range doppler to geogrid then geogrid to range doppler",
                 "Geometry coregistration algorithm",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
             DatasetParams(
                 "resampling",
                 "sinc",
                 "Secondary RSLC resampling algorithm",
-                {
-                    "algorithm_type": "RSLC coregistration",
-                },
             ),
         ]
 
@@ -611,17 +605,11 @@ class InSARBaseWriter(h5py.File):
                 "flatteningMethod",
                 flatten_method,
                 "Algorithm used to flatten the wrapped interferogram",
-                {
-                    "algorithm_type": "Interferogram formation",
-                },
             ),
             DatasetParams(
                 "multilooking",
                 multilooking_method,
                 "Multilooking algorithm",
-                {
-                    "algorithm_type": "Interferogram formation",
-                },
             ),
             DatasetParams(
                 "wrappedInterferogramFiltering",
@@ -629,9 +617,6 @@ class InSARBaseWriter(h5py.File):
                 (
                     "Algorithm used to filter the wrapped interferogram prior to phase unwrapping"
                 ),
-                {
-                    "algorithm_type": "Interferogram formation",
-                },
             ),
         ]
 
@@ -832,11 +817,29 @@ class InSARBaseWriter(h5py.File):
         """
         Write metadata datasets and attributes common to all InSAR products to HDF5
         """
+        rslc_start_times = []
         for group, h5py_file_obj, orbit_to_save in zip(['reference', 'secondary'],
                                                        [self.ref_h5py_file_obj,
                                                         self.sec_h5py_file_obj],
                                                        [self.ref_orbit,
                                                         self.sec_orbit]):
+            # Get RSLCs start times to compute temporal baseline
+            start_time = h5py_file_obj[f'{self.ref_rslc.IdentificationPath}/' \
+                                       f'zeroDopplerStartTime'][()].decode('UTF-8')
+            date_format = "%Y-%m-%dT%H:%M:%S"
+            if '.' in start_time:
+                #  Split the date into the main part and the fractional seconds
+                main_part, microseconds = start_time.split('.')
+                # The '.%f' can only account for the six digtis, or it will
+                # raise the ValueError: unconverted data remains: xxx
+                microseconds = (microseconds + "000000")[:6]
+                # Add the fractional seconds part to the format
+                date_format += ".%f"
+                # Update the datatime string to have the six digits microseconds
+                start_time = f"{main_part}.{microseconds}"
+
+            rslc_start_times.append(datetime.strptime(start_time, date_format))
+
             # Create metadata group, copy over attitude group, and open newly create attitude group
             dst_attitude_group = self.require_group(
                 f'{self.group_paths.MetadataPath}/attitude/{group}')
@@ -863,10 +866,6 @@ class InSARBaseWriter(h5py.File):
 
             dst_attitude_group["quaternions"].attrs["units"] = \
                 Units.unitless
-            dst_attitude_group["quaternions"].attrs["eulerAngles"] = \
-                Units.radian
-            dst_attitude_group["quaternions"].attrs["angularVelocity"] = \
-                Units.rad_per_second
 
             dst_orbit_group = self.require_group(f'{self.group_paths.MetadataPath}/orbit/{group}')
             orbit_to_save.save_to_h5(dst_orbit_group)
@@ -874,7 +873,7 @@ class InSARBaseWriter(h5py.File):
             # Orbit time
             orbit_time = dst_orbit_group["time"]
             orbit_time.attrs['description'] = np.bytes_(
-                "Time vector record. This record contains the time corresponding to position and velocity records")
+                "Time vector record. This record contains the time since UTC epoch corresponding to position and velocity records")
             orbit_time_units = orbit_time.attrs['units']
             orbit_time_units = extract_datetime_from_string(str(orbit_time_units), 'seconds since ')
             if orbit_time_units is not None:
@@ -901,6 +900,15 @@ class InSARBaseWriter(h5py.File):
                 'Orbit interpolation method, either "Hermite" or "Legendre"'
             )
 
+        # Compute the temporal baseline using the RSLC start times
+        temp_baseline = (rslc_start_times[1] - rslc_start_times[0]).days
+        temp_baseline_dst_params = DatasetParams("temporalBaseline", np.uint16(temp_baseline),
+                                                 "Time interval between reference and secondary RSLCs",
+                                                 {"units": Units.days})
+        dst_orbit_group = self.require_group(f'{self.group_paths.MetadataPath}/orbit')
+        add_dataset_and_attrs(dst_orbit_group, temp_baseline_dst_params)
+
+
     def add_identification_to_hdf5(self):
         """
         Add the identification group to the product
@@ -911,7 +919,9 @@ class InSARBaseWriter(h5py.File):
         processing_center = primary_exec_cfg.get("processing_center")
         processing_type = primary_exec_cfg.get("processing_type")
         partial_granule_id = primary_exec_cfg.get("partial_granule_id")
-        product_version = primary_exec_cfg.get("product_version")
+        product_type = self.product_info.ProductType.lower()
+        product_version = primary_exec_cfg["product_version"].get(f'{product_type}_version')
+        product_doi = primary_exec_cfg["product_doi"].get(f'{product_type}_doi')
         crid = primary_exec_cfg.get("composite_release_id")
 
         # Determine processingType
@@ -919,13 +929,19 @@ class InSARBaseWriter(h5py.File):
             processing_type = np.bytes_('Nominal')
         elif processing_type == 'UR':
             processing_type = np.bytes_('Urgent')
+        elif processing_type == 'OD':
+            processing_type = np.bytes_('Custom')
         else:
             processing_type = np.bytes_('Undefined')
 
-        # processing center (JPL, NRSC, or Others)
-        # if it is None, 'JPL' will be applied
+        # Adopt same logic as RSLC, GSLC, GCOV
+        # If no condition is met, assign string from runconfig
         if processing_center is None:
-            processing_center = "JPL"
+            processing_center = '(NOT SPECIFIED)'
+        elif processing_center == 'J':
+            processing_center = 'JPL'
+        elif processing_center == 'N':
+            processing_center = 'NRSC'
 
         # If the CRID identifier is None, assign a dummy crid "A10000"
         if crid is None:
@@ -940,14 +956,6 @@ class InSARBaseWriter(h5py.File):
         # Datasets that need to be copied from the RSLC
         id_ds_names_need_to_copy = [
             DatasetParams(
-                "absoluteOrbitNumber",
-                "None",
-                "Absolute orbit number",
-                {
-                    "units": Units.unitless,
-                },
-            ),
-            DatasetParams(
                 "boundingPolygon",
                 "None",
                 descriptions.bounding_polygon,
@@ -955,6 +963,14 @@ class InSARBaseWriter(h5py.File):
                     "ogr_geometry": "polygon",
                     "epsg": "4326",
                 },
+            ),
+            DatasetParams(
+                "platformName",
+                "(NOT SPECIFIED)",
+                (
+                    "Name of the platform used to collect the remote sensing"
+                    " data provided in this product"
+                ),
             ),
             DatasetParams(
                 "diagnosticModeFlag",
@@ -968,17 +984,11 @@ class InSARBaseWriter(h5py.File):
                 "frameNumber",
                 "None",
                 "Frame number",
-                {
-                    "units": Units.unitless,
-                },
             ),
             DatasetParams(
                 "trackNumber",
                 "None",
                 "Track number",
-                {
-                    "units": Units.unitless,
-                },
             ),
             DatasetParams(
                 "isDithered",
@@ -1026,14 +1036,43 @@ class InSARBaseWriter(h5py.File):
                 ds_name.value = slc_val
             add_dataset_and_attrs(dst_id_group, ds_name)
 
-        # Copy the zero-Doppler information from both reference and secondary RSLC
-        for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
-            ref_id_group.copy(ds_name, dst_id_group,
-                              f"referenceZ{ds_name[1:]}")
+        # copy the isFullFrame from the reference RSLC since the secondary RSLC will be
+        # coregistrated to align with the reference RSLC. If there is no isFullFrame dataset in the RSLC,
+        # we assume it is partial frame.
+        # Note: handle 'isFullFrame' here because we need to populate the correct
+        # *Percentage attributes from the reference and secondary RSLCs, if available.
+        # (i.e., they are not fixed attributes)
+        ds_name = "isFullFrame"
+        if ds_name in ref_id_group:
+            ref_id_group.copy(ds_name, dst_id_group)
+        else:
+            ds = DatasetParams(
+                ds_name,
+                "False",
+                '"True" if the product fully covers a NISAR frame,'
+                ' "False" if partial coverage',
+                {'frameCoveragePercentage':np.nan,
+                 'thresholdPercentage':75.0}
+            )
+            add_dataset_and_attrs(dst_id_group, ds)
 
-            sec_id_group.copy(ds_name, dst_id_group,
-                              f"secondaryZ{ds_name[1:]}")
+        # Copy datasets from reference and secondary RSLCs
+        datasets_to_copy = ["zeroDopplerStartTime",
+                            "zeroDopplerEndTime",
+                            "absoluteOrbitNumber",
+                            "isJointObservation"]
+        cap = lambda x: f"{x[0].upper()}{x[1:]}"
 
+        for ds_name in datasets_to_copy:
+            # Check if the dataset in the reference and secondary RSLC
+            # identification group to deal with the case that
+            # the old product spec of the RSLC that does not have 'isJointObservation'
+            if ds_name in ref_id_group:
+                ref_id_group.copy(ds_name, dst_id_group,  f"reference{cap(ds_name)}")
+            if ds_name in sec_id_group:
+                sec_id_group.copy(ds_name, dst_id_group,  f"secondary{cap(ds_name)}")
+
+        # Copy the the
         # Update the description attributes of the zeroDoppler
         for prod in list(product(['reference', 'secondary'],
                                  ['Start', 'End'])):
@@ -1042,7 +1081,29 @@ class InSARBaseWriter(h5py.File):
             # rename the End time to stop
             time_in_description = 'stop' if start_or_stop == 'End' else 'start'
             ds.attrs['description'] = \
-                f"Azimuth {time_in_description} time of {rslc_name} RSLC product"
+                f"Azimuth {time_in_description} time (in UTC) of {rslc_name} RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss"
+
+        for rslc_name in ['reference', 'secondary']:
+             # Update the description for the absolute orbit numbers
+            ds = dst_id_group[f"{rslc_name}AbsoluteOrbitNumber"]
+            ds.attrs['description'] = \
+            f'Absolute orbit number for the {rslc_name} RSLC'
+
+            #  Update the description for the isJointObservation
+            #  If there is no isJointObservation in the identification group,
+            #  we will create a new one
+            ds_name = f"{rslc_name}IsJointObservation"
+            description = '"True" if any portion' +\
+                f' of the {rslc_name} RSLC was acquired in a joint observation mode ' +\
+                '(e.g., L-band and S-band simultaneously), "False" otherwise'
+            if ds_name in dst_id_group:
+                ds = dst_id_group[ds_name]
+                ds.attrs['description'] = np.bytes_(description)
+            else:
+                add_dataset_and_attrs(dst_id_group, DatasetParams(
+                    ds_name,
+                    "False",
+                    description))
 
         # Granule ID follows the NISAR filename convention. The partial granule ID
         # has placeholders (curly brackets) which will be filled by the InSAR SAS
@@ -1092,9 +1153,9 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "processingDateTime",
-                datetime.utcnow().replace(microsecond=0).isoformat(),
+                datetime.now(timezone.utc).isoformat()[:19],
                 (
-                    "Processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS"
+                    "Processing date and time (in UTC) in the format YYYY-mm-ddTHH:MM:SS"
                 ),
             ),
             DatasetParams(
@@ -1105,6 +1166,10 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "radarBand", radar_band_name,
                 'Acquired frequency band, either "L" or "S"'
+            ),
+             DatasetParams(
+                "productDoi", str(product_doi),
+                "Digital Object Identifier (DOI) for the product"
             ),
             DatasetParams(
                 "productLevel",

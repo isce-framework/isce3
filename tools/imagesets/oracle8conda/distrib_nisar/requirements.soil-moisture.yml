@@ -6,5 +6,6 @@ dependencies:
   - netcdf-fortran
   - gcc
   - gfortran
+  - hdf5>=1.14.3
   - make
   - coreutils

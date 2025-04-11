@@ -70,9 +70,10 @@ runconfig:
         primary_executable:
             # RIFG_RUNW_GUNW will produce all three InSAR products
             product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'ROFF_RIFG_RUNW_GOFF_GUNW', 'ROFF', 'GOFF', 'ROFF_GOFF')
-            product_version: str('^\d+\.\d+\.\d+$', required=False)
+            product_version: include('product_version_options', required=False)
+            product_doi: include('product_doi_options', required=False)
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
-            processing_type: enum('PR', 'UR', required=False)
+            processing_type: enum('PR', 'UR', 'OD', required=False)
             product_accuracy: enum('P','M','N','F', required=False)
             urgent_request_id: list(str(), required=False)
             processing_center: str(required=False)
@@ -822,6 +823,7 @@ rifg_qa_reports_options:
     wrapped_igram: include('qa_threshold_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
+    correlation_surface_peak: include('qa_threshold_options', required=False)
     browse_png: include('qa_browse_png_wrapped_options', required=False)
 
 runw_options:
@@ -836,6 +838,7 @@ runw_qa_reports_options:
     ionosphere_phase_screen: include('qa_threshold_options', required=False)
     ionosphere_phase_screen_uncertainty: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
+    correlation_surface_peak: include('qa_threshold_options', required=False)
     browse_png: include('qa_browse_png_unwrapped_options', required=False)
 
 gunw_options:
@@ -851,6 +854,7 @@ gunw_qa_reports_options:
     ionosphere_phase_screen: include('qa_threshold_options', required=False)
     ionosphere_phase_screen_uncertainty: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
+    correlation_surface_peak: include('qa_threshold_options', required=False)
     browse_png: include('qa_browse_png_unwrapped_options', required=False)
 
 roff_options:
@@ -1068,3 +1072,17 @@ output_options:
 lut_options:
     # Boolean flag to activate/deactivate model-based solid earth tide corrections
     solid_earth_tides_enabled: bool(required=False)
+
+product_version_options:
+    rifg_version: str('^\d+\.\d+\.\d+$', required=False)
+    roff_version: str('^\d+\.\d+\.\d+$', required=False)
+    runw_version: str('^\d+\.\d+\.\d+$', required=False)
+    goff_version: str('^\d+\.\d+\.\d+$', required=False)
+    gunw_version: str('^\d+\.\d+\.\d+$', required=False)
+
+product_doi_options:
+    rifg_doi: str(required=False)
+    roff_doi: str(required=False)
+    runw_doi: str(required=False)
+    goff_doi: str(required=False)
+    gunw_doi: str(required=False)

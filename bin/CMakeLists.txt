@@ -6,5 +6,5 @@ resampSlc.py
 )
 
 install(PROGRAMS ${PROGS}
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        DESTINATION "${ISCE_BINDIR}"
         )

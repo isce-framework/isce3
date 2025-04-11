@@ -303,10 +303,15 @@ def _get_tec_time(tec_json_dict: dict,
     # Adjust the radar grid margin in case of the staggered grid.
     # The staggered grid needs at least half of the TEC spacing at each side.
     # When `margin` is not big enough, then increase it to half the spacing.
+    staggered_grid_margin_sec = 0.0
     if staggered_tec_grid:
         tec_grid_spacing = ((json_utc_datetimes[-1] - json_utc_datetimes[0]).total_seconds()
                             / (len(json_utc_datetimes) - 1))
-        margin = max(margin, tec_grid_spacing / 2.0)
+
+        staggered_grid_margin_sec = tec_grid_spacing / 2.0
+        margin = max(margin, staggered_grid_margin_sec)
+
+    staggered_grid_margin = isce3.core.TimeDelta(staggered_grid_margin_sec)
 
     # Compute lower and upper bounds as datetime objects to filter JSON UTC
     # datetime objects based on radar grid start and stop with margin applied.
@@ -319,11 +324,13 @@ def _get_tec_time(tec_json_dict: dict,
 
     # Determine mask start based on larger between orbit start,
     # rdr grid start - margin
-    mask_start = max(orbit.start_datetime, rdr_grid_start_minus_margin)
+    mask_start = max(orbit.start_datetime - staggered_grid_margin,
+                     rdr_grid_start_minus_margin)
 
     # Determine mask start based on smaller between orbit stop,
     # rdr grid start + margin
-    mask_stop = min(orbit.end_datetime, rdr_grid_end_plus_margin)
+    mask_stop = min(orbit.end_datetime + staggered_grid_margin,
+                    rdr_grid_end_plus_margin)
 
     # If correct doppler LUT provided, check LUT start/stop against mask
     # start/stop.
@@ -397,7 +404,10 @@ def _check_tec_grid_contains_radargrid(radar_grid: isce3.product.RadarGridParame
                f'tec_start={tec_t[0]}, tec_end={tec_t[-1]}\n'
                f'radargrid start={radar_grid.sensing_start}, radargrid stop={radar_grid.sensing_stop}\n'
                f'staggered: {staggered}\n'
-               f'TEC grid spacing: {tec_grid_spacing}')
+               f'TEC grid spacing: {tec_grid_spacing}\n\n'
+               f'Relative timing w.r.t. Sensing start:\ntec_start={tec_t[0] - radar_grid.sensing_start}, '
+               f'tec_end={tec_t[-1] - radar_grid.sensing_start}\n'
+               f'radargrid start={0}, radargrid_stop={radar_grid.sensing_stop - radar_grid.sensing_start}')
 
     error_channel.log(err_msg)
     raise ValueError(err_msg)

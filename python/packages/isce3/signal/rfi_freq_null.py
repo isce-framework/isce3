@@ -3,6 +3,8 @@ Perform RFI Detection and mitigation by evaluating raw data frequency domain
 averaged Power Spectra. Detected RFI-contaminated frequency bins are nulled.
 """
 
+from __future__ import annotations
+
 import numpy as np
 from scipy.fft import fft, ifft
 from numpy.polynomial import Polynomial
