@@ -135,6 +135,9 @@ void addbinding(py::class_<PolarGrid>& pyPolarGrid)
         .def_readonly("axis", &PolarGrid::axis)
         .def_readonly("range", &PolarGrid::range)
         .def_readonly("sin_squint", &PolarGrid::sin_squint)
+        .def_property_readonly("shape", [](const PolarGrid& self) {
+            return std::make_tuple(self.sin_squint.size(), self.range.size());
+        })
         ;
 }
 
