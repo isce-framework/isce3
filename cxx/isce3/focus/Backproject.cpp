@@ -219,10 +219,101 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
 }
 
 
+static Vec3 vector_mean(const std::vector<Vec3>& vecs)
+{
+    Vec3 sum = {0, 0, 0};
+    for (const auto vec : vecs) {
+        sum += vec;
+    }
+    return sum * (1.0 / vecs.size());
+}
+
+
+std::tuple<PolarGrid, std::vector<Vec3>, std::vector<Vec3>>
+setupPolarGridForPulses(
+        const RadarGeometry& in_geometry,
+        const Eigen::Ref<const Eigen::VectorXd>& azimuth_time,
+        double range_bandwidth,
+        double azimuth_resolution,
+        double oversample_range, double oversample_azimuth,
+        int num_doppler_eval,
+        bool densify_for_fast_transforms)
+{
+    // Interpolate platform position & velocity at each pulse
+    const auto nt = azimuth_time.size();
+    std::vector<Vec3> pos(nt), vel(nt);
+
+    for (auto i = decltype(nt){0}; i < nt; ++i) {
+        double t = azimuth_time[i];
+        in_geometry.orbit().interpolate(&pos[i], &vel[i], t);
+    }
+
+    // Use mean position as origin of polar grid.
+    const Vec3 origin = vector_mean(pos);
+
+    // For the along-track axis we could fit a line to the positions, or use the
+    // dominant eigenvector of the position sample covariance.  But the average
+    // velocity is probably about the same and simpler to compute.
+    Vec3 axis = vector_mean(vel);
+    const auto vs = axis.norm();
+    axis *= 1.0 / vs;
+
+    constexpr auto c = isce3::core::speed_of_light;
+    const auto fc = c / in_geometry.wavelength();
+    const auto slant_range = in_geometry.slantRange();
+
+    const auto
+        fmax = fc + range_bandwidth / 2,
+        length = vs * (azimuth_time[nt - 1] - azimuth_time[0]);
+    // Yegulalp, Eq. (11) and (12)
+    auto 
+        dq = c / (2 * fmax * length * oversample_azimuth),
+        dr = c / (2 * range_bandwidth * oversample_range);
+
+    // Our polar data structures use a constant Doppler centroid (DC) vs range.
+    // If we have some DC variation over the swath, we'll increase the Doppler
+    // bandwidth enough to accommodate it.  Later we can mask out the pixels
+    // outside the desired azimuth band if desired.
+    // We will assume the DC is stable over the slow-time span of the pulses.
+    const auto
+        tmid = (azimuth_time[0] + azimuth_time[nt - 1]) / 2,
+        r0 = slant_range.first(),
+        r1 = slant_range.last(),
+        dop2q = c / (fc * 2 * vs);
+    auto q0 = in_geometry.doppler().eval(tmid, r0) * dop2q;
+    auto q1 = q0;
+    for (int i = 1; i < num_doppler_eval; ++i) {
+        const auto ri = r0 + i * (r1 - r0) / (num_doppler_eval - 1);
+        const auto qi = in_geometry.doppler().eval(tmid, ri) * dop2q;
+        q0 = std::min(q0, qi);
+        q1 = std::max(q1, qi);
+    }
+    auto qmid = (q0 + q1) / 2;
+    auto qspan = (q1 - q0) + c / (fc * 2 * azimuth_resolution);
+
+    int nr = static_cast<int>(std::ceil((r1 - r0) / dr));
+    int nq = static_cast<int>(std::ceil(qspan / dq));
+
+    // adjust spacing so we end up with a fast FFT sizes
+    if (densify_for_fast_transforms) {
+        nr = nextFastPower(nr);
+        nq = nextFastPower(nq);
+        dr = (r1 - r0) / nr;
+        dq = qspan / nq;
+    }
+
+    auto pgrid = PolarGrid{azimuth_time[0], azimuth_time[nt - 1],
+        origin, axis, Linspace<double>(r0, dr, nr),
+        Linspace<double>(qmid - qspan / 2, dq, nq)};
+
+    return {pgrid, pos, vel};
+}
+
+
 std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
 backprojectFirstStage(
         const std::complex<float>* in, const RadarGeometry& in_geometry,
-        const std::vector<double>& in_azimuth_time,
+        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
         double range_bandwidth,
         const DEMInterpolator& dem, double fc, double ds,
         const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
@@ -247,63 +338,17 @@ backprojectFirstStage(
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
     }
 
-    // get input & output radar grid azimuth time & slant range
-    Linspace<double> in_slant_range = in_geometry.slantRange();
-
-    // interpolate platform position & velocity at each pulse
-    std::vector<Vec3> pos(in_azimuth_time.size());
-    std::vector<Vec3> vel(in_azimuth_time.size());
-    for (int i = 0; i < in_azimuth_time.size(); ++i) {
-        double t = in_azimuth_time[i];
-        in_geometry.orbit().interpolate(&pos[i], &vel[i], t);
-    }
-
-    const PolarGrid out_grid = [&](void) {
-        const auto iend = in_azimuth_time.size() - 1;
-        const auto jend = in_slant_range.size() - 1;
-
-        const Vec3 origin = (pos[0] + pos[iend]) / 2;
-        Vec3 axis = (vel[0] + vel[iend]) / 2;
-        const double vs = axis.norm();
-        axis /= vs;
-
-        double
-            fmax = fc + range_bandwidth / 2,
-            length = vs * (in_azimuth_time[iend] - in_azimuth_time[0]),
-            // Yegulalp, Eq. (11) and (12)
-            dq = c / (2 * fmax * length * oversample_azimuth),
-            dr = c / (2 * range_bandwidth * oversample_range);
-
-        // evaluate Doppler at a couple of points to try to cover variation
-        const double
-            tmid = (in_azimuth_time[0] + in_azimuth_time[iend]) / 2,
-            r0 = in_slant_range.first(),
-            r1 = in_slant_range[jend],
-            dop2q = c / (fc * 2 * vs),
-            q0 = in_geometry.doppler().eval(tmid, r0) * dop2q,
-            q1 = in_geometry.doppler().eval(tmid, r1) * dop2q,
-            qmid = (q0 + q1) / 2,
-            qspan = std::abs(q1 - q0) + c / (fc * 2 * ds);
-
-        int nr = static_cast<int>(std::ceil((r1 - r0) / dr));
-        int nq = static_cast<int>(std::ceil(qspan / dq));
-
-        // adjust spacing so we end up with a fast FFT sizes
-        nr = nextFastPower(nr);
-        nq = nextFastPower(nq);
-        dr = (r1 - r0) / nr;
-        dq = qspan / nq;
-
-        return PolarGrid{in_azimuth_time[0], in_azimuth_time[iend],
-            origin, axis, Linspace<double>(r0, dr, nr),
-            Linspace<double>(qmid - qspan / 2, dq, nq)};
-    }();
+    const auto [out_grid, pos, vel] = setupPolarGridForPulses(in_geometry,
+        in_azimuth_time,
+        range_bandwidth, ds, oversample_range,
+        oversample_azimuth, 2, true);
 
     const auto npix = out_grid.length() * out_grid.width();
     auto height = std::make_unique<float[]>(npix);
     auto out = std::make_unique<std::complex<float>[]>(npix);
 
     // range sampling window
+    auto in_slant_range = in_geometry.slantRange();
     double swst = 2. * in_slant_range.first() / c;
     double dtau = 2. * in_slant_range.spacing() / c;
     int nr = in_slant_range.size();
@@ -351,10 +396,13 @@ backprojectFirstStage(
                 tau_atm = dryTropoDelayTSX(out_grid.origin, llh, ellipsoid);
             }
 
+            // TODO range-dependent Doppler mask?
+            int kstart = 0, kstop = in_geometry.gridLength();
+
             // integrate pulses
             out[j * out_grid.width() + i] =
                     sumCoherent(in, sampling_window, pos, vel, x, fc, tau_atm,
-                                kernel, 0, in_geometry.gridLength());
+                                kernel, kstart, kstop);
         }
     }
 

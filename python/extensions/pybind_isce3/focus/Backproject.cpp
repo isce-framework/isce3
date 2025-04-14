@@ -225,6 +225,44 @@ void addbinding_backproject(py::module& m)
             py::arg("geo2rdr_params") = py::dict(),
             py::arg("height") = py::none());
 
+    m.def("setup_polar_grid_for_pulses", &setupPolarGridForPulses,
+        R"(
+        Setup a polar (range-Doppler) grid corresponding to a set of pulses.
+
+        Parameters
+        ----------
+        in_geometry : isce3.container.RadarGeometry
+        azimuth_time : Sequence[float]
+        range_bandwidth : float
+        azimuth_resolution : float
+        oversample_range : float, optional
+        oversample_azimuth : float, optional
+        num_doppler_eval : int, optional
+            Number of points across swath to evaluate Doppler centroid to
+            bound the variation of the centroid.  Default = 2
+        densify_for_fast_transform : bool, optional
+            Whether to increase the sample rate to achieve grid dimensions that
+            are products of small prime factors (good for FFTs).
+            Default = False
+
+        Returns
+        -------
+        polar_grid : isce3.focus.PolarGrid
+            Polar grid that efficiently samples the raw data.
+        position : list[numpy.ndarray]
+            Sensor position at each input pulse time.
+        velocity : list[numpy.ndarray]
+            Sensor velocity at each input pulse time.
+        )",
+        py::arg("in_geometry"),
+        py::arg("azimuth_time"),
+        py::arg("range_bandwidth"),
+        py::arg("azimuth_resolution"),
+        py::arg("oversample_range") = 1.2,
+        py::arg("oversample_azimuth") = 1.2,
+        py::arg("num_doppler_eval") = 2,
+        py::arg("densify_for_fast_transform") = false);
+
     m.def("backproject_first_stage", [](
                 const py::array_t<std::complex<float>, py::array::c_style> in,
                 const RadarGeometry& in_geometry,
@@ -255,9 +293,8 @@ void addbinding_backproject(py::module& m)
 
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
 
-            // TODO avoid copy
-            std::vector<double> aztime(in_azimuth_time.data(),
-                in_azimuth_time.data() + in_azimuth_time.size());
+            const auto aztime = Eigen::Map<const Eigen::VectorXd>(
+                in_azimuth_time.data(), in_azimuth_time.size());
 
             const std::complex<float>* in_data = in.data();
 

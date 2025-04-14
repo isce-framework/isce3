@@ -7,6 +7,7 @@
 
 #include <complex>
 #include <memory>
+#include <Eigen/Dense>
 
 #include <isce3/error/ErrorCode.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
@@ -67,7 +68,8 @@ std::tuple<isce3::error::ErrorCode,
         std::unique_ptr<float[]>>
 backprojectFirstStage(const std::complex<float>* in,
         const isce3::container::RadarGeometry& in_geometry,
-        const std::vector<double>& in_azimuth_time, double range_bandwidth,
+        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
+        double range_bandwidth,
         const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
         const isce3::core::Kernel<float>& kernel,
         DryTroposphereModel dry_tropo_model,
@@ -110,6 +112,17 @@ struct NFFTParams {
 struct NFFT2Params {
     NFFTParams x, y;
 };
+
+// set up polar grid for a group of pulses
+std::tuple<PolarGrid, std::vector<isce3::core::Vec3>, std::vector<isce3::core::Vec3>>
+setupPolarGridForPulses(
+        const isce3::container::RadarGeometry& in_geometry,
+        const Eigen::Ref<const Eigen::VectorXd>& azimuth_time,
+        double range_bandwidth,
+        double azimuth_resolution,
+        double oversample_range = 1.2, double oversample_azimuth = 1.2,
+        int num_doppler_eval = 2,
+        bool densify_for_fast_transforms = false);
 
 // interpolate polar grid to given set of XYZ positions
 isce3::error::ErrorCode
