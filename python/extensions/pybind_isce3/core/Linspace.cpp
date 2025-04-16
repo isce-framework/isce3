@@ -121,6 +121,12 @@ void addbinding(py::class_<Linspace<T>>& pyLinspace)
         .def("search", [](const Linspace<T>& self, T x) { return self.search(x); },
                 "Return the position where the specified value would be inserted "
                 "in the sequence in order to maintain sorted order.")
+
+        .def("__repr__", [](const Linspace<T>& self) {
+            return std::string("Linspace(" + std::to_string(self.first()) +
+                ", " + std::to_string(self.spacing()) + ", " +
+                std::to_string(self.size()) + ")");
+        })
         ;
 }
 
