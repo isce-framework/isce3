@@ -7,3 +7,4 @@ from .doppler import los2doppler, make_doppler_lut_from_attitude
 from .get_enu_vec_from_lat_lon import get_enu_vec_from_lat_lon
 from .polygons import (get_dem_boundary_polygon, compute_dem_overlap,
     compute_polygon_overlap)
+from .rtc import normalize_rtc_algorithm, normalize_rtc_area_beta_mode

@@ -7,7 +7,6 @@ import time
 import isce3
 import journal
 import numpy as np
-import pandas
 from isce3.core import transform_xy_to_latlon
 from isce3.io import HDF5OptimizedReader
 from nisar.products.insar.product_paths import GUNWGroupsPaths
@@ -18,16 +17,16 @@ from nisar.workflows.yaml_argparse import YamlArgparse
 from pysolid.solid import solid_grid
 
 
-def solid_grid_pixel_rounded_to_nearest_sec(timestamp: pandas.Timestamp,
+def solid_grid_pixel_rounded_to_nearest_sec(timestamp: datetime.datetime,
                                             lon: float,
                                             lat: float):
     """
-    Calcaute the nearest the solid grid components
+    Calculate the nearest the solid grid components
 
     Parameters
     ----------
-    timestamp :  pandas.Timestamp
-        datacube datetime
+    timestamp :  datetime.datetime
+        datacube datetime, with integer seconds precision
     lon : float
         longitude in degrees
     lat : float
@@ -52,7 +51,7 @@ def solid_grid_pixel_rounded_to_nearest_sec(timestamp: pandas.Timestamp,
     # The output is a 1 x 1 matrix and we want the floats within them
     return np.array([tide_e[0, 0], tide_n[0, 0], tide_u[0, 0]])
 
-def interpolate_solid_grid_pixel(ref_epoch: pandas.Timestamp,
+def interpolate_solid_grid_pixel(ref_epoch: datetime.datetime,
                                  az_time: float,
                                  slant_range : float,
                                  lon: float,
@@ -62,7 +61,7 @@ def interpolate_solid_grid_pixel(ref_epoch: pandas.Timestamp,
 
     Parameters
     ----------
-    ref_epoch : pandas.Timestamp
+    ref_epoch : datetime.datetime
         reference epoch
     az_time : float
         azimuth zero doppler time in seconds
@@ -88,8 +87,10 @@ def interpolate_solid_grid_pixel(ref_epoch: pandas.Timestamp,
     dt = ref_epoch + datetime.timedelta(
         seconds=az_time + slant_range / isce3.core.speed_of_light)
 
-    dt_sec_floor = dt.floor('s')
-    dt_sec_ceil = dt.ceil('s')
+    # Floor and Ceil of the datetime on the seconds
+    dt_sec_floor = dt.replace(microsecond=0)
+    dt_sec_ceil = dt if dt.microsecond == 0 else \
+        dt.replace(microsecond=0) + datetime.timedelta(seconds=1)
 
     seconds_diff_low = (dt - dt_sec_floor).total_seconds()
     seconds_diff_high = (dt_sec_ceil - dt).total_seconds()
@@ -157,7 +158,7 @@ def solid_grid_pixel_parallel_task(args):
                                         lon,
                                         lat)
 
-def calculate_solid_earth_tides(ref_epoch : pandas.Timestamp,
+def calculate_solid_earth_tides(ref_epoch : datetime.datetime,
                                 azimuth_time_datacube : np.ndarray,
                                 slant_range_datacube : np.ndarray,
                                 height_datacube : np.ndarray,
@@ -169,7 +170,7 @@ def calculate_solid_earth_tides(ref_epoch : pandas.Timestamp,
 
     Parameters
     ----------
-    ref_epoch : pandas.Timestamp
+    ref_epoch : datetime.datetime
         reference epoch
     azimuth_time_datacube : numpy.ndarray
         azimuth time datacube
@@ -257,7 +258,7 @@ def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
                 err_channel.log(err_msg)
                 raise RuntimeError(err_msg)
 
-            return pandas.to_datetime(match.group(0))
+            return datetime.datetime.fromisoformat(match.group(0))
 
         ref_ref_epoch = _extract_ref_epoch('referenceZeroDopplerAzimuthTime')
         sec_ref_repch = _extract_ref_epoch('secondaryZeroDopplerAzimuthTime')

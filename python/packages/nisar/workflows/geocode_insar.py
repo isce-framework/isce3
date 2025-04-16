@@ -1004,14 +1004,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     is_iono_method_sideband = iono_method in ['main_side_band',
                                               'main_diff_ms_band']
 
-    if interp_method == 'BILINEAR':
-        interp_method = isce3.core.DataInterpMethod.BILINEAR
-    if interp_method == 'BICUBIC':
-        interp_method = isce3.core.DataInterpMethod.BICUBIC
-    if interp_method == 'NEAREST':
-        interp_method = isce3.core.DataInterpMethod.NEAREST
-    if interp_method == 'BIQUINTIC':
-        interp_method = isce3.core.DataInterpMethod.BIQUINTIC
+    interp_method = isce3.core.normalize_data_interp_method(interp_method)
 
     # Interpolation method for the wrapped interferogram
     wrapped_igram_interp_method = interp_method
@@ -1020,16 +1013,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         wrapped_igram_interp_method = cfg["processing"]["geocode"]\
                 ['wrapped_interferogram']['interp_method']
 
-        if wrapped_igram_interp_method == 'SINC':
-            wrapped_igram_interp_method = isce3.core.DataInterpMethod.SINC
-        if wrapped_igram_interp_method == 'BILINEAR':
-            wrapped_igram_interp_method = isce3.core.DataInterpMethod.BILINEAR
-        if wrapped_igram_interp_method == 'BICUBIC':
-            wrapped_igram_interp_method = isce3.core.DataInterpMethod.BICUBIC
-        if wrapped_igram_interp_method == 'NEAREST':
-            wrapped_igram_interp_method = isce3.core.DataInterpMethod.NEAREST
-        if wrapped_igram_interp_method == 'BIQUINTIC':
-            wrapped_igram_interp_method = isce3.core.DataInterpMethod.BIQUINTIC
+        wrapped_igram_interp_method = \
+            isce3.core.normalize_data_interp_method(wrapped_igram_interp_method)
 
     info_channel = journal.info("geocode.run")
     info_channel.log("starting geocode")
