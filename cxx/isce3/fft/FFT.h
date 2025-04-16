@@ -111,15 +111,15 @@ InvFFTPlan<T> planifft2d(T * out, std::complex<T> * in, const int (&dims)[2]);
  * Compute the 1-D forward FFT.
  *
  * \param[out] out Output buffer
- * \param[in,out] in Input data
+ * \param[in] in Input data
  * \param[in] n Transform size
  */
 template<typename T>
-void fft1d(std::complex<T> * out, std::complex<T> * in, int n);
+void fft1d(std::complex<T> * out, const std::complex<T> * in, int n);
 
 /** \copydoc fft1d(std::complex<T> * out, std::complex<T> * in, int n) */
 template<typename T>
-void fft1d(std::complex<T> * out, T * in, int n);
+void fft1d(std::complex<T> * out, const T * in, int n);
 
 /**
  * Compute the 1-D forward FFT on 2-D data.
@@ -128,16 +128,16 @@ void fft1d(std::complex<T> * out, T * in, int n);
  * a transform along columns, \p axis = 1 corresponds to a row-wise transform.
  *
  * \param[out] out Output buffer
- * \param[in,out] in Input data
+ * \param[in] in Input data
  * \param[in] dims Input/output array shape (nrows, ncols)
  * \param[in] axis Axis over which to compute the FFT
  */
 template<typename T>
-void fft1d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2], int axis);
+void fft1d(std::complex<T> * out, const std::complex<T> * in, const int (&dims)[2], int axis);
 
 /** \copydoc fft1d(std::complex<T> * out, T * in, const int (&dims)[2], int axis) */
 template<typename T>
-void fft1d(std::complex<T> * out, T * in, const int (&dims)[2], int axis);
+void fft1d(std::complex<T> * out, const T * in, const int (&dims)[2], int axis);
 
 /**
  * Compute the 2-D forward FFT.
@@ -145,29 +145,29 @@ void fft1d(std::complex<T> * out, T * in, const int (&dims)[2], int axis);
  * The data is expected to be in row-major format.
  *
  * \param[out] out Output buffer
- * \param[in,out] in Input data
+ * \param[in] in Input data
  * \param[in] dims Input/output array shape (nrows, ncols)
  */
 template<typename T>
-void fft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2]);
+void fft2d(std::complex<T> * out, const std::complex<T> * in, const int (&dims)[2]);
 
 /** \copydoc fft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2]) */
 template<typename T>
-void fft2d(std::complex<T> * out, T * in, const int (&dims)[2]);
+void fft2d(std::complex<T> * out, const T * in, const int (&dims)[2]);
 
 /**
  * Compute the 1-D inverse FFT.
  *
  * \param[out] out Output buffer
- * \param[in,out] in Input data
+ * \param[in] in Input data
  * \param[in] n Transform size
  */
 template<typename T>
-void ifft1d(std::complex<T> * out, std::complex<T> * in, int n);
+void ifft1d(std::complex<T> * out, const std::complex<T> * in, int n);
 
 /** \copydoc ifft1d(std::complex<T> * out, std::complex<T> * in, int n) */
 template<typename T>
-void ifft1d(T * out, std::complex<T> * in, int n);
+void ifft1d(T * out, const std::complex<T> * in, int n);
 
 /**
  * Compute the 1-D inverse FFT on 2-D data.
@@ -176,16 +176,16 @@ void ifft1d(T * out, std::complex<T> * in, int n);
  * a transform along columns, \p axis = 1 corresponds to a row-wise transform.
  *
  * \param[out] out Output buffer
- * \param[in,out] in Input data
+ * \param[in] in Input data
  * \param[in] dims Input/output array shape (nrows, ncols)
  * \param[in] axis Axis over which to compute the FFT
  */
 template<typename T>
-void ifft1d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2], int axis);
+void ifft1d(std::complex<T> * out, const std::complex<T> * in, const int (&dims)[2], int axis);
 
 /** \copydoc ifft1d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2], int axis) */
 template<typename T>
-void ifft1d(T * out, std::complex<T> * in, const int (&dims)[2], int axis);
+void ifft1d(T * out, const std::complex<T> * in, const int (&dims)[2], int axis);
 
 /**
  * Compute the 2-D inverse FFT.
@@ -193,15 +193,15 @@ void ifft1d(T * out, std::complex<T> * in, const int (&dims)[2], int axis);
  * The data is expected to be in row-major format.
  *
  * \param[out] out Output buffer
- * \param[in,out] in Input data
+ * \param[in] in Input data
  * \param[in] dims Input/output array shape (nrows, ncols)
  */
 template<typename T>
-void ifft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2]);
+void ifft2d(std::complex<T> * out, const std::complex<T> * in, const int (&dims)[2]);
 
 /** \copydoc ifft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2]) */
 template<typename T>
-void ifft2d(T * out, std::complex<T> * in, int (&dims)[2]);
+void ifft2d(T * out, const std::complex<T> * in, int (&dims)[2]);
 
 }}
 
