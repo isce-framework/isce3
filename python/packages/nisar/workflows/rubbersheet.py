@@ -205,7 +205,6 @@ def _write_to_disk(outpath, array, format='ENVI',
     ds.GetRasterBand(1).WriteArray(array)
     ds.FlushCache()
 
-
 def identify_outliers(offsets_dir, rubbersheet_params):
     '''
     Identify outliers in the offset fields.
@@ -228,66 +227,119 @@ def identify_outliers(offsets_dir, rubbersheet_params):
     offset_rg: array, float
         2D array of culled/outlier filled range offset
     '''
-
-    # Pull parameters from cfg
+    # Extract parameters
     threshold = rubbersheet_params['threshold']
-    window_rg = rubbersheet_params['median_filter_size_range']
-    window_az = rubbersheet_params['median_filter_size_azimuth']
+    window_rg, window_az = rubbersheet_params['median_filter_size_range'], rubbersheet_params['median_filter_size_azimuth']
     metric = rubbersheet_params['culling_metric']
     error_channel = journal.error('rubbersheet.run.identify_outliers')
-
-    # Open offsets
-    ds = gdal.Open(f'{offsets_dir}/dense_offsets')
-    offset_az = ds.GetRasterBand(1).ReadAsArray()
-    offset_rg = ds.GetRasterBand(2).ReadAsArray()
-    ds = None
-
-    # Identify outliers based on user-defined metric
+    
+    # Load data based on metric
     if metric == 'snr':
-        # Open SNR
-        ds = gdal.Open(f'{offsets_dir}/snr')
-        snr = ds.GetRasterBand(1).ReadAsArray()
-        ds = None
-        mask_data = np.where(snr < threshold)
+        mask_data = _open_raster(f'{offsets_dir}/snr', 1) < threshold
     elif metric == 'median_filter':
-        # Use offsets to compute "median absolute deviation" (MAD)
-        median_az = ndimage.median_filter(offset_az, [window_az, window_rg])
-        median_rg = ndimage.median_filter(offset_rg, [window_az, window_rg])
-        mask_data = (np.abs(offset_az - median_az) > threshold) | (
-                np.abs(offset_rg - median_rg) > threshold)
+        offset_az = _open_raster(f'{offsets_dir}/dense_offsets', 1)
+        offset_rg = _open_raster(f'{offsets_dir}/dense_offsets', 2)
+        mask_data = compute_mad_mask(offset_az, window_az, window_rg, threshold) | \
+                    compute_mad_mask(offset_rg, window_az, window_rg, threshold)
     elif metric == 'covariance':
-        # Use offsets azimuth and range covariance elements
-        ds = gdal.Open(f'{offsets_dir}/covariance')
-        cov_az = ds.GetRasterBand(1).ReadAsArray()
-        cov_rg = ds.GetRasterBand(2).ReadAsArray()
-        ds = None
+        cov_az, cov_rg = _open_raster(f'{offsets_dir}/covariance', 1), _open_raster(f'{offsets_dir}/covariance', 2)
         mask_data = (cov_az > threshold) | (cov_rg > threshold)
     else:
-        err_str = f"{metric} invalid metric to filter outliers"
-        error_channel.log(err_str)
-        raise ValueError(err_str)
-
-    # If required, apply refinement mask to remove residual outliers
-    # (i.e., clustered areas of 2-5 pixels)
-    if rubbersheet_params['mask_refine_enabled']:
+        error_channel.log(f"{metric} is an invalid metric to filter outliers")
+        raise ValueError(f"Invalid metric: {metric}")
+    
+    # Apply mask
+    offset_az[mask_data], offset_rg[mask_data] = np.nan, np.nan
+    
+    # Optional refinement
+    if rubbersheet_params.get('mask_refine_enabled', False):
         filter_size = rubbersheet_params['mask_refine_filter_size']
-        threshold = rubbersheet_params['mask_refine_threshold']
-        offset_az[mask_data] = 0
-        offset_rg[mask_data] = 0
-        median_rg = ndimage.median_filter(offset_rg, filter_size)
-        median_az = ndimage.median_filter(offset_az, filter_size)
-        mask_refine = (np.abs(offset_az - median_az) > threshold) | (
-                np.abs(offset_rg - median_rg) > threshold)
-        # Compute final mask
-        mask = mask_data | mask_refine
-    else:
-        mask = mask_data
-
-    # Label identified outliers as NaN
-    offset_rg[mask] = np.nan
-    offset_az[mask] = np.nan
-
+        max_nan_neighbors = rubbersheet_params['mask_refine_min_neighbors']
+        mask_final = compute_mad_mask(offset_az, filter_size, filter_size, threshold) | \
+                     compute_mad_mask(offset_rg, filter_size, filter_size, threshold)
+        offset_az[mask_final], offset_rg[mask_final] = np.nan, np.nan
+        offset_az = remove_pixels_with_many_nans(offset_az, filter_size, max_nan_neighbors)
+        offset_rg = remove_pixels_with_many_nans(offset_rg, filter_size, max_nan_neighbors)
+    
     return offset_az, offset_rg
+
+
+def remove_pixels_with_many_nans(offset, kernel_size=3, max_nan_neighbors=4):
+    """
+    Replace pixels with NaN if they have too many NaN values in their neighborhood.
+
+    Parameters
+    ----------
+    offset: np.ndarray
+        2D array of offset values, where NaN represents missing data.
+    kernel_size: int
+        Size of the square neighborhood kernel (default is 3).
+    max_nan_neighbors: int
+        Maximum number of NaN neighbors allowed for a pixel to remain unchanged (default is 4).
+
+    Returns
+    -------
+    offset: np.ndarray
+        The input array with pixels removed if they have too many NaN neighbors.
+    """
+    mask = np.isnan(offset)  # Binary mask of NaN pixels (1 for NaN, 0 for valid)
+
+    # Create a kernel of ones, excluding the center pixel
+    kernel = np.ones((kernel_size, kernel_size), dtype=int)
+    center = kernel_size // 2
+    kernel[center, center] = 0  # Exclude center pixel from count
+
+    # Count the number of NaN neighbors
+    nan_neighbor_count = ndimage.convolve(mask.astype(int), kernel, mode='constant', cval=0)
+
+    # Identify pixels with too many NaN neighbors
+    remove_pixels = nan_neighbor_count > max_nan_neighbors
+
+    # Remove these pixels by setting them to NaN
+    offset[remove_pixels] = np.nan
+
+    return offset
+
+
+def compute_mad_mask(offset, window_az, window_rg, threshold):
+    '''
+    Compute a mask of outliers in a 2D offset array using the Median
+    Absolute Deviation (MAD). This function identifies pixels whose
+    absolute deviation from the local median exceeds a given threshold.
+    The median is computed over a sliding window of specified size
+
+    Parameters
+    ----------
+    offset: np.ndarray
+        2D array of offset values from image matching to 
+        be analyzed for outliers
+    window_az: int
+        Size of the filtering window along the row direction
+    window_rg: int
+        Size of the filtering window along the column direction
+    threshold: float
+        Threshold for outliers identification. Offsets with MAD
+        greater than this threshold are marked as outliers
+
+    Returns
+    -------
+    outliers_mask: np.ndarray of booleans
+        Boolean mask of the same shape as 'offset', where 'True'
+        indicates a detected offset outlier
+    '''
+    # Mask the NaN values in the input array
+    masked_offset = np.ma.masked_invalid(offset)
+    
+    # Apply median filter, ignoring NaNs
+    median_off = ndimage.median_filter(masked_offset, [window_az, window_rg])
+    
+    # Compute the absolute deviation from the median
+    mad = np.abs(offset - median_off) 
+    
+    # Create a mask for pixels where MAD exceeds the threshold
+    outliers_mask = mad > threshold
+    
+    return outliers_mask  
 
 
 def fill_outliers_holes(offset, rubbersheet_params):
@@ -317,31 +369,31 @@ def fill_outliers_holes(offset, rubbersheet_params):
     # Pull parameters from rubbersheet cfg
     method = rubbersheet_params['outlier_filling_method']
     error_channel = journal.error('rubbersheet.run.fill_outliers_holes')
-
+    info_channel = journal.info('rubbersheet.run.fill_outliers_holes')
     if method == 'nearest_neighbor':
         # Use nearest neighbor interpolation from scipy.ndimage
         invalid = np.isnan(offset)
         indices = ndimage.distance_transform_edt(invalid,
                                                  return_distances=True,
                                                  return_indices=True)
-        offset_temp = offset[tuple(indices)]
+        offset_filled = offset[tuple(indices)]
     elif method == 'fill_smoothed':
         filter_size = rubbersheet_params['fill_smoothed']['kernel_size']
         iterations = rubbersheet_params['fill_smoothed']['iterations']
-        _fill_nan_with_mean(offset, offset, filter_size)
-
-        # If NaNs are still present, perform iterative filling
-        nan_count = np.count_nonzero(np.isnan(offset))
+        offset_filled = _fill_nan_with_mean(offset, offset, filter_size)
+        nan_count = np.count_nonzero(np.isnan(offset_filled))
+        info_channel.log(f'Number of outliers at first filling iteration {nan_count}')
         while nan_count != 0 and iterations != 0:
-            iterations -= 1
-            nan_count = np.count_nonzero(np.isnan(offset))
-            _fill_nan_with_mean(offset, offset, filter_size)
+              iterations -= 1
+              nan_count = np.count_nonzero(np.isnan(offset_filled))
+              info_channel.log(f'Number of outliers: {nan_count} at iteration: {iterations}')
+              offset_filled = _fill_nan_with_mean(offset_filled, offset_filled, filter_size)
     else:
         err_str = f"{method} invalid method to fill outliers holes"
         error_channel.log(err_str)
         raise ValueError(err_str)
 
-    return offset
+    return offset_filled
 
 
 def _fill_nan_with_mean(arr_in, arr_out, neighborhood_size):
@@ -366,23 +418,30 @@ def _fill_nan_with_mean(arr_in, arr_out, neighborhood_size):
     nan_mask = np.isnan(arr_in)
 
     # Create a kernel for computing the local mean
-    kernel = np.ones((neighborhood_size, neighborhood_size))
-    kernel /= kernel.sum()
+    kernel = np.ones((neighborhood_size, neighborhood_size), dtype=np.float32)
 
-    # Iterate over each NaN pixel in the array
-    for i in range(arr_in.shape[0]):
-        for j in range(arr_in.shape[1]):
-            if nan_mask[i, j]:
-                # Extract the local neighborhood around the NaN pixel
-                neighborhood = arr_out[max(i - neighborhood_size // 2, 0): min(i + neighborhood_size // 2 + 1, arr_out.shape[0]),
-                                       max(j - neighborhood_size // 2, 0): min(j + neighborhood_size // 2 + 1, arr_out.shape[1])]
+    # Replace NaNs in arr_out with zeros temporarily
+    masked_arr_out = np.where(np.isnan(arr_out), 0, arr_out)
 
-                # Compute the mean of the non-NaN values in the neighborhood
-                neighborhood_mean = np.nanmean(neighborhood)
-                # Replace the NaN value with the computed mean
-                filled_arr[i, j] = neighborhood_mean
+    # Use convolve to compute the local sum
+    local_sum = ndimage.convolve(masked_arr_out, kernel, mode='constant', cval=0.0)
 
+    # Count non-NaN contributions in the neighborhood
+    valid_mask = np.isfinite(arr_out).astype(np.float32)  # Use np.isfinite for valid values
+    valid_counts = ndimage.convolve(valid_mask, kernel, mode='constant', cval=0.0)
 
+    # Avoid division by zero by replacing zero counts with NaN
+    valid_counts[valid_counts == 0] = np.nan
+
+    # Compute local mean
+    local_means = local_sum / valid_counts
+
+    # Fill NaNs in the input array with the computed local means
+    filled_arr[nan_mask] = local_means[nan_mask]
+
+    return filled_arr
+
+    
 def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
     '''
     Blends offsets layers at different resolution. Implements a
@@ -424,42 +483,84 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
         if nan_count_az > 0:
             offset_az_culled, _ = identify_outliers(str(off_product_dir / layer_key),
                                                     rubbersheet_params)
-            _fill_nan_with_mean(offset_az, offset_az_culled, filter_size)
+            offset_az = _fill_nan_with_mean(offset_az, offset_az_culled, filter_size)
 
         if nan_count_rg > 0:
             _, offset_rg_culled = identify_outliers(str(off_product_dir / layer_key),
                                                     rubbersheet_params)
-            _fill_nan_with_mean(offset_rg, offset_rg_culled, filter_size)
+            offset_rg = _fill_nan_with_mean(offset_rg, offset_rg_culled, filter_size)
+    
+    # Fill remaining holes by iteratively filling the output offset layer
+    offset_az = fill_outliers_holes(offset_az,
+                                    rubbersheet_params)
+    offset_rg = fill_outliers_holes(offset_rg,
+                                    rubbersheet_params)
 
     return offset_az, offset_rg
 
+
+import numpy as np
+from scipy import interpolate
+import journal
 
 def _interpolate_offsets(offset, interp_method):
     '''
     Replace NaN in offset with interpolated values
 
     Parameters
-    ---------
-    offset: np.ndarray
+    ----------
+    offset : np.ndarray
         Numpy array containing residual outliers (NaN)
-    interp_method: str
-        Interpolation method
+    interp_method : str
+        Interpolation method ('linear', 'nearest', 'cubic', or 'no_interpolation')
 
     Returns
     -------
-    offset_interp: np.ndarray
+    offset_interp : np.ndarray
         Interpolated numpy array
     '''
-    x = np.arange(0, offset.shape[1])
-    y = np.arange(0, offset.shape[0])
+    info_channel = journal.info('rubbersheet._interpolate_offsets')
+
+    # Create mask of valid (non-NaN) data
+    valid_mask = ~np.isnan(offset)
+
+    # Skip interpolation if all values are NaN
+    if not np.any(valid_mask):
+        info_channel.log('Warning: No valid data points. Skipping interpolation')
+        return np.full_like(offset, 0)
+
+    # If user chose to skip interpolation
+    if interp_method == 'no_interpolation':
+        info_channel.log('Interpolation skipped by user. Offsets may contain fill value equal to 0')
+        offset_filled = np.copy(offset)
+        offset_filled[~valid_mask] = 0
+        return offset_filled
+
+    # Extract coordinates and values of valid data points
+    new_y, new_x = np.nonzero(valid_mask)
+    new_values = offset[valid_mask]
+
+    # Prepare interpolation grid
+    x = np.arange(offset.shape[1])
+    y = np.arange(offset.shape[0])
     xx, yy = np.meshgrid(x, y)
-    new_x = xx[~np.isnan(offset)]
-    new_y = yy[~np.isnan(offset)]
-    new_array = offset[~np.isnan(offset)]
-    offset_interp = interpolate.griddata((new_x, new_y), new_array.ravel(),
-                                         (xx, yy),
-                                         method=interp_method,
-                                         fill_value=0)
+
+    # Use fast interpolators where possible
+    if interp_method == 'nearest':
+        interpolator = interpolate.NearestNDInterpolator((new_x, new_y), new_values)
+        offset_interp = interpolator(xx, yy)
+    elif interp_method == 'linear':
+        interpolator = interpolate.LinearNDInterpolator((new_x, new_y), new_values, fill_value=0)
+        offset_interp = interpolator(xx, yy)
+    elif interp_method == 'cubic':
+        offset_interp = interpolate.griddata(
+            (new_x, new_y), new_values.ravel(),
+            (xx, yy),
+            method='cubic',
+            fill_value=0)
+    else:
+        raise ValueError(f"Unsupported interpolation method: '{interp_method}'")
+
     return offset_interp
 
 
