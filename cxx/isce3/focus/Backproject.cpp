@@ -338,7 +338,10 @@ backprojectFirstStage(
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
     }
 
-    const auto [out_grid, pos, vel] = setupPolarGridForPulses(in_geometry,
+    // awful hacks for clang https://godbolt.org/z/6rrThhK3W
+    PolarGrid out_grid {0.0, 0.0, {0,0,0}, {1,0,0}, {0, 1, 0}, {0, 1, 0}};
+    std::vector<Vec3> pos, vel;
+    std::tie(out_grid, pos, vel) = setupPolarGridForPulses(in_geometry,
         in_azimuth_time,
         range_bandwidth, ds, oversample_range,
         oversample_azimuth, 2, true);
