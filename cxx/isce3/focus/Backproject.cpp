@@ -17,6 +17,7 @@
 #include <isce3/geometry/geo2rdr_roots.h>
 #include <isce3/signal/NFFT2d.h>
 #include <limits>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -423,6 +424,97 @@ backprojectFirstStage(
     auto status =
             all_converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
     return std::make_tuple(status, out_grid, std::move(out), std::move(height));
+}
+
+PolarGrid
+mergePolarGrids(const std::vector<PolarGrid>& grids,
+    const LookSide lookside,
+    const DEMInterpolator& dem,
+    const Ellipsoid& ellipsoid,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+{
+    if (grids.size() <= 0) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "can't find common grid among empty list");
+    } else if (grids.size() == 1) {
+        return grids[0];
+    }
+
+    // Compute a bunch of stats with a first pass over the data.
+    // Average origin and axis, weighted by aperture duration.
+    Vec3 origin{0, 0, 0}, axis{0, 0, 0};
+    // Min range spacing (in case different among grids)
+    auto dr = grids[0].range.spacing();
+    // Need total aperture size and sum of subaperture sizes.
+    // These are not equal if there are gaps or overlap between subapertures.
+    auto t_min = grids[0].aztime_start;  // assume start > end
+    auto t_max = grids[0].aztime_end;  // assume start > end
+    double sum_durations = 0;
+    // Doppler spacing is inversely proportional to aperture size.  Find the
+    // most conservative among the grids.
+    auto scale = grids[0].sin_squint.spacing() * (t_max - t_min);
+
+    for (const auto& grid : grids) {
+        const auto duration = grid.aztime_end - grid.aztime_start;  // + PRI ??
+        sum_durations += duration;
+        t_min = std::min(t_min, grid.aztime_start);  // assume start > end
+        t_max = std::max(t_max, grid.aztime_end);  // assume start > end
+        scale = std::min(scale, grid.sin_squint.spacing() * duration);
+        dr = std::min(dr, grid.range.spacing());
+        origin += duration * grid.origin;
+        axis += duration * grid.axis;
+    }
+    origin *= 1.0 / sum_durations;
+    axis *= 1.0 / axis.norm();
+
+    // In general, figuring out the required Doppler spacing is pretty complex.
+    // You'd want to figure out the Doppler bandwidth observed by all targets
+    // across all grids, maxing out around the azimuth resolution.
+    // For now let's just just be conservative and increase it linearly.
+    const auto dq = scale / (t_max - t_min);
+
+    // Compute range & Doppler bounds of new grid using corners of each input.
+    // Use lambda to avoid copy/paste.
+    using isce3::geometry::detail::polar2polar_bracket;
+    auto polar2polar = [&](const PolarGrid& grid, double r, double ssq) {
+        auto csq = std::sqrt(1.0 - ssq * ssq);
+        double r_out, ssq_out;
+        auto ec = polar2polar_bracket(&ssq_out, &r_out, ssq, csq, r,
+            grid.origin, grid.axis, origin, axis, dem, ellipsoid, lookside,
+            r2g_params);
+        if (ec != ErrorCode::Success) {
+            throw isce3::except::DomainError(ISCE_SRCINFO(),
+                "polar2polar failed with ErrorCode (" +
+                isce3::error::getErrorString(ec) + ") for point at r="
+                + std::to_string(r) + " sin_squint=" + std::to_string(ssq));
+        }
+        return std::make_tuple(r_out, ssq_out);
+    };
+
+    // TODO We're working with pixel centers.  Probably we should match grid
+    // boundaries and throw a bunch of dx/2 terms around.  The Doppler spacing,
+    // especially, will be different.
+    auto [r_min, q_min] = polar2polar(grids[0], grids[0].range[0], grids[0].sin_squint[0]);
+    auto r_max = r_min, q_max = q_min;
+    for (const auto& grid : grids) {
+        for (const auto& ri : {grid.range.first(), grid.range.last()}) {
+            for (const auto& qi : {grid.sin_squint.first(), grid.sin_squint.last()}) {
+                const auto [ro, qo] = polar2polar(grid, ri, qi);
+                r_min = std::min(r_min, ro);
+                r_max = std::max(r_max, ro);
+                q_min = std::min(q_min, qo);
+                q_max = std::max(q_max, qo);
+            }
+        }
+    }
+
+    int nr = 1 + static_cast<int>(std::round((r_max - r_min) / dr));
+    int nq = 1 + static_cast<int>(std::round((q_max - q_min) / dq));
+
+    // TODO The ceil() means potentially extra data.  It might be preferable to
+    // pad equally on both sides, rather than adding all the extra to the end.
+    return PolarGrid{t_min, t_max, origin, axis,
+        Linspace<double>(r_min, dr, nr), Linspace<double>(q_min, dq, nq)};
 }
 
 
