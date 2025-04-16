@@ -2,6 +2,7 @@
 
 #include "forward.h"
 
+#include <isce3/core/EMatrix.h>
 #include <isce3/core/Kernels.h>
 #include <isce3/fft/FFT.h>
 
@@ -9,8 +10,10 @@
 #include <complex>
 
 
+namespace isce3::signal {
+
 template<typename T>
-class isce3::signal::NFFT2d {
+class NFFT2d {
     public:
         static constexpr int ndims = 2;
         using dims_t = std::array<int, ndims>;
@@ -67,3 +70,28 @@ class isce3::signal::NFFT2d {
         std::array<isce3::core::NFFTKernel<T>, 2> kernels_;
         isce3::fft::InvFFTPlan<T> inv_plan_;
 };
+
+
+/**
+ * @brief Create an NFFT2d object for interpolating an image.
+ *
+ * @tparam T        Format of real/imag pixel data, typically float or double
+ * @param image     Input time-domain image.  A temporary copy will be made if
+ *                  it is not row-major with a column stride of one.
+ * @param m         Half-length of interpolator along {rows, columns}
+ * @param s         Minimum factors (> 1) for frequency-domain zero-padding
+ *                  along {rows, columns}.  Actual padding may be larger to
+ *                  achieve efficient inverse transform size.
+ * @param pad_input Whether to also zero-pad input data to an efficient
+ *                  forward transform size.  Requires extra memory.
+ *
+ * @return NFFT2d<T> object for interpolating the image.
+ */
+template<typename T>
+NFFT2d<T> makeImageNFFT2d(
+    const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
+    const typename NFFT2d<T>::dims_t& m = {2, 2},
+    const std::array<double, 2>& s = {2.0, 2.0},
+    bool pad_input = false);
+
+} // namespace isce3::signal

@@ -1,6 +1,7 @@
 #include "NFFT2d.h"
 
 #include <isce3/core/Interp2d.h>
+#include <isce3/fft/FFTUtil.h>
 
 template <typename T>
 using Kernel = isce3::core::NFFTKernel<T>;
@@ -114,7 +115,89 @@ std::complex<T> NFFT2d<T>::interp(const std::array<double, 2>& t, bool periodic)
         fft_sizes_[ydim], /* stridey */ fft_sizes_[xdim], x, y, periodic);
 }
 
+
+template<typename T>
+NFFT2d<T> makeImageNFFT2d(
+    const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
+    const typename NFFT2d<T>::dims_t& m,
+    const std::array<double, 2>& s,
+    bool pad_input)
+{
+    using isce3::fft::nextFastPower;
+
+    auto rows_in = image.rows();
+    auto cols_in = image.cols();
+    using image_t = isce3::core::EArray2D<std::complex<T>>;
+    auto image_copy = image_t(0, 0);
+
+    // Pointer to input image or padded/copied version so we can have fewer
+    // conditionals later.
+    // FIXME I can't figure out how to do this with an Eigen type...
+    auto image_ptr = image.data();
+
+    // Need to copy if image is not contiguous row-major since we don't have
+    // high-level interface for strided FFTs.
+    bool need_copy = (image.innerStride() != 1) or (image.outerStride() != cols_in);
+    if (need_copy) {
+        image_copy.resize(rows_in, cols_in);
+        // assign later
+    }
+
+    if (pad_input) {
+        auto padded_rows_in = nextFastPower(rows_in);
+        auto padded_cols_in = nextFastPower(cols_in);
+        if ((rows_in == padded_rows_in) && (cols_in == padded_cols_in)) {
+            // User asked for padding but we don't actually need it.
+            pad_input = false;
+        } else {
+            image_copy.resize(padded_rows_in, padded_cols_in);
+            image_copy.setZero();
+            rows_in = padded_rows_in;
+            cols_in = padded_cols_in;
+            // assign later
+        }
+    }
+
+    if (need_copy or pad_input) {
+        // This way NFFT2d::interp() coordinates are preserved, though user
+        // will be able to get some extra data.
+        image_copy.topLeftCorner(rows_in, cols_in) = image;
+        image_ptr = image_copy.data();
+    }
+
+    // Use fft2 b/c planfft2d could modify inputs and we won't reuse it anyway.
+    using dims_t = typename NFFT2d<T>::dims_t;
+    dims_t dims = {
+        static_cast<int>(rows_in),
+        static_cast<int>(cols_in)};
+    auto spectrum = image_t(dims[0], dims[1]);
+    isce3::fft::fft2d(spectrum.data(), image_ptr, {dims[0], dims[1]});
+
+    // Calculate sizes for padded inverse transform.
+    dims_t dims_out = {
+        nextFastPower(static_cast<int>(std::round(s[0] * dims[0]))),
+        nextFastPower(static_cast<int>(std::round(s[1] * dims[1])))};
+
+    auto interpolator = NFFT2d<T>(m, dims, dims_out);
+    interpolator.set_spectrum(dims, {dims[1], 1}, spectrum.data());
+    return interpolator;
+}
+
 }
 
 template class isce3::signal::NFFT2d<float>;
 template class isce3::signal::NFFT2d<double>;
+
+template isce3::signal::NFFT2d<float>
+isce3::signal::makeImageNFFT2d(
+    const Eigen::Ref<const isce3::core::EArray2D<std::complex<float>>>& image,
+    const typename NFFT2d<float>::dims_t& m,
+    const std::array<double, 2>& s,
+    bool pad_input);
+
+template isce3::signal::NFFT2d<double>
+isce3::signal::makeImageNFFT2d(
+    const Eigen::Ref<const isce3::core::EArray2D<std::complex<double>>>& image,
+    const typename NFFT2d<double>::dims_t& m,
+    const std::array<double, 2>& s,
+    bool pad_input);
