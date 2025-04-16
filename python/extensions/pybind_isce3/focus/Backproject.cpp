@@ -138,6 +138,19 @@ void addbinding(py::class_<PolarGrid>& pyPolarGrid)
         .def_property_readonly("shape", [](const PolarGrid& self) {
             return std::make_tuple(self.sin_squint.size(), self.range.size());
         })
+        .def("__repr__", [](const py::object self) {
+            std::vector<std::string> keys {"aztime_start", "aztime_end",
+                    "origin", "axis", "range", "sin_squint"};
+            std::string out("PolarGrid(");
+            for (auto it = keys.begin(); it != keys.end(); ++it) {
+                    auto key = *it;
+                    auto ckey = key.c_str();
+                    out += key + "=" + std::string(py::str(self.attr(ckey)));
+                    if (it != keys.end() - 1)
+                            out += ", ";
+            }
+            return out + ")";
+        })
         ;
 }
 
