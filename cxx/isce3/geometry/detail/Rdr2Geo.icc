@@ -230,6 +230,33 @@ polar2geo_bracket(isce3::core::Vec3* xyz, double* lookAngle,
 
 
 NVCC_HD_WARNING_DISABLE
+template<class DEMInterpolator>
+CUDA_HOSTDEV isce3::error::ErrorCode
+polar2polar_bracket(double* outSinSquint, double* outRange,
+        const double inSinSquint, const double inCosSquint,
+        const double inRange,
+        const isce3::core::Vec3& inOrigin, const isce3::core::Vec3& inAxis,
+        const isce3::core::Vec3& outOrigin, const isce3::core::Vec3& outAxis,
+        const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
+        const isce3::core::LookSide& side, const Rdr2GeoBracketParams& params)
+{
+    using isce3::error::ErrorCode;
+    isce3::core::Vec3 xyz;
+    double lookAngle;
+    auto errCode = polar2geo_bracket(&xyz, &lookAngle, inOrigin, inAxis,
+        inRange, inSinSquint, inCosSquint, dem, ellipsoid, side, params);
+    if (errCode != ErrorCode::Success) {
+        return errCode;
+    }
+    // geo2polar
+    const isce3::core::Vec3 lookvec = xyz - outOrigin;
+    *outRange = lookvec.norm();
+    *outSinSquint = lookvec.dot(outAxis) / (*outRange);
+    return ErrorCode::Success;
+}
+
+
+NVCC_HD_WARNING_DISABLE
 template<class Orbit, class DEMInterpolator>
 CUDA_HOSTDEV isce3::error::ErrorCode
 rdr2geo_bracket(isce3::core::Vec3* xyz,
