@@ -408,7 +408,8 @@ ceos_analysis_ready_data_options:
     # Data access for the output product (URL or DOI)
     product_data_access: str(required=False)
 
-    # Data access for the static layers product associated with the output product (URL or DOI)
+    # Data access for the static layers product associated with the output
+    # product (URL or DOI)
     static_layers_data_access: str(required=False)
 
     # Estimated geometric accuracy (bias and standard deviation)

@@ -194,7 +194,8 @@ runconfig:
 
             radar_grid_cubes:
 
-                # List of heights in meters
+                # List of heights in meters, where the parallelBaseline, perpendicularBaseline, and slantRangeSolidEarthTidesPhase
+                # datacubes contain ONLY TWO height layers (the bottom and top heights), i.e., -500 and 9000 from the default heights below
                 heights: [-500, 0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000]
 
                 # OPTIONAL - Same as the geocode group output_epsg if not provided

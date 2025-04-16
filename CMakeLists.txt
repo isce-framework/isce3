@@ -138,10 +138,6 @@ configure_file(
     doc/doxygen/Doxyfile.in
     doc/doxygen/Doxyfile
     )
-configure_file(
-    doc/sphinx/conf.py.in
-    doc/sphinx/conf.py
-    )
 
 if(NOT DEFINED SKBUILD)
     # If we're using scikit-build, the exported _IMPORT_PREFIX will be wrong:

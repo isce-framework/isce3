@@ -780,19 +780,12 @@ class ImageSet:
 
     def docsbuild(self):
         """
-        Build documentation using Doxygen + Sphinx
+        Build documentation using Doxygen
         """
 
         docdir = f"{blddir}/docs-output"
-        sphx_src = f"{srcdir}/doc/sphinx"
-        sphx_conf = f"{blddir}/doc/sphinx"
-        sphx_dir = f"{docdir}/sphinx"
-        sphx_cache = f"{sphx_dir}/_doctrees"
-        sphx_html = f"{sphx_dir}/html"
 
         self.docker_run_dev(f"""
-            PYTHONPATH={blddir}/packages/isce3/extensions \
-               sphinx-build -q -b html -c {sphx_conf} -d {sphx_cache} {sphx_src} {sphx_html}
             doxygen doc/doxygen/Doxyfile
             """)
 

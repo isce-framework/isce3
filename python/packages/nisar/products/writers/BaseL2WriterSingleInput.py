@@ -1147,6 +1147,16 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             default='(NOT SPECIFIED)')
 
         self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/productType',
+            'identification/productType',
+            default='(NOT SPECIFIED)')
+
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/granuleId',
+            'identification/granuleId',
+            default='(NOT SPECIFIED)')
+
+        self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
             'parameters/runConfigurationContents',
             '{PRODUCT}/metadata/processingInformation/parameters/'
@@ -1412,15 +1422,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             rfi_mitigation_path != '' and
             'disabled' not in rfi_mitigation_path.lower())
 
-        # populate processing information parameters
-        for xy in ['x', 'y']:
-            parameters_group = \
-                '{PRODUCT}/metadata/processingInformation/parameters'
-            self.copy_from_runconfig(
-                f'{parameters_group}/geocoding/snapToGrid{xy.upper()}',
-                f'processing/geocode/{xy}_snap',
-                default=np.nan,
-                format_function=np.float64)
+        parameters_group = \
+            '{PRODUCT}/metadata/processingInformation/parameters'
 
         self.set_value(
             f'{parameters_group}/rfiMitigationApplied',
@@ -1437,7 +1440,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         self.set_value(
             f'{inputs_group}/l1SlcGranules',
-            [self.input_file])
+            [os.path.basename(self.input_file)])
 
         # populate input orbit and TEC files
         for ancillary_type in ['orbit', 'tec']:

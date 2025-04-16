@@ -567,9 +567,10 @@ class GcovWriter(BaseL2WriterSingleInput):
             f'{parameters_group}/validSamplesSubSwathMaskingApplied',
             'processing/geocode/apply_valid_samples_sub_swath_masking')
 
-        self.copy_from_runconfig(
+        # Shadow masking has not been implemented yet, so it's always `False`
+        self.set_value(
             f'{parameters_group}/shadowMaskingApplied',
-            'processing/geocode/apply_shadow_masking')
+            False)
 
         self.copy_from_runconfig(
             f'{parameters_group}/polarimetricSymmetrizationApplied',
