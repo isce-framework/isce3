@@ -19,7 +19,7 @@ namespace isce3 { namespace geometry {
     class BoundingBox : public OGREnvelope {
         public:
         //Overload OGREnvelope::Merge by adding parameter for EPSG in geographic coordinates.
-        void Merge(const BoundingBox& other, int epsg=-1) {
+        void Merge(const BoundingBox& other, int epsg) {
             const double one_cycle = 360.0;
 
             double minx_global = (MinX < other.MinX) ? MinX : other.MinX;
@@ -28,7 +28,7 @@ namespace isce3 { namespace geometry {
             // Check if wrapping is necessary. If not, use the method in the base class
             if ((epsg != 4326) || (maxx_global - minx_global) <= 180.0){
                 // just use the method in the base class
-                Merge(other);
+                OGREnvelope::Merge(other);
                 return;
             }
 
