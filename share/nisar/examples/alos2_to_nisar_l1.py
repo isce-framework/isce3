@@ -234,6 +234,7 @@ def construct_nisar_hdf5(outh5, ldr):
 
     # fields added to spec in 2023
     ident_group.create_dataset("granuleId", data=np.bytes_("None"))
+    ident_group.create_dataset('platformName', data=np.bytes_("ALOS-2"))
     ident_group.create_dataset("instrumentName", data=np.bytes_("PALSAR-2"))
     ident_group.create_dataset("isDithered", data=np.bytes_("False"))
     ident_group.create_dataset("isMixedMode", data=np.bytes_("False"))

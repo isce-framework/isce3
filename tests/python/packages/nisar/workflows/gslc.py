@@ -124,19 +124,20 @@ def test_run():
                     rslc_doppler_centroid_lut.__getattribute__(attr))
 
         output_h5_obj = h5py.File(sas_output_file, 'r')
-        
+
         zero_doppler_time_dataset = \
             output_h5_obj['//science/LSAR/GSLC/metadata/sourceData/'
-                            'processingInformation/parameters/zeroDopplerTime']
-        
+                          'processingInformation/parameters/zeroDopplerTime']
+
         assert 'units' in zero_doppler_time_dataset.attrs.keys()
 
         assert zero_doppler_time_dataset.attrs['units'].decode().startswith(
             'seconds since ')
 
         assert zero_doppler_time_dataset.attrs['description'].decode() == \
-            ('Zero Doppler time since UTC epoch dimension corresponding to'
-             ' source data processing information records')
+            ('Vector of zero Doppler azimuth times, measured relative to'
+             ' a UTC epoch, corresponding to source data processing'
+             ' information records')
 
 
 def get_raster_geogrid(dataset_reference):

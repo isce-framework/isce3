@@ -417,26 +417,33 @@ def generate_insar_subswath_mask(ref_rslc_obj,
     azimuth_offset_band = src_azimuth_offset.GetRasterBand(1)
 
     subswath_mask = []
-
     for i in azi_idx_arr:
-        range_off = \
-            range_offset_band.ReadAsArray(0,
-                                          int(i),
-                                          ref_swath.samples,
-                                          1)
-        azimuth_off = \
-            azimuth_offset_band.ReadAsArray(0,
+        # Check if the azimuth index is within the radar grid
+        if i >= 0 and i < ref_swath.lines:
+            range_off = \
+                range_offset_band.ReadAsArray(0,
                                             int(i),
                                             ref_swath.samples,
                                             1)
-        for j in rg_idx_arr:
-            subswath_mask.append(
-                _compute_subswath_mask_id(int(i),int(j),
-                                          azimuth_off[0,int(j)],
-                                          range_off[0,int(j)],
-                                          ref_subswaths,
-                                          sec_subswaths)
-                )
+            azimuth_off = \
+                azimuth_offset_band.ReadAsArray(0,
+                                                int(i),
+                                                ref_swath.samples,
+                                                1)
+            for j in rg_idx_arr:
+                # Initialize the subswath mask id to be 0
+                subswath_mask_id = 0
+                # Check if the range index is within the swath
+                if j >= 0 and j < ref_swath.samples:
+                    subswath_mask_id =  _compute_subswath_mask_id(int(i),int(j),
+                                            azimuth_off[0,int(j)],
+                                            range_off[0,int(j)],
+                                            ref_subswaths,
+                                            sec_subswaths)
+                subswath_mask.append(subswath_mask_id)
+        # The azimuth index is not in the radar grid meaning no subswath mask
+        else:
+            subswath_mask += [0] * len(rg_idx_arr)
 
     return np.array(subswath_mask).reshape(
         (len(azi_idx_arr),

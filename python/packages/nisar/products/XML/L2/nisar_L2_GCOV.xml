@@ -2404,20 +2404,6 @@
                 <annotation app="conformance"
                             lang="en">Flag to indicate if the source data is upsampled for geocoding</annotation>
         </string>
-        <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geocoding/snapToGridX"
-              shape="scalar"
-              width="64">
-              <annotation app="conformance"
-                          lang="en"
-                          units="meters">Snap to the grid along the X direction with the origin set at 0. The X-coordinate of the scene's upper-left corner is a multiple of this value</annotation>
-        </real>
-        <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geocoding/snapToGridY"
-              shape="scalar"
-              width="64">
-              <annotation app="conformance"
-                          lang="en"
-                          units="meters">Snap to the grid along the Y direction with the origin set at 0. The Y-coordinate of the scene's upper-left corner is a multiple of this value</annotation>
-        </real>
 
         <!-- geo2rdr parameters -->
         <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geo2rdr/convergenceThreshold"
@@ -2793,6 +2779,18 @@
               <annotation app="conformance"
                           lang="en">Source data processing center</annotation>
         </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/sourceData/productType"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Product type of the source data</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/metadata/sourceData/granuleId"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Unique granule identification name of the source data</annotation>
+        </string>
         <string name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/runConfigurationContents"
               length="0"
               shape="scalar">
@@ -2812,7 +2810,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Vector of zero Doppler azimuth times, measured relative to a UTC epoch, corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"
@@ -2826,7 +2824,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Vector of zero Doppler azimuth times, measured relative to a UTC epoch, corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/frequencyA/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"
@@ -2847,7 +2845,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Vector of zero Doppler azimuth times, measured relative to a UTC epoch, corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/frequencyB/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"

@@ -1,7 +1,7 @@
 # Use pinned oraclelinux:8 image
 ARG repository=cae-artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/iems/sds/infrastructure/base/jplsds-oraclelinux
-ARG tag=8.10.241001
-ARG digest=sha256:add0de53779191a7afed7ada9549e8fee20ef8486766eb8cb98c0d7639c865f1
+ARG tag=8.10.250401
+ARG digest=sha256:e37c210f26cfe7660808e536937fcf6ac359b3ec5713211e46519d7a35973a57
 FROM ${repository}:${tag}@${digest}
 
 RUN yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo

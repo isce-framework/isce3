@@ -294,6 +294,7 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
         "2007-01-01 00:00:01.0000000"))
     # fields added to spec in 2023
     ident.create_dataset("granuleId", data=numpy.bytes_("None"))
+    ident.create_dataset('platformName', data=numpy.bytes_("ALOS-1"))
     ident.create_dataset("instrumentName", data=numpy.bytes_("PALSAR"))
     ident.create_dataset("isDithered", data=numpy.bytes_("False"))
     ident.create_dataset("isMixedMode", data=numpy.bytes_("False"))
