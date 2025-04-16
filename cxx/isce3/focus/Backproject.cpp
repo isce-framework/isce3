@@ -291,8 +291,8 @@ setupPolarGridForPulses(
     auto qmid = (q0 + q1) / 2;
     auto qspan = (q1 - q0) + c / (fc * 2 * azimuth_resolution);
 
-    int nr = static_cast<int>(std::ceil((r1 - r0) / dr));
-    int nq = static_cast<int>(std::ceil(qspan / dq));
+    int nr = 1 + static_cast<int>(std::ceil((r1 - r0) / dr));
+    int nq = 1 + static_cast<int>(std::ceil(qspan / dq));
 
     // adjust spacing so we end up with a fast FFT sizes
     if (densify_for_fast_transforms) {
@@ -304,7 +304,7 @@ setupPolarGridForPulses(
 
     auto pgrid = PolarGrid{azimuth_time[0], azimuth_time[nt - 1],
         origin, axis, Linspace<double>(r0, dr, nr),
-        Linspace<double>(qmid - qspan / 2, dq, nq)};
+        Linspace<double>(qmid - dq * (nq - 1) / 2, dq, nq)};
 
     return {pgrid, pos, vel};
 }
