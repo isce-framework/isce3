@@ -133,8 +133,9 @@ def test_run_winnipeg():
             'units'].decode().startswith('seconds since ')
 
         assert zero_doppler_time_dataset.attrs['description'].decode() == \
-            ('Zero Doppler time since UTC epoch dimension corresponding to'
-                ' source data processing information records')
+            ('Vector of zero Doppler azimuth times, measured relative to'
+             ' a UTC epoch, corresponding to source data processing'
+             ' information records')
 
 
 def test_run_envisat():
