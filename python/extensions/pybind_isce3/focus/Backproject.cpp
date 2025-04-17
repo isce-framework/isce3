@@ -338,12 +338,10 @@ void addbinding_backproject(py::module& m)
                 const isce3::core::Orbit& in_orbit,
                 const isce3::core::LUT2d<double>& in_doppler,
                 const std::vector<PolarGrid>& grids,
-                const std::vector<py::array_t<std::complex<float>, py::array::c_style>>& images,
+                const std::vector<isce3::signal::NFFT2d<float>>& image_interpolators,
                 const DEMInterpolator& dem,
                 double fc,
                 double ds,
-                const Kernel<float>& kernel_rg,
-                const Kernel<float>& kernel_az,
                 py::dict rdr2geo_params,
                 py::dict geo2rdr_params,
                 std::optional<py::array_t<float, py::array::c_style>> height) {
@@ -360,26 +358,9 @@ void addbinding_backproject(py::module& m)
                 throw InvalidArgument(ISCE_SRCINFO(), errmsg);
             }
 
-            if (grids.size() != images.size()) {
+            if (grids.size() != image_interpolators.size()) {
                 throw InvalidArgument(ISCE_SRCINFO(), "must have grid for each sub-image");
             }
-            for (decltype(grids.size()) i = 0; i < grids.size(); ++i) {
-                const auto& grid = grids[i];
-                const auto& image = images[i];
-                if (image.ndim() != 2) {
-                    throw InvalidArgument(ISCE_SRCINFO(), "input sub-images must be 2-D");
-                }
-                if (image.shape()[0] != grid.length() or
-                        image.shape()[1] != grid.width()) {
-                    std::string errmsg = "input sub-image shape must match "
-                        "input radar grid shape";
-                    throw InvalidArgument(ISCE_SRCINFO(), errmsg);
-                }
-            }
-
-            std::vector<const std::complex<float>*> images_(images.size());
-            std::transform(images.begin(), images.end(), images_.begin(),
-                [](const auto& image) { return image.data(); });
 
             std::complex<float>* out_data = out.mutable_data();
             float* height_data = nullptr;
@@ -403,9 +384,8 @@ void addbinding_backproject(py::module& m)
             {
                 py::gil_scoped_release release;
                 err = backprojectFinalStage(out_data, out_geometry, in_orbit,
-                    in_doppler, grids, images_,
-                    dem, fc, ds, kernel_rg, kernel_az, r2gparams, g2rparams,
-                    height_data);
+                    in_doppler, grids, image_interpolators, dem, fc, ds,
+                    r2gparams, g2rparams, height_data);
             }
             // TODO bind ErrorCode class.  For now return nonzero on failure.
             return err != ErrorCode::Success;
@@ -415,12 +395,10 @@ void addbinding_backproject(py::module& m)
         py::arg("in_orbit"),
         py::arg("in_doppler"),
         py::arg("grids"),
-        py::arg("images"),
+        py::arg("image_interpolators"),
         py::arg("dem"),
         py::arg("fc"),
         py::arg("ds"),
-        py::arg("kernel_rg"),
-        py::arg("kernel_az"),
         py::arg("rdr2geo_params") = py::dict(),
         py::arg("geo2rdr_params") = py::dict(),
         py::arg("height") = py::none());

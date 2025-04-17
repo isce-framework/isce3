@@ -527,9 +527,8 @@ backprojectFinalStage(std::complex<float>* out,
         const isce3::core::Orbit& in_orbit,
         const isce3::core::LUT2d<double>& in_doppler,
         const std::vector<PolarGrid>& grids,
-        const std::vector<const std::complex<float>*>& images,
+        const std::vector<NFFT2d<float>>& image_interpolators,
         const DEMInterpolator& dem, double fc, double ds,
-        const Kernel<float>& kernel_rg, const Kernel<float>& kernel_az,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
         float* height)
@@ -637,35 +636,13 @@ backprojectFinalStage(std::complex<float>* out,
     //    std::lower_bound(ends.begin(), ends.end(), tstart));
     //const auto kstop = std::distance(starts.begin(),
     //    std::upper_bound(starts.start(), starts.end(), tstart + cpi));
-    const decltype(images.size()) kstart = 0, kstop = images.size();
-
-    // configure nfft for first image, and recompute only if needed
-    const auto& grid = grids[kstart];
-    NFFT2d<float>::dims_t dims {grid.length(), grid.width()};
-    constexpr int my = 2, mx = 2, s = 2;
-    auto nfft = NFFT2d<float>({my, mx}, dims, {s * dims[0], s * dims[1]});
-
-    size_t nimg = static_cast<size_t>(grid.length()) * grid.width();
-    std::vector<std::complex<float>> img(nimg);
-    std::vector<std::complex<float>> img_spectrum(nimg);
-    auto fft = planfft2d(img_spectrum.data(), img.data(), {dims[0], dims[1]});
+    const auto num_images = image_interpolators.size();
+    const decltype(num_images) kstart = 0, kstop = num_images;
 
     for (auto k = kstart; k < kstop; ++k) {
         // check if we need to replan FFTs
         const auto& grid = grids[k];
-        dims = {grid.length(), grid.width()};
-        if (dims != nfft.sizes()) {
-            nfft = NFFT2d<float>({my, mx}, dims, {s * dims[0], s * dims[1]});
-            nimg = static_cast<size_t>(grid.length()) * grid.width();
-            img.resize(nimg);
-            img_spectrum.resize(nimg);
-            fft = planfft2d(img_spectrum.data(), img.data(), {dims[0], dims[1]});
-        }
-        // copy image and execute FFT
-        img.assign(images[k], images[k] + nimg);
-        fft.execute();
-        // zero-pad and filter
-        nfft.set_spectrum(dims, /* strides */ {dims[1], 1}, img_spectrum.data());
+        const auto& nfft = image_interpolators[k];
 
         #pragma omp parallel for
         for (size_t iflat = 0; iflat < nout; ++iflat) {

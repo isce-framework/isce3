@@ -1582,7 +1582,7 @@ def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, write
 def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
         rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
-        use_gpu=False, bandwidth=0.0, debugfile=None):
+        use_gpu=False, bandwidth=0.0, debugfile=None, nfft2d_params=dict()):
     fc = isce3.core.speed_of_light / ogrid.wavelength
     zerodop = isce3.core.LUT2d()
     if len(factor_sizes) > 1:
@@ -1621,9 +1621,9 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     grids = [result[1] for result in results]
     images = [result[2] for result in results]
 
-    # FIXME dummy kernels
-    kernel_az = isce3.core.KnabKernel(7, 1 / 1.2)
-    kernel_az = isce3.core.TabulatedKernelF32(kernel_az, 2048)
+    log.info("Computing NFFT transforms of sub-images")
+    image_interpolators = [isce3.signal.make_image_nfft2d(image, nfft2d_params)
+        for image in images]
 
     # sum factors into final image
     for block, (t0, t1) in blocks_bounds:
@@ -1633,19 +1633,18 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
             log.info(f"Skipping inactive azcomp block at {description}")
             continue
         log.info(f"Azcomp final sums for block at {description}")
-        # Still super inefficient since can upsample same subimages many times.
-        # TODO refactor so subimages only upsampled once.
-        isneeded = [(t1 > grid.aztime_start) and (t0 <= grid.aztime_end) for grid in grids]
+        isneeded = [(t1 > grid.aztime_start) and (t0 <= grid.aztime_end)
+            for grid in grids]
         active_grids = [grids[i] for i in range(len(grids)) if isneeded[i]]
-        active_images = [images[i] for i in range(len(images)) if isneeded[i]]
+        active_images = [image_interpolators[i] for i in range(len(images))
+            if isneeded[i]]
         bgrid = ogrid[block]
         ogeom = isce3.container.RadarGeometry(bgrid, igeom.orbit, zerodop)
         z = np.zeros(bgrid.shape, 'c8')
         hgt = height[block] if height is not None else None
         err = isce3.focus.backproject_final_stage(
             z, ogeom, igeom.orbit, igeom.doppler, active_grids, active_images,
-            dem, fc, azres, kernel, kernel_az, rdr2geo_params, geo2rdr_params,
-            hgt)
+            dem, fc, azres, rdr2geo_params, geo2rdr_params, hgt)
         if err:
             log.warning("azcomp block contains some invalid pixels")
         writer.queue_write(z, block)
