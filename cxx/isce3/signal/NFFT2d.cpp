@@ -119,8 +119,7 @@ std::complex<T> NFFT2d<T>::interp(const std::array<double, 2>& t, bool periodic)
 template<typename T>
 NFFT2d<T> makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
-    const typename NFFT2d<T>::dims_t& m,
-    const std::array<double, 2>& s,
+    const NFFT2dParams& params,
     bool pad_input)
 {
     using isce3::fft::nextFastPower;
@@ -132,7 +131,7 @@ NFFT2d<T> makeImageNFFT2d(
 
     // Pointer to input image or padded/copied version so we can have fewer
     // conditionals later.
-    // FIXME I can't figure out how to do this with an Eigen type...
+    // FIXME figure out how to do this with an Eigen type...
     auto image_ptr = image.data();
 
     // Need to copy if image is not contiguous row-major since we don't have
@@ -146,7 +145,7 @@ NFFT2d<T> makeImageNFFT2d(
     if (pad_input) {
         auto padded_rows_in = nextFastPower(rows_in);
         auto padded_cols_in = nextFastPower(cols_in);
-        if ((rows_in == padded_rows_in) && (cols_in == padded_cols_in)) {
+        if ((rows_in == padded_rows_in) and (cols_in == padded_cols_in)) {
             // User asked for padding but we don't actually need it.
             pad_input = false;
         } else {
@@ -175,9 +174,10 @@ NFFT2d<T> makeImageNFFT2d(
 
     // Calculate sizes for padded inverse transform.
     dims_t dims_out = {
-        nextFastPower(static_cast<int>(std::round(s[0] * dims[0]))),
-        nextFastPower(static_cast<int>(std::round(s[1] * dims[1])))};
+        nextFastPower(static_cast<int>(std::round(params.rows.s * dims[0]))),
+        nextFastPower(static_cast<int>(std::round(params.cols.s * dims[1])))};
 
+    const dims_t m = {params.rows.m, params.cols.m};
     auto interpolator = NFFT2d<T>(m, dims, dims_out);
     interpolator.set_spectrum(dims, {dims[1], 1}, spectrum.data());
     return interpolator;
@@ -191,13 +191,11 @@ template class isce3::signal::NFFT2d<double>;
 template isce3::signal::NFFT2d<float>
 isce3::signal::makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<float>>>& image,
-    const typename NFFT2d<float>::dims_t& m,
-    const std::array<double, 2>& s,
+    const isce3::signal::NFFT2dParams& params,
     bool pad_input);
 
 template isce3::signal::NFFT2d<double>
 isce3::signal::makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<double>>>& image,
-    const typename NFFT2d<double>::dims_t& m,
-    const std::array<double, 2>& s,
+    const isce3::signal::NFFT2dParams& params,
     bool pad_input);

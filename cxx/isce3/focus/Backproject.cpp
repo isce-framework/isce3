@@ -29,6 +29,7 @@ using isce3::error::ErrorCode;
 
 using isce3::container::RadarGeometry;
 using isce3::signal::NFFT2d;
+using isce3::signal::NFFT2dParams;
 using isce3::fft::planfft2d;
 using isce3::fft::nextFastPower;
 
@@ -703,16 +704,16 @@ projectPolarToGeo(
         const PolarGrid& grid,
         const std::complex<float>* polar_image,
         const double wavelength,
-        const NFFT2Params& params)
+        const NFFT2dParams& params)
 {
     using dims_t = NFFT2d<float>::dims_t;
     using std::lround;
 
-    const dims_t m = {params.y.m, params.x.m};
+    const dims_t m = {params.rows.m, params.cols.m};
     const dims_t dims_in = {grid.length(), grid.width()};
     const dims_t dims_out = {
-        nextFastPower(static_cast<int32_t>(lround(params.y.s * dims_in[0]))),
-        nextFastPower(static_cast<int32_t>(lround(params.x.s * dims_in[1])))
+        nextFastPower(static_cast<int32_t>(lround(params.rows.s * dims_in[0]))),
+        nextFastPower(static_cast<int32_t>(lround(params.cols.s * dims_in[1])))
     };
 
     auto nfft = NFFT2d<float>(m, dims_in, dims_out);

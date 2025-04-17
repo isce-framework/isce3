@@ -84,6 +84,7 @@ signal/CrossMultiply.cpp
 signal/flatten.cpp
 signal/filter2D.cpp
 signal/multilook.cpp
+signal/NFFT2d.cpp
 product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp

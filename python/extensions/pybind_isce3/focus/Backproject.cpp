@@ -14,6 +14,7 @@
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/geometry/detail/Rdr2Geo.h>
+#include <isce3/signal/NFFT2d.h>
 
 namespace py = pybind11;
 
@@ -79,41 +80,6 @@ Geo2RdrBracketParams parse_geo2rdr_params(const py::dict& params)
     return out;
 }
 
-NFFT2Params parse_nfft2_params(const py::dict& params)
-{
-    auto parse_ms = [](const py::dict& d) {
-        NFFTParams out;
-        for (auto item : d) {
-            auto key = item.first.cast<std::string>();
-            if (key == "m") {
-                out.m = item.second.cast<int>();
-            }
-            else if (key == "s") {
-                out.s = item.second.cast<double>();
-            }
-            else {
-                throw InvalidArgument(ISCE_SRCINFO(),
-                    "unexpected NFFT keyword: " + key);
-            }
-        }
-        return out;
-    };
-    NFFT2Params out;
-    for (auto item : params) {
-        auto key = item.first.cast<std::string>();
-        if (key == "x") {
-            out.x = parse_ms(item.second.cast<py::dict>());
-        }
-        else if (key == "y") {
-            out.y = parse_ms(item.second.cast<py::dict>());
-        }
-        else {
-            throw InvalidArgument(ISCE_SRCINFO(),
-                "unexpected NFFT2Parms keyword: " + key);
-        }
-    }
-    return out;
-}
 
 void addbinding(py::class_<PolarGrid>& pyPolarGrid)
 {
@@ -523,10 +489,10 @@ void addbinding_backproject(py::module& m)
                 const PolarGrid& grid,
                 const py::array_t<std::complex<float>>& polar_image,
                 const double wavelength,
-                py::dict nfft2_params) {
+                py::dict nfft2d_params) {
 
             // get root finding parameters
-            const auto params = parse_nfft2_params(nfft2_params);
+            const auto params = parse_nfft2d_params(nfft2d_params);
             if (geo_points.size() != 3 * geo_image.size()) {
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "shape mismatch between geo image and position arrays");
@@ -557,5 +523,5 @@ void addbinding_backproject(py::module& m)
         py::arg("grid"),
         py::arg("polar_image"),
         py::arg("wavelength"),
-        py::arg("nfft2_params") = py::dict());
+        py::arg("nfft2d_params") = py::dict());
 }

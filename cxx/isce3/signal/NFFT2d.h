@@ -72,6 +72,27 @@ class NFFT2d {
 };
 
 
+struct NFFTParams {
+    int m;  /// half width of interpolator
+    double s;  /// oversampling factor
+
+    NFFTParams(int m_ = 2, double s_ = 2.0) : m{m_}, s{s_} {
+        if (m_ < 1) {
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Need interpolator size m >= 1 for NFFT");
+        }
+        if (s_ <= 1.0) {
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Need oversampling ratio s > 1.0 for NFFT");
+        }
+    }
+};
+
+struct NFFT2dParams {
+    NFFTParams rows, cols;
+};
+
+
 /**
  * @brief Create an NFFT2d object for interpolating an image.
  *
@@ -90,8 +111,7 @@ class NFFT2d {
 template<typename T>
 NFFT2d<T> makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
-    const typename NFFT2d<T>::dims_t& m = {2, 2},
-    const std::array<double, 2>& s = {2.0, 2.0},
+    const NFFT2dParams& params = {},
     bool pad_input = false);
 
 } // namespace isce3::signal

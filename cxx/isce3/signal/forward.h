@@ -3,6 +3,8 @@
 namespace isce3 { namespace signal {
 
     class Crossmul;
+    class NFFTParams;
+    class NFFT2dParams;
     template<class> class Covariance;
     template<class> class Filter;
     template<class> class Looks;

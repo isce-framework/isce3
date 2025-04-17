@@ -6,6 +6,7 @@
 #include "flatten.h"
 #include "filter2D.h"
 #include "multilook.h"
+#include "NFFT2d.h"
 
 namespace py = pybind11;
 
@@ -19,10 +20,14 @@ void addsubmodule_signal(py::module & m)
     py::class_<isce3::signal::Crossmul> pyCrossmul(m_signal, "Crossmul");
     py::class_<isce3::signal::CrossMultiply> pyCrossMultiply(m_signal,
                                                              "CrossMultiply");
+    py::class_<isce3::signal::NFFT2d<float>> pyNFFT2dF32(m_signal, "NFFT2dF32");
+    py::class_<isce3::signal::NFFT2d<double>> pyNFFT2dF64(m_signal, "NFFT2dF64");
 
     // add bindings
     addbinding(pyCrossmul);
     addbinding(pyCrossMultiply);
+    addbinding<float>(pyNFFT2dF32);
+    addbinding<double>(pyNFFT2dF64);
     addbinding_flatten(m_signal);
     addbinding_filter2D(m_signal);
     addbinding_convolve2D<float>(m_signal);
@@ -33,4 +38,5 @@ void addsubmodule_signal(py::module & m)
     addbinding_multilook<EArray2D<std::complex<float>>>(m_signal);
     addbinding_multilook<EArray2D<double>>(m_signal);
     addbinding_multilook<EArray2D<std::complex<double>>>(m_signal);
+    addbinding_make_image_nfft2d(m_signal);
 }
