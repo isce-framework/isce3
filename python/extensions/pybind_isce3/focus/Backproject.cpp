@@ -28,6 +28,10 @@ using isce3::geometry::DEMInterpolator;
 using isce3::geometry::detail::Rdr2GeoBracketParams;
 using isce3::geometry::detail::Geo2RdrBracketParams;
 
+// Copied declaration from pybind_isce3/signal/NFFT2d.h
+// Implementation is in pybind_isce3/signal/NFFT2d.cpp
+isce3::signal::NFFT2dParams parse_nfft2d_params(const py::dict& params);
+
 
 Rdr2GeoBracketParams parse_rdr2geo_params(const py::dict& params)
 {

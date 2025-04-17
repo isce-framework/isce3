@@ -342,7 +342,7 @@ backprojectFirstStage(
     }
 
     // awful hacks for clang https://godbolt.org/z/6rrThhK3W
-    PolarGrid out_grid {0.0, 0.0, {0,0,0}, {1,0,0}, {0, 1, 0}, {0, 1, 0}, isce3::core::LookSide::Left};
+    PolarGrid out_grid {0.0, 0.0, {0,0,0}, {1,0,0}, {}, {}, {}};
     std::vector<Vec3> pos, vel;
     std::tie(out_grid, pos, vel) = setupPolarGridForPulses(in_geometry,
         in_azimuth_time,
