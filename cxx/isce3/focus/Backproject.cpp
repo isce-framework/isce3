@@ -683,26 +683,11 @@ projectPolarToGeo(
         const double wavelength,
         const NFFT2dParams& params)
 {
-    using dims_t = NFFT2d<float>::dims_t;
-    using std::lround;
-
-    const dims_t m = {params.rows.m, params.cols.m};
-    const dims_t dims_in = {grid.length(), grid.width()};
-    const dims_t dims_out = {
-        nextFastPower(static_cast<int32_t>(lround(params.rows.s * dims_in[0]))),
-        nextFastPower(static_cast<int32_t>(lround(params.cols.s * dims_in[1])))
-    };
-
-    auto nfft = NFFT2d<float>(m, dims_in, dims_out);
-    const size_t nin = static_cast<size_t>(grid.length()) * grid.width();
-    std::vector<std::complex<float>> spectrum(nin);
-    // Okay to discard const because fft is planned with FFTW_EXECUTE which
-    // doesn't modify input.
-    isce3::fft::fft2d(spectrum.data(),
-        const_cast<std::complex<float>*>(polar_image),
-        {dims_in[0], dims_in[1]});
-    // zero-pad and filter
-    nfft.set_spectrum(dims_in, /* strides */ {dims_in[1], 1}, spectrum.data());
+    // TODO move this outside the function
+    using img_t = isce3::core::EArray2D<std::complex<float>>;
+    const auto rows = grid.length(), cols = grid.width();
+    const auto img = Eigen::Map<const img_t>(polar_image, rows, cols);
+    const auto nfft = isce3::signal::makeImageNFFT2d<float>(img, params);
 
     const double kw = 4 * M_PI / wavelength;
 
