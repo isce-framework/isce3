@@ -224,7 +224,7 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
 static Vec3 vector_mean(const std::vector<Vec3>& vecs)
 {
     Vec3 sum = {0, 0, 0};
-    for (const auto vec : vecs) {
+    for (const auto& vec : vecs) {
         sum += vec;
     }
     return sum * (1.0 / vecs.size());
