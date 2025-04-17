@@ -89,15 +89,17 @@ void addbinding(py::class_<PolarGrid>& pyPolarGrid)
 {
     using isce3::core::Vec3;
     using isce3::core::Linspace;
+    using isce3::core::LookSide;
 
     pyPolarGrid
-        .def(py::init<double, double, Vec3, Vec3, Linspace<double>, Linspace<double>>(),
+        .def(py::init<double, double, Vec3, Vec3, Linspace<double>, Linspace<double>, LookSide>(),
             py::arg("aztime_start"),
             py::arg("aztime_end"),
             py::arg("origin"),
             py::arg("axis"),
             py::arg("range"),
-            py::arg("sin_squint")
+            py::arg("sin_squint"),
+            py::arg("look_side")
         )
         .def_readonly("aztime_start", &PolarGrid::aztime_start)
         .def_readonly("aztime_end", &PolarGrid::aztime_end)
@@ -105,12 +107,13 @@ void addbinding(py::class_<PolarGrid>& pyPolarGrid)
         .def_readonly("axis", &PolarGrid::axis)
         .def_readonly("range", &PolarGrid::range)
         .def_readonly("sin_squint", &PolarGrid::sin_squint)
+        .def_readonly("look_side", &PolarGrid::look_side)
         .def_property_readonly("shape", [](const PolarGrid& self) {
             return std::make_tuple(self.sin_squint.size(), self.range.size());
         })
         .def("__repr__", [](const py::object self) {
             std::vector<std::string> keys {"aztime_start", "aztime_end",
-                    "origin", "axis", "range", "sin_squint"};
+                    "origin", "axis", "range", "sin_squint", "look_side"};
             std::string out("PolarGrid(");
             for (auto it = keys.begin(); it != keys.end(); ++it) {
                     auto key = *it;
