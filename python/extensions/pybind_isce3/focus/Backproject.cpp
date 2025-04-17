@@ -318,15 +318,13 @@ void addbinding_backproject(py::module& m)
             py::arg("oversample_azimuth") = 1.2);
 
     m.def("merge_polar_grids", [](const std::vector<PolarGrid>& grids,
-                                  const isce3::core::LookSide& lookside,
                                   const DEMInterpolator& dem,
                                   const isce3::core::Ellipsoid& ellipsoid,
                                   py::dict rdr2geo_params) {
             const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
-            return mergePolarGrids(grids, lookside, dem, ellipsoid, r2g_params);
+            return mergePolarGrids(grids, dem, ellipsoid, r2g_params);
         },
         py::arg("grids"),
-        py::arg("lookside"),
         py::arg("dem") = DEMInterpolator(),
         py::arg("ellipsoid") = isce3::core::Ellipsoid(),
         py::arg("rdr2geo_params") = py::dict()

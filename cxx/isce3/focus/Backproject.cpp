@@ -306,7 +306,8 @@ setupPolarGridForPulses(
 
     auto pgrid = PolarGrid{azimuth_time[0], azimuth_time[nt - 1],
         origin, axis, Linspace<double>(r0, dr, nr),
-        Linspace<double>(qmid - dq * (nq - 1) / 2, dq, nq)};
+        Linspace<double>(qmid - dq * (nq - 1) / 2, dq, nq),
+        in_geometry.lookSide()};
 
     return {pgrid, pos, vel};
 }
@@ -341,7 +342,7 @@ backprojectFirstStage(
     }
 
     // awful hacks for clang https://godbolt.org/z/6rrThhK3W
-    PolarGrid out_grid {0.0, 0.0, {0,0,0}, {1,0,0}, {0, 1, 0}, {0, 1, 0}};
+    PolarGrid out_grid {0.0, 0.0, {0,0,0}, {1,0,0}, {0, 1, 0}, {0, 1, 0}, isce3::core::LookSide::Left};
     std::vector<Vec3> pos, vel;
     std::tie(out_grid, pos, vel) = setupPolarGridForPulses(in_geometry,
         in_azimuth_time,
@@ -429,7 +430,6 @@ backprojectFirstStage(
 
 PolarGrid
 mergePolarGrids(const std::vector<PolarGrid>& grids,
-    const LookSide lookside,
     const DEMInterpolator& dem,
     const Ellipsoid& ellipsoid,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
@@ -454,6 +454,7 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     // Doppler spacing is inversely proportional to aperture size.  Find the
     // most conservative among the grids.
     auto scale = grids[0].sin_squint.spacing() * (t_max - t_min);
+    const auto look_side = grids[0].look_side;
 
     for (const auto& grid : grids) {
         const auto duration = grid.aztime_end - grid.aztime_start;  // + PRI ??
@@ -464,6 +465,10 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
         dr = std::min(dr, grid.range.spacing());
         origin += duration * grid.origin;
         axis += duration * grid.axis;
+        if (grid.look_side != look_side) {
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "inconsistent look_side among input polar grids");
+        }
     }
     origin *= 1.0 / sum_durations;
     axis *= 1.0 / axis.norm();
@@ -481,7 +486,7 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
         auto csq = std::sqrt(1.0 - ssq * ssq);
         double r_out, ssq_out;
         auto ec = polar2polar_bracket(&ssq_out, &r_out, ssq, csq, r,
-            grid.origin, grid.axis, origin, axis, dem, ellipsoid, lookside,
+            grid.origin, grid.axis, origin, axis, dem, ellipsoid, look_side,
             r2g_params);
         if (ec != ErrorCode::Success) {
             throw isce3::except::DomainError(ISCE_SRCINFO(),
@@ -515,7 +520,9 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     // TODO The ceil() means potentially extra data.  It might be preferable to
     // pad equally on both sides, rather than adding all the extra to the end.
     return PolarGrid{t_min, t_max, origin, axis,
-        Linspace<double>(r_min, dr, nr), Linspace<double>(q_min, dq, nq)};
+        Linspace<double>(r_min, dr, nr),
+        Linspace<double>(q_min, dq, nq),
+        look_side};
 }
 
 

@@ -56,6 +56,7 @@ struct PolarGrid {
     isce3::core::Vec3 origin, axis;
     isce3::core::Linspace<double> range;
     isce3::core::Linspace<double> sin_squint;
+    isce3::core::LookSide look_side;
 
     PolarGrid() = delete;
 
@@ -105,7 +106,6 @@ setupPolarGridForPulses(
 
 PolarGrid
 mergePolarGrids(const std::vector<PolarGrid>& grids,
-    const isce3::core::LookSide lookside,
     const isce3::geometry::DEMInterpolator& dem,
     const isce3::core::Ellipsoid& ellipsoid,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {});
