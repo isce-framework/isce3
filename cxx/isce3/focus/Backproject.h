@@ -109,6 +109,13 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     const isce3::geometry::DEMInterpolator& dem,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {});
 
+void mergePolarImages(
+    const std::vector<PolarGrid>& grids,
+    const std::vector<isce3::signal::NFFT2d<float>>& image_interpolators,
+    const PolarGrid& output_grid,
+    Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
+    const double fc,
+    const isce3::geometry::DEMInterpolator& dem,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {});
 
 // interpolate polar grid to given set of XYZ positions

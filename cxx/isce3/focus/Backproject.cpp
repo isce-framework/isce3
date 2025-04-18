@@ -528,6 +528,101 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
 }
 
 
+void mergePolarImages(
+    const std::vector<PolarGrid>& grids,
+    const std::vector<NFFT2d<float>>& image_interpolators,
+    const PolarGrid& output_grid,
+    Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
+    const double fc,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+{
+    // check that output grid dimensions match buffer size
+    const auto m = output_grid.length(), n = output_grid.width();
+    if ((m != output_image.rows()) or (n != output_image.cols())) {
+        std::string msg = "Dimensions of image grid (" + std::to_string(m)
+            + ", " + std::to_string(n) + ") do not match dimensions of image "
+            "buffer (" + std::to_string(output_image.rows()) + ", "
+            + std::to_string(output_image.cols()) + ")";
+        throw isce3::except::LengthError(ISCE_SRCINFO(), msg);
+    }
+
+    // check that we have a grid for each input image
+    const auto num_images = image_interpolators.size();
+    if (grids.size() != num_images) {
+        std::string msg = "Size mismatch: got " + std::to_string(num_images) +
+            " sub images but " + std::to_string(grids.size()) + " grids";
+        throw isce3::except::LengthError(ISCE_SRCINFO(), msg);
+    }
+
+    // check look directions for consistency
+    const auto look_side = output_grid.look_side;
+    for (const auto& grid : grids) {
+        if (grid.look_side != look_side) {
+            std::string msg = "Output grid look direction does not match "
+                "input grid look direction";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), msg);
+        }
+    }
+
+    // reference ellipsoid
+    Ellipsoid ellipsoid = makeProjection(dem.epsgCode())->ellipsoid();
+
+    // linspace helper
+    auto to_pixel = [](const Linspace<double>& v, double x) -> double {
+        return (x - v.first()) / v.spacing();
+    };
+
+    // wavenumber
+    const double kw = 4 * M_PI * fc / isce3::core::speed_of_light;
+
+    using isce3::geometry::detail::polar2polar_bracket;
+
+    // FIXME this method does (num_images - 1) redundant polar2geo calculations
+    // and we may as well put the loop over sub-images outside this function.
+    // Should refactor to cache output XYZ points somehow.
+
+    // loop over input images
+    for (auto i_img = decltype(num_images){0}; i_img < num_images; ++i_img) {
+        const auto& input_grid = grids[i_img];
+        const auto& nfft = image_interpolators[i_img];
+
+        // parallel loop over output pixels (row-major)
+        #pragma omp parallel for collapse(2)
+        for (auto i = decltype(m){0}; i < m; ++i) {
+            // calculate polar coordinate of output pixel.
+            auto out_ssq = output_grid.sin_squint[i];
+            auto out_csq = std::sqrt(1.0 - out_ssq * out_ssq);
+            for (auto j = decltype(n){0}; j < n; ++j) {
+                const auto out_range = output_grid.range[j];
+                // calculate corresponding polar coordinate in input image
+                double in_range, in_ssq;
+                auto ec = polar2polar_bracket(&in_ssq, &in_range, out_ssq,
+                    out_csq, out_range, output_grid.origin, output_grid.axis,
+                    input_grid.origin, input_grid.axis, dem, ellipsoid,
+                    output_grid.look_side, r2g_params);
+                if (ec != ErrorCode::Success) {
+                    throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "polar2polar failed with ErrorCode (" +
+                        isce3::error::getErrorString(ec) + ") for point at r="
+                        + std::to_string(out_range) + " sin_squint="
+                        + std::to_string(out_ssq));
+                } // err
+                // convert to (real-valued) input pixel
+                const auto in_row = to_pixel(input_grid.sin_squint, in_ssq);
+                const auto in_col = to_pixel(input_grid.range, in_range);
+                // interpolate baseband input image
+                const auto z = nfft.interp({in_row, in_col}, false);
+                // compensate phase and sum contribution
+                const double phase = kw * (in_range - out_range);
+                output_image(i, j) +=
+                    z * std::complex<float>(std::cos(phase), std::sin(phase));
+            } // columns
+        } // rows
+    } // images
+}
+
+
 // For now structure like backproject() with inner loop on target.
 // Might make more sense to project on image at a time instead.
 ErrorCode

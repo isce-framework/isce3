@@ -22,11 +22,13 @@ using namespace isce3::focus;
 
 using isce3::container::RadarGeometry;
 using isce3::core::Kernel;
+using isce3::core::EArray2D;
 using isce3::error::ErrorCode;
 using isce3::except::InvalidArgument;
 using isce3::geometry::DEMInterpolator;
 using isce3::geometry::detail::Rdr2GeoBracketParams;
 using isce3::geometry::detail::Geo2RdrBracketParams;
+using isce3::signal::NFFT2d;
 
 // Copied declaration from pybind_isce3/signal/NFFT2d.h
 // Implementation is in pybind_isce3/signal/NFFT2d.cpp
@@ -335,13 +337,35 @@ void addbinding_backproject(py::module& m)
         py::arg("rdr2geo_params") = py::dict()
     );
 
+    m.def("merge_polar_images", [](
+            const std::vector<PolarGrid>& grids,
+            const std::vector<NFFT2d<float>>& image_interpolators,  // copy :,(
+            const PolarGrid& output_grid,
+            Eigen::Ref<EArray2D<std::complex<float>>> output_image,
+            const double fc,
+            const isce3::geometry::DEMInterpolator& dem,
+            const py::dict rdr2geo_params)  // only difference for python
+        {
+            const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
+            return mergePolarImages(grids, image_interpolators, output_grid,
+                output_image, fc, dem, r2g_params);
+        },
+        py::arg("grids"),
+        py::arg("image_interpolators"),
+        py::arg("output_grid"),
+        py::arg("output_image"),
+        py::arg("fc"),
+        py::arg("dem") = DEMInterpolator(),
+        py::arg("rdr2geo_parameters") = py::dict()
+    );
+
     m.def("backproject_final_stage", [](
                 py::array_t<std::complex<float>, py::array::c_style> out,
                 const RadarGeometry& out_geometry,
                 const isce3::core::Orbit& in_orbit,
                 const isce3::core::LUT2d<double>& in_doppler,
                 const std::vector<PolarGrid>& grids,
-                const std::vector<isce3::signal::NFFT2d<float>>& image_interpolators,
+                const std::vector<NFFT2d<float>>& image_interpolators,
                 const DEMInterpolator& dem,
                 double fc,
                 double ds,
