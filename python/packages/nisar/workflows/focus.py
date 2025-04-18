@@ -1591,9 +1591,14 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     factor_size = factor_sizes[0]
 
     if debugfile is not None:
-        npad = max(1, factor_size // 20)
-        log.debug(f"Factors will be separated by {npad} rows of NaN values in "
-            "the debug file.")
+        log.debug("Writing FBP metadata to file {debugfile.name}")
+        with h5py.File(debugfile, "w") as h5:
+            epoch = igeom.reference_epoch
+            igeom.orbit.save_to_h5(h5.require_group("orbit"))
+            igeom.doppler.save_to_h5(h5.require_group("doppler"), "doppler",
+                epoch, "Hz")
+            h5.create_dataset("epoch", data=np.bytes_(epoch))
+            h5.create_dataset("wavelength", data=igeom.radar_grid.wavelength)
 
     # focus to intermediate grids
     aztimes = np.array(rc_grid.sensing_times)
@@ -1601,7 +1606,6 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     for i in range(0, rc_grid.length, factor_size):
         pulses = slice(i, i + factor_size)
         ti = aztimes[pulses]
-        pulse_time = igeom.orbit.reference_epoch + isce3.core.TimeDelta(ti[0])
         fgrid = rc_grid[pulses, :]
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
@@ -1610,12 +1614,14 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         err, pgrid, img, hgt = isce3.focus.backproject_first_stage(
             fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
             atmos)
+        results.append((err, pgrid, img, hgt))
+
         if debugfile is not None:
             log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
-            img.tofile(debugfile)
-            pad = np.zeros((npad, img.shape[1]), img.dtype) + np.nan
-            pad.tofile(debugfile)
-        results.append((err, pgrid, img, hgt))
+            with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
+                iblock = i // factor_size
+                g = h5.require_group(f"stage_00/block_{iblock:06d}")
+                isce3.focus.save_polar_image_to_h5(img, pgrid, g)
 
     # pull out sub-image grids
     grids = [result[1] for result in results]
@@ -2092,7 +2098,7 @@ def focus(runconfig, runconfig_path=""):
                         hgt_mm if dump_height else None, dem,
                         get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
                         atmos, use_gpu, channel_out.band.width,
-                        temp("_fbp_factors.c8"))
+                        temp(f"_{frequency}{pol}_fbp_factors.h5"))
                 else:
                     azcomp_bp(azres, kernel, blocks_bounds[frequency], igeom,
                         rc_grid, rcfile.data, ogrid[frequency], writer,
