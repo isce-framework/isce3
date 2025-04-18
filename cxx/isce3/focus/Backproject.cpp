@@ -431,7 +431,6 @@ backprojectFirstStage(
 PolarGrid
 mergePolarGrids(const std::vector<PolarGrid>& grids,
     const DEMInterpolator& dem,
-    const Ellipsoid& ellipsoid,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
 {
     if (grids.size() <= 0) {
@@ -440,6 +439,9 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     } else if (grids.size() == 1) {
         return grids[0];
     }
+
+    // reference ellipsoid
+    Ellipsoid ellipsoid = makeProjection(dem.epsgCode())->ellipsoid();
 
     // Compute a bunch of stats with a first pass over the data.
     // Average origin and axis, weighted by aperture duration.
