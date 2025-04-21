@@ -107,7 +107,8 @@ setupPolarGridForPulses(
 PolarGrid
 mergePolarGrids(const std::vector<PolarGrid>& grids,
     const isce3::geometry::DEMInterpolator& dem,
-    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {});
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
+    const std::optional<double>& dq_min = {});
 
 void mergePolarImages(
     const std::vector<PolarGrid>& grids,

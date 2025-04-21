@@ -328,13 +328,15 @@ void addbinding_backproject(py::module& m)
 
     m.def("merge_polar_grids", [](const std::vector<PolarGrid>& grids,
                                   const DEMInterpolator& dem,
-                                  py::dict rdr2geo_params) {
+                                  py::dict rdr2geo_params,
+                                  std::optional<double>& dq_min) {
             const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
-            return mergePolarGrids(grids, dem, r2g_params);
+            return mergePolarGrids(grids, dem, r2g_params, dq_min);
         },
         py::arg("grids"),
         py::arg("dem") = DEMInterpolator(),
-        py::arg("rdr2geo_params") = py::dict()
+        py::arg("rdr2geo_params") = py::dict(),
+        py::arg("dq_min") = py::none()
     );
 
     m.def("merge_polar_images", [](

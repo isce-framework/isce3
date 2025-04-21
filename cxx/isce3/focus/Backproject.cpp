@@ -268,9 +268,19 @@ setupPolarGridForPulses(
         fmax = fc + range_bandwidth / 2,
         length = vs * (azimuth_time[nt - 1] - azimuth_time[0]);
     // Yegulalp, Eq. (11) and (12)
-    auto 
+    auto
         dq = c / (2 * fmax * length * oversample_azimuth),
         dr = c / (2 * range_bandwidth * oversample_range);
+
+    // Though inefficient, user might try to combine more pulses than are
+    // needed to achieve the desired azimuth resolution.  For example, they
+    // might try to backproject all pulses from a stripmap radar in one shot.
+    const auto dq_min = azimuth_resolution /
+        (slant_range.last() * oversample_azimuth);
+    if (dq < dq_min) {
+        // TODO emit a warning?
+        dq = dq_min;
+    }
 
     // Our polar data structures use a constant Doppler centroid (DC) vs range.
     // If we have some DC variation over the swath, we'll increase the Doppler
@@ -301,7 +311,7 @@ setupPolarGridForPulses(
         nr = nextFastPower(nr);
         nq = nextFastPower(nq);
         dr = (r1 - r0) / nr;
-        dq = qspan / nq;
+        dq = qspan / nq;  // possibly smaller than dq_min
     }
 
     auto pgrid = PolarGrid{azimuth_time[0], azimuth_time[nt - 1],
@@ -431,7 +441,8 @@ backprojectFirstStage(
 PolarGrid
 mergePolarGrids(const std::vector<PolarGrid>& grids,
     const DEMInterpolator& dem,
-    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    const std::optional<double>& dq_min)
 {
     if (grids.size() <= 0) {
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
@@ -479,7 +490,12 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     // You'd want to figure out the Doppler bandwidth observed by all targets
     // across all grids, maxing out around the azimuth resolution.
     // For now let's just just be conservative and increase it linearly.
-    const auto dq = scale / (t_max - t_min);
+    auto dq = scale / (t_max - t_min);
+
+    // But the user can override this.
+    if (dq_min) {
+        dq = std::max(dq_min.value(), dq);
+    }
 
     // Compute range & Doppler bounds of new grid using corners of each input.
     // Use lambda to avoid copy/paste.
