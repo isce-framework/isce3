@@ -1585,10 +1585,6 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         use_gpu=False, bandwidth=0.0, debugfile=None, nfft2d_params=dict()):
     fc = isce3.core.speed_of_light / ogrid.wavelength
     zerodop = isce3.core.LUT2d()
-    if len(factor_sizes) > 1:
-        raise NotImplementedError("Only a single backprojection factorization "
-            f"stage is supported (requested {len(factor_sizes)}).")
-    factor_size = factor_sizes[0]
 
     if debugfile is not None:
         log.debug("Writing FBP metadata to file {debugfile.name}")
@@ -1603,13 +1599,13 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     # focus to intermediate grids
     aztimes = np.array(rc_grid.sensing_times)
     results = []
-    for i in range(0, rc_grid.length, factor_size):
-        pulses = slice(i, i + factor_size)
+    for i in range(0, rc_grid.length, factor_sizes[0]):
+        pulses = slice(i, i + factor_sizes[0])
         ti = aztimes[pulses]
         fgrid = rc_grid[pulses, :]
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
-        log.info(f"Computing initial factorization of {factor_size} pulses "
+        log.info(f"Computing initial factorization of {factor_sizes[0]} pulses "
             f"beginning at pulse {i}")
         err, pgrid, img, hgt = isce3.focus.backproject_first_stage(
             fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
@@ -1619,7 +1615,7 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         if debugfile is not None:
             log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
             with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
-                iblock = i // factor_size
+                iblock = i // factor_sizes[0]
                 g = h5.require_group(f"stage_00/block_{iblock:06d}")
                 isce3.focus.save_polar_image_to_h5(img, pgrid, g)
 
@@ -1631,6 +1627,37 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     image_interpolators = [isce3.signal.make_image_nfft2d(image, nfft2d_params)
         for image in images]
 
+    # TODO dq_min
+
+    num_middle_stages = len(factor_sizes[1:])
+    for i_stage, factor_size in enumerate(factor_sizes[1:]):
+        log.info("Computing intermediate factorization stage "
+                 f"{i_stage + 1} / {num_middle_stages}")
+        grids_out, images_out = [], []
+        for i in range(0, len(grids), factor_size):
+            i_block = i // factor_size
+            log.info(f"Merging polar images stage {i_stage + 1} block {i_block}")
+            mask = slice(i, i + factor_size)
+            my_grid = isce3.focus.merge_polar_grids(grids[mask], dem, rdr2geo_params)
+            my_image = np.zeros(my_grid.shape, np.complex64)
+            isce3.focus.merge_polar_images(grids[mask],
+                image_interpolators[mask], my_grid, my_image, fc, dem,
+                rdr2geo_params)
+            grids_out.append(my_grid)
+            images_out.append(my_image)
+
+            if debugfile is not None:
+                name = f"stage_{i_stage + 1:02d}/block_{i_block:06d}"
+                with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
+                    g = h5.require_group(name)
+                    isce3.focus.save_polar_image_to_h5(my_image, my_grid, g)
+
+        log.info(f"Computing NFFT transforms for stage {i_stage + 1}")
+        image_interpolators = [isce3.signal.make_image_nfft2d(image, nfft2d_params)
+            for image in images_out]
+        grids = grids_out
+
+
     # sum factors into final image
     for block, (t0, t1) in blocks_bounds:
         description = f"(i, j) = ({block[0].start}, {block[1].start})"
@@ -1641,8 +1668,9 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         log.info(f"Azcomp final sums for block at {description}")
         isneeded = [(t1 > grid.aztime_start) and (t0 <= grid.aztime_end)
             for grid in grids]
+        assert len(grids) == len(image_interpolators)
         active_grids = [grids[i] for i in range(len(grids)) if isneeded[i]]
-        active_images = [image_interpolators[i] for i in range(len(images))
+        active_images = [image_interpolators[i] for i in range(len(grids))
             if isneeded[i]]
         bgrid = ogrid[block]
         ogeom = isce3.container.RadarGeometry(bgrid, igeom.orbit, zerodop)
