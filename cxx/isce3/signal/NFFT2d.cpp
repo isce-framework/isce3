@@ -160,7 +160,7 @@ NFFT2d<T> makeImageNFFT2d(
     if (need_copy or pad_input) {
         // This way NFFT2d::interp() coordinates are preserved, though user
         // will be able to get some extra data.
-        image_copy.topLeftCorner(rows_in, cols_in) = image;
+        image_copy.topLeftCorner(image.rows(), image.cols()) = image;
         image_ptr = image_copy.data();
     }
 
