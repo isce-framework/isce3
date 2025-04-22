@@ -57,7 +57,10 @@ def test_pattern():
     attitude = raw.getAttitude()
     pol = "HH"
 
-    fc, dop = make_doppler_lut([fn_raw], 0, orbit, attitude, dem)
+    # Use a smaller azimuth sample spacing to avoid sampling past the end of the
+    # orbit data.
+    fc, dop = make_doppler_lut([fn_raw], 0, orbit, attitude, dem,
+                               azimuth_spacing=0.005)
     wavelength = isce3.core.speed_of_light / fc
     rdr2geo_params = dict(
         tol_height = 1e-5,

@@ -247,8 +247,6 @@ class InSARBaseWriter(h5py.File):
         baseline_ds_shape = [len(heights),
                              grid.length,
                              grid.width]
-        if baseline_mode == 'top_bottom':
-            baseline_ds_shape[0] = 2
 
         # Add the baseline dataset to the cube
         for baseline_name in ['parallel', 'perpendicular']:
@@ -282,8 +280,7 @@ class InSARBaseWriter(h5py.File):
                 ds.attrs['grid_mapping'] = np.bytes_('projection')
                 ds.dims[1].attach_scale(cube_group['yCoordinates'])
                 ds.dims[2].attach_scale(cube_group['xCoordinates'])
-                if baseline_mode == '3D_full':
-                    ds.dims[0].attach_scale(cube_group['heightAboveEllipsoid'])
+                ds.dims[0].attach_scale(cube_group['heightAboveEllipsoid'])
 
     def add_common_to_procinfo_params_group(self):
         """

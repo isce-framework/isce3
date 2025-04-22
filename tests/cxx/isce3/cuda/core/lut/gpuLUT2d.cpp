@@ -135,6 +135,8 @@ TEST(LUT2dTest, Contains)
 
         const auto gpulut2d = isce3::cuda::core::gpuLUT2d<T>(lut2d);
 
+        EXPECT_TRUE(gpulut2d.contains(gpulut2d.yStart(), gpulut2d.xStart()));
+        EXPECT_TRUE(gpulut2d.contains(gpulut2d.yEnd(), gpulut2d.xEnd()));
         EXPECT_TRUE(gpulut2d.contains(10.5, 0.5));
 
         EXPECT_FALSE(gpulut2d.contains(9.9, 0.5));

@@ -130,6 +130,8 @@ TEST(LUT2dTest, Contains)
         const auto data = isce3::core::Matrix<T>(length, width);
         const auto lut2d = isce3::core::LUT2d<T>(x0, y0, dx, dy, data);
 
+        EXPECT_TRUE(lut2d.contains(lut2d.yStart(), lut2d.xStart()));
+        EXPECT_TRUE(lut2d.contains(lut2d.yEnd(), lut2d.xEnd()));
         EXPECT_TRUE(lut2d.contains(10.5, 0.5));
 
         EXPECT_FALSE(lut2d.contains(9.9, 0.5));

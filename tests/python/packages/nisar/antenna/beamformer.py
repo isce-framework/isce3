@@ -165,8 +165,11 @@ class TestElevationBeamformer:
     # form DEM interpolator object per ref height
     dem_interp = DEMInterpolator(ref_height)
 
+    # Use a smaller azimuth sample spacing to avoid sampling past the end of the
+    # orbit data.
     fc, dop = make_doppler_lut([os.path.join(iscetest.data, sub_dir, l0b_file)],
-                               0, orbit, attitude, dem_interp)
+                               0, orbit, attitude, dem_interp,
+                               azimuth_spacing=0.005)
 
     wavelength = isce3.core.speed_of_light / fc
     rdr2geo_params = dict(

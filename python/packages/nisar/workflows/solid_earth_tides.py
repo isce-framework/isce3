@@ -7,7 +7,7 @@ import time
 import isce3
 import journal
 import numpy as np
-from isce3.core import transform_xy_to_latlon
+from isce3.core import interpolate_datacube, transform_xy_to_latlon
 from isce3.io import HDF5OptimizedReader
 from nisar.products.insar.product_paths import GUNWGroupsPaths
 from nisar.workflows.h5_prep import get_products_and_paths
@@ -410,6 +410,13 @@ def run(cfg: dict, gunw_hdf5_path: str):
 
     # Compute the solid earth tides along los direction
     los_solid_earth_tides = compute_solid_earth_tides(gunw_hdf5_path)
+
+    # Get the radar grid heights and interpolate them
+    radar_grid_cfg = cfg["processing"]["radar_grid_cubes"]
+    heights = radar_grid_cfg["heights"]
+    los_solid_earth_tides = interpolate_datacube(los_solid_earth_tides,
+                                                 [heights[0], heights[-1]],
+                                                 heights)
 
     # Write the solid earth tides to GUNW product
     add_solid_earth_to_gunw_hdf5(los_solid_earth_tides,

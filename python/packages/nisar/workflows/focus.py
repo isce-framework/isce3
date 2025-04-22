@@ -292,8 +292,8 @@ def get_total_grid_bounds(rawfiles: list[str]):
 
 def get_total_grid(rawfiles: list[str], dt, dr):
     epoch, tmin, tmax, rmin, rmax = get_total_grid_bounds(rawfiles)
-    nt = int(np.ceil((tmax - tmin) / dt))
-    nr = int(np.ceil((rmax - rmin) / dr))
+    nt = int(np.ceil((tmax - tmin) / dt)) + 1
+    nr = int(np.ceil((rmax - rmin) / dr)) + 1
     t = isce3.core.Linspace(tmin, dt, nt)
     r = isce3.core.Linspace(rmin, dr, nr)
     return epoch, t, r

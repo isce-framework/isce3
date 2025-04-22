@@ -499,11 +499,12 @@ rubbersheet_options:
     # the offsets where outlier locations have been filled with zeros
     mask_refine_enabled: bool(required=False)
 
-    # Threshold for outlier refinement mask computation
-    mask_refine_threshold: num(min=0, required=False)
+    # Minimum number of valid (non-NaN) neighbors required for a pixel to remain
+    # unchanged during the rubbersheet refinement step
+    mask_refine_min_neighbors: num(min=0, required=False)
 
     # Size of median filter in range and azimuth for outlier mask refinement
-    mask_refine_filter_size: int(min=3, max=7, required=False)
+    mask_refine_filter_size: int(min=3, max=9, required=False)
 
     # Method to fill data holes left by outliers culling:
     # fill_smoothed: iteratively fill holes with mean value in a neighborhood.
@@ -515,7 +516,7 @@ rubbersheet_options:
 
     # Interpolation method. Interpolation is used to fill residual
     # outlier holes (if present)
-    interpolation_method: enum('nearest', 'linear', 'cubic', required=False)
+    interpolation_method: enum('no_interpolation', 'nearest', 'linear', 'cubic', required=False)
 
     # It is good practice to filter the offsets prior to interferogram
     # formation to reduce noise. We expose: no_filter: do not filter the offsets/

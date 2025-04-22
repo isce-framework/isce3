@@ -35,6 +35,12 @@ public:
     /** Get starting Y-coordinate */
     CUDA_HOSTDEV double yStart() const { return _ystart; }
 
+    /** Get end X-coordinate */
+    CUDA_HOSTDEV double xEnd() const { return xStart() + (width() - 1) * xSpacing(); }
+
+    /** Get end Y-coordinate */
+    CUDA_HOSTDEV double yEnd() const { return yStart() + (length() - 1) * ySpacing(); }
+
     /** Get X-spacing */
     CUDA_HOSTDEV double xSpacing() const { return _dx; }
 
@@ -92,10 +98,8 @@ public:
             return true;
         }
 
-        const auto i = (x - xStart()) / xSpacing();
-        const auto j = (y - yStart()) / ySpacing();
-        return (i >= 0.0 and i <= width() - 1.0) and
-               (j >= 0.0 and j <= length() - 1.0);
+        return (x >= xStart()) and (x <= xEnd()) and
+               (y >= yStart()) and (y <= yEnd());
     }
 
 private:

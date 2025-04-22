@@ -10,7 +10,7 @@ import numpy as np
 from osgeo import gdal
 from scipy.interpolate import griddata
 
-from isce3.core import crop_external_orbit
+from isce3.core import crop_external_orbit, interpolate_datacube
 from isce3.io import HDF5OptimizedReader
 from nisar.products.insar.product_paths import CommonPaths
 from nisar.products.readers import SLC
@@ -553,8 +553,10 @@ def add_baseline(output_paths,
                 height_list = height_levels
             # produce baselines for two heights levels (bottom and top)
             elif baseline_mode == 'top_bottom':
-                cubes_shape = [2, cube_row, cube_col]
+                cubes_shape = [len(height_levels), cube_row, cube_col]
                 height_list = [height_levels[0], height_levels[-1]]
+                par_baseline_top_bottom = np.full((2, cube_row, cube_col), np.nan)
+                perp_baseline_top_bottom = np.full((2, cube_row, cube_col), np.nan)
             else:
                 err_str = f'Baseline mode {baseline_mode} is not supported.'
                 error_channel.log(err_str)
@@ -603,7 +605,7 @@ def add_baseline(output_paths,
             for refsec, rdrgrid, orbit, dopp in \
                 zip(['ref', 'sec'], [ref_radargrid, sec_radargrid],
                     [ref_orbit, sec_orbit], [ref_doppler, sec_doppler]):
-                base_dir = f'{baseline_dir_path}/{refsec}_geo2rdr'
+                base_dir = f'{baseline_dir_path}/{refsec}_geo2rdr_{height_ind}'
                 os.makedirs(base_dir, exist_ok=True)
                 # run geo2rdr
                 geo2rdr_obj = geo2rdr(rdrgrid,
@@ -614,7 +616,7 @@ def add_baseline(output_paths,
                                       geo2rdr_parameters['maxiter'])
                 geo2rdr_obj.geo2rdr(topo_raster, base_dir)
                 base_dir_set.append(base_dir)
-
+            del topo_raster
             # read slant range and azimuth time
             ref_rngs, ref_azts = \
                 compute_rng_aztime(base_dir_set[0], ref_radargrid)
@@ -646,8 +648,24 @@ def add_baseline(output_paths,
                 epsg_code)
             par_baseline[invalid] = np.nan
             perp_baseline[invalid] = np.nan
-            ds_bpar[height_ind, :, :] = par_baseline
-            ds_bperp[height_ind, :, :] = perp_baseline
+
+            # If the baseline mode is `top_bottom`, we will store them into
+            # the numpy array and interpolate them later
+            if (baseline_mode == 'top_bottom') and (len(height_list) > 1):
+                par_baseline_top_bottom[height_ind, :, :] = par_baseline
+                perp_baseline_top_bottom[height_ind, :, :] = perp_baseline
+            else:
+                ds_bpar[height_ind, :, :] = par_baseline
+                ds_bperp[height_ind, :, :] = perp_baseline
+
+        # Interpolate the top bottom to full heights
+        if (baseline_mode == 'top_bottom') and (len(height_list) > 1):
+            for baseline, ds in zip([par_baseline_top_bottom,
+                                     perp_baseline_top_bottom],
+                                    [ds_bpar, ds_bperp]):
+                ds[...] = interpolate_datacube(baseline,
+                                               height_list,
+                                               height_levels)
 
         # compute statistics
         data_names = ['perpendicularBaseline', 'parallelBaseline']
