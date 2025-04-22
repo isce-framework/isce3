@@ -1582,7 +1582,8 @@ def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, write
 def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
         rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
-        use_gpu=False, bandwidth=0.0, debugfile=None, nfft2d_params=dict()):
+        use_gpu=False, bandwidth=0.0, debugfile=None, nfft2d_params=dict(),
+        oversample_range=1.2, oversample_azimuth=1.2):
     fc = isce3.core.speed_of_light / ogrid.wavelength
     zerodop = isce3.core.LUT2d()
 
@@ -1609,7 +1610,7 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
             f"beginning at pulse {i}")
         err, pgrid, img, hgt = isce3.focus.backproject_first_stage(
             fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
-            atmos)
+            atmos, rdr2geo_params, oversample_range, oversample_azimuth)
         results.append((err, pgrid, img, hgt))
 
         if debugfile is not None:
@@ -1627,7 +1628,8 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     image_interpolators = [isce3.signal.make_image_nfft2d(image, nfft2d_params)
         for image in images]
 
-    # TODO dq_min
+    # Don't let azimuth resolution grow finer than user requested one.
+    dq_min = azres / (ogrid.slant_ranges[-1] * oversample_azimuth)
 
     num_middle_stages = len(factor_sizes[1:])
     for i_stage, factor_size in enumerate(factor_sizes[1:]):
@@ -1638,7 +1640,8 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
             i_block = i // factor_size
             log.info(f"Merging polar images stage {i_stage + 1} block {i_block}")
             mask = slice(i, i + factor_size)
-            my_grid = isce3.focus.merge_polar_grids(grids[mask], dem, rdr2geo_params)
+            my_grid = isce3.focus.merge_polar_grids(grids[mask], dem,
+                rdr2geo_params, dq_min)
             my_image = np.zeros(my_grid.shape, np.complex64)
             isce3.focus.merge_polar_images(grids[mask],
                 image_interpolators[mask], my_grid, my_image, fc, dem,
