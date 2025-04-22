@@ -3,6 +3,7 @@
 
 // cassert for assert()
 #include <cassert>
+#include <algorithm>
 
 // pyre::journal
 #include <pyre/journal.h>
@@ -163,9 +164,14 @@ static void _addMarginToBoundingBox(isce3::geometry::BoundingBox& bbox,
         // If there is a dateline crossing
         if ((bbox.MaxX - bbox.MinX) > 180.0) {
             double maxx = bbox.MinX + 360.0;
-            bbox.MaxX = (maxx > bbox.MaxX) ? maxx : bbox.MaxX;
-            bbox.MinX = (maxx > bbox.MaxX) ? bbox.MaxX : maxx;
+            /* NOTE `bbox.MinX + 360.0` (i.e. maxx above) is not necessarily larger than `bbox.MaxX`
+                from actual PGM test case:
+                bbox.MinX = -179.938;
+                maxx = bbox.MinX + 360.0 = 180.062
+                bbox.MaxX = 182.167 */
 
+            bbox.MaxX = std::max(bbox.MaxX, maxx);
+            bbox.MinX = std::min(bbox.MinX, maxx);
         }
 
         // Check for north pole
