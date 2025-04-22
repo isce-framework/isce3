@@ -21,7 +21,7 @@ namespace isce3 { namespace geometry {
         //Overload OGREnvelope::Merge by adding parameter for EPSG in geographic coordinates.
         void Merge(const BoundingBox& other, int epsg) {
             double minx_global = std::min(MinX, other.MinX);
-            double maxx_global = std:max(MaxX, other.MaxX);
+            double maxx_global = std::max(MaxX, other.MaxX);
 
             // Check if wrapping is necessary. If not, use the method in the base class
             if ((epsg != 4326) || (maxx_global - minx_global) <= 180.0){
@@ -30,8 +30,6 @@ namespace isce3 { namespace geometry {
                 return;
             }
 
-            // Check if wrapping is really necessary. Wrap is necessary.
-            if isAntimeridianCrossing() || other.isAntimeridianCrossing()) {
             // Wrap the angles to the range [0, 360) if either of the
             // bounding boxes crosses the antimeridian
             auto wrap = [](double angle) {
