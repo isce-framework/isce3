@@ -346,11 +346,12 @@ void addbinding_backproject(py::module& m)
             Eigen::Ref<EArray2D<std::complex<float>>> output_image,
             const double fc,
             const isce3::geometry::DEMInterpolator& dem,
-            const py::dict rdr2geo_params)  // only difference for python
+            const py::dict rdr2geo_params,  // only difference for python
+            int az_block_size)
         {
             const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
             return mergePolarImages(grids, image_interpolators, output_grid,
-                output_image, fc, dem, r2g_params);
+                output_image, fc, dem, r2g_params, az_block_size);
         },
         py::arg("grids"),
         py::arg("image_interpolators"),
@@ -358,7 +359,8 @@ void addbinding_backproject(py::module& m)
         py::arg("output_image"),
         py::arg("fc"),
         py::arg("dem") = DEMInterpolator(),
-        py::arg("rdr2geo_parameters") = py::dict()
+        py::arg("rdr2geo_parameters") = py::dict(),
+        py::arg("az_block_size") = 1024
     );
 
     m.def("backproject_final_stage", [](

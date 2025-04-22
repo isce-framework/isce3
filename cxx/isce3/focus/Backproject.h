@@ -117,7 +117,8 @@ void mergePolarImages(
     Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
     const double fc,
     const isce3::geometry::DEMInterpolator& dem,
-    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {});
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
+    int az_block_size = 1024);
 
 // interpolate polar grid to given set of XYZ positions
 isce3::error::ErrorCode

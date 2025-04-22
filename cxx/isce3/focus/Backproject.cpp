@@ -551,7 +551,8 @@ void mergePolarImages(
     Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
     const double fc,
     const DEMInterpolator& dem,
-    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    int az_block_size)
 {
     // check that output grid dimensions match buffer size
     const auto m = output_grid.length(), n = output_grid.width();
@@ -581,6 +582,16 @@ void mergePolarImages(
         }
     }
 
+    // Check block size and allocate scratch space.
+    if (az_block_size < 0) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "azimuth block size must be positive");
+    }
+    az_block_size = std::min(az_block_size, output_grid.sin_squint.size());
+
+    auto block_positions = isce3::core::EArray2D<Vec3>();
+    block_positions.resize(az_block_size, output_grid.width());
+
     // reference ellipsoid
     Ellipsoid ellipsoid = makeProjection(dem.epsgCode())->ellipsoid();
 
@@ -593,49 +604,69 @@ void mergePolarImages(
     const double kw = 4 * M_PI * fc / isce3::core::speed_of_light;
 
     using isce3::geometry::detail::polar2polar_bracket;
+    using isce3::geometry::geo2polar;
 
-    // FIXME this method does (num_images - 1) redundant polar2geo calculations
-    // and we may as well put the loop over sub-images outside this function.
-    // Should refactor to cache output XYZ points somehow.
+    // loop over output blocks
+    auto n_blocks = (m + az_block_size - 1) / az_block_size;
+    for (auto i_block = decltype(n_blocks){0}; i_block < n_blocks; ++i_block) {
+        auto i_row0 = i_block * az_block_size;
+        auto i_row1 = std::min(i_row0 + az_block_size, m);
 
-    // loop over input images
-    for (auto i_img = decltype(num_images){0}; i_img < num_images; ++i_img) {
-        const auto& input_grid = grids[i_img];
-        const auto& nfft = image_interpolators[i_img];
-
-        // parallel loop over output pixels (row-major)
+        // Compute output pixel 3D locations
+        using isce3::geometry::detail::polar2geo_bracket;
         #pragma omp parallel for collapse(2)
-        for (auto i = decltype(m){0}; i < m; ++i) {
-            // calculate polar coordinate of output pixel.
-            auto out_ssq = output_grid.sin_squint[i];
-            auto out_csq = std::sqrt(1.0 - out_ssq * out_ssq);
+        for (auto i_row = i_row0; i_row < i_row1; ++i_row) {
+            auto i = i_row - i_row0;
             for (auto j = decltype(n){0}; j < n; ++j) {
-                const auto out_range = output_grid.range[j];
-                // calculate corresponding polar coordinate in input image
-                double in_range, in_ssq;
-                auto ec = polar2polar_bracket(&in_ssq, &in_range, out_ssq,
-                    out_csq, out_range, output_grid.origin, output_grid.axis,
-                    input_grid.origin, input_grid.axis, dem, ellipsoid,
-                    output_grid.look_side, r2g_params);
+                double look_angle;
+                const auto ssq = output_grid.sin_squint[i_row];
+                const auto csq = std::sqrt(1.0 - ssq * ssq);
+                auto ec = polar2geo_bracket(&block_positions(i, j), &look_angle,
+                    output_grid.origin, output_grid.axis, output_grid.range[j],
+                    ssq, csq, dem, ellipsoid, output_grid.look_side, r2g_params);
                 if (ec != ErrorCode::Success) {
                     throw isce3::except::DomainError(ISCE_SRCINFO(),
-                        "polar2polar failed with ErrorCode (" +
+                        "polar2geo failed with ErrorCode (" +
                         isce3::error::getErrorString(ec) + ") for point at r="
-                        + std::to_string(out_range) + " sin_squint="
-                        + std::to_string(out_ssq));
+                        + std::to_string(output_grid.range[j]) + " sin_squint="
+                        + std::to_string(ssq));
                 } // err
-                // convert to (real-valued) input pixel
-                const auto in_row = to_pixel(input_grid.sin_squint, in_ssq);
-                const auto in_col = to_pixel(input_grid.range, in_range);
-                // interpolate baseband input image
-                const auto z = nfft.interp({in_row, in_col}, false);
-                // compensate phase and sum contribution
-                const double phase = kw * (in_range - out_range);
-                output_image(i, j) +=
-                    z * std::complex<float>(std::cos(phase), std::sin(phase));
             } // columns
         } // rows
-    } // images
+
+        // loop over input images
+        for (auto i_img = decltype(num_images){0}; i_img < num_images; ++i_img) {
+            const auto& input_grid = grids[i_img];
+            const auto& nfft = image_interpolators[i_img];
+
+            #pragma omp parallel for collapse(2)
+            for (auto i_row = i_row0; i_row < i_row1; ++i_row) {
+                auto i = i_row - i_row0;
+                for (auto j = decltype(n){0}; j < n; ++j) {
+                    // calculate corresponding polar coordinate in input image
+                    double in_range, in_ssq;
+                    auto ec = geo2polar(&in_ssq, &in_range,
+                        block_positions(i, j),
+                        input_grid.origin, input_grid.axis);
+                    if (ec != ErrorCode::Success) {
+                        // should be unreachable
+                        throw isce3::except::DomainError(ISCE_SRCINFO(),
+                            "geo2polar failed with ErrorCode (" +
+                            isce3::error::getErrorString(ec) + ")");
+                    }
+                    // convert to (real-valued) input pixel
+                    const auto in_row = to_pixel(input_grid.sin_squint, in_ssq);
+                    const auto in_col = to_pixel(input_grid.range, in_range);
+                    // interpolate baseband input image
+                    const auto z = nfft.interp({in_row, in_col}, false);
+                    // compensate phase and sum contribution
+                    const double arg = kw * (in_range - output_grid.range[j]);
+                    output_image(i_row, j) +=
+                        z * std::complex<float>(std::cos(arg), std::sin(arg));
+                } // columns
+            } // rows
+        } // images
+    } // blocks
 }
 
 
