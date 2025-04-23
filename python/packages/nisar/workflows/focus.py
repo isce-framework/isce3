@@ -1600,14 +1600,17 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     # focus to intermediate grids
     aztimes = np.array(rc_grid.sensing_times)
     results = []
-    for i in range(0, rc_grid.length, factor_sizes[0]):
+    pulse_starts = range(0, rc_grid.length, factor_sizes[0])
+    log.info(f"Beginning initial factorizations of {factor_sizes[0]} pulses")
+    nblocks = len(pulse_starts)
+    for i in pulse_starts:
         pulses = slice(i, i + factor_sizes[0])
         ti = aztimes[pulses]
         fgrid = rc_grid[pulses, :]
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
-        log.info(f"Computing initial factorization of {factor_sizes[0]} pulses "
-            f"beginning at pulse {i}")
+        iblock = i // factor_sizes[0]
+        log.info(f"Computing initial factorization {iblock} of {nblocks}")
         err, pgrid, img, hgt = isce3.focus.backproject_first_stage(
             fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
             atmos, rdr2geo_params, oversample_range, oversample_azimuth)
@@ -1616,7 +1619,6 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         if debugfile is not None:
             log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
             with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
-                iblock = i // factor_sizes[0]
                 g = h5.require_group(f"stage_00/block_{iblock:06d}")
                 isce3.focus.save_polar_image_to_h5(img, pgrid, g)
 
@@ -1633,12 +1635,16 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
 
     num_middle_stages = len(factor_sizes[1:])
     for i_stage, factor_size in enumerate(factor_sizes[1:]):
+        stage_description = f"{i_stage + 1} / {num_middle_stages}"
         log.info("Computing intermediate factorization stage "
-                 f"{i_stage + 1} / {num_middle_stages}")
+            + stage_description)
         grids_out, images_out = [], []
-        for i in range(0, len(grids), factor_size):
+        input_block_starts = range(0, len(grids), factor_size)
+        nblocks = len(input_block_starts)
+        for i in input_block_starts:
             i_block = i // factor_size
-            log.info(f"Merging polar images stage {i_stage + 1} block {i_block}")
+            log.info(f"Merging polar images stage {stage_description}"
+                f" block {i_block} / {nblocks}")
             mask = slice(i, i + factor_size)
             my_grid = isce3.focus.merge_polar_grids(grids[mask], dem,
                 rdr2geo_params, dq_min)
