@@ -230,6 +230,15 @@ static Vec3 vector_mean(const std::vector<Vec3>& vecs)
     return sum * (1.0 / vecs.size());
 }
 
+double
+getPolarAngleTimeConstant(const double fc, const double vs,
+        const double bandwidth, const double c)
+{
+    // Yegulalp, Eq. (11)
+    const auto fmax = fc + bandwidth / 2;
+    return c / (2 * fmax * vs);
+}
+
 
 std::tuple<PolarGrid, std::vector<Vec3>, std::vector<Vec3>>
 setupPolarGridForPulses(
@@ -264,13 +273,11 @@ setupPolarGridForPulses(
     const auto fc = c / in_geometry.wavelength();
     const auto slant_range = in_geometry.slantRange();
 
-    const auto
-        fmax = fc + range_bandwidth / 2,
-        length = vs * (azimuth_time[nt - 1] - azimuth_time[0]);
     // Yegulalp, Eq. (11) and (12)
-    auto
-        dq = c / (2 * fmax * length * oversample_azimuth),
-        dr = c / (2 * range_bandwidth * oversample_range);
+    const auto tq = getPolarAngleTimeConstant(fc, vs, range_bandwidth, c);
+    const auto duration = azimuth_time[nt - 1] - azimuth_time[0];
+    auto dq = tq / (duration * oversample_azimuth);
+    auto dr = c / (2 * range_bandwidth * oversample_range);
 
     // Though inefficient, user might try to combine more pulses than are
     // needed to achieve the desired azimuth resolution.  For example, they

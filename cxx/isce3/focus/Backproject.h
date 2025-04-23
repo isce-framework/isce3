@@ -93,6 +93,29 @@ backprojectFinalStage(std::complex<float>* out,
 
 // WIP stuff to do one polar image at a time.
 
+/**
+ * @brief Get the time constant associated with polar angle spacing
+ *
+ * @param fc        Radar center frequency, Hz
+ * @param vs        Satellite velocity (along azimuth axis), m/s
+ * @param bandwidth Radar bandwidth, Hz (defaults to zero, e.g., narrow band)
+ * @param c         Speed of light, m/s (defaults to vacuum sol)
+ * @return          Time constant $T_q$, s
+ *
+ * This time constant is used to determine the sampling requirement for the
+ * sine of the squint angle (dimensionless Doppler)
+ *      $$ q = \frac{\vec{v}}{v} \cdot \hat{l} $$
+ * where $\vec{v}$ is the velocity and $\hat{l}$ is the line-of-sight direction.
+ * Specifically, the Nyquist criterion is
+ *      $$ \Delta q \leq \frac{T_q}{T_{sa}} $$
+ * where $T_{sa}$ is the time duration of the synthetic aperture.
+ *
+ * Helps implement equation (11) in @cite yegulalp2013
+ */
+double
+getPolarAngleTimeConstant(const double fc, const double vs,
+    const double bandwidth = 0.0, const double c = isce3::core::speed_of_light);
+
 // set up polar grid for a group of pulses
 std::tuple<PolarGrid, std::vector<isce3::core::Vec3>, std::vector<isce3::core::Vec3>>
 setupPolarGridForPulses(

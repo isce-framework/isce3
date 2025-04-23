@@ -254,6 +254,41 @@ void addbinding_backproject(py::module& m)
         py::arg("num_doppler_eval") = 2,
         py::arg("densify_for_fast_transform") = false);
 
+    m.def("get_polar_angle_time_constant", &getPolarAngleTimeConstant,
+        R"(
+        Get the time constant associated with polar angle spacing
+
+        Parameters
+        ----------
+        fc : float
+           Radar center frequency, Hz
+        vs : float
+           Satellite velocity (along azimuth axis), m/s
+        bandwidth : float, optional
+           Radar bandwidth, Hz (defaults to zero, e.g., narrow band)
+        c : float, optional
+           Speed of light, m/s (defaults to vacuum sol)
+
+        Returns
+        -------
+        tq : float
+           Time constant $T_q$, s
+
+        This time constant is used to determine the sampling requirement for the
+        sine of the squint angle (dimensionless Doppler)
+             $$ q = \frac{\vec{v}}{v} \cdot \hat{l} $$
+        where $\vec{v}$ is the velocity and $\hat{l}$ is the line-of-sight direction.
+        Specifically, the Nyquist criterion is
+             $$ \Delta q \leq \frac{T_q}{T_{sa}} $$
+        where $T_{sa}$ is the time duration of the synthetic aperture.
+
+        Helps implement equation (11) in @cite yegulalp2013
+        )",
+        py::arg("fc"),
+        py::arg("vs"),
+        py::arg("bandwidth") = 0.0,
+        py::arg("c") = isce3::core::speed_of_light);
+
     m.def("backproject_first_stage", [](
                 const py::array_t<std::complex<float>, py::array::c_style> in,
                 const RadarGeometry& in_geometry,
