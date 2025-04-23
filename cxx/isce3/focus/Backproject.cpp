@@ -449,7 +449,8 @@ PolarGrid
 mergePolarGrids(const std::vector<PolarGrid>& grids,
     const DEMInterpolator& dem,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
-    const std::optional<double>& dq_min)
+    const std::optional<double>& dq_min,
+    const std::optional<double>& tq)
 {
     if (grids.size() <= 0) {
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
@@ -464,6 +465,8 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     // Compute a bunch of stats with a first pass over the data.
     // Average origin and axis, weighted by aperture duration.
     Vec3 origin{0, 0, 0}, axis{0, 0, 0};
+    // Inferred dimensionless Doppler spacing time constant
+    double tq_inferred = 0.0;
     // Min range spacing (in case different among grids)
     auto dr = grids[0].range.spacing();
     // Need total aperture size and sum of subaperture sizes.
@@ -471,9 +474,6 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     auto t_min = grids[0].aztime_start;  // assume start > end
     auto t_max = grids[0].aztime_end;  // assume start > end
     double sum_durations = 0;
-    // Doppler spacing is inversely proportional to aperture size.  Find the
-    // most conservative among the grids.
-    auto scale = grids[0].sin_squint.spacing() * (t_max - t_min);
     const auto look_side = grids[0].look_side;
 
     for (const auto& grid : grids) {
@@ -481,10 +481,10 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
         sum_durations += duration;
         t_min = std::min(t_min, grid.aztime_start);  // assume start > end
         t_max = std::max(t_max, grid.aztime_end);  // assume start > end
-        scale = std::min(scale, grid.sin_squint.spacing() * duration);
         dr = std::min(dr, grid.range.spacing());
         origin += duration * grid.origin;
         axis += duration * grid.axis;
+        tq_inferred += duration * (grid.sin_squint.spacing() * duration);
         if (grid.look_side != look_side) {
             throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
                 "inconsistent look_side among input polar grids");
@@ -492,12 +492,13 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     }
     origin *= 1.0 / sum_durations;
     axis *= 1.0 / axis.norm();
+    tq_inferred /= sum_durations;
 
     // In general, figuring out the required Doppler spacing is pretty complex.
     // You'd want to figure out the Doppler bandwidth observed by all targets
     // across all grids, maxing out around the azimuth resolution.
     // For now let's just just be conservative and increase it linearly.
-    auto dq = scale / (t_max - t_min);
+    auto dq = tq.value_or(tq_inferred) / (t_max - t_min);
 
     // But the user can override this.
     if (dq_min) {

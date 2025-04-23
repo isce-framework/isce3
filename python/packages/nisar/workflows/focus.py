@@ -1587,6 +1587,11 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     fc = isce3.core.speed_of_light / ogrid.wavelength
     zerodop = isce3.core.LUT2d()
 
+    _, v = igeom.orbit.interpolate(igeom.orbit.mid_time)
+    vs = np.linalg.norm(v)
+    tq = isce3.focus.get_polar_angle_time_constant(fc, vs, bandwidth)
+    tq /= oversample_azimuth
+
     if debugfile is not None:
         log.debug("Writing FBP metadata to file {debugfile.name}")
         with h5py.File(debugfile, "w") as h5:
@@ -1647,7 +1652,7 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
                 f" block {i_block} / {nblocks}")
             mask = slice(i, i + factor_size)
             my_grid = isce3.focus.merge_polar_grids(grids[mask], dem,
-                rdr2geo_params, dq_min)
+                rdr2geo_params, dq_min, tq)
             my_image = np.zeros(my_grid.shape, np.complex64)
             isce3.focus.merge_polar_images(grids[mask],
                 image_interpolators[mask], my_grid, my_image, fc, dem,

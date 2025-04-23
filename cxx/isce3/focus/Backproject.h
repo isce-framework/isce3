@@ -127,11 +127,24 @@ setupPolarGridForPulses(
         int num_doppler_eval = 2,
         bool densify_for_fast_transforms = false);
 
+/**
+ * @brief Create polar grid capable of sampling data from all input grids.
+ *
+ * @param grids         List of subaperture grids.
+ * @param dem           Digital elevation model reporting height (m) above the
+ *                      ellispoid associated with its CRS.
+ * @param r2g_params    Root finding parameters for radar2geo
+ * @param dq_min        Minimum allowed dimensionless Doppler spacing.
+ *                      Necessary for stripmap processing large subapertures.
+ * @param tq            Time constant for dimensionless Doppler spacing.
+ *                      If not provided it will be inferred from input grids.
+ */
 PolarGrid
 mergePolarGrids(const std::vector<PolarGrid>& grids,
     const isce3::geometry::DEMInterpolator& dem,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
-    const std::optional<double>& dq_min = {});
+    const std::optional<double>& dq_min = {},
+    const std::optional<double>& tq = {});
 
 void mergePolarImages(
     const std::vector<PolarGrid>& grids,
