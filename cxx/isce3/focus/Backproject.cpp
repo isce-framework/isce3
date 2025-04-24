@@ -365,7 +365,7 @@ backprojectFirstStage(
         range_bandwidth, ds, oversample_range,
         oversample_azimuth, 2, true);
 
-    const auto npix = out_grid.length() * out_grid.width();
+    const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
     auto height = std::make_unique<float[]>(npix);
     auto out = std::make_unique<std::complex<float>[]>(npix);
 
