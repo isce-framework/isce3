@@ -43,6 +43,7 @@ using isce3::error::ErrorCode;
 using isce3::focus::bistaticDelay;
 using isce3::focus::dryTropoDelayTSX;
 using isce3::focus::PolarGrid;
+using isce3::focus::setupPolarGridForPulses;
 
 using HostDEMInterpolator = isce3::geometry::DEMInterpolator;
 using HostRadarGeometry = isce3::container::RadarGeometry;
@@ -858,7 +859,7 @@ template<class Kernel>
 std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
 backprojectFirstStage(
         const std::complex<float>* in, const HostRadarGeometry& in_geometry,
-        const std::vector<double>& in_azimuth_time,
+        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
         double range_bandwidth,
         DeviceDEMInterpolator& dem, double fc, double ds,
         const Kernel& kernel, DryTroposphereModel dry_tropo_model,
@@ -886,55 +887,14 @@ backprojectFirstStage(
     ISCE3_FBP_TIMING(
         auto timing = TimingReporter("isce3.cuda.focus.backprojectFirstStage");)
 
-    // interpolate platform position & velocity at each pulse
-    std::vector<Vec3> pos(in_azimuth_time.size());
-    std::vector<Vec3> vel(in_azimuth_time.size());
-    for (int i = 0; i < in_azimuth_time.size(); ++i) {
-        double t = in_azimuth_time[i];
-        in_geometry.orbit().interpolate(&pos[i], &vel[i], t);
-    }
-    ISCE3_FBP_TIMING(timing.report("orbit interp");)
+    // awful hacks for clang https://godbolt.org/z/6rrThhK3W
+    PolarGrid out_grid {0.0, 0.0, {0,0,0}, {1,0,0}, {}, {}, {}};
+    std::vector<Vec3> pos, vel;
+    std::tie(out_grid, pos, vel) = setupPolarGridForPulses(in_geometry,
+        in_azimuth_time,
+        range_bandwidth, ds, oversample_range,
+        oversample_azimuth, 2, true);
 
-    const PolarGrid out_grid = [&](void) {
-        const auto iend = in_azimuth_time.size() - 1;
-        const auto jend = in_slant_range.size() - 1;
-
-        const Vec3 origin = (pos[0] + pos[iend]) / 2;
-        Vec3 axis = (vel[0] + vel[iend]) / 2;
-        const double vs = axis.norm();
-        axis /= vs;
-
-        double
-            fmax = fc + range_bandwidth / 2,
-            length = vs * (in_azimuth_time[iend] - in_azimuth_time[0]),
-            // Yegulalp, Eq. (11) and (12)
-            dq = c / (2 * fmax * length * oversample_azimuth),
-            dr = c / (2 * range_bandwidth * oversample_range);
-
-        // evaluate Doppler at a couple of points to try to cover variation
-        const double
-            tmid = (in_azimuth_time[0] + in_azimuth_time[iend]) / 2,
-            r0 = in_slant_range.first(),
-            r1 = in_slant_range[jend],
-            dop2q = c / (fc * 2 * vs),
-            q0 = in_geometry.doppler().eval(tmid, r0) * dop2q,
-            q1 = in_geometry.doppler().eval(tmid, r1) * dop2q,
-            qmid = (q0 + q1) / 2,
-            qspan = std::abs(q1 - q0) + c / (fc * 2 * ds);
-
-        int nr = static_cast<int>(std::ceil((r1 - r0) / dr));
-        int nq = static_cast<int>(std::ceil(qspan / dq));
-
-        // adjust spacing so we end up with a fast FFT sizes
-        nr = isce3::fft::nextFastPower(nr);
-        nq = isce3::fft::nextFastPower(nq);
-        dr = (r1 - r0) / nr;
-        dq = qspan / nq;
-
-        return PolarGrid{in_azimuth_time[0], in_azimuth_time[iend],
-            origin, axis, Linspace<double>(r0, dr, nr),
-            Linspace<double>(qmid - qspan / 2, dq, nq)};
-    }();
     ISCE3_FBP_TIMING(timing.report("polar grid");)
 
     const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
@@ -1078,7 +1038,7 @@ backprojectFirstStage(
 std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
 backprojectFirstStage(
         const std::complex<float>* in, const HostRadarGeometry& in_geometry,
-        const std::vector<double>& in_azimuth_time,
+        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
         double range_bandwidth,
         const HostDEMInterpolator& dem, double fc, double ds,
         const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,

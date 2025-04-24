@@ -96,7 +96,7 @@ std::tuple<
 backprojectFirstStage(
         const std::complex<float>* in,
         const isce3::container::RadarGeometry& in_geometry,
-        const std::vector<double>& in_azimuth_time,
+        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
         double range_bandwidth,
         const isce3::geometry::DEMInterpolator& dem,
         double fc, double ds,
