@@ -1,5 +1,6 @@
 #include "Backproject.h"
 #include "pybind_isce3/focus/Backproject.h"  // parse parameter dicts
+#include "pybind_isce3/signal/NFFT2d.h"  // parse NFFT2d parameters
 
 #include <isce3/container/RadarGeometry.h>
 #include <isce3/core/Kernels.h>
@@ -21,10 +22,6 @@ using isce3::core::Kernel;
 using isce3::error::ErrorCode;
 using isce3::focus::parseDryTropoModel;
 using isce3::geometry::DEMInterpolator;
-
-// Copied declaration from pybind_isce3/signal/NFFT2d.h
-// Implementation is in pybind_isce3/signal/NFFT2d.cpp
-isce3::signal::NFFT2dParams parse_nfft2d_params(const py::dict& params);
 
 
 void addbinding_cuda_backproject(py::module& m)
