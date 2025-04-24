@@ -147,9 +147,8 @@ void addbinding_cuda_backproject(py::module& m)
 
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
 
-            // TODO avoid copy
-            std::vector<double> aztime(in_azimuth_time.data(),
-                in_azimuth_time.data() + in_azimuth_time.size());
+            const auto aztime = Eigen::Map<const Eigen::VectorXd>(
+                in_azimuth_time.data(), in_azimuth_time.size());
 
             const std::complex<float>* in_data = in.data();
 
