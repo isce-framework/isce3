@@ -624,8 +624,8 @@ void mergePolarImages(
         using isce3::geometry::detail::polar2geo_bracket;
         #pragma omp parallel for collapse(2)
         for (auto i_row = i_row0; i_row < i_row1; ++i_row) {
-            auto i = i_row - i_row0;
-            for (auto j = decltype(n){0}; j < n; ++j) {
+                        for (auto j = decltype(n){0}; j < n; ++j) {
+auto i = i_row - i_row0;
                 double look_angle;
                 const auto ssq = output_grid.sin_squint[i_row];
                 const auto csq = std::sqrt(1.0 - ssq * ssq);
@@ -649,8 +649,8 @@ void mergePolarImages(
 
             #pragma omp parallel for collapse(2)
             for (auto i_row = i_row0; i_row < i_row1; ++i_row) {
-                auto i = i_row - i_row0;
-                for (auto j = decltype(n){0}; j < n; ++j) {
+                                for (auto j = decltype(n){0}; j < n; ++j) {
+auto i = i_row - i_row0;
                     // calculate corresponding polar coordinate in input image
                     double in_range, in_ssq;
                     auto ec = geo2polar(&in_ssq, &in_range,
