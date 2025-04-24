@@ -15,7 +15,6 @@
 #include <isce3/geometry/geometry.h>
 #include <isce3/geometry/rdr2geo_roots.h>
 #include <isce3/geometry/geo2rdr_roots.h>
-#include <isce3/signal/NFFT2d.h>
 #include <limits>
 #include <numeric>
 #include <string>
