@@ -113,6 +113,6 @@ projectPolarToGeo(
         const isce3::focus::PolarGrid& grid,
         const std::complex<float>* polar_image,
         const double wavelength,
-        const isce3::focus::NFFT2Params& params);
+        const isce3::signal::NFFT2dParams& params);
 
 }}} // namespace isce3::cuda::focus

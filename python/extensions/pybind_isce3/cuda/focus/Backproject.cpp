@@ -22,6 +22,11 @@ using isce3::error::ErrorCode;
 using isce3::focus::parseDryTropoModel;
 using isce3::geometry::DEMInterpolator;
 
+// Copied declaration from pybind_isce3/signal/NFFT2d.h
+// Implementation is in pybind_isce3/signal/NFFT2d.cpp
+isce3::signal::NFFT2dParams parse_nfft2d_params(const py::dict& params);
+
+
 void addbinding_cuda_backproject(py::module& m)
 {
     m.def("backproject", [](
@@ -197,7 +202,7 @@ void addbinding_cuda_backproject(py::module& m)
                 py::dict nfft2_params) {
 
             // get root finding parameters
-            const auto params = parse_nfft2_params(nfft2_params);
+            const auto params = parse_nfft2d_params(nfft2_params);
             if (geo_points.size() != 3 * geo_image.size()) {
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "shape mismatch between geo image and position arrays");

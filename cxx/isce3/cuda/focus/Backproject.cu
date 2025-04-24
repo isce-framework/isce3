@@ -1167,17 +1167,17 @@ projectPolarToGeo(
         const PolarGrid& grid,
         const std::complex<float>* polar_image,
         const double wavelength,
-        const isce3::focus::NFFT2Params& params)
+        const isce3::signal::NFFT2dParams& params)
 {
     using isce3::fft::nextFastPower;
     using dims_t = isce3::cuda::signal::NFFT2d<float>::dims_t;
     using std::lround;
 
-    const dims_t m = {params.y.m, params.x.m};
+    const dims_t m = {params.rows.m, params.cols.m};
     const dims_t dims_in = {grid.length(), grid.width()};
     const dims_t dims_out = {
-        nextFastPower(static_cast<int32_t>(lround(params.y.s * dims_in[0]))),
-        nextFastPower(static_cast<int32_t>(lround(params.x.s * dims_in[1])))
+        nextFastPower(static_cast<int32_t>(lround(params.rows.s * dims_in[0]))),
+        nextFastPower(static_cast<int32_t>(lround(params.cols.s * dims_in[1])))
     };
 
     auto nfft = isce3::cuda::signal::NFFT2d<float>(m, dims_in, dims_out);
