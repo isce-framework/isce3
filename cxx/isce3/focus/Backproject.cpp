@@ -344,7 +344,7 @@ backprojectFirstStage(
 
     if (in_azimuth_time.size() < 2) {
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "require at least two pulses in FBP stage1");
+            "require at least two pulses in initial FBP stage");
     }
 
     static constexpr double c = isce3::core::speed_of_light;

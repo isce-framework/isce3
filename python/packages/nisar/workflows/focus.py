@@ -1611,6 +1611,9 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     for i in pulse_starts:
         pulses = slice(i, i + factor_sizes[0])
         ti = aztimes[pulses]
+        if len(ti) < 2:
+            log.info("Skipping FBP block containing only a single pulse.")
+            continue
         fgrid = rc_grid[pulses, :]
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
