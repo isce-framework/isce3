@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import h5py
 from isce3.core import Linspace, LookSide
 from isce3.focus import PolarGrid
@@ -63,3 +64,59 @@ def load_polar_image_from_h5(group: h5py.Group) -> tuple[np.ndarray, PolarGrid]:
     z = group["image"][:]
     grid = load_polar_grid_from_h5(group["polar_grid"])
     return (z, grid)
+
+@dataclass(frozen=True)
+class NonUniformFFTParameters:
+    zero_padding_factor: float = 2.0
+    kernel_halfwidth: int = 2
+
+    def __post_init__(self):
+        if self.zero_padding_factor <= 1.0:
+            raise ValueError("require NFFT zero_padding_factor > 1.0")
+        if self.kernel_halfwidth < 1:
+            raise ValueError("require NFFT kernel_halfwidth >= 1")
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        default = cls()
+        return cls(
+            float(d.get("zero_padding_factor", default.zero_padding_factor)),
+            int(d.get("kernel_halfwidth", default.kernel_halfwidth)))
+
+@dataclass(frozen=True)
+class NonUniformFFT2DParameters:
+    range: NonUniformFFTParameters = NonUniformFFTParameters()
+    azimuth: NonUniformFFTParameters = NonUniformFFTParameters()
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        default = cls()
+        T = NonUniformFFTParameters
+        rg = T.from_dict(d["range"]) if "range" in d else default.range
+        az = T.from_dict(d["azimuth"]) if "azimuth" in d else default.azimuth
+        return cls(rg, az)
+
+@dataclass(frozen=True)
+class BackprojectionStageParameters:
+    size: int = 1
+    oversample_range: float = 1.2
+    oversample_azimuth: float = 1.2
+    interpolation: NonUniformFFT2DParameters = NonUniformFFT2DParameters()
+
+    def __post_init__(self):
+        if self.size < 1:
+            raise ValueError("require at least 1 pulse/subaperture per stage")
+        if self.oversample_range < 1.0:
+            raise ValueError("must sample range at or above Nyquist limit")
+        if self.oversample_azimuth < 1.0:
+            raise ValueError("must sample azimuth at or above Nyquist limit")
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        default = cls()
+        key, T = "interpolation", NonUniformFFT2DParameters
+        return cls(
+            d.get("size", default.size),
+            d.get("oversample_range", default.oversample_range),
+            d.get("oversample_azimuth", default.oversample_azimuth),
+            T.from_dict(d[key]) if key in d else default.interpolation)

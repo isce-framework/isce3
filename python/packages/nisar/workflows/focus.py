@@ -28,6 +28,7 @@ import numpy as np
 import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
 from isce3.focus import make_los_luts, fill_gaps, make_cal_luts, Notch
+from isce3.focus.serialization import BackprojectionStageParameters
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import RadarGridParameters
@@ -70,15 +71,17 @@ def load_config(yaml):
     return Struct(cfg)
 
 
+def struct2dict(s: Struct):
+    d = s.__dict__.copy()
+    for k in d:
+        if isinstance(d[k], Struct):
+            d[k] = struct2dict(d[k])
+        elif isinstance(d[k], list):
+            d[k] = [struct2dict(v) if isinstance(v, Struct) else v for v in d[k]]
+    return d
+
+
 def dump_config(cfg: Struct, stream):
-    def struct2dict(s: Struct):
-        d = s.__dict__.copy()
-        for k in d:
-            if isinstance(d[k], Struct):
-                d[k] = struct2dict(d[k])
-            elif isinstance(d[k], list):
-                d[k] = [struct2dict(v) if isinstance(v, Struct) else v for v in d[k]]
-        return d
     parser = YAML()
     parser.indent = 4
     d = struct2dict(cfg)
@@ -1579,18 +1582,37 @@ def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, write
         writer.queue_write(z, block)
 
 
-def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
+# yeesh
+def nfft_params_dict(p: isce3.focus.serialization.NonUniformFFT2DParams):
+    return dict(
+        rows = dict(
+            m = p.azimuth.kernel_halfwidth,
+            s = p.azimuth.zero_padding_factor),
+        cols = dict(
+            m = p.range.kernel_halfwidth,
+            s = p.range.zero_padding_factor))
+
+
+def get_azcomp_stage_config(cfg: Struct):
+    factors = cfg.processing.azcomp.factorization
+    if not isinstance(factors, Iterable) or len(factors) < 1:
+        raise ValueError("Must specify at least one factorization stage "
+            "in config file.")
+    T = isce3.focus.serialization.BackprojectionStageParameters
+    return [T.from_dict(struct2dict(factor)) for factor in factors]
+
+
+def azcomp_ffbp(factors: BackprojectionStageParameters,
+        azres, kernel, blocks_bounds, igeom, rc_grid,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
         rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
-        use_gpu=False, bandwidth=0.0, debugfile=None, nfft2d_params=dict(),
-        oversample_range=1.2, oversample_azimuth=1.2):
+        use_gpu=False, bandwidth=0.0, debugfile=None):
     fc = isce3.core.speed_of_light / ogrid.wavelength
     zerodop = isce3.core.LUT2d()
 
     _, v = igeom.orbit.interpolate(igeom.orbit.mid_time)
     vs = np.linalg.norm(v)
-    tq = isce3.focus.get_polar_angle_time_constant(fc, vs, bandwidth)
-    tq /= oversample_azimuth
+    tq_max = isce3.focus.get_polar_angle_time_constant(fc, vs, bandwidth)
 
     if debugfile is not None:
         log.debug("Writing FBP metadata to file {debugfile.name}")
@@ -1605,11 +1627,12 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     # focus to intermediate grids
     aztimes = np.array(rc_grid.sensing_times)
     results = []
-    pulse_starts = range(0, rc_grid.length, factor_sizes[0])
-    log.info(f"Beginning initial factorizations of {factor_sizes[0]} pulses")
+    stage = factors[0]
+    pulse_starts = range(0, rc_grid.length, stage.size)
+    log.info(f"Beginning initial factorizations of {stage.size} pulses")
     nblocks = len(pulse_starts)
     for i in pulse_starts:
-        pulses = slice(i, i + factor_sizes[0])
+        pulses = slice(i, i + stage.size)
         ti = aztimes[pulses]
         if len(ti) < 2:
             log.info("Skipping FBP block containing only a single pulse.")
@@ -1617,11 +1640,12 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
         fgrid = rc_grid[pulses, :]
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
-        iblock = i // factor_sizes[0]
+        iblock = i // stage.size
         log.info(f"Computing initial factorization {iblock} of {nblocks}")
         err, pgrid, img, hgt = isce3.focus.backproject_first_stage(
             fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
-            atmos, rdr2geo_params, oversample_range, oversample_azimuth)
+            atmos, rdr2geo_params, stage.oversample_range,
+            stage.oversample_azimuth)
         results.append((err, pgrid, img, hgt))
 
         if debugfile is not None:
@@ -1635,25 +1659,27 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
     images = [result[2] for result in results]
 
     log.info("Computing NFFT transforms of sub-images")
+    nfft2d_params = nfft_params_dict(stage.interpolation)
     image_interpolators = [isce3.signal.make_image_nfft2d(image, nfft2d_params)
         for image in images]
 
-    # Don't let azimuth resolution grow finer than user requested one.
-    dq_min = azres / (ogrid.slant_ranges[-1] * oversample_azimuth)
+    num_middle_stages = len(factors[1:])
+    for i_stage, stage in enumerate(factors[1:]):
+        # Don't let azimuth resolution grow finer than user requested one.
+        dq_min = azres / (ogrid.slant_ranges[-1] * stage.oversample_azimuth)
+        tq = tq_max / stage.oversample_azimuth
 
-    num_middle_stages = len(factor_sizes[1:])
-    for i_stage, factor_size in enumerate(factor_sizes[1:]):
         stage_description = f"{i_stage + 1} / {num_middle_stages}"
         log.info("Computing intermediate factorization stage "
             + stage_description)
         grids_out, images_out = [], []
-        input_block_starts = range(0, len(grids), factor_size)
+        input_block_starts = range(0, len(grids), stage.size)
         nblocks = len(input_block_starts)
         for i in input_block_starts:
-            i_block = i // factor_size
+            i_block = i // stage.size
             log.info(f"Merging polar images stage {stage_description}"
                 f" block {i_block} / {nblocks}")
-            mask = slice(i, i + factor_size)
+            mask = slice(i, i + stage.size)
             my_grid = isce3.focus.merge_polar_grids(grids[mask], dem,
                 rdr2geo_params, dq_min, tq)
             my_image = np.zeros(my_grid.shape, np.complex64)
@@ -1670,6 +1696,7 @@ def azcomp_ffbp(factor_sizes, azres, kernel, blocks_bounds, igeom, rc_grid,
                     isce3.focus.save_polar_image_to_h5(my_image, my_grid, g)
 
         log.info(f"Computing NFFT transforms for stage {i_stage + 1}")
+        nfft2d_params = nfft_params_dict(stage.interpolation)
         image_interpolators = [isce3.signal.make_image_nfft2d(image, nfft2d_params)
             for image in images_out]
         grids = grids_out
@@ -2135,9 +2162,9 @@ def focus(runconfig, runconfig_path=""):
             # Do azimuth compression.
             igeom = isce3.container.RadarGeometry(rc_grid, orbit, dop[frequency])
             if cfg.processing.is_enabled.azcomp:
-                factor_sizes = cfg.processing.azcomp.factor_sizes
-                if factor_sizes[0] > 1:
-                    azcomp_ffbp(factor_sizes, azres, kernel,
+                factors = get_azcomp_stage_config(cfg)
+                if factors[0].size > 1:
+                    azcomp_ffbp(factors, azres, kernel,
                         blocks_bounds[frequency], igeom,
                         rc_grid, rcfile.data, ogrid[frequency], writer,
                         hgt_mm if dump_height else None, dem,

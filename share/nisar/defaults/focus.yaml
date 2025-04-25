@@ -374,7 +374,10 @@ runconfig:
                     fit: Table # null or Cheby or Table
                     fit_order: 2048
 
-                factor_sizes: [1]
+                # List of aperture factorization parameters.
+                # Default to direct backprojection (one stage of single pulses)
+                factorization:
+                - size: 1
 
             dry_troposphere_model: tsx
 
