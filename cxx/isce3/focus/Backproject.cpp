@@ -602,11 +602,6 @@ void mergePolarImages(
     // reference ellipsoid
     Ellipsoid ellipsoid = makeProjection(dem.epsgCode())->ellipsoid();
 
-    // linspace helper
-    auto to_pixel = [](const Linspace<double>& v, double x) -> double {
-        return (x - v.first()) / v.spacing();
-    };
-
     // wavenumber
     const double kw = 4 * M_PI * fc / isce3::core::speed_of_light;
 
@@ -645,35 +640,31 @@ void mergePolarImages(
         for (auto i_img = decltype(num_images){0}; i_img < num_images; ++i_img) {
             const auto& input_grid = grids[i_img];
             const auto& nfft = image_interpolators[i_img];
-
-            #pragma omp parallel for collapse(2)
-            for (auto i_row = i_row0; i_row < i_row1; ++i_row) {
-                for (auto j = decltype(n){0}; j < n; ++j) {
-                    auto i = i_row - i_row0;
-                    // calculate corresponding polar coordinate in input image
-                    double in_range, in_ssq;
-                    auto ec = geo2polar(&in_ssq, &in_range,
-                        block_positions(i, j),
-                        input_grid.origin, input_grid.axis);
-                    if (ec != ErrorCode::Success) {
-                        // should be unreachable
-                        throw isce3::except::DomainError(ISCE_SRCINFO(),
-                            "geo2polar failed with ErrorCode (" +
-                            isce3::error::getErrorString(ec) + ")");
-                    }
-                    // convert to (real-valued) input pixel
-                    const auto in_row = to_pixel(input_grid.sin_squint, in_ssq);
-                    const auto in_col = to_pixel(input_grid.range, in_range);
-                    // interpolate baseband input image
-                    const auto z = nfft.interp({in_row, in_col}, false);
-                    // compensate phase and sum contribution
-                    const double arg = kw * (in_range - output_grid.range[j]);
-                    output_image(i_row, j) +=
-                        z * std::complex<float>(std::cos(arg), std::sin(arg));
-                } // columns
-            } // rows
+            const auto npix = static_cast<size_t>(n) * (i_row1 - i_row0);
+            auto ec = projectPolarToGeo(output_image.row(i_row0).data(),
+                block_positions.data(), npix, input_grid, nfft, kw);
+            if (ec != ErrorCode::Success) {
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                    "projectPolarToGeo failed with ErrorCode (" +
+                    isce3::error::getErrorString(ec) + ")");
+            } // error
         } // images
     } // blocks
+
+    // Baseband.  Note that we could do this at the same time as the
+    // reprojection but it'd require a fair bit of copy/paste.
+    Eigen::VectorXcf phasors(n);
+    #pragma omp parallel for
+    for (auto j = decltype(n){0}; j < n; ++j) {
+        const double arg = -kw * output_grid.range[j];
+        phasors(j) = std::complex<float>(std::cos(arg), std::sin(arg));
+    }
+    #pragma omp parallel for collapse(2)
+    for (auto i = decltype(m){0}; i < m; ++i) {
+        for (auto j = decltype(n){0}; j < n; ++j) {
+            output_image(i, j) *= phasors(j);
+        } // columns
+    } // rows
 }
 
 
@@ -837,18 +828,9 @@ projectPolarToGeo(
         const Vec3* geo_points,
         const size_t n,
         const PolarGrid& grid,
-        const std::complex<float>* polar_image,
-        const double wavelength,
-        const NFFT2dParams& params)
+        const NFFT2d<float>& nfft,
+        const double kw)
 {
-    // TODO move this outside the function
-    using img_t = isce3::core::EArray2D<std::complex<float>>;
-    const auto rows = grid.length(), cols = grid.width();
-    const auto img = Eigen::Map<const img_t>(polar_image, rows, cols);
-    const auto nfft = isce3::signal::makeImageNFFT2d<float>(img, params);
-
-    const double kw = 4 * M_PI / wavelength;
-
     #pragma omp parallel for
     for (size_t i= 0; i < n; ++i) {
         // compute target location in polar grid

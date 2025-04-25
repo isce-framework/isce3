@@ -530,22 +530,15 @@ void addbinding_backproject(py::module& m)
                 py::array_t<std::complex<float>>& geo_image,
                 const py::array_t<double>& geo_points,
                 const PolarGrid& grid,
-                const py::array_t<std::complex<float>>& polar_image,
-                const double wavelength,
-                py::dict nfft2d_params) {
+                const NFFT2d<float>& nfft,
+                const double wavelength) {
 
             // get root finding parameters
-            const auto params = parse_nfft2d_params(nfft2d_params);
             if (geo_points.size() != 3 * geo_image.size()) {
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "shape mismatch between geo image and position arrays");
             }
             auto n = static_cast<size_t>(geo_image.size());
-            if ((polar_image.shape(0) != grid.length())
-                    or (polar_image.shape(1) != grid.width())) {
-                throw isce3::except::LengthError(ISCE_SRCINFO(),
-                    "shape mismatch between polar image array and grid");
-            }
 
             // XXX type cast after checking sizes, assume alignment is okay
             // TODO redo with Eigen::Map or change interface from Vec3 to double[3]?
@@ -554,7 +547,7 @@ void addbinding_backproject(py::module& m)
             const auto ptr = reinterpret_cast<const Vec3*>(geo_points.data());
 
             auto status = projectPolarToGeo(geo_image.mutable_data(), ptr,
-                n, grid, polar_image.data(), wavelength, params);
+                n, grid, nfft, wavelength);
 
             if (status != ErrorCode::Success) {
                 throw isce3::except::RuntimeError(ISCE_SRCINFO(),
@@ -564,7 +557,6 @@ void addbinding_backproject(py::module& m)
         py::arg("geo_image"),
         py::arg("geo_points"),
         py::arg("grid"),
-        py::arg("polar_image"),
-        py::arg("wavelength"),
-        py::arg("nfft2d_params") = py::dict());
+        py::arg("nfft"),
+        py::arg("wavelength"));
 }

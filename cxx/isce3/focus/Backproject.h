@@ -163,9 +163,8 @@ projectPolarToGeo(
         const isce3::core::Vec3* geo_points,
         const size_t n,
         const PolarGrid& grid,
-        const std::complex<float>* polar_image,
-        const double wavelength,
-        const isce3::signal::NFFT2dParams& params = {});
+        const isce3::signal::NFFT2d<float>& nfft,
+        const double kw);
 
 // figure out bounds of polar grid in stripmap radar coordinates
 std::tuple<double, double, double, double, isce3::error::ErrorCode>
