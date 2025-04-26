@@ -6,6 +6,7 @@ from typing import NamedTuple
 import numpy as np
 
 import isce3
+from isce3.core import normalize_look_side
 
 
 class Rectangle(NamedTuple):
@@ -63,7 +64,7 @@ def get_radar_grid_containing_az_rg_pts(
     *,
     az_spacing: float,
     rg_spacing: float,
-    look_side: isce3.core.LookSide,
+    look_side: isce3.core.LookSide | str,
     wavelength: float,
     ref_epoch: isce3.core.DateTime,
     az_margin: float = 0.0,
@@ -81,7 +82,7 @@ def get_radar_grid_containing_az_rg_pts(
         Azimuth time spacing of the output grid, in seconds. Must be > 0.
     rg_spacing : float
         Slant range spacing of the output grid, in meters. Must be > 0.
-    look_side : isce3.core.LookSide
+    look_side : isce3.core.LookSide or {'left', 'right'}
         The look direction of the output grid (left-looking or right-looking).
     wavelength : float
         The radar central wavelength, in meters.
@@ -153,7 +154,7 @@ def get_radar_grid_containing_az_rg_pts(
         prf=1.0 / az_spacing,
         starting_range=rg_min,
         range_pixel_spacing=rg_spacing,
-        lookside=look_side,
+        lookside=normalize_look_side(look_side),
         length=num_az,
         width=num_rg,
         ref_epoch=ref_epoch,
@@ -172,7 +173,7 @@ def get_radar_grid_containing_geo_pts(
     az_spacing: float,
     rg_spacing: float,
     orbit: isce3.core.Orbit,
-    look_side: isce3.core.LookSide,
+    look_side: isce3.core.LookSide | str,
     wavelength: float,
     doppler: isce3.core.LUT2d = isce3.core.LUT2d(),
     az_margin: float = 0.0,
@@ -202,7 +203,7 @@ def get_radar_grid_containing_geo_pts(
     orbit : isce3.core.Orbit
         The trajectory of the radar antenna phase center over a time interval that
         includes the observation times of each point in `geo_pts`.
-    look_side : isce3.core.LookSide
+    look_side : isce3.core.LookSide or {'left', 'right'}
         The look direction of the output grid (left-looking or right-looking).
     wavelength : float
         The radar central wavelength, in meters.
@@ -276,7 +277,7 @@ def get_bounding_radar_grid(
     az_spacing: float,
     rg_spacing: float,
     orbit: isce3.core.Orbit,
-    look_side: isce3.core.LookSide,
+    look_side: isce3.core.LookSide | str,
     wavelength: float,
     doppler: isce3.core.LUT2d = isce3.core.LUT2d(),
     min_height: float = isce3.core.GLOBAL_MIN_HEIGHT,
@@ -305,7 +306,7 @@ def get_bounding_radar_grid(
         The trajectory of the radar antenna phase center over a time interval that
         includes the observation times of each point in `geo_grid` at each height
         between `min_height` and `max_height`.
-    look_side : isce3.core.LookSide
+    look_side : isce3.core.LookSide or {'left', 'right'}
         The look direction of the output grid (left-looking or right-looking).
     wavelength : float
         The radar central wavelength, in meters.
