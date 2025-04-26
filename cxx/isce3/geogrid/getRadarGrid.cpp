@@ -1,5 +1,6 @@
 #include "getRadarGrid.h"
 
+#include <algorithm>
 
 #include <isce3/core/Projections.h>
 #include <isce3/core/LUT2d.h>
@@ -15,6 +16,31 @@ namespace isce3 {
 namespace geogrid {
 
 using isce3::core::Vec3;
+
+/**
+ *
+ * @param[in] orbit
+ *     ...
+ * @param[in] doppler
+ *     ...
+ *
+ * @returns
+ *
+ */
+template<class T>
+double guessInitialAzTime(
+        const isce3::core::Orbit& orbit, const LUT2d<T>& doppler)
+{
+    auto tmin = orbit.startTime();
+    auto tmax = orbit.endTime();
+
+    if (doppler.haveData()) {
+        tmin = std::max(tmin, doppler.yStart());
+        tmax = std::min(tmax, doppler.yEnd());
+    }
+
+    return 0.5 * (tmin + tmax);
+}
 
 template<class T>
 static isce3::core::Matrix<T>
@@ -155,8 +181,8 @@ void getRadarGrid(isce3::core::LookSide lookside,
     for (int i = 0; i < geogrid.length(); ++i) {
         double pos_y = geogrid.startY() + (0.5 + i) * geogrid.spacingY();
 
-        double azimuth_time = std::numeric_limits<double>::quiet_NaN();
-        double native_azimuth_time = std::numeric_limits<double>::quiet_NaN();
+        double azimuth_time = guessInitialAzTime(orbit, grid_doppler);
+        double native_azimuth_time = guessInitialAzTime(orbit, native_doppler);
         double slant_range = std::numeric_limits<double>::quiet_NaN();
         double native_slant_range = std::numeric_limits<double>::quiet_NaN();
 

@@ -14,6 +14,7 @@ from .orbit import (
     AmbiguousOrbitPassDirection, OrbitPassDirection, get_orbit_pass_direction
 )
 from .poly2d import fit_bivariate_polynomial
+from .projections import is_polar_stereo, is_utm
 from . import rdr_geo_block_generator
 from .block_param_generator import BlockParam
 from .serialization import load_orbit_from_h5_group
