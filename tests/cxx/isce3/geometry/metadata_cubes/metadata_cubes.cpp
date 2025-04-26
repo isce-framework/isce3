@@ -238,22 +238,12 @@ void _compareArrays(isce3::core::Matrix<T>& topo_array,
     if (!flag_geo) {
         ASSERT_TRUE(percent_valid == 100);
     }
-    if (flag_geo && std::is_same<T, float>::value) {
-        // geo and float
+    if (std::is_same_v<T, float>) {
         ASSERT_TRUE(rmse < 1e-5);
         ASSERT_TRUE(max_abs_error < 1e-5);
-    } else if (std::is_same<T, float>::value) {
-        // slant-range and float
-        ASSERT_TRUE(rmse < 1e-7);
-        ASSERT_TRUE(max_abs_error < 1e-6);
-    } else if (flag_geo) {
-        // geo and double
-        ASSERT_TRUE(rmse < 1e-7);
-        ASSERT_TRUE(max_abs_error < 1e-6);
     } else {
-        // slant-range and double
-        ASSERT_TRUE(rmse < 1e-15);
-        ASSERT_TRUE(max_abs_error < 1e-13);
+        ASSERT_TRUE(rmse < 1e-7);
+        ASSERT_TRUE(max_abs_error < 1e-6);
     }
 }
 
