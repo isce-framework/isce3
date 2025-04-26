@@ -106,14 +106,14 @@ def get_radar_grid_containing_az_rg_pts(
     get_radar_grid_containing_geo_pts
     """
     if not (az_spacing > 0.0):
-        raise ValueError(f"az_spacing must be > 0, got {az_spacing=}")
+        raise ValueError(f"{az_spacing=}, must be > 0")
     if not (rg_spacing > 0.0):
-        raise ValueError(f"rg_spacing must be > 0, got {rg_spacing=}")
+        raise ValueError(f"{rg_spacing=}, must be > 0")
 
     if not (az_margin >= 0.0):
-        raise ValueError(f"az_margin must be >= 0, got {az_margin=}")
+        raise ValueError(f"{az_margin=}, must be >= 0")
     if not (rg_margin >= 0.0):
-        raise ValueError(f"rg_margin must be >= 0, got {rg_margin=}")
+        raise ValueError(f"{rg_margin=}, must be >= 0")
 
     # Compute the extents of the bounding box containing all of the points.
     az_min, az_max, rg_min, rg_max = get_bounding_rectangle(az_rg_pts)
@@ -361,7 +361,7 @@ def get_bounding_radar_grid(
         )
 
     if pts_per_edge < 2:
-        raise ValueError(f"pts_per_edge must be >= 2, got {pts_per_edge=}")
+        raise ValueError(f"{pts_per_edge=}, must be >= 2")
 
     # NOTE: geo2rdr is not an affine transformation, so the set of points within
     # `geo_grid` is, in general, not a convex set when transformed to (azimuth,range)
