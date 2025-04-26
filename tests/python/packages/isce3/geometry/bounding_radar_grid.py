@@ -120,14 +120,12 @@ class TestGetRadarGridContainingAzRgPts:
     @pytest.mark.parametrize("az_spacing", [-1.0, 0.0, np.nan])
     def test_bad_spacing(self, params: MutableMapping[str, Any], az_spacing: float):
         del params["az_spacing"]
-        regex = f"^az_spacing must be > 0, got {az_spacing=}$"
-        with pytest.raises(ValueError, match=regex):
+        with pytest.raises(ValueError, match=f"^{az_spacing=}, must be > 0$"):
             get_radar_grid_containing_az_rg_pts(**params, az_spacing=az_spacing)
 
     @pytest.mark.parametrize("az_margin", [-1.0, np.nan])
     def test_bad_margin(self, params: Mapping[str, Any], az_margin: float):
-        regex = f"^az_margin must be >= 0, got {az_margin=}$"
-        with pytest.raises(ValueError, match=regex):
+        with pytest.raises(ValueError, match=f"^{az_margin=}, must be >= 0$"):
             get_radar_grid_containing_az_rg_pts(**params, az_margin=az_margin)
 
 
@@ -409,8 +407,7 @@ class TestGetBoundingRadarGrid:
     ):
         orbit = winnipeg_rslc.getOrbit()
         pts_per_edge = 1
-        regex = f"^pts_per_edge must be >= 2, got {pts_per_edge=}"
-        with pytest.raises(ValueError, match=regex):
+        with pytest.raises(ValueError, match=f"^{pts_per_edge=}, must be >= 2$"):
             isce3.geometry.get_bounding_radar_grid(
                 geo_grid=geo_grid,
                 az_spacing=1.0,
