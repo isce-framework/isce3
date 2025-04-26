@@ -242,7 +242,7 @@ def get_radar_grid_containing_geo_pts(
     if geo2rdr_params is None:
         geo2rdr_params = {}
 
-    def geo2rdr(geo_pt: tuple[float, float, float]) -> tuple[float, float]:
+    def _geo2rdr(geo_pt: tuple[float, float, float]) -> tuple[float, float]:
         # Convert from projected coordinates -> LLH -> ECEF -> (azimuth,range).
         llh = proj.inverse(geo_pt)
         xyz = proj.ellipsoid.lon_lat_to_xyz(llh)
@@ -257,7 +257,7 @@ def get_radar_grid_containing_geo_pts(
 
     # Lazily convert each item in `geo_pts` from `proj` coordinates to radar
     # coordinates.
-    az_rg_pts = map(geo2rdr, geo_pts)
+    az_rg_pts = map(_geo2rdr, geo_pts)
 
     return get_radar_grid_containing_az_rg_pts(
         az_rg_pts=az_rg_pts,
