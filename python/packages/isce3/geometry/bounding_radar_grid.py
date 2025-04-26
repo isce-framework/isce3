@@ -1,26 +1,23 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
-from typing import Generic, NamedTuple, TypeVar
+from typing import NamedTuple
 
 import numpy as np
 
 import isce3
 
 
-T = TypeVar("T")
-
-
-class Rectangle(NamedTuple, Generic[T]):
+class Rectangle(NamedTuple):
     """A rectangle in (x,y) coordinate space, defined by its extents."""
 
-    xmin: T
-    xmax: T
-    ymin: T
-    ymax: T
+    xmin: float
+    xmax: float
+    ymin: float
+    ymax: float
 
 
-def get_bounding_rectangle(pts: Iterable[tuple[float, float]]) -> Rectangle[float]:
+def get_bounding_rectangle(pts: Iterable[tuple[float, float]]) -> Rectangle:
     """
     Get the extents of the smallest bounding box that contains a set of (x,y) points.
 
@@ -32,7 +29,7 @@ def get_bounding_rectangle(pts: Iterable[tuple[float, float]]) -> Rectangle[floa
 
     Returns
     -------
-    Rectangle[float]
+    Rectangle
         The lower and upper x- and y-coordinate extents of the bounding box.
 
     Raises
