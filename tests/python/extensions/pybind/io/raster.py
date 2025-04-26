@@ -12,6 +12,7 @@ from numpy.typing import DTypeLike
 from osgeo import gdal, gdal_array
 
 import isce3
+import iscetest
 
 
 class commonClass:
@@ -338,6 +339,17 @@ def test_raster_dtype(gdal_dtype: int, numpy_dtype: DTypeLike):
     with make_temp_gtiff(shape=(4, 5), dtype=gdal_dtype) as raster:
         assert raster.datatype() == gdal_dtype
         assert raster.dtype == numpy_dtype
+
+
+def test_grid_coords():
+    raster_file = os.path.join(iscetest.data, "winnipeg_dem.tif")
+    raster = isce3.io.Raster(raster_file)
+
+    # Check that these attributes match what we get from `gdalinfo`.
+    assert np.isclose(raster.x0, -97.8507)
+    assert np.isclose(raster.y0, 49.5642)
+    assert np.isclose(raster.dx, 0.00027760989011)
+    assert np.isclose(raster.dy, -0.00027765625)
 
 
 if __name__ == "__main__":
