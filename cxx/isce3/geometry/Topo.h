@@ -370,14 +370,14 @@ private:
      * @param[in] TCNbasis basis for the line under consideration
      * @param[in] demInterp DEM interpolator object used to compute local slope
      */
-    void _setOutputTopoLayers(isce3::core::Vec3 &,
-                              TopoLayers &,
-                              size_t,
-                              isce3::core::Pixel &,
-                              isce3::core::Vec3& pos,
-                              isce3::core::Vec3& vel,
-                              isce3::core::Basis &,
-                              DEMInterpolator &);
+    void _setOutputTopoLayers(const isce3::core::Vec3& llh,
+                              TopoLayers& layers,
+                              size_t line,
+                              const isce3::core::Pixel& pixel,
+                              const isce3::core::Vec3& pos,
+                              const isce3::core::Vec3& vel,
+                              const isce3::core::Basis& TCNbasis,
+                              const DEMInterpolator& demInterp);
 
     /** Main entry point for the module; internal creation of topo rasters */
     template<typename T> void _topo(T& dem, const std::string& outdir);
