@@ -294,10 +294,12 @@ def populate_grids_group(
         copy_units_attr_from_dataset_spec(dataset, dataset_spec)
         return dataset
 
+    x_start = geo_grid.start_x
+    y_start = geo_grid.start_y
     x_spacing = geo_grid.spacing_x
     y_spacing = geo_grid.spacing_y
-    x_coords = np.asarray(geo_grid.x_coords) + 0.5 * x_spacing
-    y_coords = np.asarray(geo_grid.y_coords) + 0.5 * y_spacing
+    x_coords = x_start + (0.5 * x_spacing) + x_spacing * np.arange(geo_grid.width)
+    y_coords = y_start + (0.5 * y_spacing) + x_spacing * np.arange(geo_grid.length)
 
     create_grids_dataset("xCoordinateSpacing", x_spacing)
     create_grids_dataset("yCoordinateSpacing", y_spacing)
