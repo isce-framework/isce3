@@ -382,7 +382,7 @@ def compute_baseline(ref_rngs,
                 baseline = np.linalg.norm(sec_xyz - ref_xyz)
 
                 # compute the cosine of the angle between the baseline vector
-                # and the reference LOS vector (refernce sensor to target)
+                # and the reference LOS vector (reference sensor to target)
                 if baseline == 0:
                     cos_vbase_los = 1
                 else:
@@ -392,7 +392,7 @@ def compute_baseline(ref_rngs,
 
                 # project the baseline to LOS to get the parallel component
                 # of the baseline (i.e., parallel to the LOS direction)
-                # parallel baseline in refernce LOS direction is positive
+                # parallel baseline in reference LOS direction is positive
                 parallel_baseline = baseline * cos_vbase_los
 
                 # project the baseline to the normal to
@@ -504,7 +504,7 @@ def add_baseline(output_paths,
     output_hdf5 = output_paths[product_id]
     dst_meta_path = f'{CommonPaths.RootPath}/{product_id}/metadata'
 
-    # read 3d cube size from arbitary metadata
+    # read 3d cube size from arbitrary metadata
     if radar_or_geo == 'radar':
         grid_path = f"{dst_meta_path}/geolocationGrid"
         cube_ref_dataset = f'{grid_path}/coordinateX'
@@ -733,7 +733,7 @@ def run(cfg: dict, output_paths):
     cfg: dict
         A dictionary of the insar.py configuration workflow
     output_paths: dict
-        A dictionary conatining the different InSAR product paths
+        A dictionary containing the different InSAR product paths
         e.g.: output_paths={"RIFG": "/home/process/insar_rifg.h5",
                             "GUNW": "/home/process/insar_gunw.h5"}
 
@@ -785,7 +785,7 @@ def run(cfg: dict, output_paths):
                     if dst.startswith('G')}
 
     if geo_products:
-        # only GUNW product have information requred to compute baesline.
+        # only GUNW product have information required to compute baesline.
         product_id = next(iter(geo_products))
         dst_meta_path = f'{common_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/radarGrid"

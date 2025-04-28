@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cpl_virtualmem.h>
 #include <limits>
+#include <ios>
 
 #include <isce3/core/Basis.h>
 #include <isce3/core/DenseMatrix.h>
@@ -499,6 +500,7 @@ void Geocode<T>::geocodeInterp(
         rtc_area_array.resize(radar_grid.length(), radar_grid.width());
         rtc_raster->getBlock(rtc_area_array.data(), 0, 0, radar_grid.width(),
                 radar_grid.length(), 1);
+        rtc_raster_unique_ptr.reset();
 
         if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
             rtc_area_sigma0_array.resize(radar_grid.length(),
@@ -506,6 +508,7 @@ void Geocode<T>::geocodeInterp(
             rtc_sigma0_raster->getBlock(rtc_area_sigma0_array.data(),
                                         0, 0, radar_grid.width(),
                                         radar_grid.length(), 1);
+            rtc_raster_sigma0_unique_ptr.reset();
         }
     }
 
@@ -1962,6 +1965,9 @@ void Geocode<T>::geocodeAreaProj(
     std::unique_ptr<isce3::io::Raster> rtc_raster_sigma0_unique_ptr;
 
     isce3::core::Matrix<float> rtc_area, rtc_area_sigma;
+
+    bool flag_rtc_raster_is_in_memory = false;
+
     if (flag_apply_rtc) {
         std::string input_terrain_radiometry_str =
                 get_input_terrain_radiometry_str(input_terrain_radiometry);
@@ -1986,6 +1992,7 @@ void Geocode<T>::geocodeAreaProj(
                         vsimem_ref, radar_grid_cropped.width(),
                         radar_grid_cropped.length(), 1, GDT_Float32, "ENVI");
                 rtc_raster = rtc_raster_unique_ptr.get();
+                flag_rtc_raster_is_in_memory = true;
             }
 
             // Otherwise, copies the pointer to the output RTC file
@@ -2013,8 +2020,8 @@ void Geocode<T>::geocodeAreaProj(
                     "/vsimem/" + getTempString("geocode_cov_areaproj_rtc_sigma0"));
                 rtc_raster_sigma0_unique_ptr = 
                     std::make_unique<isce3::io::Raster>(
-                        vsimem_ref, radar_grid.width(),
-                        radar_grid.length(), 1, GDT_Float32, "ENVI");
+                        vsimem_ref, radar_grid_cropped.width(),
+                        radar_grid_cropped.length(), 1, GDT_Float32, "ENVI");
                 rtc_sigma0_raster = 
                     rtc_raster_sigma0_unique_ptr.get();
             }
@@ -2037,21 +2044,33 @@ void Geocode<T>::geocodeAreaProj(
             rtc_raster = input_rtc;
         }
 
-        if (is_radar_grid_single_block) {
+        /* 
+        Load RTC in array as a "single block" if:
+        1. `is_radar_grid_single_block` is `true`; or
+        2. RTC raster an "in-memory" raster. In this case,
+        the entire raster is already in memory. It's better to move it
+        to the array and clear the in-memory raster.
+        */
+        if (is_radar_grid_single_block || flag_rtc_raster_is_in_memory) {
             rtc_area.resize(
                     radar_grid_cropped.length(), radar_grid_cropped.width());
             rtc_raster->getBlock(rtc_area.data(), 0, 0,
                     radar_grid_cropped.width(), radar_grid_cropped.length(), 1);
+            rtc_raster_unique_ptr.reset();
+        }
 
-            if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
-                rtc_area_sigma.resize(radar_grid.length(),
-                                                radar_grid.width());
-                rtc_sigma0_raster->getBlock(
-                    rtc_area_sigma.data(), 0, 0, radar_grid.width(),
-                    radar_grid.length(), 1);
-            }
+        /*
+        In the curent implementation, rtc_sigma0_raster is always in memory.
+        So, we move it to an array to prevent extra memory to be allocated.
+        */
+        if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
+            rtc_area_sigma.resize(radar_grid_cropped.length(),
+                                  radar_grid_cropped.width());
+            rtc_sigma0_raster->getBlock(
+                rtc_area_sigma.data(), 0, 0, radar_grid_cropped.width(),
+                radar_grid_cropped.length(), 1);
 
-
+            rtc_raster_sigma0_unique_ptr.reset();
         }
     }
 
@@ -2130,6 +2149,10 @@ void Geocode<T>::geocodeAreaProj(
     _print_parameters(info, geocode_memory_mode, min_block_size,
                       max_block_size);
 
+    info << "is radar-grid single block: "
+         << std::boolalpha  << is_radar_grid_single_block << std::noboolalpha 
+         << pyre::journal::newline;
+
     /*
     T - input data template;
     T2 - input template for the _runBlock, that is equal to
@@ -2203,7 +2226,7 @@ void Geocode<T>::geocodeAreaProj(
                         out_geo_nlooks, out_geo_rtc,
                         out_geo_rtc_gamma0_to_sigma0,
                         proj.get(), flag_apply_rtc,
-                        rtc_raster, rtc_sigma0_raster,
+                        flag_rtc_raster_is_in_memory, rtc_raster,
                         az_time_correction, slant_range_correction,
                         input_raster, offset_y, offset_x,
                         output_raster, rtc_area, rtc_area_sigma,
@@ -2230,7 +2253,7 @@ void Geocode<T>::geocodeAreaProj(
                         out_geo_nlooks, out_geo_rtc,
                         out_geo_rtc_gamma0_to_sigma0,
                         proj.get(), flag_apply_rtc,
-                        rtc_raster, rtc_sigma0_raster,
+                        flag_rtc_raster_is_in_memory, rtc_raster,
                         az_time_correction, slant_range_correction,
                         input_raster, offset_y, offset_x,
                         output_raster, rtc_area, rtc_area_sigma,
@@ -2419,8 +2442,7 @@ void Geocode<T>::_runBlock(
         isce3::io::Raster* out_geo_nlooks, isce3::io::Raster* out_geo_rtc,
         isce3::io::Raster* out_geo_rtc_gamma0_to_sigma0, 
         isce3::core::ProjectionBase* proj, bool flag_apply_rtc,
-        isce3::io::Raster* rtc_raster,
-        isce3::io::Raster* rtc_sigma0_raster,
+        bool flag_rtc_raster_is_in_memory, isce3::io::Raster* rtc_raster,
         const isce3::core::LUT2d<double>& az_time_correction,
         const isce3::core::LUT2d<double>& slant_range_correction,
         isce3::io::Raster& input_raster,
@@ -2712,7 +2734,7 @@ void Geocode<T>::_runBlock(
     int xbound = radar_grid.width() - 1;
     int ybound = radar_grid.length() - 1;
 
-    isce3::core::Matrix<float> rtc_area_block, rtc_area_sigma_block;
+    isce3::core::Matrix<float> rtc_area_block;
     isce3::core::Matrix<uint8_t> input_layover_shadow_mask_block;
     std::vector<std::unique_ptr<isce3::core::Matrix<T2>>> rdrDataBlock;
     if (!is_radar_grid_single_block) {
@@ -2774,22 +2796,12 @@ void Geocode<T>::_runBlock(
                 radar_grid.offsetAndResize(offset_y, offset_x, grid_size_y,
                                            grid_size_x);
 
-        if (flag_apply_rtc) {
+        if (flag_apply_rtc && !flag_rtc_raster_is_in_memory) {
             rtc_area_block.resize(
                     radar_grid_block.length(), radar_grid_block.width());
             rtc_raster->getBlock(rtc_area_block.data(), offset_x, offset_y,
                     radar_grid_block.width(), radar_grid_block.length(), 1);
-
-           if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
-                rtc_area_sigma_block.resize(radar_grid_block.length(),
-                                            radar_grid_block.width());
-                rtc_sigma0_raster->getBlock(
-                    rtc_area_sigma_block.data(), offset_x, offset_y,
-                    radar_grid_block.width(), radar_grid_block.length(), 1);
-            }
-
         }
-
         if (input_layover_shadow_mask_raster != nullptr) {
             input_layover_shadow_mask_block.resize(
                     radar_grid_block.length(), radar_grid_block.width());
@@ -3213,7 +3225,7 @@ void Geocode<T>::_runBlock(
                     w = std::abs(w);
                     if (flag_apply_rtc) {
                         float rtc_value;
-                        if (is_radar_grid_single_block) {
+                        if (is_radar_grid_single_block || flag_rtc_raster_is_in_memory) {
                             rtc_value = rtc_area(y, x);
                         } else {
                             rtc_value =
@@ -3228,14 +3240,7 @@ void Geocode<T>::_runBlock(
                         area_total += rtc_value * w;
 
                         if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
-                            float rtc_value_sigma;
-                            if (is_radar_grid_single_block) {
-                                rtc_value_sigma = rtc_area_sigma(y, x);
-                            } else {
-                                rtc_value_sigma =
-                                    rtc_area_sigma_block(y - offset_y, x - offset_x);
-                            }
-                            area_sigma_total += rtc_value_sigma * w;
+                            area_sigma_total += rtc_area_sigma(y, x) * w;
                         }
                         w /= rtc_value;
                     } else {

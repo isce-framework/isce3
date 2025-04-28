@@ -494,7 +494,7 @@ class InSARBaseWriter(h5py.File):
     def add_coregistration_to_algo_group(self):
         """
         Add the coregistration parameters to the
-        "processingInfromation/algorithms" group
+        "processingInformation/algorithms" group
         """
         proc_cfg = self.cfg["processing"]
         dense_offsets = proc_cfg["dense_offsets"]["enabled"]
@@ -529,11 +529,11 @@ class InSARBaseWriter(h5py.File):
                 if outlier_filling_method == "fill_smoothed":
                     description = (
                         "iterative filling algorithm using the mean value"
-                        " computed in a neighboorhood centered on the pixel to"
+                        " computed in a neighborhood centered on the pixel to"
                         " fill"
                     )
                 else:
-                    description = "Nearest neighboor interpolation"
+                    description = "Nearest neighbor interpolation"
 
         algo_coregistration_ds_params = [
             DatasetParams(

@@ -16,7 +16,7 @@ import iscetest
 def replace_nan_echo(echo, rnd_seed=10):
     """
     Replace NaN or Zero values by a Gaussian random noise
-    whose STD deteremined by std of non-nan and non-zero values
+    whose STD determined by std of non-nan and non-zero values
     per range line
 
     Parameters

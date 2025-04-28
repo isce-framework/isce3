@@ -34,7 +34,7 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
             radar_geometry: RadarGeometry
                 Radar grid describing input rasters
             lines_per_block: int
-                Number of lines per block to be processed. Defualt 1000
+                Number of lines per block to be processed. Default 1000
             )")
     .def("geocode_rasters", &Geocode::geocodeRasters,
             py::arg("output_rasters"),
@@ -71,7 +71,7 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
                 DEM used to calculate radar grid indices
             native_doppler: isce3.core.LUT2d
                 Doppler centroid of data associated with radar grid, in Hz, as
-                fuction of azimuth and range
+                function of azimuth and range
             az_time_correction: isce3.core.LUT2d
                 geo2rdr azimuth additive correction, in seconds, as a function
                 of azimuth and range
@@ -82,7 +82,7 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
                 Interpolation method used by DEM interpolator. Default
                 BIQUINTIC_METHOD
             threshold: double
-                Convergence threshold for geo2rdr. Defualt 1e-8
+                Convergence threshold for geo2rdr. Default 1e-8
             maxiter: int
                 Maximum iterations for geo2rdr. Default 50
             delta_range: double

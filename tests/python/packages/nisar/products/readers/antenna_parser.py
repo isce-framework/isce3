@@ -199,7 +199,7 @@ class TestAntennaParser:
             npt.assert_allclose(az_peaks, az_avg,
                                 err_msg='Wrong azimuth for peaks'
                                 f' for pol "{pol}"!')
-            # now check overlap/transition regions agianst peak location
+            # now check overlap/transition regions against peak location
             el_trans, az_trans = self.prs.locate_beams_overlap(pol)
             npt.assert_equal(el_trans.size, num_beams - 1,
                              err_msg='Wrong size for overlap values'

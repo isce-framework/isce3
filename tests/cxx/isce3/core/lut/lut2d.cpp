@@ -162,7 +162,7 @@ TEST(LUT2dTest, RefValue)
         EXPECT_EQ(lut.refValue(), 1.0);
     }
     {
-        // scalar paramter ctor sets value
+        // scalar parameter ctor sets value
         auto lut = isce3::core::LUT2d<T>(2.0);
         EXPECT_EQ(lut.refValue(), 2.0);
     }

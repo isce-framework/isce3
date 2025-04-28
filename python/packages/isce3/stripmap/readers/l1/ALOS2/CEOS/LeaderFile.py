@@ -244,7 +244,7 @@ class LeaderFile(object):
 
     def parseFacilityData(self, fid):
         '''
-        This is very mission specfic. 
+        This is very mission specific. 
         Did not find public document with a detailed description of this.
         Last record in leader and not needed for processing. So skipping transcoding it ...
         '''

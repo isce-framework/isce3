@@ -96,7 +96,7 @@ struct EdgeMethodCostFuncTest : public ::testing::Test {
     // Absolute function value tolerance in root of cost function used in
     // "RollAngleOffsetFromEdge"
     const double abs_tol {1e-4};
-    // Max expected interation of cost function used in
+    // Max expected iteration of cost function used in
     // "RollAngleOffsetFromEdge"
     const int max_iter {20};
 

@@ -139,7 +139,7 @@ def solid_grid_pixel_parallel_task(args):
     Parameters
     ----------
     args : tuple
-        the zipped parameters incuding reference epoch,
+        the zipped parameters including reference epoch,
         azimuth time, slant range, longitude, and latitude
 
     Returns
@@ -350,7 +350,7 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
     height_mesh_arr = height_radar_grid[:, None, None] * \
         np.tile(np.ones(lon_2d.shape), tile_dims)
 
-    # Caculate the solid earth tides for the reference RSLC
+    # Calculate the solid earth tides for the reference RSLC
     ref_tide_e, ref_tide_n, ref_tide_u = \
         calculate_solid_earth_tides(ref_ref_epoch,
                                     ref_zero_doppler_azimuth_time,
@@ -359,7 +359,7 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
                                     latitude_mesh_arr,
                                     longitude_mesh_arr)
 
-    # Caculate the solid earth tides for the secondary RSLC
+    # Calculate the solid earth tides for the secondary RSLC
     sec_tide_e, sec_tide_n, sec_tide_u = \
         calculate_solid_earth_tides(sec_ref_epoch,
                                     sec_zero_doppler_azimuth_time,

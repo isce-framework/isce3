@@ -80,7 +80,7 @@ def run(cfg):
         # get frequency specific parameters
         radargrid = slc.getRadarGrid(freq)
 
-        # create seperate directory within scratch dir for rdr2geo run
+        # create separate directory within scratch dir for rdr2geo run
         rdr2geo_scratch_path = scratch_path / 'rdr2geo' / f'freq{freq}'
         rdr2geo_scratch_path.mkdir(parents=True, exist_ok=True)
 

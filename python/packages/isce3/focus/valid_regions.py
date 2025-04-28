@@ -308,7 +308,7 @@ def transform_polygons_raw2image(*, raw_polygon_lists, orbit, lookside,
     for raw_polygons in raw_polygon_lists:
         slc_polygons = []
         for raw_poly in raw_polygons:
-            # Add intermediate points between corners before tranforming
+            # Add intermediate points between corners before transforming
             # geometry.  Spacing specified in length units, so scale
             # (length = velocity * time) and then back.
             raw_poly = multiply_vel(raw_poly).segmentize(max_segment_length)

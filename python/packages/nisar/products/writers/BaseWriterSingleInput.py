@@ -919,7 +919,7 @@ class BaseWriterSingleInput():
         Parameters
         ----------
         specs_xml_file: str
-            Product specfications XML file
+            Product specifications XML file
         """
 
         specs = ET.ElementTree(file=specs_xml_file)

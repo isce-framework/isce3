@@ -34,7 +34,7 @@ def amp2deg(amp):
 
 def ref_rxdbf_txbmf_from_ant(ant, orbit, attitude, dem_interp, slant_range,
                              pulse_time_mid, txrx_pol):
-    """Get RX DBF and TX BMF EL-cut paterns from input antenna object to be
+    """Get RX DBF and TX BMF EL-cut patterns from input antenna object to be
     used as references for validation of final averaged beamformed patterns.
 
     These complex beamformed patterns are resampled at mid
@@ -137,7 +137,7 @@ class TestElevationBeamformer:
     el_spacing_min = np.deg2rad(5e-3)  # (rad)
     rg_spacing_min = 52.0  # (m)
 
-    # optional plotting of mag/phs EL patterns for debuging
+    # optional plotting of mag/phs EL patterns for debugging
     plot = False
 
     # absolute tolerances used for phase (deg) and magnitude (dB) errors,
@@ -157,7 +157,7 @@ class TestElevationBeamformer:
     attitude = _raw.getAttitude()
     slant_range = _raw.getRanges(freq_band, txrx_pol[0])
 
-    # pulse time tag used for forming active RX DBF and TX BMF EL paterns
+    # pulse time tag used for forming active RX DBF and TX BMF EL patterns
     # to be generated as either any subset of "pulse_time" or any values
     # within [pule_time[0], pulse_time[-1]].
     pulse_time_out = pulse_time[::3]

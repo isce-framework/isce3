@@ -77,7 +77,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         region. If the block is invalid, then no plot will be generated for
         that block.
     out_path : str, default='.'
-        Ouput directory for dumping PNG files, if `plot` is True.
+        Output directory for dumping PNG files, if `plot` is True.
     logger : logging.Logger, optional
         If not provided a logger with StreamHandler will be set.
 
@@ -347,7 +347,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                 f'{np.rad2deg(el_peak):.2f} (deg)')
     # Set the max EL angle for antenna patterns and the echo data.
     # For single-channel, the max EL angle shall be below peak location.
-    # Fo the sweepSAR case, the first peak (ripple) of the DBFed pattern
+    # For the sweepSAR case, the first peak (ripple) of the DBFed pattern
     # occurs somewhere between the peak of beam # 2 and # 3. It may or
     # may not be within desired leading edge in flight. Thus, the peak
     # of second beam along with a marigin is used to defined max EL angle
@@ -618,7 +618,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         # get echo for a subset of range bins for each azimuth block
         echo = raw_dset[s_rgl, :rgb_last]
         # replace bad values in place with some random with proper std given
-        # homogenous random scene
+        # homogeneous random scene
         replace_badval_echo(echo)
         # get 2-way power pattern from the echo
         p2w_echo, sr_echo, lka_echo, inc_echo, pf_echo = \
@@ -668,7 +668,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                 (0, rgb_last), valid_sbsw_all[:, s_rgl.stop - 1, :])
 
         # Convert look angles of echo to antenna EL angles via interpolation
-        # of exisiting (antenna EL -> off-nadir) arrays.
+        # of existing (antenna EL -> off-nadir) arrays.
         # Note that antenn EL/look angle has a wider coverage than that of echo
         # and it is monotonically sorted! Thus, "fill_value" is unnecessary.
         # Define a function (interpolation kernel) to evaluate EL angle (rad)
@@ -801,7 +801,7 @@ def ela_to_offnadir(el, quat, pos,  az_cut=0.0, frame=Frame(),
 def replace_badval_echo(echo, rnd_seed=10):
     """
     Replace bad values such as NaN or zero values by a Gaussian random noise
-    whose STD deteremined by std of non bad values per range line.
+    whose STD determined by std of non bad values per range line.
     The input array is modified in place.
 
     Parameters
@@ -814,7 +814,7 @@ def replace_badval_echo(echo, rnd_seed=10):
     Notes
     -----
     Invalid values, NaNs or zeros, are replaced by random values given each
-    range line contains homogenous clutter.
+    range line contains homogeneous clutter.
 
     """
     const_iq = 1. / np.sqrt(2.)

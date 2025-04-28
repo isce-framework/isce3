@@ -69,7 +69,7 @@ def corr_doppler_est(echo, prf, lag=1, axis=None):
     else:
         if axis > (echo.ndim - 1):
             raise np.AxisError(
-                f'axis {axis} is out of bound for dimenion {echo.ndim}')
+                f'axis {axis} is out of bound for dimension {echo.ndim}')
 
     if axis == 0:
         if echo.shape[0] < (lag + 1):
@@ -113,7 +113,7 @@ def sign_doppler_est(echo, prf, lag=1, axis=None):
         Lag of the correlator, a positive value.
     axis : None or int, optional
         Axis along which the correlator is perform.
-        If None it will be the firsr axis.
+        If None it will be the first axis.
 
     Returns
     -------
@@ -155,7 +155,7 @@ def sign_doppler_est(echo, prf, lag=1, axis=None):
     else:
         if axis > (echo.ndim - 1):
             raise np.AxisError(
-                f'axis {axis} is out of bound for dimenion {echo.ndim}')
+                f'axis {axis} is out of bound for dimension {echo.ndim}')
 
     sgn_i = _sgn(echo.real)
     sgn_q = _sgn(echo.imag)

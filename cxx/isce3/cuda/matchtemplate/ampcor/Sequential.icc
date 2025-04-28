@@ -945,7 +945,7 @@ _tgtRefine(cell_type * refinedArena) const
     int fwdIStride = 1;
     // the distance between tiles
     int fwdIDist = _refRefinedCells + _tgtRefinedCells;
-    // the destination of the forward FFT has indentical layout
+    // the destination of the forward FFT has identical layout
     int fwdOEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
     // the data is dense
     int fwdOStride = 1;

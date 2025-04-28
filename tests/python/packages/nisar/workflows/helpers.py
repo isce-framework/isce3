@@ -14,7 +14,7 @@ class TestDeepUpdate:
         # Test case 1
         # -----------------------------------------------------------------
         # The user doesn't provide a parameter (i.e., a field is completely
-        # ommited in the runconfig).
+        # omitted in the runconfig).
         # Test it with `flag_none_is_valid` equal to `True` and `False`
         # -----------------------------------------------------------------
         # Expected result:

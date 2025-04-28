@@ -257,7 +257,7 @@ class AntennaParser:
         # required EL spacing to be at least 20 mdeg
         el_spacing_min = np.deg2rad(20e-3)
         ant_el = self.el_cut_all(pol)
-        # check wether it is single beam or multiple beam
+        # check whether it is single beam or multiple beam
         num_beams = ant_el.copol_pattern.shape[0]
         if num_beams == 1:
             return None

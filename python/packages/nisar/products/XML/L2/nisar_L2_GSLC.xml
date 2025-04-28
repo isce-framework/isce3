@@ -3258,7 +3258,7 @@
     <shape name="numberOfInputTecFiles"
            order="slowest...fastest">
       <annotation app="conformance"
-                  lang="en">Number of input total electon content (TEC) files</annotation>
+                  lang="en">Number of input total electron content (TEC) files</annotation>
       <dimension extent="0"
                  name="numberOfInputTecFiles"/>
     </shape>

@@ -13,7 +13,7 @@ struct PolyfuncTest : public ::testing::Test {
 
     void SetUp() override
     {
-        // initialze the members
+        // initialize the members
         y_vals = get_y_vals(x_vals, pn_coef_3rd);
 
         // calculate std and mean of the input x_vals

@@ -75,7 +75,7 @@ class TestDopplerLutFromRaw:
     # frequency band 'A' or 'B'
     freq_band = 'A'
 
-    # abosulte MSE tolerance in Doppler centroid estimation in (Hz)
+    # absolute MSE tolerance in Doppler centroid estimation in (Hz)
     dop_cnt_err = 12.0
 
     # electrical boresight (EB) angle in (deg). EB along with residual

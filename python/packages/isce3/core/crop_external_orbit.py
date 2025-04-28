@@ -11,7 +11,7 @@ def crop_external_orbit(external_orbit_obj,
     external_orbit_obj : isce3.core.Orbit
         The external orbit object
     rslc_orbit_obj : isce3.core.Orbit
-        The RSLC interal orbit object
+        The RSLC internal orbit object
     npad : int
         The number of padding (default: 7)
 

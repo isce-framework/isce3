@@ -104,7 +104,7 @@ def test_run_winnipeg():
         gcov_doppler_centroid_lut = gcov_product.getDopplerCentroid()
         assert isinstance(gcov_doppler_centroid_lut, isce3.core.LUT2d)
 
-        # The GCOV Doppler Centroid LUT in radar coordiantes must match
+        # The GCOV Doppler Centroid LUT in radar coordinates must match
         # the RSLC Doppler Centroid LUT
         rslc_product = open_product(f'{iscetest.data}/winnipeg.h5')
         rslc_doppler_centroid_lut = rslc_product.getDopplerCentroid()

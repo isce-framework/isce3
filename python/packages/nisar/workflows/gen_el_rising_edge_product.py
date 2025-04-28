@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate El rising edge product from either DBFed SwwepSAR L0B (science mode)
-or a single-channel SAR over homogenous scene plus Antenna HDF5 plus
+or a single-channel SAR over homogeneous scene plus Antenna HDF5 plus
 [DEM raster]. The output will be used for pointing analyses by D&C team.
 The product spec is the same as that of `el_null_range`.
 """
