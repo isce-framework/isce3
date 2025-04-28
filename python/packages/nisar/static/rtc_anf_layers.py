@@ -5,7 +5,7 @@ from typing import NamedTuple
 
 import numpy as np
 
-from .util import transform_blockwise
+from .util import binary_transform_blockwise, unary_transform_blockwise
 
 import isce3
 from isce3.core import (
@@ -100,11 +100,11 @@ def compute_rtc_anf_layers(
         prefix="beta0_to_gamma0_factor",
     )
 
-    gamma0_to_sigma0_factor = make_scratch_gtiff(
+    beta0_to_sigma0_factor = make_scratch_gtiff(
         shape=(geo_grid.length, geo_grid.width),
         dtype=np.float32,
         dir_=scratch_dir,
-        prefix="gamma0_to_sigma0_factor",
+        prefix="beta0_to_sigma0_factor",
     )
 
     # Pass a dummy output RTC raster to avoid GeocodeCov creating this internally as an
@@ -117,7 +117,13 @@ def compute_rtc_anf_layers(
     )
 
     # XXX: Pass in input layover/shadow mask?
-    geocode.geocode(
+    # XXX: Should we have the option to provide azimuth and range correction LUTs?
+    # Geocode twice with different `output_terrain_radiometry` modes in order compute
+    # both gamma0-to-beta0 and gamma0-to-sigma0 conversion layers. The geocoding module
+    # has the capability to compute both layers in a single invocation, but this
+    # currently requires creating a large in-memory raster, which may cause
+    # out-of-memory errors on some systems.
+    kwargs = dict(
         radar_grid=radar_grid,
         input_raster=dummy_slc,
         output_raster=dummy_geocoded_cov,
@@ -125,13 +131,10 @@ def compute_rtc_anf_layers(
         output_mode=normalize_geocode_output_mode(output_mode),
         flag_apply_rtc=True,
         input_terrain_radiometry=RtcInputTerrainRadiometry.BETA_NAUGHT,
-        output_terrain_radiometry=RtcOutputTerrainRadiometry.GAMMA_NAUGHT,
         rtc_min_value_db=min_area_factor,
         rtc_upsampling=dem_upsample_factor,
         rtc_algorithm=normalize_rtc_algorithm(algorithm),
-        out_geo_rtc=beta0_to_gamma0_factor,
         rtc_area_beta_mode=normalize_rtc_area_beta_mode(area_beta_mode),
-        out_geo_rtc_gamma0_to_sigma0=gamma0_to_sigma0_factor,
         # az_time_correction=az_correction,
         # slant_range_correction=srg_correction,
         output_rtc=dummy_output_rtc,
@@ -139,6 +142,16 @@ def compute_rtc_anf_layers(
         min_block_size=min_block_size,
         max_block_size=max_block_size,
         dem_interp_method=normalize_data_interp_method(dem_interp_method),
+    )
+    geocode.geocode(
+        output_terrain_radiometry=RtcOutputTerrainRadiometry.GAMMA_NAUGHT,
+        out_geo_rtc=beta0_to_gamma0_factor,
+        **kwargs,
+    )
+    geocode.geocode(
+        output_terrain_radiometry=RtcOutputTerrainRadiometry.SIGMA_NAUGHT,
+        out_geo_rtc=beta0_to_sigma0_factor,
+        **kwargs,
     )
 
     gamma0_to_beta0_factor = make_scratch_gtiff(
@@ -148,7 +161,25 @@ def compute_rtc_anf_layers(
         prefix="gamma0_to_beta0_factor",
     )
 
-    transform_blockwise(np.reciprocal, beta0_to_gamma0_factor, gamma0_to_beta0_factor)
+    unary_transform_blockwise(
+        np.reciprocal,
+        beta0_to_gamma0_factor,
+        gamma0_to_beta0_factor,
+    )
+
+    gamma0_to_sigma0_factor = make_scratch_gtiff(
+        shape=(geo_grid.length, geo_grid.width),
+        dtype=np.float32,
+        dir_=scratch_dir,
+        prefix="gamma0_to_sigma0_factor",
+    )
+
+    binary_transform_blockwise(
+        np.divide,
+        beta0_to_sigma0_factor,
+        beta0_to_gamma0_factor,
+        gamma0_to_sigma0_factor,
+    )
 
     return StaticRTCLayers(
         gamma0_to_beta0_factor=gamma0_to_beta0_factor,

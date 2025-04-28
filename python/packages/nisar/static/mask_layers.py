@@ -20,7 +20,7 @@ from .util import (
     get_reference_ellipsoid,
     make_scratch_file,
     make_scratch_gtiff,
-    transform_blockwise,
+    unary_transform_blockwise,
 )
 
 
@@ -244,7 +244,7 @@ def binarize_and_reproject_water_mask(
     )
 
     # Convert the water mask to a binary mask.
-    transform_blockwise(lambda x: np.not_equal(x, 0), water_mask, binary_water_mask)
+    unary_transform_blockwise(lambda x: np.not_equal(x, 0), water_mask, binary_water_mask)
 
     # ...
     binary_water_mask.set_geotransform(water_mask.get_geotransform())

@@ -259,7 +259,7 @@ def copy_blockwise(
         dst[subblock] = src[subblock]
 
 
-def transform_blockwise(
+def unary_transform_blockwise(
     transform: Callable[[np.ndarray], np.ndarray],
     src: isce3.io.DatasetReader,
     dst: isce3.io.DatasetWriter,
@@ -272,3 +272,22 @@ def transform_blockwise(
 
     for subblock in BlockIterator(src.shape, chunks):
         dst[subblock] = transform(src[subblock])
+
+
+def binary_transform_blockwise(
+    transform: Callable[[np.ndarray, np.ndarray], np.ndarray],
+    src1: isce3.io.DatasetReader,
+    src2: isce3.io.DatasetReader,
+    dst: isce3.io.DatasetWriter,
+    *,
+    chunks: tuple[int, int] = (512, 512),
+) -> None:
+    """ """
+    shape = src1.shape
+    if src2.shape != shape:
+        raise ValueError  # FIXME
+    if dst.shape != shape:
+        raise ValueError  # FIXME
+
+    for subblock in BlockIterator(shape, chunks):
+        dst[subblock] = transform(src1[subblock], src2[subblock])
