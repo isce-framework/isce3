@@ -91,6 +91,8 @@ public:
      * in meters, as a function of azimuth and range
      * @param[in]  input_rtc           Input RTC area factor (in slant-range geometry).
      * @param[out] output_rtc          Output RTC area factor (in slant-range geometry).
+     * @param[out] output_rtc_sigma    Output RTC area factor to sigma-0
+     * (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -143,6 +145,7 @@ public:
             const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* output_rtc_sigma = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             std::optional<bool> apply_valid_samples_sub_swath_masking = std::nullopt,
@@ -194,6 +197,8 @@ public:
      * in meters, as a function of azimuth and range
      * @param[in]  input_rtc           Input RTC area factor (in slant-range geometry).
      * @param[out] output_rtc          Output RTC area factor (in slant-range geometry).
+     * @param[out] output_rtc_sigma    Output RTC area factor to sigma-0
+     * (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -237,6 +242,7 @@ public:
             const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* output_rtc_sigma = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             std::optional<bool> apply_valid_samples_sub_swath_masking = {},
@@ -295,6 +301,8 @@ public:
      * in meters, as a function of azimuth and range
      * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
      * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).
+     * @param[out] output_rtc_sigma    Output RTC area factor to sigma-0
+     * (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -345,6 +353,7 @@ public:
             const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* output_rtc_sigma = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             std::optional<bool> apply_valid_samples_sub_swath_masking = std::nullopt,
