@@ -51,6 +51,12 @@ void addbinding(py::class_<NFFT2d<T>>& pyNFFT2d)
             py::arg("m"), py::arg("sizes"), py::arg("fft_sizes"))
         .def("interp", &NFFT2d<T>::interp,
             py::arg("t"), py::arg("periodic") = true)
+        .def_property_readonly("spectrum", [](const NFFT2d<T>& self) {
+            const auto ptr = self.spectrum();
+            const auto dims = self.fft_sizes();
+            // property implies reference_internal return value policy
+            return py::array_t<std::complex<T>>(dims, ptr);
+        })
         ;
         // TODO more methods
 }
