@@ -258,9 +258,6 @@ setupPolarGridForPulses(
         in_geometry.orbit().interpolate(&pos[i], &vel[i], t);
     }
 
-    // Use mean position as origin of polar grid.
-    const Vec3 origin = vector_mean(pos);
-
     // For the along-track axis we could fit a line to the positions, or use the
     // dominant eigenvector of the position sample covariance.  But the average
     // velocity is probably about the same and simpler to compute.
@@ -272,9 +269,47 @@ setupPolarGridForPulses(
     const auto fc = c / in_geometry.wavelength();
     const auto slant_range = in_geometry.slantRange();
 
+    // Our polar data structures use a constant Doppler centroid (DC) vs range.
+    // If we have some DC variation over the swath, we'll increase the Doppler
+    // bandwidth enough to accommodate it.  Later we can mask out the pixels
+    // outside the desired azimuth band if desired.
+    // We will assume the DC is stable over the slow-time span of the pulses.
+    const auto
+        r0 = slant_range.first(),
+        r1 = slant_range.last(),
+        t0 = azimuth_time[0],
+        t1 = azimuth_time[nt - 1],
+        tmid = (t0 + t1) / 2,
+        dop2q = c / (fc * 2 * vs);
+
+    auto q0 = in_geometry.doppler().eval(tmid, r0) * dop2q;
+    auto q1 = q0;
+    for (int i = 1; i < num_doppler_eval; ++i) {
+        const auto ri = r0 + i * (r1 - r0) / (num_doppler_eval - 1);
+        const auto qi = in_geometry.doppler().eval(tmid, ri) * dop2q;
+        q0 = std::min(q0, qi);
+        q1 = std::max(q1, qi);
+    }
+    auto qmid = (q0 + q1) / 2;
+    auto qspan = (q1 - q0) + c / (fc * 2 * azimuth_resolution);
+
+    // Use mean position as origin of polar grid.
+    Vec3 origin = vector_mean(pos);
+
+    // Bistatic correction, roughly 22 m for NISAR-like geometry (many pulses).
+    // If neglected causes a noticeable spectral shift for short apertures
+    // that can mess up baseband interpolation.
+    const auto rmid = (r0 + r1) / 2;
+    const auto ds_dr = vs / (c - qmid * vs);
+    origin += rmid * ds_dr * axis;
+
+    // Depends on range, so adjust aperture duration by variation in shift.
+    // This will cause a higher sample rate and hopefully avoid aliasing.
+    // Roughly 4 m for NISAR-like geometry (one pulse, almost negligible).
+    const auto duration = (t1 - t0) + (r1 - r0) * ds_dr / vs;
+
     // Yegulalp, Eq. (11) and (12)
     const auto tq = getPolarAngleTimeConstant(fc, vs, range_bandwidth, c);
-    const auto duration = azimuth_time[nt - 1] - azimuth_time[0];
     auto dq = tq / (duration * oversample_azimuth);
     auto dr = c / (2 * range_bandwidth * oversample_range);
 
@@ -288,27 +323,6 @@ setupPolarGridForPulses(
         dq = dq_min;
     }
 
-    // Our polar data structures use a constant Doppler centroid (DC) vs range.
-    // If we have some DC variation over the swath, we'll increase the Doppler
-    // bandwidth enough to accommodate it.  Later we can mask out the pixels
-    // outside the desired azimuth band if desired.
-    // We will assume the DC is stable over the slow-time span of the pulses.
-    const auto
-        tmid = (azimuth_time[0] + azimuth_time[nt - 1]) / 2,
-        r0 = slant_range.first(),
-        r1 = slant_range.last(),
-        dop2q = c / (fc * 2 * vs);
-    auto q0 = in_geometry.doppler().eval(tmid, r0) * dop2q;
-    auto q1 = q0;
-    for (int i = 1; i < num_doppler_eval; ++i) {
-        const auto ri = r0 + i * (r1 - r0) / (num_doppler_eval - 1);
-        const auto qi = in_geometry.doppler().eval(tmid, ri) * dop2q;
-        q0 = std::min(q0, qi);
-        q1 = std::max(q1, qi);
-    }
-    auto qmid = (q0 + q1) / 2;
-    auto qspan = (q1 - q0) + c / (fc * 2 * azimuth_resolution);
-
     int nr = 1 + static_cast<int>(std::ceil((r1 - r0) / dr));
     int nq = 1 + static_cast<int>(std::ceil(qspan / dq));
 
@@ -320,7 +334,7 @@ setupPolarGridForPulses(
         dq = qspan / nq;  // possibly smaller than dq_min
     }
 
-    auto pgrid = PolarGrid{azimuth_time[0], azimuth_time[nt - 1],
+    auto pgrid = PolarGrid{t0, t1,
         origin, axis, Linspace<double>(r0, dr, nr),
         Linspace<double>(qmid - dq * (nq - 1) / 2, dq, nq),
         in_geometry.lookSide()};
@@ -363,7 +377,7 @@ backprojectFirstStage(
     std::tie(out_grid, pos, vel) = setupPolarGridForPulses(in_geometry,
         in_azimuth_time,
         range_bandwidth, ds, oversample_range,
-        oversample_azimuth, 2, true);
+        oversample_azimuth, 2, false);
 
     const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
     auto height = std::make_unique<float[]>(npix);
