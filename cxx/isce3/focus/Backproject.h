@@ -124,8 +124,7 @@ setupPolarGridForPulses(
         double range_bandwidth,
         double azimuth_resolution,
         double oversample_range = 1.2, double oversample_azimuth = 1.2,
-        int num_doppler_eval = 2,
-        bool densify_for_fast_transforms = false);
+        int num_doppler_eval = 2);
 
 /**
  * @brief Create polar grid capable of sampling data from all input grids.

@@ -246,8 +246,7 @@ setupPolarGridForPulses(
         double range_bandwidth,
         double azimuth_resolution,
         double oversample_range, double oversample_azimuth,
-        int num_doppler_eval,
-        bool densify_for_fast_transforms)
+        int num_doppler_eval)
 {
     // Interpolate platform position & velocity at each pulse
     const auto nt = azimuth_time.size();
@@ -326,14 +325,6 @@ setupPolarGridForPulses(
     int nr = 1 + static_cast<int>(std::ceil((r1 - r0) / dr));
     int nq = 1 + static_cast<int>(std::ceil(qspan / dq));
 
-    // adjust spacing so we end up with a fast FFT sizes
-    if (densify_for_fast_transforms) {
-        nr = nextFastPower(nr);
-        nq = nextFastPower(nq);
-        dr = (r1 - r0) / nr;
-        dq = qspan / nq;  // possibly smaller than dq_min
-    }
-
     auto pgrid = PolarGrid{t0, t1,
         origin, axis, Linspace<double>(r0, dr, nr),
         Linspace<double>(qmid - dq * (nq - 1) / 2, dq, nq),
@@ -377,7 +368,7 @@ backprojectFirstStage(
     std::tie(out_grid, pos, vel) = setupPolarGridForPulses(in_geometry,
         in_azimuth_time,
         range_bandwidth, ds, oversample_range,
-        oversample_azimuth, 2, false);
+        oversample_azimuth, 2);
 
     const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
     auto height = std::make_unique<float[]>(npix);

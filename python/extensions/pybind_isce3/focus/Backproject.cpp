@@ -248,8 +248,7 @@ void addbinding_backproject(py::module& m)
         py::arg("azimuth_resolution"),
         py::arg("oversample_range") = 1.2,
         py::arg("oversample_azimuth") = 1.2,
-        py::arg("num_doppler_eval") = 2,
-        py::arg("densify_for_fast_transform") = false);
+        py::arg("num_doppler_eval") = 2);
 
     m.def("get_polar_angle_time_constant", &getPolarAngleTimeConstant,
         R"(
