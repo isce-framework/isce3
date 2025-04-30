@@ -1660,7 +1660,8 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
 
     log.info("Computing NFFT transforms of sub-images")
     nfft2d_params = nfft_params_dict(stage.interpolation)
-    image_interpolators = [isce3.signal.make_image_nfft2d(image, nfft2d_params)
+    image_interpolators = [
+        isce3.signal.make_image_nfft2d(image, nfft2d_params, pad_input=True)
         for image in images]
 
     num_middle_stages = len(factors[1:])
@@ -1697,7 +1698,8 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
 
         log.info(f"Computing NFFT transforms for stage {i_stage + 1}")
         nfft2d_params = nfft_params_dict(stage.interpolation)
-        image_interpolators = [isce3.signal.make_image_nfft2d(image, nfft2d_params)
+        image_interpolators = [
+            isce3.signal.make_image_nfft2d(image, nfft2d_params, pad_input=True)
             for image in images_out]
         grids = grids_out
 
