@@ -1626,6 +1626,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
 
     # focus to intermediate grids
     aztimes = np.array(rc_grid.sensing_times)
+    pris = np.hstack((np.diff(aztimes), aztimes[-1] - aztimes[-2]))
     results = []
     stage = factors[0]
     pulse_starts = range(0, rc_grid.length, stage.size)
@@ -1643,7 +1644,8 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         iblock = i // stage.size
         log.info(f"Computing initial factorization {iblock + 1} of {nblocks}")
         polar_grid, x, v = isce3.focus.setup_polar_grid_for_pulses(fgeom, ti,
-            bandwidth, azres, stage.oversample_range, stage.oversample_azimuth)
+            bandwidth, azres, stage.oversample_range, stage.oversample_azimuth,
+            pri=pris[pulses][-1])
         err, img, hgt = isce3.focus.backproject_to_polar_grid(
             fdata, fgrid.slant_ranges, x, v, polar_grid, dem, fc, kernel,
             atmos, rdr2geo_params)
@@ -1712,7 +1714,6 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
                             rc_grid.sensing_start, rc_grid.sensing_stop):
             log.info(f"Skipping inactive azcomp block at {description}")
             continue
-        log.info(f"Azcomp final sums for block at {description}")
         isneeded = [(t1 > grid.aztime_start) and (t0 <= grid.aztime_end)
             for grid in grids]
         assert len(grids) == len(image_interpolators)

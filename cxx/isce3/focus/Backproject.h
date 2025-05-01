@@ -52,7 +52,7 @@ backproject(std::complex<float>* out,
 
 
 struct PolarGrid {
-    double aztime_start, aztime_end;
+    double aztime_start, aztime_end;  // end is one PRI past last pulse
     isce3::core::Vec3 origin, axis;
     isce3::core::Linspace<double> range;
     isce3::core::Linspace<double> sin_squint;
@@ -124,7 +124,7 @@ setupPolarGridForPulses(
         double range_bandwidth,
         double azimuth_resolution,
         double oversample_range = 1.2, double oversample_azimuth = 1.2,
-        int num_doppler_eval = 2);
+        int num_doppler_eval = 2, std::optional<double> pri = std::nullopt);
 
 /**
  * @brief Create polar grid capable of sampling data from all input grids.

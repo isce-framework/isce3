@@ -232,6 +232,10 @@ void addbinding_backproject(py::module& m)
             Whether to increase the sample rate to achieve grid dimensions that
             are products of small prime factors (good for FFTs).
             Default = False
+        pri : float, optional
+            Pulse repetition interval in s.  If variable, provide the PRI
+            between the last pulse and the next one.  If not provided the
+            average PRI will be used.
 
         Returns
         -------
@@ -248,7 +252,8 @@ void addbinding_backproject(py::module& m)
         py::arg("azimuth_resolution"),
         py::arg("oversample_range") = 1.2,
         py::arg("oversample_azimuth") = 1.2,
-        py::arg("num_doppler_eval") = 2);
+        py::arg("num_doppler_eval") = 2,
+        py::arg("pri") = py::none());
 
     m.def("get_polar_angle_time_constant", &getPolarAngleTimeConstant,
         R"(

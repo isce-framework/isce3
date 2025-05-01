@@ -246,7 +246,7 @@ setupPolarGridForPulses(
         double range_bandwidth,
         double azimuth_resolution,
         double oversample_range, double oversample_azimuth,
-        int num_doppler_eval)
+        int num_doppler_eval, std::optional<double> pri)
 {
     // Interpolate platform position & velocity at each pulse
     const auto nt = azimuth_time.size();
@@ -279,7 +279,8 @@ setupPolarGridForPulses(
         t0 = azimuth_time[0],
         t1 = azimuth_time[nt - 1],
         tmid = (t0 + t1) / 2,
-        dop2q = c / (fc * 2 * vs);
+        dop2q = c / (fc * 2 * vs),
+        pri_ = pri.value_or((t1 - t0) / (nt - 1));
 
     auto q0 = in_geometry.doppler().eval(tmid, r0) * dop2q;
     auto q1 = q0;
@@ -305,7 +306,7 @@ setupPolarGridForPulses(
     // Depends on range, so adjust aperture duration by variation in shift.
     // This will cause a higher sample rate and hopefully avoid aliasing.
     // Roughly 4 m for NISAR-like geometry (one pulse, almost negligible).
-    const auto duration = (t1 - t0) + (r1 - r0) * ds_dr / vs;
+    const auto duration = (t1 - t0 + pri_) + (r1 - r0) * ds_dr / vs;
 
     // Yegulalp, Eq. (11) and (12)
     const auto tq = getPolarAngleTimeConstant(fc, vs, range_bandwidth, c);
@@ -325,7 +326,7 @@ setupPolarGridForPulses(
     int nr = 1 + static_cast<int>(std::ceil((r1 - r0) / dr));
     int nq = 1 + static_cast<int>(std::ceil(qspan / dq));
 
-    auto pgrid = PolarGrid{t0, t1,
+    auto pgrid = PolarGrid{t0, t1 + pri_,
         origin, axis, Linspace<double>(r0, dr, nr),
         Linspace<double>(qmid - dq * (nq - 1) / 2, dq, nq),
         in_geometry.lookSide()};
@@ -473,7 +474,7 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     const auto look_side = grids[0].look_side;
 
     for (const auto& grid : grids) {
-        const auto duration = grid.aztime_end - grid.aztime_start;  // + PRI ??
+        const auto duration = grid.aztime_end - grid.aztime_start;
         sum_durations += duration;
         t_min = std::min(t_min, grid.aztime_start);  // assume start > end
         t_max = std::max(t_max, grid.aztime_end);  // assume start > end
