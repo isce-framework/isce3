@@ -669,7 +669,7 @@ void mergePolarImages(
 // For now structure like backproject() with inner loop on target.
 // Might make more sense to project on image at a time instead.
 ErrorCode
-backprojectFinalStage(std::complex<float>* out,
+accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const RadarGeometry& out_geometry,
         const isce3::core::Orbit& in_orbit,
         const isce3::core::LUT2d<double>& in_doppler,

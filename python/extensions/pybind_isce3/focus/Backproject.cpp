@@ -394,7 +394,7 @@ void addbinding_backproject(py::module& m)
         py::arg("az_block_size") = 1024
     );
 
-    m.def("backproject_final_stage", [](
+    m.def("accumulate_polar_images_to_radar_grid", [](
                 py::array_t<std::complex<float>, py::array::c_style> out,
                 const RadarGeometry& out_geometry,
                 const isce3::core::Orbit& in_orbit,
@@ -445,9 +445,9 @@ void addbinding_backproject(py::module& m)
             ErrorCode err;
             {
                 py::gil_scoped_release release;
-                err = backprojectFinalStage(out_data, out_geometry, in_orbit,
-                    in_doppler, grids, image_interpolators, dem, fc, ds,
-                    r2gparams, g2rparams, height_data);
+                err = accumulatePolarImagesToRadarGrid(out_data, out_geometry,
+                    in_orbit, in_doppler, grids, image_interpolators, dem, fc,
+                    ds, r2gparams, g2rparams, height_data);
             }
             // TODO bind ErrorCode class.  For now return nonzero on failure.
             return err != ErrorCode::Success;

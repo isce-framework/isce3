@@ -1726,7 +1726,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         hgt = height[block] if height is not None else None
         log.info(f"Azcomp final sums for block at {description} using "
             f"{len(active_images)} sub-apertures")
-        err = isce3.focus.backproject_final_stage(
+        err = isce3.focus.accumulate_polar_images_to_radar_grid(
             z, ogeom, igeom.orbit, igeom.doppler, active_grids, active_images,
             dem, fc, azres, rdr2geo_params, geo2rdr_params, hgt)
         if err:

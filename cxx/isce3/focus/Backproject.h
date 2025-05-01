@@ -79,7 +79,7 @@ backprojectToPolarGrid(const std::complex<float>* in,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {});
 
 isce3::error::ErrorCode
-backprojectFinalStage(std::complex<float>* out,
+accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const isce3::container::RadarGeometry& out_geometry,
         const isce3::core::Orbit& in_orbit,
         const isce3::core::LUT2d<double>& in_doppler,
