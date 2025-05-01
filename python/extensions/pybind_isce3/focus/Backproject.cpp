@@ -228,10 +228,6 @@ void addbinding_backproject(py::module& m)
         num_doppler_eval : int, optional
             Number of points across swath to evaluate Doppler centroid to
             bound the variation of the centroid.  Default = 2
-        densify_for_fast_transform : bool, optional
-            Whether to increase the sample rate to achieve grid dimensions that
-            are products of small prime factors (good for FFTs).
-            Default = False
         pri : float, optional
             Pulse repetition interval in s.  If variable, provide the PRI
             between the last pulse and the next one.  If not provided the
