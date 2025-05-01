@@ -134,6 +134,19 @@ def get_output_geo_grid(
     )
 
 
+def truncate_datetime_to_integer_seconds(t: isce3.core.DateTime) -> isce3.core.DateTime:
+    """ """
+    return isce3.core.DateTime(
+        year=t.year,
+        month=t.month,
+        day=t.day,
+        hour=t.hour,
+        minute=t.minute,
+        second=t.second,
+        frac=0.0,
+    )
+
+
 def get_cropped_orbit_and_attitude(
     orbit_xml_file: str | os.PathLike,
     pointing_xml_file: str | os.PathLike,
@@ -183,8 +196,13 @@ def get_cropped_orbit_and_attitude(
     # Crop attitude. Need at least 2 points for slerp.
     attitude_cropped = attitude_full.crop(start_time, end_time, npad=1)
 
-    # Ensure the orbit & attitude have the same reference epoch.
+    # Ensure the reference epoch has integer seconds precision.
     epoch = orbit_cropped.reference_epoch
+    if epoch.frac != 0.0:
+        epoch = truncate_datetime_to_integer_seconds(epoch)
+        orbit_cropped.update_reference_epoch(epoch)
+
+    # Ensure the orbit & attitude have the same reference epoch.
     if attitude_cropped.reference_epoch != epoch:
         attitude_cropped.update_reference_epoch(epoch)
 
