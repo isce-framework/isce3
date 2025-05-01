@@ -334,21 +334,22 @@ setupPolarGridForPulses(
 }
 
 
-std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
-backprojectFirstStage(
-        const std::complex<float>* in, const RadarGeometry& in_geometry,
-        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
-        double range_bandwidth,
-        const DEMInterpolator& dem, double fc, double ds,
+std::tuple<ErrorCode, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
+backprojectToPolarGrid(
+        const std::complex<float>* in, const Linspace<double>& in_slant_range,
+        const std::vector<Vec3>& pos,
+        const std::vector<Vec3>& vel,
+        const PolarGrid& out_grid,
+        const DEMInterpolator& dem, double fc,
         const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
-        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
-        double oversample_range, double oversample_azimuth)
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
 {
     using isce3::geometry::detail::polar2geo_bracket;
 
-    if (in_azimuth_time.size() < 2) {
+    const auto nt = pos.size();
+    if (vel.size() != nt) {
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "require at least two pulses in initial FBP stage");
+            "require same number of position and velocity vectors");
     }
 
     static constexpr double c = isce3::core::speed_of_light;
@@ -362,20 +363,11 @@ backprojectFirstStage(
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
     }
 
-    // awful hacks for clang https://godbolt.org/z/6rrThhK3W
-    PolarGrid out_grid {0.0, 0.0, {0,0,0}, {1,0,0}, {}, {}, {}};
-    std::vector<Vec3> pos, vel;
-    std::tie(out_grid, pos, vel) = setupPolarGridForPulses(in_geometry,
-        in_azimuth_time,
-        range_bandwidth, ds, oversample_range,
-        oversample_azimuth, 2);
-
     const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
     auto height = std::make_unique<float[]>(npix);
     auto out = std::make_unique<std::complex<float>[]>(npix);
 
     // range sampling window
-    auto in_slant_range = in_geometry.slantRange();
     double swst = 2. * in_slant_range.first() / c;
     double dtau = 2. * in_slant_range.spacing() / c;
     int nr = in_slant_range.size();
@@ -404,7 +396,7 @@ backprojectFirstStage(
 
                 const auto status = polar2geo_bracket(&x, &look_angle,
                         out_grid.origin, out_grid.axis, r, q, c, dem, ellipsoid,
-                        in_geometry.lookSide(), r2g_params);
+                        out_grid.look_side, r2g_params);
 
                 llh = ellipsoid.xyzToLonLat(x);
                 height[j * out_grid.width() + i] = llh[2];
@@ -424,7 +416,7 @@ backprojectFirstStage(
             }
 
             // TODO range-dependent Doppler mask?
-            int kstart = 0, kstop = in_geometry.gridLength();
+            int kstart = 0, kstop = static_cast<int>(nt);
 
             // integrate pulses
             out[j * out_grid.width() + i] =
@@ -446,7 +438,7 @@ backprojectFirstStage(
 
     auto status =
             all_converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
-    return std::make_tuple(status, out_grid, std::move(out), std::move(height));
+    return std::make_tuple(status, std::move(out), std::move(height));
 }
 
 PolarGrid

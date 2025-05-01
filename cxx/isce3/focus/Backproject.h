@@ -65,18 +65,18 @@ struct PolarGrid {
 };
 
 std::tuple<isce3::error::ErrorCode,
-        PolarGrid,
         std::unique_ptr<std::complex<float>[]>,
         std::unique_ptr<float[]>>
-backprojectFirstStage(const std::complex<float>* in,
-        const isce3::container::RadarGeometry& in_geometry,
-        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
-        double range_bandwidth,
-        const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
+backprojectToPolarGrid(const std::complex<float>* in,
+        const isce3::core::Linspace<double>& in_slant_range,
+        const std::vector<isce3::core::Vec3>& pos,
+        const std::vector<isce3::core::Vec3>& vel,
+        const PolarGrid& out_grid,
+        const isce3::geometry::DEMInterpolator& dem,
+        double fc,
         const isce3::core::Kernel<float>& kernel,
         DryTroposphereModel dry_tropo_model,
-        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
-        double oversample_range = 1.2, double oversample_azimuth = 1.2);
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {});
 
 isce3::error::ErrorCode
 backprojectFinalStage(std::complex<float>* out,

@@ -285,47 +285,46 @@ void addbinding_backproject(py::module& m)
         py::arg("bandwidth") = 0.0,
         py::arg("c") = isce3::core::speed_of_light);
 
-    m.def("backproject_first_stage", [](
+    m.def("backproject_to_polar_grid", [](
                 const py::array_t<std::complex<float>, py::array::c_style> in,
-                const RadarGeometry& in_geometry,
-                const py::array_t<double>& in_azimuth_time,
-                double range_bandwidth,
+                const isce3::core::Linspace<double>& in_slant_range,
+                const std::vector<isce3::core::Vec3>& pos,
+                const std::vector<isce3::core::Vec3>& vel,
+                const PolarGrid& grid,
                 const DEMInterpolator& dem,
                 double fc,
-                double ds,
                 const Kernel<float>& kernel,
                 const std::string& dry_tropo_model,
-                py::dict rdr2geo_params,
-                double oversample_range,
-                double oversample_azimuth) {
+                py::dict rdr2geo_params) {
 
             if (in.ndim() != 2) {
                 throw InvalidArgument(ISCE_SRCINFO(), "input signal data must be 2-D");
             }
 
-            if (in.shape()[0] != in_geometry.gridLength() or
-                in.shape()[1] != in_geometry.gridWidth()) {
+            if (in.shape()[0] != pos.size() or
+                in.shape()[1] != in_slant_range.size()) {
 
                 std::string errmsg = "input signal data shape must match "
                     "input radar grid shape";
                 throw InvalidArgument(ISCE_SRCINFO(), errmsg);
             }
 
+            if (pos.size() != vel.size()) {
+                throw InvalidArgument(ISCE_SRCINFO(), "must provide same "
+                    "number of position and velocity vectors");
+            }
+
             DryTroposphereModel atm = parseDryTropoModel(dry_tropo_model);
 
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
 
-            const auto aztime = Eigen::Map<const Eigen::VectorXd>(
-                in_azimuth_time.data(), in_azimuth_time.size());
-
             const std::complex<float>* in_data = in.data();
 
-            auto [err, grid, outp, heightp] = [&]() {
+            auto [err, outp, heightp] = [&]() {
                 py::gil_scoped_release release;
-                return isce3::focus::backprojectFirstStage(in_data,
-                    in_geometry, aztime, range_bandwidth,
-                    dem, fc, ds, kernel, atm, r2gparams,
-                    oversample_range, oversample_azimuth);
+                return isce3::focus::backprojectToPolarGrid(in_data,
+                    in_slant_range, pos, vel, grid,
+                    dem, fc, kernel, atm, r2gparams);
             }();
 
             // TODO bind ErrorCode class.  For now return nonzero on failure.
@@ -345,17 +344,15 @@ void addbinding_backproject(py::module& m)
                 Focus in azimuth via time-domain backprojection.
             )",
             py::arg("in"),
-            py::arg("in_geometry"),
-            py::arg("in_azimuth_time"),
-            py::arg("range_bandwidth"),
+            py::arg("in_slant_range"),
+            py::arg("position"),
+            py::arg("velocity"),
+            py::arg("out_grid"),
             py::arg("dem"),
             py::arg("fc"),
-            py::arg("ds"),
             py::arg("kernel"),
             py::arg("dry_tropo_model") = "tsx",
-            py::arg("rdr2geo_params") = py::dict(),
-            py::arg("oversample_range") = 1.2,
-            py::arg("oversample_azimuth") = 1.2);
+            py::arg("rdr2geo_params") = py::dict());
 
     m.def("merge_polar_grids", [](const std::vector<PolarGrid>& grids,
                                   const DEMInterpolator& dem,

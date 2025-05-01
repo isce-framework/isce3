@@ -1642,17 +1642,18 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         fdata = rcdata[pulses, :]
         iblock = i // stage.size
         log.info(f"Computing initial factorization {iblock} of {nblocks}")
-        err, pgrid, img, hgt = isce3.focus.backproject_first_stage(
-            fdata, fgeom, ti, bandwidth, dem, fc, azres, kernel,
-            atmos, rdr2geo_params, stage.oversample_range,
-            stage.oversample_azimuth)
-        results.append((err, pgrid, img, hgt))
+        polar_grid, x, v = isce3.focus.setup_polar_grid_for_pulses(fgeom, ti,
+            bandwidth, azres, stage.oversample_range, stage.oversample_azimuth)
+        err, img, hgt = isce3.focus.backproject_to_polar_grid(
+            fdata, fgrid.slant_ranges, x, v, polar_grid, dem, fc, kernel,
+            atmos, rdr2geo_params)
+        results.append((err, polar_grid, img, hgt))
 
         if debugfile is not None:
             log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
             with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
                 g = h5.require_group(f"stage_00/block_{iblock:06d}")
-                isce3.focus.save_polar_image_to_h5(img, pgrid, g)
+                isce3.focus.save_polar_image_to_h5(img, polar_grid, g)
 
     # pull out sub-image grids
     grids = [result[1] for result in results]
