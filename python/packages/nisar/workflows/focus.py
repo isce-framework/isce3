@@ -1641,7 +1641,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
         iblock = i // stage.size
-        log.info(f"Computing initial factorization {iblock} of {nblocks}")
+        log.info(f"Computing initial factorization {iblock + 1} of {nblocks}")
         polar_grid, x, v = isce3.focus.setup_polar_grid_for_pulses(fgeom, ti,
             bandwidth, azres, stage.oversample_range, stage.oversample_azimuth)
         err, img, hgt = isce3.focus.backproject_to_polar_grid(
@@ -1680,7 +1680,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         for i in input_block_starts:
             i_block = i // stage.size
             log.info(f"Merging polar images stage {stage_description}"
-                f" block {i_block} / {nblocks}")
+                f" block {i_block + 1} / {nblocks}")
             mask = slice(i, i + stage.size)
             my_grid = isce3.focus.merge_polar_grids(grids[mask], dem,
                 rdr2geo_params, dq_min, tq)
@@ -1723,6 +1723,8 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         ogeom = isce3.container.RadarGeometry(bgrid, igeom.orbit, zerodop)
         z = np.zeros(bgrid.shape, 'c8')
         hgt = height[block] if height is not None else None
+        log.info(f"Azcomp final sums for block at {description} using "
+            f"{len(active_images)} sub-apertures")
         err = isce3.focus.backproject_final_stage(
             z, ogeom, igeom.orbit, igeom.doppler, active_grids, active_images,
             dem, fc, azres, rdr2geo_params, geo2rdr_params, hgt)
