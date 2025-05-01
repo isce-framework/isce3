@@ -39,7 +39,7 @@ def processing_center_to_char_code(processing_center: str) -> str:
 def form_granule_id(
     *,
     mission_id: str,
-    band: str,
+    radar_band: str,
     product_level: int,
     product_type: str,
     relative_orbit_number: int,
@@ -59,7 +59,7 @@ def form_granule_id(
     )
     return template.substitute(
         MISSION=mission_id,
-        I=band,
+        I=radar_band,
         L=product_level,
         PROD=product_type,
         REL=int_to_3_digit_string(relative_orbit_number),

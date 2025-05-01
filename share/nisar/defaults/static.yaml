@@ -110,7 +110,8 @@ runconfig:
       # Defaults to 'LSAR'.
       instrument_name: LSAR
       # [OPTIONAL] Radio frequency band.
-      # Used to form the granule ID.
+      # Used to form the granule ID and populate the
+      # '/science/{L,S}SAR/identification/radarBand' dataset in the output product.
       # Defaults to 'L'.
       radar_band: L
       # [OPTIONAL] Data processing center.

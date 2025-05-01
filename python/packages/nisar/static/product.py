@@ -113,6 +113,7 @@ def populate_identification_group(
     mission_id: str,
     platform_name: str,
     instrument_name: str,
+    radar_band: str,
     processing_center: str,
     processing_type: str,
     product_type: str,
@@ -152,6 +153,7 @@ def populate_identification_group(
     create_identification_dataset("missionId", mission_id)
     create_identification_dataset("platformName", platform_name)
     create_identification_dataset("instrumentName", instrument_name)
+    create_identification_dataset("radarBand", radar_band)
     create_identification_dataset("processingCenter", processing_center)
     create_identification_dataset("processingType", processing_type)
     create_identification_dataset("productType", product_type)

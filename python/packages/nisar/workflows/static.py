@@ -444,24 +444,24 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         # ...
         orbit_pass_direction = isce3.core.get_orbit_pass_direction(orbit)
 
-        # Pop 'validity_start_datetime', 'radar_band', and 'product_counter' from the
-        # dict. These parameters are used to form the granule ID but don't correspond to
-        # any Datasets in the `identification' Group of the product. The other dict
-        # contents will be passed as keyword arguments to
+        # Pop 'product_counter' from the dict. This parameter is used to form the
+        # granule ID but doesn't correspond to any Dataset in the `identification' Group
+        # of the product. The other dict contents will be passed as keyword arguments to
         # `populate_identification_group()` below.
-        validity_start_datetime = primary_executable_params.pop("validity_start_datetime")
-        radar_band = primary_executable_params.pop("radar_band")
         product_counter = primary_executable_params.pop("product_counter")
 
-        # `ruamel.yaml` parses non-quoted datetime-like strings as `datetime.datetime`
-        # objects. If that happened, convert it to a datetime string in ISO 8601 format.
+        # Get `validity_start_datetime` from the input parameters as a
+        # `datetime.datetime` object. If it was passed as a non-quoted string in ISO
+        # 8601 format, `ruamel.yaml` will have already converted it. Otherwise, manually
+        # convert it here.
+        validity_start_datetime = primary_executable_params.pop("validity_start_datetime")
         if not isinstance(validity_start_datetime, datetime):
             validity_start_datetime = datetime.fromisoformat(validity_start_datetime)
 
         # ...
         granule_id = form_granule_id(
             mission_id=primary_executable_params["mission_id"],
-            band=radar_band,
+            radar_band=primary_executable_params["radar_band"],
             product_level=2,
             product_type="STATIC",
             orbit_pass_direction=orbit_pass_direction,
