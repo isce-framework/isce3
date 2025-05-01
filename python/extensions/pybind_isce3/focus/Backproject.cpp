@@ -338,7 +338,7 @@ void addbinding_backproject(py::module& m)
             auto height = py::array_t<float>(
                 {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
                 heightp.release());
-            return std::make_tuple(status, grid, out, height);
+            return std::make_tuple(status, out, height);
             },
             R"(
                 Focus in azimuth via time-domain backprojection.
