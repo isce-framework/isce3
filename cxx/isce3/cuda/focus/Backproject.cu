@@ -854,21 +854,26 @@ private:
 #define ISCE3_FBP_TIMING(x)  // no-op
 #endif
 
-
 template<class Kernel>
-std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
-backprojectFirstStage(
-        const std::complex<float>* in, const HostRadarGeometry& in_geometry,
-        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
-        double range_bandwidth,
-        DeviceDEMInterpolator& dem, double fc, double ds,
+std::tuple<ErrorCode, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
+backprojectToPolarGrid(
+        const std::complex<float>* in,
+        const Linspace<double>& in_slant_range,
+        const std::vector<Vec3>& pos,
+        const std::vector<Vec3>& vel,
+        const PolarGrid& out_grid,
+        DeviceDEMInterpolator& dem, double fc,
         const Kernel& kernel, DryTroposphereModel dry_tropo_model,
-        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
-        double oversample_range, double oversample_azimuth)
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
 {
-    if (in_azimuth_time.size() < 2) {
+    const auto nt = static_cast<int>(pos.size());
+    if (nt < 2) {
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "require at least two pulses in FBP stage1");
+            "require at least two pulses in FBP stage");
+    }
+    if (vel.size() != nt) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "require same number of position and velocity vectors");
     }
 
     static constexpr double c = isce3::core::speed_of_light;
@@ -881,21 +886,9 @@ backprojectFirstStage(
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
     }
 
-    // get input & output radar grid azimuth time & slant range
-    Linspace<double> in_slant_range = in_geometry.slantRange();
-
     ISCE3_FBP_TIMING(
-        auto timing = TimingReporter("isce3.cuda.focus.backprojectFirstStage");)
-
-    // awful hacks for clang https://godbolt.org/z/6rrThhK3W
-    PolarGrid out_grid {0.0, 0.0, {0,0,0}, {1,0,0}, {}, {}, {}};
-    std::vector<Vec3> pos, vel;
-    std::tie(out_grid, pos, vel) = setupPolarGridForPulses(in_geometry,
-        in_azimuth_time,
-        range_bandwidth, ds, oversample_range,
-        oversample_azimuth, 2, true);
-
-    ISCE3_FBP_TIMING(timing.report("polar grid");)
+        auto timing = TimingReporter("isce3.cuda.focus.backprojectToPolarGrid");
+    )
 
     const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
     auto height = std::make_unique<float[]>(npix);
@@ -922,7 +915,7 @@ backprojectFirstStage(
 
         runPolar2Geo<<<grid, block>>>(x.data().get(), out_grid,
                                     dem, ellipsoid,
-                                    in_geometry.lookSide(), r2g_params,
+                                    out_grid.look_side, r2g_params,
                                     errc.data().get());
 
         checkCudaErrors(cudaPeekAtLastError());
@@ -982,8 +975,7 @@ backprojectFirstStage(
     ISCE3_FBP_TIMING(timing.report("dry troposphere");)
 
     // Assume we can fit all pulses for a subimage in device memory.
-    const auto npix_in = static_cast<size_t>(in_geometry.gridWidth()) *
-        in_geometry.gridLength();
+    const auto npix_in = static_cast<size_t>(in_slant_range.size()) * nt;
     thrust::device_vector<thrust::complex<float>> rc(npix_in);
     thrust::copy(in, in + npix_in, rc.begin());
 
@@ -999,7 +991,6 @@ backprojectFirstStage(
         thrust::device_vector<Vec3> d_vel(vel);
 
         // TODO interface with scalar kstart & kstop
-        const auto nt = static_cast<int>(in_azimuth_time.size());
         thrust::device_vector<int> kstart(npix, 0);
         thrust::device_vector<int> kstop(npix, nt);
 
@@ -1032,55 +1023,53 @@ backprojectFirstStage(
     }
     ISCE3_FBP_TIMING(timing.report("baseband");)
 
-    return std::make_tuple(errc[0], out_grid, std::move(out), std::move(height));
+    return std::make_tuple(errc[0], std::move(out), std::move(height));
 }
 
-std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
-backprojectFirstStage(
-        const std::complex<float>* in, const HostRadarGeometry& in_geometry,
-        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
-        double range_bandwidth,
-        const HostDEMInterpolator& dem, double fc, double ds,
+
+std::tuple<
+    ErrorCode,
+    std::unique_ptr<std::complex<float>[]>,
+    std::unique_ptr<float[]>>
+backprojectToPolarGrid(
+        const std::complex<float>* in, const Linspace<double>& in_slant_range,
+        const std::vector<Vec3>& pos, const std::vector<Vec3>& vel,
+        const PolarGrid& out_grid,
+        const HostDEMInterpolator& dem, double fc,
         const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
-        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
-        double oversample_range, double oversample_azimuth)
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
 {
     DeviceDEMInterpolator d_dem(dem);
 
     if (typeid(kernel) == typeid(HostBartlettKernel<float>)) {
         const DeviceBartlettKernel<float> d_kernel(
                 dynamic_cast<const HostBartlettKernel<float>&>(kernel));
-        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
-            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
-            oversample_range, oversample_azimuth);
+        return backprojectToPolarGrid(in, in_slant_range, pos, vel,
+            out_grid, d_dem, fc, d_kernel, dry_tropo_model, r2g_params);
     }
     else if (typeid(kernel) == typeid(HostLinearKernel<float>)) {
         const DeviceLinearKernel<float> d_kernel(
                 dynamic_cast<const HostLinearKernel<float>&>(kernel));
-        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
-            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
-            oversample_range, oversample_azimuth);
+        return backprojectToPolarGrid(in, in_slant_range, pos, vel,
+            out_grid, d_dem, fc, d_kernel, dry_tropo_model, r2g_params);
     }
     else if (typeid(kernel) == typeid(HostKnabKernel<float>)) {
         const DeviceKnabKernel<float> d_kernel(
                 dynamic_cast<const HostKnabKernel<float>&>(kernel));
-        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
-            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
-            oversample_range, oversample_azimuth);
+        return backprojectToPolarGrid(in, in_slant_range, pos, vel,
+            out_grid, d_dem, fc, d_kernel, dry_tropo_model, r2g_params);
     }
     else if (typeid(kernel) == typeid(HostTabulatedKernel<float>)) {
         const DeviceTabulatedKernel<float> d_kernel(
                 dynamic_cast<const HostTabulatedKernel<float>&>(kernel));
-        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
-            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
-            oversample_range, oversample_azimuth);
+        return backprojectToPolarGrid(in, in_slant_range, pos, vel,
+            out_grid, d_dem, fc, d_kernel, dry_tropo_model, r2g_params);
     }
     else if (typeid(kernel) == typeid(HostChebyKernel<float>)) {
         const DeviceChebyKernel<float> d_kernel(
                 dynamic_cast<const HostChebyKernel<float>&>(kernel));
-        return backprojectFirstStage(in, in_geometry, in_azimuth_time,
-            range_bandwidth, d_dem, fc, ds, d_kernel, dry_tropo_model, r2g_params,
-            oversample_range, oversample_azimuth);
+        return backprojectToPolarGrid(in, in_slant_range, pos, vel,
+            out_grid, d_dem, fc, d_kernel, dry_tropo_model, r2g_params);
     }
     throw isce3::except::RuntimeError(ISCE_SRCINFO(), "not implemented");
 }
@@ -1147,7 +1136,7 @@ projectPolarToGeo(
     // Okay to discard const because fft is planned with FFTW_EXECUTE which
     // doesn't modify input.
     ISCE3_FBP_TIMING(
-        auto timing = TimingReporter("isce3.cuda.focus.backprojectFirstStage");)
+        auto timing = TimingReporter("isce3.cuda.focus.backprojectToPolarGrid");)
     // TODO do this FFT on GPU
     isce3::fft::fft2d(spectrum.data(),
         const_cast<std::complex<float>*>(polar_image),

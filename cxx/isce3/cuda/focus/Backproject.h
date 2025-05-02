@@ -90,20 +90,19 @@ backproject(std::complex<float>* out,
 
 std::tuple<
         isce3::error::ErrorCode,
-        isce3::focus::PolarGrid,
         std::unique_ptr<std::complex<float>[]>, // image
         std::unique_ptr<float[]>> // height
-backprojectFirstStage(
+backprojectToPolarGrid(
         const std::complex<float>* in,
-        const isce3::container::RadarGeometry& in_geometry,
-        const Eigen::Ref<const Eigen::VectorXd>& in_azimuth_time,
-        double range_bandwidth,
+        const isce3::core::Linspace<double>& in_slant_range,
+        const std::vector<isce3::core::Vec3>& pos,
+        const std::vector<isce3::core::Vec3>& vel,
+        const isce3::focus::PolarGrid& out_grid,
         const isce3::geometry::DEMInterpolator& dem,
-        double fc, double ds,
+        double fc,
         const isce3::core::Kernel<float>& kernel,
         DryTroposphereModel dry_tropo_model,
-        const Rdr2GeoBracketParams& r2g_params = {},
-        double oversample_range = 1.2, double oversample_azimuth = 1.2);
+        const Rdr2GeoBracketParams& r2g_params = {});
 
 isce3::error::ErrorCode
 projectPolarToGeo(
