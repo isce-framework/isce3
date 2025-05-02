@@ -476,14 +476,22 @@ void addbinding_backproject(py::module& m)
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
             const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
 
-            auto [grid, status] = findPolarGridBoundingBoxInRadarGrid(polar_grid,
-                radar_geom, dem, r2gparams, g2rparams, nextra);
+            auto [i0, i1, j0, j1, status] = findPolarGridBoundingBoxInRadarGrid(
+                polar_grid, radar_geom, dem, r2gparams, g2rparams, nextra);
 
             if (status != ErrorCode::Success) {
                 throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                     "Could not determine polar grid bounds within radar grid.");
             }
-            return grid;
+            auto rows = py::slice(
+                static_cast<py::ssize_t>(i0),
+                static_cast<py::ssize_t>(i1),
+                std::nullopt);
+            auto cols = py::slice(
+                static_cast<py::ssize_t>(j0),
+                static_cast<py::ssize_t>(j1),
+                std::nullopt);
+            return std::make_tuple(rows, cols);
         },
         py::arg("polar_grid"),
         py::arg("radar_geom"),
