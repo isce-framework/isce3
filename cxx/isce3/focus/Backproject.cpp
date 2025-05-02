@@ -944,10 +944,10 @@ findPolarGridBoundingBoxInRadarCoord(
         if (r < rmin) rmin = r;
     }
 
-    return std::tie(tmin, tmax, rmin, rmax, status);
+    return std::make_tuple(tmin, tmax, rmin, rmax, status);
 }
 
-std::tuple<isce3::product::RadarGridParameters, isce3::error::ErrorCode>
+std::tuple<int, int, int, int, isce3::error::ErrorCode>
 findPolarGridBoundingBoxInRadarGrid(
     const PolarGrid& polar_grid,
     const RadarGeometry& radar_geom,
@@ -984,7 +984,7 @@ findPolarGridBoundingBoxInRadarGrid(
 
     // return empty grid if non-overlapping
     if ((i1 < 0) or (i0 >= m) or (j1 < 0) or (j0 >= n)) {
-        return std::tie(empty, status);
+        return std::make_tuple(0, 0, 0, 0, status);
     }
 
     // otherwise clamp to grid bounds
@@ -993,18 +993,7 @@ findPolarGridBoundingBoxInRadarGrid(
     j0 = std::max(0, std::min(j0, n - 1));
     j1 = std::max(0, std::min(j1, n));
 
-    const auto ogrid =  RadarGridParameters(
-        radar_geom.sensingTime()[i0],
-        igrid.wavelength(),
-        igrid.prf(),
-        radar_geom.slantRange()[j0],
-        igrid.rangePixelSpacing(),
-        igrid.lookSide(),
-        i1 - i0,
-        j1 - j0,
-        igrid.refEpoch());
-
-    return std::tie(ogrid, status);
+    return std::make_tuple(i0, i1, j0, j1, status);
 }
 
 std::tuple<std::vector<Vec3>, ErrorCode>
@@ -1016,7 +1005,7 @@ computeRadarGridGeoPoints(
     const size_t n = geom.gridLength() * geom.gridWidth();
     std::vector<Vec3> points(n);
     auto status = computeRadarGridGeoPoints(points.data(), geom, dem, r2g_params);
-    return std::tie(points, status);
+    return std::make_tuple(points, status);
 }
 
 ErrorCode
