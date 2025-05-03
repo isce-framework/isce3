@@ -532,8 +532,8 @@ void addbinding_backproject(py::module& m)
         py::arg("rdr2geo_params") = py::dict());
 
     m.def("accumulate_polar_image_to_geo_points", [](
-                py::array_t<std::complex<float>>& image,
-                const py::array_t<double>& xyz,
+                py::array_t<std::complex<float>, py::array::c_style>& image,
+                const py::array_t<double, py::array::c_style>& xyz,
                 const PolarGrid& grid,
                 const NFFT2d<float>& nfft,
                 const double wavelength,
@@ -544,10 +544,13 @@ void addbinding_backproject(py::module& m)
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "shape mismatch between geo image and position arrays");
             }
+            if (xyz.shape(-1) != 3) {
+                throw isce3::except::LengthError(ISCE_SRCINFO(),
+                    "expected trailing dimension size == 3 for XYZ points");
+            }
             auto n = static_cast<size_t>(image.size());
 
-            // XXX type cast after checking sizes, assume alignment is okay
-            // TODO redo with Eigen::Map or change interface from Vec3 to double[3]?
+            // XXX type cast after checking sizes
             using isce3::core::Vec3;
             static_assert(sizeof(Vec3) == (sizeof(double[3])));
             const auto ptr = reinterpret_cast<const Vec3*>(xyz.data());
