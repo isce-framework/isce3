@@ -544,7 +544,7 @@ void addbinding_backproject(py::module& m)
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "shape mismatch between geo image and position arrays");
             }
-            if (xyz.shape(-1) != 3) {
+            if (xyz.shape(xyz.ndim() - 1) != 3) {
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "expected trailing dimension size == 3 for XYZ points");
             }
@@ -563,8 +563,8 @@ void addbinding_backproject(py::module& m)
                     "Could not compute map projection of polar grid coords.");
             }
         },
-        py::arg("geo_image"),
-        py::arg("geo_points"),
+        py::arg("image"),
+        py::arg("xyz"),
         py::arg("grid"),
         py::arg("nfft"),
         py::arg("wavelength"),
