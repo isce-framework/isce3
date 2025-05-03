@@ -537,10 +537,11 @@ void addbinding_backproject(py::module& m)
                 const PolarGrid& grid,
                 const NFFT2d<float>& nfft,
                 const double wavelength,
+                // TODO refactor mask type to avoid copy
                 const std::optional<std::vector<bool>>& mask) {
 
-            // get root finding parameters
-            if (xyz.size() != 3 * image.size()) {
+            const auto n = image.size();
+            if (xyz.size() != 3 * n) {
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "shape mismatch between geo image and position arrays");
             }
@@ -548,7 +549,10 @@ void addbinding_backproject(py::module& m)
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "expected trailing dimension size == 3 for XYZ points");
             }
-            auto n = static_cast<size_t>(image.size());
+            if (mask.has_value() and (mask.value().size() != n)) {
+                throw isce3::except::LengthError(ISCE_SRCINFO(),
+                    "pixel mask size does not equal image size");
+            }
 
             // XXX type cast after checking sizes
             using isce3::core::Vec3;
