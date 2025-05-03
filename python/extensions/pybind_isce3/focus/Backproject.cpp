@@ -528,7 +528,7 @@ void addbinding_backproject(py::module& m)
             return points;
         },
         py::arg("geom"),
-        py::arg("dem"), 
+        py::arg("dem"),
         py::arg("rdr2geo_params") = py::dict());
 
     m.def("accumulate_polar_image_to_geo_points", [](
