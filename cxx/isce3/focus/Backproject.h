@@ -179,7 +179,7 @@ findPolarGridBoundingBoxInRadarCoord(
     const int nextra = 0);
 
 // figure out subset of stripmap radar grid that is covered by a polar grid
-std::tuple<isce3::product::RadarGridParameters, isce3::error::ErrorCode>
+std::tuple<int, int, int, int, isce3::error::ErrorCode>
 findPolarGridBoundingBoxInRadarGrid(
     const PolarGrid& polar_grid,
     const isce3::container::RadarGeometry& radar_geom,
