@@ -155,15 +155,23 @@ void mergePolarImages(
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
     int az_block_size = 1024);
 
+void
+makeSubApertureMask(
+    const double subaperture_start, const double subaperture_end,
+    const std::vector<double>& pixel_start,
+    const std::vector<double>& pixel_end,
+    std::vector<bool>& mask);
+
 // interpolate polar grid to given set of XYZ positions
 isce3::error::ErrorCode
-projectPolarToGeo(
-        std::complex<float>* geo_image,  // accumulates, so init to zero!
-        const isce3::core::Vec3* geo_points,
+accumulatePolarImageToGeoPoints(
+        std::complex<float>* image,  // accumulates, so init to zero!
+        const isce3::core::Vec3* xyz,
         const size_t n,
         const PolarGrid& grid,
         const isce3::signal::NFFT2d<float>& nfft,
-        const double kw);
+        const double kw,
+        const std::optional<std::vector<bool>>& mask = std::nullopt);
 
 // figure out bounds of polar grid in stripmap radar coordinates
 std::tuple<double, double, double, double, isce3::error::ErrorCode>

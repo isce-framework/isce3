@@ -531,28 +531,29 @@ void addbinding_backproject(py::module& m)
         py::arg("dem"), 
         py::arg("rdr2geo_params") = py::dict());
 
-    m.def("project_polar_to_geo", [](
-                py::array_t<std::complex<float>>& geo_image,
-                const py::array_t<double>& geo_points,
+    m.def("accumulate_polar_image_to_geo_points", [](
+                py::array_t<std::complex<float>>& image,
+                const py::array_t<double>& xyz,
                 const PolarGrid& grid,
                 const NFFT2d<float>& nfft,
-                const double wavelength) {
+                const double wavelength,
+                const std::optional<std::vector<bool>>& mask) {
 
             // get root finding parameters
-            if (geo_points.size() != 3 * geo_image.size()) {
+            if (xyz.size() != 3 * image.size()) {
                 throw isce3::except::LengthError(ISCE_SRCINFO(),
                     "shape mismatch between geo image and position arrays");
             }
-            auto n = static_cast<size_t>(geo_image.size());
+            auto n = static_cast<size_t>(image.size());
 
             // XXX type cast after checking sizes, assume alignment is okay
             // TODO redo with Eigen::Map or change interface from Vec3 to double[3]?
             using isce3::core::Vec3;
             static_assert(sizeof(Vec3) == (sizeof(double[3])));
-            const auto ptr = reinterpret_cast<const Vec3*>(geo_points.data());
+            const auto ptr = reinterpret_cast<const Vec3*>(xyz.data());
 
-            auto status = projectPolarToGeo(geo_image.mutable_data(), ptr,
-                n, grid, nfft, wavelength);
+            auto status = accumulatePolarImageToGeoPoints(
+                image.mutable_data(), ptr, n, grid, nfft, wavelength, mask);
 
             if (status != ErrorCode::Success) {
                 throw isce3::except::RuntimeError(ISCE_SRCINFO(),
@@ -563,5 +564,6 @@ void addbinding_backproject(py::module& m)
         py::arg("geo_points"),
         py::arg("grid"),
         py::arg("nfft"),
-        py::arg("wavelength"));
+        py::arg("wavelength"),
+        py::arg("mask") = py::none());
 }

@@ -639,7 +639,8 @@ void mergePolarImages(
             const auto& input_grid = grids[i_img];
             const auto& nfft = image_interpolators[i_img];
             const auto npix = static_cast<size_t>(n) * (i_row1 - i_row0);
-            auto ec = projectPolarToGeo(output_image.row(i_row0).data(),
+            auto ec = accumulatePolarImageToGeoPoints(
+                output_image.row(i_row0).data(),
                 block_positions.data(), npix, input_grid, nfft, kw);
             if (ec != ErrorCode::Success) {
                 throw isce3::except::RuntimeError(ISCE_SRCINFO(),
@@ -777,6 +778,8 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         tend[iflat] = tstart[iflat] + cpi;
     }
 
+    std::vector<bool> mask(nout);
+
     // TODO reduce tstart & tend
     // TODO check this O(log(n)) algorithm
     //const auto kstart = std::distance(ends.begin(),
@@ -790,26 +793,10 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         // check if we need to replan FFTs
         const auto& grid = grids[k];
         const auto& nfft = image_interpolators[k];
-
-        #pragma omp parallel for
-        for (size_t iflat = 0; iflat < nout; ++iflat) {
-            // check if target seen in this subimage
-            if ((grid.aztime_end < tstart[iflat]) or (grid.aztime_start > tend[iflat])) {
-                continue;
-            }
-            // compute target location in polar grid
-            double sin_squint, range;
-            geo2polar(&sin_squint, &range, x[iflat], grid.origin, grid.axis);
-            // convert to image index
-            const double ix = (range - grid.range.first()) / grid.range.spacing(),
-                iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
-            // interpolate baseband data
-            const auto z = nfft.interp({iy, ix}, false);
-            // compensate phase and sum contribution
-            const double phase = kw * range;
-            out[iflat] +=
-                z * std::complex<float>(std::cos(phase), std::sin(phase));
-        }
+        makeSubApertureMask(grid.aztime_start, grid.aztime_end,
+            tstart, tend, mask);
+        accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
+            mask);
     }
 
     if (not all_converged) {
@@ -820,20 +807,47 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
 
 // WIP stuff to do one polar image at a time.
 
+void
+makeSubApertureMask(
+    const double subaperture_start, const double subaperture_end,
+    const std::vector<double>& pixel_start,
+    const std::vector<double>& pixel_end,
+    std::vector<bool>& mask)
+{
+    const auto n = pixel_start.size();
+    if (pixel_end.size() != n) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "pixel_end size does not match pixel_start size");
+    }
+    if (mask.size() != n) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "mask size does not match pixel data size");
+    }
+    #pragma omp parallel for
+    for (auto i = decltype(n){0}; i < n; ++i) {
+        mask[i] = (subaperture_end > pixel_start[i])
+            and (subaperture_start < pixel_end[i]);
+    }
+}
+
 ErrorCode
-projectPolarToGeo(
-        std::complex<float>* geo_image,
-        const Vec3* geo_points,
+accumulatePolarImageToGeoPoints(
+        std::complex<float>* image,
+        const Vec3* xyz,
         const size_t n,
         const PolarGrid& grid,
         const NFFT2d<float>& nfft,
-        const double kw)
+        const double kw,
+        const std::optional<std::vector<bool>>& mask)
 {
     #pragma omp parallel for
     for (size_t i= 0; i < n; ++i) {
+        if (mask.has_value() and not mask.value()[i]) {
+            continue;
+        }
         // compute target location in polar grid
         double sin_squint, range;
-        geo2polar(&sin_squint, &range, geo_points[i], grid.origin, grid.axis);
+        geo2polar(&sin_squint, &range, xyz[i], grid.origin, grid.axis);
         // convert to image index
         const double ix = (range - grid.range.first()) / grid.range.spacing(),
             iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
@@ -841,7 +855,7 @@ projectPolarToGeo(
         const auto z = nfft.interp({iy, ix}, /* periodic */ false);
         // compensate phase and sum contribution
         const double phase = kw * range;
-        geo_image[i] +=
+        image[i] +=
             z * std::complex<float>(std::cos(phase), std::sin(phase));
     }
     return ErrorCode::Success;
