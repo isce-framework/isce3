@@ -779,7 +779,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     }
 
     // std::vector<bool> unsuitable due to bit packing optimizations
-    Eigen::ArrayX<bool> mask(nout);
+    Eigen::Array<bool, Eigen::Dynamic, 1> mask(nout);
 
     // TODO reduce tstart & tend
     // TODO check this O(log(n)) algorithm
