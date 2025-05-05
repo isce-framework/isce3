@@ -158,9 +158,10 @@ void mergePolarImages(
 void
 makeSubApertureMask(
     const double subaperture_start, const double subaperture_end,
-    const std::vector<double>& pixel_start,
-    const std::vector<double>& pixel_end,
-    std::vector<bool>& mask);
+    const size_t n,
+    const double* pixel_start,
+    const double* pixel_end,
+    bool* mask);
 
 // interpolate polar grid to given set of XYZ positions
 isce3::error::ErrorCode
@@ -171,7 +172,7 @@ accumulatePolarImageToGeoPoints(
         const PolarGrid& grid,
         const isce3::signal::NFFT2d<float>& nfft,
         const double kw,
-        const std::optional<std::vector<bool>>& mask = std::nullopt);
+        const std::optional<const bool*>& mask = std::nullopt);
 
 // figure out bounds of polar grid in stripmap radar coordinates
 std::tuple<double, double, double, double, isce3::error::ErrorCode>

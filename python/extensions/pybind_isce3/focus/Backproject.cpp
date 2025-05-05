@@ -537,8 +537,7 @@ void addbinding_backproject(py::module& m)
                 const PolarGrid& grid,
                 const NFFT2d<float>& nfft,
                 const double wavelength,
-                // TODO refactor mask type to avoid copy
-                const std::optional<std::vector<bool>>& mask) {
+                const std::optional<py::array_t<bool, py::array::c_style>>& mask) {
 
             const auto n = image.size();
             if (xyz.size() != 3 * n) {
@@ -559,8 +558,13 @@ void addbinding_backproject(py::module& m)
             static_assert(sizeof(Vec3) == (sizeof(double[3])));
             const auto ptr = reinterpret_cast<const Vec3*>(xyz.data());
 
+            std::optional<const bool*> mask_ptr = std::nullopt;
+            if (mask.has_value()) {
+                mask_ptr = mask.value().data();
+            }
+
             auto status = accumulatePolarImageToGeoPoints(
-                image.mutable_data(), ptr, n, grid, nfft, wavelength, mask);
+                image.mutable_data(), ptr, n, grid, nfft, wavelength, mask_ptr);
 
             if (status != ErrorCode::Success) {
                 throw isce3::except::RuntimeError(ISCE_SRCINFO(),

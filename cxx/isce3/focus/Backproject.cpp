@@ -778,7 +778,8 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         tend[iflat] = tstart[iflat] + cpi;
     }
 
-    std::vector<bool> mask(nout);
+    // std::vector<bool> unsuitable due to bit packing optimizations
+    Eigen::ArrayX<bool> mask(nout);
 
     // TODO reduce tstart & tend
     // TODO check this O(log(n)) algorithm
@@ -794,9 +795,9 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const auto& grid = grids[k];
         const auto& nfft = image_interpolators[k];
         makeSubApertureMask(grid.aztime_start, grid.aztime_end,
-            tstart, tend, mask);
+            nout, tstart.data(), tend.data(), mask.data());
         accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
-            mask);
+            mask.data());
     }
 
     if (not all_converged) {
@@ -810,19 +811,11 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
 void
 makeSubApertureMask(
     const double subaperture_start, const double subaperture_end,
-    const std::vector<double>& pixel_start,
-    const std::vector<double>& pixel_end,
-    std::vector<bool>& mask)
+    const size_t n,
+    const double* pixel_start,
+    const double* pixel_end,
+    bool* mask)
 {
-    const auto n = pixel_start.size();
-    if (pixel_end.size() != n) {
-        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "pixel_end size does not match pixel_start size");
-    }
-    if (mask.size() != n) {
-        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "mask size does not match pixel data size");
-    }
     #pragma omp parallel for
     for (auto i = decltype(n){0}; i < n; ++i) {
         mask[i] = (subaperture_end > pixel_start[i])
@@ -838,7 +831,7 @@ accumulatePolarImageToGeoPoints(
         const PolarGrid& grid,
         const NFFT2d<float>& nfft,
         const double kw,
-        const std::optional<std::vector<bool>>& mask)
+        const std::optional<const bool*>& mask)
 {
     #pragma omp parallel for
     for (size_t i= 0; i < n; ++i) {
