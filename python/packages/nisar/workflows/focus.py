@@ -1610,6 +1610,11 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
     fc = isce3.core.speed_of_light / ogrid.wavelength
     zerodop = isce3.core.LUT2d()
 
+    if use_gpu:
+        bp_to_polar_grid = isce3.cuda.focus.backproject_to_polar_grid
+    else:
+        bp_to_polar_grid = isce3.focus.backproject_to_polar_grid
+
     _, v = igeom.orbit.interpolate(igeom.orbit.mid_time)
     vs = np.linalg.norm(v)
     tq_max = isce3.focus.get_polar_angle_time_constant(fc, vs, bandwidth)
@@ -1646,9 +1651,8 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         polar_grid, x, v = isce3.focus.setup_polar_grid_for_pulses(fgeom, ti,
             bandwidth, azres, stage.oversample_range, stage.oversample_azimuth,
             pri=pris[pulses][-1])
-        err, img, hgt = isce3.focus.backproject_to_polar_grid(
-            fdata, fgrid.slant_ranges, x, v, polar_grid, dem, fc, kernel,
-            atmos, rdr2geo_params)
+        err, img, hgt = bp_to_polar_grid(fdata, fgrid.slant_ranges, x, v,
+            polar_grid, dem, fc, kernel, atmos, rdr2geo_params)
         results.append((err, polar_grid, img, hgt))
 
         if debugfile is not None:
