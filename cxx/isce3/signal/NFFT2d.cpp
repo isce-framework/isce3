@@ -18,10 +18,6 @@ NFFT2d<T>::NFFT2d(
 {
     size_t nout = static_cast<size_t>(fft_sizes[0]) * fft_sizes[1];
     xf_.resize(nout);
-    xt_.resize(nout);
-
-    int idims[2] = {fft_sizes_[0], fft_sizes_[1]};
-    inv_plan_ = isce3::fft::planifft2d<T>(xt_.data(), xf_.data(), idims);
 
     // Pre-compute spectral weights (1/phi_hat in NFFT papers).
     // Also include factor of n since FFTW does not normalize DFT.
@@ -97,12 +93,15 @@ NFFT2d<T>::transform(const dims_t& sizes,
         }
     }
 
+    // Allocate result object, with friend access to storage.
+    auto result = NFFT2dResult(m_, sizes_, fft_sizes_, kernels_);
+
     // NOTE For even lengths we're not splitting Nyquist bin.
     // Transform to (expanded) time-domain.
-    inv_plan_.execute();
+    const int dims[] = {fft_sizes_[0], fft_sizes_[1]};
+    isce3::fft::ifft2d(result.xt_.data(), xf_.data(), dims);
 
-    // TODO consider using isce3::fft::ifft2d to avoid double-buffering result.
-    return NFFT2dResult(m_, sizes_, fft_sizes_, kernels_, xt_.data());
+    return result;
 }
 
 template <typename T>

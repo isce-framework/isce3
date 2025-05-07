@@ -56,15 +56,16 @@ class NFFT2d {
 
     private:
         dims_t m_, sizes_, fft_sizes_;
-        std::vector<std::complex<T>> xf_, xt_;
+        std::vector<std::complex<T>> xf_;
         std::array<std::vector<T>, 2> weights_;
         std::array<isce3::core::NFFTKernel<T>, 2> kernels_;
-        isce3::fft::InvFFTPlan<T> inv_plan_;
 };
 
 
 template <typename T>
 class NFFT2dResult {
+    friend class NFFT2d<T>;
+
     public:
         using dims_t = typename NFFT2d<T>::dims_t;
 
@@ -75,11 +76,15 @@ class NFFT2dResult {
             const dims_t& sizes,
             const dims_t& fft_sizes,
             const std::array<isce3::core::NFFTKernel<T>, 2>& kernels,
-            const std::complex<T>* xt) : m_{m}, sizes_{sizes},
-                fft_sizes_{fft_sizes}, kernels_{kernels}
+            const std::complex<T>* xt = nullptr) :
+                m_{m}, sizes_{sizes}, fft_sizes_{fft_sizes}, kernels_{kernels}
             {
                 const auto n = static_cast<size_t>(fft_sizes[0]) * fft_sizes[1];
-                xt_.assign(xt, xt + n);
+                if (xt == nullptr) {
+                    xt_.resize(n);
+                } else {
+                    xt_.assign(xt, xt + n);
+                }
             };
 
         /**
