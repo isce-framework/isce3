@@ -156,20 +156,20 @@ TEST(Kernel, Singularity)
     EXPECT_GT(window(m), window(m+dx));
 }
 
-TEST(NFFT2d, Weights)
+TEST(NonUniformFourierTransformer2d, Weights)
 {
     using T = float;
-    using dims_t = isce3::signal::NFFT2d<T>::dims_t;
+    using dims_t = isce3::signal::NonUniformFourierTransformer2d<T>::dims_t;
     dims_t dims = {32, 84};
     constexpr int s = 2, my = 4, mx = 4;
     dims_t fft_dims = {dims[0] * s, dims[1] * s};
-    auto nfft = isce3::signal::NFFT2d<T>({my, mx}, dims, fft_dims);
+    auto nfft = isce3::signal::NonUniformFourierTransformer2d<T>({my, mx}, dims, fft_dims);
 
     size_t nimg = static_cast<size_t>(dims[0]) * dims[1];
     std::vector<std::complex<T>> z(nimg);
     z.assign(nimg, std::complex<T>(1.0, 0.0));
 
-    nfft.set_spectrum(dims, {dims[1], 1}, z.data());
+    const auto result = nfft.transform(dims, {dims[1], 1}, z.data());
     size_t nout = static_cast<size_t>(fft_dims[0]) * fft_dims[1];
 
     FILE* fp = fopen("spec.c8", "wb");

@@ -4,16 +4,23 @@
 #include <isce3/fft/FFTUtil.h>
 
 template <typename T>
-using Kernel = isce3::core::NFFTKernel<T>;
+static inline isce3::core::TabulatedKernel<T>
+make_kernel(int m, int n, int fft_size, int table_size)
+{
+    auto kernel = isce3::core::NFFTKernel<T>(m, n, fft_size);
+    return isce3::core::TabulatedKernel<T>(kernel, table_size);
+}
 
 namespace isce3::signal {
 
 // constructor
 template <class T>
-NFFT2d<T>::NFFT2d(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes)
+NonUniformFourierTransformer2d<T>::NonUniformFourierTransformer2d(
+    const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes,
+    const dims_t& table_sizes)
     : m_(m), sizes_(sizes), fft_sizes_(fft_sizes), kernels_(
-        {Kernel<T>{m[0], sizes[0], fft_sizes[0]},
-        Kernel<T>{m[1], sizes[1], fft_sizes[1]}})
+        {make_kernel<T>(m[0], sizes[0], fft_sizes[0], table_sizes[0]),
+        make_kernel<T>(m[1], sizes[1], fft_sizes[1], table_sizes[1])})
 
 {
     size_t nout = static_cast<size_t>(fft_sizes[0]) * fft_sizes[1];
@@ -45,8 +52,9 @@ NFFT2d<T>::NFFT2d(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes)
 
 // Digest some data.
 template<class T>
-void
-NFFT2d<T>::set_spectrum(const dims_t& sizes, const dims_t& strides, const std::complex<T> *x)
+NFFT2dResult<T>
+NonUniformFourierTransformer2d<T>::transform(const dims_t& sizes,
+    const dims_t& strides, const std::complex<T> *x)
 {
     for (int idim = 0; idim < ndims; ++idim) {
         if (sizes[idim] != sizes_[idim]) {
@@ -99,10 +107,13 @@ NFFT2d<T>::set_spectrum(const dims_t& sizes, const dims_t& strides, const std::c
     // NOTE For even lengths we're not splitting Nyquist bin.
     // Transform to (expanded) time-domain.
     inv_plan_.execute();
+
+    // TODO consider using isce3::fft::ifft2d to avoid double-buffering result.
+    return NFFT2dResult(m_, sizes_, fft_sizes_, kernels_, xt_.data());
 }
 
 template <typename T>
-std::complex<T> NFFT2d<T>::interp(const std::array<double, 2>& t, bool periodic) const
+std::complex<T> NFFT2dResult<T>::interp(const std::array<double, 2>& t, bool periodic) const
 {
     constexpr int xdim = 1, ydim = 0;
 
@@ -117,7 +128,7 @@ std::complex<T> NFFT2d<T>::interp(const std::array<double, 2>& t, bool periodic)
 
 
 template<typename T>
-NFFT2d<T> makeImageNFFT2d(
+NFFT2dResult<T> makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
     const NFFT2dParams& params,
     bool pad_input)
@@ -165,7 +176,7 @@ NFFT2d<T> makeImageNFFT2d(
     }
 
     // Use fft2 b/c planfft2d could modify inputs and we won't reuse it anyway.
-    using dims_t = typename NFFT2d<T>::dims_t;
+    using dims_t = typename NonUniformFourierTransformer2d<T>::dims_t;
     dims_t dims = {
         static_cast<int>(rows_in),
         static_cast<int>(cols_in)};
@@ -178,23 +189,24 @@ NFFT2d<T> makeImageNFFT2d(
         nextFastPower(static_cast<int>(std::round(params.cols.s * dims[1])))};
 
     const dims_t m = {params.rows.m, params.cols.m};
-    auto interpolator = NFFT2d<T>(m, dims, dims_out);
-    interpolator.set_spectrum(dims, {dims[1], 1}, spectrum.data());
-    return interpolator;
+    auto plan = NonUniformFourierTransformer2d<T>(m, dims, dims_out);
+    return plan.transform(dims, {dims[1], 1}, spectrum.data());
 }
 
 }
 
-template class isce3::signal::NFFT2d<float>;
-template class isce3::signal::NFFT2d<double>;
+template class isce3::signal::NonUniformFourierTransformer2d<float>;
+template class isce3::signal::NonUniformFourierTransformer2d<double>;
+template class isce3::signal::NFFT2dResult<float>;
+template class isce3::signal::NFFT2dResult<double>;
 
-template isce3::signal::NFFT2d<float>
+template isce3::signal::NFFT2dResult<float>
 isce3::signal::makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<float>>>& image,
     const isce3::signal::NFFT2dParams& params,
     bool pad_input);
 
-template isce3::signal::NFFT2d<double>
+template isce3::signal::NFFT2dResult<double>
 isce3::signal::makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<double>>>& image,
     const isce3::signal::NFFT2dParams& params,

@@ -13,12 +13,12 @@
 namespace isce3::signal {
 
 template<typename T>
-class NFFT2d {
+class NonUniformFourierTransformer2d {
     public:
         static constexpr int ndims = 2;
         using dims_t = std::array<int, ndims>;
 
-        NFFT2d() = delete;
+        NonUniformFourierTransformer2d() = delete;
 
         /**
          * @brief Construct a new NFFT2d object
@@ -28,7 +28,9 @@ class NFFT2d {
          * @param fft_sizes Transform sizes along {rows, columns}.
          *                  Usually larger than image size.
          */
-        NFFT2d(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes);
+        NonUniformFourierTransformer2d(const dims_t& m, const dims_t& sizes,
+            const dims_t& fft_sizes,
+            const dims_t& table_sizes = {1024, 1024});
 
         /**
          * @brief Ingest the image spectrum.
@@ -41,18 +43,8 @@ class NFFT2d {
          * The spectrum will be zero-padded, pre-filtered, and transformed
          * to the time-domain.
          */
-        void set_spectrum(const dims_t& sizes, const dims_t& strides,
+        NFFT2dResult<T> transform(const dims_t& sizes, const dims_t& strides,
             const std::complex<T> *x);
-
-        /**
-         * @brief Interpolate the image
-         *
-         * @param t         Desired pixel location {row, column}
-         * @param periodic  Whether to use a periodic boundary condition.
-         * @return          Interpolated value.
-         */
-        std::complex<T> interp(const std::array<double, 2>& t,
-            bool periodic = true) const;
 
         /** Image spectrum dimensions */
         const dims_t& sizes() const { return sizes_; }
@@ -67,8 +59,44 @@ class NFFT2d {
         dims_t m_, sizes_, fft_sizes_;
         std::vector<std::complex<T>> xf_, xt_;
         std::array<std::vector<T>, 2> weights_;
-        std::array<isce3::core::NFFTKernel<T>, 2> kernels_;
+        std::array<isce3::core::TabulatedKernel<T>, 2> kernels_;
         isce3::fft::InvFFTPlan<T> inv_plan_;
+};
+
+
+template <typename T>
+class NFFT2dResult {
+    public:
+        using dims_t = typename NonUniformFourierTransformer2d<T>::dims_t;
+
+        NFFT2dResult() = delete;
+
+        NFFT2dResult(
+            const dims_t& m,
+            const dims_t& sizes,
+            const dims_t& fft_sizes,
+            const std::array<isce3::core::TabulatedKernel<T>, 2>& kernels,
+            const std::complex<T>* xt) : m_{m}, sizes_{sizes},
+                fft_sizes_{fft_sizes}, kernels_{kernels}
+            {
+                const auto n = static_cast<size_t>(fft_sizes[0]) * fft_sizes[1];
+                xt_.assign(xt, xt + n);
+            };
+
+        /**
+         * @brief Interpolate the image
+         *
+         * @param t         Desired pixel location {row, column}
+         * @param periodic  Whether to use a periodic boundary condition.
+         * @return          Interpolated value.
+         */
+        std::complex<T> interp(const std::array<double, 2>& t,
+            bool periodic = true) const;
+
+    private:
+        dims_t m_, sizes_, fft_sizes_;
+        std::array<isce3::core::TabulatedKernel<T>, 2> kernels_;
+        std::vector<std::complex<T>> xt_;
 };
 
 
@@ -109,7 +137,7 @@ struct NFFT2dParams {
  * @return NFFT2d<T> object for interpolating the image.
  */
 template<typename T>
-NFFT2d<T> makeImageNFFT2d(
+NFFT2dResult<T> makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
     const NFFT2dParams& params = {},
     bool pad_input = false);

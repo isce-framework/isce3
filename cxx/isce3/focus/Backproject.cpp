@@ -27,7 +27,7 @@ using namespace isce3::geometry;
 using isce3::error::ErrorCode;
 
 using isce3::container::RadarGeometry;
-using isce3::signal::NFFT2d;
+using isce3::signal::NFFT2dResult;
 using isce3::signal::NFFT2dParams;
 using isce3::fft::planfft2d;
 using isce3::fft::nextFastPower;
@@ -551,7 +551,7 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
 
 void mergePolarImages(
     const std::vector<PolarGrid>& grids,
-    const std::vector<NFFT2d<float>>& image_interpolators,
+    const std::vector<NFFT2dResult<float>>& image_interpolators,
     const PolarGrid& output_grid,
     Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
     const double fc,
@@ -675,7 +675,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const isce3::core::Orbit& in_orbit,
         const isce3::core::LUT2d<double>& in_doppler,
         const std::vector<PolarGrid>& grids,
-        const std::vector<NFFT2d<float>>& image_interpolators,
+        const std::vector<NFFT2dResult<float>>& image_interpolators,
         const DEMInterpolator& dem, double fc, double ds,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
@@ -829,7 +829,7 @@ accumulatePolarImageToGeoPoints(
         const Vec3* xyz,
         const size_t n,
         const PolarGrid& grid,
-        const NFFT2d<float>& nfft,
+        const NFFT2dResult<float>& nfft,
         const double kw,
         const std::optional<const bool*>& mask)
 {

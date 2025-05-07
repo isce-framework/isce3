@@ -29,7 +29,7 @@ using isce3::except::InvalidArgument;
 using isce3::geometry::DEMInterpolator;
 using isce3::geometry::detail::Rdr2GeoBracketParams;
 using isce3::geometry::detail::Geo2RdrBracketParams;
-using isce3::signal::NFFT2d;
+using isce3::signal::NFFT2dResult;
 
 
 Rdr2GeoBracketParams parse_rdr2geo_params(const py::dict& params)
@@ -372,7 +372,7 @@ void addbinding_backproject(py::module& m)
 
     m.def("merge_polar_images", [](
             const std::vector<PolarGrid>& grids,
-            const std::vector<NFFT2d<float>>& image_interpolators,  // copy :,(
+            const std::vector<NFFT2dResult<float>>& image_interpolators,  // copy :,(
             const PolarGrid& output_grid,
             Eigen::Ref<EArray2D<std::complex<float>>> output_image,
             const double fc,
@@ -400,7 +400,7 @@ void addbinding_backproject(py::module& m)
                 const isce3::core::Orbit& in_orbit,
                 const isce3::core::LUT2d<double>& in_doppler,
                 const std::vector<PolarGrid>& grids,
-                const std::vector<NFFT2d<float>>& image_interpolators,
+                const std::vector<NFFT2dResult<float>>& image_interpolators,
                 const DEMInterpolator& dem,
                 double fc,
                 double ds,
@@ -535,7 +535,7 @@ void addbinding_backproject(py::module& m)
                 py::array_t<std::complex<float>, py::array::c_style>& image,
                 const py::array_t<double, py::array::c_style>& xyz,
                 const PolarGrid& grid,
-                const NFFT2d<float>& nfft,
+                const NFFT2dResult<float>& nfft,
                 const double wavelength,
                 const std::optional<py::array_t<bool, py::array::c_style>>& mask) {
 
