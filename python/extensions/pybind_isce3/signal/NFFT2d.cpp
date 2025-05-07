@@ -43,13 +43,13 @@ NFFT2dParams parse_nfft2d_params(const py::dict& params)
 }
 
 template<typename T>
-void addbinding(py::class_<NonUniformFourierTransformer2d<T>>& pyNFFT2d)
+void addbinding(py::class_<NFFT2d<T>>& pyNFFT2d)
 {
-    using dims_t = typename NonUniformFourierTransformer2d<T>::dims_t;
+    using dims_t = typename NFFT2d<T>::dims_t;
     pyNFFT2d
         .def(py::init<dims_t, dims_t, dims_t>(),
             py::arg("m"), py::arg("sizes"), py::arg("fft_sizes"))
-        .def_property_readonly("spectrum", [](const NonUniformFourierTransformer2d<T>& self) {
+        .def_property_readonly("spectrum", [](const NFFT2d<T>& self) {
             const auto ptr = self.spectrum();
             const auto dims = self.fft_sizes();
             // property implies reference_internal return value policy
@@ -62,7 +62,7 @@ void addbinding(py::class_<NonUniformFourierTransformer2d<T>>& pyNFFT2d)
 template<typename T>
 void addbinding(py::class_<NFFT2dResult<T>>& pyNFFT2dResult)
 {
-    using dims_t = typename NonUniformFourierTransformer2d<T>::dims_t;
+    using dims_t = typename NFFT2d<T>::dims_t;
     pyNFFT2dResult
         .def("interp", &NFFT2dResult<T>::interp,
             py::arg("t"), py::arg("periodic") = true)
@@ -71,8 +71,8 @@ void addbinding(py::class_<NFFT2dResult<T>>& pyNFFT2dResult)
 }
 
 // instantiate
-template void addbinding(py::class_<NonUniformFourierTransformer2d<float>>&);
-template void addbinding(py::class_<NonUniformFourierTransformer2d<double>>&);
+template void addbinding(py::class_<NFFT2d<float>>&);
+template void addbinding(py::class_<NFFT2d<double>>&);
 template void addbinding(py::class_<NFFT2dResult<float>>&);
 template void addbinding(py::class_<NFFT2dResult<double>>&);
 

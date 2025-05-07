@@ -13,12 +13,12 @@
 namespace isce3::signal {
 
 template<typename T>
-class NonUniformFourierTransformer2d {
+class NFFT2d {
     public:
         static constexpr int ndims = 2;
         using dims_t = std::array<int, ndims>;
 
-        NonUniformFourierTransformer2d() = delete;
+        NFFT2d() = delete;
 
         /**
          * @brief Construct a new NFFT2d object
@@ -28,7 +28,7 @@ class NonUniformFourierTransformer2d {
          * @param fft_sizes Transform sizes along {rows, columns}.
          *                  Usually larger than image size.
          */
-        NonUniformFourierTransformer2d(const dims_t& m, const dims_t& sizes,
+        NFFT2d(const dims_t& m, const dims_t& sizes,
             const dims_t& fft_sizes);
 
         /**
@@ -66,7 +66,7 @@ class NonUniformFourierTransformer2d {
 template <typename T>
 class NFFT2dResult {
     public:
-        using dims_t = typename NonUniformFourierTransformer2d<T>::dims_t;
+        using dims_t = typename NFFT2d<T>::dims_t;
 
         NFFT2dResult() = delete;
 

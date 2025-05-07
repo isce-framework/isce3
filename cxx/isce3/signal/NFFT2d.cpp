@@ -9,7 +9,7 @@ namespace isce3::signal {
 
 // constructor
 template <class T>
-NonUniformFourierTransformer2d<T>::NonUniformFourierTransformer2d(
+NFFT2d<T>::NFFT2d(
     const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes)
     : m_(m), sizes_(sizes), fft_sizes_(fft_sizes), kernels_(
         {NFFTKernel<T>(m[0], sizes[0], fft_sizes[0]),
@@ -46,7 +46,7 @@ NonUniformFourierTransformer2d<T>::NonUniformFourierTransformer2d(
 // Digest some data.
 template<class T>
 NFFT2dResult<T>
-NonUniformFourierTransformer2d<T>::transform(const dims_t& sizes,
+NFFT2d<T>::transform(const dims_t& sizes,
     const dims_t& strides, const std::complex<T> *x)
 {
     for (int idim = 0; idim < ndims; ++idim) {
@@ -169,7 +169,7 @@ NFFT2dResult<T> makeImageNFFT2d(
     }
 
     // Use fft2 b/c planfft2d could modify inputs and we won't reuse it anyway.
-    using dims_t = typename NonUniformFourierTransformer2d<T>::dims_t;
+    using dims_t = typename NFFT2d<T>::dims_t;
     dims_t dims = {
         static_cast<int>(rows_in),
         static_cast<int>(cols_in)};
@@ -182,14 +182,14 @@ NFFT2dResult<T> makeImageNFFT2d(
         nextFastPower(static_cast<int>(std::round(params.cols.s * dims[1])))};
 
     const dims_t m = {params.rows.m, params.cols.m};
-    auto plan = NonUniformFourierTransformer2d<T>(m, dims, dims_out);
+    auto plan = NFFT2d<T>(m, dims, dims_out);
     return plan.transform(dims, {dims[1], 1}, spectrum.data());
 }
 
 }
 
-template class isce3::signal::NonUniformFourierTransformer2d<float>;
-template class isce3::signal::NonUniformFourierTransformer2d<double>;
+template class isce3::signal::NFFT2d<float>;
+template class isce3::signal::NFFT2d<double>;
 template class isce3::signal::NFFT2dResult<float>;
 template class isce3::signal::NFFT2dResult<double>;
 

@@ -20,8 +20,8 @@ void addsubmodule_signal(py::module & m)
     py::class_<isce3::signal::Crossmul> pyCrossmul(m_signal, "Crossmul");
     py::class_<isce3::signal::CrossMultiply> pyCrossMultiply(m_signal,
                                                              "CrossMultiply");
-    py::class_<isce3::signal::NonUniformFourierTransformer2d<float>> pyNFFT2dF32(m_signal, "NFFT2dF32");
-    py::class_<isce3::signal::NonUniformFourierTransformer2d<double>> pyNFFT2dF64(m_signal, "NFFT2dF64");
+    py::class_<isce3::signal::NFFT2d<float>> pyNFFT2dF32(m_signal, "NFFT2dF32");
+    py::class_<isce3::signal::NFFT2d<double>> pyNFFT2dF64(m_signal, "NFFT2dF64");
     py::class_<isce3::signal::NFFT2dResult<float>> pyNFFT2dF32Result(m_signal, "NFFT2dF32Result");
     py::class_<isce3::signal::NFFT2dResult<double>> pyNFFT2dF64Result(m_signal, "NFFT2dF64Result");
 
