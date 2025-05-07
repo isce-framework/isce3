@@ -29,8 +29,7 @@ class NonUniformFourierTransformer2d {
          *                  Usually larger than image size.
          */
         NonUniformFourierTransformer2d(const dims_t& m, const dims_t& sizes,
-            const dims_t& fft_sizes,
-            const dims_t& table_sizes = {1024, 1024});
+            const dims_t& fft_sizes);
 
         /**
          * @brief Ingest the image spectrum.
@@ -59,7 +58,7 @@ class NonUniformFourierTransformer2d {
         dims_t m_, sizes_, fft_sizes_;
         std::vector<std::complex<T>> xf_, xt_;
         std::array<std::vector<T>, 2> weights_;
-        std::array<isce3::core::TabulatedKernel<T>, 2> kernels_;
+        std::array<isce3::core::NFFTKernel<T>, 2> kernels_;
         isce3::fft::InvFFTPlan<T> inv_plan_;
 };
 
@@ -75,7 +74,7 @@ class NFFT2dResult {
             const dims_t& m,
             const dims_t& sizes,
             const dims_t& fft_sizes,
-            const std::array<isce3::core::TabulatedKernel<T>, 2>& kernels,
+            const std::array<isce3::core::NFFTKernel<T>, 2>& kernels,
             const std::complex<T>* xt) : m_{m}, sizes_{sizes},
                 fft_sizes_{fft_sizes}, kernels_{kernels}
             {
@@ -95,7 +94,7 @@ class NFFT2dResult {
 
     private:
         dims_t m_, sizes_, fft_sizes_;
-        std::array<isce3::core::TabulatedKernel<T>, 2> kernels_;
+        std::array<isce3::core::NFFTKernel<T>, 2> kernels_;
         std::vector<std::complex<T>> xt_;
 };
 

@@ -47,9 +47,8 @@ void addbinding(py::class_<NonUniformFourierTransformer2d<T>>& pyNFFT2d)
 {
     using dims_t = typename NonUniformFourierTransformer2d<T>::dims_t;
     pyNFFT2d
-        .def(py::init<dims_t, dims_t, dims_t, dims_t>(),
-            py::arg("m"), py::arg("sizes"), py::arg("fft_sizes"),
-            py::arg("table_sizes") = dims_t{1024, 1024})
+        .def(py::init<dims_t, dims_t, dims_t>(),
+            py::arg("m"), py::arg("sizes"), py::arg("fft_sizes"))
         .def_property_readonly("spectrum", [](const NonUniformFourierTransformer2d<T>& self) {
             const auto ptr = self.spectrum();
             const auto dims = self.fft_sizes();

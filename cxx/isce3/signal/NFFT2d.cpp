@@ -3,24 +3,17 @@
 #include <isce3/core/Interp2d.h>
 #include <isce3/fft/FFTUtil.h>
 
-template <typename T>
-static inline isce3::core::TabulatedKernel<T>
-make_kernel(int m, int n, int fft_size, int table_size)
-{
-    auto kernel = isce3::core::NFFTKernel<T>(m, n, fft_size);
-    return isce3::core::TabulatedKernel<T>(kernel, table_size);
-}
+using isce3::core::NFFTKernel;
 
 namespace isce3::signal {
 
 // constructor
 template <class T>
 NonUniformFourierTransformer2d<T>::NonUniformFourierTransformer2d(
-    const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes,
-    const dims_t& table_sizes)
+    const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes)
     : m_(m), sizes_(sizes), fft_sizes_(fft_sizes), kernels_(
-        {make_kernel<T>(m[0], sizes[0], fft_sizes[0], table_sizes[0]),
-        make_kernel<T>(m[1], sizes[1], fft_sizes[1], table_sizes[1])})
+        {NFFTKernel<T>(m[0], sizes[0], fft_sizes[0]),
+        NFFTKernel<T>(m[1], sizes[1], fft_sizes[1])})
 
 {
     size_t nout = static_cast<size_t>(fft_sizes[0]) * fft_sizes[1];
