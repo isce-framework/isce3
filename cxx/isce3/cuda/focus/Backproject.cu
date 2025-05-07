@@ -1077,7 +1077,7 @@ backprojectToPolarGrid(
 __global__ void
 interpPolar(thrust::complex<float>* geo_image, const Vec3* geo_points,
     size_t n, const PolarGrid grid,
-    const isce3::cuda::signal::NFFT2dView<float> nfft, const double kw)
+    const isce3::cuda::signal::NFFT2dResultView<float> nfft, const double kw)
 {
     // thread index (1d grid of 1d blocks)
     const auto i = static_cast<long>(blockIdx.x * blockDim.x + threadIdx.x);
@@ -1130,7 +1130,6 @@ projectPolarToGeo(
     };
 
     auto nfft = isce3::cuda::signal::NFFT2d<float>(m, dims_in, dims_out);
-    auto nfft_view = isce3::cuda::signal::NFFT2dView<float>(nfft);
     const size_t nin = static_cast<size_t>(grid.length()) * grid.width();
     std::vector<std::complex<float>> spectrum(nin);
     // Okay to discard const because fft is planned with FFTW_EXECUTE which
@@ -1144,7 +1143,9 @@ projectPolarToGeo(
     ISCE3_FBP_TIMING(timing.report("FFT");)
 
     // zero-pad and filter
-    nfft.set_spectrum(dims_in, /* strides */ {dims_in[1], 1}, spectrum.data());
+    auto result = nfft.transform(dims_in, /* strides = */ {dims_in[1], 1},
+        spectrum.data());
+    auto nfft_view = isce3::cuda::signal::NFFT2dResultView<float>(result);
     ISCE3_FBP_TIMING(timing.report("IFFT");)
 
     const double kw = 4 * M_PI / wavelength;
@@ -1178,5 +1179,189 @@ projectPolarToGeo(
 
     return ErrorCode::Success;
 }
+
+/*
+template<class Kernel>
+ErrorCode backproject(std::complex<float>* out,
+                      const DeviceRadarGeometry& out_geometry,
+                      const std::complex<float>* in,
+                      const DeviceRadarGeometry& in_geometry,
+                      DeviceDEMInterpolator& dem, double fc, double ds,
+                      const Kernel& kernel, DryTroposphereModel dry_tropo_model,
+                      const Rdr2GeoBracketParams& rdr2geo_params,
+                      const Geo2RdrBracketParams& geo2rdr_params, int batch,
+                      float* height)
+{
+    // XXX input reference epoch must match output reference epoch
+    if (out_geometry.referenceEpoch() != in_geometry.referenceEpoch()) {
+        std::string errmsg = "input reference epoch must match output "
+                             "reference epoch";
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+    }
+
+    // init device variable to return error codes from device code
+    thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
+
+    // get input & output radar grid azimuth time & slant range coordinates
+    const Linspace<double> in_azimuth_time = in_geometry.sensingTime();
+    const Linspace<double> in_slant_range = in_geometry.slantRange();
+    const Linspace<double> out_azimuth_time = out_geometry.sensingTime();
+    const Linspace<double> out_slant_range = out_geometry.slantRange();
+
+    // interpolate platform position & velocity at each pulse
+    int in_lines = in_azimuth_time.size();
+    thrust::device_vector<Vec3> pos(in_lines);
+    thrust::device_vector<Vec3> vel(in_lines);
+
+    {
+        const unsigned block = 256;
+        const unsigned grid = (in_lines + block - 1) / block;
+
+        interpolateOrbit<<<grid, block>>>(pos.data().get(), vel.data().get(),
+                                          in_geometry.orbit(), in_azimuth_time,
+                                          errc.data().get());
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+
+ErrorCode
+accumulatePolarImagesToRadarGrid(std::complex<float>* out,
+        const HostRadarGeometry& out_geometry,
+        const isce3::core::Orbit& in_orbit,
+        const isce3::core::LUT2d<double>& in_doppler,
+        const std::vector<PolarGrid>& grids,
+        const std::vector<NFFT2d<float>>& image_interpolators,
+        const DEMInterpolator& dem, double fc, double ds,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+        float* height)
+{
+    static constexpr double c = isce3::core::speed_of_light;
+    static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
+
+    // will search sorted intervals to figure out active sub images per target
+    auto starts = std::vector<double>(grids.size());
+    std::transform(grids.begin(), grids.end(), starts.begin(),
+        [](const PolarGrid& grid) { return grid.aztime_start; });
+    auto ends = std::vector<double>(grids.size());
+    std::transform(grids.begin(), grids.end(), ends.begin(),
+        [](const PolarGrid& grid) { return grid.aztime_end; });
+
+    // get input & output radar grid azimuth time & slant range
+    Linspace<double> out_azimuth_time = out_geometry.sensingTime();
+    Linspace<double> out_slant_range = out_geometry.slantRange();
+
+    // reference ellipsoid
+    int epsg = dem.epsgCode();
+    Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+
+    // carrier wavelength
+    const double wvl = c / fc;
+    const double kw = 4 * M_PI / wvl;
+
+    const size_t nout = out_geometry.gridLength() * out_geometry.gridWidth();
+    std::vector<Vec3> x(nout);
+    std::vector<double> tstart(nout), tend(nout);
+
+    // loop over targets in output grid
+    bool all_converged = true;
+    #pragma omp parallel for
+    for (size_t iflat = 0; iflat < nout; ++iflat) {
+        const size_t j = iflat / out_slant_range.size();
+        const size_t i = iflat % out_slant_range.size();
+
+        // Run rdr2geo using orbit and Doppler associated with output grid
+        // to get target position.  Only need LLH if dumping height or
+        // using TSX atmosphere model, but just compute it unconditionally.
+        Vec3 llh;
+        {
+            double t = out_azimuth_time[j];
+            double r = out_slant_range[i];
+            double fD = out_geometry.doppler().eval(t, r);
+
+            const int converged = rdr2geo_bracket(t, r, fD,
+                    out_geometry.orbit(), dem, x[iflat], wvl,
+                    out_geometry.lookSide(), r2g_params.tol_height,
+                    r2g_params.look_min, r2g_params.look_max);
+
+            llh = ellipsoid.xyzToLonLat(x[iflat]);
+
+            if (height != nullptr) {
+                height[iflat] = llh[2];
+            }
+            if (not converged) {
+                all_converged = false;
+                out[iflat] = {nan, nan};
+                if (height != nullptr) {
+                    height[iflat] = nan;
+                }
+                continue;
+            }
+        }
+
+        // run geo2rdr to estimate the center of the coherent processing
+        // window for the target
+        double t, r;
+        {
+            auto converged =
+                    geo2rdr_bracket(x[iflat], in_orbit,
+                            in_doppler, t, r, wvl,
+                            out_geometry.lookSide(),  // assumed same side
+                            g2r_params.tol_aztime,
+                            g2r_params.time_start, g2r_params.time_end);
+
+            if (not converged) {
+                all_converged = false;
+                out[iflat] = {nan, nan};
+                continue;
+            }
+        }
+
+        // get platform position and velocity at center of CPI
+        Vec3 p, v;
+        in_orbit.interpolate(&p, &v, t);
+
+        // estimate synthetic aperture length required to achieve the
+        // desired azimuth resolution
+        double l = wvl * r * (p.norm() / x[iflat].norm()) / (2. * ds);
+
+        // approximate CPI duration (assuming constant platform velocity)
+        double cpi = l / v.norm();
+
+        // get coherent integration bounds (pulse indices)
+        tstart[iflat] = t - cpi / 2;
+        tend[iflat] = tstart[iflat] + cpi;
+    }
+
+    // std::vector<bool> unsuitable due to bit packing optimizations
+    Eigen::Array<bool, Eigen::Dynamic, 1> mask(nout);
+
+    // TODO reduce tstart & tend
+    // TODO check this O(log(n)) algorithm
+    //const auto kstart = std::distance(ends.begin(),
+    //    std::lower_bound(ends.begin(), ends.end(), tstart));
+    //const auto kstop = std::distance(starts.begin(),
+    //    std::upper_bound(starts.start(), starts.end(), tstart + cpi));
+    const auto num_images = image_interpolators.size();
+    const decltype(num_images) kstart = 0, kstop = num_images;
+
+    for (auto k = kstart; k < kstop; ++k) {
+        // check if we need to replan FFTs
+        const auto& grid = grids[k];
+        const auto& nfft = image_interpolators[k];
+        makeSubApertureMask(grid.aztime_start, grid.aztime_end,
+            nout, tstart.data(), tend.data(), mask.data());
+        accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
+            mask.data());
+    }
+
+    if (not all_converged) {
+        return ErrorCode::FailedToConverge;
+    }
+    return ErrorCode::Success;
+}
+*/
 
 }}} // namespace isce3::cuda::focus

@@ -4,13 +4,7 @@
 #include <isce3/cuda/fft/FFT.h>
 
 template <typename T>
-using Kernel = isce3::core::NFFTKernel<T>;
-
-// TODO expose
-constexpr int NTABLE = 1024;
-
-using isce3::cuda::core::TabulatedKernel;
-using isce3::cuda::core::TabulatedKernelView;
+using Kernel = isce3::cuda::core::NFFTKernel<T>;
 
 namespace isce3::cuda::signal {
 
@@ -18,36 +12,32 @@ namespace isce3::cuda::signal {
 template <class T>
 NFFT2d<T>::NFFT2d(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes)
     : m_(m), sizes_(sizes), fft_sizes_(fft_sizes), kernels_(
-        {TabulatedKernel<T>(Kernel<T>{m[0], sizes[0], fft_sizes[0]}, NTABLE),
-        TabulatedKernel<T>(Kernel<T>{m[1], sizes[1], fft_sizes[1]}, NTABLE)})
+        {Kernel<T>{m[0], sizes[0], fft_sizes[0]},
+        Kernel<T>{m[1], sizes[1], fft_sizes[1]}})
 {
     size_t nout = static_cast<size_t>(fft_sizes[0]) * fft_sizes[1];
     xf_.resize(nout);
-    xt_.resize(nout);
 
-    int idims[2] = {fft_sizes_[0], fft_sizes_[1]};
-    inv_plan_ = isce3::cuda::fft::planifft2d<T>(xt_.data().get(),
-        xf_.data().get(), idims);
-
-    // FIXME avoid element-wise access to device vectors
+    // Just compute weights on CPU for now and then copy to GPU.
 
     // Pre-compute spectral weights (1/phi_hat in NFFT papers).
     // Also include factor of n since FFTW does not normalize DFT.
     for (int idim = 0; idim < ndims; ++idim) {
-        weights_[idim].resize(sizes[idim]);
+        auto weight = std::vector<T>(sizes[idim]);
         T b = M_PI * (2.0 - 1.0 * sizes[idim] / fft_sizes[idim]);
         T norm = isce3::math::bessel_i0(b * m[idim]) / sizes[idim];
         size_t n2 = (sizes[idim] - 1) / 2 + 1;
         for (size_t i = 0; i < n2; ++i) {
             double f = 2 * M_PI * i / fft_sizes_[idim];
-            weights_[idim][i] = norm /
+            weight[i] = norm /
                 isce3::math::bessel_i0(m[idim] * std::sqrt(b * b - f * f));
         }
         for (size_t i = n2; i < sizes[idim]; ++i) {
             double f = 2 * M_PI * ((double)i - sizes[idim]) / fft_sizes[idim];
-            weights_[idim][i] = norm /
+            weight[i] = norm /
                 isce3::math::bessel_i0(m[idim] * std::sqrt(b * b - f * f));
         }
+        weights_[idim].assign(weight.begin(), weight.end());
     }
 }
 
@@ -89,8 +79,8 @@ __global__ void setSpectrum2d(thrust::complex<T>* xout, int rows_out, int cols_o
 
 // Digest some data.
 template<class T>
-void
-NFFT2d<T>::set_spectrum(const dims_t& sizes, const dims_t& strides, const std::complex<T> *x)
+NFFT2dResult<T>
+NFFT2d<T>::transform(const dims_t& sizes, const dims_t& strides, const std::complex<T> *x)
 {
     for (int idim = 0; idim < ndims; ++idim) {
         if (sizes[idim] != sizes_[idim]) {
@@ -123,23 +113,26 @@ NFFT2d<T>::set_spectrum(const dims_t& sizes, const dims_t& strides, const std::c
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
     }
 
-    // Transform to (expanded) time-domain.
-    inv_plan_.execute();
+    // Transform to time domain.
+    auto result = NFFT2dResult<T>(m_, sizes_, fft_sizes_, kernels_);
+    int dims[] = {fft_sizes_[0], fft_sizes_[1]};
+    isce3::cuda::fft::ifft2d(result.xt_.data().get(), xf_.data().get(), dims);
+
+    return result;
 }
 
 template <typename T>
-NFFT2dView<T>::NFFT2dView(const NFFT2d<T>& nfft) :
-    sizes_{nfft.sizes_},
-    fft_sizes_{nfft.fft_sizes_},
-    pxt_{nfft.xt_.data().get()},
-    kernel_views_{{
-        TabulatedKernelView(nfft.kernels_[0]),
-        TabulatedKernelView(nfft.kernels_[1])}}
+NFFT2dResultView<T>::NFFT2dResultView(const NFFT2dResult<T>& result) :
+    sizes_{result.sizes_},
+    fft_sizes_{result.fft_sizes_},
+    pxt_{result.xt_.data().get()},
+    kernels_{result.kernels_}
     {}
 
 template <typename T>
 CUDA_DEV
-thrust::complex<T> NFFT2dView<T>::interp(const std::array<double, 2>& t, bool periodic) const
+thrust::complex<T>
+NFFT2dResultView<T>::interp(const std::array<double, 2>& t, bool periodic) const
 {
     constexpr int xdim = 1, ydim = 0;
 
@@ -147,8 +140,8 @@ thrust::complex<T> NFFT2dView<T>::interp(const std::array<double, 2>& t, bool pe
     double x = t[xdim] * fft_sizes_[xdim] / sizes_[xdim];
     double y = t[ydim] * fft_sizes_[ydim] / sizes_[ydim];
 
-    return isce3::cuda::core::interp2d(kernel_views_[xdim],
-        kernel_views_[ydim], pxt_, fft_sizes_[xdim], /* stridex */ 1,
+    return isce3::cuda::core::interp2d(kernels_[xdim],
+        kernels_[ydim], pxt_, fft_sizes_[xdim], /* stridex */ 1,
         fft_sizes_[ydim], /* stridey */ fft_sizes_[xdim], x, y, periodic);
 }
 
@@ -156,5 +149,7 @@ thrust::complex<T> NFFT2dView<T>::interp(const std::array<double, 2>& t, bool pe
 
 template class isce3::cuda::signal::NFFT2d<float>;
 template class isce3::cuda::signal::NFFT2d<double>;
-template class isce3::cuda::signal::NFFT2dView<float>;
-template class isce3::cuda::signal::NFFT2dView<double>;
+template class isce3::cuda::signal::NFFT2dResult<float>;
+template class isce3::cuda::signal::NFFT2dResult<double>;
+template class isce3::cuda::signal::NFFT2dResultView<float>;
+template class isce3::cuda::signal::NFFT2dResultView<double>;
