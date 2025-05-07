@@ -125,6 +125,36 @@ private:
     double _bandwidth;
 };
 
+template<typename T>
+class NFFTKernel : public Kernel<T, NFFTKernel<T>> {
+    using Base = Kernel<T, NFFTKernel<T>>;
+    friend Base;
+
+public:
+    /** A non-owning kernel view type that can be passed to device code */
+    using view_type = NFFTKernel<T>;
+
+    NFFTKernel(int m, int n, int fft_size);
+
+    /** Construct from corresponding host kernel object */
+    NFFTKernel(const isce3::core::NFFTKernel<T>& other);
+
+    int kernel_radius() { return m_; }
+    int data_size() { return n_; }
+    int fft_size() { return fft_size_; }
+
+protected:
+    /** \internal Implementation of \p operator() */
+    CUDA_HOSTDEV T eval(double t) const;
+
+private:
+    int m_;
+    int n_;
+    int fft_size_;
+    T scale_;
+    T b_;
+};
+
 /** A non-owning reference to a TabulatedKernel object */
 template<typename T>
 class TabulatedKernelView : public Kernel<T, TabulatedKernelView<T>> {
