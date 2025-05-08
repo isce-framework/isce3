@@ -2060,7 +2060,7 @@ void Geocode<T>::geocodeAreaProj(
         /* 
         Load RTC in array as a "single block" if:
         1. `is_radar_grid_single_block` is `true`; or
-        2. RTC raster an "in-memory" raster. In this case,
+        2. RTC raster is an "in-memory" raster. In this case,
         the entire raster is already in memory. It's better to move it
         to the array and clear the in-memory raster.
         */
@@ -2072,9 +2072,11 @@ void Geocode<T>::geocodeAreaProj(
             rtc_raster_unique_ptr.reset();
         }
 
-        /*
-        In the curent implementation, rtc_sigma0_raster is always in memory.
-        So, we move it to an array to prevent extra memory to be allocated.
+        /* 
+        The same approach is used for `rtc_sigma0_raster`, i.e.,
+        load RTC sigma in array as a "single block" if:
+        1. `is_radar_grid_single_block` is `true`; or
+        2. RTC sigma0 raster `rtc_sigma0_raster` an "in-memory" raster.
         */
         if (out_geo_rtc_gamma0_to_sigma0 != nullptr &&
                 (is_radar_grid_single_block || flag_rtc_sigma0_raster_is_in_memory)) {
