@@ -5,6 +5,7 @@
 #include <isce3/cuda/core/Kernels.h>
 #include <isce3/cuda/core/Interp2d.h>
 #include <isce3/cuda/fft/FFTPlan.h>
+#include <isce3/signal/forward.h>
 #include <thrust/complex.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -62,6 +63,8 @@ public:
             xt_.assign(xt, xt + n);
         }
     };
+
+    explicit operator isce3::signal::NFFT2dResult<T>() const;
 
 private:
     dims_t m_, sizes_, fft_sizes_;

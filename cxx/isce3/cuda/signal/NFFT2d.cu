@@ -2,6 +2,7 @@
 
 #include <isce3/cuda/core/Interp2d.h>
 #include <isce3/cuda/fft/FFT.h>
+#include <isce3/signal/NFFT2d.h>
 
 template <typename T>
 using Kernel = isce3::cuda::core::NFFTKernel<T>;
@@ -118,6 +119,16 @@ NFFT2d<T>::transform(const dims_t& sizes, const dims_t& strides, const std::comp
     int dims[] = {fft_sizes_[0], fft_sizes_[1]};
     isce3::cuda::fft::ifft2d(result.xt_.data().get(), xf_.data().get(), dims);
 
+    return result;
+}
+
+template<typename T>
+NFFT2dResult<T>::operator isce3::signal::NFFT2dResult<T>() const
+{
+    using CpuKernel = isce3::core::NFFTKernel<T>;
+    auto result = isce3::signal::NFFT2dResult<T>(m_, sizes_, fft_sizes_,
+            {CpuKernel {kernels_[0]}, CpuKernel {kernels_[1]}});
+    thrust::copy(xt_.begin(), xt_.end(), result.data());
     return result;
 }
 

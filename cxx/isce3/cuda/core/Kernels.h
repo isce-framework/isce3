@@ -143,6 +143,9 @@ public:
     int data_size() const { return n_; }
     int fft_size() const { return fft_size_; }
 
+    explicit operator isce3::core::NFFTKernel<T>() const {
+        return {kernel_radius(), data_size(), fft_size()};
+    }
 
 protected:
     /** \internal Implementation of \p operator() */
