@@ -99,6 +99,11 @@ class NFFT2dResult {
         const std::complex<T>* data() const { return xt_.data(); }
         std::complex<T>* data() { return xt_.data(); }
 
+        const dims_t& kernel_radii() const { return m_; }
+        const dims_t& sizes() const { return sizes_; }
+        const dims_t& fft_sizes() const { return fft_sizes_; }
+        const auto& kernels() const { return kernels_; }
+
     private:
         dims_t m_, sizes_, fft_sizes_;
         std::array<isce3::core::NFFTKernel<T>, 2> kernels_;

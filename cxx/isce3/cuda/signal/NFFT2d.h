@@ -64,7 +64,16 @@ public:
         }
     };
 
+    /** copy to host */
     explicit operator isce3::signal::NFFT2dResult<T>() const;
+
+    /** copy from host */
+    NFFT2dResult(const isce3::signal::NFFT2dResult<T>& other);
+
+    const dims_t& kernel_radii() const { return m_; }
+    const dims_t& sizes() const { return sizes_; }
+    const dims_t& fft_sizes() const { return fft_sizes_; }
+    const auto& kernels() const { return kernels_; }
 
 private:
     dims_t m_, sizes_, fft_sizes_;

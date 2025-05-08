@@ -132,6 +132,16 @@ NFFT2dResult<T>::operator isce3::signal::NFFT2dResult<T>() const
     return result;
 }
 
+template<typename T>
+NFFT2dResult<T>::NFFT2dResult(const isce3::signal::NFFT2dResult<T>& other)
+    : m_ {other.kernel_radii()}, sizes_ {other.sizes()},
+      fft_sizes_ {other.fft_sizes()},
+      kernels_ {Kernel<T> {other.kernels()[0]}, Kernel<T> {other.kernels()[1]}}
+{
+    const auto npix = static_cast<size_t>(sizes_[0]) * sizes_[1];
+    this->xt_.assign(other.data(), other.data() + npix);
+}
+
 template <typename T>
 NFFT2dResultView<T>::NFFT2dResultView(const NFFT2dResult<T>& result) :
     sizes_{result.sizes_},
