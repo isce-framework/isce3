@@ -27,4 +27,5 @@ signal/gpuCrossMul.cpp
 signal/gpuFilter.cpp
 signal/gpuLooks.cpp
 signal/gpuSignal.cpp
+signal/nfft2d.cu
 )

@@ -129,6 +129,9 @@ NFFT2dResultView<T>::NFFT2dResultView(const NFFT2dResult<T>& result) :
     kernels_{result.kernels_}
     {}
 
+// FIXME If I put this here instead of inline in the header, then the unit
+// test doesn't compile...
+#if 0
 template <typename T>
 CUDA_DEV
 thrust::complex<T>
@@ -144,6 +147,7 @@ NFFT2dResultView<T>::interp(const std::array<double, 2>& t, bool periodic) const
         kernels_[ydim], pxt_, fft_sizes_[xdim], /* stridex */ 1,
         fft_sizes_[ydim], /* stridey */ fft_sizes_[xdim], x, y, periodic);
 }
+#endif
 
 }
 

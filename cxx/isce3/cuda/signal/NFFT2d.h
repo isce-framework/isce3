@@ -3,6 +3,7 @@
 #include "forward.h"
 
 #include <isce3/cuda/core/Kernels.h>
+#include <isce3/cuda/core/Interp2d.h>
 #include <isce3/cuda/fft/FFTPlan.h>
 #include <thrust/complex.h>
 #include <thrust/host_vector.h>
@@ -70,24 +71,34 @@ private:
 
 template<typename T>
 class NFFT2dResultView {
-    public:
-        static constexpr int ndims = 2;
-        using dims_t = std::array<int, ndims>;
+public:
+    static constexpr int ndims = 2;
+    using dims_t = std::array<int, ndims>;
 
-        NFFT2dResultView() = delete;
-        NFFT2dResultView(const NFFT2dResult<T>& result);
+    NFFT2dResultView() = delete;
+    NFFT2dResultView(const NFFT2dResult<T>& result);
 
-        CUDA_DEV
-        thrust::complex<T> interp(const std::array<double, 2>& t,
-            bool periodic = true) const;
+    CUDA_DEV inline
+    thrust::complex<T> interp(
+            const std::array<double, 2>& t, bool periodic = true) const
+    {
+        constexpr int xdim = 1, ydim = 0;
 
-        CUDA_DEV
-        const dims_t& fft_sizes() const { return fft_sizes_; }
+        // scale time index to account for zero-padding of spectrum.
+        double x = t[xdim] * fft_sizes_[xdim] / sizes_[xdim];
+        double y = t[ydim] * fft_sizes_[ydim] / sizes_[ydim];
 
-    private:
-        dims_t sizes_, fft_sizes_;
-        const thrust::complex<T>* pxt_;
-        std::array<isce3::cuda::core::NFFTKernel<T>, 2> kernels_;
+        return isce3::cuda::core::interp2d(kernels_[xdim], kernels_[ydim], pxt_,
+                fft_sizes_[xdim], /* stridex */ 1, fft_sizes_[ydim],
+                /* stridey */ fft_sizes_[xdim], x, y, periodic);
+    };
+
+    CUDA_DEV
+    const dims_t& fft_sizes() const { return fft_sizes_; }
+
+private:
+    dims_t sizes_, fft_sizes_;
+    const thrust::complex<T>* pxt_;
+    std::array<isce3::cuda::core::NFFTKernel<T>, 2> kernels_;
 };
-
 }
