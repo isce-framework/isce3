@@ -99,7 +99,7 @@ NFFT2d<T>::transform(const dims_t& sizes,
     // NOTE For even lengths we're not splitting Nyquist bin.
     // Transform to (expanded) time-domain.
     const int dims[] = {fft_sizes_[0], fft_sizes_[1]};
-    isce3::fft::ifft2d(result.xt_.data(), xf_.data(), dims);
+    isce3::fft::ifft2d(result.data(), xf_.data(), dims);
 
     return result;
 }

@@ -64,7 +64,6 @@ class NFFT2d {
 
 template <typename T>
 class NFFT2dResult {
-    friend class NFFT2d<T>;
 
     public:
         using dims_t = typename NFFT2d<T>::dims_t;
@@ -96,6 +95,9 @@ class NFFT2dResult {
          */
         std::complex<T> interp(const std::array<double, 2>& t,
             bool periodic = true) const;
+
+        const std::complex<T>* data() const { return xt_.data(); }
+        std::complex<T>* data() { return xt_.data(); }
 
     private:
         dims_t m_, sizes_, fft_sizes_;
