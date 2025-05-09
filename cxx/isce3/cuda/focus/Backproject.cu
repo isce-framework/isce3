@@ -34,6 +34,8 @@
 #include <isce3/focus/BistaticDelay.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
+#include <isce3/geometry/rdr2geo_roots.h>
+#include <isce3/geometry/geo2rdr_roots.h>
 
 using namespace isce3::core;
 using namespace isce3::cuda::geometry;
@@ -1180,60 +1182,14 @@ projectPolarToGeo(
     return ErrorCode::Success;
 }
 
-/*
-template<class Kernel>
-ErrorCode backproject(std::complex<float>* out,
-                      const DeviceRadarGeometry& out_geometry,
-                      const std::complex<float>* in,
-                      const DeviceRadarGeometry& in_geometry,
-                      DeviceDEMInterpolator& dem, double fc, double ds,
-                      const Kernel& kernel, DryTroposphereModel dry_tropo_model,
-                      const Rdr2GeoBracketParams& rdr2geo_params,
-                      const Geo2RdrBracketParams& geo2rdr_params, int batch,
-                      float* height)
-{
-    // XXX input reference epoch must match output reference epoch
-    if (out_geometry.referenceEpoch() != in_geometry.referenceEpoch()) {
-        std::string errmsg = "input reference epoch must match output "
-                             "reference epoch";
-        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
-    }
-
-    // init device variable to return error codes from device code
-    thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
-
-    // get input & output radar grid azimuth time & slant range coordinates
-    const Linspace<double> in_azimuth_time = in_geometry.sensingTime();
-    const Linspace<double> in_slant_range = in_geometry.slantRange();
-    const Linspace<double> out_azimuth_time = out_geometry.sensingTime();
-    const Linspace<double> out_slant_range = out_geometry.slantRange();
-
-    // interpolate platform position & velocity at each pulse
-    int in_lines = in_azimuth_time.size();
-    thrust::device_vector<Vec3> pos(in_lines);
-    thrust::device_vector<Vec3> vel(in_lines);
-
-    {
-        const unsigned block = 256;
-        const unsigned grid = (in_lines + block - 1) / block;
-
-        interpolateOrbit<<<grid, block>>>(pos.data().get(), vel.data().get(),
-                                          in_geometry.orbit(), in_azimuth_time,
-                                          errc.data().get());
-
-        checkCudaErrors(cudaPeekAtLastError());
-        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
-    }
-
-
 ErrorCode
 accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const HostRadarGeometry& out_geometry,
         const isce3::core::Orbit& in_orbit,
         const isce3::core::LUT2d<double>& in_doppler,
-        const std::vector<PolarGrid>& grids,
-        const std::vector<NFFT2d<float>>& image_interpolators,
-        const DEMInterpolator& dem, double fc, double ds,
+        const std::vector<isce3::focus::PolarGrid>& grids,
+        const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
+        const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
         float* height)
@@ -1281,7 +1237,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
             double r = out_slant_range[i];
             double fD = out_geometry.doppler().eval(t, r);
 
-            const int converged = rdr2geo_bracket(t, r, fD,
+            const int converged = isce3::geometry::rdr2geo_bracket(t, r, fD,
                     out_geometry.orbit(), dem, x[iflat], wvl,
                     out_geometry.lookSide(), r2g_params.tol_height,
                     r2g_params.look_min, r2g_params.look_max);
@@ -1306,7 +1262,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         double t, r;
         {
             auto converged =
-                    geo2rdr_bracket(x[iflat], in_orbit,
+                    isce3::geometry::geo2rdr_bracket(x[iflat], in_orbit,
                             in_doppler, t, r, wvl,
                             out_geometry.lookSide(),  // assumed same side
                             g2r_params.tol_aztime,
@@ -1351,9 +1307,9 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         // check if we need to replan FFTs
         const auto& grid = grids[k];
         const auto& nfft = image_interpolators[k];
-        makeSubApertureMask(grid.aztime_start, grid.aztime_end,
+        isce3::focus::makeSubApertureMask(grid.aztime_start, grid.aztime_end,
             nout, tstart.data(), tend.data(), mask.data());
-        accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
+        isce3::focus::accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
             mask.data());
     }
 
@@ -1362,6 +1318,5 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     }
     return ErrorCode::Success;
 }
-*/
 
 }}} // namespace isce3::cuda::focus
