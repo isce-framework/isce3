@@ -224,4 +224,75 @@ void addbinding_cuda_backproject(py::module& m)
         py::arg("polar_image"),
         py::arg("wavelength"),
         py::arg("nfft2_params") = py::dict());
+
+    m.def("accumulate_polar_images_to_radar_grid", [](
+                py::array_t<std::complex<float>, py::array::c_style> out,
+                const RadarGeometry& out_geometry,
+                const isce3::core::Orbit& in_orbit,
+                const isce3::core::LUT2d<double>& in_doppler,
+                const std::vector<isce3::focus::PolarGrid>& grids,
+                const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
+                const DEMInterpolator& dem,
+                double fc,
+                double ds,
+                py::dict rdr2geo_params,
+                py::dict geo2rdr_params,
+                std::optional<py::array_t<float, py::array::c_style>> height) {
+
+            if (out.ndim() != 2) {
+                throw InvalidArgument(ISCE_SRCINFO(), "output array must be 2-D");
+            }
+
+            if (out.shape()[0] != out_geometry.gridLength() or
+                out.shape()[1] != out_geometry.gridWidth()) {
+
+                std::string errmsg = "output array shape must match output "
+                    "radar grid shape";
+                throw InvalidArgument(ISCE_SRCINFO(), errmsg);
+            }
+
+            if (grids.size() != image_interpolators.size()) {
+                throw InvalidArgument(ISCE_SRCINFO(), "must have grid for each sub-image");
+            }
+
+            std::complex<float>* out_data = out.mutable_data();
+            float* height_data = nullptr;
+
+            if (height.has_value()) {
+                auto h = height.value();
+                if (h.shape()[0] != out_geometry.gridLength() or
+                    h.shape()[1] != out_geometry.gridWidth()) {
+
+                    std::string errmsg = "height array shape must match output "
+                        "radar grid shape";
+                    throw InvalidArgument(ISCE_SRCINFO(), errmsg);
+                }
+                height_data = h.mutable_data();
+            }
+
+            const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
+            const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
+
+            ErrorCode err;
+            {
+                py::gil_scoped_release release;
+                err = isce3::cuda::focus::accumulatePolarImagesToRadarGrid(out_data, out_geometry,
+                    in_orbit, in_doppler, grids, image_interpolators, dem, fc,
+                    ds, r2gparams, g2rparams, height_data);
+            }
+            // TODO bind ErrorCode class.  For now return nonzero on failure.
+            return err != ErrorCode::Success;
+        },
+        py::arg("out"),
+        py::arg("out_geometry"),
+        py::arg("in_orbit"),
+        py::arg("in_doppler"),
+        py::arg("grids"),
+        py::arg("image_interpolators"),
+        py::arg("dem"),
+        py::arg("fc"),
+        py::arg("ds"),
+        py::arg("rdr2geo_params") = py::dict(),
+        py::arg("geo2rdr_params") = py::dict(),
+        py::arg("height") = py::none());
 }

@@ -1612,8 +1612,10 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
 
     if use_gpu:
         bp_to_polar_grid = isce3.cuda.focus.backproject_to_polar_grid
+        add_to_radar_grid = isce3.cuda.focus.accumulate_polar_images_to_radar_grid
     else:
         bp_to_polar_grid = isce3.focus.backproject_to_polar_grid
+        add_to_radar_grid = isce3.focus.accumulate_polar_images_to_radar_grid
 
     _, v = igeom.orbit.interpolate(igeom.orbit.mid_time)
     vs = np.linalg.norm(v)
@@ -1730,7 +1732,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         hgt = height[block] if height is not None else None
         log.info(f"Azcomp final sums for block at {description} using "
             f"{len(active_images)} sub-apertures")
-        err = isce3.focus.accumulate_polar_images_to_radar_grid(
+        err = add_to_radar_grid(
             z, ogeom, igeom.orbit, igeom.doppler, active_grids, active_images,
             dem, fc, azres, rdr2geo_params, geo2rdr_params, hgt)
         if err:
