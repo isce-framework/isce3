@@ -384,6 +384,57 @@ __global__ void getCPIBounds(int* kstart_out, int* kstop_out,
 
 /**
  * \internal
+ * Estimate coherent processing window bounds for one or more targets.
+ *
+ * Returns the indices of the first pulse and one past the last pulse to
+ * coherently integrate for each target.
+ *
+ * \param[out] tstart_out   Processing window start time (inclusive)
+ * \param[out] tstop_out    Processing window end time (exclusive)
+ * \param[in]  t_in         Azim. time of each target w.r.t. reference epoch (s)
+ * \param[in]  r_in         Slant range of each target (m)
+ * \param[in]  x_in         Position of each target in ECEF coords (m)
+ * \param[in]  p_in         Platform position at each target's azimuth time (m)
+ * \param[in]  v_in         Platform velocity at each target's azimuth time (m)
+ * \param[in]  n            Number of targets
+ * \param[in]  wvl          Radar wavelength (m)
+ * \param[in]  ds           Desired azimuth resolution (m)
+ */
+__global__ void getCPITimeBounds(double* tstart_out, double* tstop_out,
+                             const double* t_in, const double* r_in,
+                             const Vec3* x_in, const Vec3* p_in,
+                             const Vec3* v_in, const size_t n,
+                             const double wvl, const double ds)
+{
+    // thread index (1d grid of 1d blocks)
+    const auto tid = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+
+    // bounds check
+    if (tid >= n) {
+        return;
+    }
+
+    // load inputs
+    const double t = t_in[tid];
+    const double r = r_in[tid];
+    const Vec3 p = p_in[tid];
+    const Vec3 v = v_in[tid];
+    const Vec3 x = x_in[tid];
+
+    // estimate synthetic aperture length required to achieve the desired
+    // azimuth resolution
+    const double l = wvl * r * (p.norm() / x.norm()) / (2. * ds);
+
+    // approximate CPI duration (assuming constant platform velocity)
+    const double cpi = l / v.norm();
+
+    // get coherent processing window start & end time
+    tstart_out[tid] = t - 0.5 * cpi;
+    tstop_out[tid] = t + 0.5 * cpi;
+}
+
+/**
+ * \internal
  * Backprojection core processing loop
  *
  * Compress the radar return from each input target in azimuth by coherently
@@ -1223,7 +1274,6 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
 
     const size_t nout = out_geometry.gridLength() * out_geometry.gridWidth();
     std::vector<Vec3> x(nout);
-    std::vector<double> tstart(nout), tend(nout);
 
     thrust::device_vector<Vec3> d_x(nout);
     thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
@@ -1243,7 +1293,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     // transform each target position from ECEF to LLH coordinates
     // NOTE only really needed if dumping height layer or doing TSX atmosphere
     // correction, but just compute it unconditionally.
-    thrust::device_vector<Vec3> d_llh(out_grid_size);
+    thrust::device_vector<Vec3> d_llh(nout);
 
     {
         const unsigned block = 256;
@@ -1257,55 +1307,82 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     }
 
     if (height != nullptr) {
-        thrust::device_vector<float> d_height(out_grid_size);
-        thrust::transform(llh.begin(), llh.end(), d_height.begin(),
+        thrust::device_vector<float> d_height(nout);
+        thrust::transform(d_llh.begin(), d_llh.end(), d_height.begin(),
                 [] __device__ (const Vec3& x) { return (float)x[2]; });
         checkCudaErrors(cudaMemcpy(height, d_height.data().get(),
-                out_grid_size * sizeof(float), cudaMemcpyDeviceToHost));
+                nout * sizeof(float), cudaMemcpyDeviceToHost));
     }
+
+    // TODO atmosphere
+
+    d_llh.clear();  d_llh.shrink_to_fit();
+
+    // Running geo2rdr to get integration bounds seems like overkill.
+    // TODO Maybe mask on Doppler instead?
+    thrust::device_vector<double> d_t(nout);
+    thrust::device_vector<double> d_r(nout);
+    auto d_in_orbit = isce3::cuda::core::Orbit(in_orbit);
+    auto d_in_orbit_view = isce3::cuda::core::OrbitView(d_in_orbit);
+    auto d_in_doppler = DeviceLUT2d<double>(in_doppler);
+
+    {
+        const unsigned block = 256;
+        const unsigned grid = (nout + block - 1) / block;
+
+        runGeo2Rdr<<<grid, block>>>(
+                d_t.data().get(), d_r.data().get(), d_x.data().get(), nout,
+                d_in_orbit_view, d_in_doppler, wvl,
+                d_out_geometry.lookSide(), g2r_params, errc.data().get());
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    // get platform position & velocity at center of CPI for each target
+    thrust::device_vector<Vec3> d_p(nout);
+    thrust::device_vector<Vec3> d_v(nout);
+
+    {
+        const unsigned block = 256;
+        const unsigned grid = (nout + block - 1) / block;
+
+        interpolateOrbit<<<grid, block>>>(d_p.data().get(), d_v.data().get(),
+                                          d_in_orbit_view, d_t.data().get(),
+                                          nout, errc.data().get());
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    // get coherent integration bounds (pulse indices) for each target
+    thrust::device_vector<double> d_tstart(nout);
+    thrust::device_vector<double> d_tstop(nout);
+
+    {
+        const unsigned block = 256;
+        const unsigned grid = (nout + block - 1) / block;
+
+        getCPITimeBounds<<<grid, block>>>(d_tstart.data().get(),
+                d_tstop.data().get(), d_t.data().get(), d_r.data().get(),
+                d_x.data().get(), d_p.data().get(), d_v.data().get(), nout,
+                wvl, ds);
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    d_p.clear();  d_p.shrink_to_fit();
+    d_v.clear();  d_v.shrink_to_fit();
+    d_t.clear();  d_t.shrink_to_fit();
+    d_r.clear();  d_r.shrink_to_fit();
+
     thrust::copy(d_x.begin(), d_x.end(), x.begin());
-    d_x.resize(0);
+    d_x.clear();  d_x.shrink_to_fit();
 
-    // loop over targets in output grid
-    bool all_converged = true;
-    #pragma omp parallel for
-    for (size_t iflat = 0; iflat < nout; ++iflat) {
-        const size_t j = iflat / out_slant_range.size();
-        const size_t i = iflat % out_slant_range.size();
-
-        // run geo2rdr to estimate the center of the coherent processing
-        // window for the target
-        double t, r;
-        {
-            auto converged =
-                    isce3::geometry::geo2rdr_bracket(x[iflat], in_orbit,
-                            in_doppler, t, r, wvl,
-                            out_geometry.lookSide(),  // assumed same side
-                            g2r_params.tol_aztime,
-                            g2r_params.time_start, g2r_params.time_end);
-
-            if (not converged) {
-                all_converged = false;
-                out[iflat] = {nan, nan};
-                continue;
-            }
-        }
-
-        // get platform position and velocity at center of CPI
-        Vec3 p, v;
-        in_orbit.interpolate(&p, &v, t);
-
-        // estimate synthetic aperture length required to achieve the
-        // desired azimuth resolution
-        double l = wvl * r * (p.norm() / x[iflat].norm()) / (2. * ds);
-
-        // approximate CPI duration (assuming constant platform velocity)
-        double cpi = l / v.norm();
-
-        // get coherent integration bounds (pulse indices)
-        tstart[iflat] = t - cpi / 2;
-        tend[iflat] = tstart[iflat] + cpi;
-    }
+    std::vector<double> tstart(nout), tstop(nout);
+    thrust::copy(d_tstart.begin(), d_tstart.end(), tstart.begin());
+    thrust::copy(d_tstop.begin(), d_tstop.end(), tstop.begin());
 
     // std::vector<bool> unsuitable due to bit packing optimizations
     Eigen::Array<bool, Eigen::Dynamic, 1> mask(nout);
@@ -1324,15 +1401,12 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const auto& grid = grids[k];
         const auto& nfft = image_interpolators[k];
         isce3::focus::makeSubApertureMask(grid.aztime_start, grid.aztime_end,
-            nout, tstart.data(), tend.data(), mask.data());
+            nout, tstart.data(), tstop.data(), mask.data());
         isce3::focus::accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
             mask.data());
     }
 
-    if (not all_converged) {
-        return ErrorCode::FailedToConverge;
-    }
-    return ErrorCode::Success;
+    return errc[0];
 }
 
 }}} // namespace isce3::cuda::focus
