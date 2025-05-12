@@ -1217,9 +1217,54 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     const double wvl = c / fc;
     const double kw = 4 * M_PI / wvl;
 
+    // copy inputs to device
+    const DeviceRadarGeometry d_out_geometry(out_geometry);
+    DeviceDEMInterpolator d_dem(dem);
+
     const size_t nout = out_geometry.gridLength() * out_geometry.gridWidth();
     std::vector<Vec3> x(nout);
     std::vector<double> tstart(nout), tend(nout);
+
+    thrust::device_vector<Vec3> d_x(nout);
+    thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
+    {
+        const unsigned block = 256;
+        const unsigned grid = (nout + block - 1) / block;
+
+        runRdr2Geo<<<grid, block>>>(d_x.data().get(), out_azimuth_time,
+                out_slant_range, d_out_geometry.doppler(),
+                d_out_geometry.orbit(), d_dem, ellipsoid, wvl,
+                d_out_geometry.lookSide(), r2g_params, errc.data().get());
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    // transform each target position from ECEF to LLH coordinates
+    // NOTE only really needed if dumping height layer or doing TSX atmosphere
+    // correction, but just compute it unconditionally.
+    thrust::device_vector<Vec3> d_llh(out_grid_size);
+
+    {
+        const unsigned block = 256;
+        const unsigned grid = (nout + block - 1) / block;
+
+        ecef2llh<<<grid, block>>>(d_llh.data().get(), d_x.data().get(),
+                                  nout, ellipsoid);
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    if (height != nullptr) {
+        thrust::device_vector<float> d_height(out_grid_size);
+        thrust::transform(llh.begin(), llh.end(), d_height.begin(),
+                [] __device__ (const Vec3& x) { return (float)x[2]; });
+        checkCudaErrors(cudaMemcpy(height, d_height.data().get(),
+                out_grid_size * sizeof(float), cudaMemcpyDeviceToHost));
+    }
+    thrust::copy(d_x.begin(), d_x.end(), x.begin());
+    d_x.resize(0);
 
     // loop over targets in output grid
     bool all_converged = true;
@@ -1227,35 +1272,6 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     for (size_t iflat = 0; iflat < nout; ++iflat) {
         const size_t j = iflat / out_slant_range.size();
         const size_t i = iflat % out_slant_range.size();
-
-        // Run rdr2geo using orbit and Doppler associated with output grid
-        // to get target position.  Only need LLH if dumping height or
-        // using TSX atmosphere model, but just compute it unconditionally.
-        Vec3 llh;
-        {
-            double t = out_azimuth_time[j];
-            double r = out_slant_range[i];
-            double fD = out_geometry.doppler().eval(t, r);
-
-            const int converged = isce3::geometry::rdr2geo_bracket(t, r, fD,
-                    out_geometry.orbit(), dem, x[iflat], wvl,
-                    out_geometry.lookSide(), r2g_params.tol_height,
-                    r2g_params.look_min, r2g_params.look_max);
-
-            llh = ellipsoid.xyzToLonLat(x[iflat]);
-
-            if (height != nullptr) {
-                height[iflat] = llh[2];
-            }
-            if (not converged) {
-                all_converged = false;
-                out[iflat] = {nan, nan};
-                if (height != nullptr) {
-                    height[iflat] = nan;
-                }
-                continue;
-            }
-        }
 
         // run geo2rdr to estimate the center of the coherent processing
         // window for the target
