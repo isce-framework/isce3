@@ -138,7 +138,7 @@ NFFT2dResult<T>::NFFT2dResult(const isce3::signal::NFFT2dResult<T>& other)
       fft_sizes_ {other.fft_sizes()},
       kernels_ {Kernel<T> {other.kernels()[0]}, Kernel<T> {other.kernels()[1]}}
 {
-    const auto npix = static_cast<size_t>(sizes_[0]) * sizes_[1];
+    const auto npix = static_cast<size_t>(fft_sizes_[0]) * fft_sizes_[1];
     this->xt_.assign(other.data(), other.data() + npix);
 }
 
