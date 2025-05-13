@@ -43,7 +43,7 @@ class TestPolChannelImbalanceSlc:
     amp_ratio_atol = amp_p2p_atol
     phs_ratio_atol = phs_p2p_atol
 
-    # RSLC product over homogenous extended scene
+    # RSLC product over homogeneous extended scene
     file_slc_ext = 'calib_RSLC_ALPSRP277307130_AMAZON.h5'
     # RSLC product over corner reflector(s)
     file_slc_cr = 'calib_RSLC_ALPSRP025826990_RIO_BRANCO_CR.h5'

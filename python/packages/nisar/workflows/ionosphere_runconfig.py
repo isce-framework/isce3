@@ -11,14 +11,14 @@ from nisar.workflows.runconfig import RunConfig
 def _get_rslc_h5_freq_pols(slc_h5_path, freq):
     '''
     Attempt to retrieve for frequencies A and B polarizations rom RSLC HDF5 as
-    a list. If a frequency not found, it is represented as an emtpy list.
+    a list. If a frequency not found, it is represented as an empty list.
 
     Parameters
     ----------
     slc_h5_path: str
         Path to RSLC HDF5 file
     freq: ['A', 'B']
-        Frequency whos polarizations are to be extracted from HDF5
+        Frequency whose polarizations are to be extracted from HDF5
 
     Returns
     -------
@@ -49,7 +49,7 @@ def _cfg_freq_pol_check(cfg, freq):
     cfg: dict
         Dictionary with user-defined parameters
     freq: ['A', 'B']
-        Frequency whos polarizations are to be checked
+        Frequency whose polarizations are to be checked
     """
     freq = freq.upper()
     error_channel = \
@@ -101,7 +101,7 @@ def _cfg_freq_pol_check(cfg, freq):
         # container to store which errors occurred
         fails = []
 
-        # iterate reference and seconday polarizations from h5 for given
+        # iterate reference and secondary polarizations from h5 for given
         # frequency
         for refsec, pols_freq in zip(['reference', 'secondary'],
                                      [h5_ref_pols, h5_sec_pols]):

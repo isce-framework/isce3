@@ -7,8 +7,7 @@ import time
 import isce3
 import journal
 import numpy as np
-import pandas as pd
-from isce3.core import transform_xy_to_latlon
+from isce3.core import interpolate_datacube, transform_xy_to_latlon
 from isce3.io import HDF5OptimizedReader
 from nisar.products.insar.product_paths import GUNWGroupsPaths
 from nisar.workflows.h5_prep import get_products_and_paths
@@ -18,16 +17,16 @@ from nisar.workflows.yaml_argparse import YamlArgparse
 from pysolid.solid import solid_grid
 
 
-def solid_grid_pixel_rounded_to_nearest_sec(timestamp:  np.datetime64,
+def solid_grid_pixel_rounded_to_nearest_sec(timestamp: datetime.datetime,
                                             lon: float,
                                             lat: float):
     """
-    Calcaute the nearest the solid grid components
+    Calculate the nearest the solid grid components
 
     Parameters
     ----------
-    timestamp :  np.datetime64,
-        datacube datetime
+    timestamp :  datetime.datetime
+        datacube datetime, with integer seconds precision
     lon : float
         longitude in degrees
     lat : float
@@ -52,7 +51,7 @@ def solid_grid_pixel_rounded_to_nearest_sec(timestamp:  np.datetime64,
     # The output is a 1 x 1 matrix and we want the floats within them
     return np.array([tide_e[0, 0], tide_n[0, 0], tide_u[0, 0]])
 
-def interpolate_solid_grid_pixel(ref_epoch: np.datetime64,
+def interpolate_solid_grid_pixel(ref_epoch: datetime.datetime,
                                  az_time: float,
                                  slant_range : float,
                                  lon: float,
@@ -62,7 +61,7 @@ def interpolate_solid_grid_pixel(ref_epoch: np.datetime64,
 
     Parameters
     ----------
-    ref_epoch : np.datetime64
+    ref_epoch : datetime.datetime
         reference epoch
     az_time : float
         azimuth zero doppler time in seconds
@@ -88,8 +87,10 @@ def interpolate_solid_grid_pixel(ref_epoch: np.datetime64,
     dt = ref_epoch + datetime.timedelta(
         seconds=az_time + slant_range / isce3.core.speed_of_light)
 
-    dt_sec_floor = dt.floor('S')
-    dt_sec_ceil = dt.ceil('S')
+    # Floor and Ceil of the datetime on the seconds
+    dt_sec_floor = dt.replace(microsecond=0)
+    dt_sec_ceil = dt if dt.microsecond == 0 else \
+        dt.replace(microsecond=0) + datetime.timedelta(seconds=1)
 
     seconds_diff_low = (dt - dt_sec_floor).total_seconds()
     seconds_diff_high = (dt_sec_ceil - dt).total_seconds()
@@ -128,11 +129,7 @@ def add_solid_earth_to_gunw_hdf5(los_solid_earth_tides,
 
     with HDF5OptimizedReader(name=gunw_hdf5, mode='a', libver='latest', swmr=True) as hdf:
         radar_grid = hdf.get(GUNWGroupsPaths().RadarGridPath)
-        product_names = ['slantRangeSolidEarthTidesPhase']
-
-        for product_name, solid_earth_tides_product in zip(product_names,
-                                                           los_solid_earth_tides):
-            radar_grid[product_name][...] = solid_earth_tides_product
+        radar_grid['slantRangeSolidEarthTidesPhase'][...] = los_solid_earth_tides
 
 
 def solid_grid_pixel_parallel_task(args):
@@ -142,7 +139,7 @@ def solid_grid_pixel_parallel_task(args):
     Parameters
     ----------
     args : tuple
-        the zipped parameters incuding reference epoch,
+        the zipped parameters including reference epoch,
         azimuth time, slant range, longitude, and latitude
 
     Returns
@@ -161,7 +158,7 @@ def solid_grid_pixel_parallel_task(args):
                                         lon,
                                         lat)
 
-def calculate_solid_earth_tides(ref_epoch : np.datetime64,
+def calculate_solid_earth_tides(ref_epoch : datetime.datetime,
                                 azimuth_time_datacube : np.ndarray,
                                 slant_range_datacube : np.ndarray,
                                 height_datacube : np.ndarray,
@@ -173,7 +170,7 @@ def calculate_solid_earth_tides(ref_epoch : np.datetime64,
 
     Parameters
     ----------
-    ref_epoch : np.datetime64
+    ref_epoch : datetime.datetime
         reference epoch
     azimuth_time_datacube : numpy.ndarray
         azimuth time datacube
@@ -244,6 +241,8 @@ def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
                                                 'referenceSlantRange',
                                                 'secondaryZeroDopplerAzimuthTime',
                                                 'secondarySlantRange']]
+
+
         # Extract the reference epochs
         def _extract_ref_epoch(ds_name: str):
             pattern = r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+'
@@ -259,7 +258,7 @@ def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
                 err_channel.log(err_msg)
                 raise RuntimeError(err_msg)
 
-            return pd.to_datetime(match.group(0))
+            return datetime.datetime.fromisoformat(match.group(0))
 
         ref_ref_epoch = _extract_ref_epoch('referenceZeroDopplerAzimuthTime')
         sec_ref_repch = _extract_ref_epoch('secondaryZeroDopplerAzimuthTime')
@@ -317,6 +316,24 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
      epsg,
      wavelength) = _extract_params_from_gunw_hdf5(gunw_hdf5_path)
 
+    # Extract the bottom and top heights
+    indices = np.array([0, -1])
+    inc_angle_cube,\
+    los_unit_vector_x_cube, los_unit_vector_y_cube,\
+    height_radar_grid,\
+    ref_zero_doppler_azimuth_time, ref_slant_range,\
+    sec_zero_doppler_azimuth_time, sec_slant_range = \
+        map(lambda arr: arr[indices], [
+            inc_angle_cube,
+            los_unit_vector_x_cube,
+            los_unit_vector_y_cube,
+            height_radar_grid,
+            ref_zero_doppler_azimuth_time,
+            ref_slant_range,
+            sec_zero_doppler_azimuth_time,
+            sec_slant_range
+        ])
+
     x_2d, y_2d = \
         np.meshgrid(xcoord_radar_grid,
                     ycoord_radar_grid,
@@ -333,7 +350,7 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
     height_mesh_arr = height_radar_grid[:, None, None] * \
         np.tile(np.ones(lon_2d.shape), tile_dims)
 
-    # Caculate the solid earth tides for the reference RSLC
+    # Calculate the solid earth tides for the reference RSLC
     ref_tide_e, ref_tide_n, ref_tide_u = \
         calculate_solid_earth_tides(ref_ref_epoch,
                                     ref_zero_doppler_azimuth_time,
@@ -342,7 +359,7 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
                                     latitude_mesh_arr,
                                     longitude_mesh_arr)
 
-    # Caculate the solid earth tides for the secondary RSLC
+    # Calculate the solid earth tides for the secondary RSLC
     sec_tide_e, sec_tide_n, sec_tide_u = \
         calculate_solid_earth_tides(sec_ref_epoch,
                                     sec_zero_doppler_azimuth_time,
@@ -393,6 +410,13 @@ def run(cfg: dict, gunw_hdf5_path: str):
 
     # Compute the solid earth tides along los direction
     los_solid_earth_tides = compute_solid_earth_tides(gunw_hdf5_path)
+
+    # Get the radar grid heights and interpolate them
+    radar_grid_cfg = cfg["processing"]["radar_grid_cubes"]
+    heights = radar_grid_cfg["heights"]
+    los_solid_earth_tides = interpolate_datacube(los_solid_earth_tides,
+                                                 [heights[0], heights[-1]],
+                                                 heights)
 
     # Write the solid earth tides to GUNW product
     add_solid_earth_to_gunw_hdf5(los_solid_earth_tides,

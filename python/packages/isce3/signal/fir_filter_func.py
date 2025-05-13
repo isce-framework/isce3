@@ -12,7 +12,7 @@ def cheby_equi_ripple_filter(samprate, bandwidth, rolloff=1.2, ripple=0.1,
     Generate an arbitrary FIR equi-ripple Chebyshev , Low Pass Filter (LPF)
     or Band Pass Filter (BPF) coefficients.
 
-    It uses 'remez' optmization algorithm for designing Chebyshev filter
+    It uses 'remez' optimization algorithm for designing Chebyshev filter
     with equal pass-band and stop-band ripples.
     The min length of the filter is determined based on 'Kaiser' formula.
 
@@ -357,7 +357,7 @@ def build_multi_rate_fir_filter(
         Max allowed upsampling factor to avoid any memory or runtime issue.
     sample_rate_atol : float, default=0.5
         Absolute error tolerance in output sampling rate in the
-        same unit as `samprate`. It will raise an excpetion if it fails.
+        same unit as `samprate`. It will raise an exception if it fails.
         This tolerance comes handy when the input sampling rate is not an
         integer.
 

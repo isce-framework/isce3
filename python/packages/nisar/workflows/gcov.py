@@ -135,7 +135,7 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
         Number of lines per block
     flag_rslc_to_backscatter: bool
         Indicates if the RSLC complex values should be
-        convered to radar backscatter (square of
+        converted to radar backscatter (square of
         the RSLC magnitude)
     flag_apply_noise_correction: bool
         Flag indicating whether the noise correction

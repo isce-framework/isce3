@@ -16,7 +16,7 @@ def test_rdr2geo_run():
     '''
     # load yaml
     test_yaml = os.path.join(iscetest.data, 'insar_test.yaml')
-    # load text then substitude test directory paths since data dir is read only
+    # load text then substitute test directory paths since data dir is read only
     with open(test_yaml) as fh_test_yaml:
         test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data).\
                 replace('@TEST_OUTPUT@', 'rifg.h5').\

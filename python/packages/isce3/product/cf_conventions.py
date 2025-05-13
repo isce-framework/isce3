@@ -3,7 +3,7 @@ from osgeo import osr
 
 def get_grid_mapping_name(srs: osr.SpatialReference) -> str:
     """
-    Determing the CF-compliant grid_mapping_name corresponding to a spatial
+    Determining the CF-compliant grid_mapping_name corresponding to a spatial
     reference system.
 
     Parameters

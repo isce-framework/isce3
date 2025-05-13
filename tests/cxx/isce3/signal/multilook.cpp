@@ -102,7 +102,7 @@ TEST(Looks, Multilook)
     isce3::core::EArray2D<float> a_dataLookedExp(lengthLooked, widthLooked);
     // Given the number of looks in range and azimuth (3x3) 
     // and given data above, the multi-looked array
-    // has the following values at the begining of each line
+    // has the following values at the beginning of each line
     // firstX = {1, 4, 7, 10, 13, 16, 19};
     // Also along the columns the following values (multiplied by column number) 
     // are added to first sample of the line. 

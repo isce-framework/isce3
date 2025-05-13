@@ -91,6 +91,7 @@ def test_compute_baseline(unit_test_params):
     assert np.nanmean(parb) < 1e-5
     assert np.nanmean(perb) < 1e-5
 
+
 def test_add_baseline(unit_test_params):
     '''
     test the add_baseline without crushing and wrong values
@@ -99,7 +100,9 @@ def test_add_baseline(unit_test_params):
     prod_obj = CommonPaths()
     common_path = prod_obj.RootPath
 
-    output_paths = dict({'RIFG': 'RIFG.h5', 'RUNW': 'RUNW.h5', 'GUNW': 'GUNW.h5'})
+    output_paths = dict({'RIFG': 'RIFG.h5',
+                         'RUNW': 'RUNW.h5',
+                         'GUNW': 'GUNW.h5'})
     for dst in ['RIFG', 'GUNW']:
         with h5py.File(output_paths[dst], 'a') as h5_src:
 
@@ -126,73 +129,87 @@ def test_add_baseline(unit_test_params):
 
                 if metadata_path_dict['coordX'] in h5_src:
                     del h5_src[metadata_path_dict['coordX']]
-                h5_src.create_dataset(metadata_path_dict['coordX'],
-                                    dtype=np.float32,
-                                    shape=[1,2,2], data=grid_x)
+                h5_src.create_dataset(
+                    metadata_path_dict['coordX'],
+                    dtype=np.float32,
+                    shape=[1, 2, 2], data=grid_x)
 
                 if metadata_path_dict['coordY'] in h5_src:
                     del h5_src[metadata_path_dict['coordY']]
-                h5_src.create_dataset(metadata_path_dict['coordY'],
-                                    dtype=np.float32,
-                                    shape=[1,2,2], data=grid_y)
+                h5_src.create_dataset(
+                    metadata_path_dict['coordY'],
+                    dtype=np.float32,
+                    shape=[1, 2, 2], data=grid_y)
                 h5_src[metadata_path_dict['coordY']][:] = grid_y
 
                 if metadata_path_dict['heights'] in h5_src:
                     del h5_src[metadata_path_dict['heights']]
-                h5_src.create_dataset(metadata_path_dict['heights'],
-                                        dtype=np.float32,
-                                        shape=[1],
-                                        data=unit_test_params.coord_z)
+                h5_src.create_dataset(
+                    metadata_path_dict['heights'],
+                    dtype=np.float32,
+                    shape=[1],
+                    data=unit_test_params.coord_z)
 
                 if metadata_path_dict['epsg'] not in h5_src:
-                    h5_src.create_dataset(metadata_path_dict['epsg'],
-                                        dtype=np.int64,
-                                        data=4326)
+                    h5_src.create_dataset(
+                        metadata_path_dict['epsg'],
+                        dtype=np.int64,
+                        data=4326)
                 # replace the metadata to have only two elements.
                 if metadata_path_dict['slantRange'] in h5_src:
                     del h5_src[metadata_path_dict['slantRange']]
-                h5_src.create_dataset(metadata_path_dict['slantRange'],
-                                        dtype=np.float64,
-                                        shape=[2],
-                                        data=[13150.0574, 13649.71149664])
+                h5_src.create_dataset(
+                    metadata_path_dict['slantRange'],
+                    dtype=np.float64,
+                    shape=[2],
+                    data=[13150.0574, 13649.71149664])
 
                 if metadata_path_dict['azimuthTime'] not in h5_src:
-                    h5_src.create_dataset(metadata_path_dict['azimuthTime'],
-                                        dtype=np.float64,
-                                        shape=[2])
+                    h5_src.create_dataset(
+                        metadata_path_dict['azimuthTime'],
+                        dtype=np.float64,
+                        shape=[2])
                 if h5_src[metadata_path_dict['azimuthTime']].shape[0] == 0:
                     del h5_src[metadata_path_dict['azimuthTime']]
-                    h5_src.create_dataset(metadata_path_dict['azimuthTime'],
-                                        dtype=np.float64,
-                                        shape=[2])
+                    h5_src.create_dataset(
+                        metadata_path_dict['azimuthTime'],
+                        dtype=np.float64,
+                        shape=[2])
                 if h5_src[metadata_path_dict['slantRange']].shape[0] == 0:
                     del h5_src[metadata_path_dict['slantRange']]
-                    h5_src.create_dataset(metadata_path_dict['slantRange'],
-                                        dtype=np.float64,
-                                        shape=[2])
+                    h5_src.create_dataset(
+                        metadata_path_dict['slantRange'],
+                        dtype=np.float64,
+                        shape=[2])
 
                 output_paths_rifg = {"RIFG": output_paths["RIFG"],
                                      "RUNW": output_paths["RUNW"]}
 
-                baseline.add_baseline(output_paths_rifg,
-                                unit_test_params.ref_orbit,
-                                unit_test_params.ref_orbit,
-                                unit_test_params.ref_radargrid,
-                                unit_test_params.ref_radargrid,
-                                unit_test_params.ref_doppler,
-                                unit_test_params.ref_doppler,
-                                metadata_path_dict,
-                                unit_test_params.geo2rdr_parameters,
-                                use_gpu=False,
-                                baseline_dir_path=unit_test_params.baseline_dir_path,
-                                baseline_mode='top_bottom')
+                baseline.add_baseline(
+                    output_paths_rifg,
+                    unit_test_params.ref_orbit,
+                    unit_test_params.ref_orbit,
+                    unit_test_params.ref_radargrid,
+                    unit_test_params.ref_radargrid,
+                    unit_test_params.ref_doppler,
+                    unit_test_params.ref_doppler,
+                    metadata_path_dict,
+                    unit_test_params.geo2rdr_parameters,
+                    use_gpu=False,
+                    baseline_dir_path=unit_test_params.baseline_dir_path,
+                    baseline_mode='top_bottom')
 
-                validate_baseline(output_paths_rifg["RIFG"],
+                validate_baseline(
+                    output_paths_rifg["RIFG"],
                     perp_path=metadata_path_dict["perpendicularBaseline"],
                     par_path=metadata_path_dict["parallelBaseline"])
-                validate_baseline(output_paths_rifg["RUNW"],
-                    perp_path=metadata_path_dict["perpendicularBaseline"].replace('RIFG', 'RUNW'),
-                    par_path=metadata_path_dict["parallelBaseline"].replace('RIFG', 'RUNW'))
+                validate_baseline(
+                    output_paths_rifg["RUNW"],
+                    perp_path=metadata_path_dict[
+                        "perpendicularBaseline"].replace(
+                        'RIFG', 'RUNW'),
+                    par_path=metadata_path_dict["parallelBaseline"].replace(
+                        'RIFG', 'RUNW'))
 
             elif dst in ['GUNW']:
                 product_path = f'{common_path}/{dst}'
@@ -213,45 +230,64 @@ def test_add_baseline(unit_test_params):
                     "range_end": unit_test_params.range_end,
                     }
 
+                # To unit‑test `add_baseline`, we append “safe” values—greater
+                # than the minimum slant range and less than the maximum
+                # so we can confirm the function runs without crashing.
                 x_array = np.ones(2) * unit_test_params.coord_x
                 y_array = np.ones(2) * unit_test_params.coord_y
-                if metadata_path_dict['coordX'] not in h5_src:
-                    h5_src.create_dataset(metadata_path_dict['coordX'],
-                                        dtype=np.float32,
-                                        shape=[2],
-                                        data=x_array)
-                if metadata_path_dict['coordY'] not in h5_src:
-                    h5_src.create_dataset(metadata_path_dict['coordY'],
-                                        dtype=np.float32,
-                                        shape=[2],
-                                        data=y_array)
-                if metadata_path_dict['heights'] not in h5_src:
-                    h5_src.create_dataset(metadata_path_dict['heights'],
-                                        dtype=np.float32,
-                                        shape=[1],
-                                        data=unit_test_params.coord_z)
-                if metadata_path_dict['slantRange'] not in h5_src:
-                    h5_src.create_dataset(metadata_path_dict['slantRange'],
-                                        dtype=np.float32,
-                                        shape=[1, 2, 2])
+                if metadata_path_dict['coordX'] in h5_src:
+                    del h5_src[metadata_path_dict['coordX']]
+                h5_src.create_dataset(
+                    metadata_path_dict['coordX'],
+                    dtype=np.float32,
+                    shape=[2],
+                    data=x_array)
+
+                if metadata_path_dict['coordY'] in h5_src:
+                    del h5_src[metadata_path_dict['coordY']]
+                h5_src.create_dataset(
+                    metadata_path_dict['coordY'],
+                    dtype=np.float32,
+                    shape=[2],
+                    data=y_array)
+
+                if metadata_path_dict['heights'] in h5_src:
+                    del h5_src[metadata_path_dict['heights']]
+                h5_src.create_dataset(
+                    metadata_path_dict['heights'],
+                    dtype=np.float32,
+                    shape=[1],
+                    data=unit_test_params.coord_z
+                    )
+
+                if metadata_path_dict['slantRange'] in h5_src:
+                    del h5_src[metadata_path_dict['slantRange']]
+                h5_src.create_dataset(
+                    metadata_path_dict['slantRange'],
+                    dtype=np.float32,
+                    shape=[1, 2, 2],
+                    data=[[13150.0574, 13649.71149664],
+                          [13150.0574, 13649.71149664]])
                 output_paths_gunw = {"GUNW": output_paths["GUNW"]}
 
-                baseline.add_baseline(output_paths_gunw,
-                                unit_test_params.ref_orbit,
-                                unit_test_params.ref_orbit,
-                                unit_test_params.ref_radargrid,
-                                unit_test_params.ref_radargrid,
-                                unit_test_params.ref_doppler,
-                                unit_test_params.ref_doppler,
-                                metadata_path_dict,
-                                unit_test_params.geo2rdr_parameters,
-                                use_gpu=False,
-                                baseline_dir_path=unit_test_params.baseline_dir_path,
-                                baseline_mode='top_bottom')
-
-                validate_baseline(output_paths_gunw["GUNW"],
+                baseline.add_baseline(
+                    output_paths_gunw,
+                    unit_test_params.ref_orbit,
+                    unit_test_params.ref_orbit,
+                    unit_test_params.ref_radargrid,
+                    unit_test_params.ref_radargrid,
+                    unit_test_params.ref_doppler,
+                    unit_test_params.ref_doppler,
+                    metadata_path_dict,
+                    unit_test_params.geo2rdr_parameters,
+                    use_gpu=False,
+                    baseline_dir_path=unit_test_params.baseline_dir_path,
+                    baseline_mode='top_bottom')
+                validate_baseline(
+                    output_paths_gunw["GUNW"],
                     perp_path=metadata_path_dict["perpendicularBaseline"],
                     par_path=metadata_path_dict["parallelBaseline"])
+
 
 def validate_baseline(output_path, perp_path, par_path):
     '''
@@ -261,10 +297,5 @@ def validate_baseline(output_path, perp_path, par_path):
     with h5py.File(output_path) as src_h5:
         perp_base = np.array(src_h5[perp_path])
         par_base = np.array(src_h5[par_path])
-
         assert np.nanmean(perp_base) < 1e-5
         assert np.nanmean(par_base) < 1e-5
-
-# if __name__ == '__main__':
-#     # test_compute_baseline()
-#     test_add_baseline()

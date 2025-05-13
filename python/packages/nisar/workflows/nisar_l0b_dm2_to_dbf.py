@@ -30,7 +30,7 @@ from nisar.workflows.helpers import build_uniform_quantizer_lut_l0b, slice_gen
 def copy_swath_except_echo_h5(fid_in, fid_out, swath_path, frq_pol):
     """
     Copy all groups and datasets under swath from input HDF5 to output
-    HDF5 excpet for echo products.
+    HDF5 except for echo products.
 
     Parameters
     ----------
@@ -186,7 +186,7 @@ def cmd_line_parser():
     prs.add_argument('--plot', action='store_true', dest='plot',
                      help='Plot one-tap DBFed echo ratser for each AZ block.')
     prs.add_argument('-m', '--multiplier', type=float, dest='multiplier',
-                     help='DBFed echo multipler prior to quantization.')
+                     help='DBFed echo multiplier prior to quantization.')
     prs.add_argument('-w', '--win-ped', type=float, dest='win_ped', default=1,
                      help=('Raised-cosine window pedestal used in '
                            'range comp. A value within [0, 1].')
@@ -401,7 +401,7 @@ def nisar_l0b_dm2_to_dbf(args):
                     # AZ blocks to avoid introducing any undesired slow-time
                     # variation affecting AZ impulse response.
                     # Generally speaking, caltone should stay stable at least
-                    # within a minute data aquisition!
+                    # within a minute data acquisition!
                     caltones = raw.getCaltone(freq_band, txrx_pol)
                     cal_avg = caltones.mean(axis=0)
                     logger.info(f'Averaged Caltones -> {cal_avg}')
@@ -484,7 +484,7 @@ def nisar_l0b_dm2_to_dbf(args):
                 # mid AZ time at the center of the AZ block
                 azt_mid = azt_raw[rgl_slice].mean()
 
-                if args.no_rgcomp:  # simply peform mosaicking
+                if args.no_rgcomp:  # simply perform mosaicking
                     echo_dbf = dbf_onetap_from_dm2(
                         dset_azblk[:, :num_rgl], azt_mid, el_trans, az_trans,
                         sr, orbit, attitude, dem, cal_coefs=amp_cal

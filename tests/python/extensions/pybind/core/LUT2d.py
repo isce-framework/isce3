@@ -18,6 +18,11 @@ def test_LUT2d():
     assert lut2d.interp_method == method
     # check data accessor
     assert np.allclose(M, lut2d.data)
+    # check endpoints
+    assert lut2d.x_start == xvec[0]
+    assert lut2d.y_start == yvec[0]
+    assert lut2d.x_end == xvec[-1]
+    assert lut2d.y_end == yvec[-1]
 
     # Load reference data
     f_ref = iscetest.data + 'interpolator/data.txt'

@@ -1412,7 +1412,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         # metadata, we populate it by reading the name of the
         # RFI mitigation algorithm from the RSLC metadata. The flag
         # is only True if the name of the algorithm is present in the metadata,
-        # if it's not empy, and if the substring "disabled" is not part of the
+        # if it's not empty, and if the substring "disabled" is not part of the
         # algorithm name
         rfi_mitigation_path = (
             f'{self.output_product_path}/metadata/processingInformation/'

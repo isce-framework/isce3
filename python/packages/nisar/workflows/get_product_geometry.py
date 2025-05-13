@@ -512,19 +512,9 @@ def _get_raster(output_dir, ds_name, dtype, shape, output_file_list,
 
 
 def get_dem_interp_method(dem_interp_method):
-    if (dem_interp_method is None or
-            dem_interp_method == 'BIQUINTIC'):
+    if dem_interp_method is None:
         return isce3.core.DataInterpMethod.BIQUINTIC
-    if (dem_interp_method == 'SINC'):
-        return isce3.core.DataInterpMethod.SINC
-    if (dem_interp_method == 'BILINEAR'):
-        return isce3.core.DataInterpMethod.BILINEAR
-    if (dem_interp_method == 'BICUBIC'):
-        return isce3.core.DataInterpMethod.BICUBIC
-    if (dem_interp_method == 'NEAREST'):
-        return isce3.core.DataInterpMethod.NEAREST
-    error_msg = f'ERROR invalid DEM interpolation method: {dem_interp_method}'
-    raise NotImplementedError(error_msg)
+    return isce3.core.normalize_data_interp_method(dem_interp_method)
 
 
 def main(argv=None):

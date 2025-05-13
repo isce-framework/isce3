@@ -285,8 +285,8 @@ __global__ void cuArraysCopyExtractVaryingOffsetCorr(const float *imageIn, const
 }
 
 /**
- * copy a tile of images to another image, with starting pixels offsets accouting for boundary
- * @param[in] imageIn inut images
+ * copy a tile of images to another image, with starting pixels offsets accounting for boundary
+ * @param[in] imageIn input images
  * @param[out] imageOut output images of dimension nImages*outNX*outNY
  */
 void cuArraysCopyExtractCorr(cuArrays<float> *imagesIn, cuArrays<float> *imagesOut, cuArrays<int> *imagesValid, cuArrays<int2> *maxloc, cudaStream_t stream)

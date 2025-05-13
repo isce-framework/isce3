@@ -72,7 +72,7 @@ TEST(DateTimeTest, FromString)
     ASSERT_EQ(dtime1.seconds, 30);
     ASSERT_NEAR(dtime1.frac, 0.0, 1.0e-6);
 
-    // Test constructor with other seperator
+    // Test constructor with other separator
     isce3::core::DateTime dtm("2017-05-12 01:12:30.141592");
     EXPECT_EQ(dtm.year, 2017) << "Wrong year for white-space sep!";
     EXPECT_EQ(dtm.months, 5) << "Wrong month for white-space sep!";

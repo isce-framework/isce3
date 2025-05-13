@@ -163,7 +163,7 @@ public:
      * @brief Constructor to create ViewSubSwaths from an OwnerSubSwaths object.
      * @param[in] owner_subswaths The OwnerSubSwaths object to create views from.
      */
-    /* if const OwnerSubSwaths& as paramter then
+    /* if const OwnerSubSwaths& as parameter then
      * error: the object has type qualifiers that are not compatible with the member function "isce3::cuda::product::OwnerSubSwaths::ptr_to_valid_stop"
      */
     CUDA_HOST ViewSubSwaths(OwnerSubSwaths& owner_subswaths);

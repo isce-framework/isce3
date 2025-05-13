@@ -52,7 +52,7 @@ def geocode_insar_cfg_check(cfg):
 
 class GeocodeInsarRunConfig(RunConfig):
     def __init__(self, args):
-        # all insar submodules share a commmon `insar` schema
+        # all insar submodules share a common `insar` schema
         super().__init__(args, 'insar')
 
         if self.args.run_config_path is not None:

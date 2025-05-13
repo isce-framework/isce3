@@ -1932,7 +1932,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
     }
   }
 
-  // (3) find the shortest pathes from S to T
+  // (3) find the shortest paths from S to T
 
   // First scan the nodes in S and initialize them ......
 

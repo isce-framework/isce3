@@ -29,7 +29,8 @@ for contributing to the project.
 ### Forking the isce3 repository
 
 If you are a first-time contributor, the first thing you should do is fork the
-isce3 repository to create your own copy of the project.
+isce3 repository to create your own copy of the project. (External contributors
+cannot directly create or modify branches on the isce3 repository.)
 
 1. Go to https://github.com/isce-framework/isce3 and click on the "Fork"
    button.
@@ -161,11 +162,22 @@ quality of the project.
 
 - Review may be requested by a PR author and/or other team members. Reviewers
   can make comments, request changes, or approve the PR, indicating that it has
-  been carefully examined and is ready for merging. Before a PR can be merged,
-  it must be approved by at least two core team members.
+  been carefully examined and is ready for merging.
+- Before a PR can be merged, it must be approved by at least two core team
+  members.
+
+### Testing and scanning
+
 - CI jobs that build and test the code are automatically triggered upon each PR
   update. The CI tests must pass before your PR can be merged. To avoid overuse
   of these resources, it's helpful to test all changes locally before committing
   and push commits in batches rather than individually.
-- After all required checks have passed, the PR can be merged by pressing the
-  "Squash and merge" button.
+- Each commit is scanned using
+  [detect-secrets](https://github.com/Yelp/detect-secrets) and
+  [CodeQL](https://codeql.github.com/) to identify possible security
+  vulnerabilities and exposed credentials. Commits containing either may be
+  blocked.
+- Linters may be run on the changes and may reject PRs that don't conform to the
+  project's style conventions.
+
+After all required checks have passed, the PR may be merged by a maintainer.

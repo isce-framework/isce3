@@ -338,7 +338,7 @@ def _get_tec_time(tec_json_dict: dict,
         doppler_start = radar_grid.ref_epoch + \
             isce3.core.TimeDelta(seconds=doppler_lut.y_start)
         doppler_stop = radar_grid.ref_epoch + \
-            isce3.core.TimeDelta(seconds=doppler_lut.y_start + doppler_lut.y_spacing * (doppler_lut.length - 1))
+            isce3.core.TimeDelta(seconds=doppler_lut.y_end)
         mask_start = max(mask_start, doppler_start)
         mask_stop = min(mask_stop, doppler_stop)
 

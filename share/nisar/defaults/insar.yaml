@@ -194,7 +194,8 @@ runconfig:
 
             radar_grid_cubes:
 
-                # List of heights in meters
+                # List of heights in meters, where the parallelBaseline, perpendicularBaseline, and slantRangeSolidEarthTidesPhase
+                # datacubes contain ONLY TWO height layers (the bottom and top heights), i.e., -500 and 9000 from the default heights below
                 heights: [-500, 0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000]
 
                 # OPTIONAL - Same as the geocode group output_epsg if not provided
@@ -490,10 +491,11 @@ runconfig:
                 # The refinement is performed by thresholding the median absolute deviation of
                 # the offsets where outlier locations have been filled with zeros
                 mask_refine_enabled: True
-                # Threshold for outlier refinement mask computation
-                mask_refine_threshold: 0.5
+                # Minimum number of valid (non-NaN) neighbors required for a pixel to remain
+                # unchanged during the rubbersheet refinement step
+                mask_refine_min_neighbors: 5
                 # Size of median filter in range and azimuth for outlier mask refinement
-                mask_refine_filter_size: 3
+                mask_refine_filter_size: 5
                 # Method to fill data holes left by outliers culling:
                 # fill_smoothed: iteratively fill holes with mean value in a neighborhood.
                 # nearest_neighbor: Fill holes with nearest neighbor interpolation

@@ -247,8 +247,6 @@ class InSARBaseWriter(h5py.File):
         baseline_ds_shape = [len(heights),
                              grid.length,
                              grid.width]
-        if baseline_mode == 'top_bottom':
-            baseline_ds_shape[0] = 2
 
         # Add the baseline dataset to the cube
         for baseline_name in ['parallel', 'perpendicular']:
@@ -282,8 +280,7 @@ class InSARBaseWriter(h5py.File):
                 ds.attrs['grid_mapping'] = np.bytes_('projection')
                 ds.dims[1].attach_scale(cube_group['yCoordinates'])
                 ds.dims[2].attach_scale(cube_group['xCoordinates'])
-                if baseline_mode == '3D_full':
-                    ds.dims[0].attach_scale(cube_group['heightAboveEllipsoid'])
+                ds.dims[0].attach_scale(cube_group['heightAboveEllipsoid'])
 
     def add_common_to_procinfo_params_group(self):
         """
@@ -497,7 +494,7 @@ class InSARBaseWriter(h5py.File):
     def add_coregistration_to_algo_group(self):
         """
         Add the coregistration parameters to the
-        "processingInfromation/algorithms" group
+        "processingInformation/algorithms" group
         """
         proc_cfg = self.cfg["processing"]
         dense_offsets = proc_cfg["dense_offsets"]["enabled"]
@@ -532,11 +529,11 @@ class InSARBaseWriter(h5py.File):
                 if outlier_filling_method == "fill_smoothed":
                     description = (
                         "iterative filling algorithm using the mean value"
-                        " computed in a neighboorhood centered on the pixel to"
+                        " computed in a neighborhood centered on the pixel to"
                         " fill"
                     )
                 else:
-                    description = "Nearest neighboor interpolation"
+                    description = "Nearest neighbor interpolation"
 
         algo_coregistration_ds_params = [
             DatasetParams(

@@ -2566,7 +2566,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Vector of zero Doppler azimuth times, measured relative to a UTC epoch, corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"
@@ -2580,7 +2580,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Vector of zero Doppler azimuth times, measured relative to a UTC epoch, corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyA/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"
@@ -2601,7 +2601,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch dimension corresponding to source data processing information records</annotation>
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Vector of zero Doppler azimuth times, measured relative to a UTC epoch, corresponding to source data processing information records</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyB/slantRange"
               shape="sourceDataDopplerCentroidSlantRangeWidth"
@@ -3258,7 +3258,7 @@
     <shape name="numberOfInputTecFiles"
            order="slowest...fastest">
       <annotation app="conformance"
-                  lang="en">Number of input total electon content (TEC) files</annotation>
+                  lang="en">Number of input total electron content (TEC) files</annotation>
       <dimension extent="0"
                  name="numberOfInputTecFiles"/>
     </shape>
