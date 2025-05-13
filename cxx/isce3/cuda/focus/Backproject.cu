@@ -1273,7 +1273,6 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     DeviceDEMInterpolator d_dem(dem);
 
     const size_t nout = out_geometry.gridLength() * out_geometry.gridWidth();
-    std::vector<Vec3> x(nout);
 
     thrust::device_vector<Vec3> d_x(nout);
     thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
@@ -1377,9 +1376,6 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     d_t.clear();  d_t.shrink_to_fit();
     d_r.clear();  d_r.shrink_to_fit();
 
-    thrust::copy(d_x.begin(), d_x.end(), x.begin());
-    d_x.clear();  d_x.shrink_to_fit();
-
     std::vector<double> tstart(nout), tstop(nout);
     thrust::copy(d_tstart.begin(), d_tstart.end(), tstart.begin());
     thrust::copy(d_tstop.begin(), d_tstop.end(), tstop.begin());
@@ -1396,15 +1392,36 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     const auto num_images = image_interpolators.size();
     const decltype(num_images) kstart = 0, kstop = num_images;
 
+    // Copy image to device since we accumulate (don't init to zero).
+    // thrust::device_vector<thrust::complex<float>> d_out(out, out + nout);
+    thrust::device_vector<thrust::complex<float>> d_out(out, out + nout);
+
     for (auto k = kstart; k < kstop; ++k) {
-        // check if we need to replan FFTs
-        const auto& grid = grids[k];
+        const auto& image_grid = grids[k];
         const auto& nfft = image_interpolators[k];
-        isce3::focus::makeSubApertureMask(grid.aztime_start, grid.aztime_end,
-            nout, tstart.data(), tstop.data(), mask.data());
-        isce3::focus::accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
-            mask.data());
+        isce3::focus::makeSubApertureMask(image_grid.aztime_start,
+                image_grid.aztime_end, nout, tstart.data(), tstop.data(),
+                mask.data());
+
+        // copy sub-image to device and get a view of its memory.
+        const auto d_nfft = isce3::cuda::signal::NFFT2dResult(nfft);
+        const auto d_nfft_view = isce3::cuda::signal::NFFT2dResultView(d_nfft);
+
+        {
+            const unsigned block = 256;
+            const unsigned cuda_grid = (nout + block - 1) / block;
+
+            // TODO mask
+            interpPolar<<<cuda_grid, block>>>(d_out.data().get(),
+                    d_x.data().get(), nout, image_grid, d_nfft_view, kw);
+
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+        }
     }
+
+    // Copy result back to host.
+    thrust::copy(d_out.begin(), d_out.end(), out);
 
     return errc[0];
 }
