@@ -6,6 +6,7 @@ dependencies:
   - backoff
   - cmake>=3.19
   - cxx-compiler
+  - doxygen
   - eigen>=3.3
   - fftw>=3.3
   - gdal>=3.0,!=3.9.2

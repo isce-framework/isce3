@@ -109,6 +109,10 @@ jobs:
       - name: Build docs with mkdocs, doxygen, and pdoc
         run: |
           mkdocs build
+          cd build
+          doxygen doc/doxygen/Doxyfile
+          mkdir -p ../site/api/
+          mv docs-output ../site/api/cxx
 
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@v4
