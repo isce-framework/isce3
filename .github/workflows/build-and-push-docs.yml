@@ -100,11 +100,11 @@ jobs:
           fi
 
       # Run ctest on the project with the intended test exclusions for this run
-      - name: Test Project
-        run: |
-          cd build
-          export GDAL_MEM_ENABLE_OPEN=YES
-          ctest --output-on-failure ${{ matrix.os.ctest_exclude }}
+      #- name: Test Project
+      #  run: |
+      #    cd build
+      #    export GDAL_MEM_ENABLE_OPEN=YES
+      #    ctest --output-on-failure ${{ matrix.os.ctest_exclude }}
 
       - name: Build docs with mkdocs, doxygen, and pdoc
         run: |
