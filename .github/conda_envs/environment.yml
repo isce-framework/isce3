@@ -16,6 +16,7 @@ dependencies:
   - libgdal-hdf5
   - libgdal-netcdf
   - mkdocs
+  - mkdocs-material
   - ninja
   - numpy>=1.20,<2
   - pandas
