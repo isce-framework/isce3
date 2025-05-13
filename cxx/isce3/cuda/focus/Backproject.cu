@@ -1157,7 +1157,7 @@ interpPolar(thrust::complex<float>* geo_image, const Vec3* geo_points,
 
     // compensate phase and sum contribution
     double sin_phi, cos_phi;
-    ::sincospi(kw * range, &sin_phi, &cos_phi);
+    ::sincos(kw * range, &sin_phi, &cos_phi);
     geo_image[i] += z * thrust::complex<float>(cos_phi, sin_phi);
 }
 
