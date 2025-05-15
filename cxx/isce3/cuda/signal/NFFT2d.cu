@@ -128,7 +128,9 @@ NFFT2dResult<T>::operator isce3::signal::NFFT2dResult<T>() const
     using CpuKernel = isce3::core::NFFTKernel<T>;
     auto result = isce3::signal::NFFT2dResult<T>(m_, sizes_, fft_sizes_,
             {CpuKernel {kernels_[0]}, CpuKernel {kernels_[1]}});
-    thrust::copy(xt_.begin(), xt_.end(), result.data());
+    const auto npix = static_cast<size_t>(fft_sizes_[0]) * fft_sizes_[1];
+    checkCudaErrors(cudaMemcpy(result.data(), xt_.data().get(),
+            npix * sizeof(std::complex<T>), cudaMemcpyDeviceToHost));
     return result;
 }
 
@@ -139,7 +141,9 @@ NFFT2dResult<T>::NFFT2dResult(const isce3::signal::NFFT2dResult<T>& other)
       kernels_ {Kernel<T> {other.kernels()[0]}, Kernel<T> {other.kernels()[1]}}
 {
     const auto npix = static_cast<size_t>(fft_sizes_[0]) * fft_sizes_[1];
-    this->xt_.assign(other.data(), other.data() + npix);
+    xt_.resize(npix);
+    checkCudaErrors(cudaMemcpy(xt_.data().get(), other.data(),
+            npix * sizeof(std::complex<T>), cudaMemcpyHostToDevice));
 }
 
 template <typename T>

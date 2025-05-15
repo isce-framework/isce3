@@ -1030,7 +1030,8 @@ backprojectToPolarGrid(
     // Assume we can fit all pulses for a subimage in device memory.
     const auto npix_in = static_cast<size_t>(in_slant_range.size()) * nt;
     thrust::device_vector<thrust::complex<float>> rc(npix_in);
-    thrust::copy(in, in + npix_in, rc.begin());
+    checkCudaErrors(cudaMemcpy(rc.data().get(), in, npix_in * sizeof(*in),
+        cudaMemcpyHostToDevice));
 
     thrust::device_vector<thrust::complex<float>> img(npix, 0.0);
 	{
@@ -1394,7 +1395,9 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
 
     // Copy image to device since we accumulate (don't init to zero).
     // thrust::device_vector<thrust::complex<float>> d_out(out, out + nout);
-    thrust::device_vector<thrust::complex<float>> d_out(out, out + nout);
+    thrust::device_vector<thrust::complex<float>> d_out(nout);
+    checkCudaErrors(cudaMemcpy(d_out.data().get(), out, nout * sizeof(*out),
+        cudaMemcpyHostToDevice));
 
     for (auto k = kstart; k < kstop; ++k) {
         const auto& image_grid = grids[k];
@@ -1421,7 +1424,8 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     }
 
     // Copy result back to host.
-    thrust::copy(d_out.begin(), d_out.end(), out);
+    checkCudaErrors(cudaMemcpy(out, d_out.data().get(), nout * sizeof(*out),
+        cudaMemcpyDeviceToHost));
 
     return errc[0];
 }
