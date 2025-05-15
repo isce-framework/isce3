@@ -110,8 +110,8 @@ jobs:
         run: |
           mkdocs build
           cd build
-          rm -rf install/packages/isce3/cuda
-          pdoc -o pdoc-html --math install/packages/isce3
+          rm -rf $GITHUB_WORKSPACE/install/packages/isce3/cuda
+          pdoc -o pdoc-html --math $GITHUB_WORKSPACE/install/packages/isce3
           ls pdoc-html
           doxygen doc/doxygen/Doxyfile
           mkdir -p ../site/api/
