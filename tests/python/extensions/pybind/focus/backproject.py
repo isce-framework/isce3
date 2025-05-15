@@ -252,3 +252,14 @@ def test_factorized_backproject():
         azimuth_res, kernel_rg, kernel_az)
 
     out.tofile("out_ffbp.c8")
+
+
+def test_polar_grid_hash():
+    LS = isce.core.Linspace
+    args = (0.0, 1.0, [0, 0, 0], [1, 0, 0], LS(0, 1, 2), LS(0, 1, 2),
+        isce.core.LookSide.Left)
+    # Different instances with same parameters should be equal.
+    grid1 = isce.focus.PolarGrid(*args)
+    grid2 = isce.focus.PolarGrid(*args)
+    assert hash(grid1) == hash(grid2)
+    assert grid1 == grid2

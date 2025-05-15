@@ -9,6 +9,7 @@
 
 #include <isce3/container/RadarGeometry.h>
 #include <isce3/core/Kernels.h>
+#include <isce3/core/Linspace.h>
 #include <isce3/except/Error.h>
 #include <isce3/focus/Backproject.h>
 #include <isce3/focus/DryTroposphereModel.h>
@@ -122,6 +123,32 @@ void addbinding(py::class_<PolarGrid>& pyPolarGrid)
                             out += ", ";
             }
             return out + ")";
+        })
+        // all properties are read-only, so instances are hashable
+        .def_property_readonly("_members", [](const py::object self) {
+            const auto q = py::getattr(self, "sin_squint").cast<Linspace<double>>();
+            const auto r = py::getattr(self, "range").cast<Linspace<double>>();
+            return py::make_tuple(
+                py::getattr(self, "aztime_start"),
+                py::getattr(self, "aztime_end"),
+                py::tuple(py::getattr(self, "origin")),
+                py::tuple(py::getattr(self, "axis")),
+                py::make_tuple(q.first(), q.spacing(), q.size()),
+                py::make_tuple(r.first(), r.spacing(), r.size()),
+                py::getattr(self, "look_side")
+            );
+        })
+        .def("__hash__", [](const py::object self) {
+            return py::hash(py::getattr(self, "_members"));
+        })
+        .def("__eq__", [](const py::object self, const PolarGrid& typed_other) {
+            // Strongly-typed function signature means we don't have to check
+            // type.  The _members method is only defined in Python, though, so
+            // cast to py::object.
+            const py::object other = py::cast(typed_other);
+            const auto a = getattr(self, "_members");
+            const auto b = getattr(other, "_members");
+            return getattr(a, "__eq__")(b);
         })
         ;
 }
