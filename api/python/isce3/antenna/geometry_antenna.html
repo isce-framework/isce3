@@ -424,11 +424,11 @@
     Ellipsoid in (rad, rad, m)
 pos_sc_ecef : sequence or 1-D array of three floats
     Position of spacecraft in XYZ ECEF coordinate in meters
-quat_ant2ecef : isce3.core.Quaternion
+quat_ant2ecef : <a href="../core.html#Quaternion">isce3.core.Quaternion</a>
     Quaternion attitude of spacecraft from antenna frame to ECEF
 ant_frame : isce3.antenna.Frame, default=EL-AND-AZ
     This object defines antenna spherical coordinate type.
-ellips : isce3.core.Ellipsoid, default=WGS84
+ellips : <a href="../core.html#Ellipsoid">isce3.core.Ellipsoid</a>, default=WGS84
     Ellipsoid model of the spheroid planet on where the target is located.</p>
 
 <h2 id="returns">Returns</h2>
@@ -523,7 +523,7 @@ slant_range : float
     slant range in (m).
 orbit : isce.core.Orbit
 attitude : isce.core.Attitude
-side :  str or isce3.core.LookSide
+side :  str or <a href="../core.html#LookSide">isce3.core.LookSide</a>
     Radar antenna look direction.
 wavelength : float
     Radar wavelength in (m)
@@ -531,7 +531,7 @@ doppler : float, default=0.0
     Doppler that defines radar grid geometry in (Hz)
 dem : isce3.geometry.DEMInterpolator, default=0.0
     It covers DEM heights w.r.t. ellipsoid.
-ellipsoid : isce3.core.Ellipsoid, default='WGS84'
+ellipsoid : <a href="../core.html#Ellipsoid">isce3.core.Ellipsoid</a>, default='WGS84'
     Ellipsoid model of the spheroid planet on where the target is located.
 ant_frame : isce3.antenna.Frame, default='EL-AND-AZ'
     This object defines antenna spherical coordinate type.
@@ -661,7 +661,7 @@ az : float
     AZ angle in radians
 pos_ecef : array_like
     ECEF XYZ position of radar in m
-quat : isce3.core.Quaternion
+quat : <a href="../core.html#Quaternion">isce3.core.Quaternion</a>
     Orientation of the antenna (RCS to ECEF quaternion)
 a : float
     Radius of spherical planet in m.  Center is at (0, 0, 0).</p>
@@ -778,7 +778,7 @@ az : float
     AZ angle in radians
 pos_ecef : array_like
     ECEF XYZ position of radar in m
-quat : isce3.core.Quaternion
+quat : <a href="../core.html#Quaternion">isce3.core.Quaternion</a>
     Orientation of the antenna (RCS to ECEF quaternion)
 dem : isce3.geometry.DEMInterpolator, optional
     Digital elevation model, heights in m above ellipsoid.

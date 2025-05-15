@@ -51,13 +51,84 @@
 
             <h2>Submodules</h2>
             <ul>
-                    <li><a href="io/background.html">background</a></li>
-                    <li><a href="io/compute_page_size.html">compute_page_size</a></li>
-                    <li><a href="io/dataset.html">dataset</a></li>
                     <li><a href="io/gdal.html">gdal</a></li>
-                    <li><a href="io/optimize_chunk_size.html">optimize_chunk_size</a></li>
-                    <li><a href="io/read_opt_hdf5.html">read_opt_hdf5</a></li>
             </ul>
+
+            <h2>API Documentation</h2>
+                <ul class="memberlist">
+            <li>
+                    <a class="class" href="#Raster">Raster</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#Raster.__init__">Raster</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Raster.close_dataset">close_dataset</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.width">width</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.length">length</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.shape">shape</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.num_bands">num_bands</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.x0">x0</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.y0">y0</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.dx">dx</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.dy">dy</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.access">access</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.readonly">readonly</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Raster.get_geotransform">get_geotransform</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Raster.set_geotransform">set_geotransform</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Raster.datatype">datatype</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Raster.dtype">dtype</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Raster.get_epsg">get_epsg</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Raster.set_epsg">set_epsg</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Raster.get_block">get_block</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Raster.set_block">set_block</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="function" href="#decode_bfpq_lut">decode_bfpq_lut</a>
+            </li>
+            <li>
+                    <a class="function" href="#get_ref_epoch">get_ref_epoch</a>
+            </li>
+    </ul>
 
 
 
@@ -78,19 +149,429 @@
 
                         <label class="view-source-button" for="mod-io-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">1</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">isce3.ext.isce3.io</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos">2</span></a>
-</span><span id="L-3"><a href="#L-3"><span class="linenos">3</span></a><span class="c1"># Note that the local &#39;gdal&#39; package import shadows the gdal package that was</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos">4</span></a><span class="c1"># imported from &#39;isce3.ext.isce3.io&#39; above</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos">5</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">gdal</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos">6</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.background</span><span class="w"> </span><span class="kn">import</span> <span class="n">BackgroundReader</span><span class="p">,</span> <span class="n">BackgroundWriter</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos">7</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.compute_page_size</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_page_size</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos">8</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.optimize_chunk_size</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize_chunk_size</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos">9</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.read_opt_hdf5</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDF5OptimizedReader</span>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">isce3.ext.isce3.io</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">isce3.ext.isce3.io</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">extio</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="c1"># Note that the local &#39;gdal&#39; package import shadows the gdal package that was</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="c1"># imported from &#39;isce3.ext.isce3.io&#39; above</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">gdal</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.background</span><span class="w"> </span><span class="kn">import</span> <span class="n">BackgroundReader</span><span class="p">,</span> <span class="n">BackgroundWriter</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.compute_page_size</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_page_size</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.optimize_chunk_size</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize_chunk_size</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.read_opt_hdf5</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDF5OptimizedReader</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">extio</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)]</span>
 </span></pre></div>
 
 
             </section>
+                <section id="Raster">
+                    <div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">Raster</span><wbr>(<span class="base">pybind11_builtins.pybind11_object</span>):
+
+        
+    </div>
+    <a class="headerlink" href="#Raster"></a>
+    
+    
+
+                            <div id="Raster.__init__" class="classattr">
+                                <div class="attr function">
+            
+        <span class="name">Raster</span><span class="signature pdoc-code condensed">()</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.__init__"></a>
+    
+            <div class="docstring"><p>__init__(<em>args, *</em>kwargs)
+Overloaded function.</p>
+
+<ol>
+<li>__init__(self: <a href="#Raster">Raster</a>, path: str, update: bool = False) -> None</li>
+</ol>
+
+<p>Open raster in update or read-only (default) mode</p>
+
+<ol start="2">
+<li>__init__(self: <a href="#Raster">Raster</a>, path: str, width: int, length: int, num_bands: int, dtype: int, driver_name: str) -> None</li>
+</ol>
+
+<p>Create a raster dataset</p>
+
+<ol start="3">
+<li>__init__(self: <a href="#Raster">Raster</a>, path: str, raster_list: list[<a href="#Raster">Raster</a>]) -> None</li>
+</ol>
+
+<p>Create a VRT raster dataset from list of rasters</p>
+
+<ol start="4">
+<li>__init__(self: <a href="#Raster">Raster</a>, py_ds_ptr: int) -> None</li>
+</ol>
+
+<p>Create a raster from Python GDAlDataset</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.close_dataset" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">close_dataset</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.close_dataset"></a>
+    
+            <div class="docstring"><p>close_dataset(self: <a href="#Raster">Raster</a>) -> None</p>
+
+<p>Close the dataset.</p>
+
+<p>Decrements the reference count of the underlying <code>GDALDataset</code>, which,
+if this was the last open instance, causes the dataset to be closed
+and any cached changes to be flushed to disk.</p>
+
+<p>This invalidates the <code><a href="#Raster">Raster</a></code> instance -- it cannot be used after closing
+the underlying dataset.</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.width" class="classattr">
+                                <div class="attr variable">
+            <span class="name">width</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.width"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> int</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.length" class="classattr">
+                                <div class="attr variable">
+            <span class="name">length</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.length"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> int</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.shape" class="classattr">
+                                <div class="attr variable">
+            <span class="name">shape</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.shape"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> tuple</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.num_bands" class="classattr">
+                                <div class="attr variable">
+            <span class="name">num_bands</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.num_bands"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> int</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.x0" class="classattr">
+                                <div class="attr variable">
+            <span class="name">x0</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.x0"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> float</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.y0" class="classattr">
+                                <div class="attr variable">
+            <span class="name">y0</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.y0"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> float</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.dx" class="classattr">
+                                <div class="attr variable">
+            <span class="name">dx</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.dx"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> float</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.dy" class="classattr">
+                                <div class="attr variable">
+            <span class="name">dy</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.dy"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> float</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.access" class="classattr">
+                                <div class="attr variable">
+            <span class="name">access</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.access"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> isce3.ext.isce3.io.gdal.GDALAccess</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.readonly" class="classattr">
+                                <div class="attr variable">
+            <span class="name">readonly</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.readonly"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> bool</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.get_geotransform" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_geotransform</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.get_geotransform"></a>
+    
+            <div class="docstring"><p>get_geotransform(self: <a href="#Raster">Raster</a>) -> list[float]</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.set_geotransform" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">set_geotransform</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.set_geotransform"></a>
+    
+            <div class="docstring"><p>set_geotransform(self: <a href="#Raster">Raster</a>, arg0: list[float]) -> None</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.datatype" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">datatype</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.datatype"></a>
+    
+            <div class="docstring"><p>datatype(self: <a href="#Raster">Raster</a>, band: int = 1) -> int</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.dtype" class="classattr">
+                                <div class="attr variable">
+            <span class="name">dtype</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.dtype"></a>
+    
+            <div class="docstring"><p>(arg0: <a href="#Raster">Raster</a>) -> numpy.dtype</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.get_epsg" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_epsg</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.get_epsg"></a>
+    
+            <div class="docstring"><p>get_epsg(self: <a href="#Raster">Raster</a>) -> int</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.set_epsg" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">set_epsg</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.set_epsg"></a>
+    
+            <div class="docstring"><p>set_epsg(self: <a href="#Raster">Raster</a>, arg0: int) -> int</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.get_block" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_block</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.get_block"></a>
+    
+            <div class="docstring"><p>get_block(self: <a href="#Raster">Raster</a>, key: tuple[slice, slice], band: int = 1) -> numpy.ndarray</p>
+
+<p>Read a block of data from the raster dataset.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<p>key : (slice, slice)
+    The row and column indices of the block to read from the
+    raster. Normal Python slicing rules apply.
+band : int, optional
+    The (1-based) index of the raster band to read from.
+    Defaults to 1.</p>
+
+<h2 id="returns">Returns</h2>
+
+<p>numpy.ndarray
+    A 2-D NumPy array with the same datatype as the raster
+    containing the values read from the raster.</p>
+</div>
+
+
+                            </div>
+                            <div id="Raster.set_block" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">set_block</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#Raster.set_block"></a>
+    
+            <div class="docstring"><p>set_block(self: <a href="#Raster">Raster</a>, key: tuple[slice, slice], value: Buffer, band: int = 1) -> None</p>
+
+<p>Write a block of data to a raster.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<p>key : (slice, slice)
+    The row and column indices of the block in the raster to be
+    overwritten. Normal Python slicing rules apply.
+value : array_like
+    The data to write to the raster.
+band : int, optional
+    The (1-based) index of the raster band to write to.
+    Defaults to 1.</p>
+</div>
+
+
+                            </div>
+                </section>
+                <section id="decode_bfpq_lut">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">decode_bfpq_lut</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#decode_bfpq_lut"></a>
+    
+            <div class="docstring"><p>decode_bfpq_lut(table: numpy.ndarray[numpy.float32], indices: numpy.ndarray[complex_u16]) -> numpy.ndarray[numpy.complex64]</p>
+
+<p>Look up complex valued indexes in BFPQ decode table,
+equivalent to <code>table[indices['r']] + 1j * table[indices['i']]</code></p>
+
+<p>This is a highly specialized function provided to parallelize
+a particular task related to decoding NISAR L0B data.  Note that it
+only works for indices.ndim==2.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<p>table : numpy.ndarray
+    BFPQ look up table that provides the floating-point values
+    associated with the composite key <code>(exponent &lt;&lt; M) | mantissa</code>
+    where M is the number of bits in the mantissa (including sign).
+indices : numpy.ndarray
+    Array containing the data signal data, where the real and imaginary
+    parts are each encoded as 16-bit unsigned integer indexes into
+    <code>table</code>.</p>
+
+<h2 id="returns">Returns</h2>
+
+<p>out : numpy.ndarray
+    Complex floating-point data decoded from <code>indices</code>.</p>
+</div>
+
+
+                </section>
+                <section id="get_ref_epoch">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_ref_epoch</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">unknown</span></span><span class="return-annotation">):</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#get_ref_epoch"></a>
+    
+            <div class="docstring"><p>get_ref_epoch(arg0: object, arg1: str) -> isce3.ext.isce3.core.DateTime</p>
+</div>
+
+
+                </section>
     </main>
 <script>
     function escapeHTML(html) {

@@ -242,22 +242,22 @@ Doppler (reskew) or orbit (motion compensation).</p>
         Azimuth time, seconds past orbit epoch
 r : float
         Range, m
-orbit : isce3.core.Orbit
+orbit : <a href="../core.html#Orbit">isce3.core.Orbit</a>
         Orbit defining radar motion on input path
-side : {"left", "right", isce3.core.LookSide.Left, isce3.core.LookSide.Right}
+side : {"left", "right", <a href="../core.html#LookSide.Left">isce3.core.LookSide.Left</a>, <a href="../core.html#LookSide.Right">isce3.core.LookSide.Right</a>}
         Flag describing which side the radar is looking.
-doppler : isce3.core.LUT2d
+doppler : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     Doppler look up table vs input range and azimuth time, Hz
 wavelength : float
     Wavelength associated with Doppler, m
 dem : isce3.geometry.DEMInterpolator, optional
     Digital elevation model, m above ellipsoid.  Defaults to h=0.
-ellipsoid : isce3.core.Ellipsoid, optional
+ellipsoid : <a href="../core.html#Ellipsoid">isce3.core.Ellipsoid</a>, optional
     Ellipsoid describing surface.  Defaults to WGS-84.
-doppler_out : isce3.core.LUT2d, optional
+doppler_out : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>, optional
     Doppler look up table vs output range and azimuth time, Hz
     Defaults to input <code>doppler</code>.
-orbit_out : isce3.core.Orbit, optional
+orbit_out : <a href="../core.html#Orbit">isce3.core.Orbit</a>, optional
     Orbit defining radar motion on output path.  Defaults to input <code>orbit</code>.
 rdr2geo_params : dict, optional
     Dictionary specifying convergence parameters for rdr2geo solver.

@@ -1082,7 +1082,7 @@ mixed-mode processing.</p>
     reference epoch.
 chirp_durations : list[float]
     Duration of transmit chirp for each raw data file, in seconds.
-orbit : isce3.core.Orbit
+orbit : <a href="../core.html#Orbit">isce3.core.Orbit</a>
     Radar trajectory.
 wavelength : float
     Radar wavelength in meters.
@@ -1090,7 +1090,7 @@ azres : float
     Intended azimuth resolution in meters.
 prf : float
     Pulse repetition frequency in Hz.
-ellipsoid : isce3.core.Ellipsoid, optional
+ellipsoid : <a href="../core.html#Ellipsoid">isce3.core.Ellipsoid</a>, optional
     Ellipsoid describing shape of planet.
 convolution_mode : {"valid", "full", "same"}, optional
     How to handle boundary effects of focusing operation.  For "valid",
@@ -1234,16 +1234,16 @@ domain to focused image domain (usually zero Doppler for NISAR).</p>
 <p>raw_polygon_lists : list[list[shapely.Polygon]]
     List of valid data regions for each file/observation specified in
     raw radar (x=range, y=time) coordinates (e.g., native Doppler).
-orbit : isce3.core.Orbit
+orbit : <a href="../core.html#Orbit">isce3.core.Orbit</a>
     Trajectory of radar antenna phase center.
-lookside : isce3.core.LookSide
+lookside : <a href="../core.html#LookSide">isce3.core.LookSide</a>
     Side that radar observes (Left or Right)
-native_doppler : isce3.core.LUT2d
+native_doppler : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     Doppler centroid in Hz.  Time should be referenced to the same epoch
     as the orbit.
 wavelength : float
     Wavelength associated with Doppler in meters.
-image_grid_doppler : isce3.core.LUT2d, optional
+image_grid_doppler : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>, optional
     Doppler (in Hz) associated with focused image grid geometry.
     Defaults to zero-Doppler (NISAR convention).
 dem : isce3.geometry.DEMInterpolator, optional
@@ -1505,9 +1505,9 @@ gaps and gaps between files (in multi-observation processing).</p>
     reference epoch.
 chirp_durations : list[float]
     Duration of transmit chirp for each raw data file.
-orbit : isce3.core.Orbit
+orbit : <a href="../core.html#Orbit">isce3.core.Orbit</a>
     Trajectory of radar antenna phase center.
-native_doppler : isce3.core.LUT2d
+native_doppler : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     Doppler centroid in Hz.  Time should be referenced to the same epoch
     as the orbit.
 azres : float
@@ -1516,7 +1516,7 @@ grid : isce3.product.RadarGridParameters
     Grid for focused image.
 dem : isce3.geometry.DEMInterpolator, optional
     Digital elevation model.  Defaults to 0 m above WGS84 ellipsoid.
-image_grid_doppler : isce3.core.LUT2d, optional
+image_grid_doppler : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>, optional
     Doppler (in Hz) associated with focused image grid geometry.
     Defaults to zero-Doppler (NISAR convention).
 rdr2geo_params : dict, optional

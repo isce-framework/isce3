@@ -398,13 +398,13 @@
 
 <h2 id="parameters">Parameters</h2>
 
-<p>orbit : isce3.core.Orbit
+<p>orbit : <a href="../core.html#Orbit">isce3.core.Orbit</a>
     Trajectory of antenna phase center
-Attitude : isce3.core.Attitude
+Attitude : <a href="../core.html#Attitude">isce3.core.Attitude</a>
     Orientation of the antenna (RCS) frame wrt ECEF frame
-side : isce3.core.LookSide or str in {"left", "right"}
+side : <a href="../core.html#LookSide">isce3.core.LookSide</a> or str in {"left", "right"}
     Side the radar looks
-doppler : isce3.core.LUT2d
+doppler : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     Doppler centroid (in Hz) corresponding to radar boresight.
     The output EL LUT2d will have identical (time, range) postings.
 wavelength : float
@@ -420,13 +420,13 @@ interp_method : str, optional
 
 <h2 id="returns">Returns</h2>
 
-<p>el_lut : isce3.core.LUT2d
+<p>el_lut : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     EL angle (in rad) vs native-Doppler radar coordinates (time, range).
-inc_lut : isce3.core.LUT2d
+inc_lut : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     Ellipsoidal incidence angle (in rad) relative to ellipsoid normal at
     target vs native-Doppler radar coordinates (time, range), where
     ellipsoid is inferred from DEM.
-hgt_lut : isce3.core.LUT2d
+hgt_lut : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     Terrain height (in m) vs native-Doppler radar coordinates (time, range).</p>
 </div>
 
@@ -657,7 +657,7 @@ area normalization conventions.</p>
 
 <h2 id="parameters">Parameters</h2>
 
-<p>inc_lut : isce3.core.LUT2d
+<p>inc_lut : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     Ellipsoidal incidence angle (in rad) lookup table.
 abscal : float
     Absolute calibration factor to divide from image power (units of DN^2)
@@ -666,9 +666,9 @@ input_convention : isce3.focus.AreaConvention, optional
 
 <h2 id="returns">Returns</h2>
 
-<p>beta0 : isce3.core.LUT2d
-sigma0 : isce3.core.LUT2d
-gamma0 : isce3.core.LUT2d
+<p>beta0 : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
+sigma0 : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
+gamma0 : <a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     Lookup tables for scaling input SLC data to all three backscatter
     area normalization conventions according to the formula
         backscatter = abs(z)<strong>2 / lut</strong>2

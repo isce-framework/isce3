@@ -471,11 +471,11 @@ wvl : float
 slant_range : array_like
     Slant range coordinates of the output LUT, in meters. Values must be uniformly
     spaced.
-orbit : isce3.core.Orbit
+orbit : <a href="../core.html#Orbit">isce3.core.Orbit</a>
     The path of the antenna phase center over a period spanning the azimuth time
     bounds of the output LUT. If <code>epoch</code> is None, this must have the same reference
     epoch as <code>attitude</code>.
-attitude : isce3.core.Attitude
+attitude : <a href="../core.html#Attitude">isce3.core.Attitude</a>
     The orientation of the antenna over a period spanning the azimuth time bounds of
     the output LUT. Represents the rotation from the radar antenna coordinate system
     to ECEF coordinates as a function of time. The antenna coordinate system is a
@@ -490,7 +490,7 @@ dem : DEMInterpolator or None, optional
     WGS 84 ellipsoid. If None, a zero-height DEM is used. Will calculate stats
     (modifying input object) if they haven't already been calculated. Defaults to
     None.
-epoch : isce3.core.DateTime or None, optional
+epoch : <a href="../core.html#DateTime">isce3.core.DateTime</a> or None, optional
     Reference epoch for the azimuth time coordinates of the output LUT. If None,
     defaults to the reference epoch of <code>orbit</code> and <code>attitude</code> (which must have the
     same reference epoch in this case). Defaults to None.
@@ -498,7 +498,7 @@ az_angle : float, optional
     Complement of the angle between the along-track axis of the antenna and its
     electrical boresight, in radians.  Zero for non-scanned, flush-mounted antennas
     like ALOS-1. Defaults to 0.
-interp_method : isce3.core.DataInterpMethod or str, optional
+interp_method : <a href="../core.html#DataInterpMethod">isce3.core.DataInterpMethod</a> or str, optional
     Interpolation method used by the output LUT. Defaults to 'bilinear'.
 bounds_error : bool, optional
     Whether to raise an exception when attempting to evaluate the output LUT outside
@@ -506,7 +506,7 @@ bounds_error : bool, optional
 
 <h2 id="returns">Returns</h2>
 
-<p>isce3.core.LUT2d
+<p><a href="../core.html#LUT2d">isce3.core.LUT2d</a>
     A 2-D LUT that may be used to compute the estimated Doppler centroid of the SAR
     acquisition, in hertz, as a function of azimuth time and slant range.</p>
 </div>
