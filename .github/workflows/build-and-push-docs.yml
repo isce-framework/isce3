@@ -110,8 +110,10 @@ jobs:
         run: |
           mkdocs build
           cd build
+          pdoc -o pdoc-html --math install/packages/isce3
           doxygen doc/doxygen/Doxyfile
           mkdir -p ../site/api/
+          mv pdoc-html ../site/api/python
           mv docs-output ../site/api/cxx
 
       - name: Deploy docs
