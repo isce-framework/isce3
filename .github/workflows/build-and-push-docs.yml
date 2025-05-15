@@ -111,6 +111,7 @@ jobs:
           mkdocs build
           cd build
           pdoc -o pdoc-html --math install/packages/isce3
+          ls pdoc-html
           doxygen doc/doxygen/Doxyfile
           mkdir -p ../site/api/
           mv pdoc-html ../site/api/python
