@@ -110,6 +110,7 @@ jobs:
         run: |
           mkdocs build
           cd build
+          rm -rf install/packages/isce3/cuda
           pdoc -o pdoc-html --math install/packages/isce3
           ls pdoc-html
           doxygen doc/doxygen/Doxyfile

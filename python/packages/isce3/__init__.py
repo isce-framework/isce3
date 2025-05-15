@@ -30,7 +30,3 @@ from . import atmosphere
 # attributes to `isce3` above. (If you try to import it in alphabetical order you will
 # get an AttributeError.)
 from . import cal
-
-# check for cuda
-if hasattr(extisce3, "cuda"):
-    from . import cuda
