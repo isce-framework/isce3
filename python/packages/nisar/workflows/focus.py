@@ -2,7 +2,7 @@
 from __future__ import annotations
 from bisect import bisect_left, bisect_right
 from collections import defaultdict
-from functools import reduce
+from functools import reduce, lru_cache
 import h5py
 from itertools import chain
 import json
@@ -1602,6 +1602,16 @@ def get_azcomp_stage_config(cfg: Struct):
     return [T.from_dict(struct2dict(factor)) for factor in factors]
 
 
+class Task:
+    def __init__(self, function, *args, **kwargs):
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+
+    def result(self):
+        return self.function(*self.args, **self.kwargs)
+
+
 def azcomp_ffbp(factors: BackprojectionStageParameters,
         azres, kernel, blocks_bounds, igeom, rc_grid,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
@@ -1631,14 +1641,33 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
             h5.create_dataset("epoch", data=np.bytes_(epoch))
             h5.create_dataset("wavelength", data=igeom.radar_grid.wavelength)
 
-    # focus to intermediate grids
+    # Focus to intermediate grids.
+    # NOTE We'll actually just define the tasks and only evaluate them as needed
+    # in order to reduce memory pressure.  We could process them in
+    # parallel using concurrent.futures or dask, for for now just store them in
+    # a dict keyed by the PolarGrid associated with the imagelets.
+    tasks = dict()
     aztimes = np.array(rc_grid.sensing_times)
     pris = np.hstack((np.diff(aztimes), aztimes[-1] - aztimes[-2]))
-    results = []
     stage = factors[0]
+    nfft2d_params = nfft_params_dict(stage.interpolation)
     pulse_starts = range(0, rc_grid.length, stage.size)
     log.info(f"Beginning initial factorizations of {stage.size} pulses")
     nblocks = len(pulse_starts)
+
+    def process_pulses(iblock, nblocks, debugfile, fdata, sr, x, v,
+                polar_grid, dem, fc, kernel, atmos, rdr2geo_params):
+        log.info(f"Focusing {len(x)} pulses to polar image {iblock + 1} of {nblocks}")
+        _, img, _ = bp_to_polar_grid(fdata, sr, x, v,
+            polar_grid, dem, fc, kernel, atmos, rdr2geo_params)
+        if debugfile is not None:
+            log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
+            with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
+                g = h5.require_group(f"stage_00/block_{iblock:06d}")
+                isce3.focus.save_polar_image_to_h5(img, polar_grid, g)
+        log.info("NFFT upsampling and filtering")
+        return isce3.signal.make_image_nfft2d(img, nfft2d_params, pad_input=True)
+
     for i in pulse_starts:
         pulses = slice(i, i + stage.size)
         ti = aztimes[pulses]
@@ -1649,83 +1678,91 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
         iblock = i // stage.size
-        log.info(f"Computing initial factorization {iblock + 1} of {nblocks}")
         polar_grid, x, v = isce3.focus.setup_polar_grid_for_pulses(fgeom, ti,
             bandwidth, azres, stage.oversample_range, stage.oversample_azimuth,
             pri=pris[pulses][-1])
-        err, img, hgt = bp_to_polar_grid(fdata, fgrid.slant_ranges, x, v,
+        tasks[polar_grid] = Task(process_pulses, iblock, nblocks,
+            debugfile, fdata, fgrid.slant_ranges, x, v,
             polar_grid, dem, fc, kernel, atmos, rdr2geo_params)
-        results.append((err, polar_grid, img, hgt))
 
+    grids = sorted(tasks.keys(), key = lambda grid: grid.aztime_start)
+
+    # Merge polar grids to make bigger polar grids.
+    # With Python 3.12 we could use itertools.batched
+    def process_merge(i_stage, i_block, nblocks, in_grids, out_grid, nfft2d_params):
+        # Process the input data we need.  Middle stages don't overlap, so no
+        # harm in popping the task off the stack.
+        in_images = [tasks.pop(grid).result() for grid in in_grids]
+        log.info(f"Merging {len(in_grids)} polar images stage {i_stage} block "
+            f"{i_block + 1} / {nblocks}")
+        out_image = np.zeros(out_grid.shape, np.complex64)
+        isce3.focus.merge_polar_images(in_grids, in_images, out_grid, out_image,
+            fc, dem, rdr2geo_params)
         if debugfile is not None:
-            log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
+            name = f"stage_{i_stage + 1:02d}/block_{i_block:06d}"
             with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
-                g = h5.require_group(f"stage_00/block_{iblock:06d}")
-                isce3.focus.save_polar_image_to_h5(img, polar_grid, g)
-
-    # pull out sub-image grids
-    grids = [result[1] for result in results]
-    images = [result[2] for result in results]
-
-    log.info("Computing NFFT transforms of sub-images")
-    nfft2d_params = nfft_params_dict(stage.interpolation)
-    image_interpolators = [
-        isce3.signal.make_image_nfft2d(image, nfft2d_params, pad_input=True)
-        for image in images]
+                g = h5.require_group(name)
+                isce3.focus.save_polar_image_to_h5(out_image, out_grid, g)
+        log.info("NFFT upsampling and filtering")
+        return isce3.signal.make_image_nfft2d(out_image, nfft2d_params, pad_input=True)
 
     num_middle_stages = len(factors[1:])
     for i_stage, stage in enumerate(factors[1:]):
+        log.info("Planning intermediate factorization stage "
+            + f"{i_stage + 1} / {num_middle_stages}")
+
         # Don't let azimuth resolution grow finer than user requested one.
         dq_min = azres / (ogrid.slant_ranges[-1] * stage.oversample_azimuth)
         tq = tq_max / stage.oversample_azimuth
 
-        stage_description = f"{i_stage + 1} / {num_middle_stages}"
-        log.info("Computing intermediate factorization stage "
-            + stage_description)
-        grids_out, images_out = [], []
+        nfft2d_params = nfft_params_dict(stage.interpolation)
         input_block_starts = range(0, len(grids), stage.size)
         nblocks = len(input_block_starts)
+        stage_grids = []
+
         for i in input_block_starts:
             i_block = i // stage.size
-            log.info(f"Merging polar images stage {stage_description}"
-                f" block {i_block + 1} / {nblocks}")
             mask = slice(i, i + stage.size)
-            my_grid = isce3.focus.merge_polar_grids(grids[mask], dem,
+            input_grids = grids[mask]
+            if len(input_grids) == 1:
+                # No need to merge. Grid is already tasked, though be sure to
+                # carry it forward to next stage.
+                stage_grids.append(input_grids[0])
+                continue
+            my_grid = isce3.focus.merge_polar_grids(input_grids, dem,
                 rdr2geo_params, dq_min, tq)
-            my_image = np.zeros(my_grid.shape, np.complex64)
-            isce3.focus.merge_polar_images(grids[mask],
-                image_interpolators[mask], my_grid, my_image, fc, dem,
-                rdr2geo_params)
-            grids_out.append(my_grid)
-            images_out.append(my_image)
+            tasks[my_grid] = Task(process_merge, i_stage, i_block, nblocks,
+                input_grids, my_grid, nfft2d_params)
+            stage_grids.append(my_grid)
 
-            if debugfile is not None:
-                name = f"stage_{i_stage + 1:02d}/block_{i_block:06d}"
-                with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
-                    g = h5.require_group(name)
-                    isce3.focus.save_polar_image_to_h5(my_image, my_grid, g)
+        # Use this stage's grids as input for next stage.
+        grids = stage_grids
 
-        log.info(f"Computing NFFT transforms for stage {i_stage + 1}")
-        nfft2d_params = nfft_params_dict(stage.interpolation)
-        image_interpolators = [
-            isce3.signal.make_image_nfft2d(image, nfft2d_params, pad_input=True)
-            for image in images_out]
-        grids = grids_out
-
-
-    # sum factors into final image
+    # plan final stage to get bound on LRU cache size
+    blocks_grids = list()
     for block, (t0, t1) in blocks_bounds:
         description = f"(i, j) = ({block[0].start}, {block[1].start})"
         if not is_overlapping(t0, t1,
                             rc_grid.sensing_start, rc_grid.sensing_stop):
-            log.info(f"Skipping inactive azcomp block at {description}")
+            log.info(f"Will skip inactive azcomp block at {description}")
             continue
-        isneeded = [(t1 > grid.aztime_start) and (t0 <= grid.aztime_end)
-            for grid in grids]
-        assert len(grids) == len(image_interpolators)
-        active_grids = [grids[i] for i in range(len(grids)) if isneeded[i]]
-        active_images = [image_interpolators[i] for i in range(len(grids))
-            if isneeded[i]]
+        active_grids = [grid for grid in grids
+            if is_overlapping(t0, t1, grid.aztime_start, grid.aztime_end)]
+        blocks_grids.append((block, active_grids))
+
+    max_images = max(len(active_grids) for (_, active_grids) in blocks_grids)
+    log.info(f"Proceeding to final stage with max {max_images} sub-images per block")
+
+    @lru_cache(maxsize=max_images)
+    def get_image_iterpolator(polar_grid):
+        # Using pop() to remove from stack ensures that cache is adequate to
+        # avoid redundant computations.
+        return tasks.pop(polar_grid).result()
+
+    # sum factors into final image
+    for block, active_grids in blocks_grids:
+        description = f"(i, j) = ({block[0].start}, {block[1].start})"
+        active_images = [get_image_iterpolator(grid) for grid in active_grids]
         bgrid = ogrid[block]
         ogeom = isce3.container.RadarGeometry(bgrid, igeom.orbit, zerodop)
         z = np.zeros(bgrid.shape, 'c8')
@@ -1739,6 +1776,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
             log.warning("azcomp block contains some invalid pixels")
         writer.queue_write(z, block)
 
+    assert len(tasks) == 0, "We've got unfinished business..."
 
 
 def focus(runconfig, runconfig_path=""):
