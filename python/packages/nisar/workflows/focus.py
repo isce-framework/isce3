@@ -1738,7 +1738,8 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         # Use this stage's grids as input for next stage.
         grids = stage_grids
 
-    # plan final stage to get bound on LRU cache size
+    # Plan final stage to get bound on LRU cache size, assuming FIFO access
+    # pattern.
     blocks_grids = list()
     for block, (t0, t1) in blocks_bounds:
         description = f"(i, j) = ({block[0].start}, {block[1].start})"
@@ -1755,9 +1756,16 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
 
     @lru_cache(maxsize=max_images)
     def get_image_iterpolator(polar_grid):
-        # Using pop() to remove from stack ensures that cache is adequate to
-        # avoid redundant computations.
-        return tasks.pop(polar_grid).result()
+        # Using pop() to remove from stack requires that cache size is adequate
+        # to avoid redundant computations, which we prioritize over generality.
+        try:
+            return tasks.pop(polar_grid).result()
+        except KeyError as err:
+            msg = ("Failed to retrieve sub-image spanning time interval "
+                f"[{polar_grid.aztime_start}, {polar_grid.aztime_end}).  This "
+                "could mean that the stripmap assumption was violated.")
+            log.error(msg)
+            raise
 
     # sum factors into final image
     for block, active_grids in blocks_grids:
