@@ -148,7 +148,7 @@ void addbinding(py::class_<PolarGrid>& pyPolarGrid)
             const py::object other = py::cast(typed_other);
             const auto a = getattr(self, "_members");
             const auto b = getattr(other, "_members");
-            return getattr(a, "__eq__")(b);
+            return a.equal(b);
         })
         ;
 }
