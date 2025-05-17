@@ -39,6 +39,7 @@
 
 using namespace isce3::core;
 using namespace isce3::cuda::geometry;
+using namespace isce3::cuda::focus::detail;
 
 using isce3::cuda::core::interp1d;
 using isce3::error::ErrorCode;
@@ -73,7 +74,7 @@ template<typename T> using DeviceTabulatedKernel = isce3::cuda::core::TabulatedK
 
 namespace isce3 { namespace cuda { namespace focus {
 
-namespace {
+namespace detail {
 
 /**
  * \internal
@@ -526,7 +527,7 @@ __global__ void sumCoherentBatch(
     out[tid] += thrust::complex<float>(batch_sum);
 }
 
-} // namespace
+} // namespace detail
 
 template<class Kernel>
 ErrorCode backproject(std::complex<float>* out,
@@ -1129,7 +1130,7 @@ backprojectToPolarGrid(
 }
 
 __global__ void
-interpPolar(thrust::complex<float>* geo_image, const Vec3* geo_points,
+detail::interpPolar(thrust::complex<float>* geo_image, const Vec3* geo_points,
     size_t n, const PolarGrid grid,
     const isce3::cuda::signal::NFFT2dResultView<float> nfft, const double kw)
 {
@@ -1234,200 +1235,5 @@ projectPolarToGeo(
     return ErrorCode::Success;
 }
 
-ErrorCode
-accumulatePolarImagesToRadarGrid(std::complex<float>* out,
-        const HostRadarGeometry& out_geometry,
-        const isce3::core::Orbit& in_orbit,
-        const isce3::core::LUT2d<double>& in_doppler,
-        const std::vector<isce3::focus::PolarGrid>& grids,
-        const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
-        const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
-        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
-        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
-        float* height)
-{
-    static constexpr double c = isce3::core::speed_of_light;
-    static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
-
-    // will search sorted intervals to figure out active sub images per target
-    auto starts = std::vector<double>(grids.size());
-    std::transform(grids.begin(), grids.end(), starts.begin(),
-        [](const PolarGrid& grid) { return grid.aztime_start; });
-    auto ends = std::vector<double>(grids.size());
-    std::transform(grids.begin(), grids.end(), ends.begin(),
-        [](const PolarGrid& grid) { return grid.aztime_end; });
-
-    // get input & output radar grid azimuth time & slant range
-    Linspace<double> out_azimuth_time = out_geometry.sensingTime();
-    Linspace<double> out_slant_range = out_geometry.slantRange();
-
-    // reference ellipsoid
-    int epsg = dem.epsgCode();
-    Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
-
-    // carrier wavelength
-    const double wvl = c / fc;
-    const double kw = 4 * M_PI / wvl;
-
-    // copy inputs to device
-    const DeviceRadarGeometry d_out_geometry(out_geometry);
-    DeviceDEMInterpolator d_dem(dem);
-
-    const size_t nout = out_geometry.gridLength() * out_geometry.gridWidth();
-
-    thrust::device_vector<Vec3> d_x(nout);
-    thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
-    {
-        const unsigned block = 256;
-        const unsigned grid = (nout + block - 1) / block;
-
-        runRdr2Geo<<<grid, block>>>(d_x.data().get(), out_azimuth_time,
-                out_slant_range, d_out_geometry.doppler(),
-                d_out_geometry.orbit(), d_dem, ellipsoid, wvl,
-                d_out_geometry.lookSide(), r2g_params, errc.data().get());
-
-        checkCudaErrors(cudaPeekAtLastError());
-        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
-    }
-
-    // transform each target position from ECEF to LLH coordinates
-    // NOTE only really needed if dumping height layer or doing TSX atmosphere
-    // correction, but just compute it unconditionally.
-    thrust::device_vector<Vec3> d_llh(nout);
-
-    {
-        const unsigned block = 256;
-        const unsigned grid = (nout + block - 1) / block;
-
-        ecef2llh<<<grid, block>>>(d_llh.data().get(), d_x.data().get(),
-                                  nout, ellipsoid);
-
-        checkCudaErrors(cudaPeekAtLastError());
-        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
-    }
-
-    if (height != nullptr) {
-        thrust::device_vector<float> d_height(nout);
-        thrust::transform(d_llh.begin(), d_llh.end(), d_height.begin(),
-                [] __device__ (const Vec3& x) { return (float)x[2]; });
-        checkCudaErrors(cudaMemcpy(height, d_height.data().get(),
-                nout * sizeof(float), cudaMemcpyDeviceToHost));
-    }
-
-    // TODO atmosphere
-
-    d_llh.clear();  d_llh.shrink_to_fit();
-
-    // Running geo2rdr to get integration bounds seems like overkill.
-    // TODO Maybe mask on Doppler instead?
-    thrust::device_vector<double> d_t(nout);
-    thrust::device_vector<double> d_r(nout);
-    auto d_in_orbit = isce3::cuda::core::Orbit(in_orbit);
-    auto d_in_orbit_view = isce3::cuda::core::OrbitView(d_in_orbit);
-    auto d_in_doppler = DeviceLUT2d<double>(in_doppler);
-
-    {
-        const unsigned block = 256;
-        const unsigned grid = (nout + block - 1) / block;
-
-        runGeo2Rdr<<<grid, block>>>(
-                d_t.data().get(), d_r.data().get(), d_x.data().get(), nout,
-                d_in_orbit_view, d_in_doppler, wvl,
-                d_out_geometry.lookSide(), g2r_params, errc.data().get());
-
-        checkCudaErrors(cudaPeekAtLastError());
-        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
-    }
-
-    // get platform position & velocity at center of CPI for each target
-    thrust::device_vector<Vec3> d_p(nout);
-    thrust::device_vector<Vec3> d_v(nout);
-
-    {
-        const unsigned block = 256;
-        const unsigned grid = (nout + block - 1) / block;
-
-        interpolateOrbit<<<grid, block>>>(d_p.data().get(), d_v.data().get(),
-                                          d_in_orbit_view, d_t.data().get(),
-                                          nout, errc.data().get());
-
-        checkCudaErrors(cudaPeekAtLastError());
-        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
-    }
-
-    // get coherent integration bounds (pulse indices) for each target
-    thrust::device_vector<double> d_tstart(nout);
-    thrust::device_vector<double> d_tstop(nout);
-
-    {
-        const unsigned block = 256;
-        const unsigned grid = (nout + block - 1) / block;
-
-        getCPITimeBounds<<<grid, block>>>(d_tstart.data().get(),
-                d_tstop.data().get(), d_t.data().get(), d_r.data().get(),
-                d_x.data().get(), d_p.data().get(), d_v.data().get(), nout,
-                wvl, ds);
-
-        checkCudaErrors(cudaPeekAtLastError());
-        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
-    }
-
-    d_p.clear();  d_p.shrink_to_fit();
-    d_v.clear();  d_v.shrink_to_fit();
-    d_t.clear();  d_t.shrink_to_fit();
-    d_r.clear();  d_r.shrink_to_fit();
-
-    std::vector<double> tstart(nout), tstop(nout);
-    thrust::copy(d_tstart.begin(), d_tstart.end(), tstart.begin());
-    thrust::copy(d_tstop.begin(), d_tstop.end(), tstop.begin());
-
-    // std::vector<bool> unsuitable due to bit packing optimizations
-    Eigen::Array<bool, Eigen::Dynamic, 1> mask(nout);
-
-    // TODO reduce tstart & tend
-    // TODO check this O(log(n)) algorithm
-    //const auto kstart = std::distance(ends.begin(),
-    //    std::lower_bound(ends.begin(), ends.end(), tstart));
-    //const auto kstop = std::distance(starts.begin(),
-    //    std::upper_bound(starts.start(), starts.end(), tstart + cpi));
-    const auto num_images = image_interpolators.size();
-    const decltype(num_images) kstart = 0, kstop = num_images;
-
-    // Copy image to device since we accumulate (don't init to zero).
-    // thrust::device_vector<thrust::complex<float>> d_out(out, out + nout);
-    thrust::device_vector<thrust::complex<float>> d_out(nout);
-    checkCudaErrors(cudaMemcpy(d_out.data().get(), out, nout * sizeof(*out),
-        cudaMemcpyHostToDevice));
-
-    for (auto k = kstart; k < kstop; ++k) {
-        const auto& image_grid = grids[k];
-        const auto& nfft = image_interpolators[k];
-        isce3::focus::makeSubApertureMask(image_grid.aztime_start,
-                image_grid.aztime_end, nout, tstart.data(), tstop.data(),
-                mask.data());
-
-        // copy sub-image to device and get a view of its memory.
-        const auto d_nfft = isce3::cuda::signal::NFFT2dResult(nfft);
-        const auto d_nfft_view = isce3::cuda::signal::NFFT2dResultView(d_nfft);
-
-        {
-            const unsigned block = 256;
-            const unsigned cuda_grid = (nout + block - 1) / block;
-
-            // TODO mask
-            interpPolar<<<cuda_grid, block>>>(d_out.data().get(),
-                    d_x.data().get(), nout, image_grid, d_nfft_view, kw);
-
-            checkCudaErrors(cudaPeekAtLastError());
-            checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
-        }
-    }
-
-    // Copy result back to host.
-    checkCudaErrors(cudaMemcpy(out, d_out.data().get(), nout * sizeof(*out),
-        cudaMemcpyDeviceToHost));
-
-    return errc[0];
-}
 
 }}} // namespace isce3::cuda::focus

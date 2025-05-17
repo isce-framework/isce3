@@ -1,4 +1,5 @@
 #include "Backproject.h"
+#include "pybind_isce3/container/TypedPythonSequence.h"
 #include "pybind_isce3/focus/Backproject.h"  // parse parameter dicts
 #include "pybind_isce3/signal/NFFT2d.h"  // parse NFFT2d parameters
 
@@ -231,7 +232,8 @@ void addbinding_cuda_backproject(py::module& m)
                 const isce3::core::Orbit& in_orbit,
                 const isce3::core::LUT2d<double>& in_doppler,
                 const std::vector<isce3::focus::PolarGrid>& grids,
-                const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
+                // const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
+                const py::sequence& image_interpolators,
                 const DEMInterpolator& dem,
                 double fc,
                 double ds,
@@ -273,12 +275,17 @@ void addbinding_cuda_backproject(py::module& m)
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
             const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
 
+            using T = isce3::signal::NFFT2dResult<float>;
+            auto interpolators = TypedPythonSequence<T>(image_interpolators);
+
             ErrorCode err;
             {
-                py::gil_scoped_release release;
-                err = isce3::cuda::focus::accumulatePolarImagesToRadarGrid(out_data, out_geometry,
-                    in_orbit, in_doppler, grids, image_interpolators, dem, fc,
-                    ds, r2gparams, g2rparams, height_data);
+                // Can't release GIL because we're using a Python sequence...
+                // py::gil_scoped_release release;
+                err = isce3::cuda::focus::accumulatePolarImagesToRadarGrid(
+                    out_data, out_geometry, in_orbit, in_doppler, grids,
+                    interpolators, dem, fc, ds, r2gparams, g2rparams,
+                    height_data);
             }
             // TODO bind ErrorCode class.  For now return nonzero on failure.
             return err != ErrorCode::Success;

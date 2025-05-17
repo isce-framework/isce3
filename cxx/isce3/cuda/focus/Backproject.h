@@ -114,16 +114,21 @@ projectPolarToGeo(
         const double wavelength,
         const isce3::signal::NFFT2dParams& params);
 
+template <class SequenceType>
 isce3::error::ErrorCode
 accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const isce3::container::RadarGeometry& out_geometry,
         const isce3::core::Orbit& in_orbit,
         const isce3::core::LUT2d<double>& in_doppler,
         const std::vector<isce3::focus::PolarGrid>& grids,
-        const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
+        const SequenceType& image_interpolators,
         const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
         const Rdr2GeoBracketParams& r2g_params,
         const Geo2RdrBracketParams& g2r_params,
         float* height);
 
 }}} // namespace isce3::cuda::focus
+
+#define ISCE_CUDA_FOCUS_BACKPROJECT_ICC
+#include "Backproject.icc"
+#undef ISCE_CUDA_FOCUS_BACKPROJECT_ICC

@@ -109,7 +109,7 @@ if(WITH_CUDA)
          cuda/geometry/geometry.cpp
          cuda/geometry/geo2rdr.cpp
          cuda/geometry/rdr2geo.cpp
-         cuda/focus/Backproject.cpp
+         cuda/focus/Backproject.cu
          cuda/focus/focus.cpp
          cuda/image/image.cpp
          cuda/image/ResampSlc.cpp

@@ -22,6 +22,7 @@ core/OrbitView.h
 core/OrbitView.icc
 except/Error.h
 focus/Backproject.h
+focus/Backproject.icc
 fft/detail/CufftWrapper.h
 fft/detail/FFTPlanBase.h
 fft/detail/FFTPlanBase.icc
