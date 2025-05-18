@@ -1198,7 +1198,7 @@ projectPolarToGeo(
     ISCE3_FBP_TIMING(timing.report("FFT");)
 
     // zero-pad and filter
-    auto result = nfft.transform(dims_in, /* strides = */ {dims_in[1], 1},
+    auto result = nfft.transform_host(dims_in, /* strides = */ {dims_in[1], 1},
         spectrum.data());
     auto nfft_view = isce3::cuda::signal::NFFT2dResultView<float>(result);
     ISCE3_FBP_TIMING(timing.report("IFFT");)

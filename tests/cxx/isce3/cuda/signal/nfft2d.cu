@@ -33,7 +33,7 @@ TEST(nfft2d, ctor)
     auto spectrum = std::vector<std::complex<T>>(npix, 1.0f);
 
     // expect sinc in time domain, centered at [0, 0] since no phase above.
-    auto result = ft.transform(sizes, {sizes[1], 1}, spectrum.data());
+    auto result = ft.transform_host(sizes, {sizes[1], 1}, spectrum.data());
     auto view = NFFT2dResultView<T>(result);
     auto results_d = thrust::device_vector<thrust::complex<T>>(1);
 

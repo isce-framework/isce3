@@ -1623,9 +1623,18 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
     if use_gpu:
         bp_to_polar_grid = isce3.cuda.focus.backproject_to_polar_grid
         add_to_radar_grid = isce3.cuda.focus.accumulate_polar_images_to_radar_grid
+        # TODO could make this a separate option to conserve GPU memory.
+        # That'd require a little finess in the bindings and CUDA side, though.
+        make_image_nfft2d = isce3.cuda.signal.make_image_nfft2d
     else:
         bp_to_polar_grid = isce3.focus.backproject_to_polar_grid
         add_to_radar_grid = isce3.focus.accumulate_polar_images_to_radar_grid
+        make_image_nfft2d = isce3.signal.make_image_nfft2d
+
+    if use_gpu and len(factors) > 1:
+        raise NotImplementedError("Only direct backprojection and two-stage "
+            f"factorizations are suported on GPU.  Requested {len(factors) + 1}"
+            " stages.")
 
     _, v = igeom.orbit.interpolate(igeom.orbit.mid_time)
     vs = np.linalg.norm(v)
@@ -1666,7 +1675,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
                 g = h5.require_group(f"stage_00/block_{iblock:06d}")
                 isce3.focus.save_polar_image_to_h5(img, polar_grid, g)
         log.info("NFFT upsampling and filtering")
-        return isce3.signal.make_image_nfft2d(img, nfft2d_params, pad_input=True)
+        return make_image_nfft2d(img, nfft2d_params, pad_input=True)
 
     for i in pulse_starts:
         pulses = slice(i, i + stage.size)
@@ -1704,7 +1713,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
                 g = h5.require_group(name)
                 isce3.focus.save_polar_image_to_h5(out_image, out_grid, g)
         log.info("NFFT upsampling and filtering")
-        return isce3.signal.make_image_nfft2d(out_image, nfft2d_params, pad_input=True)
+        return make_image_nfft2d(out_image, nfft2d_params, pad_input=True)
 
     num_middle_stages = len(factors[1:])
     for i_stage, stage in enumerate(factors[1:]):

@@ -44,7 +44,7 @@ NFFT2d<T>::NFFT2d(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes)
 
 template <typename T>
 __global__ void setSpectrum2d(thrust::complex<T>* xout, int rows_out, int cols_out, 
-    thrust::complex<T>* xin, int rows_in, int cols_in, int row_stride_in,
+    const thrust::complex<T>* xin, int rows_in, int cols_in, int row_stride_in,
     int col_stride_in, T* weights_rows, T* weights_cols)
 {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -81,7 +81,20 @@ __global__ void setSpectrum2d(thrust::complex<T>* xout, int rows_out, int cols_o
 // Digest some data.
 template<class T>
 NFFT2dResult<T>
-NFFT2d<T>::transform(const dims_t& sizes, const dims_t& strides, const std::complex<T> *x)
+NFFT2d<T>::transform_host(const dims_t& sizes, const dims_t& strides, const std::complex<T> *x)
+{
+    // Copy input data to device.
+    auto nin = static_cast<size_t>(sizes[0]) * sizes[1];
+    thrust::device_vector<thrust::complex<T>> d_x(nin);
+    checkCudaErrors(cudaMemcpy(d_x.data().get(), x, nin * sizeof(*x),
+        cudaMemcpyHostToDevice));
+
+    return NFFT2d<T>::transform_device(sizes, strides, d_x.data().get());
+}
+
+template<class T>
+NFFT2dResult<T>
+NFFT2d<T>::transform_device(const dims_t& sizes, const dims_t& strides, const thrust::complex<T>* x)
 {
     for (int idim = 0; idim < ndims; ++idim) {
         if (sizes[idim] != sizes_[idim]) {
@@ -93,11 +106,6 @@ NFFT2d<T>::transform(const dims_t& sizes, const dims_t& strides, const std::comp
     auto nout = static_cast<size_t>(fft_sizes_[0]) * fft_sizes_[1];
     xf_.assign(nout, thrust::complex<T>(0, 0));
 
-    // Copy input data to device.
-    auto nin = static_cast<size_t>(sizes[0]) * sizes[1];
-    auto px = reinterpret_cast<const thrust::complex<T>*>(x);
-    thrust::device_vector<thrust::complex<T>> d_x(px, px + nin);
-
     // Pad and weight
     {
         dim3 cu_block(16, 16);
@@ -107,7 +115,7 @@ NFFT2d<T>::transform(const dims_t& sizes, const dims_t& strides, const std::comp
 
         setSpectrum2d<<<cu_grid, cu_block>>>(
             xf_.data().get(), fft_sizes_[0], fft_sizes_[1],
-            d_x.data().get(), sizes[0], sizes[1], strides[0], strides[1],
+            x, sizes[0], sizes[1], strides[0], strides[1],
             weights_[0].data().get(), weights_[1].data().get());
 
         checkCudaErrors(cudaPeekAtLastError());
@@ -174,6 +182,79 @@ NFFT2dResultView<T>::interp(const std::array<double, 2>& t, bool periodic) const
 }
 #endif
 
+
+template<typename T>
+NFFT2dResult<T> makeImageNFFT2d(
+    const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
+    const isce3::signal::NFFT2dParams& params,
+    bool pad_input)
+{
+    using isce3::fft::nextFastPower;
+
+    auto rows_in = image.rows();
+    auto cols_in = image.cols();
+    using image_t = isce3::core::EArray2D<std::complex<T>>;
+    auto image_copy = image_t(0, 0);
+
+    // Pointer to input image or padded/copied version so we can have fewer
+    // conditionals later.
+    // FIXME figure out how to do this with an Eigen type...
+    auto image_ptr = image.data();
+
+    // Need to copy if image is not contiguous row-major since we don't have
+    // high-level interface for strided FFTs.
+    bool need_copy = (image.innerStride() != 1) or (image.outerStride() != cols_in);
+    if (need_copy) {
+        image_copy.resize(rows_in, cols_in);
+        // assign later
+    }
+
+    if (pad_input) {
+        auto padded_rows_in = nextFastPower(rows_in);
+        auto padded_cols_in = nextFastPower(cols_in);
+        if ((rows_in == padded_rows_in) and (cols_in == padded_cols_in)) {
+            // User asked for padding but we don't actually need it.
+            pad_input = false;
+        } else {
+            image_copy.resize(padded_rows_in, padded_cols_in);
+            image_copy.setZero();
+            rows_in = padded_rows_in;
+            cols_in = padded_cols_in;
+            // assign later
+        }
+    }
+
+    if (need_copy or pad_input) {
+        // This way NFFT2d::interp() coordinates are preserved, though user
+        // will be able to get some extra data.
+        image_copy.topLeftCorner(image.rows(), image.cols()) = image;
+        image_ptr = image_copy.data();
+    }
+
+    // now copy contiguous data to GPU
+    thrust::device_vector<thrust::complex<T>> d_image(rows_in * cols_in);
+    checkCudaErrors(cudaMemcpy(d_image.data().get(), image_ptr,
+        d_image.size() * sizeof(*image_ptr), cudaMemcpyHostToDevice));
+
+    // Use fft2 b/c planfft2d could modify inputs and we won't reuse it anyway.
+    using dims_t = typename NFFT2d<T>::dims_t;
+    dims_t dims = {
+        static_cast<int>(rows_in),
+        static_cast<int>(cols_in)};
+    // Since we've already made a copy, we can just FFT in-place.
+    isce3::cuda::fft::fft2d(d_image.data().get(), d_image.data().get(),
+        {dims[0], dims[1]});
+
+    // Calculate sizes for padded inverse transform.
+    dims_t dims_out = {
+        nextFastPower(static_cast<int>(std::round(params.rows.s * dims[0]))),
+        nextFastPower(static_cast<int>(std::round(params.cols.s * dims[1])))};
+
+    const dims_t m = {params.rows.m, params.cols.m};
+    auto plan = NFFT2d<T>(m, dims, dims_out);
+    return plan.transform_device(dims, {dims[1], 1}, d_image.data().get());
+}
+
 }
 
 template class isce3::cuda::signal::NFFT2d<float>;
@@ -182,3 +263,15 @@ template class isce3::cuda::signal::NFFT2dResult<float>;
 template class isce3::cuda::signal::NFFT2dResult<double>;
 template class isce3::cuda::signal::NFFT2dResultView<float>;
 template class isce3::cuda::signal::NFFT2dResultView<double>;
+
+template isce3::cuda::signal::NFFT2dResult<float>
+isce3::cuda::signal::makeImageNFFT2d(
+    const Eigen::Ref<const isce3::core::EArray2D<std::complex<float>>>& image,
+    const isce3::signal::NFFT2dParams& params,
+    bool pad_input);
+
+template isce3::cuda::signal::NFFT2dResult<double>
+isce3::cuda::signal::makeImageNFFT2d(
+    const Eigen::Ref<const isce3::core::EArray2D<std::complex<double>>>& image,
+    const isce3::signal::NFFT2dParams& params,
+    bool pad_input);

@@ -275,7 +275,7 @@ void addbinding_cuda_backproject(py::module& m)
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
             const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
 
-            using T = isce3::signal::NFFT2dResult<float>;
+            using T = isce3::cuda::signal::NFFT2dResult<float>;
             auto interpolators = TypedPythonSequence<T>(image_interpolators);
 
             ErrorCode err;

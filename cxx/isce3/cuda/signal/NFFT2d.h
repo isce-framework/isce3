@@ -2,10 +2,12 @@
 
 #include "forward.h"
 
+#include <isce3/core/EMatrix.h>
 #include <isce3/cuda/core/Kernels.h>
 #include <isce3/cuda/core/Interp2d.h>
 #include <isce3/cuda/fft/FFTPlan.h>
 #include <isce3/signal/forward.h>
+#include <isce3/signal/NFFT2d.h>
 #include <thrust/complex.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -26,8 +28,13 @@ class NFFT2d {
         NFFT2d() = delete;
         NFFT2d(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes);
 
-        NFFT2dResult<T> transform(const dims_t& sizes, const dims_t& strides,
-            const std::complex<T> *x);
+        // input data in host memory
+        NFFT2dResult<T> transform_host(const dims_t& sizes,
+            const dims_t& strides, const std::complex<T>* x);
+
+        // input data already on device
+        NFFT2dResult<T> transform_device(const dims_t& sizes,
+            const dims_t& strides, const thrust::complex<T>* x);
 
         const dims_t& sizes() const { return sizes_; }
         const dims_t& fft_sizes() const { return fft_sizes_; }
@@ -113,4 +120,27 @@ private:
     const thrust::complex<T>* pxt_;
     std::array<isce3::cuda::core::NFFTKernel<T>, 2> kernels_;
 };
+
+
+/**
+ * @brief Create an NFFT2dResult object for interpolating an image.
+ *
+ * @tparam T        Format of real/imag pixel data, typically float or double
+ * @param image     Input time-domain image.  A temporary copy will be made if
+ *                  it is not row-major with a column stride of one.
+ * @param m         Half-length of interpolator along {rows, columns}
+ * @param s         Minimum factors (> 1) for frequency-domain zero-padding
+ *                  along {rows, columns}.  Actual padding may be larger to
+ *                  achieve efficient inverse transform size.
+ * @param pad_input Whether to also zero-pad input data to an efficient
+ *                  forward transform size.  Requires extra memory.
+ *
+ * @return NFFT2dResult<T> object for interpolating the image.
+ */
+template<typename T>
+NFFT2dResult<T> makeImageNFFT2d(
+    const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
+    const isce3::signal::NFFT2dParams& params = {},
+    bool pad_input = false);
+
 }
