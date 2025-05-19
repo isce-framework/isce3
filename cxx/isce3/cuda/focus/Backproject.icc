@@ -255,14 +255,14 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
 
     for (auto k = kstart; k < kstop; ++k, ++image_iter) {
         const auto& image_grid = grids[k];
-        const auto& nfft = *image_iter;
+        // FIXME Using reference instead of copy result in undefined symbol
+        // error when importing python module...
+        const auto d_nfft = *image_iter;
     
         isce3::focus::makeSubApertureMask(image_grid.aztime_start,
                 image_grid.aztime_end, nout, tstart.data(), tstop.data(),
                 mask.data());
 
-        // copy sub-image to device and get a view of its memory.
-        const auto d_nfft = isce3::cuda::signal::NFFT2dResult(nfft);
         const auto d_nfft_view = isce3::cuda::signal::NFFT2dResultView(d_nfft);
 
         {
