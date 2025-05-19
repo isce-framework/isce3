@@ -25,7 +25,7 @@ If you don't have such an environment already, we recommend using
 [miniforge](https://github.com/conda-forge/miniforge) to install all of these
 packages to a self-contained conda environment.
 
-Using our list of dependencies from `environment.yml`, create an environment
+Using our list of dependencies from [environment.yml](https://github.com/isce-framework/isce3/blob/develop/environment.yml), create an environment
 for ISCE3 and activate it:
 
 ```bash
