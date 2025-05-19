@@ -15,6 +15,31 @@ from nisar.products.readers.orbit import load_orbit
 
 LEXICOGRAPHIC_BASE_POLS = ['HH', 'HV', 'VH', 'VV']
 COMPACT_POLS = ['RH', 'RV']
+CROSSTALK_DATASETS = ['txHorizontalCrosspol',
+                      'txVerticalCrosspol',
+                      'rxHorizontalCrosspol',
+                      'rxVerticalCrosspol']
+
+# For now, `referenceTerrainHeight` is a 1-D Dataset, varying with
+# azimuth time. In future, we plan to reimplement this as a 2-D Dataset,
+# but in the meantime the code needs to be able to handle the 1-D case.
+LUT_1D_AZ_DATASETS = ['referenceTerrainHeight']
+LUT_1D_RG_DATASETS = CROSSTALK_DATASETS
+
+# The constants below specify the number of rows or columns to be added
+# in the direction where 1-D LUTs will be expanded into 2-D LUTs before
+# the margin is added
+LUT_1D_AZ_DATASETS_LUT_EXPANSION_ALONG_RG_N_POINTS = 21
+LUT_1D_RG_DATASETS_LUT_EXPANSION_ALONG_AZ_N_POINTS = 21
+
+# The number of additional rows or columns to be added in the
+# direction where 1-D LUTs will be expanded into 2-D LUTs, beyond
+# the extents of the input RSLC radar grid, on either side.
+# This extra margin may be necessary for accommodating the width
+# of the interpolator kernel when performing LUT lookups near the 
+# boundary of the valid data.
+LUT_1D_AZ_DATASETS_LUT_EXPANSION_ALONG_RG_MARGIN_IN_PIXELS = 5
+LUT_1D_RG_DATASETS_LUT_EXPANSION_ALONG_AZ_MARGIN_IN_PIXELS = 5
 
 
 def _get_attribute_dict(band,
@@ -962,16 +987,10 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     self.copy_from_input(f'{cal_freq_path}/{pol}/{parameter}',
                                          default=np.nan)
 
-        # geocode crosstalk parameter LUTs
-        crosstalk_parameters = ['txHorizontalCrosspol',
-                                'txVerticalCrosspol',
-                                'rxHorizontalCrosspol',
-                                'rxVerticalCrosspol']
-        for crosstalk_parameter in crosstalk_parameters:
-            self.copy_from_input(
-                '{PRODUCT}/metadata/calibrationInformation/crosstalk/'
-                f'{crosstalk_parameter}',
-                skip_if_not_present=True)
+        self.geocode_lut('{PRODUCT}/metadata/calibrationInformation/crosstalk',
+                         output_ds_name_list=CROSSTALK_DATASETS,
+                         skip_if_not_present=True,
+                         compute_stats=True)
 
         for abstract_lut in ("eap", "noise"):
 
@@ -1002,7 +1021,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 # Try reading with the old name.
                 if not success and new_name != old_name:
                     root = ('{PRODUCT}/metadata/calibrationInformation/'
-                        f'frequency{frequency}')
+                            f'frequency{frequency}')
                     success = self.geocode_lut(
                         output_h5_group=f"{root}/{new_name}",
                         input_h5_group=f"{root}/{old_name}",
@@ -1469,7 +1488,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         ds_name_list = ['referenceTerrainHeight']
         self.geocode_lut(
             '{PRODUCT}/metadata/processingInformation/parameters',
-            frequency=self.first_sorted_frequency,
             output_ds_name_list=ds_name_list,
             skip_if_not_present=True)
 
@@ -1485,7 +1503,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 skip_if_not_present=True)
 
     def geocode_lut(self, output_h5_group, input_h5_group=None,
-                    frequency='A', output_ds_name_list=None,
+                    frequency=None, output_ds_name_list=None,
                     input_ds_name_list=None,
                     skip_if_not_present=False,
                     compute_stats=False):
@@ -1502,10 +1520,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             same path of the output dataset `output_h5_group` will
             be used
         frequency: str, optional
-            Frequency sub-band, used to read the sub-band wavelength.
+            Frequency sub-band, used to read the sub-band radar grid and/or
+            wavelength.
             The sub-band wavelength is only used in geocoding 
-            (during geo2rdr) if the dataset (LUT) is not in the 
-            zero-Doppler geometry
+            (during geo2rdr) if the dataset (LUT) is not in the
+            zero-Doppler geometry. If not specified, the first
+            available frequency in the sorted list will be used.
         output_ds_name_list: str, list
             List of LUT datasets to geocode
         input_ds_name_list: list
@@ -1578,6 +1598,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             error_channel.log(error_msg)
             raise NotImplementedError(error_msg)
 
+        if frequency is None:
+            frequency = self.first_sorted_frequency
+
         return self.geocode_metadata_group(
             frequency,
             input_ds_name_list,
@@ -1607,7 +1630,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         Parameters
         ----------
         frequency: str, optional
-            Frequency sub-band, used to read the sub-band wavelength.
+            Frequency sub-band, used to read the sub-band radar grid and/or
+            wavelength.
             The sub-band wavelength is only used in geocoding 
             (during geo2rdr) if the dataset (LUT) is not in the 
             zero-Doppler geometry
@@ -1672,68 +1696,126 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         radar_grid_slc = self.input_product_obj.getRadarGrid(frequency)
 
-        zero_doppler_path = f'{input_h5_group_path}/zeroDopplerTime'
-        try:
-            zero_doppler_h5_dataset = self.input_hdf5_obj[zero_doppler_path]
-        except KeyError:
-            not_found_msg = ('Metadata entry not found in the input'
-                             ' product: ' + zero_doppler_path)
-            if skip_if_not_present:
-                warnings.warn(not_found_msg)
-                return False
-            else:
-                error_channel.log(not_found_msg)
-                raise KeyError(not_found_msg)
+        # If some -- but not all -- input datasets are 1-D, an error will be
+        # raised later on.
+        flag_luts_are_1d_rg = all([var in LUT_1D_RG_DATASETS
+                                   for var in input_ds_name_list])
 
+        if not flag_luts_are_1d_rg:
+            zero_doppler_path = f'{input_h5_group_path}/zeroDopplerTime'
+            try:
+                zero_doppler_h5_dataset = self.input_hdf5_obj[
+                    zero_doppler_path]
+            except KeyError:
+                not_found_msg = ('Metadata entry not found in the input'
+                                 ' product: ' + zero_doppler_path)
+                if skip_if_not_present:
+                    warnings.warn(not_found_msg)
+                    return False
+                else:
+                    error_channel.log(not_found_msg)
+                    raise KeyError(not_found_msg)
+            lines = zero_doppler_h5_dataset.size
+
+            if lines >= 2:
+                time_spacing = np.average(np.diff(zero_doppler_h5_dataset))
+            else:
+                time_spacing = None
+
+            if time_spacing is None or time_spacing <= 0:
+                error_msg = ('Invalid zero-Doppler time array under'
+                             f' {zero_doppler_path}:'
+                             f' {zero_doppler_h5_dataset[()]}')
+                error_channel.log(error_msg)
+                raise RuntimeError(error_msg)
+
+            ref_epoch = isce3.io.get_ref_epoch(zero_doppler_h5_dataset.parent,
+                                               zero_doppler_h5_dataset.name)
+
+            prf = 1.0 / time_spacing
+
+            sensing_start = zero_doppler_h5_dataset[0]
+        else:
+            # read starting and ending sensing time from the RSLC radar grid
+            sensing_start = radar_grid_slc.sensing_start
+            sensing_end = radar_grid_slc.sensing_stop
+
+            # determine number of lines, pulse-repetition interval (PRI)
+            # pulse-repetitition frequency (PRF) and reference epoch
+            lines = LUT_1D_RG_DATASETS_LUT_EXPANSION_ALONG_AZ_N_POINTS
+            pri = (sensing_end - sensing_start) / (lines - 1)
+            prf = 1.0 / pri
+            ref_epoch = radar_grid_slc.ref_epoch
+
+            # Add margins in both sides
+            margin_in_pixels = \
+                LUT_1D_RG_DATASETS_LUT_EXPANSION_ALONG_AZ_MARGIN_IN_PIXELS
+            margin_in_seconds = margin_in_pixels * pri
+            sensing_start -= margin_in_seconds
+            sensing_end += margin_in_seconds
+            lines += 2 * margin_in_pixels
+
+        # The `referenceTerrainHeight` LUT can be either a 1-D LUT (along
+        # azimuth) or a 2-D LUT. So, to determine the type of the LUT to
+        # geocode, check the constant `LUT_1D_AZ_DATASETS`, but also verify if
+        # `slantRange` is present within the LUT group to confirm its
+        # dimensions.
         slant_range_path = f'{input_h5_group_path}/slantRange'
-        try:
-            slant_range_h5_dataset = self.input_hdf5_obj[slant_range_path]
-        except KeyError:
-            not_found_msg = ('Metadata entry not found in the input'
-                             ' product: ' + slant_range_path)
-            if skip_if_not_present:
-                warnings.warn(not_found_msg)
-                return False
+        flag_luts_are_1d_az = (all([var in LUT_1D_AZ_DATASETS
+                                   for var in input_ds_name_list]) and
+                               slant_range_path not in self.input_hdf5_obj)
+
+        if not flag_luts_are_1d_az:
+            slant_range_path = f'{input_h5_group_path}/slantRange'
+            try:
+                slant_range_h5_dataset = self.input_hdf5_obj[slant_range_path]
+            except KeyError:
+                not_found_msg = ('Metadata entry not found in the input'
+                                 ' product: ' + slant_range_path)
+                if skip_if_not_present:
+                    warnings.warn(not_found_msg)
+                    return False
+                else:
+                    error_channel.log(not_found_msg)
+                    raise KeyError(not_found_msg)
+            samples = slant_range_h5_dataset.size
+
+            if samples >= 2:
+                range_spacing = np.average(np.diff(slant_range_h5_dataset))
             else:
-                error_channel.log(not_found_msg)
-                raise KeyError(not_found_msg)
+                range_spacing = None
 
-        lines = zero_doppler_h5_dataset.size
-        samples = slant_range_h5_dataset.size
+            if range_spacing is None or range_spacing <= 0:
+                error_msg = ('Invalid range spacing array under'
+                             f' {slant_range_path}: {slant_range_h5_dataset[()]}')
+                error_channel.log(error_msg)
+                raise RuntimeError(error_msg)
 
-        if len(zero_doppler_h5_dataset) >= 2:
-            time_spacing = np.average(np.diff(zero_doppler_h5_dataset))
+            starting_range = slant_range_h5_dataset[0]
+
         else:
-            time_spacing = None
+            # read starting and ending range from the RSLC radar grid
+            starting_range = radar_grid_slc.starting_range
+            ending_range = radar_grid_slc.end_range
 
-        if time_spacing is None or time_spacing <= 0:
-            error_msg = ('Invalid zero-Doppler time array under'
-                         f' {zero_doppler_path}:'
-                         f' {zero_doppler_h5_dataset[()]}')
-            error_channel.log(error_msg)
-            raise RuntimeError(error_msg)
+            # determine number of samples and range spacing
+            samples = LUT_1D_AZ_DATASETS_LUT_EXPANSION_ALONG_RG_N_POINTS
+            range_spacing = ((ending_range - starting_range) /
+                             (samples - 1))
 
-        if len(slant_range_h5_dataset) >= 2:
-            range_spacing = np.average(np.diff(slant_range_h5_dataset))
-        else:
-            range_spacing = None
-
-        if range_spacing is None or range_spacing <= 0:
-            error_msg = ('Invalid range spacing array under'
-                         f' {slant_range_path}: {slant_range_h5_dataset[()]}')
-            error_channel.log(error_msg)
-            raise RuntimeError(error_msg)
-
-        ref_epoch = isce3.io.get_ref_epoch(zero_doppler_h5_dataset.parent,
-                                           zero_doppler_h5_dataset.name)
-
-        prf = 1.0 / time_spacing
+            # Add margins in both sides
+            margin_in_pixels = \
+                LUT_1D_AZ_DATASETS_LUT_EXPANSION_ALONG_RG_MARGIN_IN_PIXELS
+            margin_in_meters = margin_in_pixels * range_spacing
+            starting_range -= margin_in_meters
+            ending_range += margin_in_meters
+            samples += 2 * margin_in_pixels
 
         radar_grid = isce3.product.RadarGridParameters(
-                zero_doppler_h5_dataset[0],
+                sensing_start,
                 radar_grid_slc.wavelength,
                 prf,
-                slant_range_h5_dataset[0],
+                starting_range,
                 range_spacing,
                 radar_grid_slc.lookside,
                 lines, samples, ref_epoch)
@@ -1747,16 +1829,59 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         input_ds_name_list defines the target HDF5 dataset that will contain
         the geocoded metadata
         '''
-        for var in input_ds_name_list:
-            raster_ref = (f'HDF5:"{self.input_file}":/'
-                          f'{input_h5_group_path}/{var}')
+        flag_all_succeeded = True
+        for count, var in enumerate(input_ds_name_list):
+            var_h5_path = f'{input_h5_group_path}/{var}'
 
-            # Read `raster_ref` catching/handling potential problems:
-            # - Dataset does not exist;
-            # - Dataset is a 1-D vector instead of a 2-D array.
-            try:
+            if var_h5_path not in self.input_hdf5_obj:
+                not_found_msg = ('Metadata entry not found in the input'
+                                 ' product: ' + var_h5_path)
+                if skip_if_not_present:
+                    warnings.warn(not_found_msg)
+                    flag_all_succeeded = False
+
+                    # remove corresponding dataset in `output_ds_name_list`
+                    output_ds_name_list.pop(count)
+                    continue
+                else:
+                    error_channel.log(not_found_msg)
+                    raise KeyError(not_found_msg)
+
+            # Some LUTs may be 1-dimensional. These datasets need to handled
+            # differently.
+            # If the dataset does not have one dimension, create an ISCE3
+            # Raster object and continue to the next for-loop iteration
+            if not flag_luts_are_1d_rg and not flag_luts_are_1d_az:
+                raster_ref = f'HDF5:"{self.input_file}":/{var_h5_path}'
+
+                # Read `raster_ref` catching/handling potential problems
                 temp_raster = isce3.io.Raster(raster_ref)
-            except:
+                input_raster_list.append(temp_raster)
+                continue
+
+            # Handle 1-D LUTs
+            var_h5_dataset = self.input_hdf5_obj[var_h5_path]
+            var_array = var_h5_dataset[()]
+
+            # If LUT is a vector along azimuth
+            if flag_luts_are_1d_az:
+                warning_msg = ('Geolocating one dimensional dataset:'
+                               f' {var_h5_path} in {self.input_file}'
+                               ' (az. vector)')
+                warnings.warn(warning_msg)
+                new_var_array = np.repeat(np.transpose([var_array]),
+                                          samples, axis=1)
+
+            # If LUT is a vector along range
+            elif flag_luts_are_1d_rg:
+                warning_msg = ('Geolocating one dimensional dataset:'
+                               f' {var_h5_path} in {self.input_file}'
+                               ' (rg. vector)')
+                warnings.warn(warning_msg)
+
+                new_var_array = np.repeat([var_array], lines, axis=0)
+
+            else:
                 not_found_msg = ('Failed to create GDAL dataset from'
                                  f' reference: {raster_ref}')
                 if skip_if_not_present:
@@ -1766,10 +1891,25 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 error_channel.log(not_found_msg)
                 raise KeyError(not_found_msg)
 
+            temp_file = tempfile.NamedTemporaryFile(dir=scratch_path,
+                                                    suffix='.bin')
+            length, width = new_var_array.shape
+            dtype = gdal_array.NumericTypeCodeToGDALTypeCode(
+                new_var_array.dtype)
+            temp_raster = isce3.io.Raster(path=temp_file.name,
+                                          width=width,
+                                          length=length,
+                                          num_bands=1,
+                                          dtype=dtype,
+                                          driver_name="ENVI")
+            temp_raster[:, :] = new_var_array
+
             input_raster_list.append(temp_raster)
 
-        if len(input_ds_name_list) == 1:
-            input_ds_name_list = input_ds_name_list[0]
+        if len(input_raster_list) == 0:
+            warnings.warn('No dataset to geocode from input list: '
+                          f'{input_ds_name_list}')
+            return False
 
         # create a temporary file that will point to the input layers
         input_temp = tempfile.NamedTemporaryFile(
@@ -1797,10 +1937,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         geo.doppler = zero_doppler
         geo.threshold_geo2rdr = threshold
         geo.numiter_geo2rdr = maxiter
-
-        if (len(zero_doppler_h5_dataset) < 5 or 
-                len(slant_range_h5_dataset) < 5):
-            geo.data_interpolator = 'nearest'
 
         geo.geogrid(metadata_geogrid.start_x,
                     metadata_geogrid.start_y,
@@ -1848,4 +1984,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                      yds, xds, output_ds_name_list,
                      compute_stats=compute_stats)
 
-        return True
+        input_temp.close()
+        temp_output.close()
+
+        return flag_all_succeeded
