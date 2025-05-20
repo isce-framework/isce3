@@ -62,6 +62,15 @@ struct PolarGrid {
 
     CUDA_HOSTDEV auto width() const { return range.size(); }
     CUDA_HOSTDEV auto length() const { return sin_squint.size(); }
+
+    PolarGrid offsetAndResize(int q_off, int r_off, int nq, int nr) const
+    {
+        using LS = isce3::core::Linspace<double>;
+        const auto q = LS(sin_squint[q_off], sin_squint.spacing(), nq);
+        const auto r = LS(range[r_off], range.spacing(), nr);
+        return PolarGrid {
+                aztime_start, aztime_end, origin, axis, r, q, look_side};
+    }
 };
 
 std::tuple<isce3::error::ErrorCode,
