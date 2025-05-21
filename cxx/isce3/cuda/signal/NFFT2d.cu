@@ -50,7 +50,7 @@ __global__ void setSpectrum2d(thrust::complex<T>* xout, int rows_out, int cols_o
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if ((col > cols_in) || (row > rows_in)) {
+    if ((col >= cols_in) || (row >= rows_in)) {
         return;
     }
 
@@ -83,6 +83,10 @@ template<class T>
 NFFT2dResult<T>
 NFFT2d<T>::transform_host(const dims_t& sizes, const dims_t& strides, const std::complex<T> *x)
 {
+    if ((strides[0] != sizes[1]) or (strides[1] != 1)) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Only implemented for C-ordered data");
+    }
     // Copy input data to device.
     auto nin = static_cast<size_t>(sizes[0]) * sizes[1];
     thrust::device_vector<thrust::complex<T>> d_x(nin);
