@@ -527,6 +527,22 @@ __global__ void sumCoherentBatch(
     out[tid] += thrust::complex<float>(batch_sum);
 }
 
+template <typename T>
+__global__ void broadcastMultiply(const T* row, size_t ncol, T* image, size_t npix)
+{
+    // thread index (1d grid of 1d blocks)
+    const auto tid = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+
+    // bounds check
+    if (tid >= npix) {
+        return;
+    }
+
+    auto i_col = tid % ncol;
+
+    image[tid] *= row[i_col];
+}
+
 } // namespace detail
 
 template<class Kernel>
@@ -835,7 +851,7 @@ ErrorCode backproject(std::complex<float>* out,
  * \param[in]  params       Root-finding algorithm parameters
  * \param[out] errc         Error flag
  */
-__global__ void runPolar2Geo(Vec3* xyz_out, const PolarGrid grid,
+__global__ void detail::runPolar2Geo(Vec3* xyz_out, const PolarGrid grid,
                            DeviceDEMInterpolator dem, const Ellipsoid ellipsoid,
                            const LookSide side,
                            const Rdr2GeoBracketParams params,
@@ -967,7 +983,7 @@ backprojectToPolarGrid(
         const unsigned block = 256;
         const unsigned grid = (npix + block - 1) / block;
 
-        runPolar2Geo<<<grid, block>>>(x.data().get(), out_grid,
+        detail::runPolar2Geo<<<grid, block>>>(x.data().get(), out_grid,
                                     dem, ellipsoid,
                                     out_grid.look_side, r2g_params,
                                     errc.data().get());
@@ -1237,3 +1253,8 @@ projectPolarToGeo(
 
 
 }}} // namespace isce3::cuda::focus
+
+template __global__ void
+isce3::cuda::focus::detail::broadcastMultiply(
+    const thrust::complex<float>* row, size_t ncol,
+    thrust::complex<float>* image, size_t npix);
