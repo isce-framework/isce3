@@ -127,6 +127,18 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const Geo2RdrBracketParams& g2r_params,
         float* height);
 
+template <class SequenceType>
+void mergePolarImages(
+    const std::vector<isce3::focus::PolarGrid>& grids,
+    // const std::vector<NFFT2dResult<float>>& image_interpolators,
+    const SequenceType& image_interpolators,
+    const isce3::focus::PolarGrid& output_grid,
+    Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
+    const double fc,
+    const isce3::geometry::DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
+    int az_block_size = 1024);
+
 }}} // namespace isce3::cuda::focus
 
 #define ISCE_CUDA_FOCUS_BACKPROJECT_ICC

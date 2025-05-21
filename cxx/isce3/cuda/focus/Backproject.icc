@@ -72,6 +72,17 @@ interpPolar(thrust::complex<float>* geo_image, const isce3::core::Vec3* geo_poin
     size_t n, const isce3::focus::PolarGrid grid,
     const isce3::cuda::signal::NFFT2dResultView<float> nfft, const double kw);
 
+__global__ void runPolar2Geo(isce3::core::Vec3* xyz_out,
+        const isce3::focus::PolarGrid grid,
+        isce3::cuda::geometry::gpuDEMInterpolator dem,
+        const isce3::core::Ellipsoid ellipsoid,
+        const isce3::core::LookSide side,
+        const isce3::geometry::detail::Rdr2GeoBracketParams params,
+        isce3::error::ErrorCode* errc);
+
+template <typename T>
+__global__ void broadcastMultiply(const T* row, size_t ncol, T* image, size_t npix);
+
 }  // namespace detail
 
 
@@ -283,6 +294,148 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         cudaMemcpyDeviceToHost));
 
     return errc[0];
+}
+
+
+template <class NFFT2dSequence>
+void mergePolarImages(
+    const std::vector<isce3::focus::PolarGrid>& grids,
+    // const std::vector<NFFT2dResult<float>>& image_interpolators,
+    const NFFT2dSequence& image_interpolators,
+    const isce3::focus::PolarGrid& output_grid,
+    Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
+    const double fc,
+    const isce3::geometry::DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    int az_block_size)
+{
+    using namespace isce3::cuda::focus::detail;
+
+    // check that output grid dimensions match buffer size
+    const auto m = output_grid.length(), n = output_grid.width();
+    if ((m != output_image.rows()) or (n != output_image.cols())) {
+        std::string msg = "Dimensions of image grid (" + std::to_string(m)
+            + ", " + std::to_string(n) + ") do not match dimensions of image "
+            "buffer (" + std::to_string(output_image.rows()) + ", "
+            + std::to_string(output_image.cols()) + ")";
+        throw isce3::except::LengthError(ISCE_SRCINFO(), msg);
+    }
+
+    // check that we have a grid for each input image
+    const auto num_images = image_interpolators.size();
+    if (grids.size() != num_images) {
+        std::string msg = "Size mismatch: got " + std::to_string(num_images) +
+            " sub images but " + std::to_string(grids.size()) + " grids";
+        throw isce3::except::LengthError(ISCE_SRCINFO(), msg);
+    }
+
+    // check look directions for consistency
+    const auto look_side = output_grid.look_side;
+    for (const auto& grid : grids) {
+        if (grid.look_side != look_side) {
+            std::string msg = "Output grid look direction does not match "
+                "input grid look direction";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), msg);
+        }
+    }
+
+    // Check block size and allocate scratch space.
+    if (az_block_size < 0) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "azimuth block size must be positive");
+    }
+    az_block_size = std::min(az_block_size, output_grid.sin_squint.size());
+
+    // auto block_positions = isce3::core::EArray2D<Vec3>();
+    const auto npix = static_cast<size_t>(az_block_size) * output_grid.width();
+    auto block_positions = thrust::device_vector<isce3::core::Vec3>(npix);
+    auto block_image = thrust::device_vector<thrust::complex<float>>(npix);
+
+    // reference ellipsoid
+    isce3::core::Ellipsoid ellipsoid = isce3::core::makeProjection(dem.epsgCode())->ellipsoid();
+    isce3::cuda::geometry::gpuDEMInterpolator d_dem(dem);
+
+    // wavenumber
+    const double kw = 4 * M_PI * fc / isce3::core::speed_of_light;
+
+    // Baseband.  Note that we could do this at the same time as the
+    // reprojection but it'd require a fair bit of copy/paste.
+    thrust::host_vector<thrust::complex<float>> h_phasors(n);
+    #pragma omp parallel for
+    for (auto j = decltype(n){0}; j < n; ++j) {
+        const double arg = -kw * output_grid.range[j];
+        h_phasors[j] = std::complex<float>(std::cos(arg), std::sin(arg));
+    }
+    const auto d_phasors = thrust::device_vector<thrust::complex<float>>(h_phasors);
+
+    using isce3::error::ErrorCode;
+    thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
+
+    // loop over output blocks
+    auto n_blocks = (m + az_block_size - 1) / az_block_size;
+    for (auto i_block = decltype(n_blocks){0}; i_block < n_blocks; ++i_block) {
+        const auto i_row0 = i_block * az_block_size;
+        const auto i_row1 = std::min(i_row0 + az_block_size, m);
+        const auto block_npix = static_cast<size_t>(n) * (i_row1 - i_row0);
+
+        const auto output_grid_subset = output_grid.offsetAndResize(i_row0, 0,
+            i_row1 - i_row0, output_grid.width());
+
+        // Compute output pixel 3D locations
+        {
+            const unsigned cu_block = 256;
+            const unsigned cu_grid = (block_npix + cu_block - 1) / cu_block;
+
+            runPolar2Geo<<<cu_grid, cu_block>>>(block_positions.data().get(),
+                    output_grid_subset, d_dem, ellipsoid, output_grid.look_side,
+                    r2g_params, errc.data().get());
+
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+        }
+        const auto ec = errc[0];
+        if (ec != ErrorCode::Success) {
+            throw isce3::except::DomainError(ISCE_SRCINFO(),
+                "polar2geo failed with ErrorCode " +
+                isce3::error::getErrorString(ec));
+        }
+
+        // loop over input images
+        auto image_it = image_interpolators.begin();
+        for (int i_img = 0; i_img < num_images; ++i_img, ++image_it) {
+            const auto& input_grid = grids[i_img];
+            // Do we need to copy here?
+            const auto& d_nfft = *image_it;
+            const auto d_nfft_view = isce3::cuda::signal::NFFT2dResultView<float>(d_nfft);
+            {
+                const unsigned cu_block = 256;
+                const unsigned cu_grid = (block_npix + cu_block - 1) / cu_block;
+
+                interpPolar<<<cu_grid, cu_block>>>(block_image.data().get(),
+                    block_positions.data().get(), block_npix, input_grid,
+                    d_nfft_view, kw);
+
+                checkCudaErrors(cudaPeekAtLastError());
+                checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+            }
+        } // images
+
+        // baseband
+        {
+            const unsigned cu_block = 256;
+            const unsigned cu_grid = (block_npix + cu_block - 1) / cu_block;
+
+            broadcastMultiply<<<cu_grid, cu_block>>>(d_phasors.data().get(),
+                    n, block_image.data().get(), block_npix);
+
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+        }
+
+        checkCudaErrors(cudaMemcpy(output_image.row(i_row0).data(),
+            block_image.data().get(), block_npix * sizeof(std::complex<float>),
+            cudaMemcpyDeviceToHost));
+    } // blocks
 }
 
 }  // namespace isce3::cuda::focus

@@ -12,6 +12,7 @@
 #include <isce3/focus/DryTroposphereModel.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <optional>
+#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
@@ -302,4 +303,33 @@ void addbinding_cuda_backproject(py::module& m)
         py::arg("rdr2geo_params") = py::dict(),
         py::arg("geo2rdr_params") = py::dict(),
         py::arg("height") = py::none());
+
+    m.def("merge_polar_images", [](
+            const std::vector<isce3::focus::PolarGrid>& grids,
+            // const std::vector<NFFT2dResult<float>>& image_interpolators,
+            py::sequence image_interpolators,
+            const isce3::focus::PolarGrid& output_grid,
+            Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
+            const double fc,
+            const isce3::geometry::DEMInterpolator& dem,
+            const py::dict rdr2geo_params,  // only difference for python
+            int az_block_size)
+        {
+            using T = isce3::cuda::signal::NFFT2dResult<float>;
+            auto interpolators = TypedPythonSequence<T>(image_interpolators);
+
+            const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
+
+            return mergePolarImages(grids, interpolators, output_grid,
+                output_image, fc, dem, r2g_params, az_block_size);
+        },
+        py::arg("grids"),
+        py::arg("image_interpolators"),
+        py::arg("output_grid"),
+        py::arg("output_image"),
+        py::arg("fc"),
+        py::arg("dem") = DEMInterpolator(),
+        py::arg("rdr2geo_parameters") = py::dict(),
+        py::arg("az_block_size") = 1024
+    );
 }

@@ -1622,19 +1622,16 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
 
     if use_gpu:
         bp_to_polar_grid = isce3.cuda.focus.backproject_to_polar_grid
+        merge_polar_images = isce3.cuda.focus.merge_polar_images
         add_to_radar_grid = isce3.cuda.focus.accumulate_polar_images_to_radar_grid
         # TODO could make this a separate option to conserve GPU memory.
         # That'd require a little finess in the bindings and CUDA side, though.
         make_image_nfft2d = isce3.cuda.signal.make_image_nfft2d
     else:
         bp_to_polar_grid = isce3.focus.backproject_to_polar_grid
+        merge_polar_images = isce3.focus.merge_polar_images
         add_to_radar_grid = isce3.focus.accumulate_polar_images_to_radar_grid
         make_image_nfft2d = isce3.signal.make_image_nfft2d
-
-    if use_gpu and len(factors) > 1:
-        raise NotImplementedError("Only direct backprojection and two-stage "
-            f"factorizations are suported on GPU.  Requested {len(factors) + 1}"
-            " stages.")
 
     _, v = igeom.orbit.interpolate(igeom.orbit.mid_time)
     vs = np.linalg.norm(v)
@@ -1705,7 +1702,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
         log.info(f"Merging {len(in_grids)} polar images stage {i_stage} block "
             f"{i_block + 1} / {nblocks}")
         out_image = np.zeros(out_grid.shape, np.complex64)
-        isce3.focus.merge_polar_images(in_grids, in_images, out_grid, out_image,
+        merge_polar_images(in_grids, in_images, out_grid, out_image,
             fc, dem, rdr2geo_params)
         if debugfile is not None:
             name = f"stage_{i_stage + 1:02d}/block_{i_block:06d}"
