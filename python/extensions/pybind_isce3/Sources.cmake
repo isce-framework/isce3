@@ -112,6 +112,7 @@ if(WITH_CUDA)
          cuda/focus/Backproject.cu
          cuda/focus/focus.cpp
          cuda/image/image.cpp
+         cuda/image/Resample.cpp
          cuda/image/ResampSlc.cpp
          cuda/matchtemplate/matchtemplate.cpp
          cuda/matchtemplate/pycuampcor.cpp

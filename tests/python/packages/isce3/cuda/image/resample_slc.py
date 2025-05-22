@@ -3,22 +3,20 @@ from __future__ import annotations
 
 import pytest
 
-from .resamp_funcs import block_resample, pybind_resample
-from ..resample_slc_utils import (
+from .resamp_funcs import gpu_pybind_resample
+from ...resample_slc_utils import (
     distributed_target_resample_test,
     ResampFunc,
     sinusoidal_resample_test,
 )
 
-
 @pytest.mark.parametrize(
     "resamp_func,error_name",
     [
-        (pybind_resample, "C++ _resample_to_coords pybind"),
-        (block_resample, "Python resample_slc_blocks"),
+        (gpu_pybind_resample, "CUDA _gpu_resample_to_coords pybind"),
     ]
 )
-class TestResampleSLCV2:
+class TestGPUResampleSLCV2:
     """Tests for the Resample SLC Ver. 2 code."""
 
     def test_interpolate_sinusoidal(self, resamp_func: ResampFunc, error_name: str):

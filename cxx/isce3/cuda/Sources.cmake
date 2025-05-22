@@ -27,6 +27,7 @@ geometry/gpuTopoLayers.cpp
 geometry/Topo.cpp
 geometry/utilities.cu
 image/gpuResampSlc.cu
+image/Resample.cu
 image/ResampSlc.cpp
 matchtemplate/pycuampcor/cuAmpcorChunk.cu
 matchtemplate/pycuampcor/cuAmpcorController.cu

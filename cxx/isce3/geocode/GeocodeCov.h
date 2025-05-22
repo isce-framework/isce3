@@ -80,7 +80,8 @@ public:
      * @param[out] out_nlooks          Raster to which the number of radar-grid
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
-     * geo-coordinates).
+     * geo-coordinates) to normalize the `output_raster` to the same
+     * radiometric convention as the `input_raster` (e.g., gamma0 to beta0).
      * @param[out] out_geo_rtc_gamma0_to_sigma0 Output RTC area factor 
      * gamma0 to sigma0 (in geo-coordinates).
      * @param[in]  phase_screen_raster Phase screen to be removed before
@@ -89,8 +90,20 @@ public:
      * seconds, as a function of azimuth and range
      * @param[in]  slant_range_correction  Slant range additive correction,
      * in meters, as a function of azimuth and range
-     * @param[in]  input_rtc           Input RTC area factor (in slant-range geometry).
-     * @param[out] output_rtc          Output RTC area factor (in slant-range geometry).
+     * @param[in]  input_rtc           Input RTC normalization values (in
+     * slant-range geometry) used to convert the radiometric convention of
+     * the `input_raster` (e.g., beta0) to that of the `output_raster`
+     * (e.g., gamma0). These normalization values are applied by dividing
+     * the `input_raster` by them, ensuring consistency with the
+     * `output_raster`'s radiometric convention. This normalization is only
+     * applied if `flag_apply_rtc` is set to `true`. If `flag_apply_rtc` is
+     * `true`, but `input_rtc` is not provided, the RTC module will be used
+     * to compute the normalization values.
+     * @param[out] output_rtc          Output RTC area normalization factor (ANF)
+     * (in slant-range geometry) to convert the radiometric convention of
+     * the `output_raster` (e.g., gamma0) to that of the `input_raster` (e.g.,
+     * beta0). These values are only computed if `flag_apply_rtc` is `true`
+     * and `input_rtc` is not provided.
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -182,7 +195,8 @@ public:
      * @param[out] out_geo_dem         Raster to which the interpolated DEM
      * will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
-     * geo-coordinates).
+     * geo-coordinates) to normalize the `output_raster` to the same
+     * radiometric convention as the `input_raster` (e.g., gamma0 to beta0).
      * @param[out] out_geo_rtc_gamma0_to_sigma0 Output RTC area factor 
      * gamma0 to sigma0 (in geo-coordinates).
      * @param[in]  flatten             Flatten the geocoded SLC
@@ -192,8 +206,20 @@ public:
      * seconds, as a function of azimuth and range
      * @param[in]  slant_range_correction  Slant range additive correction,
      * in meters, as a function of azimuth and range
-     * @param[in]  input_rtc           Input RTC area factor (in slant-range geometry).
-     * @param[out] output_rtc          Output RTC area factor (in slant-range geometry).
+     * @param[in]  input_rtc           Input RTC normalization values (in
+     * slant-range geometry) used to convert the radiometric convention of
+     * the `input_raster` (e.g., beta0) to that of the `output_raster`
+     * (e.g., gamma0). These normalization values are applied by dividing
+     * the `input_raster` by them, ensuring consistency with the
+     * `output_raster`'s radiometric convention. This normalization is only
+     * applied if `flag_apply_rtc` is set to `true`. If `flag_apply_rtc` is
+     * `true`, but `input_rtc` is not provided, the RTC module will be used
+     * to compute the normalization values.
+     * @param[out] output_rtc          Output RTC area normalization factor (ANF)
+     * (in slant-range geometry) to convert the radiometric convention of
+     * the `output_raster` (e.g., gamma0) to that of the `input_raster` (e.g.,
+     * beta0). These values are only computed if `flag_apply_rtc` is `true`
+     * and `input_rtc` is not provided.
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -286,15 +312,28 @@ public:
      * @param[out] out_geo_nlooks      Raster to which the number of radar-grid
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
-     * geo-coordinates).
+     * geo-coordinates) to normalize the the `output_raster` to the same
+     * radiometric convention as the `input_raster` (e.g., gamma0 to beta0).
      * @param[out] out_geo_rtc_gamma0_to_sigma0 Output RTC area factor 
      * gamma0 to sigma0 (in geo-coordinates).
      * @param[in]  az_time_correction     Azimuth additive correction, in
      * seconds, as a function of azimuth and range
      * @param[in]  slant_range_correction  Slant range additive correction,
      * in meters, as a function of azimuth and range
-     * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
-     * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).
+     * @param[in]  input_rtc           Input RTC normalization values (in
+     * slant-range geometry) used to convert the radiometric convention of
+     * the `input_raster` (e.g., beta0) to that of the `output_raster`
+     * (e.g., gamma0). These normalization values are applied by dividing
+     * the `input_raster` by them, ensuring consistency with the
+     * `output_raster`'s radiometric convention. This normalization is only
+     * applied if `flag_apply_rtc` is set to `true`. If `flag_apply_rtc` is
+     * `true`, but `input_rtc` is not provided, the RTC module will be used
+     * to compute the normalization values.
+     * @param[out] output_rtc          Output RTC area normalization factor (ANF)
+     * (in slant-range geometry) to convert the radiometric convention of
+     * the `output_raster` (e.g., gamma0) to that of the `input_raster` (e.g.,
+     * beta0). These values are only computed if `flag_apply_rtc` is `true`
+     * and `input_rtc` is not provided.
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -562,8 +601,9 @@ private:
      * @param[in] rtc_area            RTC area normalization factor array
      * @param[in] rtc_area_sigma      RTC area normalization factor array
      * gamma0 to sigma0
-     * @param[out] out_geo_rtc        Output RTC area factor raster (in
-     * geo-coordinates)
+     * @param[out] out_geo_rtc         Output RTC area factor (in
+     * geo-coordinates) to normalize the the `output_raster` to the same
+     * radiometric convention as the `input_raster` (e.g., gamma0 to beta0).
      * @param[out] out_geo_rtc_array  Output RTC area factor array (in
      * geo-coordinates)
      * @param[out] out_geo_rtc_gamma0_to_sigma0  Output RTC area factor 

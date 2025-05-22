@@ -445,6 +445,8 @@ void addbinding(py::class_<Raster> & pyRaster)
                     return py::make_tuple(self.length(), self.width());
                 })
         .def_property_readonly("num_bands", &Raster::numBands)
+        .def_property_readonly("x0", &Raster::x0)
+        .def_property_readonly("y0", &Raster::y0)
         .def_property_readonly("dx", &Raster::dx)
         .def_property_readonly("dy", &Raster::dy)
         .def_property_readonly("access", [](Raster & self)

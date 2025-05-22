@@ -137,6 +137,18 @@ def test_run_winnipeg():
              ' a UTC epoch, corresponding to source data processing'
              ' information records')
 
+        for crosstalk_dataset in ['txHorizontalCrosspol',
+                                  'txVerticalCrosspol',
+                                  'rxHorizontalCrosspol',
+                                  'rxVerticalCrosspol']:
+            path = ('/science/LSAR/GCOV/metadata/calibrationInformation/'
+                    f'crosstalk/{crosstalk_dataset}')
+            crosstalk_array = output_h5_obj[path][()]
+
+            # these arrays are created as a linspace(0, 1, 225)
+            assert (np.nanmin(crosstalk_array) >= 0)
+            assert (np.nanmax(crosstalk_array) <= 1)
+
 
 def test_run_envisat():
     '''
