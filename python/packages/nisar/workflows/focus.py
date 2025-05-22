@@ -2228,13 +2228,15 @@ def focus(runconfig, runconfig_path=""):
             if cfg.processing.is_enabled.azcomp:
                 factors = get_azcomp_stage_config(cfg)
                 if factors[0].size > 1:
+                    debugfile = (temp(f"_{frequency}{pol}_fbp_factors.h5")
+                        if not cfg.processing.delete_tempfiles else None)
                     azcomp_ffbp(factors, azres, kernel,
                         blocks_bounds[frequency], igeom,
                         rc_grid, rcfile.data, ogrid[frequency], writer,
                         hgt_mm if dump_height else None, dem,
                         get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
                         atmos, use_gpu, channel_out.band.width,
-                        temp(f"_{frequency}{pol}_fbp_factors.h5"))
+                        debugfile)
                 else:
                     azcomp_bp(azres, kernel, blocks_bounds[frequency], igeom,
                         rc_grid, rcfile.data, ogrid[frequency], writer,
