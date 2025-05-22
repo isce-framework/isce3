@@ -39,7 +39,7 @@ def run(cfg):
     slc = SLC(hdf5file=input_hdf5)
 
     # if provided, load an external orbit from the runconfig file;
-    # othewise, load the orbit from the RSLC metadata
+    # otherwise, load the orbit from the RSLC metadata
     orbit = slc.getOrbit()
     if orbit_file is not None:
         external_orbit = load_orbit_from_xml(orbit_file, slc.getRadarGrid().ref_epoch)

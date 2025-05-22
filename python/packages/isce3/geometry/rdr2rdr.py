@@ -28,7 +28,7 @@ def rdr2rdr(t: float,
     orbit : isce3.core.Orbit
 	    Orbit defining radar motion on input path
     side : {"left", "right", isce3.core.LookSide.Left, isce3.core.LookSide.Right}
-	    Flag desribing which side the radar is looking.
+	    Flag describing which side the radar is looking.
     doppler : isce3.core.LUT2d
         Doppler look up table vs input range and azimuth time, Hz
     wavelength : float
@@ -43,11 +43,11 @@ def rdr2rdr(t: float,
     orbit_out : isce3.core.Orbit, optional
         Orbit defining radar motion on output path.  Defaults to input `orbit`.
     rdr2geo_params : dict, optional
-        Dictionary specifying convergence paramters for rdr2geo solver.
+        Dictionary specifying convergence parameters for rdr2geo solver.
         Keys among {"tol_aztime", "look_min", "look_max"}
         See isce3.geometry.rdr2geo_bracket
     geo2rdr_params: dict, optional
-        Dictionary specifying convergence paramters for geo2rdr solver.
+        Dictionary specifying convergence parameters for geo2rdr solver.
         Keys among {"tol_height", "time_start", "time_start"}
         See isce3.geometry.geo2rdr_bracket
 

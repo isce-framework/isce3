@@ -549,7 +549,7 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
                               num_rng_block, scalar, diff, diff_method,
                               median_ev, remove_mean, perc_invalid_rngblk,
                               logger):
-    """Helper function ot get noise product per frequency band and RX Pol.
+    """Helper function to get noise product per frequency band and RX Pol.
 
     Parameters
     ----------

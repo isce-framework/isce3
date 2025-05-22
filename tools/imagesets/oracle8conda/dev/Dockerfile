@@ -1,7 +1,7 @@
 ARG runtime_img
 FROM $runtime_img
 
-# Install dependencies for ISCE developement
+# Install dependencies for ISCE development
 RUN set -ex \
  && yum update -y \
  && yum install -y \

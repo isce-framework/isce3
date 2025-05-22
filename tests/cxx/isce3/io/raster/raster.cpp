@@ -230,7 +230,7 @@ TEST_F(RasterTest, createRasterFromStdVector) {
   std::valarray<float>    dataLineOut( 0., nc );             // zeros
   isce3::io::Raster msk = isce3::io::Raster( mskFilename,  // filename
                                                dataLineIn,   // line valarray or vector
-                                               nl );         // numnber of lines in Raster
+                                               nl );         // number of lines in Raster
     for (uint i=0; i < msk.width(); ++i) {
     msk.setLine( dataLineIn,  i );
     msk.getLine( dataLineOut, i );

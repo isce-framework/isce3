@@ -590,7 +590,7 @@ class ImageSet:
         if tests is None:
             tests = workflowtests['end2end'].items()
         for testname, dataname in tests:
-            # copy runconfigs and create output direcotories
+            # copy runconfigs and create output directories
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             for wfname in ['rslc', 'gslc', 'gcov', 'insar']:
                 if wfname == 'rslc':

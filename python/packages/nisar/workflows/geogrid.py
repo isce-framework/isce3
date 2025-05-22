@@ -1,5 +1,5 @@
 '''
-collection of functions for determing and setting geogrid
+collection of functions for determining and setting geogrid
 '''
 import copy
 

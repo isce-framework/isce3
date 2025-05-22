@@ -63,7 +63,7 @@ public:
     Quaternion toQuaternion() const;
 
     /**
-     * Check if *this is approximatly equals to other within
+     * Check if *this is approximately equals to other within
      * a desired precision
      * @param[in] other : another EulerAngles object
      * @param[in] prec (optional) : double scalar precision

@@ -64,7 +64,7 @@ void cuCorrNormalizeFixed(cuArrays<float> *correlation, cuArrays<float> *referen
 void cuCorrNormalizeSAT(cuArrays<float> *correlation, cuArrays<float> *reference, cuArrays<float> *secondary,
     cuArrays<float> * referenceSum2, cuArrays<float> *secondarySAT, cuArrays<float> *secondarySAT2, cudaStream_t stream);
 
-//in cuOffset.cu: utitilies for determining the max locaiton of cross correlations or the offset
+//in cuOffset.cu: utitilies for determining the max location of cross correlations or the offset
 void cuArraysMaxloc2D(cuArrays<float> *images, cuArrays<int2> *maxloc, cuArrays<float> *maxval, cudaStream_t stream);
 void cuArraysMaxloc2D(cuArrays<float> *images, cuArrays<int2> *maxloc, cudaStream_t stream);
 void cuSubPixelOffset(cuArrays<int2> *offsetInit, cuArrays<int2> *offsetZoomIn, cuArrays<float2> *offsetFinal,

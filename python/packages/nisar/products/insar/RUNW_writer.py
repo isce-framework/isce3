@@ -287,7 +287,7 @@ class RUNWWriter(L1InSARWriter):
             # shape of the interferogram product
             igram_shape = self._get_interferogram_dataset_shape(freq, pol_list[0])
 
-            # add additonal datasets to each polarization group
+            # add additional datasets to each polarization group
             for pol in pol_list:
                 # create the interferogram dataset
                 igram_pol_group_name = \

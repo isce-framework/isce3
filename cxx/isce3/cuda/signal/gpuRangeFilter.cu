@@ -129,7 +129,7 @@ constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
                              int nfft,
                              std::valarray<std::complex<T>>& _filter1D)
 {
-    // construct a boxcar bandpass filter in frequency domian
+    // construct a boxcar bandpass filter in frequency domain
     // which may have several bands defined by centerferquencies and
     // subBandBandwidths
     for (size_t i = 0; i<subBandCenterFrequencies.size(); ++i){

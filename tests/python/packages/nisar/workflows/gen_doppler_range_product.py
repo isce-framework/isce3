@@ -10,14 +10,14 @@ import warnings
 class TestGenDopplerRangeProduct:
     # L0B and antenna file (beam # 7) for ALOS1 data over Amazon
     # used for argument testing with single-channel antenna w/ plotting given
-    # it is homogenous scene and suitable for a good doppler estimation.
+    # it is homogeneous scene and suitable for a good doppler estimation.
     l0b_alos1 = 'ALPSRP081257070-H1.0__A_HH_2500_LINES.h5'
     ant_alos1 = 'pointing/ALOS1_PALSAR_ANTPAT_BEAM343.h5'
 
     # L0B, orbit, attitude, antenna files from NISAR-like science mode (DBFed)
     # used for testing with external orbit, attitude and multi-channel antenna
     # plus polyfitting option.
-    # Note that this dataset is over heterogenous scene. The antenna is also
+    # Note that this dataset is over heterogeneous scene. The antenna is also
     # steered to 0.3 deg rather than 0.9 deg; reported in the antenna file;
     # due to resource limitation at the time of simulation. That being said,
     # the reported doppler from attitude+antenna (~900 Hz) shall be around

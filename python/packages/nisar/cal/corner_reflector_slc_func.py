@@ -186,7 +186,7 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, freq_band='A',
             # interpolated complex peak value and locations of a CR.
             # the coherently-averaged amp around the peak within around 3dB
             # is used to represent the complex peak value.
-            # Note that simly co-pol data is used for averaged location of
+            # Note that simply co-pol data is used for averaged location of
             # the CR for all polarizations.
             amp_cr[pol], az_rg_slices = _amp_avg_around_peak(
                 chp_ovs, (azb_pk_ovs, rgb_pk_ovs), rel_pow_th_db)

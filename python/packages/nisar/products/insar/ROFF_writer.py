@@ -49,7 +49,7 @@ class ROFFWriter(L1InSARWriter):
 
     def add_coregistration_to_algo_group(self):
         """
-        Add the coregistration parameters to the "processingInfromation/algorithms" group
+        Add the coregistration parameters to the "processingInformation/algorithms" group
         """
         proc_cfg = self.cfg["processing"]
         dense_offsets = proc_cfg["dense_offsets"]["enabled"]
@@ -85,7 +85,7 @@ class ROFFWriter(L1InSARWriter):
 
     def add_cross_correlation_to_algo_group(self):
         """
-        Add the cross correlation parameters to the "processingInfromation/algorithms" group
+        Add the cross correlation parameters to the "processingInformation/algorithms" group
         """
         proc_cfg = self.cfg["processing"]
         is_roff = proc_cfg["offsets_product"]["enabled"]

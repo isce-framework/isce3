@@ -51,7 +51,7 @@ namespace isce3 { namespace cuda { namespace core {
          * @param[out] llh Lon/Lat/Height - Lon and Lat are in radians */
         CUDA_HOST int inverse_h(const Vec3& xyz, Vec3& llh) const;
 
-        /** Device function for tranforming to LLH.
+        /** Device function for transforming to LLH.
          *
          * @param[in] xyz Coordinates in specified projection system
          * @param[out] llh Lon/Lat/Height - Lon and Lat are in radians */
@@ -114,7 +114,7 @@ namespace isce3 { namespace cuda { namespace core {
 
         // Value constructor
         CUDA_HOSTDEV PolarStereo(int);
-        /** Transfrom from LLH to Polar Stereo */
+        /** Transform from LLH to Polar Stereo */
         CUDA_DEV int forward(const Vec3&, Vec3&) const;
         /** Transform from Polar Stereo to LLH */
         CUDA_DEV int inverse(const Vec3&, Vec3&) const;

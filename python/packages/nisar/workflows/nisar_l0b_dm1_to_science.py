@@ -139,8 +139,8 @@ def copy_swath_except_echo_sr_h5(fid_in, fid_out, swath_path,
                                  frq_pol, freq_band_in='A', n_sbsw=1):
     """
     Copy all groups and datasets under swath from input HDF5 to output
-    HDF5 excpet for echo products and slant range vector.
-    Slant range and echo fileds are skipped because those need to be
+    HDF5 except for echo products and slant range vector.
+    Slant range and echo fields are skipped because those need to be
     updated with new size and shape after filtering in range direction.
     Given output may have two frequency bands as opposed to the input, e.g.,
     in QQ case, the input values are repeated for output products.
@@ -350,7 +350,7 @@ def create_slantrange_update_range_h5(
 
 def update_subswath_h5(fid_out, sbsw_path_prefix, sbswath):
     """
-    Update valid subswath values for an exisiting fields in new hdf5
+    Update valid subswath values for an existing fields in new hdf5
     product.
 
     Parameters

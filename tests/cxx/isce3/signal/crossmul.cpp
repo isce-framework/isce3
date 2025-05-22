@@ -47,18 +47,18 @@ TEST(Crossmul, RunCrossmul)
     // Create a product
     isce3::product::RadarGridProduct product(file);
 
-    // get the Doppler polynomial for refernce SLC
+    // get the Doppler polynomial for reference SLC
     isce3::core::LUT1d<double> dop1 =
         avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
 
-    // Since this test careates an interferogram between the refernce SLC and itself,
+    // Since this test careates an interferogram between the reference SLC and itself,
     // the second Doppler is the same as the first
     isce3::core::LUT1d<double> dop2 = dop1;
 
     //instantiate the Crossmul class
     isce3::signal::Crossmul crsmul;
 
-    // set Doppler polynomials for refernce and secondary SLCs
+    // set Doppler polynomials for reference and secondary SLCs
     crsmul.doppler(dop1, dop2);
 
     // set number of interferogram looks in range
@@ -122,18 +122,18 @@ TEST(Crossmul, RunCrossmulMLook)
     // Create a product
     isce3::product::RadarGridProduct product(file);
 
-    // get the Doppler polynomial for refernce SLC
+    // get the Doppler polynomial for reference SLC
     isce3::core::LUT1d<double> dop1 =
         avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
 
-    // Since this test careates an interferogram between the refernce SLC and itself,
+    // Since this test careates an interferogram between the reference SLC and itself,
     // the second Doppler is the same as the first
     isce3::core::LUT1d<double> dop2 = dop1;
 
     //instantiate the Crossmul class
     isce3::signal::Crossmul crsmul;
 
-    // set Doppler polynomials for refernce and secondary SLCs
+    // set Doppler polynomials for reference and secondary SLCs
     crsmul.doppler(dop1, dop2);
 
     // set number of interferogram looks in range

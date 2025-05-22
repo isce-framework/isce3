@@ -65,7 +65,7 @@ class IonosphereFilter:
         input_data : str
             file path for data to be filtered.
         input_std_dev : str
-            file path for stardard deviation
+            file path for standard deviation
             or nondispersive array
         mask_path : str
             file path for mask raster

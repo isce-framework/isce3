@@ -22,7 +22,7 @@ class TestElNullRangeEst:
     # Multi-channel Raw Echo (L0B) and respective antenna files
     # The L0B file is truncated first pass of REE repeated-pass
     # interferometric NISAR-LIKE 4-channel non-DBF (DM2-like)
-    # simulation over a very heterogenous scene with good SNR to
+    # simulation over a very heterogeneous scene with good SNR to
     # prove that this Null formation technique almost independent
     # of target reflectivity variations provided decent SNR.
     # The antenna file contains respective four NISAR nominal EL cut
@@ -113,7 +113,7 @@ class TestElNullRangeEst:
         el_ang_step : float
             step EL angle in (rad)
         ant_null_est : isce3::antenna::NullProduct for antenna null with
-            memebrs (slant_range, el_angle, doppler, magnitude)
+            members (slant_range, el_angle, doppler, magnitude)
         echo_null_est : isce3::antenna::NullProduct for echo null with
             members (slant_range, el_angle, doppler, magnitude)
         aztime_utc_est : isce3 DateTime object

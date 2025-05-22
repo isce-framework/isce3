@@ -58,7 +58,7 @@ runconfig:
                 # Whether to attempt RFI detection and record related metadata.
                 # Defaults to True
                 detection_enabled: True
-                # Whether to attemt RFI removal. Default to False.
+                # Whether to attempt RFI removal. Default to False.
                 mitigation_enabled: False
                 # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
                 # eigenvalue decomposition.

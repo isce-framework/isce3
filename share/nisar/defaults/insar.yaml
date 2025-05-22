@@ -491,10 +491,11 @@ runconfig:
                 # The refinement is performed by thresholding the median absolute deviation of
                 # the offsets where outlier locations have been filled with zeros
                 mask_refine_enabled: True
-                # Threshold for outlier refinement mask computation
-                mask_refine_threshold: 0.5
+                # Minimum number of valid (non-NaN) neighbors required for a pixel to remain
+                # unchanged during the rubbersheet refinement step
+                mask_refine_min_neighbors: 5
                 # Size of median filter in range and azimuth for outlier mask refinement
-                mask_refine_filter_size: 3
+                mask_refine_filter_size: 5
                 # Method to fill data holes left by outliers culling:
                 # fill_smoothed: iteratively fill holes with mean value in a neighborhood.
                 # nearest_neighbor: Fill holes with nearest neighbor interpolation

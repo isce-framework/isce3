@@ -157,7 +157,7 @@ def generate_signal_sinusoidal(
     np.ndarray of complex values
         The generated signal.
     """
-    # Scale the row and column indices to ajust the frequency of the signal.
+    # Scale the row and column indices to adjust the frequency of the signal.
     scaled_rows = rows * scaling_factor
     scaled_cols = cols * scaling_factor
     # The contribution of the row indices to the signal is

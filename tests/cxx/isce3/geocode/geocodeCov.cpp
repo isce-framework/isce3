@@ -57,7 +57,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
     // Create a DEM with zero height (ellipsoid surface)
     createZeroDem();
 
-    // Run Topo with the zero height DEM and cerate the lat-lon grids on ellipsoid
+    // Run Topo with the zero height DEM and create the lat-lon grids on ellipsoid
     createTestData();
 
     std::string h5file(TESTDATA_DIR "envisat.h5");

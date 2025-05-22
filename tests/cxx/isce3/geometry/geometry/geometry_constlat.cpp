@@ -305,7 +305,7 @@ $$ Y = \left( a + h \right) \cdot \cos \lambda \sin \psi $$
 $$ Z = \left( a + h \right) \cdot \sin \lambda $$
 
 
-## Target on same longitude as satellite is on Zero Doppler Countour
+## Target on same longitude as satellite is on Zero Doppler Contour
 ----------
 
 Consider a target ($\vec{T}$) located on the same longitude as the satellite.

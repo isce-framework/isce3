@@ -24,7 +24,7 @@ ref_vals = np.array([
 
 class TestLUT1d:
 
-    # construct coordiates and corresponding values for LUT
+    # construct coordinates and corresponding values for LUT
     coords = np.arange(10)
     values = np.exp(-coords / 3)
 

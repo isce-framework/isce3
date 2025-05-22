@@ -59,7 +59,7 @@ class TestLookIncAngles:
     az_tm_mid = tm_echo.mean()
 
     # Following data are grabbed from config file "REE_L0B_out17.rdf"
-    # form Ellipsoid object from PLANET paramteres
+    # form Ellipsoid object from PLANET parameters
     ellips_obj = Ellipsoid(6378137.0, 669437.999014132e-8)
 
     # form DEMInterpolator object from TARGET parameters
