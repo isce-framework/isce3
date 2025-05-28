@@ -668,7 +668,7 @@ void mergePolarImages(
 
 
 // For now structure like backproject() with inner loop on target.
-// Might make more sense to project on image at a time instead.
+// Might make more sense to project one image at a time instead.
 ErrorCode
 accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const RadarGeometry& out_geometry,
