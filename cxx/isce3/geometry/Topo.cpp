@@ -176,62 +176,73 @@ topo(Raster & demRaster, TopoLayers & layers)
         // Reset output block sizes in layers
         layers.setBlockSize(blockLength, _radarGrid.width());
 
-        // Allocate vector for storing satellite position for each line
-        std::vector<Vec3> satPosition(blockLength);
+        // Pre-compute some values that only need to be computed once per
+        // range line.
+        auto sensingTime = std::vector<double>(blockLength);
+        auto satPosition = std::vector<Vec3>(blockLength);
+        auto satVelocity = std::vector<Vec3>(blockLength);
+        auto satSpeed = std::vector<double>(blockLength);
+        auto TCNbases = std::vector<Basis>(blockLength);
 
-        // For each line in block
-        double tline;
+        #pragma omp parallel for
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
-
-            if (blockLine % std::max((int) (blockLength / 100), 1) == 0)
-                printf("\rTopo progress (block %d/%d): %d%%",
-                       (int) block + 1, (int) nBlocks,
-                       (int) (blockLine * 1e2 / blockLength)),
-                       fflush(stdout);
-
             // Global line index
             size_t line = lineStart + blockLine;
 
             // Initialize orbital data for this azimuth line
-            Basis TCNbasis;
-            Vec3 pos, vel;
-            _initAzimuthLine(line, tline, pos, vel, TCNbasis);
+            auto& vel = satVelocity[blockLine];
+            _initAzimuthLine(line, sensingTime[blockLine],
+                    satPosition[blockLine], vel, TCNbases[blockLine]);
+            satSpeed[blockLine] = vel.norm();
+        }
 
-            satPosition[blockLine] = pos;
+        #pragma omp parallel
+        {
+            // Thread-local count of the total number of rdr2geo calls that
+            // converged successfully.
+            size_t totalconv_thread = 0;
 
-            // Compute velocity magnitude
-            const double satVmag = vel.norm();
+            // Initialize LLH to middle of input DEM and average height
+            Vec3 llh = demInterp.midLonLat();
 
-            // For each slant range bin
-            #pragma omp parallel for reduction(+:totalconv)
-            for (size_t rbin = 0; rbin < _radarGrid.width(); ++rbin) {
+            #pragma omp for collapse(2)
+            for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
+                for (size_t rbin = 0; rbin < _radarGrid.width(); ++rbin) {
 
-                // Get current slant range
-                const double rng = _radarGrid.slantRange(rbin);
+                    // Get current slant range
+                    const double rng = _radarGrid.slantRange(rbin);
 
-                // Get current Doppler value
-                const double dopfact = (0.5 * _radarGrid.wavelength()
-                                     * (_doppler.eval(tline, rng) / satVmag)) * rng;
+                    // Get current Doppler value
+                    const auto tline = sensingTime[blockLine];
+                    const auto satVmag = satSpeed[blockLine];
+                    const double dopfact = (0.5 * _radarGrid.wavelength() *
+                                            (_doppler.eval(tline, rng) / satVmag)) *
+                                           rng;
 
-                // Store slant range bin data in Pixel
-                Pixel pixel(rng, dopfact, rbin);
+                    // Store slant range bin data in Pixel
+                    Pixel pixel(rng, dopfact, rbin);
 
-                // Initialize LLH to middle of input DEM and average height
-                Vec3 llh = demInterp.midLonLat();
+                    // Perform rdr->geo iterations
+                    const auto& pos = satPosition[blockLine];
+                    const auto& vel = satVelocity[blockLine];
+                    const auto& TCNbasis = TCNbases[blockLine];
+                    int geostat = rdr2geo(pixel, TCNbasis, pos, vel, _ellipsoid,
+                                          demInterp, llh, _radarGrid.lookSide(),
+                                          _threshold, _numiter, _extraiter);
+                    totalconv_thread += geostat;
 
-                // Perform rdr->geo iterations
-                int geostat = rdr2geo(
-                    pixel, TCNbasis, pos, vel, _ellipsoid, demInterp, llh,
-                    _radarGrid.lookSide(), _threshold, _numiter, _extraiter);
-                totalconv += geostat;
+                    // Save data in output arrays
+                    _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel,
+                                         TCNbasis, demInterp);
+                }
+            }
 
-                // Save data in output arrays
-                _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel,
-                        TCNbasis, demInterp);
-
-            } // end OMP for loop pixels in block
-        } // end for loop lines in block
-        printf("\rTopo progress (block %d/%d): 100%%\n",
+            // Collect the total number of converged rdr2geo calls from among all
+            // threads.
+            #pragma omp atomic
+            totalconv += totalconv_thread;
+        }
+        printf("\rTopo progress (block %d/%d): Done\n",
                (int) block + 1, (int) nBlocks), fflush(stdout);
 
         // Compute layover/shadow masks for the block
@@ -600,9 +611,9 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
 }
 
 void isce3::geometry::Topo::
-_setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
-                     Pixel & pixel, Vec3& pos, Vec3& vel, Basis & TCNbasis,
-                     DEMInterpolator & demInterp)
+_setOutputTopoLayers(const Vec3& targetLLH, TopoLayers & layers, size_t line,
+                     const Pixel& pixel, const Vec3& pos, const Vec3& vel,
+                     const Basis& TCNbasis, const DEMInterpolator& demInterp)
 {
     const double degrees = 180.0 / M_PI;
 
