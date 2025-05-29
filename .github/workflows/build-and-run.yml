@@ -32,7 +32,7 @@ jobs:
             # background reader/writer test sometimes fails on macOS due to slow runtimes.
         deps:
           - label: Latest
-            env-file: .github/conda_envs/environment.yml
+            env-file: environment.yml
             extra-specs: ""
         build-type: [ Release, Debug ]
         include:

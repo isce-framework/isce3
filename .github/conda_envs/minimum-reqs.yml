@@ -19,9 +19,6 @@ dependencies:
   - hdf5
   - ninja
   - numpy
-  # Needed to resolve against numpy <1.22,
-  # see https://github.com/conda-forge/pandas-feedstock/issues/208
-  - pandas<2.2
   - pyaps3=0.3
   - pybind11=2.6
   # pyre not included in this build

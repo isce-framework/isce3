@@ -6,7 +6,6 @@ import numpy.testing as npt
 import h5py
 import tempfile
 import isce3
-import journal
 
 
 def load_h5():

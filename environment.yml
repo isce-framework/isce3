@@ -11,14 +11,14 @@ dependencies:
   - gdal>=3
   - gmock>=1.10
   - gtest>=1.10
-  - h5py>=3
+  - h5py>=3.5
   - hdf5>=1.10.2,!=1.14.0
   - libgdal-hdf5
   - libgdal-netcdf
   - ninja
   - numpy>=1.20
   - pyaps3>=0.3
-  - pybind11>=2.5
+  - pybind11>=2.6
   - pyre>=1.12.5
   - pysolid>=0.2
   - pytest

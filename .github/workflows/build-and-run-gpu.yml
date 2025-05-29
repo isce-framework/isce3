@@ -2,10 +2,9 @@ name: Build-And-Run Tests on GPU
 
 on:
   pull_request:
+    # Trigger the workflow whenever a PR receives a special label
+    # in addition to the default triggering events.
     types: [ labeled, opened, synchronize, reopened ]
-  push:
-    branches:
-      - 'ci-updates-gpu'
 
 
 concurrency:
@@ -15,9 +14,7 @@ concurrency:
 jobs:
   build_and_test_gpu:
     # Trigger on pushes to CI updates branch, or PRs with specific label
-    if: |
-      github.event_name == 'push' ||
-      contains(github.event.pull_request.labels.*.name, 'GPU')
+    if: contains(github.event.pull_request.labels.*.name, 'GPU')
 
     env:
       ALL_EXCLUDE: stage_dem|pybind\.unwrap\.phass
@@ -37,7 +34,7 @@ jobs:
             ctest_exclude: -E ".*($ALL_EXCLUDE)"
         deps:
           - label: Latest
-            env-file: .github/conda_envs/environment.yml
+            env-file: environment.yml
             extra-specs: ""
         build-type: [ RelWithDebInfo ]
 
