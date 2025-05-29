@@ -20,7 +20,7 @@ dependencies:
   - ninja
   - numpy
   - pyaps3=0.3
-  - pybind11=2.6
+  - pybind11
   # pyre not included in this build
   - pysolid
   - pytest
