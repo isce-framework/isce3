@@ -1148,7 +1148,9 @@ backprojectToPolarGrid(
 __global__ void
 detail::interpPolar(thrust::complex<float>* geo_image, const Vec3* geo_points,
     size_t n, const PolarGrid grid,
-    const isce3::cuda::signal::NFFT2dResultView<float> nfft, const double kw)
+    const isce3::cuda::signal::NFFT2dResultView<float> nfft, const double kw,
+    std::optional<const bool*> mask,
+    std::optional<const double*> extra_range_delays)
 {
     // thread index (1d grid of 1d blocks)
     const auto i = static_cast<long>(blockIdx.x * blockDim.x + threadIdx.x);
@@ -1157,14 +1159,22 @@ detail::interpPolar(thrust::complex<float>* geo_image, const Vec3* geo_points,
     if (i >= n) {
         return;
     }
+    // mask check
+    if (mask.has_value() and not mask.value()[i]) {
+        return;
+    }
 
     // compute target location in polar grid
     // TODO not sure why I get a linker error when I try using the API (with CUDA_HOSTDEV added)
     // double sin_squint, range;
     // isce3::geometry::geo2polar(&sin_squint, &range, geo_points[i], grid.origin, grid.axis);
     const Vec3 lookvec = geo_points[i] - grid.origin;
-    const double range = lookvec.norm();
+    double range = lookvec.norm();
     const double sin_squint = lookvec.dot(grid.axis) / range;
+
+    if (extra_range_delays.has_value()) {
+        range += extra_range_delays.value()[i];
+    }
 
     // convert to image index
     const double ix = (range - grid.range.first()) / grid.range.spacing(),

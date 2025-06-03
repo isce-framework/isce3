@@ -70,7 +70,9 @@ __global__ void getCPITimeBounds(double* tstart_out, double* tstop_out,
 __global__ void
 interpPolar(thrust::complex<float>* geo_image, const isce3::core::Vec3* geo_points,
     size_t n, const isce3::focus::PolarGrid grid,
-    const isce3::cuda::signal::NFFT2dResultView<float> nfft, const double kw);
+    const isce3::cuda::signal::NFFT2dResultView<float> nfft, const double kw,
+    std::optional<const bool*> mask = std::nullopt,
+    std::optional<const double*> dr_atm = std::nullopt);
 
 __global__ void runPolar2Geo(isce3::core::Vec3* xyz_out,
         const isce3::focus::PolarGrid grid,
@@ -82,6 +84,11 @@ __global__ void runPolar2Geo(isce3::core::Vec3* xyz_out,
 
 template <typename T>
 __global__ void broadcastMultiply(const T* row, size_t ncol, T* image, size_t npix);
+
+
+__global__ void estimateDryTropoDelayTSX(double* tau_atm,
+    const isce3::core::Vec3* p, const isce3::core::Vec3* llh, const size_t n,
+    const isce3::core::Ellipsoid ellipsoid);
 
 }  // namespace detail
 
@@ -95,6 +102,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const std::vector<isce3::focus::PolarGrid>& grids,
         const SequenceType& image_interpolators,
         const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
+        DryTroposphereModel dry_tropo_model,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
         float* height)
@@ -102,6 +110,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     using namespace isce3::core;
     using namespace isce3::cuda::geometry;
     using namespace isce3::cuda::focus::detail;
+    using isce3::focus::dryTropoDelayTSX;
     using isce3::error::ErrorCode;
     using isce3::focus::PolarGrid;
     using DeviceDEMInterpolator = isce3::cuda::geometry::gpuDEMInterpolator;
@@ -175,10 +184,6 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
                 nout * sizeof(float), cudaMemcpyDeviceToHost));
     }
 
-    // TODO atmosphere
-
-    d_llh.clear();  d_llh.shrink_to_fit();
-
     // Running geo2rdr to get integration bounds seems like overkill.
     // TODO Maybe mask on Doppler instead?
     thrust::device_vector<double> d_t(nout);
@@ -215,6 +220,35 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
     }
+
+    // Calculate dry troposphere delay.  To re-use code and memory, first we'll
+    // calculate in time units and then convert to spatial units.
+    thrust::device_vector<double> dr_atm(nout);
+
+    if (dry_tropo_model == DryTroposphereModel::NoDelay) {
+        checkCudaErrors(cudaMemset(dr_atm.data().get(), 0,
+                                   nout * sizeof(double)));
+    } else if (dry_tropo_model == DryTroposphereModel::TSX) {
+        const unsigned block = 256;
+        const unsigned grid = (nout + block - 1) / block;
+
+        estimateDryTropoDelayTSX<<<grid, block>>>(
+                dr_atm.data().get() /* time units */, d_p.data().get(),
+                d_llh.data().get(), nout, ellipsoid);
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    } else {
+        std::string errmsg = "unexpected dry troposphere model";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+    }
+
+    // two-way time -> one-way range
+    constexpr double halfspeed = isce3::core::speed_of_light / 2.0;
+    thrust::transform(dr_atm.begin(), dr_atm.end(), dr_atm.begin(),
+        [halfspeed] __host__ __device__ (double dt) { return halfspeed * dt; });
+
+    d_llh.clear();  d_llh.shrink_to_fit();
 
     // get coherent integration bounds (pulse indices) for each target
     thrust::device_vector<double> d_tstart(nout);
@@ -282,7 +316,8 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
 
             // TODO mask
             interpPolar<<<cuda_grid, block>>>(d_out.data().get(),
-                    d_x.data().get(), nout, image_grid, d_nfft_view, kw);
+                    d_x.data().get(), nout, image_grid, d_nfft_view, kw,
+                    std::nullopt, dr_atm.data().get());
 
             checkCudaErrors(cudaPeekAtLastError());
             checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));

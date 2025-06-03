@@ -182,7 +182,7 @@ void addbinding_cuda_backproject(py::module& m)
             py::arg("dem"),
             py::arg("fc"),
             py::arg("kernel"),
-            py::arg("dry_tropo_model") = "tsx",
+            py::arg("dry_tropo_model") = "nodelay",  // off here, on later
             py::arg("rdr2geo_params") = py::dict());
 
     m.def("project_polar_to_geo", [](
@@ -238,6 +238,7 @@ void addbinding_cuda_backproject(py::module& m)
                 const DEMInterpolator& dem,
                 double fc,
                 double ds,
+                const std::string& dry_tropo_model,
                 py::dict rdr2geo_params,
                 py::dict geo2rdr_params,
                 std::optional<py::array_t<float, py::array::c_style>> height) {
@@ -273,6 +274,8 @@ void addbinding_cuda_backproject(py::module& m)
                 height_data = h.mutable_data();
             }
 
+            DryTroposphereModel atm = parseDryTropoModel(dry_tropo_model);
+
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
             const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
 
@@ -285,7 +288,7 @@ void addbinding_cuda_backproject(py::module& m)
                 // py::gil_scoped_release release;
                 err = isce3::cuda::focus::accumulatePolarImagesToRadarGrid(
                     out_data, out_geometry, in_orbit, in_doppler, grids,
-                    interpolators, dem, fc, ds, r2gparams, g2rparams,
+                    interpolators, dem, fc, ds, atm, r2gparams, g2rparams,
                     height_data);
             }
             // TODO bind ErrorCode class.  For now return nonzero on failure.
@@ -300,6 +303,7 @@ void addbinding_cuda_backproject(py::module& m)
         py::arg("dem"),
         py::arg("fc"),
         py::arg("ds"),
+        py::arg("dry_tropo_model") = "tsx",
         py::arg("rdr2geo_params") = py::dict(),
         py::arg("geo2rdr_params") = py::dict(),
         py::arg("height") = py::none());

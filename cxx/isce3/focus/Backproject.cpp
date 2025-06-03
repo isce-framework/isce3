@@ -677,12 +677,21 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const std::vector<PolarGrid>& grids,
         const std::vector<NFFT2dResult<float>>& image_interpolators,
         const DEMInterpolator& dem, double fc, double ds,
+        DryTroposphereModel dry_tropo_model,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
         float* height)
 {
     static constexpr double c = isce3::core::speed_of_light;
     static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
+
+    // check that dry_tropo_model is supported internally
+    if (not(dry_tropo_model == DryTroposphereModel::NoDelay or
+            dry_tropo_model == DryTroposphereModel::TSX)) {
+
+        std::string errmsg = "unexpected dry troposphere model";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+    }
 
     // will search sorted intervals to figure out active sub images per target
     auto starts = std::vector<double>(grids.size());
@@ -706,7 +715,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
 
     const size_t nout = out_geometry.gridLength() * out_geometry.gridWidth();
     std::vector<Vec3> x(nout);
-    std::vector<double> tstart(nout), tend(nout);
+    std::vector<double> tstart(nout), tend(nout), dr_atm(nout);
 
     // loop over targets in output grid
     bool all_converged = true;
@@ -776,6 +785,12 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         // get coherent integration bounds (pulse indices)
         tstart[iflat] = t - cpi / 2;
         tend[iflat] = tstart[iflat] + cpi;
+
+        // Calculate dry troposphere delay (in units of one-way range).
+        if (dry_tropo_model == DryTroposphereModel::TSX) {
+            dr_atm[iflat] = dryTropoDelayTSX(p, llh, ellipsoid) * c / 2.;
+        }
+        // else zero-initialized by vector ctor
     }
 
     // std::vector<bool> unsuitable due to bit packing optimizations
@@ -797,7 +812,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         makeSubApertureMask(grid.aztime_start, grid.aztime_end,
             nout, tstart.data(), tend.data(), mask.data());
         accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
-            mask.data());
+            mask.data(), dr_atm.data());
     }
 
     if (not all_converged) {
@@ -831,7 +846,8 @@ accumulatePolarImageToGeoPoints(
         const PolarGrid& grid,
         const NFFT2dResult<float>& nfft,
         const double kw,
-        const std::optional<const bool*>& mask)
+        const std::optional<const bool*>& mask,
+        const std::optional<const double*>& dr_atm)
 {
     #pragma omp parallel for
     for (size_t i= 0; i < n; ++i) {
@@ -841,6 +857,9 @@ accumulatePolarImageToGeoPoints(
         // compute target location in polar grid
         double sin_squint, range;
         geo2polar(&sin_squint, &range, xyz[i], grid.origin, grid.axis);
+        if (dr_atm.has_value()) {
+            range += dr_atm.value()[i];
+        }
         // convert to image index
         const double ix = (range - grid.range.first()) / grid.range.spacing(),
             iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();

@@ -95,9 +95,10 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const std::vector<PolarGrid>& grids,
         const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
         const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
-        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
-        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
-        float* height);
+        const DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
+        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params = {},
+        float* height = nullptr);
 
 
 // WIP stuff to do one polar image at a time.
@@ -181,7 +182,8 @@ accumulatePolarImageToGeoPoints(
         const PolarGrid& grid,
         const isce3::signal::NFFT2dResult<float>& nfft,
         const double kw,
-        const std::optional<const bool*>& mask = std::nullopt);
+        const std::optional<const bool*>& mask = std::nullopt,
+        const std::optional<const double*>& dr_atm = std::nullopt);
 
 // figure out bounds of polar grid in stripmap radar coordinates
 std::tuple<double, double, double, double, isce3::error::ErrorCode>

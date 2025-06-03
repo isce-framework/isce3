@@ -1664,8 +1664,11 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
     def process_pulses(iblock, nblocks, debugfile, fdata, sr, x, v,
                 polar_grid, dem, fc, kernel, atmos, rdr2geo_params):
         log.info(f"Focusing {len(x)} pulses to polar image {iblock + 1} of {nblocks}")
+        # NOTE Atmosphere will get applied (if requested) at final stage to
+        # avoid phase modulation from DEM sampling issues across subimages.
+        # Always "nodelay" in this stage.
         _, img, _ = bp_to_polar_grid(fdata, sr, x, v,
-            polar_grid, dem, fc, kernel, atmos, rdr2geo_params)
+            polar_grid, dem, fc, kernel, "nodelay", rdr2geo_params)
         if debugfile is not None:
             log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
             with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
@@ -1785,7 +1788,7 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
             f"{len(active_images)} sub-apertures")
         err = add_to_radar_grid(
             z, ogeom, igeom.orbit, igeom.doppler, active_grids, active_images,
-            dem, fc, azres, rdr2geo_params, geo2rdr_params, hgt)
+            dem, fc, azres, atmos, rdr2geo_params, geo2rdr_params, hgt)
         if err:
             log.warning("azcomp block contains some invalid pixels")
         writer.queue_write(z, block)

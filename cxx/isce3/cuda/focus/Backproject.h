@@ -123,9 +123,10 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const std::vector<isce3::focus::PolarGrid>& grids,
         const SequenceType& image_interpolators,
         const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
-        const Rdr2GeoBracketParams& r2g_params,
-        const Geo2RdrBracketParams& g2r_params,
-        float* height);
+        DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
+        const Rdr2GeoBracketParams& r2g_params = {},
+        const Geo2RdrBracketParams& g2r_params = {},
+        float* height = nullptr);
 
 template <class SequenceType>
 void mergePolarImages(
