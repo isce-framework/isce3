@@ -1,6 +1,13 @@
 name: Build-And-Run Tests
 
-on: [pull_request, push]
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - release-*
+    tags:
+      - v*.*.*
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}

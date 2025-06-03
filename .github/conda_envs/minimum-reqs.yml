@@ -4,6 +4,7 @@ channels:
   - nodefaults
 dependencies:
   - backoff
+  # Building pyre from source requires cmake>=3.19
   - cmake=3.19
   - gxx_linux-64=11
   - eigen=3.3

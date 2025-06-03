@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build_and_test_gpu:
-    # Trigger on pushes to CI updates branch, or PRs with specific label
+    # Trigger on PRs with specific label
     if: contains(github.event.pull_request.labels.*.name, 'GPU')
 
     env:
