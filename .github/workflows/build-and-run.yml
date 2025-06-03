@@ -42,17 +42,7 @@ jobs:
             env-file: environment.yml
             extra-specs: ""
         build-type: [ Release, Debug ]
-        include:
-          - os:
-              label: Linux
-              runner: ubuntu-latest
-              ctest_exclude: -E ".*($ALL_EXCLUDE|ionosphere)"
-              # ionosphere tests fail on Linux Minimum due to apparent issues with older GDAL versions
-            deps:
-              label: Minimum
-              env-file: .github/conda_envs/minimum-reqs.yml
-              extra-specs: "gsl"
-            build-type: Release
+
 
     name: Build And Test - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
     runs-on: ${{ matrix.os.runner }}
