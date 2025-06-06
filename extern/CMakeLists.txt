@@ -95,11 +95,16 @@ endmacro()
 macro(getpackage_openmp_optional)
     # Check for OpenMP (optional dependency).
     # If not found, default to an empty placeholder target.
-    find_package(OpenMP OPTIONAL_COMPONENTS CXX)
+    find_package(OpenMP OPTIONAL_COMPONENTS CXX CUDA)
     add_library(OpenMP::OpenMP_CXX_Optional INTERFACE IMPORTED)
+    add_library(OpenMP::OpenMP_CUDA_Optional INTERFACE IMPORTED)
     if(TARGET OpenMP::OpenMP_CXX)
         target_link_libraries(OpenMP::OpenMP_CXX_Optional
             INTERFACE OpenMP::OpenMP_CXX)
+    endif()
+    if(TARGET OpenMP::OpenMP_CUDA)
+        target_link_libraries(OpenMP::OpenMP_CUDA_Optional
+            INTERFACE OpenMP::OpenMP_CUDA)
     endif()
 endmacro()
 
