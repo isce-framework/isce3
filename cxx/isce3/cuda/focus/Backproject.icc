@@ -90,6 +90,14 @@ __global__ void estimateDryTropoDelayTSX(double* tau_atm,
     const isce3::core::Vec3* p, const isce3::core::Vec3* llh, const size_t n,
     const isce3::core::Ellipsoid ellipsoid);
 
+__global__ void
+makeSubApertureMask(
+    const double subaperture_start, const double subaperture_end,
+    const size_t n,
+    const double* pixel_start,
+    const double* pixel_end,
+    bool* mask);
+
 }  // namespace detail
 
 
@@ -272,12 +280,8 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     d_t.clear();  d_t.shrink_to_fit();
     d_r.clear();  d_r.shrink_to_fit();
 
-    std::vector<double> tstart(nout), tstop(nout);
-    thrust::copy(d_tstart.begin(), d_tstart.end(), tstart.begin());
-    thrust::copy(d_tstop.begin(), d_tstop.end(), tstop.begin());
-
-    // std::vector<bool> unsuitable due to bit packing optimizations
-    Eigen::Array<bool, Eigen::Dynamic, 1> mask(nout);
+    // NOTE Thrust does not use the bit-packing strategy as STL.
+    thrust::device_vector<bool> d_mask(nout);
 
     // TODO reduce tstart & tend
     // TODO check this O(log(n)) algorithm
@@ -304,9 +308,17 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         // error when importing python module...
         const auto d_nfft = *image_iter;
     
-        isce3::focus::makeSubApertureMask(image_grid.aztime_start,
-                image_grid.aztime_end, nout, tstart.data(), tstop.data(),
-                mask.data());
+        {
+            const unsigned block = 256;
+            const unsigned cuda_grid = (nout + block - 1) / block;
+
+            makeSubApertureMask<<<cuda_grid, block>>>(image_grid.aztime_start,
+                image_grid.aztime_end, nout, d_tstart.data().get(),
+                d_tstop.data().get(), d_mask.data().get());
+
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+        }
 
         const auto d_nfft_view = isce3::cuda::signal::NFFT2dResultView(d_nfft);
 
@@ -314,10 +326,9 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
             const unsigned block = 256;
             const unsigned cuda_grid = (nout + block - 1) / block;
 
-            // TODO mask
             interpPolar<<<cuda_grid, block>>>(d_out.data().get(),
                     d_x.data().get(), nout, image_grid, d_nfft_view, kw,
-                    std::nullopt, dr_atm.data().get());
+                    d_mask.data().get(), dr_atm.data().get());
 
             checkCudaErrors(cudaPeekAtLastError());
             checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));

@@ -543,6 +543,25 @@ __global__ void broadcastMultiply(const T* row, size_t ncol, T* image, size_t np
     image[tid] *= row[i_col];
 }
 
+__global__ void
+makeSubApertureMask(
+    const double subaperture_start, const double subaperture_end,
+    const size_t n,
+    const double* pixel_start,
+    const double* pixel_end,
+    bool* mask)
+{
+    const auto tid = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+
+    // bounds check
+    if (tid >= n) {
+        return;
+    }
+
+    mask[tid] = (subaperture_end > pixel_start[tid])
+            and (subaperture_start < pixel_end[tid]);
+}
+
 } // namespace detail
 
 template<class Kernel>
