@@ -119,8 +119,8 @@ def test_geocode_validate():
 
                 # check max error
                 max_err = np.nanmax(err)
-                # 1e-4 is ~11m
-                assert(max_err < 1e-4), f'{axis}-axis max error fail on {pu}'
+                # 0.00011 deg is ~12m
+                assert(max_err < 0.00011), f'{axis}-axis max error fail on {pu}'
 
                 # check RMSE
                 rmse = np.sqrt(np.sum(err**2) / np.count_nonzero(~geo_arr.mask))

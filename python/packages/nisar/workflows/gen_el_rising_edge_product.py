@@ -45,7 +45,7 @@ def cmd_line_parser():
                      help='Filename of HDF5 L0B science product')
     prs.add_argument('--ant', type=str, required=True, dest='antenna_file',
                      help='Filename of HDF5 Antenna product')
-    prs.add_argument('-b', '--beam_num', type=int, default=1, dest='beam_num',
+    prs.add_argument('-b', '--beam_num', type=int, dest='beam_num',
                      help='Beam number to pick the antenna pattern from the'
                      ' antenna HDF5 file. This is only used for single-channel'
                      ' SAR (not multi-channel DBFed SweepSAR!)')
@@ -78,11 +78,11 @@ def cmd_line_parser():
                      'file. The attitude data will be used in place of those '
                      'in L0B. Default is attitude data stored in L0B.')
     prs.add_argument('-a', '--az_block_dur', type=float, dest='az_block_dur',
-                     default=3.0, help='Duration of azimuth block in seconds.'
+                     default=5.0, help='Duration of azimuth block in seconds.'
                      ' This value will be limited by total azimuth duration.'
                      ' The value must be equal or larger than the mean PRI.')
     prs.add_argument('-o', '--out', type=str, dest='out_path', default='.',
-                     help='Output directory to dump PNG files if `--plot` and'
+                     help='Output directory to dump PNG files if `--plot` and '
                      'the EL rising-edge product. The product is CSV file '
                      'whose name conforms to JPL D-104976.')
     prs.add_argument('--no_dbf_norm', action='store_true',

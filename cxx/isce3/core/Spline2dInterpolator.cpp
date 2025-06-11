@@ -7,9 +7,13 @@
 #include <pyre/journal.h>
 #include "Interpolator.h"
 
+#include <isce3/core/detail/SSOBuffer.h>
+
+namespace isce3::core {
+
 /** @param[in] order Order of 2D spline */
 template<typename U>
-isce3::core::Spline2dInterpolator<U>::Spline2dInterpolator(size_t order)
+Spline2dInterpolator<U>::Spline2dInterpolator(size_t order)
     : super_t {BIQUINTIC_METHOD}, _order {order}
 {
 
@@ -30,8 +34,8 @@ isce3::core::Spline2dInterpolator<U>::Spline2dInterpolator(size_t order)
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
 template<class U>
-U isce3::core::Spline2dInterpolator<U>::interp_impl(double x, double y,
-                                                   const Map& z) const
+U Spline2dInterpolator<U>::interp_impl(double x, double y,
+                                       const Map& z) const
 {
 
     // Get array size
@@ -50,7 +54,7 @@ U isce3::core::Spline2dInterpolator<U>::interp_impl(double x, double y,
     i0 = i0 - (_order / 2) + 1;
     j0 = j0 - (_order / 2) + 1;
 
-    std::valarray<U> A(_order), R(_order), Q(_order), HC(_order);
+    detail::SSOBuffer<U> A(_order), R(_order), Q(_order), HC(_order);
     
     for (int i = 0; i < _order; ++i) {
         const int indi = std::min(std::max(i0 + i, 0), ny - 2);
@@ -67,9 +71,9 @@ U isce3::core::Spline2dInterpolator<U>::interp_impl(double x, double y,
 }
 
 template<typename U>
-U isce3::core::Spline2dInterpolator<U>::_spline(double x,
-                                               const std::valarray<U>& Y, int n,
-                                               const std::valarray<U>& R) const
+U Spline2dInterpolator<U>::_spline(double x,
+                                   const detail::SSOBuffer<U>& Y, int n,
+                                   const detail::SSOBuffer<U>& R) const
 {
 
     const U denom = static_cast<U>(6.0);
@@ -87,10 +91,10 @@ U isce3::core::Spline2dInterpolator<U>::_spline(double x,
 }
 
 template<typename U>
-void isce3::core::Spline2dInterpolator<U>::_initSpline(const std::valarray<U>& Y,
-                                                      int n,
-                                                      std::valarray<U>& R,
-                                                      std::valarray<U>& Q) const
+void Spline2dInterpolator<U>::_initSpline(const detail::SSOBuffer<U>& Y,
+                                          int n,
+                                          detail::SSOBuffer<U>& R,
+                                          detail::SSOBuffer<U>& Q) const
 {
     Q[0] = U(0.0);
     R[0] = U(0.0);
@@ -108,9 +112,11 @@ void isce3::core::Spline2dInterpolator<U>::_initSpline(const std::valarray<U>& Y
 }
 
 // Forward declaration of classes
-template class isce3::core::Spline2dInterpolator<double>;
-template class isce3::core::Spline2dInterpolator<float>;
-template class isce3::core::Spline2dInterpolator<std::complex<double>>;
-template class isce3::core::Spline2dInterpolator<std::complex<float>>;
+template class Spline2dInterpolator<double>;
+template class Spline2dInterpolator<float>;
+template class Spline2dInterpolator<std::complex<double>>;
+template class Spline2dInterpolator<std::complex<float>>;
+
+} // namespace isce3::core
 
 // end of file 

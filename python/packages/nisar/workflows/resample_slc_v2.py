@@ -9,6 +9,7 @@ import journal
 import numpy as np
 from journal.Channel import Channel
 
+from isce3.core.gpu_check import use_gpu
 from isce3.image.v2.resample_slc import resample_slc_blocks
 from isce3.io.gdal.gdal_raster import GDALRaster
 
@@ -40,6 +41,9 @@ def run(cfg: dict, resample_type: str) -> None:
 
     # According to the type of resampling, choose proper resample cfg
     resamp_args = cfg["processing"][f"{resample_type}_resample"]
+
+    # Determine if the user requested to use the GPU.
+    with_gpu = use_gpu(cfg['worker']['gpu_enabled'], cfg['worker']['gpu_id'])
 
     # Python sees journal.info as returning Any.
     # It is a subclasse of Channel and being used as such, so this type hint
@@ -101,6 +105,7 @@ def run(cfg: dict, resample_type: str) -> None:
             pols=pol_list,
             block_size_az=block_length,
             block_size_rg=block_width,
+            with_gpu=with_gpu,
         )
 
         t_freq_elapsed += perf_counter()
@@ -121,6 +126,7 @@ def resample_secondary_rslc_onto_reference(
     pols: Iterable[str],
     block_size_az: int,
     block_size_rg: int,
+    with_gpu: bool = False,
 ) -> None:
     """
     Resample a secondary RSLC product onto a reference one using NISAR HDF5 datasets.
@@ -149,6 +155,9 @@ def resample_secondary_rslc_onto_reference(
     block_size_rg : int
         The block size along the range axis. Must be 0 or greater. If 0, the block size
         in the range dimension will be the entire line of range values.
+    with_gpu : bool, optional
+        If True, run the GPU resample workflow. If False, run the CPU resample workflow.
+        Defaults to False.
     """
     sec_slc_obj = RSLC(hdf5file=os.fspath(sec_file_path))
     sec_grid = sec_slc_obj.getRadarGrid(freq)
@@ -217,6 +226,7 @@ def resample_secondary_rslc_onto_reference(
         block_size_az=block_size_az,
         block_size_rg=block_size_rg,
         fill_value=0.0 + 0.0j,
+        with_gpu=with_gpu,
     )
 
 

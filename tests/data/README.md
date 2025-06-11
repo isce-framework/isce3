@@ -136,7 +136,12 @@ Note that these files may be stored in a separate location outside *isce3* repo.
 - **REE_L0B_DBF_EXTSCENE_PASS1_LINE3000_TRUNCATED.h5**
 
   DBFed version of "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5"
-  under subdir *pointing/*.
+  under subdir *pointing/* with the following changes.
+  1. The selected range bins is within `[100, 1600)`.
+  2. The second and third WDs are increased by 50 and 90, respectively while
+    the respective WLs are reduced by the same amount. This is to introudce
+    regions where echo is simply collected from one or two channels at the
+    start of a range line despite `3`-tap DBF!
 
 - **REE_ANTPAT_CUTS_DBF.h5**
 
@@ -275,10 +280,12 @@ Here is a brief summary of the files:
   angle around *34.3 deg*. The antenna pattern EL/AZ cuts are interpolated/smoothed version
   provided by *ESA*.
 
-- **ALPSRP264757150-H1.0__A_HH_LINE4000-5000_RANGE0-2200.h5**
+- **ALPSRP264757150-H1.0__A_HH_LINE4000-5000_RANGE0-2500.h5**
 
   Truncated ALOS1 PALSAR L0B product containing simply *HH* product with 1000 range lines
-  within [4000,5000) and 2200 range bins within [0, 2200) over the Amazon.
+  within [4000,5000) and 2500 range bins within [0, 2500) over the Amazon.
+  This product is sitting under subfolder *pointing/* used in testing EL rising edge
+  pointing workflow.
 
 ## PolCal
 All the files used for polarimetric channel imbalance and calibration-related modules.

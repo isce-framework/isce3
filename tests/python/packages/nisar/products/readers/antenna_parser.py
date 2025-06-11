@@ -245,10 +245,12 @@ class TestAntennaParser:
         beam_last = self.prs.az_cut(num_beam, full=False)
         ang_first = beam_first.angle[0]
         ang_last = beam_last.angle[-1]
-        num_ang = int(np.ceil((ang_last - ang_first) /
-                              (beam_first.angle[1] - beam_first.angle[0]))) + 1
+        # reduce original az spacing by a factor of 2
+        az_spacing = 0.5 * (beam_first.angle[1] - beam_first.angle[0])
+        num_ang = int(np.ceil((ang_last - ang_first) / az_spacing)) + 1
 
-        azcut = self.prs.az_cut_all(full=False)
+        azcut = self.prs.az_cut_all(
+            full=False, spacing_max_deg=np.rad2deg(az_spacing))
         npt.assert_equal(azcut.copol_pattern.shape, (num_beam, num_ang),
                          err_msg="Wrong shape for 'copol'")
 
@@ -278,10 +280,12 @@ class TestAntennaParser:
         beam_last = self.prs.el_cut(num_beam, full=False)
         ang_first = beam_first.angle[0]
         ang_last = beam_last.angle[-1]
-        num_ang = int(np.ceil((ang_last - ang_first) /
-                              (beam_first.angle[1] - beam_first.angle[0]))) + 1
+        # reduce original el spacing by a factor of 10
+        el_spacing = 0.1 * (beam_first.angle[1] - beam_first.angle[0])
+        num_ang = int(np.ceil((ang_last - ang_first) / el_spacing)) + 1
 
-        elcut = self.prs.el_cut_all(full=False)
+        elcut = self.prs.el_cut_all(
+            full=False, spacing_max_deg=np.rad2deg(el_spacing))
         npt.assert_equal(elcut.copol_pattern.shape, (num_beam, num_ang),
                          err_msg="Wrong shape for 'copol'")
 
