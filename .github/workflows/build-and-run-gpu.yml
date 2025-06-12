@@ -36,6 +36,9 @@ jobs:
           - label: Latest
             env-file: environment.yml
             extra-specs: ""
+        # It would be ideal to test with both Release and Debug build types, but GPU runners cost per-minute;
+        # to avoid excess runtime costs, we compromise to run with RelWithDebInfo build type, which runs fast
+        # but still produces debugging checks.
         build-type: [ RelWithDebInfo ]
 
     name: Build And Test on GPU - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
