@@ -23,6 +23,7 @@ def resample_slc_blocks(
     block_size_rg: int = 1024,
     quiet: bool = False,
     fill_value: np.complex64 = np.nan + 1.0j * np.nan,
+    with_gpu: bool = False,
 ) -> None:
     """
     Resamples one or more SLCs onto a geometry described by given offsets datasets.
@@ -57,12 +58,23 @@ def resample_slc_blocks(
     quiet : bool, optional
         If True, don't log informational statements about progress and benchmarking.
         Defaults to False.
-    fill_value: complex, optional
+    fill_value : complex, optional
         The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+    with_gpu : bool, optional
+        If True, run the GPU resample workflow. If False, run the CPU resample workflow.
+        Defaults to False.
     """
     info_channel = journal.info("resample_slc.resample_slc_blocks")
     warning_channel = journal.warning("resample_slc.resample_slc_blocks")
     error_channel = journal.error("resample_slc.resample_slc_blocks")
+
+    # If the user has opted to use CUDA, use the gpu_resample_to_coords function for
+    # interpolation. Otherwise, use the resample_to_coords function.
+    if with_gpu:
+        from isce3.cuda.image.v2.resample_slc import gpu_resample_to_coords
+        resample = gpu_resample_to_coords
+    else:
+        resample = resample_to_coords
 
     if len(input_slcs) != len(output_resampled_slcs):
         err_log = "Number of input and output datasets do not match."
@@ -207,7 +219,7 @@ def resample_slc_blocks(
                 # Reporting input block shape for debugging
                 info_channel.log(f"Input block: {in_slices}")
 
-            output_blocks[i] = resample_to_coords(
+            output_blocks[i] = resample(
                 input_block,
                 range_index_grid,
                 azimuth_index_grid,

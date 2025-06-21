@@ -52,22 +52,43 @@ class isce3::core::Ellipsoid {
 
         /** \brief Set eccentricity^2 
          *
-         * @param[in] ecc Eccentricity-squared of ellipsoid*/
+         * @param[in] ecc Eccentricity-squared of ellipsoid
+        **/
         void e2(double val) {_e2 = val;}
 
-        /** Return local radius in EW direction */
+        /** Return transverse radius of curvature, perpendicular to NS direction
+         * 
+         * @param[in] lat Latitude in radians
+         *
+         * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Prime_vertical">Prime vertical radius</a>
+        **/
         CUDA_HOSTDEV
         inline double rEast(double lat) const;
 
-        /** Return local radius in NS direction */
+        /** Return local radius in NS direction
+         *
+         * @param[in] lat Latitude in radians
+         *
+         * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Meridional">Meridional radius</a>
+        **/
         CUDA_HOSTDEV
         inline double rNorth(double lat) const;
 
-        /** Return directional local radius */
+        /** Return directional local radius
+         * 
+         * @param[in] hdg Heading, in radians, measured in clockwise direction from the North direction.
+         * @param[in] lat Latitude in radians
+         *
+         * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Directional">Directional Radius</a>
+        **/
         CUDA_HOSTDEV
         inline double rDir(double hdg, double lat) const;
 
-        /** Transform WGS84 Lon/Lat/Hgt to ECEF xyz */
+        /** Transform WGS84 Lon/Lat/Hgt in radians/radians/meters to ECEF xyz in meters
+         *
+         * @param[in] llh Latitude (rad), Longitude (rad), Height (m).
+         * @param[out] xyz ECEF Cartesian coordinates in meters.
+        **/
         CUDA_HOSTDEV
         void lonLatToXyz(const cartesian_t &llh, cartesian_t &xyz) const;
         CUDA_HOSTDEV Vec3 lonLatToXyz(const Vec3& llh) const {
@@ -76,7 +97,13 @@ class isce3::core::Ellipsoid {
             return xyz;
         }
 
-        /** Transform ECEF xyz to Lon/Lat/Hgt */
+        /** Transform ECEF xyz in meters to Lon/Lat/Hgt in radians/radians/meters
+         *
+         * @param[in] xyz ECEF Cartesian coordinates in meters.
+         * @param[out] llh Latitude (rad), Longitude(rad), Height (m).
+         *
+         * Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct
+        **/
         CUDA_HOSTDEV
         void xyzToLonLat(const cartesian_t &xyz, cartesian_t &llh) const;
         CUDA_HOSTDEV Vec3 xyzToLonLat(const Vec3& xyz) const {
@@ -85,7 +112,14 @@ class isce3::core::Ellipsoid {
             return llh;
         }
 
-        /** Return normal to the ellipsoid at given lon, lat */
+        /** Return normal to the ellipsoid at Lon/Lat, given in radians
+         * 
+         * @param[in] lon Longitude in radians
+         * @param[in] lat Latitude in radians
+         * @param[out] vec Unit vector of normal pointing outwards in ECEF cartesian coordinates
+         *
+         *  See <a href="https://en.wikipedia.org/wiki/N-vector">N-vector</a>
+        **/
         CUDA_HOSTDEV
         inline void nVector(double lon, double lat, cartesian_t &vec) const;
         CUDA_HOSTDEV
@@ -95,7 +129,14 @@ class isce3::core::Ellipsoid {
             return result;
         }
 
-        /** Return ECEF coordinates of point on ellipse */
+        /** Return ECEF coordinates of point on ellipse, given as a lon/lat in radians
+         * 
+         * @param[in] lon Longitude in radians
+         * @param[in] lat Latitude in radians
+         * @param[out] xyz ECEF coordinates of point on ellipse
+         *
+         *  See <a href="https://en.wikipedia.org/wiki/Ellipsoid#Parametric_representation">parametric representation of ellipsoid</a>
+        **/
         CUDA_HOSTDEV
         inline void xyzOnEllipse(double lon, double lat, cartesian_t &xyz) const;
 
@@ -110,9 +151,6 @@ class isce3::core::Ellipsoid {
 };
 
 
-/** @param[in] lat Latitude in radians
- *
- * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Prime_vertical">Prime vertical radius</a>*/
 CUDA_HOSTDEV
 double isce3::core::Ellipsoid::rEast(double lat) const {
     // Radius of Ellipsoid in East direction (assuming latitude-wise symmetry)
@@ -120,20 +158,12 @@ double isce3::core::Ellipsoid::rEast(double lat) const {
 }
 
 
-/** @param[in] lat Latitude in radians
- *
- * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Meridional">Meridional radius</a> */
 CUDA_HOSTDEV
 double isce3::core::Ellipsoid::rNorth(double lat) const {
     // Radius of Ellipsoid in North direction (assuming latitude-wise symmetry)
     return (_a * (1.0 - _e2)) / std::pow((1.0 - (_e2 * std::pow(std::sin(lat), 2))), 1.5);
 }
 
-/** @param[in] hdg Heading in radians
- *  @param[in] lat Latitude in radians
- *
- *  Heading is measured in clockwise direction from the North direction.
- *  See <a href="https://en.wikipedia.org/wiki/Earth_radius#Directional">Directional Radius</a> */
 CUDA_HOSTDEV
 double isce3::core::Ellipsoid::rDir(double hdg, double lat) const {
     auto re = rEast(lat);
@@ -143,11 +173,6 @@ double isce3::core::Ellipsoid::rDir(double hdg, double lat) const {
 }
 
 
-/** @param[in] lon Longitude in radians
- *  @param[in] lat Latitude in radians
- *  @param[out] vec Unit vector of normal pointing outwards in ECEF cartesian coordinates
- *
- *  See <a href="https://en.wikipedia.org/wiki/N-vector">N-vector</a> */
 CUDA_HOSTDEV
 void isce3::core::Ellipsoid::nVector(double lon, double lat, cartesian_t &vec) const
 {
@@ -158,11 +183,6 @@ void isce3::core::Ellipsoid::nVector(double lon, double lat, cartesian_t &vec) c
 }
 
 
-/** @param[in] lon Longitude in radians
- *  @param[in] lat Latitude in radians
- *  @param[out] xyz ECEF coordinates of point on ellipse
- *
- *  See <a href="https://en.wikipedia.org/wiki/Ellipsoid#Parametric_representation">parametric representation of ellipsoid</a>*/
 CUDA_HOSTDEV
 void isce3::core::Ellipsoid::xyzOnEllipse(double lon, double lat, cartesian_t &vec) const
 {
@@ -172,8 +192,6 @@ void isce3::core::Ellipsoid::xyzOnEllipse(double lon, double lat, cartesian_t &v
     vec[2] *= b();
 }
 
-/** @param[in] llh Latitude (ras), Longitude (rad), Height (m).
- *  @param[out] xyz ECEF Cartesian coordinates in meters.*/
 CUDA_HOSTDEV inline void isce3::core::Ellipsoid::
 lonLatToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
     /*
@@ -189,10 +207,6 @@ lonLatToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
     xyz[2] = ((re * (1.0 - _e2)) + llh[2]) * std::sin(llh[1]);
 }
 
-/** @param[in] xyz ECEF Cartesian coordinates in meters.
- *  @param[out] llh Latitude (rad), Longitude(rad), Height (m).
- *
- *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */
 CUDA_HOSTDEV inline void isce3::core::Ellipsoid::
 xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
     /*

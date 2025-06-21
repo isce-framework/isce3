@@ -5,6 +5,7 @@ import os
 import pathlib
 import time
 
+from itertools import repeat
 import numpy as np
 from osgeo import gdal
 
@@ -12,12 +13,18 @@ import isce3
 from isce3.atmosphere.main_band_estimation import (MainSideBandIonosphereEstimation,
                                                    MainDiffMsBandIonosphereEstimation)
 from isce3.atmosphere.split_band_estimation import SplitBandIonosphereEstimation
-from isce3.atmosphere.ionosphere_filter import IonosphereFilter, write_array
+from isce3.atmosphere.ionosphere_filter import (IonosphereFilter,
+                                                read_block_array,
+                                                write_array,
+                                                unwrapping_correction_with_filter)
+from isce3.core.block_param_generator import block_param_generator
 from isce3.io import HDF5OptimizedReader
 from isce3.signal.interpolate_by_range import (decimate_freq_a_array,
-                                              interpolate_freq_b_array)
+                                               interpolate_freq_b_array)
 
 from isce3.splitspectrum import splitspectrum
+from isce3.unwrap.preprocess import project_map_to_radar
+from isce3.unwrap.bridge_phase import bridge_unwrapped_phase
 
 from nisar.products.readers import SLC
 from nisar.workflows import (crossmul, dense_offsets, h5_prep,
@@ -61,6 +68,50 @@ def write_disp_block_hdf5(
         dst_h5[path].write_direct(data,
             dest_sel=np.s_[block_row : block_row + block_length,
                 :block_width])
+
+
+def compute_phase_jump(previous_with_pad, current_image, half_pad_length):
+    """
+    Compute and correct for phase jumps between overlapping regions of two images.
+
+    This function extracts the overlapping regions between a padded previous image
+    and a current image, computes the phase jump (difference in phase), and applies
+    the correction to the current image to account for phase unwrapping errors.
+
+    Parameters
+    ----------
+    previous_with_pad : numpy.ndarray
+        A 2D array representing the previous image, padded to account for the
+        overlapping region. The overlap is assumed to be at the bottom of this image.
+    current_image : numpy.ndarray
+        A 2D array representing the current image. The overlap is assumed to be at
+        the top of this image.
+    half_pad_length : int
+        The number of rows corresponding to the overlap region between the previous
+        and current images.
+
+    Returns
+    -------
+    current_image : numpy.ndarray
+        The current image with the phase jump corrected.
+    difference_jump : float
+        The computed phase jump value, which was applied to correct the current image.
+    """
+    # Extract the overlap regions
+    previous_overlap = previous_with_pad[-half_pad_length:, :]
+    current_overlap = current_image[:half_pad_length, :]
+
+    # Calculate the difference in phase in the overlap areas
+    difference = np.nanmedian(current_overlap) - np.nanmedian(previous_overlap)
+
+    # Calculate the jump in phase
+    difference_jump = -((np.abs(difference) + np.pi) // (2.0 * np.pi))
+
+    # Apply the correction to the current image
+    current_image += 2.0 * np.pi * difference_jump
+
+    return current_image, difference_jump
+
 
 def decimate_freq_a_offset(iono_insar_cfg, original_dict):
     """Decimate range and azimuth offsets
@@ -383,6 +434,20 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
     iono_insar_cfg = original_cfg.copy()
     iono_insar_cfg['primary_executable'][
                 'product_type'] = 'RUNW'
+    
+    # It is sufficient to compute crossmul once at 80 m posting for computing the ionosphere
+    # Therefore, we switch off the number of looks from crossmul (30 m) with that 
+    # of unwrapping (80 m)
+  
+    runw_rg_looks = iono_insar_cfg['processing']['phase_unwrap']['range_looks']
+    runw_az_looks = iono_insar_cfg['processing']['phase_unwrap']['azimuth_looks']
+
+    if runw_rg_looks != 1 or runw_az_looks !=1:
+        iono_insar_cfg['processing']['crossmul']['range_looks'] = runw_rg_looks
+        iono_insar_cfg['processing']['crossmul']['azimuth_looks'] = runw_az_looks
+
+        iono_insar_cfg['processing']['phase_unwrap']['range_looks'] = 1
+        iono_insar_cfg['processing']['phase_unwrap']['azimuth_looks'] = 1
 
     # update processing parameter
     # water mask for ionosphere is not supported now.
@@ -392,7 +457,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
     if unwrap_mask_type == 'water':
         # Either set to a default value or delete the key entirely.
-        prep_wrapped_phase_cfg['enabled'] = False
+        prep_wrapped_phase_cfg['enabled'] = True
 
     if iono_method == 'split_main_band':
         # For split_main_band, two sub-band interferograms need to be
@@ -542,7 +607,17 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
     # run insar for ionosphere pairs
     prepare_insar_hdf5.run(iono_insar_cfg)
 
-    iono_freq_pol =  iono_insar_cfg['processing']['input_subset'][
+    # create symbolic links for rdr2geo
+    sym_iono_rdr2geo_dir = os.path.abspath(
+        f"{iono_insar_cfg['product_path_group']['scratch_path']}/rdr2geo")
+
+    if not os.path.lexists(sym_iono_rdr2geo_dir):
+        os.symlink(
+            os.path.abspath(f"{original_dict['scratch_path']}/rdr2geo"),
+            sym_iono_rdr2geo_dir,
+            target_is_directory=True)
+
+    iono_freq_pol = iono_insar_cfg['processing']['input_subset'][
                     'list_of_frequencies']
     # decimate offsets for frequency B and create ionosphere layers
     if 'B' in iono_freq_pol:
@@ -605,7 +680,18 @@ def run(cfg: dict, runw_hdf5: str):
     filling_method = filter_cfg['filling_method']
     filter_iterations = filter_cfg['filter_iterations']
     median_filter_size = filter_cfg['median_filter_size']
+    median_filter_threshold = filter_cfg['median_filter_threshold']
+    min_cluster_pixels = filter_cfg['min_cluster_pixels']
     unwrap_correction_bool = filter_cfg['unwrap_correction']
+
+    # bridge algorithm options
+    bridge_algorithm_bool = filter_cfg['bridge_algorithm_enabled']
+    bridge_minimum_samples = filter_cfg['bridge_minimum_samples']
+    bridge_radius = filter_cfg['bridge_radius']
+    bridge_erosion_size = filter_cfg['bridge_erosion_size']
+    bridge_deramp_type = filter_cfg['bridge_ramp_type']
+    bridge_ramp_maximum_pixel = filter_cfg['bridge_ramp_maximum_pixel']
+
     rg_looks = cfg['processing']['crossmul']['range_looks']
     az_looks = cfg['processing']['crossmul']['azimuth_looks']
     unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
@@ -680,13 +766,13 @@ def run(cfg: dict, runw_hdf5: str):
 
         # find polarizations which are not processed in InSAR workflow
         if 'A' in orig_freq_pols:
-            residual_pol_a =  list(set(
+            residual_pol_a = list(set(
                 iono_freq_pols['A']) - set(orig_freq_pols['A']))
         else:
             residual_pol_a = list(iono_freq_pols['A'])
 
         if 'B' in orig_freq_pols:
-            residual_pol_b =  list(set(
+            residual_pol_b = list(set(
                 iono_freq_pols['B']) - set(orig_freq_pols['B']))
         else:
             residual_pol_b = list(iono_freq_pols['B'])
@@ -849,7 +935,7 @@ def run(cfg: dict, runw_hdf5: str):
                 sub_high_coh_image = np.empty([block_rows_data, cols_main],
                     dtype=float)
 
-                if mask_type == "connected_components":
+                if "connected_components" in mask_type:
                     sub_low_conn_image = np.empty(
                         [block_rows_data, cols_main],
                         dtype=float)
@@ -865,26 +951,60 @@ def run(cfg: dict, runw_hdf5: str):
                     # Read runw block for sub-bands
                     src_low_h5[runw_path_freq_a].read_direct(
                         sub_low_image,
-                        np.s_[row_start : row_start + block_rows_data, :])
+                        np.s_[row_start:row_start + block_rows_data, :])
                     src_high_h5[runw_path_freq_a].read_direct(
                         sub_high_image,
-                        np.s_[row_start : row_start + block_rows_data, :])
+                        np.s_[row_start:row_start + block_rows_data, :])
                     # Read coherence block for sub-bands
                     src_low_h5[rcoh_path_freq_a].read_direct(
                         sub_low_coh_image,
-                        np.s_[row_start : row_start + block_rows_data, :])
+                        np.s_[row_start:row_start + block_rows_data, :])
                     src_high_h5[rcoh_path_freq_a].read_direct(
                         sub_high_coh_image,
-                        np.s_[row_start : row_start + block_rows_data, :])
+                        np.s_[row_start:row_start + block_rows_data, :])
 
-                    if mask_type == "connected_components":
+                    if "connected_components" in mask_type:
                         # Read connected_components block for sub-bands
                         src_low_h5[rcom_path_freq_a].read_direct(
                             sub_low_conn_image,
-                            np.s_[row_start : row_start + block_rows_data, :])
+                            np.s_[row_start:row_start + block_rows_data, :])
                         src_high_h5[rcom_path_freq_a].read_direct(
                             sub_high_conn_image,
-                            np.s_[row_start : row_start + block_rows_data, :])
+                            np.s_[row_start:row_start + block_rows_data, :])
+
+                if bridge_algorithm_bool:
+                    sub_high_image = bridge_unwrapped_phase(
+                        sub_high_image,
+                        radius=bridge_radius,
+                        min_num_pixel=bridge_minimum_samples,
+                        erosion_size=bridge_erosion_size,
+                        ramp_type=bridge_deramp_type,
+                        deramp_max_num_sample=bridge_ramp_maximum_pixel)
+                    sub_low_image = bridge_unwrapped_phase(
+                        sub_low_image,
+                        radius=bridge_radius,
+                        min_num_pixel=bridge_minimum_samples,
+                        erosion_size=bridge_erosion_size,
+                        ramp_type=bridge_deramp_type,
+                        deramp_max_num_sample=bridge_ramp_maximum_pixel)
+
+                if unwrap_correction_bool:
+                    sub_high_image = unwrapping_correction_with_filter(
+                        sub_high_image,
+                        kernel_width=kernel_range_size,
+                        kernel_length=kernel_azimuth_size,
+                        sig_kernel_x=kernel_sigma_range,
+                        sig_kernel_y=kernel_sigma_azimuth,
+                        iterations=filter_iterations,
+                        filter_method='convolution')
+                    sub_low_image = unwrapping_correction_with_filter(
+                        sub_low_image,
+                        kernel_width=kernel_range_size,
+                        kernel_length=kernel_azimuth_size,
+                        sig_kernel_x=kernel_sigma_range,
+                        sig_kernel_y=kernel_sigma_azimuth,
+                        iterations=filter_iterations,
+                        filter_method='convolution')
 
             if iono_method in iono_method_sideband:
 
@@ -897,7 +1017,7 @@ def run(cfg: dict, runw_hdf5: str):
                 side_coh_image = np.empty([block_rows_data, cols_side],
                     dtype=float)
 
-                if mask_type == "connected_components":
+                if "connected_components" in mask_type:
                     main_conn_image = np.empty([block_rows_data, cols_main],
                         dtype=float)
                     side_conn_image = np.empty([block_rows_data, cols_side],
@@ -923,7 +1043,7 @@ def run(cfg: dict, runw_hdf5: str):
                         side_coh_image,
                         np.s_[row_start : row_start + block_rows_data, :])
 
-                    if mask_type == "connected_components":
+                    if "connected_components" in mask_type:
                         # Read connected components block for main and side bands
                         src_main_h5[rcom_path_freq_a].read_direct(
                             main_conn_image,
@@ -931,6 +1051,40 @@ def run(cfg: dict, runw_hdf5: str):
                         src_side_h5[rcom_path_freq_b].read_direct(
                             side_conn_image,
                             np.s_[row_start : row_start + block_rows_data, :])
+
+                if bridge_algorithm_bool:
+                    main_image = bridge_unwrapped_phase(
+                        main_image,
+                        radius=bridge_radius,
+                        min_num_pixel=bridge_minimum_samples,
+                        erosion_size=bridge_erosion_size,
+                        ramp_type=bridge_deramp_type,
+                        deramp_max_num_sample=bridge_ramp_maximum_pixel)
+                    side_image = bridge_unwrapped_phase(
+                        side_image,
+                        radius=bridge_radius,
+                        min_num_pixel=bridge_minimum_samples,
+                        erosion_size=bridge_erosion_size,
+                        ramp_type=bridge_deramp_type,
+                        deramp_max_num_sample=bridge_ramp_maximum_pixel)
+
+                if unwrap_correction_bool:
+                    main_image = unwrapping_correction_with_filter(
+                        main_image,
+                        kernel_width=kernel_range_size,
+                        kernel_length=kernel_azimuth_size,
+                        sig_kernel_x=kernel_sigma_range,
+                        sig_kernel_y=kernel_sigma_azimuth,
+                        iterations=filter_iterations,
+                        filter_method='convolution')
+                    side_image = unwrapping_correction_with_filter(
+                        side_image,
+                        kernel_width=kernel_range_size,
+                        kernel_length=kernel_azimuth_size,
+                        sig_kernel_x=kernel_sigma_range,
+                        sig_kernel_y=kernel_sigma_azimuth,
+                        iterations=filter_iterations,
+                        filter_method='convolution')
 
             # Estimate dispersive and non-dispersive phase
             dispersive, non_dispersive = iono_phase_obj.compute_disp_nondisp(
@@ -1022,11 +1176,12 @@ def run(cfg: dict, runw_hdf5: str):
                         oversample_flag=True,
                         slant_main=main_slant,
                         slant_side=side_slant)
-
             else:
                 info_channel.log(f'{mask_type} is used for mask construction')
-                if mask_type == "coherence":
-                    mask_array = iono_phase_obj.get_coherence_mask_array(
+                mask_array = np.ones([block_rows_data, cols_output],
+                                     dtype=bool)
+                if "coherence" in mask_type:
+                    mask_image = iono_phase_obj.get_coherence_mask_array(
                         main_array=main_coh_image,
                         side_array=side_coh_image,
                         low_band_array=sub_low_coh_image,
@@ -1034,28 +1189,67 @@ def run(cfg: dict, runw_hdf5: str):
                         slant_main=main_slant,
                         slant_side=side_slant,
                         threshold=filter_coh_thresh)
-
-                elif mask_type == "connected_components":
-                    mask_array = iono_phase_obj.get_conn_component_mask_array(
+                    mask_array = mask_array & mask_image
+                if "connected_components" in mask_type:
+                    mask_image = iono_phase_obj.get_conn_component_mask_array(
                         main_array=main_conn_image,
                         side_array=side_conn_image,
                         low_band_array=sub_low_conn_image,
                         high_band_array=sub_high_conn_image,
                         slant_main=main_slant,
                         slant_side=side_slant)
+                    mask_array = mask_array & mask_image
 
-                elif mask_type == "median_filter":
-                    mask_array = iono_phase_obj.get_mask_median_filter(
+                if "median_filter" in mask_type:
+                    mask_image = iono_phase_obj.get_mask_median_filter(
                         disp=dispersive,
                         looks=number_looks,
-                        threshold=filter_coh_thresh,
-                        median_filter_size=median_filter_size)
+                        threshold=median_filter_threshold,
+                        median_filter_size=median_filter_size,
+                        )
+                    mask_array = mask_array & mask_image
+
+                if "water" in mask_type:
+                    # Extract preprocessing dictionary and open arrays
+                    # water_mask_file is expected to have distance from the
+                    # boundary of the water bodies. The values 0-100 represent
+                    # the distance from the coastline and values from 101-200
+                    # represent the distance from inland water boundaries.
+                    water_mask_path = \
+                            cfg["dynamic_ancillary_file_group"][
+                                "water_mask_file"]
+                    water_distance = project_map_to_radar(
+                        cfg,
+                        water_mask_path,
+                        'A')
+                    mask_image = water_distance[
+                        row_start:row_start + block_rows_data, :] == 0
+                    mask_array = mask_array & mask_image
+
+                valid_area = iono_phase_obj.get_valid_area(
+                    main_array=main_image,
+                    side_array=side_image,
+                    low_band_array=sub_low_image,
+                    high_band_array=sub_high_image,
+                    slant_main=main_slant,
+                    slant_side=side_slant,
+                    invalid_value=0)
+
+                valid_area_coh = iono_phase_obj.get_valid_area(
+                    main_array=main_coh_image,
+                    side_array=side_coh_image,
+                    low_band_array=sub_low_coh_image,
+                    high_band_array=sub_high_coh_image,
+                    slant_main=main_slant,
+                    slant_side=side_slant,
+                    invalid_value=0)
                 mask_path = os.path.join(
                     iono_path, iono_method, pol_comb_str, 'mask_array')
                 # Write sigma of dispersive phase into the
                 # ENVI format files
-                write_array(mask_path,
-                    mask_array,
+                write_array(
+                    mask_path,
+                    mask_array & valid_area & valid_area_coh,
                     data_type=gdal.GDT_Float32,
                     block_row=row_start,
                     data_shape=[rows_output, cols_output])
@@ -1076,7 +1270,8 @@ def run(cfg: dict, runw_hdf5: str):
                         mask_path=mask_path,
                         filtered_output=iono_hdf5_path,
                         filtered_std_dev=iono_sig_hdf5_path,
-                        lines_per_block=blocksize)
+                        lines_per_block=blocksize,
+                        min_cluster_pixels=min_cluster_pixels)
                 # oversample ionosphere of frequencyB to frequencyA
                 # and copy them to standard RUNW product.
                 if iono_method in iono_method_sideband:
@@ -1098,7 +1293,8 @@ def run(cfg: dict, runw_hdf5: str):
                     mask_path=mask_path,
                     filtered_output=filt_disp_path,
                     filtered_std_dev=filt_disp_sig_path,
-                    lines_per_block=blocksize)
+                    lines_per_block=blocksize,
+                    min_cluster_pixels=min_cluster_pixels)
 
                 # low pass filtering for non-dispersive phase
                 filt_nondisp_path = os.path.join(
@@ -1111,29 +1307,42 @@ def run(cfg: dict, runw_hdf5: str):
                     mask_path=mask_path,
                     filtered_output=filt_nondisp_path,
                     filtered_std_dev=filt_nondisp_sig_path,
-                    lines_per_block=blocksize)
+                    lines_per_block=blocksize,
+                    min_cluster_pixels=min_cluster_pixels)
 
                 disp_tif = gdal.Open(filt_disp_path)
-                nondisp_tif = gdal.Open(filt_nondisp_path)
                 disp_width = disp_tif.RasterXSize
                 disp_length = disp_tif.RasterYSize
+                pad_length = kernel_sigma_azimuth
+                half_pad_length = int(pad_length / 2)
+                correction_pad_shape = [int(2 * half_pad_length), 0]
+                block_params = block_param_generator(
+                    blocksize, [disp_length, cols_main],
+                    correction_pad_shape)
 
-                for block in range(0, nblocks):
+                # Generate block_params_side for the sideband data (separate instance of the generator)
+                if iono_method in iono_method_sideband:
+                    block_params_side = block_param_generator(
+                        blocksize, [disp_length, cols_side], correction_pad_shape)  # Second call for sideband
+                else:
+                    block_params_side = repeat(None)
+
+                for block_ind, (block_parm, block_parm_side) in enumerate(
+                        zip(block_params, block_params_side)):
+
+                    row_start = block_parm.read_start_line
+                    block_rows_data = block_parm.read_length
                     row_start = block * blocksize
-                    if (row_start + blocksize > rows_main):
-                        block_rows_data = rows_main - row_start
+                    if iono_method in iono_method_sideband:
+                        block_parm_iono = block_parm_side
                     else:
-                        block_rows_data = blocksize
-
-                    filt_disp = disp_tif.GetRasterBand(1).ReadAsArray(0,
-                        row_start,
-                        disp_width,
-                        block_rows_data)
-
-                    filt_nondisp = nondisp_tif.GetRasterBand(1).ReadAsArray(0,
-                        row_start,
-                        disp_width,
-                        block_rows_data)
+                        block_parm_iono = block_parm
+                    filt_disp = read_block_array(filt_disp_path,
+                                                 block_parm_iono, 0)
+                    filt_nondisp = read_block_array(filt_nondisp_path,
+                                                    block_parm_iono, 0)
+                    mask_image = read_block_array(mask_path,
+                                                  block_parm_iono, 0)
 
                     # initialize arrays by setting None
                     sub_low_image = None
@@ -1142,10 +1351,6 @@ def run(cfg: dict, runw_hdf5: str):
                     side_image = None
 
                     if iono_method in iono_method_subbands:
-                        sub_low_image = np.empty([block_rows_data, cols_main],
-                            dtype=float)
-                        sub_high_image = np.empty([block_rows_data, cols_main],
-                            dtype=float)
 
                         with HDF5OptimizedReader(name=sub_low_runw_str, mode='r',
                             libver='latest', swmr=True) as src_low_h5, \
@@ -1153,18 +1358,51 @@ def run(cfg: dict, runw_hdf5: str):
                             libver='latest', swmr=True) as src_high_h5:
 
                             # Read runw block for sub-bands
-                            src_low_h5[runw_path_freq_a].read_direct(
+                            sub_low_image = read_block_array(
+                                src_low_h5[runw_path_freq_a],
+                                block_parm, 0)
+                            sub_high_image = read_block_array(
+                                src_high_h5[runw_path_freq_a],
+                                block_parm, 0)
+
+                            sub_high_image[mask_image == 0] = 0
+                            sub_low_image[mask_image == 0] = 0
+
+                        if bridge_algorithm_bool:
+                            sub_low_image = bridge_unwrapped_phase(
                                 sub_low_image,
-                                np.s_[row_start : row_start + block_rows_data, :])
-                            src_high_h5[runw_path_freq_a].read_direct(
+                                radius=bridge_radius,
+                                min_num_pixel=bridge_minimum_samples,
+                                erosion_size=bridge_erosion_size,
+                                ramp_type=bridge_deramp_type,
+                                deramp_max_num_sample=bridge_ramp_maximum_pixel)
+                            sub_high_image = bridge_unwrapped_phase(
                                 sub_high_image,
-                                np.s_[row_start : row_start + block_rows_data, :])
+                                radius=bridge_radius,
+                                min_num_pixel=bridge_minimum_samples,
+                                erosion_size=bridge_erosion_size,
+                                ramp_type=bridge_deramp_type,
+                                deramp_max_num_sample=bridge_ramp_maximum_pixel)
+
+                            if block_ind > 0:
+                                sub_low_image, _ = compute_phase_jump(
+                                    previous_low_with_pad,
+                                    sub_low_image,
+                                    half_pad_length)
+                                sub_high_image, _ = compute_phase_jump(
+                                    previous_high_with_pad,
+                                    sub_high_image,
+                                    half_pad_length)
+                            previous_low_with_pad = sub_low_image
+                            previous_high_with_pad = sub_high_image
 
                     if iono_method in iono_method_sideband:
 
-                        main_image = np.empty([block_rows_data, cols_main],
+                        main_image = np.empty(
+                            [block_rows_data, cols_main],
                             dtype=float)
-                        side_image = np.empty([block_rows_data, cols_side],
+                        side_image = np.empty(
+                            [block_rows_data, cols_side],
                             dtype=float)
 
                         with HDF5OptimizedReader(name=runw_freq_a_str, mode='r',
@@ -1172,51 +1410,82 @@ def run(cfg: dict, runw_hdf5: str):
                             HDF5OptimizedReader(name=runw_freq_b_str, mode='r',
                             libver='latest', swmr=True) as src_side_h5:
 
-                            # Read runw block for main and side bands
-                            src_main_h5[runw_path_freq_a].read_direct(
+                            # Read runw block for sub-bands
+                            main_image = read_block_array(
+                                src_main_h5[runw_path_freq_a],
+                                block_parm, 0)
+                            side_image = read_block_array(
+                                src_side_h5[runw_path_freq_b],
+                                block_parm_side, 0)
+
+                        if bridge_algorithm_bool:
+                            main_image = bridge_unwrapped_phase(
                                 main_image,
-                                np.s_[row_start : row_start + block_rows_data, :])
-                            src_side_h5[runw_path_freq_b].read_direct(
+                                radius=bridge_radius,
+                                min_num_pixel=bridge_minimum_samples,
+                                erosion_size=bridge_erosion_size,
+                                ramp_type=bridge_deramp_type,
+                                deramp_max_num_sample=bridge_ramp_maximum_pixel)
+                            side_image = bridge_unwrapped_phase(
                                 side_image,
-                                np.s_[row_start : row_start + block_rows_data, :])
+                                radius=bridge_radius,
+                                min_num_pixel=bridge_minimum_samples,
+                                erosion_size=bridge_erosion_size,
+                                ramp_type=bridge_deramp_type,
+                                deramp_max_num_sample=bridge_ramp_maximum_pixel)
+
+                            if block_ind > 0:
+                                main_image, _ = compute_phase_jump(
+                                    previous_main_with_pad,
+                                    main_image,
+                                    half_pad_length)
+                                side_image, _ = compute_phase_jump(
+                                    previous_side_with_pad,
+                                    side_image,
+                                    half_pad_length)
+                            previous_main_with_pad = main_image
+                            previous_side_with_pad = side_image
 
                     # Estimating phase unwrapping errors
-                    com_unw_err, diff_unw_err = iono_phase_obj.compute_unwrapp_error(
-                        disp_array=filt_disp,
-                        nondisp_array=filt_nondisp,
-                        main_runw=main_image,
-                        side_runw=side_image,
-                        slant_main=main_slant,
-                        slant_side=side_slant,
-                        low_sub_runw=sub_low_image,
-                        high_sub_runw=sub_high_image)
+                    com_unw_err, diff_unw_err = \
+                        iono_phase_obj.compute_unwrapp_error(
+                            disp_array=filt_disp,
+                            nondisp_array=filt_nondisp,
+                            main_runw=main_image,
+                            side_runw=side_image,
+                            slant_main=main_slant,
+                            slant_side=side_slant,
+                            low_sub_runw=sub_low_image,
+                            high_sub_runw=sub_high_image)
 
                     dispersive_unwcor, non_dispersive_unwcor = \
                         iono_phase_obj.compute_disp_nondisp(
-                        phi_sub_low=sub_low_image,
-                        phi_sub_high=sub_high_image,
-                        phi_main=main_image,
-                        phi_side=side_image,
-                        slant_main=main_slant,
-                        slant_side=side_slant,
-                        comm_unwcor_coef=com_unw_err,
-                        diff_unwcor_coef=diff_unw_err)
+                            phi_sub_low=sub_low_image,
+                            phi_sub_high=sub_high_image,
+                            phi_main=main_image,
+                            phi_side=side_image,
+                            slant_main=main_slant,
+                            slant_side=side_slant,
+                            comm_unwcor_coef=com_unw_err,
+                            diff_unwcor_coef=diff_unw_err)
 
                     out_disp_cor_path = os.path.join(
-                        iono_path, iono_method, pol_comb_str, f'dispersive_cor')
+                        iono_path, iono_method, pol_comb_str, 'dispersive_cor')
                     out_nondisp_cor_path = os.path.join(
                         iono_path, iono_method, pol_comb_str, 'non_dispersive_cor')
 
-                    write_array(out_disp_cor_path,
-                        dispersive_unwcor,
+                    write_array(
+                        out_disp_cor_path,
+                        dispersive_unwcor[half_pad_length:-half_pad_length, :],
                         data_type=gdal.GDT_Float32,
-                        block_row=row_start,
+                        block_row=block_parm.write_start_line,
                         data_shape=[rows_output, cols_output])
 
-                    write_array(out_nondisp_cor_path,
-                        non_dispersive_unwcor,
+                    write_array(
+                        out_nondisp_cor_path,
+                        non_dispersive_unwcor[half_pad_length:-half_pad_length, :],
                         data_type=gdal.GDT_Float32,
-                        block_row=row_start,
+                        block_row=block_parm.write_start_line,
                         data_shape=[rows_output, cols_output])
 
                 with HDF5OptimizedReader(name=iono_output, mode='a', libver='latest', swmr=True) as dst_h5:
@@ -1230,7 +1499,8 @@ def run(cfg: dict, runw_hdf5: str):
                         mask_path=mask_path,
                         filtered_output=iono_hdf5_path,
                         filtered_std_dev=iono_sig_hdf5_path,
-                        lines_per_block=blocksize)
+                        lines_per_block=blocksize,
+                        min_cluster_pixels=min_cluster_pixels)
                 # oversample ionosphere of frequencyB to frequencyA
                 # and copyt them to standard RUNW product.
                 if iono_method in iono_method_sideband:
@@ -1242,9 +1512,10 @@ def run(cfg: dict, runw_hdf5: str):
                         slant_main=main_slant,
                         slant_side=side_slant)
 
-
     t_all_elapsed = time.time() - t_all
-    info_channel.log(f"successfully ran Ionosphere in {t_all_elapsed:.3f} seconds")
+    info_channel.log("successfully ran Ionosphere in "
+                     f"{t_all_elapsed:.3f} seconds")
+
 
 if __name__ == "__main__":
     # parse CLI input

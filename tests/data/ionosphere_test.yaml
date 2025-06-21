@@ -160,7 +160,7 @@ runconfig:
                     B:
                 dispersive_filter:
                     enabled: True
-                    filter_mask_type: coherence
+                    filter_mask_type: ['coherence']
                     filter_coherence_threshold: 0.5
                     filling_method: nearest
                     unwrap_correction: False

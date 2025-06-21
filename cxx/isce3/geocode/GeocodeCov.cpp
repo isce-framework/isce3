@@ -372,6 +372,7 @@ void Geocode<T>::geocodeInterp(
     switch (_data_interp_method) {
         case BILINEAR_METHOD:
             std::cout << "interpolator: BilinearInterpolator" << std::endl;
+            interp_margin = 0;
             break;
         case BICUBIC_METHOD:
             std::cout << "interpolator: BicubicInterpolator" << std::endl;
@@ -418,6 +419,18 @@ void Geocode<T>::geocodeInterp(
     if (abs_cal_factor != 1)
         info << "absolute calibration factor: " << abs_cal_factor
              << pyre::journal::newline;
+
+    /*
+    Complex-valued input and output rasters are assumed to be SLCs.
+    Since the `abs_cal_factor` is proportional to power/intensity
+    and applied to the output, if the output with type `T_out` is
+    complex-valued, use the square root of `abs_cal_factor` instead.
+    */
+    double abs_cal_factor_effective;
+    if (isce3::is_complex<T_out>())
+        abs_cal_factor_effective = std::sqrt(abs_cal_factor);
+    else
+        abs_cal_factor_effective = abs_cal_factor;
 
     isce3::io::Raster* rtc_raster;
     isce3::io::Raster* rtc_sigma0_raster = nullptr;
@@ -579,8 +592,9 @@ void Geocode<T>::geocodeInterp(
 
         // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)
-        std::valarray<double> radarX(blockSize);
-        std::valarray<double> radarY(blockSize);
+        constexpr auto nan = std::numeric_limits<double>::quiet_NaN();
+        std::valarray<double> radarX(nan, blockSize);
+        std::valarray<double> radarY(nan, blockSize);
 
         int azimuthFirstLine = radar_grid.length() - 1;
         int azimuthLastLine = 0;
@@ -659,18 +673,38 @@ void Geocode<T>::geocodeInterp(
                 out_geo_rdr_r(blockLine, pixel) = rdrX;
             }
 
-            if (rdrY < 0 || rdrX < 0 || rdrY >= radar_grid.length() ||
-                    rdrX >= radar_grid.width())
+            /*
+            `rdrX` and `rdrY` are defined wrt to the center of the first
+            pixel. The last valid radar-grid position will be located
+            at radar_grid.length() - 1 and radar_grid.width - 1. For a
+            5 x 5 radar grid, we have:
+
+                              * rdrX = 0              * rdrX = 4
+                           |-----|-----|-----|-----|-----|
+               rdrY = 0  * | 1,1 | 1,2 | 1,3 | 1,4 | 1,5 |
+                           |-----|-----|-----|-----|-----|
+                           | 2,1 | 2,2 | 2,3 | 2,4 | 2,5 |
+                           |-----|-----|-----|-----|-----|
+                           | 3,1 | 3,2 | 3,3 | 3,4 | 3,5 |
+                           |-----|-----|-----|-----|-----|
+                           | 4,1 | 4,2 | 4,3 | 4,4 | 4,5 |
+                           |-----|-----|-----|-----|-----|
+               rdrY = 4  * | 5,1 | 5,2 | 5,3 | 5,4 | 5,5 |
+                           |-----|-----|-----|-----|-----|
+
+            */
+            if (rdrY < 0 || rdrX < 0 || rdrY > (radar_grid.length() - 1) ||
+                    rdrX > (radar_grid.width() - 1))
                 continue;
 
             azimuthFirstLine = std::min(
                     azimuthFirstLine, static_cast<int>(std::floor(rdrY)));
             azimuthLastLine = std::max(azimuthLastLine,
-                    static_cast<int>(std::ceil(rdrY) - 1));
+                    static_cast<int>(std::ceil(rdrY)));
             rangeFirstPixel = std::min(
                     rangeFirstPixel, static_cast<int>(std::floor(rdrX)));
             rangeLastPixel = std::max(
-                    rangeLastPixel, static_cast<int>(std::ceil(rdrX) - 1));
+                    rangeLastPixel, static_cast<int>(std::ceil(rdrX)));
 
             // store the adjusted X and Y indices
             radarX[blockLine * geogrid.width() + pixel] = rdrX;
@@ -713,11 +747,12 @@ void Geocode<T>::geocodeInterp(
         // define the geo-block matrix based on the raster bands data type
         isce3::core::Matrix<T_out> geoDataBlock(
                 geoBlockLength, geogrid.width());
-        geoDataBlock.fill(nan_t_out);
 
         // if invalid, fill all bands with NaNs and continue to the next block
         if (azimuthFirstLine > azimuthLastLine ||
                 rangeFirstPixel > rangeLastPixel) {
+
+            geoDataBlock.fill(nan_t_out);
             for (int band = 0; band < nbands; ++band) {
                 outputRaster.setBlock(geoDataBlock.data(), 0, lineStart,
                         geogrid.width(), geoBlockLength, band + 1);
@@ -812,12 +847,21 @@ void Geocode<T>::geocodeInterp(
                 out_mask_array.resize(geoBlockLength, geogrid.width());
                 out_mask_array.fill(255);
             }
+
+            /*
+            geoDataBlock is reused across all polarizations. Since the _interpolate()
+            function may skip invalid pixels in the geogrid, it's safer to initialize
+            geoDataBlock with NaNs before each use. This prevents residual values
+            from previous iterations from being mistakenly retained.
+            */
+            geoDataBlock.fill(nan_t_out);
  
             _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY,
                     rdrBlockWidth, rdrBlockLength, azimuthFirstLine,
                     rangeFirstPixel, interp.get(), radar_grid,
                     flag_az_baseband_doppler, flatten, phase_screen_raster,
-                    phase_screen_array, abs_cal_factor, clip_min, clip_max,
+                    phase_screen_array, rtc_min_value,
+                    abs_cal_factor_effective, clip_min, clip_max,
                     flag_apply_rtc, rtc_area_array, rtc_area_sigma0_array, out_geo_rtc_band,
                     out_geo_rtc_array, out_geo_rtc_gamma0_to_sigma0_band,
                     out_geo_rtc_gamma0_to_sigma0_array,
@@ -902,7 +946,9 @@ inline void Geocode<T>::_interpolate(
         const isce3::product::RadarGridParameters& radar_grid,
         const bool flag_az_baseband_doppler, const bool flatten,
         isce3::io::Raster* phase_screen_raster,
-        isce3::core::Matrix<float>& phase_screen_array, double abs_cal_factor,
+        isce3::core::Matrix<float>& phase_screen_array,
+        float rtc_min_value,
+        double abs_cal_factor_effective,
         float clip_min, float clip_max, bool flag_apply_rtc,
         const isce3::core::Matrix<float>& rtc_area,
         const isce3::core::Matrix<float>& rtc_area_sigma,
@@ -940,9 +986,10 @@ inline void Geocode<T>::_interpolate(
         double rdrY = radarY[i * width + j] - azimuthFirstLine;
         double rdrX = radarX[i * width + j] - rangeFirstPixel;
 
-        if (rdrX < interp_margin || rdrY < interp_margin ||
-                rdrX >= (radarBlockWidth - interp_margin) ||
-                rdrY >= (radarBlockLength - interp_margin)) {
+        if (std::isnan(rdrX) || std::isnan(rdrY) ||
+                rdrX < interp_margin || rdrY < interp_margin ||
+                rdrX > (radarBlockWidth - interp_margin - 1) ||
+                rdrY > (radarBlockLength - interp_margin - 1)) {
             continue;
         }
 
@@ -989,20 +1036,6 @@ inline void Geocode<T>::_interpolate(
                 }
 
                 if (flag_has_invalid_sample) {
-                    // set NaN values according to T_out, i.e. real (NaN)
-                    // or complex (NaN, NaN)
-                    using T_out_real = typename isce3::real<T_out>::type;
-                    geoDataBlock(i, j) *= 
-                        std::numeric_limits<T_out_real>::quiet_NaN();
-                    if (flag_apply_rtc && out_geo_rtc != nullptr) {
-                        out_geo_rtc_array(i, j) =
-                            std::numeric_limits<float>::quiet_NaN();
-                    }
-                    if (flag_apply_rtc &&
-                            out_geo_rtc_gamma0_to_sigma0 != nullptr) {
-                        out_geo_rtc_gamma0_to_sigma0_array(i, j) =
-                            std::numeric_limits<float>::quiet_NaN();
-                    }
                     continue;
                 }
            }
@@ -1040,14 +1073,32 @@ inline void Geocode<T>::_interpolate(
         // Interpolate chip
         T_out val = interp->interpolate(rdrX, rdrY, rdrDataBlock);
 
-        if (!isnan(abs_cal_factor) && abs_cal_factor != 1)
-            val *= abs_cal_factor;
+        if (!std::isnan(abs_cal_factor_effective) && abs_cal_factor_effective != 1)
+            val *= abs_cal_factor_effective;
 
         if (flag_apply_rtc) {
             float rtc_value =
                     rtc_area(int(rdrY + azimuthFirstLine),
                              int(rdrX + rangeFirstPixel));
-            val /= std::sqrt(rtc_value);
+ 
+            if (std::isnan(rtc_value) || rtc_value < rtc_min_value) {
+                continue;
+            }
+
+            /*
+            RTC normalization values are proportional to backscater
+            (power/intensity ratio) values. If the output is complex,
+            we assume its data represents an SLC, whose absolute
+            values represent magnitudes. Therefore, we
+            convert RTC ANF values to amplitude by taking the square
+            root the RTC values before division. If the data are real,
+            we assume they are power so we divide by `rtc_value` directly.
+            */
+            if (isce3::is_complex<T_out>())
+                val /= std::sqrt(rtc_value);
+            else
+                val /= rtc_value;
+
             if (out_geo_rtc != nullptr) {
                 out_geo_rtc_array(i, j) = rtc_value;
             }

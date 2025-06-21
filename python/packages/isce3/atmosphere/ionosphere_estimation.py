@@ -1,6 +1,6 @@
 import journal
 import numpy as np
-from scipy.ndimage import median_filter
+from scipy.ndimage import median_filter, binary_opening
 from isce3.signal.interpolate_by_range import decimate_freq_a_array
 
 class IonosphereEstimation:
@@ -73,19 +73,25 @@ class IonosphereEstimation:
             1: valid pixels,
             0: invalid pixels.
         """
-
-        std_iono, _ = self.estimate_iono_std(
-            main_coh=threshold,
-            side_coh=threshold,
-            low_band_coh=threshold,
-            high_band_coh=threshold,
-            number_looks=looks,
-            resample_flag=False)
-
         mask_array = np.abs(disp - median_filter(disp,
-            median_filter_size)) < 3 * std_iono
-
+                            median_filter_size)) < threshold
+        mask_array = self.remove_single_pixels(mask_array)
         return mask_array
+
+    def remove_single_pixels(
+            self,
+            binary_image):
+        # Define a 3x3 cross-shaped structuring element
+        structure = np.array([[0, 1, 0],
+                              [1, 1, 1],
+                              [0, 1, 0]])
+
+        # Perform binary opening with the defined structure.
+        # This will remove isolated pixels.
+        opened_image = binary_opening(binary_image,
+                                      structure=structure).astype(np.uint8)
+
+        return opened_image
 
     def compute_unwrapp_error(
             self,

@@ -36,7 +36,7 @@ DryTroposphereModel parseDryTropoModel(const std::string& s);
  * \cite breit2010
  *
  * \param[in] p         Antenna phase center position (ECEF m)
- * \param[in] llh       Target Lon/Lat/HAE (deg/deg/m)
+ * \param[in] llh       Target Lon/Lat/HAE (radian/radian/m)
  * \param[in] ellipsoid Reference ellipsoid
  * \returns             Propagation delay (s)
  */

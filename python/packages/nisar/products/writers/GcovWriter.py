@@ -467,11 +467,23 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.check_and_decorate_product_using_specs_xml(specs_xml_file)
 
     def populate_ceos_analysis_ready_data_parameters(self):
+
+        flag_full_covariance = self.cfg['processing']['input_subset'][
+                    'fullcovariance']
+
         # Note: CEOS ARD documentation uses the British spelling "Normalised"
         # rather than the American (US) spelling "Normalized"
-        self.set_value(
-            '{PRODUCT}/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
-            'Normalised Radar Backscatter (NRB)')
+        if flag_full_covariance:
+            # [CovMat] is subtype of CEOS-ARD Polarimetric Radar [POL]
+            self.set_value(
+                '{PRODUCT}/metadata/ceosAnalysisReadyData/'
+                'ceosAnalysisReadyDataProductType',
+                'Normalised Covariance Matrix (CovMat)')
+        else:
+            self.set_value(
+                '{PRODUCT}/metadata/ceosAnalysisReadyData/'
+                'ceosAnalysisReadyDataProductType',
+                'Normalised Radar Backscatter (NRB)')
 
         self.set_value(
             '{PRODUCT}/metadata/ceosAnalysisReadyData/'

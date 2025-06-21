@@ -133,6 +133,7 @@ def run(cfg: dict):
             low_frequency_slc = meta_data.center_freq - bandwidth_half
             high_frequency_slc = meta_data.center_freq + bandwidth_half
 
+
             # first and second elements are the frequency ranges
             # for low and high sub-bands, respectively.
             low_subband_frequencies = np.array([
@@ -147,6 +148,7 @@ def run(cfg: dict):
             low_band_center_freq = low_frequency_slc + (low_band_bandwidth / 2)
             high_band_center_freq = high_frequency_slc - \
                 (high_band_bandwidth / 2)
+
             # Specify split-spectrum parameters
             split_spectrum_parameters = splitspectrum.SplitSpectrum(
                 rg_sample_freq=meta_data.rg_sample_freq,

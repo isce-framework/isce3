@@ -280,13 +280,18 @@ def ionosphere_cfg_check(cfg):
 
     iono_cfg = cfg['processing']['ionosphere_phase_correction']
     iono_cfg_freq_pol = iono_cfg['list_of_frequencies']
-
+    water_file_path = cfg['dynamic_ancillary_file_group'][
+            'water_mask_file']
     # if any polarizations and frequencies are not given,
     # default is None for both polarizations.
     if iono_cfg_freq_pol is None:
         cfg['processing']['ionosphere_phase_correction'][
             'list_of_frequencies'] = {'A': None, 'B': None}
-
+    if 'water' in iono_cfg['dispersive_filter']['filter_mask_type']:
+        if not os.path.isfile(water_file_path) or water_file_path is None:
+            err_str = f"The water mask file does not exist"
+            error_channel.log(err_str)
+            raise ValueError(err_str)
     _cfg_freq_pol_check(cfg, 'A')
 
     if iono_method in iono_method_side:
