@@ -620,14 +620,16 @@ def analyze_corner_reflectors(
           The unique identifier of the corner reflector.
 
         'latitude': float
-          The geodetic latitude, in degrees, of the corner reflector.
+          The geodetic latitude, in degrees, of the corner reflector at the time it was
+          surveyed.
 
         'longitude': float
-          The longitude, in degrees, of the corner reflector.
+          The longitude, in degrees, of the corner reflector at the time it was
+          surveyed.
 
         'height_above_ellipsoid': float
-          The height of the corner reflector, in meters above the WGS 84 reference
-          ellipsoid.
+          The height of the corner reflector at the time it was surveyed, in meters
+          above the WGS 84 reference ellipsoid.
 
         'frequency': str
           The frequency sub-band of the data.
