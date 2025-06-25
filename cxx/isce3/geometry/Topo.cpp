@@ -202,9 +202,6 @@ topo(Raster & demRaster, TopoLayers & layers)
             // converged successfully.
             size_t totalconv_thread = 0;
 
-            // Initialize LLH to middle of input DEM and average height
-            Vec3 llh = demInterp.midLonLat();
-
             #pragma omp for collapse(2)
             for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
                 for (size_t rbin = 0; rbin < _radarGrid.width(); ++rbin) {
@@ -221,6 +218,9 @@ topo(Raster & demRaster, TopoLayers & layers)
 
                     // Store slant range bin data in Pixel
                     Pixel pixel(rng, dopfact, rbin);
+
+                    // Initialize LLH to middle of input DEM and average height
+                    Vec3 llh = demInterp.midLonLat();
 
                     // Perform rdr->geo iterations
                     const auto& pos = satPosition[blockLine];
