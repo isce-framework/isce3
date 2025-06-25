@@ -32,16 +32,52 @@ namespace isce3 { namespace geometry {
 
             // Wrap the angles to the range [0, 360) if either of the
             // bounding boxes crosses the antimeridian
-            auto wrap = [](double angle) {
-                return std::fmod(std::fmod(angle, 360.0) + 360.0, 360.0);
-            };
 
-                MinX = std::min(wrap(MinX), wrap(other.MinX));
-                MaxX = std::max(wrap(MaxX), wrap(other.MaxX));
-                MinY = std::min(MinY, other.MinY);
-                MaxY = std::max(MaxY, other.MaxY);
+            constexpr double pi = 3.14159265358979323846;
+            double this_lon_x1 = std::cos(MinX / 180.0 * pi);
+            double this_lon_y1 = std::sin(MinX / 180.0 * pi);
+            double this_lon_x2 = std::cos(MaxX / 180.0 * pi);
+            double this_lon_y2 = std::sin(MaxX / 180.0 * pi);
+
+            double other_lon_x1 = std::cos(other.MinX / 180.0 * pi);
+            double other_lon_y1 = std::sin(other.MinX / 180.0 * pi);
+            double other_lon_x2 = std::cos(other.MaxX / 180.0 * pi);
+            double other_lon_y2 = std::sin(other.MaxX / 180.0 * pi);
+
+            double lon_cross_1 = this_lon_x1 * other_lon_y1 - this_lon_y1 * other_lon_x1;
+
+            double lon_min_x, lon_min_y;
+            double xy_min;
+            if(lon_cross_1 >= 0) {
+                minx_global = MinX;
+                lon_min_x = this_lon_x1;
+                lon_min_y = this_lon_y1;
             }
-        };
+            else{
+                minx_global = other.MinX;
+                lon_min_x = other_lon_x1;
+                lon_min_y = other_lon_y1;
+            }
+
+            double dot_1 = lon_min_x * this_lon_x2 + lon_min_y * this_lon_y2;
+            double dot_2 = lon_min_x * other_lon_x2 + lon_min_y * other_lon_y2;
+
+            if(dot_1 < dot_2){
+                maxx_global = MaxX;
+            }
+            else{
+                maxx_global = other.MaxX;
+            }
+
+            if(minx_global > maxx_global){
+                maxx_global += 360.0;
+            }
+
+            MaxX = maxx_global;
+            MinX = minx_global;
+
+        }
+    };
     /** Same as GDAL's OGRTriangle structure. See: https://gdal.org/doxygen/classOGRTriangle.html */
     typedef OGRTriangle Triangle;
 }}
