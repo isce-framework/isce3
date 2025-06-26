@@ -169,6 +169,7 @@ runconfig:
                     sigma_range: 100
                     sigma_azimuth: 100
                     filter_iterations: 1
+                    min_cluster_pixels: 0
 
         output:
             compression_enabled: False
