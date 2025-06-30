@@ -494,17 +494,41 @@ class GcovWriter(BaseL2WriterSingleInput):
         """
         Populate the data group `grids` of the GCOV product
         """
-        for frequency in self.freq_pols_dict.keys():
+        for frequency, pol_list in self.freq_pols_dict.items():
 
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
             output_grids_freq_path = ('{PRODUCT}/grids/'
-                                       f'frequency{frequency}')
+                                      f'frequency{frequency}')
 
             self.copy_from_input(
                 f'{output_grids_freq_path}/numberOfSubSwaths',
                 f'{input_swaths_freq_path}/numberOfSubSwaths',
                 skip_if_not_present=True)
+
+            output_grids_freq_full_path = (f'{self.output_product_path}'
+                                           f'/grids/frequency{frequency}')
+
+            first_gcov_term_path = (f'{output_grids_freq_full_path}/'
+                                    f'{pol_list[0]}{pol_list[0]}')
+
+            first_gcov_term_shape = \
+                self.output_hdf5_obj[first_gcov_term_path].shape
+
+            self.set_value(
+                f'{output_grids_freq_path}/numberOfLines',
+                first_gcov_term_shape[0],
+                format_function=np.uint32)
+
+            self.set_value(
+                f'{output_grids_freq_path}/numberOfColumns',
+                first_gcov_term_shape[1],
+                format_function=np.uint32)
+
+            for axis in ['xCoordinates', 'yCoordinates']:
+                axis_path = f'{output_grids_freq_full_path}/{axis}'
+                self.output_hdf5_obj[axis_path].attrs[
+                    "pixel_coordinate_convention"] = np.bytes_('center')
 
     def populate_processing_information(self):
         """
@@ -608,7 +632,8 @@ class GcovWriter(BaseL2WriterSingleInput):
             'algorithm_type']
         if geocoding_algorithm == 'area_projection':
             geocoding_algorithm_name = ('Area-Based SAR Geocoding with'
-                                        ' Adaptive Multilooking (GEO-AP)')
+                                        ' Adaptive Multilooking (GEO-AP).'
+                                        ' DOI: 10.1109/TGRS.2022.3147472')
         else:
             geocoding_algorithm_name = geocoding_algorithm
 
@@ -622,7 +647,8 @@ class GcovWriter(BaseL2WriterSingleInput):
             'algorithm_type']
         if rtc_algorithm == 'area_projection':
             rtc_algorithm_name = ('Area-Based SAR Radiometric Terrain'
-                                  ' Correction (RTC-AP)')
+                                  ' Correction (RTC-AP).'
+                                  ' DOI: 10.1109/TGRS.2022.3147472')
         else:
             rtc_algorithm_name = rtc_algorithm
 

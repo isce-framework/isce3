@@ -801,6 +801,10 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             list_of_frequencies)
 
         self.copy_from_input(
+            'identification/listOfObservationModes',
+            default=['(NOT SPECIFIED)'])
+
+        self.copy_from_input(
             'identification/platformName',
             default='(NOT SPECIFIED)')
 
