@@ -258,17 +258,24 @@ void writeVectorDerivedCubes(const int array_pos_i,
     }
 
     // Compute velocity vector (ENU)
-    const isce3::core::Vec3 along_track_unit_vector =
-            xyz2enu.dot(vel_xyz).normalized();
+    const isce3::core::Vec3 along_track_vector =
+            xyz2enu.dot(vel_xyz);
+    const double horizontal_norm = std::sqrt(
+        std::pow(along_track_vector[0], 2) +
+        std::pow(along_track_vector[1], 2));
 
-    // Along-track unit vector X
+    /// Along-track unit vector X along the ground track without the vertical
+    // component
     if (along_track_unit_vector_x_raster != nullptr) {
-        along_track_unit_vector_x_array(i, j) = along_track_unit_vector[0];
+        along_track_unit_vector_x_array(i, j) =
+            along_track_vector[0] / horizontal_norm;
     }
 
-    // Along-track unit vector Y
+    // Along-track unit vector Y along the ground track without the vertical
+    // component
     if (along_track_unit_vector_y_raster != nullptr) {
-        along_track_unit_vector_y_array(i, j) = along_track_unit_vector[1];
+        along_track_unit_vector_y_array(i, j) =
+            along_track_vector[1] / horizontal_norm;
     }
 
 }

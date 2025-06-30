@@ -110,6 +110,9 @@ void writeVectorDerivedCubes(const int array_pos_i,
  * 
  * The line-of-sight (LOS) and along-track unit vectors are referenced to
  * ENU coordinates computed wrt targets.
+ * 
+ * The along-track unit vectors X and Y are computed at the target location
+ * in ENU coordinates, without the vertical component
  *
  * @param[in]  radar_grid                  Radar grid
  * @param[in]  geogrid                     Geogrid to be
@@ -185,6 +188,9 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
  * 
  * The line-of-sight (LOS) and along-track unit vectors are referenced to
  * ENU coordinates computed wrt targets.
+ *
+ * The along-track unit vectors X and Y are computed at the target location
+ * in ENU coordinates, without the vertical component
  *
  * @param[in]  radar_grid                Cube radar grid
  * @param[in]  heights                   Cube heights
