@@ -11,6 +11,7 @@ from nisar.workflows.h5_prep import set_get_geo_info
 from isce3.core.types import truncate_mantissa
 from isce3.geometry import get_near_and_far_range_incidence_angles
 from nisar.products.readers.orbit import load_orbit
+from nisar.workflows.stage_dem import EARTH_RADIUS
 
 
 LEXICOGRAPHIC_BASE_POLS = ['HH', 'HV', 'VH', 'VV']
@@ -1701,7 +1702,14 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         flag_luts_are_1d_rg = all([var in LUT_1D_RG_DATASETS
                                    for var in input_ds_name_list])
 
-        if not flag_luts_are_1d_rg:
+        flag_noise_equivalent_backscatter = \
+            'noiseEquivalentBackscatter' in input_h5_group_path
+
+        # If the LUT is not 1D along range and it's not a noise-equivalent
+        # backscatter LUT, read the `zeroDopplerTime` dimensions.
+        # The LUT noise-equivalent backscatter is irregulary sampled in the
+        # azimuth direction
+        if not flag_luts_are_1d_rg and not flag_noise_equivalent_backscatter:
             zero_doppler_path = f'{input_h5_group_path}/zeroDopplerTime'
             try:
                 zero_doppler_h5_dataset = self.input_hdf5_obj[
@@ -1735,6 +1743,91 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             prf = 1.0 / time_spacing
 
             sensing_start = zero_doppler_h5_dataset[0]
+
+        elif flag_noise_equivalent_backscatter:
+
+            info_channel = journal.info('geocode_metadata_group')
+
+            info_channel.log(
+                'The LUT to be geocoded is noiseEquivalentBackscatter,'
+                ' which is irregularly sampled along the azimuth direction.'
+                ' Resampling it onto a uniformly spaced azimuth grid.'
+                ' Determining the maximum azimuth pixel spacing from'
+                ' output geogrid:')
+
+            # Retrieve sensing start and end times, assuming
+            # identical zero-Doppler extents across all polarizations
+            first_pol = input_ds_name_list[0]
+            noise_product = \
+                self.input_product_obj.getNoiseEquivalentBackscatter(
+                    frequency=frequency, pol=first_pol)
+
+            sensing_start = noise_product.az_time[0]
+            sensing_end = noise_product.az_time[-1]
+            sensing_mid = (sensing_end + sensing_start) / 2.0
+
+            # Verify minimum geogrid pixel spacing in meters
+            epsg_spatial_ref = osr.SpatialReference()
+            epsg_spatial_ref.ImportFromEPSG(metadata_geogrid.epsg)
+            if epsg_spatial_ref.IsGeographic():
+
+                dy_meters = abs(metadata_geogrid.spacing_y * np.pi *
+                                EARTH_RADIUS/180)
+                lat = (metadata_geogrid.start_y + metadata_geogrid.end_y) / 2
+                dx_meters = (metadata_geogrid.spacing_x *
+                             (np.pi * EARTH_RADIUS *
+                              np.cos(np.pi*lat/180))/180)
+            else:
+                dx_meters = metadata_geogrid.spacing_x
+                dy_meters = abs(metadata_geogrid.spacing_y)
+
+            min_geogrid_pixel_spacing = min(dx_meters, dy_meters)
+
+            info_channel.log(
+                ' - Output geogrid minimum pixel spacing [m]:'
+                f' {min_geogrid_pixel_spacing}'
+                f' (X: {dx_meters}, Y: {dy_meters}')
+
+            _, vel_mid = self.orbit.interpolate(sensing_mid)
+
+            # ground velocity is always smaller than platform velocity
+            platform_velocity = np.sqrt(vel_mid[0] ** 2 +
+                                        vel_mid[1] ** 2 +
+                                        vel_mid[2] ** 2)
+
+            info_channel.log(f' - Platform velocity: {platform_velocity}')
+
+            # To compute the pulse repetition interval (PRI),
+            # one would use the delta spacing divided by the
+            # velocity, which in this case would be the ground
+            # velocity. Since we are interested in roughly estimating
+            # the maximum PRI, to compute the minimum number of azimuth
+            # lines,  we can use the platform velocity
+            # instead. The platform velocity is always greater
+            # than the ground velocity.
+            geogrid_pixel_max_pri = (min_geogrid_pixel_spacing /
+                                     platform_velocity)
+            info_channel.log(' - Maximum PRI to fit one sample in a'
+                             f' geogrid pixel: {geogrid_pixel_max_pri}')
+
+            # Determine number of lines. Multiply it by two, to
+            # make sure there are at least 2 samples within each
+            # geogrid pixel
+            lines = int(np.ceil(2 * (sensing_end - sensing_start) /
+                                geogrid_pixel_max_pri))
+            info_channel.log(' - Number of lines (with at least 2 samples'
+                             f' within PRI): {lines}')
+
+            # Compute new pulse-repetition interval (PRI)
+            # pulse-repetitition frequency (PRF) and reference epoch 
+            pri = (sensing_end - sensing_start) / (lines - 1)
+            info_channel.log(f' - Resampled radargrid PRI: {pri}')
+
+            prf = 1.0 / pri
+            info_channel.log(f' - Resampled radargrid PRF: {prf}')
+
+            ref_epoch = noise_product.ref_epoch
+
         else:
             # read starting and ending sensing time from the RSLC radar grid
             sensing_start = radar_grid_slc.sensing_start
@@ -1836,6 +1929,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             if var_h5_path not in self.input_hdf5_obj:
                 not_found_msg = ('Metadata entry not found in the input'
                                  ' product: ' + var_h5_path)
+
                 if skip_if_not_present:
                     warnings.warn(not_found_msg)
                     flag_all_succeeded = False
@@ -1847,49 +1941,90 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     error_channel.log(not_found_msg)
                     raise KeyError(not_found_msg)
 
-            # Some LUTs may be 1-dimensional. These datasets need to handled
-            # differently.
-            # If the dataset does not have one dimension, create an ISCE3
-            # Raster object and continue to the next for-loop iteration
-            if not flag_luts_are_1d_rg and not flag_luts_are_1d_az:
+            # Some LUTs, such as noise-equivalent backscatter LUTs or 1D LUTs, 
+            # require special handling. If the dataset is neither a noise-equivalent 
+            # backscatter LUT nor one-dimensional, create an ISCE3 Raster object 
+            # and proceed to the next iteration of the loop.
+            if (not flag_noise_equivalent_backscatter and
+                    not flag_luts_are_1d_rg and not flag_luts_are_1d_az):
+
                 raster_ref = f'HDF5:"{self.input_file}":/{var_h5_path}'
 
-                # Read `raster_ref` catching/handling potential problems
                 temp_raster = isce3.io.Raster(raster_ref)
+
                 input_raster_list.append(temp_raster)
                 continue
 
             # Handle 1-D LUTs
-            var_h5_dataset = self.input_hdf5_obj[var_h5_path]
-            var_array = var_h5_dataset[()]
+            if not flag_noise_equivalent_backscatter:
 
-            # If LUT is a vector along azimuth
-            if flag_luts_are_1d_az:
-                warning_msg = ('Geolocating one dimensional dataset:'
-                               f' {var_h5_path} in {self.input_file}'
-                               ' (az. vector)')
-                warnings.warn(warning_msg)
-                new_var_array = np.repeat(np.transpose([var_array]),
-                                          samples, axis=1)
+                var_h5_dataset = self.input_hdf5_obj[var_h5_path]
+                var_array = var_h5_dataset[()]
 
-            # If LUT is a vector along range
-            elif flag_luts_are_1d_rg:
-                warning_msg = ('Geolocating one dimensional dataset:'
-                               f' {var_h5_path} in {self.input_file}'
-                               ' (rg. vector)')
-                warnings.warn(warning_msg)
+                # If LUT is a vector along azimuth
+                if flag_luts_are_1d_az:
+                    warning_msg = ('Geolocating one dimensional dataset:'
+                                   f' {var_h5_path} in {self.input_file}'
+                                   ' (az. vector)')
+                    warnings.warn(warning_msg)
+                    new_var_array = np.repeat(np.transpose([var_array]),
+                                              samples, axis=1)
 
-                new_var_array = np.repeat([var_array], lines, axis=0)
+                # If LUT is a vector along range
+                elif flag_luts_are_1d_rg:
+                    warning_msg = ('Geolocating one dimensional dataset:'
+                                   f' {var_h5_path} in {self.input_file}'
+                                   ' (rg. vector)')
+                    warnings.warn(warning_msg)
 
+                    new_var_array = np.repeat([var_array], lines, axis=0)
+                else:
+                    not_found_msg = ('Failed to create GDAL dataset from'
+                                     f' reference: {raster_ref}')
+
+                    error_channel.log(not_found_msg)
+                    raise KeyError(not_found_msg)
+
+            # Handle noise-equivalent backscatter LUTs
             else:
-                not_found_msg = ('Failed to create GDAL dataset from'
-                                 f' reference: {raster_ref}')
-                if skip_if_not_present:
-                    warnings.warn(not_found_msg)
-                    return False
 
-                error_channel.log(not_found_msg)
-                raise KeyError(not_found_msg)
+                # Load noise product resampled to a constantly-sampled grid
+                noise_product = \
+                    self.input_product_obj.getResampledNoiseEquivalentBackscatter(
+                        sensing_times=radar_grid.sensing_times,
+                        frequency=frequency,
+                        pol=var)
+
+                radiometric_calibration_lut = \
+                    self.input_product_obj.getRadiometricCalibrationLUT(
+                        lut_name='beta0', frequency=frequency)
+
+                # The radiometric calibration LUT might not fully cover
+                # the noise equivalent backscatter LUT. In that case, since
+                # the beta0 calibration LUT coefficients should be all unity,
+                # we can simply disable bounds checking in order to correctly
+                # calibration samples outside the LUT bounds.
+                radiometric_calibration_lut.bounds_error = False
+
+                # `new_var_array` will hold the radiometrically calibrated
+                # noise product
+                new_var_array = np.zeros_like(noise_product.power_linear)
+
+                slant_ranges = noise_product.slant_range
+                sensing_times = noise_product.az_time
+
+                for i in range(lines):
+
+                    radiometric_calibraton_line = \
+                        radiometric_calibration_lut.eval(sensing_times[i],
+                                                         slant_ranges)
+
+                    # apply radiometric calibration by dividing the noise power
+                    # by the radiometric calibration slant-range line converted
+                    # to power/intensity (square)
+                    new_var_array[i, :] = \
+                        (noise_product.power_linear[i, :] /
+                         radiometric_calibraton_line ** 2)
 
             temp_file = tempfile.NamedTemporaryFile(dir=scratch_path,
                                                     suffix='.bin')
@@ -1956,12 +2091,26 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             temp_output.name, metadata_geogrid.width, metadata_geogrid.length,
             input_raster_obj.num_bands, dtype, 'GTiff')
 
+        # If geocoding the noise-equivalent backscatter LUT for GCOV products,
+        # the terrain radiometry convention needs to be updated from
+        # beta0/sigma0 to gamma0
+        flag_apply_rtc = (flag_noise_equivalent_backscatter and
+                          self.product_type == 'GCOV')
+
+        geocode_kwargs = {}
+        if flag_apply_rtc:
+            geocode_kwargs['input_terrain_radiometry'] = \
+                self.cfg['processing']['rtc']['input_terrain_radiometry_enum']
+            geocode_kwargs['output_terrain_radiometry'] = \
+                self.cfg['processing']['rtc']['output_type_enum']
+
         # geocode rasters
         geo.geocode(radar_grid=radar_grid,
                     input_raster=input_raster_obj,
                     output_raster=output_raster_obj,
                     output_mode=geocode_mode,
                     dem_raster=dem_raster,
+                    flag_apply_rtc=flag_apply_rtc,
                     exponent=exponent)
 
         output_raster_obj.close_dataset()

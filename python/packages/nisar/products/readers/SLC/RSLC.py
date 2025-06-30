@@ -8,6 +8,7 @@ import pyre
 import re
 import numpy as np
 
+import isce3
 from nisar.noise import NoiseEquivalentBackscatterProduct
 from isce3.core import DateTime
 from isce3.core.types import ComplexFloat16Decoder, is_complex32
@@ -118,6 +119,61 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
                 raise LookupError(err_str)
 
             return is_complex32(h[slc_path])
+
+    def getRadiometricCalibrationLUT(self, lut_name, frequency=None):
+        '''
+        Extract a geometry look-up table (LUT)
+
+        Parameters
+        ----------
+        lut_name: str
+            Name of the radiometric calibration LUT (e.g., "beta0").
+        freq : "A" or "B"
+            The frequency letter, either "A" or "B".
+
+        Returns
+        -------
+        radiometric_calibration_lut: isce3.core.LUT2d
+            Radiometric calibration LUT.
+
+        '''
+        if frequency is None:
+            frequency = self._getFirstFrequency()
+
+        geometry_group_path = f'{self.CalibrationInformationPath}/geometry'
+        radiometric_calibration_lut_path = f'{geometry_group_path}/{lut_name}'
+
+        # First, we look for the coordinate vectors `zeroDopplerTime`
+        # and `slantRange` in `geometry` group.
+        # If these vectors are not found, we look for the coordinate
+        # vectors in the previous level, following old RSLC specs.
+        zero_doppler_time_dataset_path = (f'{geometry_group_path}/'
+                                          'zeroDopplerTime')
+        slant_range_dataset_path = f'{geometry_group_path}/slantRange'
+
+        zero_doppler_time_dataset_path_other = \
+            f'{self.CalibrationInformationPath}/zeroDopplerTime'
+        slant_range_dataset_path_other = (f'{self.CalibrationInformationPath}/'
+                                          'slantRange')
+
+        # extract the native Doppler dataset
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            if zero_doppler_time_dataset_path not in fid:
+                zero_doppler_time_dataset_path = \
+                    zero_doppler_time_dataset_path_other
+            if slant_range_dataset_path not in fid:
+                slant_range_dataset_path = \
+                    slant_range_dataset_path_other
+
+            rad_cal_data = fid[radiometric_calibration_lut_path][:]
+            zeroDopplerTime = fid[zero_doppler_time_dataset_path][:]
+            slantRange = fid[slant_range_dataset_path][:]
+
+        radiometric_calibration_lut = isce3.core.LUT2d(xcoord=slantRange,
+                                                       ycoord=zeroDopplerTime,
+                                                       data=rad_cal_data)
+
+        return radiometric_calibration_lut
 
     def getNoiseEquivalentBackscatter(self, frequency=None, pol=None):
         '''
