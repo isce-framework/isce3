@@ -425,6 +425,7 @@ TEST(radarGridCubeTest, testRadarGridCube)
                                                   epsg);
 
         bool flag_set_output_rasters_geolocation = true;
+        bool flag_ground_velocity_from_rdr2geo = false;
 
         // Make cubes
         std::cout << "calling makeRadarGridCubes() with geogrid EPSG:" << epsg
@@ -437,7 +438,8 @@ TEST(radarGridCubeTest, testRadarGridCube)
                 &along_track_unit_vector_y_raster, &elevation_angle_raster,
                 &ground_track_velocity_raster,
                 threshold_geo2rdr, numiter_geo2rdr, delta_range,
-                flag_set_output_rasters_geolocation);
+                flag_set_output_rasters_geolocation,
+                flag_ground_velocity_from_rdr2geo);
 
         // 1. Check geotransform and EPSG
         std::vector<isce3::io::Raster> raster_vector = {

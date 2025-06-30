@@ -288,7 +288,8 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster* elevation_angle_raster,
         isce3::io::Raster* ground_track_velocity_raster,
         const double threshold_geo2rdr, const int numiter_geo2rdr,
-        const double delta_range, bool flag_set_output_rasters_geolocation)
+        const double delta_range, bool flag_set_output_rasters_geolocation,
+        const bool flag_ground_velocity_from_rdr2geo)
 {
 
     pyre::journal::info_t info("isce.geometry.makeRadarGridCubes");
@@ -337,6 +338,29 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
                 getNanArray<float>(elevation_angle_raster, geogrid);
         auto ground_track_velocity_array =
                 getNanArray<double>(ground_track_velocity_raster, geogrid);
+
+        /*
+        The function `isce3::geometry::writeVectorDerivedCubes()` computes
+        ground-track velocity using a theoretical expression. It determines
+        whether to perform this computation based on the output ground-track
+        velocity raster being `nullptr` or not.
+
+        If the `flag_ground_velocity_from_rdr2geo` flag is enabled, we intend
+        to compute the ground-track velocity using the rdr2geo method
+        instead of the theoretical formula. In this case, the ground-track
+        velocity raster passed to `writeVectorDerivedCubes()` should be
+        `nullptr`.
+
+        On the other hand, if `flag_ground_velocity_from_rdr2geo` is disabled,
+        we want the theoretical method to be used, so the output ground-track
+        velocity raster should be set to `ground_track_velocity_raster`.
+        */
+        isce3::io::Raster* ground_track_velocity_theoretical_raster = nullptr;
+
+        if (!flag_ground_velocity_from_rdr2geo) {
+            ground_track_velocity_theoretical_raster = ground_track_velocity_raster;
+        }
+        isce3::geometry::DEMInterpolator dem_interpolator(height, geogrid.epsg());
 
         for (int i = 0; i < geogrid.length(); ++i) {
             double pos_y = geogrid.startY() + (0.5 + i) * geogrid.spacingY();
@@ -402,6 +426,96 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
                     continue;
                 }
 
+                // Ground-track velocity using rdr2geo
+                if (ground_track_velocity_raster != nullptr &&
+                        flag_ground_velocity_from_rdr2geo) {
+
+                        /*
+                        Get target position (target_llh) considering grid Doppler
+                        */
+                        double fd = grid_doppler.eval(azimuth_time, slant_range);
+                        
+                        Vec3 target_llh_before, target_llh_after;
+                        target_llh_before[2] = height;
+                        target_llh_after[2] = height;
+
+                        /*
+                        Compute ground-track velocity using finite differences
+                        where dt is the pulse-repetition interval (PRI), inverse
+                        of the pulse-repetition frequency (PRF)
+                        */
+                        double dt = 1.0 / radar_grid.prf();
+                        double azimuth_time_before = azimuth_time - dt / 2.0;
+                        double azimuth_time_after = azimuth_time + dt / 2.0;
+
+                        auto converged_before =
+                                rdr2geo(azimuth_time_before, slant_range, fd, orbit, ellipsoid,
+                                        dem_interpolator, target_llh_before,
+                                        radar_grid.wavelength(),
+                                        radar_grid.lookSide(), threshold_geo2rdr,
+                                        numiter_geo2rdr, delta_range);
+
+                        auto converged_after =
+                                rdr2geo(azimuth_time_after, slant_range, fd, orbit, ellipsoid,
+                                        dem_interpolator, target_llh_after,
+                                        radar_grid.wavelength(),
+                                        radar_grid.lookSide(), threshold_geo2rdr,
+                                        numiter_geo2rdr, delta_range);
+
+                        /*
+                        Since we already have the central point, we need at least one extra point
+                        that converged to a solution
+                        */
+                        if (converged_before || converged_after) {
+                            /*
+                            If the previous point didn't converge, replace it by the central point
+                            */
+                            if (!converged_before) {
+                                dt = dt / 2.0;
+                                target_llh_before = target_llh;
+                            }
+
+                            /*
+                            Otherwise, if the next point didn't converge, replace it by the central
+                            point
+                            */
+                            else if (!converged_after && converged_before) {
+                                dt = dt / 2.0;
+                                target_llh_after = target_llh;
+                            }
+
+                            /*
+                            We compute the distance between `target_xyz_after` and
+                            `target_xyz_before` and divide it by the associated time interval.
+                            This distance does not consider the Earth's curvature
+                            which should be in the order of 3mm for a 1km distance.
+                            */
+                            const isce3::core::Vec3 target_xyz_before = \
+                                ellipsoid.lonLatToXyz(target_llh_before);
+                            const isce3::core::Vec3 target_xyz_after = \
+                                ellipsoid.lonLatToXyz(target_llh_after);
+
+                            // derivative X wrt az. time
+                            double dx_dt = (target_xyz_after[0] - target_xyz_before[0]) / dt;
+
+                            // derivative Y wrt az. time
+                            double dy_dt = (target_xyz_after[1] - target_xyz_before[1]) / dt;
+
+
+                            // derivative Z wrt az. time
+                            double dz_dt = (target_xyz_after[2] - target_xyz_before[2]) / dt;
+
+                            ground_track_velocity_array(i, j) = std::sqrt(std::pow(dx_dt, 2) +
+                                                                          std::pow(dy_dt, 2) +
+                                                                          std::pow(dz_dt, 2));
+
+                        }
+                        else {
+                            ground_track_velocity_array(i, j) = std::numeric_limits<double>::quiet_NaN();
+                        }
+
+                }
+
                 isce3::geometry::writeVectorDerivedCubes(i, j,
                         native_azimuth_time, target_llh, orbit, ellipsoid,
                         incidence_angle_raster, incidence_angle_array,
@@ -413,7 +527,7 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
                         along_track_unit_vector_y_array, 
                         elevation_angle_raster,
                         elevation_angle_array,
-                        ground_track_velocity_raster,
+                        ground_track_velocity_theoretical_raster,
                         ground_track_velocity_array,
                         local_incidence_angle_raster,
                         local_incidence_angle_array,
