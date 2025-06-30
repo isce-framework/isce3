@@ -4,6 +4,7 @@ import numpy as np
 import warnings
 import journal
 import os
+import gc
 
 import isce3
 from nisar.products.writers import BaseWriterSingleInput
@@ -1502,6 +1503,80 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 output_ds_name_list=ds_name_list,
                 skip_if_not_present=True)
 
+    def geocode_lut_object(self, correction_lut, lut_name,
+                           timing_corrections_group_path, frequency):
+        '''
+        Geocode ISCE3 look-up table (LUT) object
+
+        Parameters
+        ----------
+        correction_lut: isce3.core.LUT2d
+            ISCE3 look-up table (LUT) object containing the data
+            to be geocoded
+        lut_name: str
+           Name of the LUT dataset in the output product metadata
+        timing_corrections_group_path: str
+            Path to the output HDF5 LUT group
+        frequency: str, optional
+            Frequency sub-band, used to read the sub-band wavelength.
+        '''
+
+        '''
+            timing_corrections_group = self.output_hdf5_obj.require_group(
+                f'{timing_corrections_group_path}/frequency{frequency}/')
+
+            # Az. correction
+            add_cal_layer(timing_corrections_group, lut=correction,
+                            name="azimuthIonosphere", epoch=ref_epoch,
+                            units="seconds", description='')
+        '''
+
+        new_var_array = correction_lut.data
+
+        driver = gdal.GetDriverByName("GTiff")
+        dtype = gdal_array.NumericTypeCodeToGDALTypeCode(
+                new_var_array.dtype)
+        length, width = new_var_array.shape
+
+        scratch_path = self.cfg['product_path_group']['scratch_path']
+        temp_file = tempfile.NamedTemporaryFile(dir=scratch_path,
+                                                suffix='.tif')
+        dset = driver.Create(temp_file.name, xsize=width, ysize=length,
+                             bands=1, eType=dtype)
+        raster_band = dset.GetRasterBand(1)
+        raster_band.WriteArray(new_var_array)
+
+        # flush data to the disk (gc is the garbage collector)
+        raster_band.FlushCache()
+        del raster_band
+        del dset
+        gc.collect()
+
+        correction_raster = isce3.io.Raster(temp_file.name)
+
+        radar_grid_slc = self.input_product_obj.getRadarGrid(frequency)
+
+        radar_grid = isce3.product.RadarGridParameters(
+                correction_lut.y_start,
+                radar_grid_slc.wavelength,
+                1.0 / correction_lut.y_spacing,
+                correction_lut.x_start,
+                correction_lut.x_spacing,
+                radar_grid_slc.lookside,
+                correction_lut.length,
+                correction_lut.width,
+                radar_grid_slc.ref_epoch)
+
+        self.geocode_raster(correction_raster,
+                            timing_corrections_group_path,
+                            [lut_name],
+                            radar_grid,
+                            metadata_group='processingInformation',
+                            compute_stats=True,
+                            data_interpolator='nearest')
+
+        return frequency
+
     def geocode_lut(self, output_h5_group, input_h5_group=None,
                     frequency=None, output_ds_name_list=None,
                     input_ds_name_list=None,
@@ -1662,37 +1737,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         error_channel = journal.error('geocode_metadata_group')
 
         scratch_path = self.cfg['product_path_group']['scratch_path']
-
-        if metadata_group == 'calibrationInformation':
-            metadata_geogrid = self.cfg['processing'][
-                'calibration_information']['geogrid']
-        elif metadata_group == 'processingInformation':
-            metadata_geogrid = self.cfg['processing'][
-                'processing_information']['geogrid']
-        else:
-            error_msg = f'Invalid metadata group {metadata_group}'
-            error_channel.log(error_msg)
-            raise NotImplementedError(error_msg)
-
-        dem_file = self.cfg['dynamic_ancillary_file_group']['dem_file']
-
-        # unpack geo2rdr parameters
-        geo2rdr_dict = self.cfg['processing']['geo2rdr']
-        threshold = geo2rdr_dict['threshold']
-        maxiter = geo2rdr_dict['maxiter']
-
-        # init parameters shared between frequencyA and frequencyB sub-bands
-        dem_raster = isce3.io.Raster(dem_file)
-        zero_doppler = isce3.core.LUT2d()
-
-        epsg = dem_raster.get_epsg()
-        proj = isce3.core.make_projection(epsg)
-        ellipsoid = proj.ellipsoid
-
-        # do not apply any exponentiation to the samples to geocode
-        exponent = 1
-
-        geocode_mode = isce3.geocode.GeocodeOutputMode.INTERP
 
         radar_grid_slc = self.input_product_obj.getRadarGrid(frequency)
 
@@ -1917,6 +1961,88 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         input_raster_obj = isce3.io.Raster(
             input_temp.name, raster_list=input_raster_list)
 
+        kwargs = {}
+        if (lines == 1 or samples == 1):
+            kwargs['data_interpolator'] = 'nearest'
+
+        elif (lines < 5 or samples < 5):
+            kwargs['data_interpolator'] = 'bilinear'
+
+        self.geocode_raster(input_raster_obj,
+                            output_h5_group_path,
+                            output_ds_name_list,
+                            radar_grid,
+                            metadata_group,
+                            compute_stats,
+                            **kwargs)
+
+        input_temp.close()
+
+        return flag_all_succeeded
+
+    def geocode_raster(self,
+                       input_raster_obj,
+                       output_h5_group_path,
+                       output_ds_name_list,
+                       radar_grid,
+                       metadata_group,
+                       compute_stats,
+                       data_interpolator=None):
+        """
+        Geocode an ISCE3 Raster object containing look-up tables (LUTs)
+        radar coordinates to the output product in map coordinates
+        using runconfig parameters associated with that
+        metadata group, either 'calibrationInformation'
+        or 'processingInformation'
+
+        Parameters
+        ----------
+        input_raster_obj: isce3.io.Raster
+            Raster object to geocode
+        output_h5_group_path: str
+            Path of the output group
+        output_ds_name_list: str, list
+            List of output LUT datasets
+        radar_grid: isce3.product.RadarGridParameters
+            RadarGridParameters object representing the geometry of the
+            input raster object
+        metadata_group: str
+            Metadata group, either 'calibrationInformation'
+            or 'processingInformation'
+        compute_stats: bool, optional
+            Flag that indicates if statistics should be computed for the
+            output raster layer. Defaults to False.
+        """
+
+        error_channel = journal.error('geocode_raster')
+
+        scratch_path = self.cfg['product_path_group']['scratch_path']
+
+        if metadata_group == 'calibrationInformation':
+            metadata_geogrid = self.cfg['processing'][
+                'calibration_information']['geogrid']
+        elif metadata_group == 'processingInformation':
+            metadata_geogrid = self.cfg['processing'][
+                'processing_information']['geogrid']
+        else:
+            error_msg = f'Invalid metadata group {metadata_group}'
+            error_channel.log(error_msg)
+            raise NotImplementedError(error_msg)
+
+        dem_file = self.cfg['dynamic_ancillary_file_group']['dem_file']
+
+        # unpack geo2rdr parameters
+        geo2rdr_dict = self.cfg['processing']['geo2rdr']
+        threshold = geo2rdr_dict['threshold']
+        maxiter = geo2rdr_dict['maxiter']
+
+        # init parameters shared between frequencyA and frequencyB sub-bands
+        dem_raster = isce3.io.Raster(dem_file)
+        zero_doppler = isce3.core.LUT2d()
+
+        epsg = dem_raster.get_epsg()
+        proj = isce3.core.make_projection(epsg)
+        ellipsoid = proj.ellipsoid
         # init Geocode object depending on raster type
         if input_raster_obj.datatype() == gdal.GDT_Float32:
             geo = isce3.geocode.GeocodeFloat32()
@@ -1931,12 +2057,20 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             error_channel.log(err_str)
             raise NotImplementedError(err_str)
 
+        # do not apply any exponentiation to the samples to geocode
+        exponent = 1
+
+        geocode_mode = isce3.geocode.GeocodeOutputMode.INTERP
+
         # init geocode members
         geo.orbit = self.orbit
         geo.ellipsoid = ellipsoid
         geo.doppler = zero_doppler
         geo.threshold_geo2rdr = threshold
         geo.numiter_geo2rdr = maxiter
+
+        if data_interpolator is not None:
+            geo.data_interpolator = data_interpolator
 
         geo.geogrid(metadata_geogrid.start_x,
                     metadata_geogrid.start_y,
@@ -1984,7 +2118,5 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                      yds, xds, output_ds_name_list,
                      compute_stats=compute_stats)
 
-        input_temp.close()
         temp_output.close()
 
-        return flag_all_succeeded
