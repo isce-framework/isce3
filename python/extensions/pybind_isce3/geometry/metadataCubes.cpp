@@ -114,6 +114,7 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("threshold_geo2rdr") = defaults.threshold,
             py::arg("numiter_geo2rdr") = defaults.maxiter,
             py::arg("delta_range") = defaults.delta_range,
+            py::arg("flag_ground_velocity_from_rdr2geo") = true,
             R"(Make metadata geolocation grid cubes
 
                Metadata geolocation grid cubes describe the radar geometry 
@@ -177,6 +178,11 @@ void addbinding_metadata_cubes(py::module & m)
                     Geo2rdr maximum number of iterations
                 delta_range : double, optional
                     Step size used for computing derivative of doppler
+                flag_ground_velocity_from_rdr2geo, bool, optional
+                    Compute ground-track velocity based on estimated distance
+                    between two points on the ground along the azimuth direction
+                    (`rdr2geo` method), instead of applying a theoretical
+                    expression
 
 )");
 }

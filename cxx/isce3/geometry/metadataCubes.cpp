@@ -503,7 +503,7 @@ void makeGeolocationGridCubes(
         isce3::io::Raster* elevation_angle_raster,
         isce3::io::Raster* ground_track_velocity_raster,
         const double threshold_geo2rdr, const int numiter_geo2rdr,
-        const double delta_range)
+        const double delta_range, const bool flag_ground_velocity_from_rdr2geo)
 {
 
     pyre::journal::info_t info("isce.geometry.makeGeolocationGridCubes");
@@ -521,6 +521,28 @@ void makeGeolocationGridCubes(
     isce3::core::Matrix<float> simulated_radar_brightness_array;
     isce3::core::Vec3* terrain_normal_vector = nullptr;
     isce3::core::LookSide* lookside = nullptr;
+
+    /*
+    The function `isce3::geometry::writeVectorDerivedCubes()` computes
+    ground-track velocity using a theoretical expression. It determines
+    whether to perform this computation based on the output ground-track
+    velocity raster being `nullptr` or not.
+
+    If the `flag_ground_velocity_from_rdr2geo` flag is enabled, we intend
+    to compute the ground-track velocity using the rdr2geo method
+    instead of the theoretical formula. In this case, the ground-track
+    velocity raster passed to `writeVectorDerivedCubes()` should be
+    `nullptr`.
+
+    On the other hand, if `flag_ground_velocity_from_rdr2geo` is disabled,
+    we want the theoretical method to be used, so the output ground-track
+    velocity raster should be set to `ground_track_velocity_raster`.
+    */
+    isce3::io::Raster* ground_track_velocity_theoretical_raster = nullptr;
+
+    if (!flag_ground_velocity_from_rdr2geo) {
+        ground_track_velocity_theoretical_raster = ground_track_velocity_raster;
+    }
 
     #pragma omp parallel for
     for (int height_count = 0; height_count < heights.size(); ++height_count) {
@@ -547,12 +569,40 @@ void makeGeolocationGridCubes(
         auto ground_track_velocity_array =
                 getNanArrayRadarGrid<double>(ground_track_velocity_raster, radar_grid);
 
+        isce3::core::Matrix<double> target_pos_x, target_pos_y, target_pos_z;
+        /*
+        Set the minimum (`i_0`) and maximum (`i_f') azimuth lines to process.
+        The algorithm to compute the ground-track velocity from `rdr2geo`
+        requires one extra azimuth line at the beginning and another at the end
+        of the radar grid. Therefore, if the flag
+        `flag_ground_velocity_from_rdr2geo` is enabled, subtract `1` from
+        `i_0` and add `1` to `i_f`.
+        */
+        int i_0 = 0;
+        int i_f = radar_grid.length() - 1;
+
+        if (flag_ground_velocity_from_rdr2geo) {
+            i_0 -= 1;
+            i_f += 1;
+
+            /*
+            the target_pos arrays will have an extra line at the beginning and 
+            at the end, therefore we add `2` to their length.
+            */
+            target_pos_x.resize(radar_grid.length() + 2, radar_grid.width());
+            target_pos_y.resize(radar_grid.length() + 2, radar_grid.width());
+            target_pos_z.resize(radar_grid.length() + 2, radar_grid.width());
+            target_pos_x.fill(std::numeric_limits<double>::quiet_NaN());
+            target_pos_y.fill(std::numeric_limits<double>::quiet_NaN());
+            target_pos_z.fill(std::numeric_limits<double>::quiet_NaN());
+        }
+
         auto height = heights[height_count];
         isce3::geometry::DEMInterpolator dem_interpolator(height, epsg);
         double native_azimuth_time = radar_grid.sensingMid();
         double native_slant_range = radar_grid.midRange();
 
-        for (int i = 0; i < radar_grid.length(); ++i) {
+        for (int i = i_0; i <= i_f; ++i) {
             double az_time = radar_grid.sensingTime(i);
             for (int j = 0; j < radar_grid.width(); ++j) {
                 double slant_range = radar_grid.slantRange(j);
@@ -579,6 +629,25 @@ void makeGeolocationGridCubes(
 
                 // Check convergence
                 if (!converged) {
+                    continue;
+                }
+
+                if (flag_ground_velocity_from_rdr2geo) {
+                    const isce3::core::Vec3 target_xyz = ellipsoid.lonLatToXyz(target_llh);
+
+                    target_pos_x(i + 1, j) = target_xyz[0];
+                    target_pos_y(i + 1, j) = target_xyz[1];
+                    target_pos_z(i + 1, j) = target_xyz[2];
+
+                }
+
+                /*
+                The extra azimuth lines are only used to populate
+                the `target_pos_x`, `target_pos_y`, and `target_pos_z`
+                arrays. Once they are populated, we don't need
+                those extra lines anymore.
+                */
+                if (i < 0 or i > radar_grid.length() - 1) {
                     continue;
                 }
 
@@ -630,7 +699,7 @@ void makeGeolocationGridCubes(
                         along_track_unit_vector_y_array, 
                         elevation_angle_raster,
                         elevation_angle_array,
-                        ground_track_velocity_raster,
+                        ground_track_velocity_theoretical_raster,
                         ground_track_velocity_array,
                         local_incidence_angle_raster,
                         local_incidence_angle_array,
@@ -641,6 +710,60 @@ void makeGeolocationGridCubes(
                         terrain_normal_vector, lookside);
             }
         }
+
+        // Ground-track velocity
+        if (ground_track_velocity_raster != nullptr &&
+                flag_ground_velocity_from_rdr2geo) {
+
+            if (height_count == 0) {
+                info << "estimating the ground-track velocity using rdr2geo" << pyre::journal::endl;
+            }
+
+        _Pragma("omp parallel for")
+            /* 
+            Compute ground-track velocity based on estimated distance between
+            two points on the ground along the azimuth direction (`rdr2geo` method).
+            This code may introduce NaNs in the image where rdr2geo fails
+            */
+            for (int i = 0; i < radar_grid.length(); ++i) {
+                for (int j = 0; j < radar_grid.width(); ++j) {
+                    /*
+                    The target_pos arrays have an extra line at the beginning
+                    and an extra line at the end. The variable `ii` indicates
+                    the indices for those arrays.  The line `i=0` in the radar
+                    grid is located at line `ii=1` in target_pos arrays.
+                    */
+                    const int ii = i + 1;
+
+                    /*
+                    We compute the distance between the azimuth line `ii + 1`
+                    and `ii - 1` and divide it by the associated time interval.
+                    This distance does not consider the Earth's curvature
+                    which should be in the order of 3mm for a 1km distance.
+                    */
+
+                    // derivative X wrt az. time
+                    double dx_dt = ((target_pos_x(ii + 1, j) -
+                                        target_pos_x(ii - 1, j)) /
+                                    (2 * radar_grid.azimuthTimeInterval()));
+
+                    // derivative Y wrt az. time
+                    double dy_dt = ((target_pos_y(ii + 1, j) -
+                                        target_pos_y(ii - 1, j)) /
+                                    (2 * radar_grid.azimuthTimeInterval()));
+
+                    // derivative Z wrt az. time
+                    double dz_dt = ((target_pos_z(ii + 1, j) -
+                                        target_pos_z(ii - 1, j)) /
+                                    (2 * radar_grid.azimuthTimeInterval()));
+
+                    ground_track_velocity_array(i, j) = std::sqrt(std::pow(dx_dt, 2) +
+                                                                  std::pow(dy_dt, 2) +
+                                                                  std::pow(dz_dt, 2));
+                }
+            }
+        }
+
         writeArray(coordinate_x_raster, coordinate_x_array, height_count);
         writeArray(coordinate_y_raster, coordinate_y_array, height_count);
         writeArray(incidence_angle_raster, incidence_angle_array, height_count);

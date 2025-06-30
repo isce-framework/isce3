@@ -211,6 +211,10 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
  * @param[in]  numiter_geo2rdr           Geo2rdr maximum number of iterations
  * @param[in]  delta_range               Step size used for computing
  * derivative of doppler
+ * @param[in] flag_ground_velocity_from_rdr2geo Compute ground-track
+ * velocity based on estimated distance between two points on the ground
+ * along the azimuth direction (`rdr2geo` method), instead of applying a
+ * theoretical expression
  */
 void makeGeolocationGridCubes(
         const isce3::product::RadarGridParameters& radar_grid,
@@ -227,6 +231,7 @@ void makeGeolocationGridCubes(
         isce3::io::Raster* elevation_angle_raster = nullptr,
         isce3::io::Raster* ground_track_velocity_raster = nullptr, 
         const double threshold_geo2rdr = 1e-8, const int numiter_geo2rdr = 100,
-        const double delta_range = 1e-8);
+        const double delta_range = 1e-8,
+        const bool flag_ground_velocity_from_rdr2geo = true);
 
 }} // namespace isce3::geocode
