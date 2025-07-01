@@ -719,7 +719,7 @@ void makeGeolocationGridCubes(
                 info << "estimating the ground-track velocity using rdr2geo" << pyre::journal::endl;
             }
 
-        _Pragma("omp parallel for")
+            _Pragma("omp parallel for")
             /* 
             Compute ground-track velocity based on estimated distance between
             two points on the ground along the azimuth direction (`rdr2geo` method).

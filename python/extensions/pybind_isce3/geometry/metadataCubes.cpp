@@ -179,10 +179,12 @@ void addbinding_metadata_cubes(py::module & m)
                 delta_range : double, optional
                     Step size used for computing derivative of doppler
                 flag_ground_velocity_from_rdr2geo, bool, optional
-                    Compute ground-track velocity based on estimated distance
-                    between two points on the ground along the azimuth direction
-                    (`rdr2geo` method), instead of applying a theoretical
-                    expression
+                    When True, compute ground-track velocity using a
+                    finite-difference approximation between grid locations in
+                    the azimuth direction (`rdr2geo` method). In this case, the
+                    azimuth spacing of the grid affects the accuracy of the
+                    approximation. When False, use a closed-form expression for
+                    a geocentric spherical surface model instead.
 
 )");
 }
