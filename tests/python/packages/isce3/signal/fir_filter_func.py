@@ -245,6 +245,9 @@ def test_bandpass(width, fc):
                                       transition_width=tw, force_odd_len=odd)
     # compute frequency response over entire unit circle
     f, H = sig.freqz(h, fs=1.0, whole=True)
+    # Workaround for scipy=1.16.0
+    # (see https://github.com/isce-framework/isce3/pull/49#issuecomment-3025125318).
+    f = f.real
     a, b = transition_region(width, tw)
     # should have unit gain in passband with ripple < -att
     mask_pass = wrapped_distance(f - fc) < a
