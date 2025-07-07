@@ -25,7 +25,7 @@ def normalize_geocode_output_mode(mode: str | GeocodeOutputMode) -> GeocodeOutpu
 
     if mode == "area_projection":
         return GeocodeOutputMode.AREA_PROJECTION
-    if mode == "interp":
+    if mode in ["sinc", "bilinear", "bicubic", "nearest", "biquintic"]:
         return GeocodeOutputMode.INTERP
 
     raise ValueError(f"unexpected GeocodeOutputMode argument: {mode!r}")
