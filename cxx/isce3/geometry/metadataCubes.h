@@ -141,10 +141,11 @@ void writeVectorDerivedCubes(const int array_pos_i,
  * derivative of doppler
  * @param[in]  flag_set_output_rasters_geolocation Set output rasters'
  * geotransform and spatial reference
- * @param[in] flag_ground_velocity_from_rdr2geo Compute ground-track
- * velocity based on estimated distance between two points on ground
- * along the azimuth direction (`rdr2geo` method), instead of applying a
- * theoretical expression
+ * @param[in] flag_ground_velocity_from_rdr2geo When true, compute ground-track
+ * velocity using a finite-difference approximation between grid locations in
+ * the azimuth direction (`rdr2geo` method). In this case, the azimuth spacing
+ * of the grid affects the accuracy of the approximation. When false, use a
+ * closed-form expression for a geocentric spherical surface model instead.
  */
 void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         const isce3::product::GeoGridParameters& geogrid,
