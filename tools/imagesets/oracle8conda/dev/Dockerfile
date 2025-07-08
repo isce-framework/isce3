@@ -8,4 +8,8 @@ RUN conda install --yes --file /tmp/spec-file.txt \
  && rm -rf /opt/conda/pkgs \
  && rm /tmp/spec-file.txt
 
+RUN rpm --rebuilddb -vv \
+ && mkdir -p /opt/conda/var/tmp \
+ && chmod 777 /opt/conda/var/tmp
+
 ENV CUDAHOSTCXX=x86_64-conda-linux-gnu-c++
