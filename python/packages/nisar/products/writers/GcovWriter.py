@@ -509,22 +509,6 @@ class GcovWriter(BaseL2WriterSingleInput):
             output_grids_freq_full_path = (f'{self.output_product_path}'
                                            f'/grids/frequency{frequency}')
 
-            first_gcov_term_path = (f'{output_grids_freq_full_path}/'
-                                    f'{pol_list[0]}{pol_list[0]}')
-
-            first_gcov_term_shape = \
-                self.output_hdf5_obj[first_gcov_term_path].shape
-
-            self.set_value(
-                f'{output_grids_freq_path}/numberOfLines',
-                first_gcov_term_shape[0],
-                format_function=np.uint32)
-
-            self.set_value(
-                f'{output_grids_freq_path}/numberOfColumns',
-                first_gcov_term_shape[1],
-                format_function=np.uint32)
-
             for axis in ['xCoordinates', 'yCoordinates']:
                 axis_path = f'{output_grids_freq_full_path}/{axis}'
                 self.output_hdf5_obj[axis_path].attrs[
