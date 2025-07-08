@@ -33,10 +33,6 @@ ENV MPLCONFIGDIR=/tmp
 # default for security reasons. See https://gdal.org/en/stable/drivers/raster/mem.html.
 ENV GDAL_MEM_ENABLE_OPEN=YES
 
-ENV CUDA_VERSION_MAJOR 11
-ENV CUDA_VERSION_MINOR 8
-ENV CUDA_PKG_VERSION "${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}"
-
 # https://github.com/NVIDIA/nvidia-container-runtime#environment-variables-oci-spec
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
@@ -46,4 +42,4 @@ ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 # same major version family. However, a newer driver may still be required if the GPU
 # architecture is different from the architectures that we target when compiling ISCE3
 # within the container image.
-ENV NVIDIA_REQUIRE_CUDA "cuda>=${CUDA_VERSION_MAJOR}"
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11"
