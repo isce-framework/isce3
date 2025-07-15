@@ -33,11 +33,11 @@ runconfig:
 
         product_path_group:
             # Directory where PGE will place results Irrelevant to SAS.
-            product_path: str()
+            product_path: str(required=False)
             product_counter: int(min=1, max=999, required=False)
 
             # Directory where SAS can write temporary data
-            scratch_path: str()
+            scratch_path: str(required=False)
 
             # Output file in the HDF5 format
             sas_output_file: str()
@@ -78,6 +78,7 @@ runconfig:
             pre_process: include('pre_process_options', required=False)
 
             # Radiometric Terrain Correction (RTC) options
+            # Only relevant if `apply_rtc` is enabled in the `geocode` group
             rtc: include('rtc_options', required=False)
 
             # Geocode options: (e.g. output posting)
@@ -157,31 +158,43 @@ list_of_frequencies_options:
     B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
 
 radar_grid_cubes_options:
+    # Group to define parameters for radar grid cubes.
+    # Radar grid cubes describe the radar geometry in the form of
+    # 3D data cubes. The representation as data cubes,
+    # rather than two-dimensional arrays, is used to reduce storage
+    # requirements for NISAR L2 products. This is possible because
+    # radar geometry values vary slowly in space and can be accurately
+    # captured using a low-resolution three-dimensional grid
 
-    # List of metadata cube heights, in meters
+    # List of heights (in meters) above the WGS84 ellipsoid
+    # representing metadata cube layers along the Z-direction.
     heights: list(num(), required=False)
 
-    # Same as input DEM if not provided.
+    # Output EPSG code for the radar grid cubes
+    # Defaults to `output_epsg` in the `geocode` group
     output_epsg: int(min=1024, max=32767, required=False)
 
-    # Pixel spacing in the units of the output EPSG coordinate system
-    # (output_epsg).
-    # 
-    # If not specified and `output_epsg` differs from the DEM’s EPSG:
-    #   - Defaults to 0.00017966305682390427 degrees for geographic
-    # coordinate systems.
-    #   - Defaults to 20 meters for projected coordinate systems.
-    #
-    # If not specified and `output_epsg` matches the DEM’s EPSG,
-    # spacing will be taken from the input DEM.
+    # Spacing between pixels, in same units as output EPSG.
+    # All postings/spacings must be > 0.
+    # ISCE3 output rasters always have North-up West-left orientation
+    # If not provided, coarser spacing values will be inferred
+    # based on the `output_epsg` and the DEM
     output_posting:
         x_posting: num(min=0, required=False)
         y_posting: num(min=0, required=False)
 
-    # To control output grid in same units as output EPSG
+    # Snap-to-grid interval along the X-direction, in same units as
+    # output EPSG `output_epsg`.
+    # This parameter aligns the output grid in the X-direction such
+    # that its origin and spacing are rounded to the nearest
+    # multiple of `x_snap`.
     x_snap: num(min=0, required=False)
 
-    # To control output grid in same units as output EPSG
+    # Snap-to-grid interval along the Y-direction, in same units as
+    # output EPSG `output_epsg`.
+    # This parameter aligns the output grid in the Y-direction such
+    # that its origin and spacing are rounded to the nearest
+    # multiple of `y_snap`.
     y_snap: num(min=0, required=False)
 
     # Coordinates of the top-left pixel corner,
@@ -195,8 +208,10 @@ radar_grid_cubes_options:
         x_abs: num(required=False)
 
     # Coordinates of the bottom-right pixel corner in the
-    # output EPSG coordinate system,  before grid snapping
-    # and before adjusting to ensure alignment with pixel spacing.
+    # output EPSG coordinate system.
+    # These coordinates will be adjusted based on
+    # the provided top-left coordinate, to ensure
+    # alignment with grid snapping and pixel spacing.
     bottom_right:
         # Set bottom-right y in same units as output EPSG
         y_abs: num(required=False)
@@ -206,14 +221,22 @@ radar_grid_cubes_options:
 
 calibration_information_options:
 
-    # Output posting in same units as output EPSG.
+    # Spacing between pixels, in same units as output EPSG.
+    # All postings/spacings must be > 0.
+    # ISCE3 output rasters always have North-up West-left orientation
+    # If not provided, coarser spacing values will be inferred
+    # based on the `output_epsg` and the DEM
     output_posting:
         x_posting: num(min=0, required=False)
         y_posting: num(min=0, required=False)
 
 processing_information_options:
 
-    # Output posting in same units as output EPSG.
+    # Spacing between pixels, in same units as output EPSG.
+    # All postings/spacings must be > 0.
+    # ISCE3 output rasters always have North-up West-left orientation
+    # If not provided, coarser spacing values will be inferred
+    # based on the `output_epsg` and the DEM
     output_posting:
         x_posting: num(min=0, required=False)
         y_posting: num(min=0, required=False)
@@ -306,16 +329,16 @@ rtc_options:
     dem_upsampling: int(min=1, required=False)
 
     # RTC area beta mode. Options:
-    # 'auto' - Default value is defined by the RTC algorithm that is being
-    #     executed, i.e., 'pixel_area' for 'algorithm_type' equal to
-    #     'bilinear_distribution' and 'projection_angle' for
-    #     'algorithm_type' equal to 'area_projection'
     #  'pixel_area' - Estimate the beta surface reference area `A_beta`
     #     using the pixel area, which is the product of the range spacing
     #     by the azimuth spacing (computed using the ground velocity)
     #  'projection_angle' - estimate the beta surface reference area `A_beta`
     #     using the projection angle method:
     #     `A_beta = A_sigma * cos(projection_angle)`
+    # 'auto' - Default value is defined by the RTC algorithm that is being
+    #     executed, i.e., 'pixel_area' for 'algorithm_type' equal to
+    #     'bilinear_distribution' and 'projection_angle' for
+    #     'algorithm_type' equal to 'area_projection'
     area_beta_mode: enum('auto', 'pixel_area', 'projection_angle', required=False)
 
 geocode_options:
@@ -325,6 +348,7 @@ geocode_options:
     algorithm_type: enum('area_projection', 'sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
     # Apply radiometric terrain correction
+    # If `False`, the entire `rtc` group is ignored.
     apply_rtc: bool(required=False)
 
     # NOT YET IMPLEMENTED (it is expected that the RSLC product already
@@ -425,11 +449,21 @@ geocode_options:
     # Note: Enabling this may significantly increase memory usage and runtime.
     upsample_radargrid: bool(required=False)
 
-    # Same as input DEM if not provided.
+    # EPSG code of the output product, including GCOV terms
+    # and all metadata LUTs (excluding radar grid cubes)
+    # Defaults to the DEM EPSG code, if not provided.
     output_epsg: int(min=1024, max=32767, required=False)
 
-    # Output posting in same units as output EPSG.
-    # If not provided, spacing values will be taken from provided DEM.
+    # Pixel spacing in the units of the output EPSG coordinate
+    # system (output_epsg).
+    # 
+    # If not specified and `output_epsg` differs from the DEM’s EPSG:
+    #   - Defaults to 0.00017966305682390427 degrees for geographic
+    # coordinate systems.
+    #   - Defaults to 20 meters for projected coordinate systems.
+    #
+    # If not specified and `output_epsg` matches the DEM’s EPSG,
+    # spacing will be taken from the input DEM.
     output_posting:
         A:
             x_posting: num(min=0, required=False)
@@ -438,10 +472,18 @@ geocode_options:
             x_posting: num(min=0, required=False)
             y_posting: num(min=0, required=False)
 
-    # To control output grid in same units as output EPSG
+    # Snap-to-grid interval along the X-direction, in same units as
+    # output EPSG `output_epsg`.
+    # This parameter aligns the output grid in the X-direction such
+    # that its origin and spacing are rounded to the nearest
+    # multiple of `x_snap`.
     x_snap: num(min=0, required=False)
 
-    # To control output grid in same units as output EPSG
+    # Snap-to-grid interval along the Y-direction, in same units as
+    # output EPSG `output_epsg`.
+    # This parameter aligns the output grid in the Y-direction such
+    # that its origin and spacing are rounded to the nearest
+    # multiple of `y_snap`.
     y_snap: num(min=0, required=False)
 
     # Coordinates of the top-left pixel corner,
@@ -455,8 +497,10 @@ geocode_options:
         x_abs: num(required=False)
 
     # Coordinates of the bottom-right pixel corner in the
-    # output EPSG coordinate system,  before grid snapping
-    # and before adjusting to ensure alignment with pixel spacing.
+    # output EPSG coordinate system.
+    # These coordinates will be adjusted based on
+    # the provided top-left coordinate, to ensure
+    # alignment with grid snapping and pixel spacing.
     bottom_right:
         # Set bottom-right y in same units as output EPSG
         y_abs: num(required=False)
@@ -464,20 +508,25 @@ geocode_options:
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
 
-    # Minimum block size in MB per thread
+    # Minimum block size per thread, in megabytes (MB).
+    # Used by the GeocodeCov (geocoding) module to determine the
+    # geogrid block allocation.
+    # It defines the smallest memory block required to process a geogrid
+    # block, accounting for the data type and the number
+    # of bands (polarizations) to process.
     min_block_size: num(min=0, required=False)
 
-    # Maximum block size in MB per thread
+    # Maximum block size per thread, in megabytes (MB).
+    # Used by the GeocodeCov (geocoding) module to limit the
+    # geogrid block allocation.
+    # It defines the upper memory limit to process a geogrid
+    # block, considering the data type and the number of bands
+    # (polarizations) to process.
     max_block_size: num(min=0, required=False)
 
 ceos_analysis_ready_data_options:
 
-    # Data access for the source data (URL or DOI)
-    source_data_access: str(required=False)
-
-    # Data access for the output product (URL or DOI)
-    product_data_access: str(required=False)
-
+    # NOT YET IMPLEMENTED
     # Data access for the static layers product associated with the output
     # product (URL or DOI)
     static_layers_data_access: str(required=False)

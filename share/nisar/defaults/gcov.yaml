@@ -52,6 +52,7 @@ runconfig:
             # strategy works well for accessing files stored on the cloud by
             # reducing the number of high-latency REST API calls needed to read
             # datasets and their metadata.
+            # Options: "fsm", "page", "aggregate", and "none"
             fs_strategy: page
 
             # HDF5 file space page size.  Only relevant when fs_strategy="page".
@@ -68,6 +69,7 @@ runconfig:
                 compression_enabled: True
 
                 # Compression type. 'none' for no compression
+                # Options: "gzip", "lzf", and "szip"
                 compression_type: gzip
 
                 # Compression level
@@ -122,12 +124,30 @@ runconfig:
                 mantissa_nbits:
 
         primary_executable:
+            # Product type ("GCOV")
             product_type: GCOV
+
+            # Product version
             product_version: 0.1.0
+
+            # Product Digital Object Identifier (DOI). If not provided,
+            # the corresponding metadata field will be set to "(NOT SPECIFIED)".
             product_doi:
+
+            # Composite release ID (CRID). If not provided, the corresponding
+            # metadata field will be set to b'A10000'.
             composite_release_id:
+
+            # Processing center. If not provided, the corresponding metadata
+            # field will be set to "Undefined".
             processing_type:
+
+            # Processing center. If not provided, the corresponding metadata
+            # field will be set to "(NOT SPECIFIED)".
             processing_center:
+
+            # Processing center. If not provided, the metadata field 
+            # `granuleId` will be set to "(NOT SPECIFIED)".
             partial_granule_id:
 
         debug_level_group:
@@ -205,6 +225,7 @@ runconfig:
                range_looks:   1
 
             # Radiometric Terrain Correction (RTC) options
+            # Only relevant if `apply_rtc` is enabled in the `geocode` group
             rtc:
                 # Output type (defines the terrain radiometry convention for
                 # the output). Choices:
@@ -233,16 +254,16 @@ runconfig:
                 dem_upsampling: 2
 
                 # RTC area beta mode. Options:
-                # 'auto' - Default value is defined by the RTC algorithm that is being
-                #     executed, i.e., 'pixel_area' for 'algorithm_type' equal to
-                #     'bilinear_distribution' and 'projection_angle' for
-                #     'algorithm_type' equal to 'area_projection'
                 #  'pixel_area' - Estimate the beta surface reference area `A_beta`
                 #     using the pixel area, which is the product of the range spacing
                 #     by the azimuth spacing (computed using the ground velocity)
                 #  'projection_angle' - estimate the beta surface reference area `A_beta`
                 #     using the projection angle method:
                 #     `A_beta = A_sigma * cos(projection_angle)`
+                # 'auto' - Default value is defined by the RTC algorithm that is being
+                #     executed, i.e., 'pixel_area' for 'algorithm_type' equal to
+                #     'bilinear_distribution' and 'projection_angle' for
+                #     'algorithm_type' equal to 'area_projection'
                 area_beta_mode: auto
 
             # Mechanism to specify output posting and DEM
@@ -254,6 +275,7 @@ runconfig:
                 algorithm_type: area_projection
 
                 # Apply radiometric terrain correction
+                # If `False`, the entire `rtc` group is ignored.
                 apply_rtc: True
 
                 # NOT YET IMPLEMENTED (it is expected that the RSLC product already
@@ -359,7 +381,9 @@ runconfig:
                 # increase memory usage and runtime.
                 upsample_radargrid: False
 
-                # Same as input DEM if not provided.
+                # EPSG code of the output product, including GCOV terms
+                # and all metadata LUTs (excluding radar grid cubes)
+                # Defaults to the DEM EPSG code, if not provided.
                 output_epsg:
 
                 # Pixel spacing in the units of the output EPSG coordinate
@@ -380,10 +404,18 @@ runconfig:
                         x_posting:
                         y_posting:
 
-                # To control output grid in same units as output EPSG
+                # Snap-to-grid interval along the Y-direction, in same units as
+                # output EPSG `output_epsg`.
+                # This parameter aligns the output grid in the Y-direction such
+                # that its origin and spacing are rounded to the nearest
+                # multiple of `y_snap`.
                 y_snap:
 
-                # To control output grid in same units as output EPSG
+                # Snap-to-grid interval along the X-direction, in same units as
+                # output EPSG `output_epsg`.
+                # This parameter aligns the output grid in the X-direction such
+                # that its origin and spacing are rounded to the nearest
+                # multiple of `x_snap`.
                 x_snap:
 
                 # Coordinates of the top-left pixel corner,
@@ -396,8 +428,10 @@ runconfig:
                     x_abs:
 
                 # Coordinates of the bottom-right pixel corner in the
-                # output EPSG coordinate system,  before grid snapping
-                # and before adjusting to ensure alignment with pixel spacing.
+                # output EPSG coordinate system.
+                # These coordinates will be adjusted based on
+                # the provided top-left coordinate, to ensure
+                # alignment with grid snapping and pixel spacing.
                 bottom_right:
                     y_abs:
                     x_abs:
@@ -408,27 +442,44 @@ runconfig:
                 # Maximum block size in MB per thread
                 max_block_size:
 
+            # Group to define parameters for radar grid cubes.
+            # Radar grid cubes describe the radar geometry in the form of
+            # 3D data cubes. The representation as data cubes,
+            # rather than two-dimensional arrays, is used to reduce storage
+            # requirements for NISAR L2 products. This is possible because
+            # radar geometry values vary slowly in space and can be accurately
+            # captured using a low-resolution three-dimensional grid
             radar_grid_cubes:
 
-                # List of metadata cube heights, in meters
+                # List of heights (in meters) above the WGS84 ellipsoid
+                # representing metadata cube layers along the Z-direction.
                 heights:
 
-                # Same as the geocode group output_EPSG if not provided
+                # Output EPSG code for the radar grid cubes
+                # Defaults to `output_epsg` in the `geocode` group
                 output_epsg:
 
                 # Spacing between pixels, in same units as output EPSG.
-                # If not provided, spacing values will be taken from geocode group
-                # parameters.
                 # All postings/spacings must be > 0.
                 # ISCE3 output rasters always have North-up West-left orientation
+                # If not provided, coarser spacing values will be inferred
+                # based on the `output_epsg` and the DEM
                 output_posting:
                     x_posting:
                     y_posting:
 
-                # To control output grid in same units as output EPSG
+                # Snap-to-grid interval along the Y-direction, in same units as
+                # output EPSG `output_epsg`.
+                # This parameter aligns the output grid in the Y-direction such
+                # that its origin and spacing are rounded to the nearest
+                # multiple of `y_snap`.
                 y_snap:
 
-                # To control output grid in same units as output EPSG
+                # Snap-to-grid interval along the X-direction, in same units as
+                # output EPSG `output_epsg`.
+                # This parameter aligns the output grid in the X-direction such
+                # that its origin and spacing are rounded to the nearest
+                # multiple of `x_snap`.
                 x_snap:
 
                 # Coordinates of the top-left pixel corner,
@@ -441,8 +492,10 @@ runconfig:
                     x_abs:
 
                 # Coordinates of the bottom-right pixel corner in the
-                # output EPSG coordinate system,  before grid snapping
-                # and before adjusting to ensure alignment with pixel spacing.
+                # output EPSG coordinate system.
+                # These coordinates will be adjusted based on
+                # the provided top-left coordinate, to ensure
+                # alignment with grid snapping and pixel spacing.
                 bottom_right:
                     y_abs:
                     x_abs:
@@ -451,6 +504,9 @@ runconfig:
 
                 # Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
+                # If not provided, coarser spacing values will be inferred
+                # based on the `output_epsg` and the DEM
                 output_posting:
                     x_posting:
                     y_posting:
@@ -459,6 +515,9 @@ runconfig:
 
                 # Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
+                # If not provided, coarser spacing values will be inferred
+                # based on the `output_epsg` and the DEM
                 output_posting:
                     x_posting:
                     y_posting:
@@ -470,6 +529,7 @@ runconfig:
                 maxiter: 50
 
             # DEM interpolation method
+            # Options: "sinc", "bilinear", "bicubic", "nearest", and "biquintic"
             dem_interpolation_method: biquintic
 
             noise_correction:
@@ -483,12 +543,7 @@ runconfig:
         # to populate the output product's metadata
         ceos_analysis_ready_data:
 
-            # Data access for the source data (URL or DOI)
-            source_data_access:
-
-            # Data access for the output product (URL or DOI)
-            product_data_access:
-
+            # NOT YET IMPLEMENTED
             # Data access for the static layers product associated with the output product (URL or DOI)
             static_layers_data_access:
 
