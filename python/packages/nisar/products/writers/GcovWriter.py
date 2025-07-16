@@ -494,7 +494,7 @@ class GcovWriter(BaseL2WriterSingleInput):
         """
         Populate the data group `grids` of the GCOV product
         """
-        for frequency, pol_list in self.freq_pols_dict.items():
+        for frequency in self.freq_pols_dict.keys():
 
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
