@@ -469,7 +469,7 @@ class L1InSARWriter(InSARBaseWriter):
                                                  " subswath number of that pixel in the secondary RSLC,"
                                                  " and the most significant digit represents"
                                                  " the subswath number of that pixel in the reference RSLC."
-                                                 " A value of '0' in either digit indicates an invalid sample"
+                                                 " A value of 0 in either digit indicates an invalid sample"
                                                  " in the corresponding RSLC"),
                                     fill_value=255)
             offset_group['mask'].attrs['long_name'] = np.bytes_("Valid samples subswath mask")

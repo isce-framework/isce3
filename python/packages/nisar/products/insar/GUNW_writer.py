@@ -273,7 +273,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                      " where 1 is water and 0 is non-water;"
                      " the second digit represents the subswath number of that pixel in the reference RSLC;"
                      " the least-significant digit represents the subswath number of that pixel in the secondary RSLC."
-                     " A value of '0' in either subswath digit indicates an invalid sample in the corresponding RSLC"),
+                     " A value of 0 in either subswath digit indicates an invalid sample in the corresponding RSLC"),
                     grid_mapping=grids_val,
                     xds=xds,
                     yds=yds,
