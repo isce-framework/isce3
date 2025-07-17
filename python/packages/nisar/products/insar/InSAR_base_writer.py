@@ -380,7 +380,7 @@ class InSARBaseWriter(h5py.File):
 
         reference_terrain_height = "referenceTerrainHeight"
         reference_terrain_height_description = \
-            f"Reference Terrain Height as a function of time for {rslc_name} RSLC"
+            f"Reference terrain height as a function of time for {rslc_name} RSLC"
         if reference_terrain_height in src_param_group:
             src_param_group.copy(reference_terrain_height, dst_param_group)
             dst_param_group[reference_terrain_height].attrs['description'] = \
