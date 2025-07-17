@@ -186,7 +186,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         for rslc_name in ['reference', 'secondary']:
             rslc = self[self.group_paths.ParametersPath][rslc_name]
             rslc['referenceTerrainHeight'].attrs['description'] = \
-                np.bytes_("Reference Terrain Height as a function of"
+                np.bytes_("Reference terrain height as a function of"
                            f" map coordinates for {rslc_name} RSLC")
             rslc['referenceTerrainHeight'].attrs['units'] = \
                 Units.meter
