@@ -928,8 +928,6 @@ class InSARBaseWriter(h5py.File):
             processing_type = np.bytes_('Urgent')
         elif processing_type == 'OD':
             processing_type = np.bytes_('Custom')
-        else:
-            processing_type = np.bytes_('Undefined')
 
         # Adopt same logic as RSLC, GSLC, GCOV
         # If no condition is met, assign string from runconfig
@@ -1158,7 +1156,10 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "processingType",
                 processing_type,
-                "Nominal (or) Urgent (or) Custom (or) Undefined",
+                'Processing pipeline used to generate this granule. ' \
+                '"Nominal": standard production system; "Urgent": time-sensitive ' \
+                'processing in response to urgent response events; ' \
+                '"Custom": user-initiated processing outside the nominal production system',
             ),
             DatasetParams(
                 "radarBand", radar_band_name,
