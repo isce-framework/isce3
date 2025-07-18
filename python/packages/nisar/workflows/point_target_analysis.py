@@ -619,11 +619,11 @@ def analyze_corner_reflectors(
         'id': str
           The unique identifier of the corner reflector.
 
-        'latitude': float
+        'latitude_deg': float
           The geodetic latitude, in degrees, of the corner reflector at the time it was
           surveyed.
 
-        'longitude': float
+        'longitude_deg': float
           The longitude, in degrees, of the corner reflector at the time it was
           surveyed.
 
@@ -793,8 +793,8 @@ def analyze_corner_reflectors(
         # Add some additional metadata.
         extra_cr_info = {
             "id": cr.id,
-            "latitude": np.rad2deg(cr.llh.latitude),
-            "longitude": np.rad2deg(cr.llh.longitude),
+            "latitude_deg": np.rad2deg(cr.llh.latitude),
+            "longitude_deg": np.rad2deg(cr.llh.longitude),
             "height_above_ellipsoid": cr.llh.height,
             "frequency": freq,
             "polarization": pol,

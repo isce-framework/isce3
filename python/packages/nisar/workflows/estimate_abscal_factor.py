@@ -138,11 +138,11 @@ def estimate_abscal_factor(
           The absolute radiometric calibration error for the corner reflector (the ratio
           of the measured RCS to the predicted RCS), in linear units.
 
-        'latitude': float
+        'latitude_deg': float
           The geodetic latitude, in degrees, of the corner reflector at the time it was
           surveyed.
 
-        'longitude': float
+        'longitude_deg': float
           The longitude, in degrees, of the corner reflector at the time it was
           surveyed.
 
@@ -299,8 +299,8 @@ def estimate_abscal_factor(
         cr_info = {
             "id": cr.id,
             "absolute_calibration_factor": abscal_error,
-            "latitude": np.rad2deg(cr.llh.latitude),
-            "longitude": np.rad2deg(cr.llh.longitude),
+            "latitude_deg": np.rad2deg(cr.llh.latitude),
+            "longitude_deg": np.rad2deg(cr.llh.longitude),
             "height_above_ellipsoid": cr.llh.height,
             "elevation_angle": el_angle,
             "timestamp": az_datetime,

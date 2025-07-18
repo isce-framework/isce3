@@ -654,8 +654,8 @@ def analyze_gslc_point_targets_csv(
         perf_dict.update(
             {
                 "id": cr.id,
-                "latitude": np.rad2deg(cr.llh.latitude),
-                "longitude": np.rad2deg(cr.llh.longitude),
+                "latitude_deg": np.rad2deg(cr.llh.latitude),
+                "longitude_deg": np.rad2deg(cr.llh.longitude),
                 "height_above_ellipsoid": cr.llh.height,
                 "frequency": freq,
                 "polarization": pol,
