@@ -124,7 +124,7 @@ __global__ void cuArraysSubtractMean_kernel(float *images, int imageSize, float 
 
 /**
  * Compute and subtract mean values from images
- * @param[inout] images Input/Output images
+ * @param[in,out] images Input/Output images
  * @param[out] mean Output mean values
  * @param[in] stream cudaStream
  */
@@ -317,7 +317,7 @@ __global__ void cuCorrNormalize_kernel(
  * Normalize a correlation surface
  * @param[in] templates Reference windows with mean subtracted
  * @param[in] images Secondary windows
- * @param[inout] results un-normalized correlation surface as input and normalized as output
+ * @param[in,out] results un-normalized correlation surface as input and normalized as output
  * @param[in] stream cudaStream
  * @warning The current implementation uses one thread for one column, therefore,
  *   the secondary window width is limited to <=1024, the max threads in a block.

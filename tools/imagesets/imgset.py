@@ -178,8 +178,36 @@ class ImageSet:
             --network=host
         ''' + " ".join(f"--build-arg {x}_img={self.imgname(repomod='dev', tagmod=x)}" for x in self.imgs)
 
+        # Determine which GPU architectures to target. We will generate PTX + cubin for
+        # each architecture. The list of architectures is based on which AWS EC2
+        # instance types we wish to support.
+        #
+        # | EC2 Instance Type | Nvidia GPU | Compute Capability |
+        # |-------------------|------------|--------------------|
+        # | p2                | Tesla K80  | 3.7                |
+        # | p3                | Tesla V100 | 7.0                |
+        # | g4dn              | Tesla T4   | 7.5                |
+        # | p4d               | A100       | 8.0                |
+        # | g5                | A10G       | 8.6                |
+        # | g6                | L4         | 8.9                |
+        # | g6e               | L40S       | 8.9                |
+        # | p5                | H100       | 9.0                |
+        # | p5e               | H200       | 9.0                |
+        #
+        # Note that cubin is forwards-compatible with newer architectures with the same
+        # compute capability (CC) major version. PTX is forwards-compatible with all
+        # newer architectures, but JIT compilation from PTX is unsupported if the driver
+        # version is older than the CUDA Toolkit version. Therefore, we want to build
+        # cubin for each CC major version that we wish to support.
+        #
+        # The oldest CC supported by CUDA 11 is 3.5. This is only needed for p2 instance
+        # types, which are being sunsetted by AWS. When support for p2's is no longer
+        # needed, we can drop CC 3.5 from the list and upgrade to CUDA 12.
+        cuda_archs = ["3.5", "7.0", "8.0", "9.0"]
+
         self.cmake_defs = {
             "WITH_CUDA": "YES",
+            "ISCE_CUDA_ARCHS": ",".join(cuda_archs),
             "ISCE3_FETCH_DEPS": "NO",
             "CPACK_PACKAGE_FILE_NAME": "isce3",
         }
@@ -562,7 +590,7 @@ class ImageSet:
         if tests is None:
             tests = workflowtests['end2end'].items()
         for testname, dataname in tests:
-            # copy runconfigs and create output direcotories
+            # copy runconfigs and create output directories
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             for wfname in ['rslc', 'gslc', 'gcov', 'insar']:
                 if wfname == 'rslc':
@@ -752,19 +780,12 @@ class ImageSet:
 
     def docsbuild(self):
         """
-        Build documentation using Doxygen + Sphinx
+        Build documentation using Doxygen
         """
 
         docdir = f"{blddir}/docs-output"
-        sphx_src = f"{srcdir}/doc/sphinx"
-        sphx_conf = f"{blddir}/doc/sphinx"
-        sphx_dir = f"{docdir}/sphinx"
-        sphx_cache = f"{sphx_dir}/_doctrees"
-        sphx_html = f"{sphx_dir}/html"
 
         self.docker_run_dev(f"""
-            PYTHONPATH={blddir}/packages/isce3/extensions \
-               sphinx-build -q -b html -c {sphx_conf} -d {sphx_cache} {sphx_src} {sphx_html}
             doxygen doc/doxygen/Doxyfile
             """)
 

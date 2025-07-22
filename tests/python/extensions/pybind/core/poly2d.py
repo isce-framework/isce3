@@ -91,7 +91,7 @@ def test_grid_eval():
     # Transpose coeffs to account for numpy reversed indexing
     npp_out = npp.polynomial.polygrid2d(common.x_vec, common.y_vec, common.coeffs.transpose())
 
-    # Check values of mesh eval againt point eval to ensure pybind ordering correct
+    # Check values of mesh eval against point eval to ensure pybind ordering correct
     npt.assert_array_almost_equal(npp_out, grid_eval_vals)
 
 def test_1d_eval():
@@ -114,7 +114,7 @@ def test_1d_eval():
     c = common.poly2d.coeffs.T
     ref = npp.polynomial.polyval2d(x, y, c)
 
-    # Check values of mesh eval againt point eval to ensure pybind ordering correct
+    # Check values of mesh eval against point eval to ensure pybind ordering correct
     npt.assert_array_almost_equal(out, ref)
 
 def test_2d_eval():
@@ -134,7 +134,7 @@ def test_2d_eval():
     # Transpose coeffs to account for numpy reversed indexing
     npp_out = npp.polynomial.polyval2d(x_mesh, y_mesh, common.coeffs.transpose())
 
-    # Check values of mesh eval againt point eval to ensure pybind ordering correct
+    # Check values of mesh eval against point eval to ensure pybind ordering correct
     npt.assert_array_almost_equal(npp_out, mesh_eval_vals)
 
 def test_coeffs():

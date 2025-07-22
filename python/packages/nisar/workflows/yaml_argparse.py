@@ -15,9 +15,9 @@ class StoreDictKeyPair(argparse.Action):
     '''
     Class that converts key value strings and parse into a dict.
     Intended for parsing frequency-polarizations strings.
-    key and values seperated by '='
-    values per key seperated by ','
-    key-values pairs seperated by ' '
+    key and values separated by '='
+    values per key separated by ','
+    key-values pairs separated by ' '
     https://stackoverflow.com/a/42355279
     '''
 

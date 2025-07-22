@@ -30,7 +30,7 @@ def test_instrument_parser_v1p0():
     with InstrumentParser(os.path.join(iscetest.data, sub_dir,
                                        instrument_file)) as ins:
 
-        # check some attirbutes per knowledge from the file content
+        # check some attributes per knowledge from the file content
         npt.assert_equal(ins.pols, ['H', 'V'], err_msg='Wrong list of pols')
 
         npt.assert_equal(ins.num_channels, 12,

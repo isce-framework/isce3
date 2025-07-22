@@ -100,15 +100,13 @@ def _validate_lut(lut, orbit, radargrid, az_or_srg):
     outside that of the radar grid. Unit test RSLC from envisat has a radar
     grid whose time domain lies entirely within that of the orbit.
     """
-    srg_start_stop = [lut.x_start,
-                      lut.x_start + lut.x_spacing * (lut.width - 1)]
+    srg_start_stop = [lut.x_start, lut.x_end]
     for srg, start_or_stop in zip(srg_start_stop, ['start', 'stop']):
         # Check if outside radar grid time domain.
         assert not(radargrid.starting_range < srg < radargrid.end_range), \
                f'{az_or_srg} LUT2d {start_or_stop} outside radar grid range domain'
 
-    t_start_stop = [lut.y_start,
-                    lut.y_start + lut.y_spacing * (lut.length - 1)]
+    t_start_stop = [lut.y_start, lut.y_end]
     for t, start_or_stop in zip(t_start_stop, ['start', 'stop']):
         # Check if within orbit time domain.
         assert orbit.start_time < t < orbit.end_time, \

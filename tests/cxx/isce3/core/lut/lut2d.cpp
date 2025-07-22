@@ -130,6 +130,8 @@ TEST(LUT2dTest, Contains)
         const auto data = isce3::core::Matrix<T>(length, width);
         const auto lut2d = isce3::core::LUT2d<T>(x0, y0, dx, dy, data);
 
+        EXPECT_TRUE(lut2d.contains(lut2d.yStart(), lut2d.xStart()));
+        EXPECT_TRUE(lut2d.contains(lut2d.yEnd(), lut2d.xEnd()));
         EXPECT_TRUE(lut2d.contains(10.5, 0.5));
 
         EXPECT_FALSE(lut2d.contains(9.9, 0.5));
@@ -144,6 +146,25 @@ TEST(LUT2dTest, Contains)
         const double bigval = 1e9;
         EXPECT_TRUE(lut2d.contains(bigval, bigval));
         EXPECT_TRUE(lut2d.contains(-bigval, -bigval));
+    }
+}
+
+TEST(LUT2dTest, RefValue)
+{
+    using T = double;
+    {
+        // default ctor sets to zero
+        auto lut = isce3::core::LUT2d<T>();
+        EXPECT_EQ(lut.refValue(), 0.0);
+
+        // setter should update value
+        lut.refValue(1.0);
+        EXPECT_EQ(lut.refValue(), 1.0);
+    }
+    {
+        // scalar parameter ctor sets value
+        auto lut = isce3::core::LUT2d<T>(2.0);
+        EXPECT_EQ(lut.refValue(), 2.0);
     }
 }
 

@@ -10,7 +10,7 @@ namespace isce3::cuda::geocode {
  *                              a pair of NaNs are returned.
  * \param[in]   data            Double vector to retrieve minimum and maximum
  *                              from. Must be same size as mask and cannot be
- *                              emtpy.
+ *                              empty.
  * \param[in]   mask            Bool vector applied to data using Numpy masked
  *                              array convention where true is masked and false
  *                              is unmasked. Must be same size as data and

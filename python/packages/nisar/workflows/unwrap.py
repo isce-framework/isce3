@@ -304,7 +304,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
                 # Clean up unwrapped phase raster
                 del unw_raster
-                
+
                 # Allocate coherence in RUNW. If no further multilooking, the coherence
                 # is copied from RIFG
                 datasets = ['coherenceMagnitude']

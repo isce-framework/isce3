@@ -526,7 +526,7 @@ TEST(Ampcor, ReferenceStats)
         auto expectedVar = std::sqrt(std::accumulate(tile, tile+refCells, 0.0, square));
         // the computed value
         auto computedVar = refStats[pid];
-        // chech the mismatch
+        // check the mismatch
         ASSERT_FLOAT_EQ(expectedVar, computedVar);
     }
 

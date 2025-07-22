@@ -333,7 +333,7 @@ class RunConfig:
             metadata_dict['output_posting']['y_posting'] = \
                 abs(default_metadata_geogrid_spacing_y)
 
-        # Set snap values equal to the metdata geogrid posting
+        # Set snap values equal to the metadata geogrid posting
         metadata_dict['x_snap'] = metadata_dict['output_posting']['x_posting']
         metadata_dict['y_snap'] = metadata_dict['output_posting']['y_posting']
 

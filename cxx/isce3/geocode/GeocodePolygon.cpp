@@ -7,6 +7,7 @@
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/core/Projections.h>
 #include <isce3/core/blockProcessing.h>
+#include <isce3/core/LUT2d.h>
 #include <isce3/core/Utilities.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/RTC.h>
@@ -220,6 +221,9 @@ void GeocodePolygon<T>::getPolygonMean(
 
         isce3::core::MemoryModeBlocksY rtc_memory_mode =
                 isce3::core::MemoryModeBlocksY::SingleBlockY;
+        
+        const isce3::core::LUT2d<double>& az_time_correction = {};
+        const isce3::core::LUT2d<double>& slant_range_correction = {};
 
         isce3::io::Raster* out_sigma = nullptr;
 
@@ -228,7 +232,8 @@ void GeocodePolygon<T>::getPolygonMean(
                    output_terrain_radiometry, rtc_area_mode,
                    rtc_algorithm, rtc_area_beta_mode,
                    geogrid_upsampling * 2, rtc_min_value_db,
-                   out_sigma, rtc_memory_mode, interp_method, _threshold,
+                   out_sigma, az_time_correction, slant_range_correction,
+                   rtc_memory_mode, interp_method, _threshold,
                    _num_iter, _delta_range);
 
         rtc_area.resize(radar_grid_cropped.length(),

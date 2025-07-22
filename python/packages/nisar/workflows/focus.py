@@ -292,8 +292,8 @@ def get_total_grid_bounds(rawfiles: list[str]):
 
 def get_total_grid(rawfiles: list[str], dt, dr):
     epoch, tmin, tmax, rmin, rmax = get_total_grid_bounds(rawfiles)
-    nt = int(np.ceil((tmax - tmin) / dt))
-    nr = int(np.ceil((rmax - rmin) / dr))
+    nt = int(np.ceil((tmax - tmin) / dt)) + 1
+    nr = int(np.ceil((rmax - rmin) / dr)) + 1
     t = isce3.core.Linspace(tmin, dt, nt)
     r = isce3.core.Linspace(rmin, dr, nr)
     return epoch, t, r
@@ -407,41 +407,17 @@ def make_doppler_lut(rawfiles: list[str],
         t = [tmin, tmax]
 
     t = convert_epoch(t, epoch_in, epoch)
-    dop = np.zeros((len(t), len(r)))
-
-    # Using the default EL bounds [-45, 45] deg can cause trouble when looking
-    # near nadir, as this large interval can span both sides of the left-right
-    # ambiguity.  So solve the problem on the sphere a few times using bounding
-    # cases.
-    log.info("Attempting to find reasonable EL search bounds.")
-    ti = t[len(t) // 2]
-    rdr_xyz, _ = orbit.interpolate(ti)
-    qi = attitude.interpolate(ti)
-    el0, el1 = isce3.antenna.get_approx_el_bounds(r[0], az, rdr_xyz, qi, dem)
-    el2, el3 = isce3.antenna.get_approx_el_bounds(r[-1], az, rdr_xyz, qi, dem)
-    el_min, el_max = min(el0, el2), max(el1, el3)
-    log.info(f"Preliminary EL bounds are [{np.rad2deg(el_min) :.3f}, "
-        f"{np.rad2deg(el_max) :.3f}] deg")
-
-    for i, ti in enumerate(t):
-        rdr_xyz, v = orbit.interpolate(ti)
-        qi = attitude.interpolate(ti)
-        for j, rj in enumerate(r):
-            # For very long observations the geometry may change enough that
-            # the bounds become invalid.  If that happens, recalculate.
-            try:
-                tgt_xyz = isce3.antenna.range_az_to_xyz(rj, az, rdr_xyz, qi,
-                    dem, el_min=el_min, el_max=el_max)
-            except RuntimeError:
-                el0, el1 = isce3.antenna.get_approx_el_bounds(rj, az, rdr_xyz,
-                    qi, dem)
-                el_min, el_max = min(el0, el_min), max(el1, el_max)
-                log.info(f"Updating EL bounds to [{np.rad2deg(el_min) :.3f}, "
-                         f"{np.rad2deg(el_max) :.3f}] deg")
-                tgt_xyz = isce3.antenna.range_az_to_xyz(rj, az, rdr_xyz, qi,
-                    dem, el_min=el_min, el_max=el_max)
-            dop[i,j] = los2doppler(tgt_xyz - rdr_xyz, v, wvl)
-    lut = LUT2d(np.asarray(r), t, dop, interp_method, False)
+    lut = isce3.geometry.make_doppler_lut_from_attitude(
+        az_time=t,
+        slant_range=r,
+        orbit=orbit,
+        attitude=attitude,
+        wavelength=wvl,
+        dem=dem,
+        az_angle=az,
+        interp_method=interp_method,
+        bounds_error=False,
+    )
     return fc, lut
 
 
@@ -1797,6 +1773,10 @@ def focus(runconfig, runconfig_path=""):
             # 80 MHz (A) being mixed with 5 MHz sideband (B).
             rawdata = raw.getRawDataset(channel_in.freq_id, pol)
             log.info(f"Raw data shape = {rawdata.shape}")
+            if rawdata.ndim != 2:
+                raise ValueError("Expected 2D raw data.  For diagnostic mode "
+                    "data (DM2) you must use a separate conversion script "
+                    "like `nisar_l0b_dm2_to_dbf.py` before this one.")
             raw_times, raw_grid = raw.getRadarGrid(channel_in.freq_id,
                                                    tx=pol[0], epoch=grid_epoch)
 
@@ -1808,6 +1788,10 @@ def focus(runconfig, runconfig_path=""):
                 continue
             raw_times = raw_times[pulse_begin:pulse_end]
             raw_grid = raw_grid[pulse_begin:pulse_end, :]
+
+            # Need to correct raw data to have constant phase wrt TX event.
+            log.info("Will apply basebandPhaseCorrection to raw data")
+            bb_phasor = raw.getBasebandPhaseCorrection(channel_in.freq_id, pol)
 
             na = cfg.processing.rangecomp.block_size.azimuth
             nr = rawdata.shape[1]
@@ -1824,9 +1808,10 @@ def focus(runconfig, runconfig_path=""):
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
                 nblock = min(na, rawdata.shape[0] - pulse, raw_mm.shape[0] - i)
-                block_in = np.s_[pulse:pulse+nblock, :]
+                pulse_slice = slice(pulse, pulse + nblock)
+                block_in = np.s_[pulse_slice, :]
                 block_out = np.s_[i:i+nblock, :]
-                z = rawdata[block_in]
+                z = rawdata[block_in] * bb_phasor[pulse_slice, np.newaxis]
                 # Remove NaNs.  TODO could incorporate into gap mask.
                 z[np.isnan(z)] = 0.0
                 if cfg.processing.zero_fill_gaps:

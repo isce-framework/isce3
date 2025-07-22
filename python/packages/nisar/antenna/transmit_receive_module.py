@@ -11,6 +11,14 @@ class CalPath(IntEnum):
     There are three types of calibration: HCAL=HPA, LCAL=LNA, and BCAL=BYPASS.
     See [1]_ for details.
 
+    In case of corrupted range line with unknown Cal Path type, the
+    respective calibration path type is flagged as INVALID to avoid
+    using it for any of the three valid types.
+
+    Given data type `uint8` is used to represent these Cal Types inside
+    L0B products, the max 8-bit unsigned integer value of 255 is assigned
+    to the INVALID case.
+
     References
     ----------
     .. [1] H. Ghaemi, "DSI SweepSAR On-Board DSP Algorithms Description ,"
@@ -20,6 +28,7 @@ class CalPath(IntEnum):
     HPA = 0
     LNA = 1
     BYPASS = 2
+    INVALID = 255
 
 
 @dataclass(frozen=True)
@@ -102,7 +111,7 @@ class RxTrmInfo:
         (AC table) in radians with shape
         (total RX channels, number of DBF coeffs).
     fs_win : float, default=240e6
-        Sampling frequency in (Hz) at which fast-time range window paramters
+        Sampling frequency in (Hz) at which fast-time range window parameters
         RD/WD/WL are generated.
     fs_ta : float, default=96e6
         Sampling rate of DBF fast-time indexing in time-to-angle and

@@ -39,6 +39,7 @@ geometry/Topo.h
 geometry/utilities.h
 image/forward.h
 image/gpuResampSlc.h
+image/Resample.h
 image/ResampSlc.h
 math/complexOperations.h
 product/SubSwaths.h

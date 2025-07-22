@@ -327,7 +327,7 @@ class TxBMF(ElevationBeamformer):
         # apply correction/fudge factor to Tx weights along active channels
         # if provided
         if channel_adj_factors is not None:
-            # check the size of corection factor container
+            # check the size of correction factor container
             if len(channel_adj_factors) != num_chanl:
                 raise ValueError('Size of TX "channel adjustment factor" '
                                  f'must be {num_chanl}')
@@ -461,7 +461,7 @@ class RxDBF(ElevationBeamformer):
         the number of pulses in the air for mid swath of NISAR orbit.
     el_ofs_dbf : float, default=0.0
         Elevation angle offset (in radians) used in adjusting angle indexes
-        prior to grabing DBF coeffs from AC table in DBF process.
+        prior to grabbing DBF coeffs from AC table in DBF process.
     rg_spacing_min: float, optional
         Min slant range spacing in (m) used to compute EL-cut antenna patterns
         as a function of range via interpolation. Antenna pattern for slant
@@ -608,7 +608,7 @@ class RxDBF(ElevationBeamformer):
         # apply correction/fudge factor to Rx weights along active channels
         # if provided
         if channel_adj_factors is not None:
-            # check the size of corection factor container
+            # check the size of correction factor container
             if len(channel_adj_factors) != num_chanl:
                 raise ValueError('Size of RX "channel adjustment factor" '
                                  f'must be {num_chanl}')
@@ -680,8 +680,12 @@ def get_calib_range_line_idx(cal_path_mask):
     Get range line index for each calbration path enumeration type
     "CalPath" from calibration mask array stored in L0B product.
 
-    Each rangeline contains either of calibration measurments HCAL,
+    Each rangeline contains either of calibration measurements HCAL,
     BCAL or LCAL.
+
+    In case of corrupted range line with unknown Cal Path type, the
+    respective calibration path type is flagged as INVALID to avoid
+    using it for any of the three valid types.
 
     It also reports noise-only (no transmit) range line indexes.
 
@@ -703,9 +707,12 @@ def get_calib_range_line_idx(cal_path_mask):
     """
     rng_lines_idx = np.arange(cal_path_mask.size, dtype='uint32')
     hcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.HPA]
-    lcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.LNA]
-    bcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.BYPASS]
-    noise_lines_idx = rng_lines_idx[cal_path_mask != CalPath.HPA]
+    lna_mask = (cal_path_mask == CalPath.LNA)
+    lcal_lines_idx = rng_lines_idx[lna_mask]
+    byp_mask = (cal_path_mask == CalPath.BYPASS)
+    bcal_lines_idx = rng_lines_idx[byp_mask]
+    # Noise-only range lines are those tagged as either LNA or BYPASS.
+    noise_lines_idx = rng_lines_idx[lna_mask | byp_mask]
 
     return hcal_lines_idx, bcal_lines_idx, lcal_lines_idx, noise_lines_idx
 
@@ -968,7 +975,7 @@ def get_pulse_index(pulse_times, t, nearest=False, eps=5e-10):
     eps : float
         Tolerance for snapping time tags, e.g., when
             `abs(pulse_times[i] - t) <= eps`
-        then return `i`.  This accomodates floating point precision issues like
+        then return `i`.  This accommodates floating point precision issues like
         `n * pri != n / prf`.
 
     Returns

@@ -333,7 +333,7 @@ TEST(Signal, upsample)
     sig.inverseRangeFFT(specU, slcU, nfft*oversample, 1);
     sig.upsample(slc, slcU, 1, nfft, oversample);
 
-    // Check if the original smaples have the same phase in the signal before and after upsampling
+    // Check if the original samples have the same phase in the signal before and after upsampling
     double max_err = 0.0;
     double err;
     for (size_t col = 0; col<width; col++){
@@ -406,7 +406,7 @@ TEST(Signal, upsample2D)
     sig.upsample2D(slc, slcU, oversample);
 
 
-    // Check if the original smaples have the same phase in the signal before and after upsampling
+    // Check if the original samples have the same phase in the signal before and after upsampling
     double max_err = 0.0;
     double err;
     for (int j = 0; j<nY; j++){

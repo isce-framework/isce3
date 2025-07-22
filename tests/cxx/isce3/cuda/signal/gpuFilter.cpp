@@ -36,7 +36,7 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
-    // Get the Doppler polynomial and use it for both refernce and secondary SLCs
+    // Get the Doppler polynomial and use it for both reference and secondary SLCs
     isce3::core::LUT1d<double> dop1 =
         avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
     isce3::core::LUT1d<double> dop2 = dop1;

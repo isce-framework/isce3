@@ -127,7 +127,7 @@ void addbinding_boundingbox(py::module& m)
     Returns
     -------
     RadarGridBoundingBox
-        Radar grid bouding box object with indices for:
+        Radar grid bounding box object with indices for:
         first_azimuth_line,last_azimuth_line, first_range_sample,
         last_range_sample
     )")
@@ -177,7 +177,7 @@ void addbinding_boundingbox(py::module& m)
     Returns
     -------
     _: RadarGridBoundingBox
-        Radar grid bouding box object with indices for:
+        Radar grid bounding box object with indices for:
         first_azimuth_line,last_azimuth_line, first_range_sample,
         last_range_sample
     )");

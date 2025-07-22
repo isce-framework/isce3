@@ -787,6 +787,46 @@ class RawBase(Base, family='nisar.productreader.raw'):
         return "L0B"
 
 
+    def getBasebandPhaseCorrection(self, frequency='A', polarization=None):
+        """
+        Get the phasor needed to rotate the raw data to have a constant phase
+        with respect to the transmit.  This is required for sensors like NISAR
+        where the raw data phase is constant with respect to the opening of the
+        receive window and the receive window timing may change during an
+        observation.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically the main science band is 'A', which is the
+            default value.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
+
+        Returns
+        -------
+        np.ndarray[np.complex64]
+            Array of complex values with shape = (rangelines,) whose elements at
+            each index should be multiplied into all samples at the
+            corresponding rangeline.
+
+        Notes
+        -----
+        This method does not actually require that the raw data file contains a
+        dataset that stores this correction.  If it doesn't, an array of ones
+        will be returned instead (which imparts no phase rotation).
+        """
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        naz = self.getRawDataset(frequency, polarization).shape[-2] # beware DM2
+        path_txrx = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            group = fid[path_txrx]
+            key = "basebandPhaseCorrection"
+            return group.get(key, np.ones(naz, np.complex64))[()]
+
+
 # adapted from ReeUtilPy/REEout/AntPatAnalysis.py:getDCMant2sc
 def get_rcs2body(el_deg=37.0, az_deg=0.0, side='left') -> isce3.core.Quaternion:
     """

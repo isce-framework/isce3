@@ -369,7 +369,7 @@ def download_watermask(polys, epsgs, outfile, version):
         # Build vrt with downloaded watermasks
         gdal.BuildVRT(outfile, watermask_list)
     except Exception:
-        errmsg = f'Failed to donwload NISAR WATERMASK {version} from s3 bucket. ' \
+        errmsg = f'Failed to download NISAR WATERMASK {version} from s3 bucket. ' \
                  f'Maybe {version} is not currently supported.'
         raise ValueError(errmsg)
 

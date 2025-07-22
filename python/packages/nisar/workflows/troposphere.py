@@ -217,14 +217,14 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 output_file = hres.out_file(weather_model_output_dir)
                 hres._out_name =  output_file
 
-                # Return the ouput file if it exists
+                # Return the output file if it exists
                 if os.path.exists(output_file):
                     return output_file
                 else:
                     # Write to hard drive
                     return hres.write()
 
-            # ouput location
+            # output location
             weather_model_output_dir = \
                 os.path.join(scratch_path, 'weather_model_files')
 
@@ -380,7 +380,7 @@ def write_to_GUNW_product(tropo_delay_datacubes: dict, gunw_hdf5: str):
              # Product name
              output_product_name = f'{delay_product}TroposphericPhaseScreen'
 
-             # If there is no troposphere delay product, then createa new one
+             # If there is no troposphere delay product, then create a new one
              if output_product_name not in radar_grid:
                  h5_prep._create_datasets(radar_grid, [0], np.float64,
                                           output_product_name, descr = descr,

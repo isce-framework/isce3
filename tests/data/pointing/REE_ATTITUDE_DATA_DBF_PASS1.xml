@@ -1,19 +1,19 @@
 <?xml version="1.0" ?>
 <radarPointing>
   <productInformation>
-    <productName>REE-Attitude</productName>
+    <productName>NISAR_ANC_L_PR_FRP_20250219T203655_20220101T000255_20220101T000300.xml</productName>
     <mission>NISAR</mission>
-    <validityStartDateTime>2022-01-01T00:02:55.000000000</validityStartDateTime>
-    <validityEndDateTime>2022-01-01T00:02:59.999425000</validityEndDateTime>
+    <validityStartDateTime>2022-01-01T00:02:55.000000</validityStartDateTime>
+    <validityEndDateTime>2022-01-01T00:03:00.000000</validityEndDateTime>
     <fileClass>Custom</fileClass>
-    <fileType>FOE</fileType>
+    <fileType>FRP</fileType>
     <creator>NASA JPL</creator>
-    <creationDateTime>2022-05-16T19:12:15.991627</creationDateTime>
+    <creationDateTime>2025-02-19T20:36:55.192040</creationDateTime>
   </productInformation>
   <LSAR>
     <radarPointingStateVectorList count="6">
       <radarPointingStateVector index="1">
-        <utc>2022-01-01T00:02:55.000000000</utc>
+        <utc>2022-01-01T00:02:55.000000</utc>
         <yaw>-86.1525350614773</yaw>
         <pitch>36.99997267463242</pitch>
         <roll>-0.08071485253586881</roll>
@@ -23,50 +23,50 @@
         <q3>-0.155495387720781</q3>
       </radarPointingStateVector>
       <radarPointingStateVector index="2">
-        <utc>2022-01-01T00:02:55.999885000</utc>
-        <yaw>-86.15274412320669</yaw>
-        <pitch>36.9999724251356</pitch>
-        <roll>-0.0810825024013284</roll>
-        <q0>0.6412976162980668</q0>
-        <q1>-0.6893195311996931</q1>
-        <q2>0.29903444906948956</q2>
-        <q3>-0.15541669635775907</q3>
+        <utc>2022-01-01T00:02:56.000000</utc>
+        <yaw>-86.15274419575148</yaw>
+        <pitch>36.99997242504442</pitch>
+        <roll>-0.08108263644262546</roll>
+        <q0>0.6412977957983478</q0>
+        <q1>-0.6893193384579864</q1>
+        <q2>0.299034529860059</q2>
+        <q3>-0.15541665510297872</q3>
       </radarPointingStateVector>
       <radarPointingStateVector index="3">
-        <utc>2022-01-01T00:02:56.999770000</utc>
-        <yaw>-86.15295738924269</yaw>
-        <pitch>36.999972174576584</pitch>
-        <roll>-0.08145004739996753</roll>
-        <q0>0.6416398792010012</q0>
-        <q1>-0.6889518312757855</q1>
-        <q2>0.2991884709524931</q2>
-        <q3>-0.15533801353749618</q3>
+        <utc>2022-01-01T00:02:57.000000</utc>
+        <yaw>-86.1529574943929</yaw>
+        <pitch>36.999972174452914</pitch>
+        <roll>-0.08145022837924974</roll>
+        <q0>0.6416400584068287</q0>
+        <q1>-0.6889516386532577</q1>
+        <q2>0.29918855157809093</q2>
+        <q3>-0.15533797233541083</q3>
       </radarPointingStateVector>
       <radarPointingStateVector index="4">
-        <utc>2022-01-01T00:02:57.999655000</utc>
-        <yaw>-86.15317486539494</yaw>
-        <pitch>36.999971922948</pitch>
-        <roll>-0.08181749965254768</roll>
-        <q0>0.6419819825014039</q0>
-        <q1>-0.6885839262030656</q1>
-        <q2>0.2993423596286815</q2>
-        <q3>-0.1552593393334887</q3>
+        <utc>2022-01-01T00:02:58.000000</utc>
+        <yaw>-86.15317498803874</yaw>
+        <pitch>36.999971922808065</pitch>
+        <roll>-0.08181770353687652</roll>
+        <q0>0.6419821615198211</q0>
+        <q1>-0.6885837335844094</q1>
+        <q2>0.29934244013998734</q2>
+        <q3>-0.15525929815741069</q3>
       </radarPointingStateVector>
       <radarPointingStateVector index="5">
-        <utc>2022-01-01T00:02:58.999540000</utc>
-        <yaw>-86.15339653466023</yaw>
-        <pitch>36.99997167026974</pitch>
-        <roll>-0.08218483156794573</roll>
-        <q0>0.6423239262083886</q0>
-        <q1>-0.6882158159558729</q1>
-        <q2>0.2994961151185754</q2>
-        <q3>-0.15518067378805167</q3>
+        <utc>2022-01-01T00:02:59.000000</utc>
+        <yaw>-86.15339669036014</yaw>
+        <pitch>36.99997167009617</pitch>
+        <roll>-0.08218508332958062</roll>
+        <q0>0.642324104923607</q0>
+        <q1>-0.6882156234639103</q1>
+        <q2>0.2994961954738031</q2>
+        <q3>-0.15518063265429144</q3>
       </radarPointingStateVector>
       <radarPointingStateVector index="6">
-        <utc>2022-01-01T00:02:59.999425000</utc>
-        <yaw>-86.15362247891464</yaw>
-        <pitch>36.9999714164337</pitch>
-        <roll>-0.0825522008628761</roll>
+        <utc>2022-01-01T00:03:00.000000</utc>
+        <yaw>-86.1536224789146</yaw>
+        <pitch>36.999971416433674</pitch>
+        <roll>-0.08255220086287608</roll>
         <q0>0.6426657094241127</q0>
         <q1>-0.6878475014673341</q1>
         <q2>0.29964973710614373</q2>

@@ -69,24 +69,25 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         radar_grid_cubes_heights = proc_cfg["radar_grid_cubes"]["heights"]
 
         radar_grid = self[self.group_paths.RadarGridPath]
-        descrs = ["Solid Earth tides phase along slant range direction",
-                  'Solid Earth tides phase in along-track direction']
+        descrs = ["Solid Earth tides phase along slant range direction"]
         product_names = ['slantRangeSolidEarthTidesPhase']
+
+        cube_shape = (len(radar_grid_cubes_heights),
+                      radar_grid_cubes_geogrid.length,
+                      radar_grid_cubes_geogrid.width)
 
         # Add the troposphere datasets to the radarGrid cube
         if tropo_cfg['enabled']:
             for delay_type in ['wet', 'hydrostatic', 'comb']:
                 if tropo_cfg[f'enable_{delay_type}_product']:
-                    descrs.append(f"{delay_type.capitalize()} component "
-                                  "of the troposphere phase screen")
                     if delay_type == 'comb':
+                        descrs.append("Combined (wet + hydrostatic) component "
+                                    "of the troposphere phase screen")
                         product_names.append(f'combinedTroposphericPhaseScreen')
                     else:
+                        descrs.append(f"{delay_type.capitalize()} component "
+                                    "of the troposphere phase screen")
                         product_names.append(f'{delay_type}TroposphericPhaseScreen')
-
-        cube_shape = [len(radar_grid_cubes_heights),
-                      radar_grid_cubes_geogrid.length,
-                      radar_grid_cubes_geogrid.width]
 
         # Retrieve the x, y, and z coordinates from the radargrid cube
         # Since the radargrid cube has been added, it is safe to
@@ -108,7 +109,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
             create_dataset_kwargs['shuffle'] = \
                 self.hdf5_optimizer_config.shuffle_filter
 
-        for product_name, descr in zip(product_names,descrs):
+        for product_name, descr in zip(product_names, descrs):
             if product_name not in radar_grid:
                 if self.hdf5_optimizer_config.chunk_size is not None:
                     ds_chunk_size = \
@@ -128,6 +129,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 ds.attrs['description'] = np.bytes_(descr)
                 ds.attrs['units'] = Units.radian
                 ds.attrs['grid_mapping'] = np.bytes_('projection')
+
                 ds.dims[0].attach_scale(zds)
                 ds.dims[1].attach_scale(yds)
                 ds.dims[2].attach_scale(xds)

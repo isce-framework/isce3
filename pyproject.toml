@@ -1,0 +1,13 @@
+[project]
+name = "isce3"
+dynamic = ["version"]
+
+[build-system]
+requires = ["scikit-build-core"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "VERSION.txt"
+regex = "(?P<major>\\d+).(?P<minor>\\d+).(?P<patch>\\d+)(?P<suffix>(-dev|-pre)?)"
+result = "{major}.{minor}.{patch}{suffix}"

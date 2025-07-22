@@ -107,7 +107,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
         of beams or RX channels. By default, all beams are included
         in the polyfitting of Doppler over entire swath of DM2 products.
     out_path : str, default='.'
-        Ouput directory for dumping PNG files, if `plot` is True.
+        Output directory for dumping PNG files, if `plot` is True.
     plot : bool, default=False
         If True, it will generate bunch of .png plots of both True and
         poly-fitted Doppler centroid as a function of slant ranges per azimuth
@@ -243,7 +243,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
         num_chnl, tot_pulses, tot_rgbs = raw_dset.shape
         logger.info('Shape of the echo data (channel, pulses, ranges) -> '
                     f'{num_chnl, tot_pulses, tot_rgbs}')
-        # existance of antenna object is a must!
+        # existence of antenna object is a must!
         if ant is None:
             raise ValueError('Multi-channel (DM2) raw requires'
                              ' antenna object!')
@@ -428,7 +428,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
     logger.info(
         f'Time interval between azimuth blocks -> {len_tm_int/prf:.3f} (sec)')
     logger.info(
-        'Number of range line seperation between azimuth blocks -> '
+        'Number of range line separation between azimuth blocks -> '
         f'{len_tm_int}'
     )
     logger.info(f'Total number of azimuth blocks -> {num_blk_az}')
@@ -617,7 +617,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
         # Use median (or mean) of measured ambiguous doppler over slant ranges
         # obatained from echo to be used in doppler ambiguity calculation.
         # Perhaps Median is more suited in case of skewed Doppler outliers
-        # due to presence of man-made or non-homogenous targets in homogenous
+        # due to presence of man-made or non-homogeneous targets in homogeneous
         # scene.
         dop_echo = np.median(dop_cnt_valid)
         dop_abs, dop_amb_num = _compute_doppler_abs_ambiguity(
@@ -836,7 +836,7 @@ def _get_az_block_interval_len(num_pls: int, az_block_dur: float, prf: float,
         total number of blocks , full + partial (last block).
 
     """
-    # time interval shall be equal ot less than block duration
+    # time interval shall be equal to less than block duration
     time_interval = min(time_interval, az_block_dur)
     # make sure the min time interval is one PRI!
     len_tm_int = max(int(time_interval * prf), 1)

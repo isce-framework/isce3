@@ -35,6 +35,15 @@ def cmdLineParse():
                         default=0.0)
     parser.add_argument("--gap-location", type=float, default=0.5,
                         help="Location of simulated gap given as a fraction of the swath.")
+    parser.add_argument("--flip-phase-at-pulse", type=int, default=None,
+                        help=("Rotate the phase by 180 degrees for pulses "
+                              "beginning at the given pulse index through "
+                              "the end of the file. The rotation is reported "
+                              "in the basebandPhaseCorrection dataset which "
+                              "should be used in RSLC processing to compensate "
+                              "the shift.  This option is intended to support "
+                              "NISAR testing and is not needed for general "
+                              "ALOS processing."))
 
     inps = parser.parse_args()
     if not os.path.isdir(inps.indir):
@@ -294,6 +303,7 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
         "2007-01-01 00:00:01.0000000"))
     # fields added to spec in 2023
     ident.create_dataset("granuleId", data=numpy.bytes_("None"))
+    ident.create_dataset('platformName', data=numpy.bytes_("ALOS-1"))
     ident.create_dataset("instrumentName", data=numpy.bytes_("PALSAR"))
     ident.create_dataset("isDithered", data=numpy.bytes_("False"))
     ident.create_dataset("isMixedMode", data=numpy.bytes_("False"))
@@ -323,6 +333,10 @@ def constructNISARHDF5(args, ldr):
         rrsd = lsar.create_group('RRSD')
         inps = rrsd.create_group('metadata/processingInformation/inputs')
         inps.create_dataset('l0aGranules', data=numpy.bytes_([os.path.basename(args.indir)]))
+
+        algos = rrsd.create_group('metadata/processingInformation/algorithms')
+        dset = algos.create_dataset("softwareVersion", data=numpy.bytes_(isce3.__version__))
+        dset.attrs["description"] = numpy.bytes_("Software version used for processing")
 
         #Start populating telemetry
         orbit_group = rrsd.create_group('lowRateTelemetry/orbit')
@@ -357,7 +371,8 @@ def getNominalSpacing(prf, dr, orbit, look_angle, i=0):
     return ds, dg
 
 
-def addImagery(h5file, ldr, imgfile, pol, gap_width_usec=0.0, gap_location=0.5):
+def addImagery(h5file, ldr, imgfile, pol, gap_width_usec=0.0, gap_location=0.5,
+               flip_phase_at_pulse=None):
     '''
     Populate swaths segment of HDF5 file.
     ''' 
@@ -466,6 +481,21 @@ def addImagery(h5file, ldr, imgfile, pol, gap_width_usec=0.0, gap_location=0.5):
     rxgrp.create_dataset('TRMDataWindow', data=numpy.ones((nLines,1), dtype='u1'))
     # Create List of RX TRMs
     rxgrp.create_dataset('listOfRxTRMs', data=numpy.asarray([1], dtype='uint8'))
+    # NISAR raw data phase correction.  For ALOS just set to zero phase (1+0j)
+    # and add description & units.
+    dset = rxgrp.create_dataset('basebandPhaseCorrection',
+        data=numpy.ones(nLines, 'c8'), dtype='c8')
+    dset.attrs['description'] = numpy.bytes_('Phase correction to multiply '
+        'into each rangeline to achieve consistent phase with respect to '
+        'transmit event')
+    dset.attrs['units'] = numpy.bytes_('1')
+
+    # Can add 180 degree phase rotation for testing.
+    if flip_phase_at_pulse is not None:
+        if not (0 <= flip_phase_at_pulse < nLines):
+            raise ValueError("Expected flip_phase_at_pulse in interval"
+                f"[0, {nLines}] but got {flip_phase_at_pulse}")
+        dset[flip_phase_at_pulse:] = -1.0
 
     ##Set up BFPQLUT
     assert firstrec.SARRawSignalData.dtype.itemsize <= 2
@@ -504,6 +534,11 @@ def addImagery(h5file, ldr, imgfile, pol, gap_width_usec=0.0, gap_location=0.5):
         write_arr = numpy.full((2*nPixels), BAD_VALUE, dtype=numpy.uint16)
 
         inarr = rec.SARRawSignalData[0,:].astype(numpy.uint16)
+
+        # Dark magic for testing basebandPhaseCorrection.  ALOS data is
+        # unsigned integer, with twos-complement at 5 bits.
+        if (flip_phase_at_pulse is not None) and (linnum > flip_phase_at_pulse):
+            inarr = 2**5 - 1 - inarr
 
         left = 2 * rec.ActualCountOfLeftFillPixels
         right = 2 * rec.ActualCountOfRightFillPixels
@@ -623,7 +658,8 @@ def process(args=None):
     for pol in ['HH', 'HV', 'VV', 'VH']:
         if pol in filenames:
             addImagery(args.outh5, leader, filenames[pol], pol,
-                args.gap_width_usec, args.gap_location)
+                args.gap_width_usec, args.gap_location,
+                args.flip_phase_at_pulse)
 
     finalizeIdentification(args.outh5)
 

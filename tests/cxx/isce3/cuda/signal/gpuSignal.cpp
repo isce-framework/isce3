@@ -253,7 +253,7 @@ TEST(gpuSignal, upsampleFloat)
             slc,
             slcU);
 
-    // Check if the original smaples have the same phase in the signal before and after upsampling
+    // Check if the original samples have the same phase in the signal before and after upsampling
     float max_err = 0.0;
     float err = 0.0;
     for (size_t col = 0; col<width; col++){
@@ -315,7 +315,7 @@ TEST(gpuSignal, upsampleDouble)
             slc,
             slcU);
 
-    // Check if the original smaples have the same phase in the signal before and after upsampling
+    // Check if the original samples have the same phase in the signal before and after upsampling
     double max_err = 0.0;
     double err = 0.0;
     for (size_t col = 0; col<width; col++){

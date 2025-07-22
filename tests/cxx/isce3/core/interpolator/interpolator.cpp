@@ -387,7 +387,7 @@ TEST_F(InterpolatorTest, SimpleRampTest) {
 
     // This test creates a matrix of data whose values form a 
     // linear ramp in x direction (Values are x indices). 
-    // For a given interpolation point x,y the interpolated value is compared aginst x.
+    // For a given interpolation point x,y the interpolated value is compared against x.
     // bilinear, bicubic and biquintic methods are tested.
 
     size_t length = 100;

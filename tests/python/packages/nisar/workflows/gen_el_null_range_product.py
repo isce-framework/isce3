@@ -27,7 +27,8 @@ class TestGenElNullRangeProduct:
         freq_band=None, txrx_pol=None, dem_file=None, apply_caltone=False,
         az_block_dur=2.0, out_path='.', ref_height=-100.0,
         orbit_file=None, attitude_file=None, plot=False, polyfit_deg=6,
-        exclude_nulls=None
+        exclude_nulls=None, sample_delays=None, sample_delays2=None,
+        amp_ratio_imbalances=None, phase_diff_imbalances=None
     )
 
     def test_correct_args(self):
@@ -54,4 +55,26 @@ class TestGenElNullRangeProduct:
     def test_exclude_nulls(self):
         # exclude null # 2
         self.args.exclude_nulls = [2]
+        gen_el_null_range_product(self.args)
+
+    def test_sample_delays(self):
+        self.args.plot = False
+        self.args.sample_delays = [-2, 2, -1]
+        gen_el_null_range_product(self.args)
+
+    def test_sample_delay_wrong_size(self):
+        self.args.sample_delays = [-2, 1, -1, 2]
+        with npt.assert_raises(ValueError):
+            gen_el_null_range_product(self.args)
+
+    def test_imbalances_size_mismatch(self):
+        self.args.sample_delays = None
+        self.args.exclude_nulls = None
+        self.args.amp_ratio_imbalances = [1, 0.9, 1.1]
+        self.args.phase_diff_imbalances = [-10.4, 30.5]
+        with npt.assert_raises(ValueError):
+            gen_el_null_range_product(self.args)
+
+    def test_imbalances(self):
+        self.args.phase_diff_imbalances = [-1.5, 0.0, 2.3]
         gen_el_null_range_product(self.args)

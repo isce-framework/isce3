@@ -5,6 +5,7 @@ import numpy as np
 from .ionosphere_estimation import IonosphereEstimation
 from isce3.signal.interpolate_by_range import decimate_freq_a_array
 
+
 class MainBandIonosphereEstimation(IonosphereEstimation):
     '''Virtual class for main band ionosphere estimation methods
     '''
@@ -35,7 +36,8 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
         self.estimate_sigma = None
         self.compute_unwrap_err = None
 
-    def compute_disp_nondisp(self,
+    def compute_disp_nondisp(
+            self,
             phi_sub_low=None,
             phi_sub_high=None,
             phi_main=None,
@@ -95,11 +97,11 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
             raise ValueError(err_str)
 
         phi_main = decimate_freq_a_array(slant_main,
-                                        slant_side,
-                                        phi_main)
+                                         slant_side,
+                                         phi_main)
 
-        no_data_array = (phi_main==no_data) |\
-                        (phi_side==no_data)
+        no_data_array = (phi_main == no_data) |\
+                        (phi_side == no_data)
 
         # correct unwrapped phase when correction coefficients are given
         if comm_unwcor_coef is not None and diff_unwcor_coef is not None:
@@ -117,7 +119,8 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
 
         return dispersive, non_dispersive
 
-    def get_coherence_mask_array(self,
+    def get_coherence_mask_array(
+            self,
             main_array=None,
             side_array=None,
             low_band_array=None,
@@ -240,6 +243,58 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
 
         return mask_array
 
+    def get_valid_area(self,
+            main_array=None,
+            side_array=None,
+            low_band_array=None,
+            high_band_array=None,
+            slant_main=None,
+            slant_side=None,
+            invalid_value=0):
+        """Build a boolean mask of valid pixels based on an invalid_value
+        threshold and NaNs.
+        A pixel is considered valid (True) if:
+        - Its value in `main_array` is neither equal to `invalid_value` nor NaN
+        - And, if `side_array` is provided, its value in `side_array` also
+            is neither equal to `invalid_value` nor NaN.
+
+        Parameters
+        ----------
+        main_array : numpy.ndarray
+            image of main-band interferogram
+        side_array : numpy.ndarray
+            image of side-band interferogram
+        low_band_array : numpy.ndarray
+            image of main-band interferogram
+        high_band_array : numpy.ndarray
+            image of side-band interferogram
+        slant_main : numpy.ndarray
+            slant range array of frequency A band
+        slant_side : numpy.ndarray
+            slant range array of frequency B band
+        invalid_value : float
+            invalid_value
+
+        Returns
+        -------
+        mask_array : numpy.ndarray
+            2D binary array extracted from images
+            1: valid pixels,
+            0: invalid pixels.
+        """
+        # decimate image when side array is also used.
+        if side_array is not None:
+            main_array = decimate_freq_a_array(
+                slant_main,
+                slant_side,
+                main_array)
+
+        mask_array = (main_array != invalid_value) & \
+                     (side_array != invalid_value) & \
+                     ~np.isnan(main_array) & \
+                     ~np.isnan(side_array)
+
+        return mask_array
 
     def estimate_iono_std(
             self,
@@ -294,14 +349,16 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
 
         # estimate sigma from main- and side- band coherences
         if (main_coh is not None) & (side_coh is not None):
-            sig_phi_main = np.divide(np.sqrt(1 - main_coh**2),
+            sig_phi_main = np.divide(
+                np.sqrt(1 - main_coh**2),
                 main_coh / np.sqrt(2 * number_looks),
                 out=np.zeros_like(main_coh),
-                where=main_coh!=0)
-            sig_phi_side = np.divide(np.sqrt(1 - side_coh**2),
+                where=main_coh != 0)
+            sig_phi_side = np.divide(
+                np.sqrt(1 - side_coh**2),
                 side_coh / np.sqrt(2 * number_looks),
                 out=np.zeros_like(side_coh),
-                where=side_coh!=0)
+                where=side_coh != 0)
 
         sig_phi_iono, sig_nondisp = \
             self.estimate_sigma(
@@ -408,17 +465,18 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
         """
         com_unw_coeff, diff_unw_coeff = \
             super().compute_unwrapp_error(
-            disp_array=disp_array,
-            nondisp_array=nondisp_array,
-            compute_unwrapp_error_func=self.compute_unwrap_err,
-            main_runw=main_runw,
-            side_runw=side_runw,
-            slant_main=slant_main,
-            slant_side=slant_side,
-            low_sub_runw=low_sub_runw,
-            high_sub_runw=high_sub_runw)
+                disp_array=disp_array,
+                nondisp_array=nondisp_array,
+                compute_unwrapp_error_func=self.compute_unwrap_err,
+                main_runw=main_runw,
+                side_runw=side_runw,
+                slant_main=slant_main,
+                slant_side=slant_side,
+                low_sub_runw=low_sub_runw,
+                high_sub_runw=high_sub_runw)
 
         return com_unw_coeff, diff_unw_coeff
+
 
 class MainSideBandIonosphereEstimation(MainBandIonosphereEstimation):
     '''Main side band ionosphere estimation
@@ -452,6 +510,7 @@ class MainSideBandIonosphereEstimation(MainBandIonosphereEstimation):
         self.estimate_sigma = self.estimate_sigma_main_side
         self.compute_unwrap_err = compute_unwrapp_error_main_side_band
 
+
 class MainDiffMsBandIonosphereEstimation(MainBandIonosphereEstimation):
     '''Main diff MS band ionosphere estimation
     '''
@@ -483,6 +542,7 @@ class MainDiffMsBandIonosphereEstimation(MainBandIonosphereEstimation):
         self.estimate_iono = estimate_iono_main_diff
         self.estimate_sigma = self.estimate_sigma_main_diff
         self.compute_unwrap_err = compute_unwrapp_error_main_diff_ms_band
+
 
 def compute_unwrapp_error_main_diff_ms_band(
         f0,
@@ -530,6 +590,7 @@ def compute_unwrapp_error_main_diff_ms_band(
 
     return com_unw_coeff, diff_unw_coeff
 
+
 def compute_unwrapp_error_main_side_band(
         f0,
         f1,
@@ -566,16 +627,20 @@ def compute_unwrapp_error_main_side_band(
     diff_unw_coeff : numpy.ndarray
         2D differential unwrapping error coefficient array
     """
-
-    diff_unw_coeff = np.round( ( (1 - f1 / f0) \
+    # Unwrapping errors exists in side interferogram,
+    # but not in main interferogram.
+    diff_unw_coeff = np.round(((1 - f1 / f0)
         * nondisp_array + (1 - f0 / f1) * disp_array
         + side_runw - main_runw) / (2 * np.pi))
-    com_unw_coeff = np.round( ( main_runw + side_runw \
-        - (1 + f1 / f0) * nondisp_array \
-        - (1 + f0 / f1) * disp_array \
-        - 2 * np.pi * diff_unw_coeff) / (4 * np.pi) )
+    # Unwrapping errors detected from both main and side
+    # interferograms.
+    com_unw_coeff = np.round((main_runw + side_runw
+        - (1 + f1 / f0) * nondisp_array
+        - (1 + f0 / f1) * disp_array
+        - 2 * np.pi * diff_unw_coeff) / (4 * np.pi))
 
     return com_unw_coeff, diff_unw_coeff
+
 
 def estimate_iono_main_diff(f0,
                             f1,
@@ -620,6 +685,7 @@ def estimate_iono_main_diff(f0,
     dispersive = output[0].reshape(y_size, x_size)
 
     return dispersive, non_dispersive
+
 
 def estimate_iono_main_side(
         f0,

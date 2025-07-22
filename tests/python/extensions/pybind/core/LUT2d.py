@@ -18,6 +18,11 @@ def test_LUT2d():
     assert lut2d.interp_method == method
     # check data accessor
     assert np.allclose(M, lut2d.data)
+    # check endpoints
+    assert lut2d.x_start == xvec[0]
+    assert lut2d.y_start == yvec[0]
+    assert lut2d.x_end == xvec[-1]
+    assert lut2d.y_end == yvec[-1]
 
     # Load reference data
     f_ref = iscetest.data + 'interpolator/data.txt'
@@ -31,5 +36,11 @@ def test_LUT2d():
 
     n_pts = d_refs.shape[0]
     assert error/n_pts < 0.058, f'pybind LUT2d failed: {error} > 0.058'
-    
-# end of file
+
+    # check that we can set ref_value
+    lut = isce.core.LUT2d()
+    assert lut.ref_value == 0.0
+    lut.ref_value = 1.0
+    assert lut.ref_value == 1.0
+    lut = isce.core.LUT2d(2.0)
+    assert lut.ref_value == 2.0

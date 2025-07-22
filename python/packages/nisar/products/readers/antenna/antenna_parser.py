@@ -257,7 +257,7 @@ class AntennaParser:
         # required EL spacing to be at least 20 mdeg
         el_spacing_min = np.deg2rad(20e-3)
         ant_el = self.el_cut_all(pol)
-        # check wether it is single beam or multiple beam
+        # check whether it is single beam or multiple beam
         num_beams = ant_el.copol_pattern.shape[0]
         if num_beams == 1:
             return None
@@ -379,7 +379,7 @@ class AntennaParser:
         """
         return self._get_ang_cut(beam, pol, 'azimuth', full=full)
 
-    def el_cut_all(self, pol='H', full=False):
+    def el_cut_all(self, pol='H', full=False, spacing_max_deg=None):
         """Parse all Co-pol and Cx-pol EL (Elevation) cuts.
 
         Get all uniformly-spaced EL cuts of co-pol and cx-pol and store them in
@@ -396,6 +396,11 @@ class AntennaParser:
             If False, it will limit angular coverage to within around 10 dB
             dynamic range on both ends, first and last beam, w.r.t the
             one-way peak magnitude of the corresponding beam.
+        spacing_max_deg : float, optional
+            Max EL angle spacing in degrees.
+            Default is the same as the original data.
+            If set, the min value betwen this and that of original data
+            will determine the final EL angle spacing.
 
         Returns
         -------
@@ -425,9 +430,10 @@ class AntennaParser:
         ones if the cx-pol patterns are missing in the product.
 
         """
-        return self._ang_cut_all(cut_type='elevation', pol=pol, full=full)
+        return self._ang_cut_all(cut_type='elevation', pol=pol, full=full,
+                                 spacing_max_deg=spacing_max_deg)
 
-    def az_cut_all(self, pol='H', full=False):
+    def az_cut_all(self, pol='H', full=False, spacing_max_deg=None):
         """Parse all Co-pol and Cx-pol AZ (Azimuth) cuts.
 
         Get all uniformly-spaced AZ cuts of co-pol and cx-pol and store them in
@@ -444,6 +450,11 @@ class AntennaParser:
             If False, it will limit angular coverage to within around 10 dB
             dynamic range on both ends, first and last beam, w.r.t the
             one-way peak magnitude of the corresponding beam.
+        spacing_max_deg : float, optional
+            Max AZ angle spacing in degrees.
+            Default is the same as the original data.
+            If set, the min value betwen this and that of original data
+            will determine the final AZ angle spacing.
 
         Returns
         -------
@@ -475,7 +486,8 @@ class AntennaParser:
         ones if the cx-pol patterns are missing in the product.
 
         """
-        return self._ang_cut_all(cut_type='azimuth', pol=pol, full=full)
+        return self._ang_cut_all(cut_type='azimuth', pol=pol, full=full,
+                                 spacing_max_deg=spacing_max_deg)
 
     def cut_angles_az_cuts(self, pol='H'):
         """
@@ -601,8 +613,8 @@ class AntennaParser:
         except AttributeError:
             return grd.replace('-', '_')
 
-    def _ang_cut_all(self, cut_type: str, pol: str, full: bool = False
-                     ) -> AntPatCut:
+    def _ang_cut_all(self, cut_type: str, pol: str, full: bool = False,
+                     spacing_max_deg: float = None) -> AntPatCut:
         """
         Get all co-pol and cx-pol cut patterns of a certain cut_type
         and pol.
@@ -617,6 +629,11 @@ class AntennaParser:
             If False, the angles on either sides will be truncated
             within one-way 10-dB beamwidth, otherwise the entire
             angular coverage will be returned.
+        spacing_max_deg : float, optional
+            Max angular spacing in degrees.
+            Default is the same as the original data.
+            If set, the min value betwen this and that of original data
+            will determine the final angular spacing.
 
         Returns
         -------
@@ -641,6 +658,8 @@ class AntennaParser:
             ang_first, _, _ = xdb_points_from_cut(beam_first)
             _, ang_last, _ = xdb_points_from_cut(beam_last)
         ang_spacing = beam_first.angle[1] - beam_first.angle[0]
+        if spacing_max_deg is not None:
+            ang_spacing = min(ang_spacing, np.deg2rad(spacing_max_deg))
         num_ang = int(np.ceil((ang_last - ang_first) / ang_spacing)) + 1
         # linearly interpolate each beam over desired angular coverage with
         # out-of-range values filled with float or complex zero.

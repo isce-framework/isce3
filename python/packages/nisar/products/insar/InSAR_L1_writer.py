@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 from isce3.core import LUT2d
+from isce3.product import get_radar_grid_nominal_ground_spacing
 from nisar.workflows import geo2rdr, rdr2geo
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
 from nisar.workflows.helpers import (get_cfg_freq_pols, get_offset_radar_grid,
@@ -380,7 +381,11 @@ class L1InSARWriter(InSARBaseWriter):
                                                     'seconds since ')
             if time_str is not None:
                 zero_dopp_time_units = time_str
-
+            
+            # Get the azimuth spacing and the ground range spacings at the middle
+            # of the swath for the offsets radar grid
+            off_da_center, off_dr_center = get_radar_grid_nominal_ground_spacing(off_radargrid, 
+                                                                                 self.ref_rslc.getOrbit())
 
             ds_offsets_params = [
                 DatasetParams(
@@ -409,8 +414,7 @@ class L1InSARWriter(InSARBaseWriter):
                 ),
                 DatasetParams(
                     "sceneCenterAlongTrackSpacing",
-                    rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
-                    * az_skip,
+                    off_da_center,
                     (
                         "Nominal along-track spacing in meters between"
                         " consecutive lines near mid-swath of the product images"
@@ -419,8 +423,7 @@ class L1InSARWriter(InSARBaseWriter):
                 ),
                 DatasetParams(
                     "sceneCenterGroundRangeSpacing",
-                    rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
-                    * rg_skip,
+                    off_dr_center,
                     (
                         "Nominal ground range spacing in meters between"
                         " consecutive pixels near mid-swath of the product images"
@@ -556,6 +559,11 @@ class L1InSARWriter(InSARBaseWriter):
                                                     'seconds since ')
             if time_str is not None:
                 zero_dopp_time_units = time_str
+            
+            # Get the azimuth spacing and the ground range spacings at the middle
+            # of the swath for the interferogram radar grid
+            igram_da_center, igram_dr_center = get_radar_grid_nominal_ground_spacing(igram_radargrid, 
+                                                                                     self.ref_rslc.getOrbit())
 
             ds_igram_params = [
                 DatasetParams(
@@ -591,8 +599,7 @@ class L1InSARWriter(InSARBaseWriter):
                 ),
                 DatasetParams(
                     "sceneCenterAlongTrackSpacing",
-                    rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
-                    * self.igram_azimuth_looks,
+                    igram_da_center,
                     (
                         "Nominal along-track spacing in meters "
                         "between consecutive lines near mid-swath of the product images"
@@ -601,8 +608,7 @@ class L1InSARWriter(InSARBaseWriter):
                 ),
                 DatasetParams(
                     "sceneCenterGroundRangeSpacing",
-                    rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
-                    * self.igram_range_looks,
+                    igram_dr_center,
                     (
                         "Nominal ground range spacing in meters between "
                         "consecutive pixels near mid-swath of the product images"
