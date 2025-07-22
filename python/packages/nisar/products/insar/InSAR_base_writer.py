@@ -1078,11 +1078,11 @@ class InSARBaseWriter(h5py.File):
             ds.attrs['description'] = \
             f'Absolute orbit number for the {rslc_name} RSLC'
 
-            ds = dst_id_group[f"{rslc_name}plannedDatatakeId"]
+            ds = dst_id_group[f"{rslc_name}PlannedDatatakeId"]
             ds.attrs['description'] = \
             f'List of planned datatakes included in the {rslc_name} RSLC'
 
-            ds = dst_id_group[f"{rslc_name}plannedObservationId"]
+            ds = dst_id_group[f"{rslc_name}PlannedObservationId"]
             ds.attrs['description'] = \
             f'List of planned observations included in the {rslc_name} RSLC'
 
