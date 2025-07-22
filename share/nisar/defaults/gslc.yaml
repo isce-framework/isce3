@@ -327,12 +327,7 @@ runconfig:
         # to populate the output product's metadata
         ceos_analysis_ready_data:
 
-            # Data access for the source data (URL or DOI)
-            source_data_access:
-
-            # Data access for the output product (URL or DOI)
-            product_data_access:
-
+            # NOT YET IMPLEMENTED
             # Data access for the static layers product associated with the output product (URL or DOI)
             static_layers_data_access:
 

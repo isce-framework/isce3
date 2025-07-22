@@ -30,6 +30,7 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("numiter_geo2rdr") = defaults.maxiter,
             py::arg("delta_range") = defaults.delta_range,
             py::arg("flag_set_output_rasters_geolocation") = false,
+            py::arg("flag_ground_velocity_from_rdr2geo") = true,
             R"(Make metadata radar grid cubes
 
                Metadata radar grid cubes describe the radar geometry
@@ -96,8 +97,14 @@ void addbinding_metadata_cubes(py::module & m)
                     Step size used for computing derivative of doppler
                 flag_set_output_rasters_geolocation : bool
                     Set output rasters' geotransform and spatial reference
-
-)");
+                flag_ground_velocity_from_rdr2geo, bool, optional
+                    When True, compute ground-track velocity using a
+                    finite-difference approximation between grid locations in
+                    the azimuth direction (`rdr2geo` method). In this case, the
+                    azimuth spacing of the grid affects the accuracy of the
+                    approximation. When False, use a closed-form expression for
+                    a geocentric spherical surface model instead.
+                    )");
 
     m.def("make_geolocation_cubes", &isce3::geometry::makeGeolocationGridCubes,
             py::arg("radar_grid"), py::arg("heights"), py::arg("orbit"),
@@ -114,6 +121,7 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("threshold_geo2rdr") = defaults.threshold,
             py::arg("numiter_geo2rdr") = defaults.maxiter,
             py::arg("delta_range") = defaults.delta_range,
+            py::arg("flag_ground_velocity_from_rdr2geo") = true,
             R"(Make metadata geolocation grid cubes
 
                Metadata geolocation grid cubes describe the radar geometry 
@@ -177,6 +185,13 @@ void addbinding_metadata_cubes(py::module & m)
                     Geo2rdr maximum number of iterations
                 delta_range : double, optional
                     Step size used for computing derivative of doppler
+                flag_ground_velocity_from_rdr2geo, bool, optional
+                    When True, compute ground-track velocity using a
+                    finite-difference approximation between grid locations in
+                    the azimuth direction (`rdr2geo` method). In this case, the
+                    azimuth spacing of the grid affects the accuracy of the
+                    approximation. When False, use a closed-form expression for
+                    a geocentric spherical surface model instead.
 
 )");
 }

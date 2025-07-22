@@ -800,7 +800,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "orbitFiles",
-                np.bytes_([orbit_file]),
+                np.bytes_(orbit_file),
                 "List of input orbit files used",
             ),
         ]
