@@ -227,29 +227,29 @@ class TestDatasetSpec:
             epsg_code="Projection EPSG code",
             false_easting=(
                 "The value added to all abscissa values in the rectangular coordinates"
-                " for a map projection."
+                " for a map projection"
             ),
             false_northing=(
                 "The value added to all ordinate values in the rectangular coordinates"
-                " for a map projection."
+                " for a map projection"
             ),
             grid_mapping_name="Grid mapping variable name",
             inverse_flattening="Inverse flattening of the ellipsoidal figure",
             latitude_of_projection_origin=(
                 "The latitude chosen as the origin of rectangular coordinates for a map"
-                " projection."
+                " projection"
             ),
             longitude_of_projection_origin=(
                 "The longitude, with respect to Greenwich, of the prime meridian"
-                " associated with the geodetic datum."
+                " associated with the geodetic datum"
             ),
             longitude_of_central_meridian=(
                 "The line of longitude at the center of a map projection generally used"
-                " as the basis for constructing the projection."
+                " as the basis for constructing the projection"
             ),
             scale_factor_at_central_meridian=(
                 "A multiplier for reducing a distance obtained from a map by"
-                " computation or scaling to the actual distance along the central meridian."
+                " computation or scaling to the actual distance along the central meridian"
             ),
             semi_major_axis="Semi-major axis",
             spatial_ref="Spatial reference",
