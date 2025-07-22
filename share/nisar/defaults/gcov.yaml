@@ -250,7 +250,7 @@ runconfig:
                 # or inaccurate outputs.
                 rtc_min_value_db:
 
-                # RTC DEM upsampling
+                # RTC DEM upsampling factor
                 dem_upsampling: 2
 
                 # RTC area beta mode. Options:

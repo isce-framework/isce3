@@ -32,8 +32,16 @@ runconfig:
             tec_file: str(required=False)
 
         product_path_group:
-            # Directory where PGE will place results Irrelevant to SAS.
+            # Directory where PGE will place results. Irrelevant to SAS.
             product_path: str(required=False)
+
+            # Product counter. Irrelevant to SAS.
+            # The product counter is used to version data products generated
+            # multiple times from the same SDS venue deployed. The counter
+            # starts with `001` and increments for subsequent generation of
+            # the same granule of any particular product type.
+            # This versioning is valid within an SDS venue.
+            # It is reset to `001` upon deployment of a new CRID.
             product_counter: int(min=1, max=999, required=False)
 
             # Directory where SAS can write temporary data
@@ -308,8 +316,7 @@ pre_process_options:
     range_looks: int(min=1, required=False)
 
 rtc_options:
-    # Output type (defines the terrain radiometry convention for
-    # the output)
+    # Output type (defines the terrain radiometry convention for the output
     output_type: enum('gamma0', 'sigma0', required=False)
 
     # RTC algorithm type
@@ -325,7 +332,7 @@ rtc_options:
     # or inaccurate outputs.
     rtc_min_value_db: num(required=False)
 
-    # RTC DEM upsampling
+    # RTC DEM upsampling factor
     dem_upsampling: int(min=1, required=False)
 
     # RTC area beta mode. Options:
@@ -440,7 +447,7 @@ geocode_options:
     # clipping occurs.
     clip_max: num(required=False)
 
-     # Clip values below the threshold. If empty, no min. value
+    # Clip values below the threshold. If empty, no min. value
     # clipping occurs.
     clip_min: num(required=False)
 
