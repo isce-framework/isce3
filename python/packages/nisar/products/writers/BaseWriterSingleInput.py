@@ -904,6 +904,54 @@ class BaseWriterSingleInput():
 
         return self.set_value(h5_field, data=data, *args, **kwargs)
 
+    def get_value_from_input_runconfig(self, field_name):
+        """
+        Parse input product runconfig and load value associated with a field
+
+        Parameters
+        ----------
+        field_name: str
+            Field name from input product
+
+        Returns
+        -------
+        value: str
+            Value associated with input product runconfig field. `None`
+            if the input product does not include the input runconfig
+            or if the field does not exist in the runconfig.
+        """
+
+        input_h5_field_path = (self.input_product_path +
+                               '/metadata/processingInformation/parameters/'
+                               'runConfigurationContents')
+
+        if input_h5_field_path not in self.input_hdf5_obj:
+            return
+
+        input_h5_dataset_obj = self.input_hdf5_obj[input_h5_field_path]
+
+        # check if dataset contains a string. If so, read it using method
+        # `asstr()``
+        # NOTE: It is necessary to check the object's shape to determine
+        # whether it is a single string or a list of strings. If it is a
+        # list of string, then it will be kept as it is.
+        if (h5py.check_string_dtype(input_h5_dataset_obj.dtype) and
+                input_h5_dataset_obj.shape == ()):
+            # use asstr() to read the dataset
+            runconfig_str = str(input_h5_dataset_obj.asstr()[...])
+
+        # otherwise, read it directly without changing the datatype
+        else:
+            runconfig_str = input_h5_dataset_obj[...]
+        for runconfig_line in runconfig_str.split("\n"):
+            if ':' not in runconfig_line:
+                continue
+            var_name = runconfig_line.split(':')[0].strip()
+
+            if field_name == var_name:
+                return runconfig_line.split(':')[1].strip()
+        return
+
     def check_and_decorate_product_using_specs_xml(self, specs_xml_file,
                                                    verbose=False):
         """

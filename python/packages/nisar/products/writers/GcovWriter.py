@@ -535,16 +535,6 @@ class GcovWriter(BaseL2WriterSingleInput):
             f'{parameters_group}/radiometricTerrainCorrectionApplied',
             'processing/geocode/apply_rtc')
 
-        # TODO: read these values from the RSLC metadata once they are
-        # available (the RSLC datasets below are not in the specs)
-        self.copy_from_input(
-            f'{parameters_group}/dryTroposphericGeolocationCorrectionApplied',
-            default=True)
-
-        self.copy_from_input(
-            f'{parameters_group}/wetTroposphericGeolocationCorrectionApplied',
-            default=False)
-
         self.copy_from_runconfig(
             f'{parameters_group}/rangeIonosphericGeolocationCorrectionApplied',
             'processing/geocode/apply_range_ionospheric_delay_correction')

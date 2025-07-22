@@ -1448,6 +1448,23 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             f'{parameters_group}/rfiMitigationApplied',
             flag_rfi_mitigation_applied)
 
+        # Read the RSLC runconfig to determine if the dry tropospheric
+        # correction has been applied. This correction is enabled by defaul
+        # therefore, if the information is not available, it is assumed
+        # that the correction has been applied.
+        rslc_dry_troposphere_model = self.get_value_from_input_runconfig(
+            'dry_troposphere_model')
+        dryTroposphericGeolocationCorrectionApplied = \
+            (rslc_dry_troposphere_model is None or
+             rslc_dry_troposphere_model != 'nodelay')
+        self.copy_from_input(
+            f'{parameters_group}/dryTroposphericGeolocationCorrectionApplied',
+            default=dryTroposphericGeolocationCorrectionApplied)
+
+        self.copy_from_input(
+            f'{parameters_group}/wetTroposphericGeolocationCorrectionApplied',
+            default=False)
+
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'softwareVersion',
