@@ -28,7 +28,7 @@ class stats:
             input array
         '''
         # Skip the accumulation when all values in the array is NaN
-        if np.alltrue(np.isnan()):
+        if np.alltrue(np.isnan(array)):
             return
 
         self.num_sample += np.sum(~np.isnan(array))
