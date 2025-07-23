@@ -137,7 +137,7 @@ def run(cfg):
             rslc_datasets = []
             gslc_datasets = []
 
-            stats_complex_list = [stats_complex()] * len(pol_list)
+            stats_complex_list = [stats_complex() for _ in pol_list]
 
             for polarization in pol_list:
                 # check the datatype of RSLC
@@ -226,9 +226,6 @@ def run(cfg):
 
             # loop over polarizations and compute statistics
             for i, gslc_dataset in enumerate(gslc_datasets):
-                gslc_raster = isce3.io.Raster(f"IH5:::ID={gslc_dataset.id.id}".encode("utf-8"), update=True)
-                compute_stats_complex_data(gslc_raster, gslc_dataset)
-
                 stats_complex_list[i].update_stat_complex()
                 write_stats_complex_data(gslc_dataset, stats_complex_list[i])
 
