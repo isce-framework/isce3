@@ -1,6 +1,7 @@
 #include "Topo.h"
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -176,25 +177,14 @@ topo(Raster & demRaster, TopoLayers & layers)
         // Reset output block sizes in layers
         layers.setBlockSize(blockLength, _radarGrid.width());
 
-        // Pre-compute some values that only need to be computed once per
-        // range line.
-        auto sensingTime = std::vector<double>(blockLength);
-        auto satPosition = std::vector<Vec3>(blockLength);
-        auto satVelocity = std::vector<Vec3>(blockLength);
-        auto satSpeed = std::vector<double>(blockLength);
-        auto TCNbases = std::vector<Basis>(blockLength);
+        // Allocate vector for storing satellite position for each line
+        std::vector<Vec3> satPosition(blockLength);
 
-        #pragma omp parallel for
-        for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
-            // Global line index
-            size_t line = lineStart + blockLine;
-
-            // Initialize orbital data for this azimuth line
-            auto& vel = satVelocity[blockLine];
-            _initAzimuthLine(line, sensingTime[blockLine],
-                    satPosition[blockLine], vel, TCNbases[blockLine]);
-            satSpeed[blockLine] = vel.norm();
-        }
+        // Get the midpoint of the DEM block in LLH coordinates.
+        // This should always be safe since the call to `computeDEMBounds()`
+        // above loads a block of the DEM raster.
+        assert(demInterp.hasRaster());
+        const auto dem_midpoint = demInterp.midLonLat();
 
         #pragma omp parallel
         {
@@ -202,38 +192,55 @@ topo(Raster & demRaster, TopoLayers & layers)
             // converged successfully.
             size_t totalconv_thread = 0;
 
-            #pragma omp for collapse(2)
+            // For each line in block
+            #pragma omp for
             for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
+                // Global line index
+                size_t line = lineStart + blockLine;
+
+                // Initialize orbital data for this azimuth line
+                Basis TCNbasis;
+                double tline;
+                Vec3 pos, vel;
+                _initAzimuthLine(line, tline, pos, vel, TCNbasis);
+
+                satPosition[blockLine] = pos;
+
+                // Compute velocity magnitude
+                const double satVmag = vel.norm();
+
+                // Initialize LLH to middle of input DEM block and average height.
+                auto llh = dem_midpoint;
+
                 for (size_t rbin = 0; rbin < _radarGrid.width(); ++rbin) {
 
                     // Get current slant range
                     const double rng = _radarGrid.slantRange(rbin);
 
                     // Get current Doppler value
-                    const auto tline = sensingTime[blockLine];
-                    const auto satVmag = satSpeed[blockLine];
-                    const double dopfact = (0.5 * _radarGrid.wavelength() *
-                                            (_doppler.eval(tline, rng) / satVmag)) *
-                                           rng;
+                    const double dopfact = (0.5 * _radarGrid.wavelength()
+                                         * (_doppler.eval(tline, rng) / satVmag))
+                                         * rng;
 
                     // Store slant range bin data in Pixel
                     Pixel pixel(rng, dopfact, rbin);
 
-                    // Initialize LLH to middle of input DEM and average height
-                    Vec3 llh = demInterp.midLonLat();
-
                     // Perform rdr->geo iterations
-                    const auto& pos = satPosition[blockLine];
-                    const auto& vel = satVelocity[blockLine];
-                    const auto& TCNbasis = TCNbases[blockLine];
-                    int geostat = rdr2geo(pixel, TCNbasis, pos, vel, _ellipsoid,
-                                          demInterp, llh, _radarGrid.lookSide(),
-                                          _threshold, _numiter, _extraiter);
+                    int geostat = rdr2geo(
+                        pixel, TCNbasis, pos, vel, _ellipsoid, demInterp, llh,
+                        _radarGrid.lookSide(), _threshold, _numiter, _extraiter);
                     totalconv_thread += geostat;
 
                     // Save data in output arrays
                     _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel,
                                          TCNbasis, demInterp);
+
+                    // If rdr2geo failed to converge, re-initialize the LLH estimate for
+                    // the next iteration. Otherwise, reuse the current solution as the
+                    // initial guess for the next range bin.
+                    if (geostat == 0) {
+                        llh = dem_midpoint;
+                    }
                 }
             }
 
