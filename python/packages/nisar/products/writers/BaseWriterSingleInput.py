@@ -665,6 +665,12 @@ class BaseWriterSingleInput():
         elif processing_type_runconfig == 'UR':
             processing_type = np.bytes_('Urgent')
         else:
+            warning_channel = journal.warning(
+                'BaseWriterSingleInput.populate_identification_common()')
+            warning_channel.log(
+                'The processing type in the runconfig is set to'
+                f' "{processing_type}", which is not a valid value'
+                ' for the output product metadata. Defaulting to "Custom"')
             processing_type = np.bytes_('Custom')
 
         self.set_value(
