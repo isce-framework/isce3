@@ -669,7 +669,7 @@ class BaseWriterSingleInput():
                 'BaseWriterSingleInput.populate_identification_common()')
             warning_channel.log(
                 'The processing type in the runconfig is set to'
-                f' "{processing_type}", which is not a valid value'
+                f' "{processing_type_runconfig}", which is not a valid value'
                 ' for the output product metadata. Defaulting to "Custom"')
             processing_type = np.bytes_('Custom')
 
