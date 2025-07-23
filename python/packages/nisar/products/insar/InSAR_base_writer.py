@@ -362,10 +362,19 @@ class InSARBaseWriter(h5py.File):
                                   ' radar modes, "False" otherwise')
         ds_params = [
             DatasetParams(
+                "rfiMitigation",
+                rfi_mitigation,
+                (
+                    f'Algorithm used for Radio Frequency Interference (RFI) mitigation in ' \
+                      'the {rslc_name} either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
+                      'mitigation was applied'
+                ),
+            ),
+            DatasetParams(
                 "rfiMitigationApplied",
                 rfi_mitigation_flag,
                 (
-                    "Flag to indicate if RFI mitigation has been applied"
+                    "Flag to indicate if Radio Frequency Interference mitigation has been applied"
                     f" to {rslc_name} RSLC"
                 ),
             ),
