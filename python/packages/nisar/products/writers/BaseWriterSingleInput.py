@@ -665,7 +665,7 @@ class BaseWriterSingleInput():
         elif processing_type_runconfig == 'UR':
             processing_type = np.bytes_('Urgent')
         else:
-            if processing_type_runconfig == 'OD':
+            if processing_type_runconfig != 'OD':
                 warning_channel = journal.warning(
                     'BaseWriterSingleInput.populate_identification_common()')
                 warning_channel.log(
