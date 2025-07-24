@@ -283,11 +283,13 @@ def get_product_spec_version(xml_string: str) -> str:
     Returns
     -------
     str
-        The product specification version as a string in '<MAJOR>.<MINOR>.<PATCH>'
+        The product specification version string in
         format.
     """
+    # The version string is expected to follow the format '<MAJOR>.<MINOR>.<PATCH>', but
+    # this may change in the future. This regex should be format-agnostic.
     regex = re.compile(
-        r"^<!-- product specification version is (?P<version>\d+\.\d+\.\d+) -->$",
+        r"^<!-- product specification version is (?P<version>\S+) -->$",
         flags=re.MULTILINE,
     )
     if (match := regex.search(xml_string)) is not None:
