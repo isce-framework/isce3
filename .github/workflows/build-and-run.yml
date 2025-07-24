@@ -42,6 +42,16 @@ jobs:
             env-file: environment.yml
             extra-specs: ""
         build-type: [ Release, Debug ]
+        include:
+          - os:
+              label: Linux
+              runner: ubuntu-latest
+              ctest_exclude: -E ".*($ALL_EXCLUDE)"
+            deps:
+              label: Minimum Python supported
+              env-file: environment.yml
+              extra-specs: |
+                python=3.9
 
 
     name: Build And Test - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
