@@ -11,7 +11,6 @@ from nisar.workflows.h5_prep import set_get_geo_info
 from isce3.core.types import truncate_mantissa
 from isce3.geometry import get_near_and_far_range_incidence_angles
 from nisar.products.readers.orbit import load_orbit
-from nisar.workflows.stage_dem import EARTH_RADIUS
 
 
 LEXICOGRAPHIC_BASE_POLS = ['HH', 'HV', 'VH', 'VV']
@@ -1746,87 +1745,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         elif flag_noise_equivalent_backscatter:
 
-            info_channel = journal.info('geocode_metadata_group')
-
-            info_channel.log(
-                'The LUT to be geocoded is noiseEquivalentBackscatter,'
-                ' which is irregularly sampled along the azimuth direction.'
-                ' Resampling it onto a uniformly spaced azimuth grid.'
-                ' Determining the maximum azimuth pixel spacing from'
-                ' output geogrid:')
-
-            # Retrieve sensing start and end times, assuming
-            # identical zero-Doppler extents across all polarizations
-            first_pol = input_ds_name_list[0]
-            noise_product = \
-                self.input_product_obj.getNoiseEquivalentBackscatter(
-                    frequency=frequency, pol=first_pol)
-
-            sensing_start = noise_product.az_time[0]
-            sensing_end = noise_product.az_time[-1]
-            sensing_mid = (sensing_end + sensing_start) / 2.0
-
-            # Verify minimum geogrid pixel spacing in meters
-            epsg_spatial_ref = osr.SpatialReference()
-            epsg_spatial_ref.ImportFromEPSG(metadata_geogrid.epsg)
-            if epsg_spatial_ref.IsGeographic():
-
-                dy_meters = abs(metadata_geogrid.spacing_y * np.pi *
-                                EARTH_RADIUS/180)
-                lat = (metadata_geogrid.start_y + metadata_geogrid.end_y) / 2
-                dx_meters = (metadata_geogrid.spacing_x *
-                             (np.pi * EARTH_RADIUS *
-                              np.cos(np.pi*lat/180))/180)
-            else:
-                dx_meters = metadata_geogrid.spacing_x
-                dy_meters = abs(metadata_geogrid.spacing_y)
-
-            min_geogrid_pixel_spacing = min(dx_meters, dy_meters)
-
-            info_channel.log(
-                ' - Output geogrid minimum pixel spacing [m]:'
-                f' {min_geogrid_pixel_spacing}'
-                f' (X: {dx_meters}, Y: {dy_meters}')
-
-            _, vel_mid = self.orbit.interpolate(sensing_mid)
-
-            # ground velocity is always smaller than platform velocity
-            platform_velocity = np.sqrt(vel_mid[0] ** 2 +
-                                        vel_mid[1] ** 2 +
-                                        vel_mid[2] ** 2)
-
-            info_channel.log(f' - Platform velocity: {platform_velocity}')
-
-            # To compute the pulse repetition interval (PRI),
-            # one would use the delta spacing divided by the
-            # velocity, which in this case would be the ground
-            # velocity. Since we are interested in roughly estimating
-            # the maximum PRI, to compute the minimum number of azimuth
-            # lines,  we can use the platform velocity
-            # instead. The platform velocity is always greater
-            # than the ground velocity.
-            geogrid_pixel_max_pri = (min_geogrid_pixel_spacing /
-                                     platform_velocity)
-            info_channel.log(' - Maximum PRI to fit one sample in a'
-                             f' geogrid pixel: {geogrid_pixel_max_pri}')
-
-            # Determine number of lines. Multiply it by two, to
-            # make sure there are at least 2 samples within each
-            # geogrid pixel
-            lines = int(np.ceil(2 * (sensing_end - sensing_start) /
-                                geogrid_pixel_max_pri))
-            info_channel.log(' - Number of lines (with at least 2 samples'
-                             f' within PRI): {lines}')
-
-            # Compute new pulse-repetition interval (PRI)
-            # pulse-repetitition frequency (PRF) and reference epoch 
-            pri = (sensing_end - sensing_start) / (lines - 1)
-            info_channel.log(f' - Resampled radargrid PRI: {pri}')
-
-            prf = 1.0 / pri
-            info_channel.log(f' - Resampled radargrid PRF: {prf}')
-
-            ref_epoch = noise_product.ref_epoch
+            sensing_start, lines, prf, ref_epoch =\
+                self.get_az_parameters_for_noise_equivalent_backscatter_luts(
+                    frequency, input_ds_name_list, metadata_geogrid)
 
         else:
             # read starting and ending sensing time from the RSLC radar grid
@@ -1941,10 +1862,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     error_channel.log(not_found_msg)
                     raise KeyError(not_found_msg)
 
-            # Some LUTs, such as noise-equivalent backscatter LUTs or 1D LUTs, 
-            # require special handling. If the dataset is neither a noise-equivalent 
-            # backscatter LUT nor one-dimensional, create an ISCE3 Raster object 
-            # and proceed to the next iteration of the loop.
+            # Some LUTs, such as noise-equivalent backscatter LUTs or 1D LUTs,
+            # require special handling. If the dataset is neither a
+            # noise-equivalent backscatter LUT nor one-dimensional, create an
+            # ISCE3 Raster object and proceed to the next iteration of the
+            # loop.
             if (not flag_noise_equivalent_backscatter and
                     not flag_luts_are_1d_rg and not flag_luts_are_1d_az):
 
@@ -1995,36 +1917,54 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                         frequency=frequency,
                         pol=var)
 
-                radiometric_calibration_lut = \
-                    self.input_product_obj.getRadiometricCalibrationLUT(
-                        lut_name='beta0', frequency=frequency)
+                # GCOV noise equivalent backscatter LUTs are normalized
+                # based on the GCOV runconfig, from
+                # 'input_terrain_radiometry_enum' (e.g., "beta") to
+                # `output_type_enum` (e.g., "gamma0").
+                #
+                # GSLC noise equivalent backscatter LUTs are provided
+                # in the same radiometry as the input noise equivalent
+                # backscatter LUTs (e.g., "digital numbers")
+                if self.product_type == 'GCOV':
+                    # if GCOV, apply radiometric calibration
 
-                # The radiometric calibration LUT might not fully cover
-                # the noise equivalent backscatter LUT. In that case, since
-                # the beta0 calibration LUT coefficients should be all unity,
-                # we can simply disable bounds checking in order to correctly
-                # calibration samples outside the LUT bounds.
-                radiometric_calibration_lut.bounds_error = False
+                    input_terrain_radiometry_str = \
+                        self.cfg['processing']['rtc'][
+                            'input_terrain_radiometry']
 
-                # `new_var_array` will hold the radiometrically calibrated
-                # noise product
-                new_var_array = np.zeros_like(noise_product.power_linear)
+                    radiometric_calibration_lut = \
+                        self.input_product_obj.getRadiometricCalibrationLUT(
+                            lut_name=input_terrain_radiometry_str,
+                            frequency=frequency)
 
-                slant_ranges = noise_product.slant_range
-                sensing_times = noise_product.az_time
+                    # The radiometric calibration LUT might not fully cover
+                    # the noise equivalent backscatter LUT. In that case, since
+                    # the beta0 calibration LUT coefficients should be all
+                    # unity, we can simply disable bounds checking in order
+                    # to correctly calibrate samples outside the LUT bounds.
+                    radiometric_calibration_lut.bounds_error = False
 
-                for i in range(lines):
+                    # `new_var_array` will hold the radiometrically calibrated
+                    # noise product
+                    new_var_array = np.zeros_like(noise_product.power_linear)
 
-                    radiometric_calibraton_line = \
-                        radiometric_calibration_lut.eval(sensing_times[i],
-                                                         slant_ranges)
+                    slant_ranges = noise_product.slant_range
+                    sensing_times = noise_product.az_time
 
-                    # apply radiometric calibration by dividing the noise power
-                    # by the radiometric calibration slant-range line converted
-                    # to power/intensity (square)
-                    new_var_array[i, :] = \
-                        (noise_product.power_linear[i, :] /
-                         radiometric_calibraton_line ** 2)
+                    for i in range(lines):
+
+                        radiometric_calibraton_line = \
+                            radiometric_calibration_lut.eval(sensing_times[i],
+                                                             slant_ranges)
+
+                        # apply radiometric calibration by dividing the noise
+                        # power by the radiometric calibration slant-range line
+                        # converted to power/intensity (square)
+                        new_var_array[i, :] = \
+                            (noise_product.power_linear[i, :] /
+                             radiometric_calibraton_line ** 2)
+                else:
+                    new_var_array = noise_product.power_linear
 
             temp_file = tempfile.NamedTemporaryFile(dir=scratch_path,
                                                     suffix='.bin')
@@ -2111,7 +2051,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     output_mode=geocode_mode,
                     dem_raster=dem_raster,
                     flag_apply_rtc=flag_apply_rtc,
-                    exponent=exponent)
+                    exponent=exponent,
+                    **geocode_kwargs)
 
         output_raster_obj.close_dataset()
         del output_raster_obj
@@ -2137,3 +2078,118 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         temp_output.close()
 
         return flag_all_succeeded
+
+    def get_az_parameters_for_noise_equivalent_backscatter_luts(
+            self, frequency, input_ds_name_list, metadata_geogrid):
+        """
+        Get azimuth parameters number of lines, pulse-repetition
+        frequency (PRF), and reference epoch for resampling
+        noise equivalent backscatter LUTs to a constant-sampled
+        grid
+
+        Parameters
+        ----------
+        frequency: str, optional
+            Frequency sub-band, used to read the sub-band radar grid and/or
+            wavelength.
+            The sub-band wavelength is only used in geocoding 
+            (during geo2rdr) if the dataset (LUT) is not in the 
+            zero-Doppler geometry
+        input_ds_name_list: list of str
+            List of LUT datasets to geocode
+        metadata_geogrid: isce3.product.GeoGridParameters
+            Geo grid parameters of output raster
+
+        Returns
+        -------
+        sensing_start: float
+            Sensing start, in seconds since the reference epoch.
+        lines: int
+            Number of azimuth lines
+        prf: float
+            Pulse-repetition frequency (PRF), in hertz.
+        ref_epoch: isce3.core.DateTime
+            Reference epoch
+        """
+
+        info_channel = journal.info('geocode_metadata_group')
+
+        info_channel.log(
+                'The LUT to be geocoded is noiseEquivalentBackscatter,'
+                ' which is irregularly sampled along the azimuth direction.'
+                ' Resampling it onto a uniformly spaced azimuth grid.'
+                ' Determining the maximum azimuth pixel spacing from'
+                ' output geogrid:')
+
+        # Retrieve sensing start and end times, assuming
+        # identical zero-Doppler extents across all polarizations
+        first_pol = input_ds_name_list[0]
+        noise_product = \
+            self.input_product_obj.getNoiseEquivalentBackscatter(
+                frequency=frequency, pol=first_pol)
+
+        sensing_start = noise_product.az_time[0]
+        sensing_end = noise_product.az_time[-1]
+        sensing_mid = (sensing_end + sensing_start) / 2.0
+
+        # Verify minimum geogrid pixel spacing in meters
+        epsg_spatial_ref = osr.SpatialReference()
+        epsg_spatial_ref.ImportFromEPSG(metadata_geogrid.epsg)
+        if epsg_spatial_ref.IsGeographic():
+            earth_radius = isce3.core.WGS84_ELLIPSOID.a
+            dy_meters = abs(np.deg2rad(metadata_geogrid.spacing_y) *
+                            earth_radius)
+            lat = (metadata_geogrid.start_y + metadata_geogrid.end_y) / 2
+            radius_ew = earth_radius * np.cos(np.deg2rad(lat))
+            dx_meters = abs(np.deg2rad(metadata_geogrid.spacing_x) *
+                            radius_ew)
+        else:
+            dx_meters = abs(metadata_geogrid.spacing_x)
+            dy_meters = abs(metadata_geogrid.spacing_y)
+
+        min_geogrid_pixel_spacing = min(dx_meters, dy_meters)
+
+        info_channel.log(
+                ' - Output geogrid minimum pixel spacing [m]:'
+                f' {min_geogrid_pixel_spacing}'
+                f' (X: {dx_meters}, Y: {dy_meters}')
+
+        _, vel_mid = self.orbit.interpolate(sensing_mid)
+
+        # ground velocity is always smaller than platform velocity
+        platform_velocity = np.linalg.norm(vel_mid)
+
+        info_channel.log(f' - Platform velocity: {platform_velocity}')
+
+        # To compute the pulse repetition interval (PRI),
+        # one would use the spacing divided by the
+        # velocity, which in this case would be the ground
+        # velocity. Since we are interested in roughly estimating
+        # the maximum PRI, to compute the minimum number of azimuth
+        # lines,  we can use the platform velocity
+        # instead. The platform velocity is always greater
+        # than the ground velocity.
+        geogrid_pixel_max_pri = (min_geogrid_pixel_spacing /
+                                 platform_velocity)
+        info_channel.log(' - Maximum PRI to fit one sample in a'
+                         f' geogrid pixel: {geogrid_pixel_max_pri}')
+
+        # Determine number of lines. Multiply it by two, to
+        # make sure there are at least 2 samples within each
+        # geogrid pixel
+        lines = int(np.ceil(2 * (sensing_end - sensing_start) /
+                            geogrid_pixel_max_pri)) + 1
+        info_channel.log(' - Number of lines (with at least 2 samples'
+                         f' within PRI): {lines}')
+
+        # Compute new pulse-repetition interval (PRI)
+        # pulse-repetitition frequency (PRF) and reference epoch
+        pri = (sensing_end - sensing_start) / (lines - 1)
+        info_channel.log(f' - Resampled radargrid PRI: {pri}')
+
+        prf = 1.0 / pri
+        info_channel.log(f' - Resampled radargrid PRF: {prf}')
+
+        ref_epoch = noise_product.ref_epoch
+
+        return sensing_start, lines, prf, ref_epoch

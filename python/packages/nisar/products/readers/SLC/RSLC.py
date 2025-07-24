@@ -126,10 +126,12 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
 
         Parameters
         ----------
-        lut_name: str
-            Name of the radiometric calibration LUT (e.g., "beta0").
-        freq : "A" or "B"
-            The frequency letter, either "A" or "B".
+        lut_name: isce3.focus.calibration_luts.AreaConvention
+            Area normalization convention of table to retrieve.
+        frequency : "A" or "B" or None, optional
+            The frequency letter, either "A" or "B". 
+            Default is the first available frequency in
+            lexicographical order.
 
         Returns
         -------
