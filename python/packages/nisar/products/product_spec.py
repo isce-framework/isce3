@@ -290,7 +290,7 @@ def get_product_spec_version(xml_string: str) -> str:
     # this may change in the future. This regex should be format-agnostic.
     regex = re.compile(
         r"^<!-- product specification version is (?P<version>\S+) -->$",
-        flags=re.MULTILINE,
+        flags=(re.MULTILINE | re.IGNORECASE),
     )
     if (match := regex.search(xml_string)) is not None:
         return match["version"]
