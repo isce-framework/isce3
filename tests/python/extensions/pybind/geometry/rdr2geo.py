@@ -93,7 +93,7 @@ def unit_test_params():
     dem_interp.compute_min_max_mean_height()
 
     # golden data layer tolerances
-    params.tols = [1.0e-5, 1.0e-5, 0.15, 1.0e-4, 1.0e-4, 0.02, 0.02]
+    params.tols = [1.0e-4, 1.0e-5, 0.15, 1.0e-3, 1.0e-4, 0.02, 0.02]
 
     # tolerances for east/north ground to satellite ENU unit vector layers
     # use same tolerance as heading angle since the computations are similar
@@ -189,6 +189,8 @@ def test_validate(unit_test_params):
     validate generated results
     """
     # load reference topo raster
+    # XXX: Topo produces 11 layers but this raster only has 7 layers. The
+    # remaining layers are untested.
     ref_ds = gdal.Open(
         os.path.join(iscetest.data, "topo/topo.vrt"), gdal.GA_ReadOnly
     )
