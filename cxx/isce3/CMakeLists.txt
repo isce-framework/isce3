@@ -35,7 +35,7 @@ target_compile_features(${LISCE} INTERFACE
 target_include_directories(${LISCE} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/..>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
+    $<INSTALL_INTERFACE:"${ISCE_INCLUDEDIR}">
     )
 
 # Define the preprocessor macro "ISCE3_CUDA" if CUDA is enabled
@@ -48,11 +48,11 @@ endif()
 foreach(HEADER ${HEADERS})
     get_filename_component(DIR ${HEADER} DIRECTORY)
     install(FILES       ${HEADER}
-            DESTINATION include/isce3/${DIR}
+            DESTINATION "${ISCE_INCLUDEDIR}/isce3/${DIR}"
             COMPONENT   isce_libs)
 endforeach()
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/config.h
-        DESTINATION include/isce3/
+        DESTINATION "${ISCE_INCLUDEDIR}/isce3/"
         COMPONENT   isce_libs)
 
 # Specify API version and build version (used to generate name and soname

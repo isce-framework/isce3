@@ -247,8 +247,6 @@ class InSARBaseWriter(h5py.File):
         baseline_ds_shape = [len(heights),
                              grid.length,
                              grid.width]
-        if baseline_mode == 'top_bottom':
-            baseline_ds_shape[0] = 2
 
         # Add the baseline dataset to the cube
         for baseline_name in ['parallel', 'perpendicular']:
@@ -282,8 +280,7 @@ class InSARBaseWriter(h5py.File):
                 ds.attrs['grid_mapping'] = np.bytes_('projection')
                 ds.dims[1].attach_scale(cube_group['yCoordinates'])
                 ds.dims[2].attach_scale(cube_group['xCoordinates'])
-                if baseline_mode == '3D_full':
-                    ds.dims[0].attach_scale(cube_group['heightAboveEllipsoid'])
+                ds.dims[0].attach_scale(cube_group['heightAboveEllipsoid'])
 
     def add_common_to_procinfo_params_group(self):
         """
@@ -497,7 +494,7 @@ class InSARBaseWriter(h5py.File):
     def add_coregistration_to_algo_group(self):
         """
         Add the coregistration parameters to the
-        "processingInfromation/algorithms" group
+        "processingInformation/algorithms" group
         """
         proc_cfg = self.cfg["processing"]
         dense_offsets = proc_cfg["dense_offsets"]["enabled"]
@@ -532,11 +529,11 @@ class InSARBaseWriter(h5py.File):
                 if outlier_filling_method == "fill_smoothed":
                     description = (
                         "iterative filling algorithm using the mean value"
-                        " computed in a neighboorhood centered on the pixel to"
+                        " computed in a neighborhood centered on the pixel to"
                         " fill"
                     )
                 else:
-                    description = "Nearest neighboor interpolation"
+                    description = "Nearest neighbor interpolation"
 
         algo_coregistration_ds_params = [
             DatasetParams(
@@ -803,7 +800,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "orbitFiles",
-                np.bytes_([orbit_file]),
+                np.bytes_(orbit_file),
                 "List of input orbit files used",
             ),
         ]
@@ -929,6 +926,8 @@ class InSARBaseWriter(h5py.File):
             processing_type = np.bytes_('Nominal')
         elif processing_type == 'UR':
             processing_type = np.bytes_('Urgent')
+        elif processing_type == 'OD':
+            processing_type = np.bytes_('Custom')
         else:
             processing_type = np.bytes_('Undefined')
 
@@ -1012,16 +1011,6 @@ class InSARBaseWriter(h5py.File):
                 'Orbit direction, either "Ascending" or "Descending"',
             ),
             DatasetParams(
-                "plannedDatatakeId",
-                "None",
-                "List of planned datatakes included in the product",
-            ),
-            DatasetParams(
-                "plannedObservationId",
-                "None",
-                "List of planned observations included in the product",
-            ),
-            DatasetParams(
                 "isUrgentObservation",
                 "None",
                 'Flag indicating if observation is nominal ("False") or urgent ("True")',
@@ -1058,7 +1047,9 @@ class InSARBaseWriter(h5py.File):
         datasets_to_copy = ["zeroDopplerStartTime",
                             "zeroDopplerEndTime",
                             "absoluteOrbitNumber",
-                            "isJointObservation"]
+                            "isJointObservation",
+                            "plannedObservationId",
+                            "plannedDatatakeId"]
         cap = lambda x: f"{x[0].upper()}{x[1:]}"
 
         for ds_name in datasets_to_copy:
@@ -1082,10 +1073,18 @@ class InSARBaseWriter(h5py.File):
                 f"Azimuth {time_in_description} time (in UTC) of {rslc_name} RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss"
 
         for rslc_name in ['reference', 'secondary']:
-             # Update the description for the absolute orbit numbers
+             # Update descriptions for absolute orbit number, planned datatakes and observation
             ds = dst_id_group[f"{rslc_name}AbsoluteOrbitNumber"]
             ds.attrs['description'] = \
             f'Absolute orbit number for the {rslc_name} RSLC'
+
+            ds = dst_id_group[f"{rslc_name}PlannedDatatakeId"]
+            ds.attrs['description'] = \
+            f'List of planned datatakes included in the {rslc_name} RSLC'
+
+            ds = dst_id_group[f"{rslc_name}PlannedObservationId"]
+            ds.attrs['description'] = \
+            f'List of planned observations included in the {rslc_name} RSLC'
 
             #  Update the description for the isJointObservation
             #  If there is no isJointObservation in the identification group,

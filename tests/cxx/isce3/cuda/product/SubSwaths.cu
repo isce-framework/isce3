@@ -238,7 +238,7 @@ TEST_F(gpuSubSwathsTest, CheckIntermediateValidRgLine)
                                                   dev_srg_inds);
     thrust::host_vector<bool> host_test_results = dev_test_results;
 
-    // Compare test results againt expected results.
+    // Compare test results against expected results.
     auto test_it = host_test_results.begin();
     auto expected_it = expected_results.begin();
     for (;(test_it != host_test_results.end()

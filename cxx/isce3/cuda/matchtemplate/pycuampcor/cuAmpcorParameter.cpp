@@ -407,40 +407,40 @@ void cuAmpcorParameter::checkPixelInImageRange()
             int i = row*numberWindowAcross + col;
             if(referenceStartPixelDown[i] <0)
             {
-                printf("Warning: Reference Window start pixel out ot range in Down, window (%d,%d), pixel %d\n", row, col, referenceStartPixelDown[i]);
+                printf("Warning: Reference Window start pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, referenceStartPixelDown[i]);
             }
             if(referenceStartPixelAcross[i] <0)
             {
-                printf("Warning: Reference Window start pixel out ot range in Across, window (%d,%d), pixel %d\n", row, col, referenceStartPixelAcross[i]);
+                printf("Warning: Reference Window start pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, referenceStartPixelAcross[i]);
             }
             endPixel = referenceStartPixelDown[i] + windowSizeHeightRaw;
             if(endPixel >= referenceImageHeight)
             {
-                printf("Warning: Warning: Reference Window end pixel out ot range in Down, window (%d,%d), pixel %d\n", row, col, endPixel);
+                printf("Warning: Warning: Reference Window end pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, endPixel);
             }
             endPixel = referenceStartPixelAcross[i] + windowSizeWidthRaw;
             if(endPixel >= referenceImageWidth)
             {
-                printf("Warning: Reference Window end pixel out ot range in Across, window (%d,%d), pixel %d\n", row, col, endPixel);
+                printf("Warning: Reference Window end pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, endPixel);
             }
             //secondary
             if(secondaryStartPixelDown[i] <0)
             {
-                printf("Warning: Secondary Window start pixel out ot range in Down, window (%d,%d), pixel %d\n", row, col, secondaryStartPixelDown[i]);
+                printf("Warning: Secondary Window start pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, secondaryStartPixelDown[i]);
             }
             if(secondaryStartPixelAcross[i] <0)
             {
-                printf("Warning: Secondary Window start pixel out ot range in Across, window (%d,%d), pixel %d\n", row, col, secondaryStartPixelAcross[i]);
+                printf("Warning: Secondary Window start pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, secondaryStartPixelAcross[i]);
             }
             endPixel = secondaryStartPixelDown[i] + searchWindowSizeHeightRaw;
             if(endPixel >= secondaryImageHeight)
             {
-                printf("Warning: Secondary Window end pixel out ot range in Down, window (%d,%d), pixel %d\n", row, col, endPixel);
+                printf("Warning: Secondary Window end pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, endPixel);
             }
             endPixel = secondaryStartPixelAcross[i] + searchWindowSizeWidthRaw;
             if(endPixel >= secondaryImageWidth)
             {
-                printf("Warning: Secondary Window end pixel out ot range in Across, window (%d,%d), pixel %d\n", row, col, endPixel);
+                printf("Warning: Secondary Window end pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, endPixel);
             }
 
         }

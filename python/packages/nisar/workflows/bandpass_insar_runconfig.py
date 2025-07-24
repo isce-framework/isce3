@@ -4,7 +4,7 @@ from nisar.workflows.runconfig import RunConfig
 
 class BandpassRunConfig(RunConfig):
     def __init__(self, args):
-        # all insar submodules share a commmon `insar` schema
+        # all insar submodules share a common `insar` schema
         super().__init__(args, 'insar')
 
         self.load_geocode_yaml_to_dict()

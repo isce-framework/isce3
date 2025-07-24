@@ -1,18 +1,20 @@
 """
 Functions and classes for noise power estimation from Raw data
 """
+from __future__ import annotations
 from warnings import warn
 from dataclasses import dataclass
+from collections.abc import Iterator
 
 import numpy as np
 from scipy.interpolate import PchipInterpolator
+import h5py
 
 from isce3.noise import noise_pow_min_var_est, noise_pow_min_eigval_est
 from isce3.focus import fill_gaps
 from nisar.antenna import get_calib_range_line_idx
 from nisar.log import set_logger
-from isce3.core import DateTime
-
+from isce3.core import DateTime, TimeDelta
 
 # Global Noise-related Constants
 # Min number of range bins recommended per noise range block
@@ -89,10 +91,20 @@ class NoiseEstProduct:
 
     Attributes
     ----------
-    power_linear : 1-D array of float
-        Noise power in linear scale in (DN ** 2) as a function of range
+    power_linear : 1-D array or 2-D array of float
+        Noise power in linear scale in (DN ** 2).
+        If 1-D, it represents noise power as a function of slant range
+        and must have the same size as `slant_range`.
+        If 2-D, it represents noise power as a function of slant range
+        at various AZ times/blocks with shape
+        (size of `datetime_utc`, size of `slant_range`).
     slant_range : 1-D array of float
-        Slant range vecTor in (m). Must be the same size as `power_linear`
+        Slant range vector in (m).
+    datetime_utc: str | np.ndarray
+        UTC datetime of the center of the processed azimuth interval,
+        as a string in ISO 8601 format.
+        It is a str for 1-D noise power and an array of str for 2-D
+        noise power.
     enbw : float
         Equivalent noise bandwidth (ENBW) in (Hz)
     txrx_pol : str
@@ -106,6 +118,7 @@ class NoiseEstProduct:
     """
     power_linear: np.ndarray
     slant_range: np.ndarray
+    datetime_utc: str | np.ndarray
     enbw: float
     txrx_pol: str
     freq_band: str
@@ -116,13 +129,48 @@ class NoiseEstProduct:
             raise ValueError('ENBW must be positive value!')
         if self.txrx_pol[1] not in ('H', 'V'):
             raise ValueError('RX Pol must be either "H" or "V"!')
-        if len(self.slant_range) != len(self.power_linear):
+        if self.power_linear.ndim == 1:  # noise is 1-D array
+            if self.slant_range.size != self.power_linear.size:
+                raise ValueError(
+                    'Size mismatch between 1-D Noise Power and '
+                    'slant-range arrays!'
+                )
+        elif self.power_linear.ndim == 2:  # noise is 2-D array
+            if self.power_linear.shape != (
+                    self.datetime_utc.size, self.slant_range.size):
+                raise ValueError(
+                    'Shape mismatch between 2-D Noise Power and '
+                    '(size of datetime_utc, size of slant_range)!'
+                )
+        else:
             raise ValueError(
-                'Size mismatch between Noise Power and Slant-range arrays!'
-            )
+                'Noise power must have either 1 or 2 dimensions!')
 
 
-def extract_noise_only_lines(raw, freq_band, txrx_pol):
+def _slice_gen(n_smp: int, n_smp_blk: int) -> Iterator[slice]:
+    """slice generator.
+
+    Parameters
+    ----------
+    n_smp : int
+        Total number of samples
+    n_smp_blk : int
+        Number of samples per full block
+
+    Yields
+    ------
+    slice
+        slice object for each block.
+        The last block can be partial and have less
+        number of samples than `n_smp_blk`!
+
+    """
+    for i_start in range(0, n_smp, n_smp_blk):
+        i_stop = min(n_smp, i_start + n_smp_blk)
+        yield slice(i_start, i_stop)
+
+
+def extract_noise_only_lines(raw, freq_band, txrx_pol, max_lines=18944):
     """Extract noise-only range lines from a L0B raw dataset.
 
     Parameters:
@@ -134,8 +182,16 @@ def extract_noise_only_lines(raw, freq_band, txrx_pol):
     txrx_pol: str
         Tx and Rx polarization such as
         'HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'
+    max_lines: int, default=18944
+        Max number of noise-only range lines to be extracted
+        from raw raster at a time.
+        This is simply used to limit memory usage in special case where
+        the entire raw raster is treated as noise-only product such as
+        in NISAR L0B product with RCID=1,2,3.
+        RCID is a 8-bit integer representing the mode number in NISAR mode
+        table. RCID is extracted from low rate telemetry if exists.
 
-    Returns:
+    Yields:
     --------
     2D array of complex
         Noise-only echo data
@@ -143,10 +199,40 @@ def extract_noise_only_lines(raw, freq_band, txrx_pol):
         Noise-only true range line indexes
 
     """
+    # special RCIDs (NISAR mode numbers) to be treated as noise-only product
+    rcid_special = (1, 2, 3)
+    # get noise-only range lines if any
     cal_path_mask = raw.getCalType(freq_band, tx=txrx_pol[0])
     _, _, _, noise_index = get_calib_range_line_idx(cal_path_mask)
+    # check if it is a special case with RCID=1,2,3 where there is no
+    # noise-only range line and TX=OFF.
+    # RCID is extracted from low rate telemetry if exists.
     dset = raw.getRawDataset(freq_band, txrx_pol)
-    return dset[noise_index], noise_index
+    if len(noise_index) == 0:  # no noise-only range lines
+        with h5py.File(raw.filename, mode='r', swmr=True) as fid:
+            try:
+                rcids = fid[f'{raw._RootPath}/RRSD/lowRateTelemetry/DRT/'
+                            'IFSW/ST_IFSW_CUR_RCID'][()]
+            except KeyError:
+                # assumed it is not RCID=1,2,or3 but simply
+                # lacks any noise-only range line!
+                yield dset[noise_index], noise_index
+            else:
+                # XXX Use last value to check for RCID given the delay
+                # in updating low-rate telemetry (DRT) for NISAR!
+                if rcids[-1] in rcid_special:
+                    if max_lines < 3:
+                        warn(f'Max number of noise-only lines {max_lines} is '
+                             'too short! The results may be biased!')
+                    # treat all range lines as noise-only data
+                    nrgls, _ = dset.shape
+                    # do blocking in AZ
+                    for rgl_slice in _slice_gen(nrgls, max_lines):
+                        yield dset[rgl_slice], np.arange(
+                            rgl_slice.start, rgl_slice.stop)
+
+    else:  # there exists noise only range lines so not a special mode!
+        yield dset[noise_index], noise_index
 
 
 def enbw_from_raw(raw, freq_band, tx_pol):
@@ -207,7 +293,7 @@ def est_noise_power_from_raw(
         raw, *, num_rng_block=None, algorithm='MEE', cpi=None, diff=True,
         diff_method='single', median_ev=True, dif_quad=False,
         remove_mean=False, perc_invalid_rngblk=PERC_INVALID_NOISE,
-        exclude_first_last=False, logger=None):
+        exclude_first_last=False, logger=None, max_lines=18944):
     """Estimate noise power from a L0B raw product.
 
     Parameters
@@ -265,6 +351,14 @@ def est_noise_power_from_raw(
         RX cal while the last one can be affected by a new config at the
         transition mode. Thus, to avoid any bias, it is safer to exclude them.
     logger : logging.Logger, optional
+    max_lines : int, default=18944
+        Max number of noise-only range lines to be extracted
+        from raw raster at a time.
+        This is simply used to limit memory usage in special case where
+        the entire raw raster is treated as noise-only product such as
+        in NISAR L0B product with RCID=1,2,3.
+        RCID is a 8-bit integer representing the mode number in NISAR mode
+        table. RCID is extracted from low rate telemetry if exists.
 
     Returns
     -------
@@ -371,35 +465,87 @@ def est_noise_power_from_raw(
             # removing undesired deterministic signals
             # repeated almost equally in both products.
             # Thus, simply loop over RX pols per band!
-
             for rx_pol in ('H', 'V'):
                 txrx_pols = [tx_pol + rx_pol for tx_pol in ('H', 'V')]
                 logger.info(
                     'Processing TX co-pol and cx-pol jointly for frequency '
                     f'band {freq_band} and Rx Pol {rx_pol} ...'
                 )
+                # parse valid sub-swath and slant range
+                sbsw = raw.getSubSwaths(freq_band, rx_pol)
+                num_rgls = sbsw.shape[1]
+                nrgl_mid = num_rgls // 2
+                sr_lsp = raw.getRanges(freq_band, rx_pol)
+                # get pulse time and reference epoch
+                epoch, aztime = raw.getPulseTimes(freq_band, rx_pol)
+                # calculate approximate ENBW for relatively white noise!
+                enbw = enbw_from_raw(raw, freq_band, rx_pol)
+                logger.info(f'Approximate ENBW in (MHz) -> {enbw * 1e-6}')
                 # parse two noise datasets
-                dset_noise1, idx_rgl_ns = extract_noise_only_lines(
-                    raw, freq_band, txrx_pols[0])
-                dset_noise2, _ = extract_noise_only_lines(
-                    raw, freq_band, txrx_pols[1])
-                assert dset_noise1.shape == dset_noise2.shape, (
-                    f"Shape mismatch between {txrx_pols[0]} and {txrx_pols[1]}"
-                )
-                # subtract the two products with the same RX pol
-                dset_noise = dset_noise1 - dset_noise2
-                if exclude_first_last:
-                    logger.info(
-                        'Exclude the first and last noise range lines.')
-                    dset_noise = dset_noise[1:-1]
-                    idx_rgl_ns = idx_rgl_ns[1:-1]
-                # get noise product
-                ns_prod = _noise_product_rng_blocks(
-                    raw, dset_noise, idx_rgl_ns, freq_band, 2 * rx_pol,
-                    algorithm, cpi, num_rng_block, 0.5, diff,
-                    diff_method, median_ev, remove_mean,
-                    perc_invalid_rngblk, logger
-                )
+                # loop over several AZ blocks of noise-only range lines
+                noise_power_azblk = []
+                az_dt_utc = []
+                for (dset_noise1, idx_rgl_ns), (dset_noise2, _) in zip(
+                    extract_noise_only_lines(
+                        raw, freq_band, txrx_pols[0], max_lines),
+                    extract_noise_only_lines(
+                        raw, freq_band, txrx_pols[1], max_lines)
+                ):
+                    assert dset_noise1.shape == dset_noise2.shape, (
+                        f'Shape mismatch between {txrx_pols[0]} and '
+                        f'{txrx_pols[1]}'
+                    )
+                    # subtract the two products with the same RX pol
+                    dset_noise = dset_noise1 - dset_noise2
+                    if exclude_first_last:
+                        logger.info(
+                            'Exclude the first and last noise range lines.')
+                        dset_noise = dset_noise[1:-1]
+                        idx_rgl_ns = idx_rgl_ns[1:-1]
+                    # get valid sub-swath for noise-only range lines
+                    sbsw_ns = sbsw[:, idx_rgl_ns]
+                    # get mid az time
+                    if len(idx_rgl_ns) > 0:
+                        azt_mid = aztime[np.mean(idx_rgl_ns, dtype=int)]
+                    else:
+                        azt_mid = aztime[nrgl_mid]
+                    az_datetime = epoch + TimeDelta(azt_mid)
+                    az_datetime_utc = az_datetime.isoformat()
+                    # get noise product
+                    ns_prod = _noise_product_rng_blocks(
+                        dset_noise,
+                        sbsw_ns,
+                        sr_lsp,
+                        enbw,
+                        az_datetime_utc,
+                        freq_band,
+                        2 * rx_pol,
+                        algorithm,
+                        cpi,
+                        num_rng_block,
+                        0.5,
+                        diff,
+                        diff_method,
+                        median_ev,
+                        remove_mean,
+                        perc_invalid_rngblk,
+                        logger
+                    )
+                    # store noise powers for each AZ block
+                    noise_power_azblk.append(ns_prod.power_linear)
+                    az_dt_utc.append(ns_prod.datetime_utc)
+                # Form a new noise product with 2-D noise power and 1-D
+                # AZ datetime only if there is more than one AZ block!
+                if len(noise_power_azblk) > 1:
+                    ns_prod = NoiseEstProduct(
+                        np.asarray(noise_power_azblk),
+                        ns_prod.slant_range,
+                        np.asarray(az_dt_utc),
+                        ns_prod.enbw,
+                        ns_prod.txrx_pol,
+                        ns_prod.freq_band,
+                        ns_prod.method
+                    )
                 noise_prods.append(ns_prod)
 
         else:  # other pol types than QP
@@ -408,21 +554,71 @@ def est_noise_power_from_raw(
                     'Processing individually frequency band '
                     f'{freq_band} and Pol {txrx_pol} ...'
                 )
+                # parse valid sub-swath and slant range
+                sbsw = raw.getSubSwaths(freq_band, txrx_pol[0])
+                num_rgls = sbsw.shape[1]
+                nrgl_mid = num_rgls // 2
+                sr_lsp = raw.getRanges(freq_band, txrx_pol[0])
+                # get pulse time and reference epoch
+                epoch, aztime = raw.getPulseTimes(freq_band, txrx_pol[0])
+                # calculate approximate ENBW for relatively white noise!
+                enbw = enbw_from_raw(raw, freq_band, txrx_pol[0])
+                logger.info(f'Approximate ENBW in (MHz) -> {enbw * 1e-6}')
                 # parse one noise dataset
-                dset_noise, idx_rgl_ns = extract_noise_only_lines(
-                    raw, freq_band, txrx_pol)
-                if exclude_first_last:
-                    logger.info(
-                        'Exclude the first and last noise range lines.')
-                    dset_noise = dset_noise[1:-1]
-                    idx_rgl_ns = idx_rgl_ns[1:-1]
-                # get noise product
-                ns_prod = _noise_product_rng_blocks(
-                    raw, dset_noise, idx_rgl_ns, freq_band, txrx_pol,
-                    algorithm, cpi, num_rng_block, 1.0, diff,
-                    diff_method, median_ev, remove_mean,
-                    perc_invalid_rngblk, logger
-                )
+                # loop over several AZ blocks of noise-only range lines
+                noise_power_azblk = []
+                az_dt_utc = []
+                for (dset_noise, idx_rgl_ns) in extract_noise_only_lines(
+                        raw, freq_band, txrx_pol, max_lines):
+                    if exclude_first_last:
+                        logger.info(
+                            'Exclude the first and last noise range lines.')
+                        dset_noise = dset_noise[1:-1]
+                        idx_rgl_ns = idx_rgl_ns[1:-1]
+                    # get valid sub-swath for noise-only range lines
+                    sbsw_ns = sbsw[:, idx_rgl_ns]
+                    # get mid az time
+                    if len(idx_rgl_ns) > 0:
+                        azt_mid = aztime[np.mean(idx_rgl_ns, dtype=int)]
+                    else:
+                        azt_mid = aztime[nrgl_mid]
+                    az_datetime = epoch + TimeDelta(azt_mid)
+                    az_datetime_utc = az_datetime.isoformat()
+                    # get noise product
+                    ns_prod = _noise_product_rng_blocks(
+                        dset_noise,
+                        sbsw_ns,
+                        sr_lsp,
+                        enbw,
+                        az_datetime_utc,
+                        freq_band,
+                        txrx_pol,
+                        algorithm,
+                        cpi,
+                        num_rng_block,
+                        1.0,
+                        diff,
+                        diff_method,
+                        median_ev,
+                        remove_mean,
+                        perc_invalid_rngblk,
+                        logger
+                    )
+                    # store noise powers for each AZ block
+                    noise_power_azblk.append(ns_prod.power_linear)
+                    az_dt_utc.append(ns_prod.datetime_utc)
+                # Form a new noise product with 2-D noise power and 1-D
+                # AZ datetime only if there is more than one AZ block!
+                if len(noise_power_azblk) > 1:
+                    ns_prod = NoiseEstProduct(
+                        np.asarray(noise_power_azblk),
+                        ns_prod.slant_range,
+                        np.asarray(az_dt_utc),
+                        ns_prod.enbw,
+                        ns_prod.txrx_pol,
+                        ns_prod.freq_band,
+                        ns_prod.method
+                    )
                 noise_prods.append(ns_prod)
 
     return noise_prods
@@ -544,20 +740,40 @@ def _check_noise_validity(
     return len(valid_lines) != 0, valid_lines
 
 
-def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
-                              txrx_pol, algorithm, cpi,
-                              num_rng_block, scalar, diff, diff_method,
-                              median_ev, remove_mean, perc_invalid_rngblk,
-                              logger):
-    """Helper function ot get noise product per frequency band and RX Pol.
+def _noise_product_rng_blocks(
+        dset_noise,
+        sbsw_ns,
+        sr_lsp,
+        enbw,
+        az_datetime,
+        freq_band,
+        txrx_pol,
+        algorithm,
+        cpi,
+        num_rng_block,
+        scalar,
+        diff,
+        diff_method,
+        median_ev,
+        remove_mean,
+        perc_invalid_rngblk,
+        logger):
+    """Helper function to get noise product per frequency band and RX Pol.
 
     Parameters
     ----------
-    raw : nisar.products.reader.Raw
     dset_noise : np.ndarray
         2-D array of noisy dataset with shape (range lines, range bins)
-    idx_rgl_ns : np.ndarray
-        1-D array of indexes for noise-only range lines.
+    sbsw_ns : np.ndarray
+        3-D array of valid subswath for noise-only range lines with shape
+        (number of valid subswath, range lines, 2). The number of range lines
+        must be the same as that of dset_noise
+    sr_lsp : isce3.core.Linspace
+        Slant range values in (m).
+    enbw : float
+        Equivalent noise bandwidth (ENBW) in (Hz).
+    az_datetime: str
+        AZ date-time in UTC ISO8601 to represent the noise block.
     freq_band : str, {'A', 'B'}
         frequency band char
     txrx_pol : str
@@ -617,14 +833,10 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
     logger.info('Number of noise-only range (lines, bins) '
                 f'-> ({nrgls}, {nrgbs})')
 
-    # parse valid sub-swath for noise-only range lines
-    sbsw_ns = raw.getSubSwaths(freq_band, txrx_pol[0])[:, idx_rgl_ns]
     # fill-in TX gap regions with invalid value for noise-only range lines
     # This is to guarantee TX gap regions are mitigated and filled with
     # a common invalid value!
     fill_gaps(dset_noise, sbsw_ns, INVALID_VALUE)
-    # get slant range vector
-    sr_lsp = raw.getRanges(freq_band, txrx_pol[0])
     # get range block slices
     rg_slices = _range_slice_gen(nrgbs, num_rng_block)
     # initialize the outputs
@@ -669,11 +881,13 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
                 cpi = min(max(
                     min(nrgl_valid, 3),
                     np.ceil(nrgl_valid / max_num_cpi_blocks).astype(int)
-                    ), MAX_CPI_LEN)
-            elif cpi > MAX_CPI_LEN:
-                logger.warning(
-                    f'Too large CPI value! It exceeds max {MAX_CPI_LEN}!'
-                )
+                ), MAX_CPI_LEN)
+            else:
+                cpi = min(nrgl_valid, cpi)
+                if cpi > MAX_CPI_LEN:
+                    logger.warning(
+                        f'Too large CPI value! It exceeds max {MAX_CPI_LEN}!'
+                        )
             logger.info(f'MEE CPI size -> {cpi}')
             pow_noise[nn] = noise_pow_min_eigval_est(
                 noise_rng_blk[idx_valid], cpi, scalar=scalar,
@@ -693,11 +907,9 @@ def _noise_product_rng_blocks(raw, dset_noise, idx_rgl_ns, freq_band,
             f'{sr_noise[nn] * 1e-3:.3f})'
         )
     # store noise product for all blocks
-    # calculate approximate ENBW for relatively white noise!
-    enbw = enbw_from_raw(raw, freq_band, txrx_pol[0])
-    logger.info(f'Approximate ENBW in (MHz) -> {enbw * 1e-6}')
     return NoiseEstProduct(
-        pow_noise, sr_noise, enbw, txrx_pol, freq_band, algorithm)
+        pow_noise, sr_noise, az_datetime, enbw, txrx_pol, freq_band, algorithm
+    )
 
 
 def est_noise_power_in_focus(

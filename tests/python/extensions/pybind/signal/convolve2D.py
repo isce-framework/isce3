@@ -5,7 +5,7 @@ import isce3.ext.isce3 as isce3
 
 def get_dims():
     '''
-    Return data and kernel dimenstions
+    Return data and kernel dimensions
     '''
     length = 200
     width = 310

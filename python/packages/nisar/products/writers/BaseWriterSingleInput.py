@@ -85,13 +85,7 @@ def get_granule_id_single_input(input_obj, partial_granule_id, freq_pols_dict):
         mode_str += mode
 
         pols = freq_pols_dict[freq]
-        pols_code = get_polarization_code(pols, default="XX")
-        if pols_code == "XX":   # pol set not found
-            error_msg = ('Could not find polarization mode for input'
-                         f' set of polarizations: {pols}')
-            error_channel.log(error_msg)
-            raise NotImplementedError(error_msg)
-        pol_mode_str += pols_code
+        pol_mode_str += get_polarization_code(pols, default="XX")
 
     # mode_str should have 4 characters
     if len(mode_str) != 4:
@@ -505,7 +499,7 @@ class BaseWriterSingleInput():
 
         self.output_product_path = f'{self.root_path}/{self.product_type}'
 
-        self.input_hdf5_obj = h5py.File(self.input_file, mode='r')
+        self.input_hdf5_obj = h5py.File(self.input_file, mode='r', swmr=True)
         self.output_hdf5_obj = h5py.File(self.output_file, mode='a')
 
     def populate_metadata(self):
@@ -667,11 +661,13 @@ class BaseWriterSingleInput():
             self.cfg['primary_executable']['processing_type']
 
         if processing_type_runconfig == 'PR':
-            processing_type = np.bytes_('NOMINAL')
+            processing_type = np.bytes_('Nominal')
         elif processing_type_runconfig == 'UR':
-            processing_type = np.bytes_('URGENT')
+            processing_type = np.bytes_('Urgent')
+        elif processing_type_runconfig == 'OD':
+            processing_type = np.bytes_('Custom')
         else:
-            processing_type = np.bytes_('UNDEFINED')
+            processing_type = np.bytes_('Undefined')
         self.set_value(
             'identification/processingType',
             processing_type,
@@ -917,7 +913,7 @@ class BaseWriterSingleInput():
         Parameters
         ----------
         specs_xml_file: str
-            Product specfications XML file
+            Product specifications XML file
         """
 
         specs = ET.ElementTree(file=specs_xml_file)

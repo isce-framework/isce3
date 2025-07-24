@@ -62,14 +62,14 @@ def test_cheby_equi_ripple_filter():
     npt.assert_allclose(rect_bw_est, bandwidth, rtol=rtol_bw,
                         err_msg='Wrong bandwidth!')
 
-    # get the expected [low, high[ index wihtin pass-band region
+    # get the expected [low, high[ index within pass-band region
     frq_pass_low = -0.5 * bandwidth + centerfreq
     frq_pass_high = 0.5 * bandwidth + centerfreq
     idx_pass_low = bisect.bisect_left(freq, frq_pass_low)
     idx_pass_high = bisect.bisect_right(freq, frq_pass_high)
     slice_pass = slice(idx_pass_low, idx_pass_high)
 
-    # make sure the peak occurs wihtin expected [low,high[ of passband
+    # make sure the peak occurs within expected [low,high[ of passband
     idx_max = pow_spec.argmax()
     npt.assert_equal(idx_pass_low <= idx_max and idx_max <= idx_pass_high,
                      True, err_msg='The peak gain occurs outside expected \
@@ -245,6 +245,9 @@ def test_bandpass(width, fc):
                                       transition_width=tw, force_odd_len=odd)
     # compute frequency response over entire unit circle
     f, H = sig.freqz(h, fs=1.0, whole=True)
+    # Workaround for scipy=1.16.0
+    # (see https://github.com/isce-framework/isce3/pull/49#issuecomment-3025125318).
+    f = f.real
     a, b = transition_region(width, tw)
     # should have unit gain in passband with ripple < -att
     mask_pass = wrapped_distance(f - fc) < a

@@ -401,7 +401,7 @@ def filter_crs_per_az_heading(crs, az_heading, az_atol=np.deg2rad(20.0)):
     az_heading : float
         Desired AZ/heading angle in radians w.r.t. geographic North.
     az_atol : float, default=20.0 degrees
-        Absolute tolerance in radians when comapring AZ of CRs with
+        Absolute tolerance in radians when comparing AZ of CRs with
         `az_heading`. The default is around 0.5 * HBPW of an ideal
         triangular trihedral CR (HPBW ~ 40 deg).
 

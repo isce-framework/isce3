@@ -46,7 +46,7 @@ public:
     int windowSizeWidthRawEnlarged; ///< Template window width Enlarged to search window size for oversampling
 
     int searchWindowSizeHeightRaw;  ///< Search window height (original size)
-    int searchWindowSizeWidthRaw;   ///< Search window width (orignal size)
+    int searchWindowSizeWidthRaw;   ///< Search window width (original size)
 
     int halfSearchRangeDownRaw;   ///< (searchWindowSizeHeightRaw-windowSizeHeightRaw)/2
     int halfSearchRangeAcrossRaw;    ///< (searchWindowSizeWidthRaw-windowSizeWidthRaw)/2

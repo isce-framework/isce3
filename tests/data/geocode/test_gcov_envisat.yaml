@@ -1,0 +1,82 @@
+runconfig:
+    name: gcov_workflow_default
+
+    groups:
+        pge_name_group:
+            pge_name: GCOV_L_PGE
+
+        input_file_group:
+            input_file_path: @ISCETEST@/envisat.h5
+        dynamic_ancillary_file_group:
+            dem_file: @ISCETEST@/geocode/zeroHeightDEM.geo
+        product_path_group:
+            # Directory where PGE will place results. Irrelevant to SAS.
+            product_path: '.'
+            # Directory where SAS can write temporary data
+            scratch_path: '.'
+            # SAS writes output product to the following file. PGE may rename.
+            # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RCOV workflow.
+            sas_output_file: to_be_set_within_test_code
+
+        primary_executable:
+            product_type: GCOV
+
+        debug_level_group:
+            debug_switch: false
+
+        worker:
+            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
+            internet_access: False
+
+            # OPTIONAL - To explicitly use GPU capability if available. Default False
+            gpu_enabled: False
+
+        #adt section - isce3 + pyre workflow
+        processing:
+            input_subset:                 # {optional} List of frequencies to process. Default empty representing all
+                list_of_frequencies:
+                    A: ['HH']
+            dem_download:   #{optional} Only checked when internet access is available
+                source: #{optional} s3 bucket / curl URL / local file
+                top_left:
+                    x:
+                    y:
+                bottom_right:
+                    x:
+                    y:
+
+            rtc:                                # {optional} RTC options
+                output_type: gamma0               # {optional} Choices: “None” (to turn off RTC) or “gamma0”
+                algorithm_type: area_projection   # {optional} Choices: "area_projection" (default) and "bilinear_distribution"
+                input_terrain_radiometry: sigma0  # {optional} Choices: "beta0" and "sigma0"
+                rtc_min_value_db: -30             # {optional} Minimum RTC area factor in dB
+
+            geocode:        #{optional} Mechanism to specify output posting and DEM
+                algorithm_type: area_projection # {optional} Choices: "area_projection" (default) and "interp"
+                memory_mode: auto                # {optional} Choices: "auto", "single-block" "blocks-geogrid", and "blocks-geogrid-and-radargrid"
+                geogrid_upsampling: 1      # {optional} Processing upsampling factor on top of the input geogrid
+                save_nlooks: True          # {optional} Save the number of looks used to compute GCOV
+                abs_rad_cal: 1             # {optional} Absolute radiometric correction factor
+                output_epsg: 4326          # {optional} Same as input DEM if not provided.
+                x_snap:                    # {optional} To control output grid in same units as output EPSG
+                y_snap:                    # {optional} To control output grid in same units as output EPSG
+                output_posting:
+                    A:
+                        x_posting:  0.002  # {required} In same units as output EPSG
+                        y_posting:  8.0e-4 # {required} In same units as output EPSG
+                    B:
+                        x_posting:
+                        y_posting:
+                top_left:     #{optional} Can control with absolute values or with snap values
+                    y_abs: 34.85   #{optional} Set top-left y in same units as output EPSG
+                    x_abs: -115.65    #{optional} Set top-left x in same units as output EPSG
+                bottom_right: #{optional} Can control with absolute values or with snap values
+                    y_abs: 34.8
+                    x_abs: -115.5
+            geo2rdr:
+                threshold: 1.0e-8
+                maxiter: 25
+
+            noise_correction:
+                apply_correction: False  # Note, this is overwritten by the unit test itself (we test both True and False)
+                correction_type:

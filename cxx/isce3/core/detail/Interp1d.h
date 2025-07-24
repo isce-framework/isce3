@@ -6,7 +6,7 @@
 
 namespace isce3::core::detail {
 
-/** Get interpolator coefficents for a given offset.
+/** Get interpolator coefficients for a given offset.
  *
  * @param[in]  kernel Kernel function to use for interpolation.
  * @param[in]  t      Desired time sample (0 <= t < array_size).
@@ -46,7 +46,7 @@ void interp1d_coeffs(const Kernel<KernelType>& kernel, const double t,
  * @param[in]  low      Index to start of selection.
  * @param[in]  data     Buffer to take selection from.
  * @param[in]  size     Size of buffer (number of elements).
- * @param[in]  stride   Stride betwen elements in data buffer.
+ * @param[in]  stride   Stride between elements in data buffer.
  * @param[in]  periodic Whether to use periodic boundary condition.
  *
  * @returns Pointer to contiguous selection in `data` or to `block` if copied.

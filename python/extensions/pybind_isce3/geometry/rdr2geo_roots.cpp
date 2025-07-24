@@ -62,7 +62,7 @@ void addbinding_rdr2geo_roots(py::module& m)
                 If doppler=0 then wavelength has no effect on the solution
                 (as long as it is finite).
             dem : isce3.geometry.DEMInterpolator, optional
-                Digital elevation model provding height in meters above the
+                Digital elevation model providing height in meters above the
                 WGS84 ellipsoid.  Defaults to an object that returns zero
                 everywhere.
             tol_height : float, optional

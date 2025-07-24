@@ -459,7 +459,7 @@ class FaradayRotEstBickelBates(FaradayRotAngleSlc):
 
     This method is time-spatial domain approach. However, the frequency
     domain version of this method is also jointly implemented.
-    The frequency doamin is based on the slope of the linear
+    The frequency domain is based on the slope of the linear
     regression of FR angle as a function of RF frequency to
     extract the mean FR angle at the center of the RF band as described
     in [PAPATHAN2017]_.
@@ -589,7 +589,7 @@ class FaradayRotEstBickelBates(FaradayRotAngleSlc):
         The frequency-domain version of this where the slope of the linear
         regression of FR angle as a function of RF frequency is employed to
         extract the mean FR angle at the center of the RF band is also
-        implemenetd [PAPATHAN2017]_.
+        implemented [PAPATHAN2017]_.
 
         Parameters
         ----------
@@ -802,7 +802,7 @@ class FaradayRotEstBickelBates(FaradayRotAngleSlc):
                     mmap_blk_lr_fft[:az_blksz] *= (
                         mmap_blk_rl_fft[:az_blksz].conj())
 
-                    # get FR angle varation in fast-time frequency by
+                    # get FR angle variation in fast-time frequency by
                     # averaging over azimuth, take fftshift in range, and
                     # limit fast-time frequency within around [-BW/2, BW/2]
                     z_fft = fft.fftshift(

@@ -2,6 +2,7 @@
 Function to estimate roll angle offset from rising edge of two-way power
 patterns extracted from L0b and antenna products via edge method.
 """
+from __future__ import annotations
 import os
 import bisect
 import numpy as np
@@ -77,7 +78,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         region. If the block is invalid, then no plot will be generated for
         that block.
     out_path : str, default='.'
-        Ouput directory for dumping PNG files, if `plot` is True.
+        Output directory for dumping PNG files, if `plot` is True.
     logger : logging.Logger, optional
         If not provided a logger with StreamHandler will be set.
 
@@ -163,17 +164,20 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
     prefix = 'EL_Rising_Edge_Plot'
     # polyfit degree for echo, antenna, weights used in cost function
     pf_deg = 3
-    # Number of taps in DBF process
+    # Max number of taps in a DBF process
     num_taps_dbf = 3
     # EL angle margin on either ends of antenna EL coverage of rising edge.
-    # Shall be set to Max error = +/- ~0.5
-    el_margin_deg = 0.5
+    # Shall be set to Max detectable offset based on NISAR nominal science
+    # that is, EL margin ~ 0.2 degrees!
+    el_margin_deg = 0.2
     # Number of range bins of range block to be averaged
     size_rgb_avg = 8
     # EL angle resolution in cost function
     el_res_deg = 1e-3
     # 1-D Interpolation method used in EL direction for look angle -> EL angle
     interp_method_el = 'linear'
+    # Max el angle spacing in antenna EL cuts
+    el_spacing_max_deg = 0.025
 
     # set logger
     if logger is None:
@@ -186,6 +190,9 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
             plot = False
 
     # Check inputs
+    if raw.identification.diagnosticModeFlag != 0:
+        raise RuntimeError('Expected Science/DBF-mode Raw Echo but got '
+                           f'{raw.identification.diagnosticModeName}!')
 
     # Check frequency band
     if freq_band not in raw.polarizations:
@@ -210,12 +217,12 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         beam_num = 1
     else:
         if (beam_num < 1 or beam_num > ant.num_beams(txrx_pol[1])):
-            raise ValueError('Beam number is out of range!')
+            raise ValueError(
+                f'Beam number {beam_num} is out of range '
+                f'{ant.num_beams(txrx_pol[1])}!')
 
     # Get raw dataset
     raw_dset = raw.getRawDataset(freq_band, txrx_pol)
-    if raw_dset.ndim != 2:
-        raise RuntimeError('Expected 2-D Science Raw Echo!')
     num_rgls, num_rgbs = raw_dset.shape
     logger.info('Shape of the Raw echo data (pulses, ranges) -> '
                 f'({num_rgls, num_rgbs})')
@@ -321,9 +328,14 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
             'required to form TX BMF pattern!'
         )
     # Parse El-cut info of Rx and TX individual beams
-    rx_beams_el = ant.el_cut_all(txrx_pol[1])
+    rx_beams_el = ant.el_cut_all(
+        txrx_pol[1], spacing_max_deg=el_spacing_max_deg)
+    el_spacing_mdeg = rad2mdeg(rx_beams_el.angle[1] - rx_beams_el.angle[0])
+    logger.info('Using EL angle spacing for EL antenna patterns -> '
+                f'{el_spacing_mdeg:.1f} (mdeg)')
     if txrx_pol[0] != txrx_pol[1]:
-        tx_beams_el = ant.el_cut_all(txrx_pol[0])
+        tx_beams_el = ant.el_cut_all(
+            txrx_pol[0], spacing_max_deg=el_spacing_max_deg)
         # RX and TX beams must have the same EL angle coverage/array for
         # patterns of X-Pol product
         is_tx_equal_rx_el = (np.isclose(rx_beams_el.angle[0],
@@ -348,15 +360,19 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
     # Set the max EL angle for antenna patterns and the echo data.
     # For single-channel, the max EL angle shall be below peak location.
     # Fo the sweepSAR case, the first peak (ripple) of the DBFed pattern
-    # occurs somewhere between the peak of beam # 2 and # 3. It may or
-    # may not be within desired leading edge in flight. Thus, the peak
-    # of second beam along with a marigin is used to defined max EL angle
-    # for antenna in sweepsar SAR case.
+    # occurs somewhere between the peak of beam # 1 and # 2 given non-three
+    # DBF! Given variable number of taps, the antenna and echo EL coverage
+    # shall be the same (no extra margins for antenna!).
+    # Thus, the max EL shall be set to peak location of second beam minus
+    # some margin where that margin is around max possible EL offset
+    # estimation. Given current instrument setup for NISAR science
+    # mode, the max value is around 0.25 degrees!
     # In either case, make sure EL angle coverage for echo is smaller than
     # that of antenna, and both are within rising edge below the first peak.
     if is_sweepsar:
-        el_ant_max = el_peak + el_margin
-        el_echo_max = el_peak
+        # make sure both antenna and echo coverage is exactly the same
+        el_ant_max = el_peak - el_margin
+        el_echo_max = el_peak - el_margin
     else:  # single-channel SAR
         el_ant_max = el_peak
         el_echo_max = el_peak - el_margin
@@ -421,22 +437,56 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
     sr_start = sr_linspace.first
     logger.info('slant range (start, spacing) -> '
                 f'({sr_start:.3f}, {sr_spacing:.3f}) (m, m)')
-
-    # parse valid subswath index for all range lines used later
-    valid_sbsw_all = raw.getSubSwaths(freq_band, txrx_pol[0])
-
-    # Use TX Calibration components HPA and BYPASS to build complex TX
-    # weighting defined by the averaged ratio of the HPA CAL to BYPASS CAL.
-    # This approach includes both mag/phase of the key parts of TX path.
-    # Alternatively, one may use the TX phases covering the phase of
-    # entire TX path and ignoring the magnitude by assuming the TX channels
-    # are pretty-well balanced magnitude-wise due to HPAs operating in
-    # saturation mode.
-    # Note that phase imbalance is key driving factor in forming TX pattern.
-    # However, the channel imbalances only affect overlapped regions of
-    # beams (part of leading edge).
-    # TX patterns.
+    # Determine the number of range bins to skip at the start
+    # of range line. Also compute the relative starting range
+    # bin for the first `num_taps_dbf` to be used for RX DBFed
+    # pattern later on.
+    rgb_first = 0
     if is_sweepsar:
+        fs_echo = 0.5 * speed_of_light / sr_spacing
+        logger.info(f'Echo sampling rate -> {fs_echo * 1e-6:.3f} (MHz)')
+        rd, wd, wl = raw.getRdWdWl(freq_band, txrx_pol)
+        fs_dbf = raw.getSampleRateDBF(freq_band, txrx_pol)
+        logger.info(f'DBF sampling rate -> {fs_dbf * 1e-6:.3f} (MHz)')
+        # function to rescale range bins from DBF sampling rate
+        # to product sampling rate
+        fs_echo2dbf = fs_echo / fs_dbf
+
+        def _rgb_dbf2echo(nrgb_dbf):
+            return np.round(nrgb_dbf * fs_echo2dbf).astype(int)
+
+        # get DWP and WL for those RX channels involved in RX DBF
+        dwp_dbf = rd[:, :num_taps_dbf] + wd[:, :num_taps_dbf]
+        wl_dbf = wl[:, :num_taps_dbf]
+        # Determine the number of range bins to skip at the start
+        # of range line per min/max of the first DWP, RD1 + WD1
+        nrgb_skip_dbf = np.nanmax(dwp_dbf[:, 0]) - np.nanmin(dwp_dbf[:, 0])
+        rgb_first = int(np.ceil(nrgb_skip_dbf * fs_echo2dbf))
+        logger.info(
+            f'Start range bin for the rising edge is set to -> {rgb_first}'
+        )
+        sr_start += rgb_first * sr_spacing
+        logger.info(
+            f'Start slant range in rising edge is set to -> {sr_start:.3f} (m)'
+        )
+        # update number of range bins of echo used in rising edge
+        num_rgbs -= rgb_first
+        logger.info('Total number of range bins of echo available for '
+                    f'rising edge analysis -> {num_rgbs}')
+
+        # Use TX Calibration components HPA and BYPASS to build complex TX
+        # weighting defined by the averaged ratio of the HPA CAL to BYPASS CAL.
+        # This approach includes both mag/phase of the key parts of TX path.
+        # Alternatively, one may use the TX phases covering the phase of
+        # entire TX path and ignoring the magnitude by assuming the TX channels
+        # are pretty-well balanced magnitude-wise due to HPAs operating in
+        # saturation mode.
+        # Note that phase imbalance is key driving factor in forming TX
+        # pattern.
+        # However, the channel imbalances only affect overlapped regions of
+        # beams (part of leading edge).
+        # TX patterns.
+
         # Last TX beam needed to form TX BMF pattern valid within rising edge
         beam_num_stop_tx = min(beam_num_peak + num_taps_dbf,
                                ant.num_beams(txrx_pol[0]))
@@ -453,7 +503,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
             np.arange(1, beam_num_stop_tx + 1),
             raw.getChirpCorrelator(freq_band, txrx_pol[0])[..., 1],
             raw.getCalType(freq_band, txrx_pol[0])
-            )
+        )
         # get TX weights to be used to form Tx pattern in EL.
         tx_cal_ratio = compute_transmit_pattern_weights(
             tx_trm_info, norm=True)
@@ -472,6 +522,9 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
     else:  # no weighting
         logger.warning('No weighting will be applied to the cost function!')
         pf_wgt = Poly1d([1.0])
+
+    # parse valid subswath index for all range lines used later
+    valid_sbsw_all = raw.getSubSwaths(freq_band, txrx_pol[0])
 
     # initialize return values for containers
     mask_valid = np.ones(num_azimuth_block, dtype=bool)
@@ -506,7 +559,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                                                      dem_interp)
         logger.info(
             'Estimated starting off-nadir angle -> '
-            f'{np.rad2deg(lka_first):.2f} (deg)'
+            f'{np.rad2deg(lka_first):.3f} (deg)'
         )
         # Get approximate first (starting) antenna EL angle per estimated
         # Mechanical boresight (MB) in radians
@@ -514,11 +567,11 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         el_echo_first = lka_first - mb_ang
         logger.info(
             'Estimated mechanical boresight angle -> '
-            f'{np.rad2deg(mb_ang):.2f} (deg)'
+            f'{np.rad2deg(mb_ang):.3f} (deg)'
         )
         logger.info(
             'Estimated starting EL angle -> '
-            f'{np.rad2deg(el_echo_first):.2f} (deg)'
+            f'{np.rad2deg(el_echo_first):.3f} (deg)'
         )
         # check if the antenna starting EL angle is equal or less than the
         # "el_echo_first". If not issue an error due to lack of enough
@@ -529,23 +582,54 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                 ' pattern! Antenna start EL '
                 f'{np.rad2deg(rx_beams_el.angle[0]):.3f} (deg) is larger than'
                 f' estimated start EL {np.rad2deg(el_echo_first):.3f} (deg)!'
-                )
+            )
         # get [start, stop) EL angle indices for antenna pattern
         # make sure to include el margin on each end to go slightly
-        # beyond EL coverage of echo data!
-        el_ant_min = el_echo_first - el_margin
+        # beyond EL coverage of echo data for a single-channel SAR,
+        # non-sweepsar case!
+        if is_sweepsar:
+            el_ant_min = el_echo_first
+        else:  # single-channel SAR
+            el_ant_min = el_echo_first - el_margin
         idx_el_ant_str = bisect.bisect_left(rx_beams_el.angle, el_ant_min)
         idx_el_ant_stp = bisect.bisect_right(rx_beams_el.angle, el_ant_max)
         el_ant_slice = slice(idx_el_ant_str, idx_el_ant_stp)
+        ant_el = rx_beams_el.angle[el_ant_slice]
         logger.info(
-            f'(min, max) antenna EL coverage -> ({np.rad2deg(el_ant_min):.2f}'
-            f', {np.rad2deg(el_ant_max):.2f}) (deg, deg)'
+            f'(min, max) antenna EL coverage -> ({np.rad2deg(ant_el[0]):.3f}'
+            f', {np.rad2deg(ant_el[-1]):.3f}) (deg, deg)'
         )
-
+        # convert antenna EL angles to slant range and then compute weighting
+        # factor based on relative SNR used in weighing cost function of
+        # rising edge method. SNR ~ (pow_pat2w / sr**3) for random scene.
+        ant_sr, _, _ = ant2rgdop(
+            ant_el, az_ang_cut, pos_ecef_mid, vel_ecef_mid,
+            quat_ant2ecef_mid, wavelength, dem_interp
+        )
+        logger.info(
+            f'(min, max) antenna slant range coverage -> ({ant_sr[0]:.3f}'
+            f', {ant_sr[-1]:.3f}) (m, m)'
+        )
+        # build polyfit coeffs to represent EL (deg) as a function
+        # of slant range (km) with either first or second order within
+        # a relatively small rising edge region!
+        if ant_el.size < 2:
+            raise RuntimeError(
+                'Not enough antenna EL angles to polyfit EL vs slant range')
+        pf_sr2el = np.polyfit(
+            ant_sr * 1e-3, np.rad2deg(ant_el), deg=min(ant_el.size - 1, 2)
+            )
+        logger.info('Slantrange-to-elevation polyfit coeffs for AZ block # '
+                    f'{n_azblk} -> {pf_sr2el}')
+        def _slantrange_to_elevation(
+                sr: float | np.ndarray) -> float | np.ndarray:
+            """
+            Slant range (meters) to antenna elevation (radians)
+            """
+            return np.deg2rad(np.polyval(pf_sr2el, sr * 1e-3))
         # form rising-edge two-way antenna power pattern (dB) as a
         # function of EL (rad) within rising edge limit
         # [el_ant_min, el_ant_max]
-        ant_el = rx_beams_el.angle[el_ant_slice]
         if is_sweepsar:
             # get multi-channel complex antenna pattern for both TX and RX side
             # within [start, stop) EL angle "el_ant_slice" for selected beams.
@@ -556,6 +640,34 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
 
             # Get block-averaged TX complex weighting to build TX BMF pattern
             tx_wgt = np.nanmean(tx_cal_ratio[s_rgl], axis=0)
+
+            # zero out portion of RX beams that outside RX DBF window for
+            # the first `N` channel involved in N-tap DBF.
+            # Get EL angle coverage within DBFed window for each RX beam
+            slice_el_all = _dbf_windows_to_ant_el_coverge_slice(
+                dwp_dbf[s_rgl], wl_dbf[s_rgl], rgb_first, sr_start,
+                sr_spacing, ant_el, _rgb_dbf2echo, _slantrange_to_elevation
+                )
+            # exclude the portion outside the EL coverage by zeroing out
+            # its values.
+            for cc, slice_el in enumerate(slice_el_all):
+                c_num = cc + 1
+                logger.info(f'EL angle slices for RX # {c_num} -> {slice_el}')
+                logger.info(
+                    'EL angle coverage [first, last] for RX channal # '
+                    f'{c_num} -> ({np.rad2deg(ant_el[slice_el.start]):.3f}, '
+                    f'{np.rad2deg(ant_el[slice_el.stop - 1]):.3f}) (deg, deg)')
+                # skip the start of the first two channel from zeroing out.
+                # given only the first two channels are dominant beyond lower
+                # limit of rising edge for forming RX antenna pattern.
+                if c_num > 2:
+                    ant_pat_rx[cc, :max(slice_el.start - 1, 0)] = 0
+                # skip the end of the last two channel from zeroing out
+                # given simply the last two channels are dominant beyond
+                # upper limit of the rising edge for forming RX antenna
+                # pattern
+                if c_num < beam_num_stop_rx - 1:
+                    ant_pat_rx[cc, slice_el.stop:] = 0
 
             # form 2-way power pattern (dB) of rising edge only
             antpat2w = _form_ant2way_sweepsar(
@@ -569,35 +681,24 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
             antpat2w = 2 * pow2db(abs(ant_pat_rx * ant_pat_tx))
 
         # peak normalized 2-way power pattern
-        antpat2w -= antpat2w.max()
+        antpat2w -= np.nanmax(antpat2w)
 
         # get exact look angle (off-nadir) for antenna at mid azimuth block
         # perform 3rd-order polyfit of antenna power pattern (dB) as a function
         # of look angle in radians
         ant_lka = ela_to_offnadir(ant_el, quat_ant2ecef_mid, pos_ecef_mid,
                                   az_cut=az_ang_cut, frame=ant.frame)
-        pf_coef_ant = np.polyfit(ant_lka, antpat2w, deg=pf_deg)
+        pf_coef_ant = _polyfit(ant_lka, antpat2w, deg=pf_deg)
         pf_ant = Poly1d(pf_coef_ant[::-1])
 
-        # convert antenna EL angles to slant range and then compute weighting
-        # factor based on relative SNR used in weighing cost function of
-        # rising edge method. SNR ~ (pow_pat2w / sr**3) for random scene.
-        ant_sr, _, _ = ant2rgdop(
-            ant_el, az_ang_cut, pos_ecef_mid, vel_ecef_mid,
-            quat_ant2ecef_mid, wavelength, dem_interp
-        )
-        logger.info(
-            f'(min, max) antenna slant range coverage -> ({ant_sr[0]:.3f}'
-            f', {ant_sr[-1]:.3f}) (m, m)'
-        )
         if apply_weight:
             # cost function weights based on SNR in (dB)
             cf_wgt = antpat2w - 3 * pow2db(ant_sr)
             # peak normalized
-            cf_wgt -= cf_wgt.max()
+            cf_wgt -= np.nanmax(cf_wgt)
             # form 3rd-order poly1d for weighting of cost function, relative
             # power in (dB) as a function of look angle in (rad)
-            pf_coef_wgt = np.polyfit(ant_lka, cf_wgt, deg=pf_deg)
+            pf_coef_wgt = _polyfit(ant_lka, cf_wgt, deg=pf_deg)
             pf_wgt = Poly1d(pf_coef_wgt[::-1])
 
         # convert the (first, last) el angle (within first EL peak location)
@@ -612,13 +713,14 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         sr_last += sr_chirp
         # convert to range bin
         rgb_last = round((sr_last - sr_start) / sr_spacing)
-        logger.info(f'(start, stop) range bins of echo -> (0, {rgb_last})')
+        logger.info('(start, stop) range bins of echo -> '
+                    f'({rgb_first}, {rgb_last})')
         if rgb_last > num_rgbs:
             raise RuntimeError('Not enough range bins in echo data!')
         # get echo for a subset of range bins for each azimuth block
-        echo = raw_dset[s_rgl, :rgb_last]
+        echo = raw_dset[s_rgl, rgb_first:rgb_last]
         # replace bad values in place with some random with proper std given
-        # homogenous random scene
+        # homogeneous random scene
         replace_badval_echo(echo)
         # get 2-way power pattern from the echo
         p2w_echo, sr_echo, lka_echo, inc_echo, pf_echo = \
@@ -642,8 +744,14 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                 pf_echo, pf_ant, lka_echo[0], lka_echo[-1], el_res,
                 pf_wgt
             )
-        logger.info('Estimated roll angle offset -> '
+        logger.info('Estimated pointing bias in EL (error) -> '
+                    f'{rad2mdeg(-roll_ofs):.1f} (mdeg)')
+        logger.info('Estimated roll angle offset (correction) -> '
                     f'{rad2mdeg(roll_ofs):.1f} (mdeg)')
+        logger.info('Cost function (value, iterations) for estimated roll '
+                    f'angle offset -> ({roll_fval}, {roll_iter})')
+        logger.info('Convergence flag for roll offset estimation -> '
+                    f'{roll_flag}')
         # Plot poly-fitted echo power pattern v.s. antenna one w/ & w/o roll
         # angle correction per azimuth block.
         az_dtm = ref_epoch_echo + TimeDelta(azt_mid)
@@ -654,7 +762,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
             _plot_echo_vs_ant_pat(
                 pf_echo, pf_ant, (lka_echo[0], lka_echo[-1]),
                 roll_ofs, azt_mid, ref_epoch_echo.isoformat(), plt_filename
-                )
+            )
 
         # If PRF is constant then find out if rising edge region is valid. That
         # is, whether or not it overlaps with TX gap!
@@ -668,7 +776,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                 (0, rgb_last), valid_sbsw_all[:, s_rgl.stop - 1, :])
 
         # Convert look angles of echo to antenna EL angles via interpolation
-        # of exisiting (antenna EL -> off-nadir) arrays.
+        # of existing (antenna EL -> off-nadir) arrays.
         # Note that antenn EL/look angle has a wider coverage than that of echo
         # and it is monotonically sorted! Thus, "fill_value" is unnecessary.
         # Define a function (interpolation kernel) to evaluate EL angle (rad)
@@ -676,22 +784,22 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         func_lka2el = interp1d(
             ant_lka, ant_el, kind=interp_method_el, copy=False,
             fill_value='extrapolate', assume_sorted=True
-            )
+        )
 
         # fill up the output containers per azimuth block
         el_ofs[nn] = roll_ofs
         az_datetime.append(az_dtm)
         # True EL angle is roll offset added to off-nadir angle in
         # antenna frame. Given "el_fl" is obtained from slant ranges in
-        # echo domain, then roll offset shall be subtratced from the EL
-        # angle to get the true/corrected EL angle for the respective
-        # slant range at leading edge.
-        el_first_last[nn] = func_lka2el((lka_echo[0] - roll_ofs,
-                                         lka_echo[-1] - roll_ofs))
+        # echo domain, then roll offset (negative of pointing bias/error)
+        # shall be added to EL angle to get the true/corrected EL angle
+        # for the respective slant range at leading edge.
+        el_first_last[nn] = func_lka2el((lka_echo[0] + roll_ofs,
+                                         lka_echo[-1] + roll_ofs))
         sr_first_last[nn] = (sr_echo[0], sr_echo[-1])
         lka_first_last[nn] = (lka_echo[0], lka_echo[-1])
         mask_valid[nn] = mask_valid_rgb
-        cvg_flag[nn] = roll_fval
+        cvg_flag[nn] = roll_flag
         pf_echo_all.append(pf_echo)
         pf_ant_all.append(pf_ant)
         pf_wgt_all.append(pf_wgt)
@@ -740,7 +848,7 @@ def compute_mb_angle(pos, quat, ellips=Ellipsoid()):
         3-D position vector of spacecraft in ECEF
     quat : isce3.core.Quaternion
         Represent unit quaternions for conversion from antenna/radar coordinate
-        to spacecraft coordinate.
+        to ECEF.
     ellips : isce3.core.Ellipsoid, default=WGS84
 
     Returns
@@ -801,7 +909,7 @@ def ela_to_offnadir(el, quat, pos,  az_cut=0.0, frame=Frame(),
 def replace_badval_echo(echo, rnd_seed=10):
     """
     Replace bad values such as NaN or zero values by a Gaussian random noise
-    whose STD deteremined by std of non bad values per range line.
+    whose STD determined by std of non bad values per range line.
     The input array is modified in place.
 
     Parameters
@@ -814,7 +922,7 @@ def replace_badval_echo(echo, rnd_seed=10):
     Notes
     -----
     Invalid values, NaNs or zeros, are replaced by random values given each
-    range line contains homogenous clutter.
+    range line contains homogeneous clutter.
 
     """
     const_iq = 1. / np.sqrt(2.)
@@ -864,7 +972,7 @@ def _form_ant2way_sweepsar(ant_pat_tx, ant_pat_rx, ant_el, tx_wgt,
 
     """
     # form perfect N-tap RX DBF power pattern
-    rx_dbf = (abs(ant_pat_rx)**2).sum(axis=0)
+    rx_dbf = np.nansum(abs(ant_pat_rx)**2, axis=0)
     if not pow_norm:
         rx_dbf *= rx_dbf
     # form TX BMF power pattern
@@ -975,6 +1083,75 @@ def _plot_echo_vs_ant_pat(pf_echo, pf_ant, lka_fl, roll_ofs,
     plt.title(
         f'Echo v.s. Antenna Rising Edge w/ & w/o EL Adjustment\n'
         f'@ AZ-Time={az_time:.3f} sec\nsince {epoch}'
-        )
+    )
     plt.savefig(filename)
     plt.close()
+
+
+def _polyfit(x: np.ndarray, y: np.ndarray, deg: int) -> np.ndarray:
+    """
+    Numpy polyfit with handling of Nan and Inf values.
+    """
+    mask_valid = ~(np.isinf(y) | np.isnan(y))
+    return np.polyfit(x[mask_valid], y[mask_valid], deg=deg)
+
+
+def _dbf_windows_to_ant_el_coverge_slice(
+        dwp, wl, rgb_first, sr_start, sr_spacing, ant_el,
+        rgb_dbf2echo, slantrange_to_elevation):
+    """
+    Get antenna elevation angle (EL) coverage [start, stop) for each
+    beam involved in RX DBF from multi-channel DBF window postions
+    for an AZ block.
+    The start and stop window position are obtained from relative DWPs (RD+WD)
+    and WLs wrt RX # 1 of an AZ block given corresponding starting range bin
+    and slant range.
+
+    Parameters
+    ----------
+    dwp : array of int
+        2-D array of absolute DWP of shape (range lines, RX channels) at
+        original DBF sampling rate for a desired AZ block.
+    wl : array of int
+        2-D array of WL of shape (range lines, RX channels) at
+        original DBF sampling rate for a desired AZ block.
+    rgb_first : int
+        First range bin number corresponds to `sr_start` at samplig rate
+        of echo product. A value >= 0!
+    sr_start : float
+        Start slant range in meters correspinds to first range bin `rgb_first`
+    sr_spacing : float
+        Slant range spacing in meters
+    ant_el : array of float
+        1-D array of elevation angles in antenna frame in radians.
+    rgb_dbf2echo : callable
+        A function to rescale range bins from DBF sampling rate to
+        that of echo.
+    slantrange_to_elevation : callable
+        A function to convert slant range(s) in meters to elevation
+        angle(s) in radians.
+
+    Yield
+    -----
+    slice
+        [Start, stop) antenna EL angle indices that a certian RX beam covers.
+
+    """
+
+    num_rxs = dwp.shape[1]
+    # convert data window positions to range bins at echo rate
+    for cc in range(num_rxs):
+        rgb_start = rgb_dbf2echo(np.nanmean(dwp[:, cc] - dwp[:, 0]))
+        rgb_stop = rgb_start + rgb_dbf2echo(np.nanmean(wl[:, cc]))
+        # adjust the first range bins corresponds to starting slant range
+        rgb_start += rgb_first
+        sr_first_last = sr_start + sr_spacing * np.asarray(
+            [rgb_start, rgb_stop - 1])
+        # get start,stop EL angle covering this this slant range for
+        # that particular RX
+        ela = slantrange_to_elevation(sr_first_last)
+        # find indecies in EL
+        idx_el_start = bisect.bisect_left(ant_el, ela[0])
+        idx_el_start = min(idx_el_start, ant_el.size - 1)
+        idx_el_stop = bisect.bisect_right(ant_el, ela[1])
+        yield slice(idx_el_start, idx_el_stop)

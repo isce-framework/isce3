@@ -576,11 +576,11 @@ def test_run_arrays_exceptions(unit_test_params):
     # run array mode for all test cases with forced erroneous inputs to ensure
     # correct exceptions are raised
     for test_case in geocode_slc_test_cases(unit_test_params):
-        with np.testing.assert_raises(journal.ext.journal.ApplicationError):
+        with np.testing.assert_raises(journal.ApplicationError):
             run_geocode_slc_arrays(test_case, unit_test_params,
                                    extra_input=True)
 
-        with np.testing.assert_raises(journal.ext.journal.ApplicationError):
+        with np.testing.assert_raises(journal.ApplicationError):
             run_geocode_slc_arrays(test_case, unit_test_params,
                                    non_matching_shape=True)
 

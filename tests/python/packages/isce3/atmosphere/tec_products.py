@@ -107,8 +107,7 @@ def _validate_tec_lut(tec_lut, orbit, radargrid, az_or_srg):
     outside that of the radar grid. Unit test RSLC from envisat has a radar
     grid whose time domain lies entirely within that of the orbit.
     """
-    t_start_stop = [tec_lut.y_start,
-                    tec_lut.y_start + tec_lut.y_spacing * (tec_lut.length - 1)]
+    t_start_stop = [tec_lut.y_start, tec_lut.y_end]
     for t, start_or_stop in zip(t_start_stop, ['start', 'stop']):
         # Check if within orbit time domain.
         assert orbit.start_time < t < orbit.end_time, \

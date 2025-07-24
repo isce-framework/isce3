@@ -176,7 +176,7 @@ def add_pta_args(
             type=str,
             default='rect',
             help=(
-                "Point target impulse reponse window tapering type: rect, kaiser,"
+                "Point target impulse response window tapering type: rect, kaiser,"
                 " cosine. Only used when --predict-null requested."
             ),
         )
@@ -185,7 +185,7 @@ def add_pta_args(
             metavar="PARAMETER",
             type=float,
             default=0.0,
-            help="Point target impulse reponse window tapering parameter."
+            help="Point target impulse response window tapering parameter."
         )
     parser.add_argument(
         "--cuts",

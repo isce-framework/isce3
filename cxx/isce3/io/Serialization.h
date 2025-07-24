@@ -298,26 +298,40 @@ inline isce3::core::DateTime getRefEpoch(H5obj& h5obj,
  *
  * @param[in] h5obj        HDF5 file or group object.
  * @param[in] datasetPath  H5 path of dataset relative to h5obj.
- * @param[in] epoch        isce3::core::DateTime of reference epoch. */
+ * @param[in] epoch        isce3::core::DateTime of reference epoch.
+ * @param[in] ensureEpochIntegerSeconds   Ensure that the
+ * orbit reference epoch has integer seconds precision
+ * (NISAR specs requirement)
+ * */
 template<typename H5obj>
 inline void setRefEpoch(H5obj& h5obj, const std::string& datasetPath,
-                        const isce3::core::DateTime& refEpoch)
+                        const isce3::core::DateTime& refEpoch,
+                        const bool ensureEpochIntegerSeconds = true)
 {
-    if (refEpoch.frac != 0.0) {
+    if (refEpoch.frac != 0.0 && ensureEpochIntegerSeconds) {
         auto log = pyre::journal::error_t("isce.io.Serialization.setRefEpoch");
         log << pyre::journal::at(__HERE__) << "Truncating fractional part of "
             "reference epoch " << std::string(refEpoch) << " while serializing "
             "dataset " << datasetPath << " to HDF5" << pyre::journal::endl;
     }
 
+    char buffer[50];
+ 
+    // Need to create string representation of DateTime manually
+    if (ensureEpochIntegerSeconds) {
+        snprintf(buffer, sizeof(buffer),  "seconds since %04d-%02d-%02dT%02d:%02d:%02d",
+        refEpoch.year, refEpoch.months, refEpoch.days, refEpoch.hours,
+        refEpoch.minutes, refEpoch.seconds);
+
+    } else {
+        snprintf(buffer, sizeof(buffer), "seconds since %04d-%02d-%02dT%02d:%02d:%012.9f",
+        refEpoch.year, refEpoch.months, refEpoch.days, refEpoch.hours,
+        refEpoch.minutes, refEpoch.seconds + refEpoch.frac);
+    }
+
     // Open the dataset
     isce3::io::IDataSet dset = h5obj.openDataSet(datasetPath);
 
-    // Need to create string representation of DateTime manually
-    char buffer[40];
-    snprintf(buffer, 40, "seconds since %04d-%02d-%02dT%02d:%02d:%02d",
-            refEpoch.year, refEpoch.months, refEpoch.days, refEpoch.hours,
-            refEpoch.minutes, refEpoch.seconds);
     std::string unitsAttr {buffer};
 
     // Save buffer to attribute

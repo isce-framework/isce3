@@ -96,7 +96,11 @@ InitInstallDirLayout()
 
 # Dependencies
 
-option(ISCE3_FETCH_DEPS "Fetch external dependencies at build time" ON)
+if(DEFINED SKBUILD)
+    option(ISCE3_FETCH_DEPS "Fetch external dependencies at build time" OFF)
+else()
+    option(ISCE3_FETCH_DEPS "Fetch external dependencies at build time" ON)
+endif()
 include(CMakeDependentOption)
 cmake_dependent_option(ISCE3_FETCH_EIGEN "Fetch Eigen at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
@@ -134,25 +138,26 @@ configure_file(
     doc/doxygen/Doxyfile.in
     doc/doxygen/Doxyfile
     )
-configure_file(
-    doc/sphinx/conf.py.in
-    doc/sphinx/conf.py
-    )
 
-set(ISCE3_CMAKE_DIR "share/cmake/isce3" CACHE STRING
-    "Install directory for cmake files, relative to install prefix"
-    )
-install(EXPORT isce3-targets
-        NAMESPACE ISCE3::
-        DESTINATION ${ISCE3_CMAKE_DIR}
+if(NOT DEFINED SKBUILD)
+    # If we're using scikit-build, the exported _IMPORT_PREFIX will be wrong:
+    # https://github.com/scikit-build/scikit-build-core/issues/894
+    # So we cannot export the target config module when using skbuild.
+    set(ISCE3_CMAKE_DIR "${ISCE_SHAREDIR}/cmake/isce3" CACHE STRING
+        "Install directory for cmake files, relative to install prefix"
         )
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-    ${PROJECT_SOURCE_DIR}/.cmake/isce3-config.cmake.in
-    ${PROJECT_BINARY_DIR}/isce3-config.cmake
-    INSTALL_DESTINATION ${ISCE3_CMAKE_DIR})
-install(FILES ${PROJECT_BINARY_DIR}/isce3-config.cmake
-        DESTINATION ${ISCE3_CMAKE_DIR})
+    install(EXPORT isce3-targets
+            NAMESPACE ISCE3::
+            DESTINATION "${ISCE3_CMAKE_DIR}"
+            )
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file(
+        "${PROJECT_SOURCE_DIR}/.cmake/isce3-config.cmake.in"
+        "${PROJECT_BINARY_DIR}/isce3-config.cmake"
+        INSTALL_DESTINATION "${ISCE3_CMAKE_DIR}")
+    install(FILES "${PROJECT_BINARY_DIR}/isce3-config.cmake"
+            DESTINATION "${ISCE3_CMAKE_DIR}")
+endif()
 
 # Enables native packaging using CMake/CPack
 include(CPack)

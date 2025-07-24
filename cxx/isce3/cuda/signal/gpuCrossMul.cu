@@ -202,7 +202,7 @@ void lookdownShiftImpact(size_t oversample,
                                                    std::sin(phase));
     }
 
-    // The imapct is the same for each range line. Therefore copying the line for the block
+    // The impact is the same for each range line. Therefore copying the line for the block
     for (size_t line = 0; line < linesPerBlock; ++line) {
         thrust::copy_n(shiftImpactLine.begin(), ncols,
                        shiftImpact.begin() + line * ncols);
@@ -445,7 +445,7 @@ gpuCrossmul::crossmul(isce3::io::Raster& refSlcRaster,
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaDeviceSynchronize());
 
-        // flatten post interferogram - ala CrossMultipy + Flatten
+        // flatten post interferogram - ala CrossMultiply + Flatten
         if (flatten) {
             // Read range offsets
             std::valarray<double> offsetLine(ncols);

@@ -160,7 +160,7 @@ runconfig:
                     B:
                 dispersive_filter:
                     enabled: True
-                    filter_mask_type: coherence
+                    filter_mask_type: ['coherence']
                     filter_coherence_threshold: 0.5
                     filling_method: nearest
                     unwrap_correction: False
@@ -169,6 +169,7 @@ runconfig:
                     sigma_range: 100
                     sigma_azimuth: 100
                     filter_iterations: 1
+                    min_cluster_pixels: 0
 
         output:
             compression_enabled: False

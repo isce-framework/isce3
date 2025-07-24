@@ -184,7 +184,8 @@ class RunConfig:
         # otherwise, check contents of freq_pols
         for freq in freq_pols.keys():
             if freq not in slc.frequencies:
-                err_str = f"Frequency {freq} invalid; not found in source frequencies."
+                err_str = (f'Requested frequency {freq} not found in input'
+                           ' product.')
                 error_channel.log(err_str)
                 raise ValueError(err_str)
 
@@ -199,7 +200,8 @@ class RunConfig:
             # check if user provided polarizations match RSLC ones
             for usr_pol in freq_pols[freq]:
                 if usr_pol not in rslc_pols:
-                    err_str = f"{usr_pol} invalid; not found in source polarizations."
+                    err_str = (f'Requested polarization {usr_pol}'
+                               ' not found in input product.')
                     error_channel.log(err_str)
                     raise ValueError(err_str)
 
@@ -333,7 +335,7 @@ class RunConfig:
             metadata_dict['output_posting']['y_posting'] = \
                 abs(default_metadata_geogrid_spacing_y)
 
-        # Set snap values equal to the metdata geogrid posting
+        # Set snap values equal to the metadata geogrid posting
         metadata_dict['x_snap'] = metadata_dict['output_posting']['x_posting']
         metadata_dict['y_snap'] = metadata_dict['output_posting']['y_posting']
 

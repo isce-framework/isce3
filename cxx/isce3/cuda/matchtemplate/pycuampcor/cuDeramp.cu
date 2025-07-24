@@ -123,7 +123,7 @@ __global__ void cuDerampMethod1_kernel(real2_type *images, const int imageNX, in
  * Deramp a complex signal with Method 1
  * @brief Each signal is decomposed into real and imaginary parts,
  *   and the average phase shift is obtained as atan(\sum imag / \sum real).
- * @param[inout] images input/output complex signals
+ * @param[in,out] images input/output complex signals
  * @param[in] stream cuda stream
  */
 void cuDerampMethod1(cuArrays<real2_type> *images, cudaStream_t stream)

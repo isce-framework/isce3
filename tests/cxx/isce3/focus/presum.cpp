@@ -17,7 +17,7 @@ TEST(Presum, Domain)
     isce3::core::BartlettKernel<double> acorr(3.0);
     // Compute weights.
     {
-        // Expect three coefficents at i = {4, 5, 6}
+        // Expect three coefficients at i = {4, 5, 6}
         auto coeff = isce3::focus::getPresumWeights(acorr, t, 5.0, &offset);
         EXPECT_EQ(coeff.size(), 3);
         EXPECT_EQ(offset, 4);
@@ -45,7 +45,7 @@ TEST(Presum, Values)
     isce3::core::BartlettKernel<double> acorr(3.0);
     // Compute weights.
     {
-        // Expect three coefficents at i = {4, 5, 6}
+        // Expect three coefficients at i = {4, 5, 6}
         // with values {0, 1, 0}
         auto coeff = isce3::focus::getPresumWeights(acorr, t, 5.0, &offset);
         EXPECT_DOUBLE_EQ(coeff(0), 0.0);

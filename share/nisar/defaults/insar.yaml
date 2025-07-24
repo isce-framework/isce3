@@ -194,7 +194,8 @@ runconfig:
 
             radar_grid_cubes:
 
-                # List of heights in meters
+                # List of heights in meters, where the parallelBaseline, perpendicularBaseline, and slantRangeSolidEarthTidesPhase
+                # datacubes contain ONLY TWO height layers (the bottom and top heights), i.e., -500 and 9000 from the default heights below
                 heights: [-500, 0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000]
 
                 # OPTIONAL - Same as the geocode group output_epsg if not provided
@@ -252,7 +253,7 @@ runconfig:
                    B:
                 # Options for split_main_band method
                 split_range_spectrum:
-                    lines_per_block: 1000
+                    lines_per_block: 2048
                     # Bandwidth for lower sub-band SLC in Hz
                     # If unspecified, it is automatically set by the workflow
                     low_band_bandwidth:
@@ -269,17 +270,18 @@ runconfig:
                     enabled: True
                     # Filter type for dispersive raster
                     # (median_filter, coherence, connected_components)
-                    filter_mask_type: coherence
+                    # When multiple validation sources are enabled,
+                    # take the intersection of their invalid masks
+                    # to form a combined mask.
+                    filter_mask_type: ['coherence']
                     # Median filter size for mask generation
                     median_filter_size: 15
+                    median_filter_threshold: 0.6
                     # Coherence thresholds 0<= thresholds <=1
                     filter_coherence_threshold: 0.5
                     # Filling method for invalid regions
                     # (nearest, smoothed)
                     filling_method: nearest
-                    # Unwrapping correction bool. If False, only filtering
-                    # is applied
-                    unwrap_correction: False
                     # Kernel size in pixels
                     kernel_range: 800
                     kernel_azimuth: 800
@@ -288,6 +290,30 @@ runconfig:
                     sigma_azimuth: 100
                     # Number of iteration for low pass filtering
                     filter_iterations: 1
+                    # Unwrapping correction bool. If False, only filtering
+                    # is applied
+                    unwrap_correction: True
+                    # Before running dispersive_filter, remove every cluster
+                    # whose size is strictly smaller than `min_cluster_pixels`.
+                    # When `min_cluster_pixels` is 0, this pre-removal step is
+                    # skipped entirely.
+                    min_cluster_pixels: 5
+
+                    # Maximum radius used when bridging disconnected
+                    # regions.
+                    bridge_algorithm_enabled: True
+                    bridge_radius: 500
+                    # Size of the structuring element used for erosion
+                    # during bridge labeling.
+                    bridge_erosion_size: 2
+                    # Minimum number of pixel of connected components
+                    # to retain during processing.
+                    bridge_minimum_samples: 14
+                    # Ramp type to correct before bridge algoritm
+                    bridge_ramp_type:
+                    # During deramping, uniform sampling is applied
+                    # when number of samples is larger than maximum pixel
+                    bridge_ramp_maximum_pixel: 1e6
 
             troposphere_delay:
                 # Boolean flag to activate (True) troposphere delay computation
@@ -490,10 +516,11 @@ runconfig:
                 # The refinement is performed by thresholding the median absolute deviation of
                 # the offsets where outlier locations have been filled with zeros
                 mask_refine_enabled: True
-                # Threshold for outlier refinement mask computation
-                mask_refine_threshold: 0.5
+                # Minimum number of valid (non-NaN) neighbors required for a pixel to remain
+                # unchanged during the rubbersheet refinement step
+                mask_refine_min_neighbors: 5
                 # Size of median filter in range and azimuth for outlier mask refinement
-                mask_refine_filter_size: 3
+                mask_refine_filter_size: 5
                 # Method to fill data holes left by outliers culling:
                 # fill_smoothed: iteratively fill holes with mean value in a neighborhood.
                 # nearest_neighbor: Fill holes with nearest neighbor interpolation

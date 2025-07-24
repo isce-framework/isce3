@@ -14,7 +14,6 @@ import journal
 import numpy as np
 
 import isce3
-from isce3.core import crop_external_orbit
 from isce3.core.types import complex32, read_complex_dataset
 from nisar.products.readers import SLC
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
@@ -23,7 +22,7 @@ from isce3.atmosphere.tec_product import (tec_lut2d_from_json_srg,
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 import nisar.workflows.helpers as helpers
-from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.readers.orbit import load_orbit
 from nisar.products.writers.BaseL2WriterSingleInput import get_file_extension
 from nisar.products.writers.GcovWriter import GcovWriter, run_geocode_cov
 
@@ -65,8 +64,52 @@ def read_rslc_backscatter(ds: h5py.Dataset, key, flag_rslc_is_complex32):
     return backscatter
 
 
+def apply_noise_correction(data_block, noise_product, is_backscatter):
+    '''
+    Apply noise correction
+
+    Parameters
+    ----------
+    data_block: np.ndarray
+        Data block
+    noise_product: nisar.noise.NoiseEquivalentBackscatterProduct
+        ISCE3 noise product
+    is_backscatter: bool
+        Identify if noise correction should be applied in the
+        power domain as opposed to amplitude (complex)
+
+    Returns
+    -------
+    data_block: np.ndarray
+        Noise-corrected data block
+    '''
+    if is_backscatter:
+
+        # subtract noise power from data backscatter
+        data_block = data_block - noise_product.power_linear
+
+        # new backscatter cannot be negative
+        data_block = np.clip(data_block, a_min=0, a_max=None)
+    else:
+        # convert radar samples to power, remove noise power, and
+        # convert them back to amplitude to scale the
+        # complex SLC samples
+        new_data_block_power = (np.square(np.absolute(data_block)) -
+                                noise_product.power_linear)
+        new_data_block_power = np.clip(new_data_block_power, a_min=0,
+                                       a_max=None)
+        new_data_block_amp = np.sqrt(new_data_block_power)
+
+        ind = data_block != 0
+        data_block[ind] = (new_data_block_amp[ind] * data_block[ind] /
+                           np.absolute(data_block[ind]))
+
+    return data_block
+
+
 def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
-                 flag_rslc_to_backscatter, pol_2=None, format="ENVI"):
+                 flag_rslc_to_backscatter, flag_apply_noise_correction,
+                 pol_2=None, format="ENVI"):
     '''
     Copy RSLC dataset to GDAL format converting RSLC real and
     imaginary parts from float16 to float32. If the flag
@@ -92,8 +135,11 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
         Number of lines per block
     flag_rslc_to_backscatter: bool
         Indicates if the RSLC complex values should be
-        convered to radar backscatter (square of
+        converted to radar backscatter (square of
         the RSLC magnitude)
+    flag_apply_noise_correction: bool
+        Flag indicating whether the noise correction
+        should be applied
     pol_2: str, optional
         Polarization associated with the second RSLC
     format: str, optional
@@ -117,19 +163,22 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
                      f' {flag_rslc_is_complex32}')
     info_channel.log('    requires polarimetric symmetrization:'
                      f' {flag_symmetrize}')
+    info_channel.log('    apply noise correction:'
+                     f' {flag_apply_noise_correction}')
 
     pol_ref = f'HDF5:{in_file}:/{pol_dataset_path}'
 
     # If there's no need for pre-processing, return Raster of `pol_ref`
     if (not flag_rslc_is_complex32 and not flag_rslc_to_backscatter and
-            not flag_symmetrize):
+            not flag_symmetrize and not flag_apply_noise_correction):
         return isce3.io.Raster(pol_ref)
 
     # If RSLC is already CFloat32 and the polarimetric symmetrization needs
-    # to be applied coherently (i.e., using complex values), use ISCE3 C++
-    # symmetrization for faster processing
+    # to be applied coherently (i.e., using complex values) and
+    # noise correction does not need to be applied, use ISCE3 C++
+    # symmetrization for faster processing.
     if (not flag_rslc_is_complex32 and not flag_rslc_to_backscatter and
-            flag_symmetrize):
+            flag_symmetrize and not flag_apply_noise_correction):
         info_channel.log('    symmetrizing cross-polarimetric channels'
                          ' coherently')
         pol_2_ref = f'HDF5:{in_file}:/{rslc.slcPath(freq, pol_2)}'
@@ -176,13 +225,18 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
     lines_per_block = min(rslc_length, lines_per_block)
     num_blocks = int(np.ceil(rslc_length / lines_per_block))
 
+    # get radar_grid for noise correction
+    if flag_apply_noise_correction:
+        radar_grid = rslc.getRadarGrid(frequency=freq)
+
     for block in range(num_blocks):
+
+        info_channel.log(f'    processing block {block + 1}/{num_blocks}')
         line_start = block * lines_per_block
         if block == num_blocks - 1:
             block_length = rslc_length - line_start
         else:
             block_length = lines_per_block
-
         # read a block of data from the RSLC
         if flag_rslc_to_backscatter:
             data_block = read_rslc_backscatter(
@@ -192,16 +246,43 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
             data_block = read_complex_dataset(
                 hdf5_ds, np.s_[line_start:line_start + block_length, :])
 
+        if flag_apply_noise_correction:
+            # get radar grid of current block
+            radar_grid_block = radar_grid.offset_and_resize(
+                yoff=line_start, xoff=0, ysize=block_length,
+                xsize=radar_grid.width)
+
+            noise_product = rslc.getResampledNoiseEquivalentBackscatter(
+                sensing_times=radar_grid_block.sensing_times,
+                slant_ranges=radar_grid_block.slant_ranges,
+                frequency=freq, pol=pol)
+
+            data_block = apply_noise_correction(
+                data_block, noise_product,
+                is_backscatter=flag_rslc_to_backscatter)
+
         if flag_symmetrize:
             # compute average with a block of data from the second RSLC
             if flag_rslc_to_backscatter:
-                data_block += read_rslc_backscatter(
+                data_block_2 = read_rslc_backscatter(
                     hdf5_ds_2, np.s_[line_start:line_start + block_length, :],
                     flag_rslc_is_complex32)
             else:
-                data_block += read_complex_dataset(
+                data_block_2 = read_complex_dataset(
                     hdf5_ds_2, np.s_[line_start:line_start + block_length, :])
-            data_block /= 2.0
+
+            if flag_apply_noise_correction:
+                noise_product_2 = rslc.getResampledNoiseEquivalentBackscatter(
+                    sensing_times=radar_grid_block.sensing_times,
+                    slant_ranges=radar_grid_block.slant_ranges,
+                    frequency=freq, pol=pol_2)
+
+                data_block_2 = apply_noise_correction(
+                    data_block_2, noise_product_2,
+                    is_backscatter=flag_rslc_to_backscatter)
+
+            # average cross-pol channels
+            data_block = 0.5 * (data_block + data_block_2)
 
         # write to GDAL raster
         out_ds.GetRasterBand(1).WriteArray(data_block, yoff=line_start, xoff=0)
@@ -259,6 +340,9 @@ def _run(cfg, raster_scratch_dir):
     flag_fullcovariance = cfg['processing']['input_subset']['fullcovariance']
     flag_symmetrize_cross_pol_channels = \
         cfg['processing']['input_subset']['symmetrize_cross_pol_channels']
+
+    flag_apply_noise_correction = \
+        cfg['processing']['noise_correction']['apply_correction']
 
     # Retrieve file spacing params
     file_spacing_kwargs = cfg['output']
@@ -361,9 +445,7 @@ def _run(cfg, raster_scratch_dir):
     zero_doppler = isce3.core.LUT2d()
     native_doppler = slc.getDopplerCentroid()
 
-    # the variable `complex_type` will hold the complex data type
-    # to be used for off-diagonal terms (if full covariance GCOV)
-    complex_type = None
+    orbit = None
 
     for frequency, input_pol_list in freq_pols.items():
 
@@ -405,11 +487,14 @@ def _run(cfg, raster_scratch_dir):
                                         'VH' in input_pol_list)
 
         # Convert complex values to backscatter as a pre-processing step
-        # only if full covariance was not requested and symmetrization was requested.
-        # Note that the `GeocodeCov` module itself performs this conversion if necessary (and
-        # it is faster than doing it as a pre-processing step if symmetrization is not required).
+        # only if full covariance was not requested and either noise
+        # # correction or polarimetric symmetrization is enabled.
+        # Note that the `GeocodeCov` module itself performs this conversion
+        # if necessary (and it is faster than doing it as a pre-processing
+        # step).
         flag_rslc_to_backscatter = (not flag_fullcovariance and
-                                    flag_symmetrization_required)
+                                    (flag_apply_noise_correction or
+                                     flag_symmetrization_required))
 
         if flag_symmetrization_required:
 
@@ -423,6 +508,7 @@ def _run(cfg, raster_scratch_dir):
                 input_hdf5, frequency, 'HV',
                 symmetrized_hv_temp.name, 2**11,  # 2**11 = 2048 lines
                 flag_rslc_to_backscatter=flag_rslc_to_backscatter,
+                flag_apply_noise_correction=flag_apply_noise_correction,
                 pol_2='VH', format=output_gcov_terms_raster_files_format)
 
             # Since HV and VH were symmetrized into HV, remove VH from
@@ -455,31 +541,16 @@ def _run(cfg, raster_scratch_dir):
                     input_hdf5, frequency, pol,
                     temp_pol_file.name, 2**12,  # 2**12 = 4096 lines
                     flag_rslc_to_backscatter=flag_rslc_to_backscatter,
+                    flag_apply_noise_correction=flag_apply_noise_correction,
                     format=output_gcov_terms_raster_files_format)
 
             input_raster_list.append(input_raster)
 
         info_channel.log('Preparing multi-band raster for geocoding')
 
-        # if provided, load an external orbit from the runconfig file;
-        # othewise, load the orbit from the RSLC metadata
-        orbit = slc.getOrbit()
-        if orbit_file is not None:
-            external_orbit = load_orbit_from_xml(orbit_file,
-                                                 radar_grid.ref_epoch)
-
-            # Apply 2 mins of padding before / after sensing period when
-            # cropping the external orbit.
-            # 2 mins of margin is based on the number of IMAGEN TEC samples
-            # required for TEC computation, with few more safety margins for
-            # possible needs in the future.
-            #
-            # `7` in the line below is came from the default value for `npad`
-            # in `crop_external_orbit()`. See:
-            # .../isce3/python/isce3/core/crop_external_orbit.py
-            npad = max(int(120.0 / external_orbit.spacing), 7)
-            orbit = crop_external_orbit(external_orbit, orbit,
-                                        npad=npad)
+        # load the orbit, if it has not been loaded yet
+        if orbit is None:
+            orbit = load_orbit(slc, orbit_file, radar_grid.ref_epoch)
 
         # get azimuth ionospheric delay LUTs (if applicable)
         center_freq = \
@@ -503,8 +574,6 @@ def _run(cfg, raster_scratch_dir):
         optional_geo_kwargs['abs_cal_factor'] = abs_cal_factor
         optional_geo_kwargs['clip_min'] = clip_min
         optional_geo_kwargs['clip_max'] = clip_max
-        optional_geo_kwargs['geogrid_upsampling'] = geogrid_upsampling
-        optional_geo_kwargs['abs_cal_factor'] = abs_cal_factor
         optional_geo_kwargs['flag_upsample_radar_grid'] = \
             flag_upsample_radar_grid
 
@@ -590,7 +659,7 @@ def _run(cfg, raster_scratch_dir):
                 compression_level=radar_grid_cubes_compression_level,
                 shuffle_filter=radar_grid_cubes_shuffle_filter)
 
-    return output_files_list
+    return output_files_list, orbit
 
 
 if __name__ == "__main__":
@@ -608,9 +677,9 @@ if __name__ == "__main__":
     if os.path.isfile(sas_output_file):
         os.remove(sas_output_file)
 
-    output_files_list = run(gcov_runconfig.cfg)
+    output_files_list, orbit = run(gcov_runconfig.cfg)
 
-    with GcovWriter(runconfig=gcov_runconfig) as gcov_obj:
+    with GcovWriter(runconfig=gcov_runconfig, orbit=orbit) as gcov_obj:
         gcov_obj.populate_metadata()
 
     info_channel.log('output file(s):')

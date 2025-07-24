@@ -224,11 +224,11 @@ TEST_F(FrameTest, OperatorsEq)
 
     // equality
     EXPECT_TRUE(Frame() == Frame("el_and_az"))
-            << "Expect equality between two constrcutors";
+            << "Expect equality between two constructors";
 
     // inequality
     EXPECT_TRUE(Frame() != Frame("theta_phi"))
-            << "Expect inequality between two constrcutors";
+            << "Expect inequality between two constructors";
 }
 
 int main(int argc, char** argv)

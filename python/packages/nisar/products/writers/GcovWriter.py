@@ -50,21 +50,8 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
     rtc_upsampling = rtc_dict['dem_upsampling']
 
-    rtc_area_beta_mode = rtc_dict['area_beta_mode']
-    if rtc_area_beta_mode == 'pixel_area':
-        rtc_area_beta_mode_enum = \
-            isce3.geometry.RtcAreaBetaMode.PIXEL_AREA
-    elif rtc_area_beta_mode == 'projection_angle':
-        rtc_area_beta_mode_enum = \
-            isce3.geometry.RtcAreaBetaMode.PROJECTION_ANGLE
-    elif (rtc_area_beta_mode == 'auto' or
-            rtc_area_beta_mode is None):
-        rtc_area_beta_mode_enum = \
-            isce3.geometry.RtcAreaBetaMode.AUTO
-    else:
-        err_msg = ('ERROR invalid area beta mode:'
-                   f' {rtc_area_beta_mode}')
-        raise ValueError(err_msg)
+    rtc_area_beta_mode = \
+        isce3.geometry.normalize_rtc_area_beta_mode(rtc_dict['area_beta_mode'])
 
     # unpack geocode run parameters
     geocode_dict = cfg['processing']['geocode']
@@ -80,19 +67,6 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
         read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
                                         output_terrain_radiometry)
     save_mask = geocode_dict['save_mask']
-
-    min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
-    max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
-
-    # optional keyword arguments , i.e. arguments that may or may not be
-    # included in the call to geocode()
-    optional_geo_kwargs = {}
-
-    # read min/max block size converting MB to B
-    if min_block_size_mb is not None:
-        optional_geo_kwargs['min_block_size'] = min_block_size_mb * (2**20)
-    if max_block_size_mb is not None:
-        optional_geo_kwargs['max_block_size'] = max_block_size_mb * (2**20)
 
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']
@@ -253,7 +227,7 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
                 out_off_diag_terms=out_off_diag_terms_obj,
                 out_geo_nlooks=out_geo_nlooks_obj,
                 out_geo_rtc=out_geo_rtc_obj,
-                rtc_area_beta_mode=rtc_area_beta_mode_enum,
+                rtc_area_beta_mode=rtc_area_beta_mode,
                 out_geo_rtc_gamma0_to_sigma0=
                     out_geo_rtc_gamma0_to_sigma0_obj,
                 out_mask=out_mask_obj,
@@ -493,11 +467,23 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.check_and_decorate_product_using_specs_xml(specs_xml_file)
 
     def populate_ceos_analysis_ready_data_parameters(self):
+
+        flag_full_covariance = self.cfg['processing']['input_subset'][
+                    'fullcovariance']
+
         # Note: CEOS ARD documentation uses the British spelling "Normalised"
         # rather than the American (US) spelling "Normalized"
-        self.set_value(
-            '{PRODUCT}/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
-            'Normalised Radar Backscatter (NRB)')
+        if flag_full_covariance:
+            # [CovMat] is subtype of CEOS-ARD Polarimetric Radar [POL]
+            self.set_value(
+                '{PRODUCT}/metadata/ceosAnalysisReadyData/'
+                'ceosAnalysisReadyDataProductType',
+                'Normalised Covariance Matrix (CovMat)')
+        else:
+            self.set_value(
+                '{PRODUCT}/metadata/ceosAnalysisReadyData/'
+                'ceosAnalysisReadyDataProductType',
+                'Normalised Radar Backscatter (NRB)')
 
         self.set_value(
             '{PRODUCT}/metadata/ceosAnalysisReadyData/'
@@ -513,12 +499,20 @@ class GcovWriter(BaseL2WriterSingleInput):
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
             output_grids_freq_path = ('{PRODUCT}/grids/'
-                                       f'frequency{frequency}')
+                                      f'frequency{frequency}')
 
             self.copy_from_input(
                 f'{output_grids_freq_path}/numberOfSubSwaths',
                 f'{input_swaths_freq_path}/numberOfSubSwaths',
                 skip_if_not_present=True)
+
+            output_grids_freq_full_path = (f'{self.output_product_path}'
+                                           f'/grids/frequency{frequency}')
+
+            for axis in ['xCoordinates', 'yCoordinates']:
+                axis_path = f'{output_grids_freq_full_path}/{axis}'
+                self.output_hdf5_obj[axis_path].attrs[
+                    "pixel_coordinate_convention"] = np.bytes_('center')
 
     def populate_processing_information(self):
         """
@@ -529,9 +523,9 @@ class GcovWriter(BaseL2WriterSingleInput):
         parameters_group = \
             '{PRODUCT}/metadata/processingInformation/parameters'
 
-        self.set_value(
+        self.copy_from_runconfig(
             f'{parameters_group}/noiseCorrectionApplied',
-            False)
+            'processing/noise_correction/apply_correction')
 
         self.set_value(
             f'{parameters_group}/preprocessingMultilookingApplied',
@@ -580,9 +574,10 @@ class GcovWriter(BaseL2WriterSingleInput):
             f'{parameters_group}/validSamplesSubSwathMaskingApplied',
             'processing/geocode/apply_valid_samples_sub_swath_masking')
 
-        self.copy_from_runconfig(
+        # Shadow masking has not been implemented yet, so it's always `False`
+        self.set_value(
             f'{parameters_group}/shadowMaskingApplied',
-            'processing/geocode/apply_shadow_masking')
+            False)
 
         self.copy_from_runconfig(
             f'{parameters_group}/polarimetricSymmetrizationApplied',
@@ -621,7 +616,8 @@ class GcovWriter(BaseL2WriterSingleInput):
             'algorithm_type']
         if geocoding_algorithm == 'area_projection':
             geocoding_algorithm_name = ('Area-Based SAR Geocoding with'
-                                        ' Adaptive Multilooking (GEO-AP)')
+                                        ' Adaptive Multilooking (GEO-AP).'
+                                        ' DOI: 10.1109/TGRS.2022.3147472')
         else:
             geocoding_algorithm_name = geocoding_algorithm
 
@@ -635,7 +631,8 @@ class GcovWriter(BaseL2WriterSingleInput):
             'algorithm_type']
         if rtc_algorithm == 'area_projection':
             rtc_algorithm_name = ('Area-Based SAR Radiometric Terrain'
-                                  ' Correction (RTC-AP)')
+                                  ' Correction (RTC-AP).'
+                                  ' DOI: 10.1109/TGRS.2022.3147472')
         else:
             rtc_algorithm_name = rtc_algorithm
 

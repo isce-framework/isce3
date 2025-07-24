@@ -72,7 +72,7 @@ namespace isce3::cuda::geocode {
  * \param[in] side              look side
  * \param[in] geo2rdr_params    geo2rdr params
  * \param[in] geogrid           Geogrid defining output product/rasters
- * \param[in] radargrid         Radar grid decribing rasters to be geocoded
+ * \param[in] radargrid         Radar grid describing rasters to be geocoded
  * \param[in] line_start        Starting line of block
  * \param[in] block_size        Number of elements in a block
  * \param[in] proj              Projection used to covert geogrid XYZ to LLH

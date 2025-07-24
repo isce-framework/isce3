@@ -1,23 +1,15 @@
 # Use pinned oraclelinux:8 image
 ARG repository=cae-artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/iems/sds/infrastructure/base/jplsds-oraclelinux
-ARG tag=8.10.241001
-ARG digest=sha256:add0de53779191a7afed7ada9549e8fee20ef8486766eb8cb98c0d7639c865f1
+ARG tag=8.10.250401
+ARG digest=sha256:e37c210f26cfe7660808e536937fcf6ac359b3ec5713211e46519d7a35973a57
 FROM ${repository}:${tag}@${digest}
 
-RUN yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-
-# Trying to install a package that doesn't exist should be an error.
-RUN yum update -y \
- && yum clean all \
- && echo 'skip_missing_names_on_install=False' >> /etc/yum.conf \
- && rm -rf /var/cache/yum
-
-# install latest miniconda
+# install latest miniforge
 ARG conda_prefix
-RUN curl -sSL https://repo.anaconda.com/miniconda/Miniconda3-py312_24.7.1-0-Linux-x86_64.sh \
-        -o miniconda.sh \
- && bash miniconda.sh -b -p $conda_prefix \
- && rm miniconda.sh
+RUN curl -sSL https://github.com/conda-forge/miniforge/releases/download/24.11.3-2/Miniforge3-Linux-x86_64.sh \
+        -o Miniforge3.sh \
+ && bash Miniforge3.sh -b -p $conda_prefix \
+ && rm Miniforge3.sh
 ENV PATH="$conda_prefix/bin:$PATH"
 
 # use the libmamba solver, which is faster and has better diagnostics
@@ -37,17 +29,17 @@ ENV GDAL_DRIVER_PATH=$conda_prefix/lib/gdalplugins
 ENV PROJ_LIB=$conda_prefix/share/proj
 ENV MPLCONFIGDIR=/tmp
 
-ENV CUDA_VERSION_MAJOR 11
-ENV CUDA_VERSION_MINOR 4
-ENV CUDA_PKG_VERSION "${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}"
-
-RUN yum install -y \
-        cuda-cudart-$CUDA_PKG_VERSION \
-        libcufft-$CUDA_PKG_VERSION \
- && yum clean all \
- && rm -rf /var/cache/yum
+# In GDAL>=3.10, constructing a "MEM" raster from a pointer address is disallowed by
+# default for security reasons. See https://gdal.org/en/stable/drivers/raster/mem.html.
+ENV GDAL_MEM_ENABLE_OPEN=YES
 
 # https://github.com/NVIDIA/nvidia-container-runtime#environment-variables-oci-spec
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV NVIDIA_REQUIRE_CUDA "cuda>=${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}"
+
+# Specify the minimum driver version required on the host. The CUDA runtime libraries
+# installed within the container are backwards compatible with older drivers within the
+# same major version family. However, a newer driver may still be required if the GPU
+# architecture is different from the architectures that we target when compiling ISCE3
+# within the container image.
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11"

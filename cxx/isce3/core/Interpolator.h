@@ -12,6 +12,7 @@
 #include "Constants.h"
 #include "EMatrix.h"
 #include "Matrix.h"
+#include "detail/SSOBuffer.h"
 
 /** Definition of parent Interpolator */
 template<typename U>
@@ -150,11 +151,11 @@ private:
 
     // Utility spline functions
 private:
-    void _initSpline(const std::valarray<U>&, int, std::valarray<U>&,
-                     std::valarray<U>&) const;
+    void _initSpline(const detail::SSOBuffer<U>&, int, detail::SSOBuffer<U>&,
+                     detail::SSOBuffer<U>&) const;
 
-    U _spline(double, const std::valarray<U>&, int,
-              const std::valarray<U>&) const;
+    U _spline(double, const detail::SSOBuffer<U>&, int,
+              const detail::SSOBuffer<U>&) const;
 };
 
 /** Definition of Sinc2dInterpolator */

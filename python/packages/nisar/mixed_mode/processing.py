@@ -27,7 +27,7 @@ def get_common_band_filter(band_in, band_out, fs, attenuation=40.0, width=0.15,
     Returns
     -------
     coeffs : ndarray
-        Filter coeffients to apply to input data.  Length N will be odd, and
+        Filter coefficients to apply to input data.  Length N will be odd, and
         group delay will be (N-1)/2.
     shift : float
         Phase ramp in rad/sample needed to apply to input data to make it

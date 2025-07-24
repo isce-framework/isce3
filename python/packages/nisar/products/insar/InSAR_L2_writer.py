@@ -69,7 +69,7 @@ class L2InSARWriter(L1InSARWriter):
         grid_doppler : isce3.core.LUT2d
             The grid doppler look-up table
         threshold_geo2rdr : float
-            Convergence threashold for the geo2rdr
+            Convergence threshold for the geo2rdr
         numiter_geo2rdr : float
             Maximum number of iteration for geo2rdr
         delta_range : float

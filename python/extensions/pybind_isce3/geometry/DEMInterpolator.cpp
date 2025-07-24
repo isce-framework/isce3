@@ -14,6 +14,8 @@
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
 
+#include <pybind_isce3/core/Constants.h>
+
 namespace py = pybind11;
 
 using DEMInterp = isce3::geometry::DEMInterpolator;
@@ -53,7 +55,30 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
                     py::arg("raster"), py::arg("min_x"), py::arg("max_x"),
                     py::arg("min_y"), py::arg("max_y"), py::arg("raster_band") = 1)
 
-            .def("interpolate_lonlat", &DEMInterp::interpolateLonLat)
+            .def("interpolate_lonlat", &DEMInterp::interpolateLonLat,
+                R"(
+                Interpolate the digital elevation model at a given point.
+
+                Parameters
+                ----------
+                longitude : float
+                    Longitude in radians
+                latitude : float
+                    Geodetic latitude in radians
+
+                Returns
+                -------
+                height : float
+                    DEM value interpolated at requested point, or ref_height
+                    if point is not within the spatial extent of the DEM.
+                    This class does not perform any conversions for units or
+                    vertical datum, though many places in ISCE3 assume the value
+                    represents the height in meters above the ellipsoid
+                    associated with the DEM projection.
+                )",
+                py::arg("longitude"),
+                py::arg("latitude")
+            )
             .def("interpolate_xy", &DEMInterp::interpolateXY)
 
             .def_property("ref_height",
@@ -63,8 +88,9 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
             .def_property_readonly("have_stats", &DEMInterp::haveStats)
             .def_property("interp_method",
                     py::overload_cast<>(&DEMInterp::interpMethod, py::const_),
-                    py::overload_cast<isce3::core::dataInterpMethod>(
-                            &DEMInterp::interpMethod))
+                    [](DEMInterp& self, py::object method) {
+                        self.interpMethod(duck_method(method));
+                    })
 
             .def("compute_min_max_mean_height",
                     [](DEMInterp& self) {

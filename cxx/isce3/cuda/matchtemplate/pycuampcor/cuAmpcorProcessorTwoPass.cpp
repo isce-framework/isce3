@@ -426,7 +426,7 @@ cuAmpcorProcessorTwoPass::cuAmpcorProcessorTwoPass(cuAmpcorParameter *param_, Sl
     r_secondaryBatchOverSampled->allocate();
 
     referenceBatchOverSampler = new cuOverSamplerC2C(
-        c_referenceBatchRaw->height, c_referenceBatchRaw->width, //orignal size
+        c_referenceBatchRaw->height, c_referenceBatchRaw->width, //original size
         c_referenceBatchOverSampled->height, c_referenceBatchOverSampled->width, //oversampled size
         c_referenceBatchRaw->count, stream);
 

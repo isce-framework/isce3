@@ -86,13 +86,24 @@ void addbinding(py::class_<Orbit> & pyOrbit)
             "De-serialize orbit from h5py.Group object",
             py::arg("h5py_group"))
 
-        .def("save_to_h5", [](const Orbit& self, py::object h5py_group) {
+        .def("save_to_h5", [](const Orbit& self, py::object h5py_group,
+                              const bool ensureEpochIntegerSeconds) {
                 auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
                 isce3::io::IGroup group(id);
-                isce3::core::saveToH5(group, self);
+                isce3::core::saveToH5(group, self, ensureEpochIntegerSeconds);
             },
-            "Serialize Orbit to h5py.Group object.",
-            py::arg("h5py_group"))
+            R"(Serialize Orbit to h5py.Group object.
+
+             Parameters
+             ----------
+             h5py_group: h5py.Group
+                H5 group (h5py.Group) object
+             ensure_epoch_integer_seconds: bool
+                Ensure that the orbit reference epoch has integer seconds precision
+                (NISAR specs requirement)
+            )",
+            py::arg("h5py_group"),
+            py::arg("ensure_epoch_integer_seconds") = true)
 
         // trivial member getters
         .def_property_readonly("spacing",        &Orbit::spacing)

@@ -2,11 +2,8 @@ ISCE - InSAR Scientific Computing Environment
 =============================================
 
 [![Build Status](
-https://nisar-adt-ci.jpl.nasa.gov/buildStatus/icon?job=isce-develop)](
-https://nisar-adt-ci.jpl.nasa.gov/job/isce-develop/)|
-[![Nightly Build Status](
-https://nisar-adt-ci.jpl.nasa.gov/buildStatus/icon?job=isce-develop-nightly-build)](
-https://nisar-adt-ci.jpl.nasa.gov/job/isce-develop-nightly-build/)
+https://github.com/isce-framework/isce3/actions/workflows/build-and-run.yml/badge.svg)](
+https://github.com/isce-framework/isce3/actions/workflows/build-and-run.yml)
 
 The InSAR Scientific Computing Environment (ISCE) is an open source library for
 processing spaceborne and airborne Interferometric Synthetic Aperture Radar

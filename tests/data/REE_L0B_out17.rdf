@@ -413,7 +413,7 @@ Interpolation method used for generating output LUT (LINEAR or SPLINE) = LINEAR
 
 Whether or not use input file for tropospheric calculation (YES or NO) = NO
 
-Name of the input and ouput LUT for troposphere one-way range delay map (-) = LUT_TROPO_DEL_MAP.dat
+Name of the input and output LUT for troposphere one-way range delay map (-) = LUT_TROPO_DEL_MAP.dat
 
 Look angle and DEM height resolutions for output troposphere range delay map LUT (deg,m) = 0.01,10.0
 

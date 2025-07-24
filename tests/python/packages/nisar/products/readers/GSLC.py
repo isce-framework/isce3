@@ -45,7 +45,7 @@ def rslc_object() -> RSLC:
 def gslc_runconfig() -> GSLCRunConfig:
     test_yaml = os.path.join(iscetest.data, 'geocodeslc/test_gslc.yaml')
 
-    # load text then substitude test directory paths since data dir is read only
+    # load text then substitute test directory paths since data dir is read only
     with open(test_yaml) as fh_test_yaml:
         test_yaml = fh_test_yaml.read(). \
             replace('@ISCETEST@', iscetest.data). \

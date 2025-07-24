@@ -8,7 +8,7 @@ log = logging.getLogger("Raw")
 
 class DataDecoder(object):
     """Handle the various data types floating around for raw data, currently
-    complex32, complex64, and lookup table.  Indexing operatations always return
+    complex32, complex64, and lookup table.  Indexing operations always return
     data converted to complex64.
     """
     def __getitem__(self, key):

@@ -107,7 +107,14 @@ def cmd_line_parser():
                      help='Filename of an external attitude XML '
                      'file. The attitude data will be used in place of those '
                      'in L0B. Default is attitude data stored in L0B.')
-
+    prs.add_argument('--exclude-beams', type=int, nargs='*',
+                     dest='exclude_beams',
+                     help='List of excluded beams, in the range [1, N] where '
+                     'N is the number of RX channels or beams, in '
+                     'Doppler polyfitting only for DM2 L0B product (has no '
+                     'effect if the input product is not DM2). By '
+                     'default, the data from all beams is included in '
+                     'the polyfit.')
     return prs.parse_args()
 
 
