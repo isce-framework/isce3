@@ -381,11 +381,11 @@ class L1InSARWriter(InSARBaseWriter):
                                                     'seconds since ')
             if time_str is not None:
                 zero_dopp_time_units = time_str
-            
+
             # Get the azimuth spacing and the ground range spacings at the middle
             # of the swath for the offsets radar grid
-            off_da_center, off_dr_center = get_radar_grid_nominal_ground_spacing(off_radargrid, 
-                                                                                 self.ref_rslc.getOrbit())
+            off_da_center, off_dr_center = get_radar_grid_nominal_ground_spacing(off_radargrid,
+                                                                                 self.ref_orbit)
 
             ds_offsets_params = [
                 DatasetParams(
@@ -559,11 +559,11 @@ class L1InSARWriter(InSARBaseWriter):
                                                     'seconds since ')
             if time_str is not None:
                 zero_dopp_time_units = time_str
-            
+
             # Get the azimuth spacing and the ground range spacings at the middle
             # of the swath for the interferogram radar grid
-            igram_da_center, igram_dr_center = get_radar_grid_nominal_ground_spacing(igram_radargrid, 
-                                                                                     self.ref_rslc.getOrbit())
+            igram_da_center, igram_dr_center = get_radar_grid_nominal_ground_spacing(igram_radargrid,
+                                                                                     self.ref_orbit)
 
             ds_igram_params = [
                 DatasetParams(

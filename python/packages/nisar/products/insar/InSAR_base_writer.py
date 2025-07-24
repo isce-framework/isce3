@@ -800,7 +800,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "orbitFiles",
-                np.bytes_([orbit_file]),
+                np.bytes_(orbit_file),
                 "List of input orbit files used",
             ),
         ]
@@ -1011,16 +1011,6 @@ class InSARBaseWriter(h5py.File):
                 'Orbit direction, either "Ascending" or "Descending"',
             ),
             DatasetParams(
-                "plannedDatatakeId",
-                "None",
-                "List of planned datatakes included in the product",
-            ),
-            DatasetParams(
-                "plannedObservationId",
-                "None",
-                "List of planned observations included in the product",
-            ),
-            DatasetParams(
                 "isUrgentObservation",
                 "None",
                 'Flag indicating if observation is nominal ("False") or urgent ("True")',
@@ -1057,7 +1047,9 @@ class InSARBaseWriter(h5py.File):
         datasets_to_copy = ["zeroDopplerStartTime",
                             "zeroDopplerEndTime",
                             "absoluteOrbitNumber",
-                            "isJointObservation"]
+                            "isJointObservation",
+                            "plannedObservationId",
+                            "plannedDatatakeId"]
         cap = lambda x: f"{x[0].upper()}{x[1:]}"
 
         for ds_name in datasets_to_copy:
@@ -1081,10 +1073,18 @@ class InSARBaseWriter(h5py.File):
                 f"Azimuth {time_in_description} time (in UTC) of {rslc_name} RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss"
 
         for rslc_name in ['reference', 'secondary']:
-             # Update the description for the absolute orbit numbers
+             # Update descriptions for absolute orbit number, planned datatakes and observation
             ds = dst_id_group[f"{rslc_name}AbsoluteOrbitNumber"]
             ds.attrs['description'] = \
             f'Absolute orbit number for the {rslc_name} RSLC'
+
+            ds = dst_id_group[f"{rslc_name}PlannedDatatakeId"]
+            ds.attrs['description'] = \
+            f'List of planned datatakes included in the {rslc_name} RSLC'
+
+            ds = dst_id_group[f"{rslc_name}PlannedObservationId"]
+            ds.attrs['description'] = \
+            f'List of planned observations included in the {rslc_name} RSLC'
 
             #  Update the description for the isJointObservation
             #  If there is no isJointObservation in the identification group,
