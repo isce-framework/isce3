@@ -1742,6 +1742,17 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         scratch_path = self.cfg['product_path_group']['scratch_path']
 
+        if metadata_group == 'calibrationInformation':
+            metadata_geogrid = self.cfg['processing'][
+                'calibration_information']['geogrid']
+        elif metadata_group == 'processingInformation':
+            metadata_geogrid = self.cfg['processing'][
+                'processing_information']['geogrid']
+        else:
+            error_msg = f'Invalid metadata group {metadata_group}'
+            error_channel.log(error_msg)
+            raise NotImplementedError(error_msg)
+
         radar_grid_slc = self.input_product_obj.getRadarGrid(frequency)
 
         # If some -- but not all -- input datasets are 1-D, an error will be
@@ -2040,12 +2051,26 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         input_raster_obj = isce3.io.Raster(
             input_temp.name, raster_list=input_raster_list)
 
-        kwargs = {}
+        geocode_kwargs = {}
         if (lines == 1 or samples == 1):
-            kwargs['data_interpolator'] = 'nearest'
+            geocode_kwargs['data_interpolator'] = 'nearest'
 
         elif (lines < 5 or samples < 5):
-            kwargs['data_interpolator'] = 'bilinear'
+            geocode_kwargs['data_interpolator'] = 'bilinear'
+
+        # If geocoding the noise-equivalent backscatter LUT for GCOV products,
+        # the terrain radiometry convention needs to be updated from
+        # beta0/sigma0 to gamma0
+        flag_apply_rtc = (flag_noise_equivalent_backscatter and
+                          self.product_type == 'GCOV')
+
+        geocode_kwargs['flag_apply_rtc'] = flag_apply_rtc
+
+        if flag_apply_rtc:
+            geocode_kwargs['input_terrain_radiometry'] = \
+                self.cfg['processing']['rtc']['input_terrain_radiometry_enum']
+            geocode_kwargs['output_terrain_radiometry'] = \
+                self.cfg['processing']['rtc']['output_type_enum']
 
         self.geocode_raster(input_raster_obj,
                             output_h5_group_path,
@@ -2053,7 +2078,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                             radar_grid,
                             metadata_group,
                             compute_stats,
-                            **kwargs)
+                            **geocode_kwargs)
 
         input_temp.close()
 
@@ -2066,7 +2091,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                        radar_grid,
                        metadata_group,
                        compute_stats,
-                       data_interpolator=None):
+                       data_interpolator=None,
+                       geocode_kwargs=None):
         """
         Geocode an ISCE3 Raster object containing look-up tables (LUTs)
         radar coordinates to the output product in map coordinates
@@ -2091,6 +2117,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
+        geocode_kwargs: dict or None
+            Keyword arguments to be passed to the `geocode()`.
         """
 
         error_channel = journal.error('geocode_raster')
@@ -2169,26 +2197,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             temp_output.name, metadata_geogrid.width, metadata_geogrid.length,
             input_raster_obj.num_bands, dtype, 'GTiff')
 
-        # If geocoding the noise-equivalent backscatter LUT for GCOV products,
-        # the terrain radiometry convention needs to be updated from
-        # beta0/sigma0 to gamma0
-        flag_apply_rtc = (flag_noise_equivalent_backscatter and
-                          self.product_type == 'GCOV')
-
-        geocode_kwargs = {}
-        if flag_apply_rtc:
-            geocode_kwargs['input_terrain_radiometry'] = \
-                self.cfg['processing']['rtc']['input_terrain_radiometry_enum']
-            geocode_kwargs['output_terrain_radiometry'] = \
-                self.cfg['processing']['rtc']['output_type_enum']
-
         # geocode rasters
         geo.geocode(radar_grid=radar_grid,
                     input_raster=input_raster_obj,
                     output_raster=output_raster_obj,
                     output_mode=geocode_mode,
                     dem_raster=dem_raster,
-                    flag_apply_rtc=flag_apply_rtc,
                     exponent=exponent,
                     **geocode_kwargs)
 
@@ -2213,7 +2227,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                      compute_stats=compute_stats)
 
         temp_output.close()
-
 
     def get_az_parameters_for_noise_equivalent_backscatter_luts(
             self, frequency, input_ds_name_list, metadata_geogrid):
