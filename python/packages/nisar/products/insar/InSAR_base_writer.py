@@ -365,17 +365,17 @@ class InSARBaseWriter(h5py.File):
                 "rfiMitigation",
                 rfi_mitigation,
                 (
-                    f'Algorithm used for Radio Frequency Interference (RFI) mitigation in ' \
-                      'the {rslc_name} either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
-                      'mitigation was applied'
+                    f'Algorithm used for radio frequency interference (RFI) mitigation in ' \
+                      'the {rslc_name}, either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
+                      'mitigation was applied)'
                 ),
             ),
             DatasetParams(
                 "rfiMitigationApplied",
                 rfi_mitigation_flag,
                 (
-                    "Flag to indicate if Radio Frequency Interference mitigation has been applied"
-                    f" to {rslc_name} RSLC"
+                    "Flag to indicate if radio frequency interference mitigation was applied"
+                    f" to the {rslc_name} RSLC"
                 ),
             ),
             mixed_mode,
