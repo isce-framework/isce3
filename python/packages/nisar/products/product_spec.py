@@ -283,8 +283,7 @@ def get_product_spec_version(xml_string: str) -> str:
     Returns
     -------
     str
-        The product specification version string in
-        format.
+        The product specification version string.
     """
     # The version string is expected to follow the format '<MAJOR>.<MINOR>.<PATCH>', but
     # this may change in the future. This regex should be format-agnostic.
