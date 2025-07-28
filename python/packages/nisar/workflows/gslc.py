@@ -12,6 +12,7 @@ from isce3.core.rdr_geo_block_generator import block_generator
 from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
                               to_complex32)
 from isce3.io import HDF5OptimizedReader, optimize_chunk_size, compute_page_size
+from isce3.math import StatsRealImagFloat32
 
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit
@@ -137,7 +138,8 @@ def run(cfg):
             rslc_datasets = []
             gslc_datasets = []
 
-            stats_complex_list = [stats_complex() for _ in pol_list]
+            #stats_complex_list = [stats_complex() for _ in pol_list]
+            stats_complex_list = [StatsRealImagFloat32() for _ in pol_list]
 
             for polarization in pol_list:
                 # check the datatype of RSLC
@@ -203,7 +205,8 @@ def run(cfg):
 
                 # update the numbers for stats computation
                 for i, gslc_data_blk in enumerate(gslc_data_blks):
-                    stats_complex_list[i].accumulate_complex(gslc_data_blk)
+                    #stats_complex_list[i].accumulate_complex(gslc_data_blk)
+                    stats_complex_list[i].update(gslc_data_blk)
 
                 # write geocoded blocks to respective HDF5 datasets
                 for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
@@ -226,10 +229,8 @@ def run(cfg):
 
             # loop over polarizations and compute statistics
             for i, gslc_dataset in enumerate(gslc_datasets):
-                stats_complex_list[i].update_stat_complex()
+                #stats_complex_list[i].update_stat_complex()
                 write_stats_complex_data(gslc_dataset, stats_complex_list[i])
-
-
 
         cube_geogrid = isce3.product.GeoGridParameters(
             start_x=radar_grid_cubes_geogrid.start_x,
