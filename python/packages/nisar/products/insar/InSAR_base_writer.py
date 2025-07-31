@@ -366,7 +366,7 @@ class InSARBaseWriter(h5py.File):
                 rfi_mitigation,
                 (
                     f'Algorithm used for radio frequency interference (RFI) mitigation in ' \
-                      'the {rslc_name}, either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
+                      'the {rslc_name} RSLC, either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
                       'mitigation was applied)'
                 ),
             ),
@@ -374,8 +374,8 @@ class InSARBaseWriter(h5py.File):
                 "rfiMitigationApplied",
                 rfi_mitigation_flag,
                 (
-                    "Flag to indicate if radio frequency interference mitigation was applied"
-                    f" to the {rslc_name} RSLC"
+                    "Flag to indicate if radio frequency interference (RFI) mitigation was applied"
+                    f" during the generation of the {rslc_name} RSLC"
                 ),
             ),
             mixed_mode,
