@@ -363,7 +363,7 @@ class InSARBaseWriter(h5py.File):
         ds_params = [
             DatasetParams(
                 "rfiMitigation",
-                rfi_mitigation,
+                np.bytes_(rfi_mitigation),
                 (
                     f'Algorithm used for radio frequency interference (RFI) mitigation in ' \
                       'the {rslc_name} RSLC, either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
