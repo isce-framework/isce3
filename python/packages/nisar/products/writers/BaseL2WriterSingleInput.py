@@ -2096,7 +2096,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Raster object to geocode
         output_h5_group_path: str
             Path of the output group
-        output_ds_name_list: str, list
+        output_ds_name_list: str or list of str
             List of output LUT datasets
         radar_grid: isce3.product.RadarGridParameters
             RadarGridParameters object representing the geometry of the
