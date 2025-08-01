@@ -1688,7 +1688,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                input_h5_group_path,
                                output_h5_group_path,
                                skip_if_not_present,
-                               compute_stats):
+                               data_interpolator=False,
+                               compute_stats=False):
         """
         Geocode look-up tables (LUTs) from the input product in
         radar coordinates to the output product in map coordinates
@@ -1718,6 +1719,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         skip_if_not_present: bool, optional
             Flag to prevent the execution to stop if the dataset
             is not present from input
+        data_interpolator: str, optional
+            Interpolation algorithm to use for geocoding
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
@@ -2042,7 +2045,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             input_temp.name, raster_list=input_raster_list)
 
         geocode_kwargs = {}
-        if (lines == 1 or samples == 1):
+        if data_interpolator is not None:
+            geocode_kwargs['data_interpolator'] = data_interpolator
+        elif (lines == 1 or samples == 1):
             geocode_kwargs['data_interpolator'] = 'nearest'
 
         elif (lines < 5 or samples < 5):
@@ -2108,7 +2113,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
-        data_interpolator: str
+        data_interpolator: str, optional
             Interpolation algorithm to use for geocoding
         **geocode_kwargs
             Keyword arguments to be passed to the `geocode()`.
