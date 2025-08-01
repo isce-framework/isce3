@@ -1507,8 +1507,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 output_ds_name_list=ds_name_list,
                 skip_if_not_present=True)
 
-    def geocode_lut_object(self, correction_lut, lut_name,
-                           timing_corrections_group_path, frequency):
+    def geocode_isce3_lut(self, correction_lut, lut_name,
+                          timing_corrections_group_path, frequency):
         '''
         Geocode ISCE3 look-up table (LUT) object
 

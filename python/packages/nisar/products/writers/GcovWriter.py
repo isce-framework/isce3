@@ -825,7 +825,7 @@ class GcovWriter(BaseL2WriterSingleInput):
                 az_correction_lut = \
                     self.timing_corrections_dict['az_correction'][frequency]
 
-                self.geocode_lut_object(
+                self.geocode_isce3_lut(
                     az_correction_lut, 'azimuthIonosphere',
                     timing_corrections_group_path, frequency)
 
@@ -835,7 +835,7 @@ class GcovWriter(BaseL2WriterSingleInput):
                 rg_correction_lut = \
                     self.timing_corrections_dict['rg_correction'][frequency]
 
-                self.geocode_lut_object(
+                self.geocode_isce3_lut(
                     rg_correction_lut, 'slantRangeIonosphere',
                     timing_corrections_group_path, frequency)
 
