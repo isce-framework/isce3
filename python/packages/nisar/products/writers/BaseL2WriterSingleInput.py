@@ -1561,6 +1561,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 correction_lut.width,
                 radar_grid_slc.ref_epoch)
 
+        # Use nearest neighbor interpolation because these timing correction LUTs
+        # are expected to be very small -- just a couple of samples in range & azimuth.
         self.geocode_raster(correction_raster,
                             timing_corrections_group_path,
                             [lut_name],
