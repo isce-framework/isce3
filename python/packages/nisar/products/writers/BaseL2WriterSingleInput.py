@@ -2080,7 +2080,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                        output_ds_name_list,
                        radar_grid,
                        metadata_group,
-                       compute_stats,
+                       compute_stats=False,
                        data_interpolator=None,
                        **geocode_kwargs):
         """
