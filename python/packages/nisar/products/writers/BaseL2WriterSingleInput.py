@@ -1525,16 +1525,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Frequency sub-band, used to read the sub-band wavelength.
         '''
 
-        '''
-            timing_corrections_group = self.output_hdf5_obj.require_group(
-                f'{timing_corrections_group_path}/frequency{frequency}/')
-
-            # Az. correction
-            add_cal_layer(timing_corrections_group, lut=correction,
-                            name="azimuthIonosphere", epoch=ref_epoch,
-                            units="seconds", description='')
-        '''
-
         new_var_array = correction_lut.data
 
         driver = gdal.GetDriverByName("GTiff")
