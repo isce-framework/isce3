@@ -2108,6 +2108,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
+        data_interpolator: str
+            Interpolation algorithm to use for geocoding
         **geocode_kwargs
             Keyword arguments to be passed to the `geocode()`.
         """
