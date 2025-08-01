@@ -1569,8 +1569,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                             compute_stats=True,
                             data_interpolator='nearest')
 
-        return frequency
-
     def geocode_lut(self, output_h5_group, input_h5_group=None,
                     frequency=None, output_ds_name_list=None,
                     input_ds_name_list=None,
