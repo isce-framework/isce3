@@ -2093,21 +2093,22 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         Parameters
         ----------
         input_raster_obj: isce3.io.Raster
-            Raster object to geocode
+            Raster object to geocode.
         output_h5_group_path: str
-            Path of the output group
+            Path of the output group.
         output_ds_name_list: str or list of str
-            List of output LUT datasets
+            List of output LUT datasets. If the list contains only one
+            element, it may also be provided as a string.
         radar_grid: isce3.product.RadarGridParameters
             RadarGridParameters object representing the geometry of the
-            input raster object
+            input raster object.
         metadata_group: str
             Metadata group, either 'calibrationInformation'
-            or 'processingInformation'
+            or 'processingInformation'.
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
-        geocode_kwargs: dict or None
+        **geocode_kwargs
             Keyword arguments to be passed to the `geocode()`.
         """
 
