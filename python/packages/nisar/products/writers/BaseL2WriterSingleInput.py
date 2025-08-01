@@ -2085,7 +2085,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                        **geocode_kwargs):
         """
         Geocode an ISCE3 Raster object containing look-up tables (LUTs)
-        radar coordinates to the output product in map coordinates
+        in radar coordinates to the output product in map coordinates
         using runconfig parameters associated with that
         metadata group, either 'calibrationInformation'
         or 'processingInformation'
