@@ -1685,7 +1685,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                input_h5_group_path,
                                output_h5_group_path,
                                skip_if_not_present,
-                               data_interpolator=False,
+                               data_interpolator=None,
                                compute_stats=False):
         """
         Geocode look-up tables (LUTs) from the input product in
@@ -2041,14 +2041,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         input_raster_obj = isce3.io.Raster(
             input_temp.name, raster_list=input_raster_list)
 
-        geocode_kwargs = {}
-        if data_interpolator is not None:
-            geocode_kwargs['data_interpolator'] = data_interpolator
-        elif (lines == 1 or samples == 1):
-            geocode_kwargs['data_interpolator'] = 'nearest'
+        if (data_interpolator is None and (lines == 1 or samples == 1)):
+            data_interpolator = 'nearest'
 
-        elif (lines < 5 or samples < 5):
-            geocode_kwargs['data_interpolator'] = 'bilinear'
+        if (data_interpolator is None and (lines < 5 or samples < 5)):
+            data_interpolator = 'bilinear'
 
         # If geocoding the noise-equivalent backscatter LUT for GCOV products,
         # the terrain radiometry convention needs to be updated from
@@ -2056,6 +2053,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         flag_apply_rtc = (flag_noise_equivalent_backscatter and
                           self.product_type == 'GCOV')
 
+        geocode_kwargs = {}
         geocode_kwargs['flag_apply_rtc'] = flag_apply_rtc
 
         if flag_apply_rtc:
@@ -2070,6 +2068,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                             radar_grid,
                             metadata_geogrid,
                             compute_stats,
+                            data_interpolator=data_interpolator,
                             **geocode_kwargs)
 
         input_temp.close()
