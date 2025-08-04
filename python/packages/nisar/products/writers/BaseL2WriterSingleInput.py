@@ -1527,26 +1527,19 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         new_var_array = correction_lut.data
 
-        driver = gdal.GetDriverByName("GTiff")
-        dtype = gdal_array.NumericTypeCodeToGDALTypeCode(
-                new_var_array.dtype)
-        length, width = new_var_array.shape
-
         scratch_path = self.cfg['product_path_group']['scratch_path']
         temp_file = tempfile.NamedTemporaryFile(dir=scratch_path,
-                                                suffix='.tif')
-        dset = driver.Create(temp_file.name, xsize=width, ysize=length,
-                             bands=1, eType=dtype)
-        raster_band = dset.GetRasterBand(1)
-        raster_band.WriteArray(new_var_array)
-
-        # flush data to the disk (gc is the garbage collector)
-        raster_band.FlushCache()
-        del raster_band
-        del dset
-        gc.collect()
-
-        correction_raster = isce3.io.Raster(temp_file.name)
+                                                suffix='.bin')
+        length, width = new_var_array.shape
+        dtype = gdal_array.NumericTypeCodeToGDALTypeCode(
+            new_var_array.dtype)
+        correction_raster = isce3.io.Raster(path=temp_file.name,
+                                            width=width,
+                                            length=length,
+                                            num_bands=1,
+                                            dtype=dtype,
+                                            driver_name="ENVI")
+        correction_raster[:, :] = new_var_array
 
         radar_grid_slc = self.input_product_obj.getRadarGrid(frequency)
 
@@ -1561,8 +1554,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 correction_lut.width,
                 radar_grid_slc.ref_epoch)
 
-        # Use nearest neighbor interpolation because these timing correction LUTs
-        # are expected to be very small -- just a couple of samples in range & azimuth.
+        # Use nearest neighbor interpolation because these timing correction
+        # LUTs are expected to be very small -- just a couple of samples in
+        # range and azimuth.
         self.geocode_raster(correction_raster,
                             timing_corrections_group_path,
                             [lut_name],
