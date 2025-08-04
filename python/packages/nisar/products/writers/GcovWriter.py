@@ -818,6 +818,9 @@ class GcovWriter(BaseL2WriterSingleInput):
              '/metadata/processingInformation/'
              'timingCorrections')
 
+        processing_information_geogrid = self.cfg['processing'][
+            'processing_information']['geogrid']
+
         for frequency in self.input_freq_pols_dict.keys():
 
             if (self.timing_corrections_dict is not None and
@@ -828,7 +831,8 @@ class GcovWriter(BaseL2WriterSingleInput):
 
                 self.geocode_isce3_lut(
                     az_correction_lut, 'azimuthIonosphere',
-                    timing_corrections_group_path, frequency)
+                    timing_corrections_group_path, frequency,
+                    processing_information_geogrid)
 
             if (self.timing_corrections_dict is not None and
                 frequency in
@@ -838,7 +842,8 @@ class GcovWriter(BaseL2WriterSingleInput):
 
                 self.geocode_isce3_lut(
                     rg_correction_lut, 'slantRangeIonosphere',
-                    timing_corrections_group_path, frequency)
+                    timing_corrections_group_path, frequency,
+                    processing_information_geogrid)
 
     def populate_orbit_gcov_specific(self):
         """

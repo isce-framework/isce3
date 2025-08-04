@@ -1508,7 +1508,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 skip_if_not_present=True)
 
     def geocode_isce3_lut(self, correction_lut, lut_name,
-                          timing_corrections_group_path, frequency):
+                          timing_corrections_group_path, frequency,
+                          metadata_geogrid):
         '''
         Geocode ISCE3 look-up table (LUT) object
 
@@ -1522,7 +1523,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         timing_corrections_group_path: str
             Path to the output HDF5 LUT group
         frequency: str, optional
-            Frequency sub-band, used to read the sub-band wavelength.
+            Frequency sub-band, used to read the sub-band wavelength
+        metadata_geogrid: GeoGridParameters
+            GeoGrid parameters of the output raster
         '''
 
         new_var_array = correction_lut.data
@@ -1561,7 +1564,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                             timing_corrections_group_path,
                             [lut_name],
                             radar_grid,
-                            metadata_group='processingInformation',
+                            metadata_geogrid,
                             compute_stats=True,
                             data_interpolator='nearest')
 
@@ -2065,7 +2068,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                             output_h5_group_path,
                             output_ds_name_list,
                             radar_grid,
-                            metadata_group,
+                            metadata_geogrid,
                             compute_stats,
                             **geocode_kwargs)
 
@@ -2078,7 +2081,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                        output_h5_group_path,
                        output_ds_name_list,
                        radar_grid,
-                       metadata_group,
+                       metadata_geogrid,
                        compute_stats,
                        data_interpolator=None,
                        **geocode_kwargs):
@@ -2101,9 +2104,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         radar_grid: isce3.product.RadarGridParameters
             RadarGridParameters object representing the geometry of the
             input raster object.
-        metadata_group: str
-            Metadata group, either 'calibrationInformation'
-            or 'processingInformation'.
+        metadata_geogrid: GeoGridParameters
+            GeoGrid parameters of the output raster
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
@@ -2116,17 +2118,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         error_channel = journal.error('geocode_raster')
 
         scratch_path = self.cfg['product_path_group']['scratch_path']
-
-        if metadata_group == 'calibrationInformation':
-            metadata_geogrid = self.cfg['processing'][
-                'calibration_information']['geogrid']
-        elif metadata_group == 'processingInformation':
-            metadata_geogrid = self.cfg['processing'][
-                'processing_information']['geogrid']
-        else:
-            error_msg = f'Invalid metadata group {metadata_group}'
-            error_channel.log(error_msg)
-            raise NotImplementedError(error_msg)
 
         dem_file = self.cfg['dynamic_ancillary_file_group']['dem_file']
 
