@@ -1685,8 +1685,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                input_h5_group_path,
                                output_h5_group_path,
                                skip_if_not_present,
-                               data_interpolator=None,
-                               compute_stats=False):
+                               compute_stats=False,
+                               data_interpolator=None):
         """
         Geocode look-up tables (LUTs) from the input product in
         radar coordinates to the output product in map coordinates
@@ -1716,11 +1716,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         skip_if_not_present: bool, optional
             Flag to prevent the execution to stop if the dataset
             is not present from input
-        data_interpolator: str, optional
-            Interpolation algorithm to use for geocoding
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
+        data_interpolator: str, optional
+            Interpolation algorithm to use for geocoding
 
         Returns
         -------
@@ -2044,7 +2044,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         if (data_interpolator is None and (lines == 1 or samples == 1)):
             data_interpolator = 'nearest'
 
-        if (data_interpolator is None and (lines < 5 or samples < 5)):
+        elif (data_interpolator is None and (lines < 5 or samples < 5)):
             data_interpolator = 'bilinear'
 
         # If geocoding the noise-equivalent backscatter LUT for GCOV products,
