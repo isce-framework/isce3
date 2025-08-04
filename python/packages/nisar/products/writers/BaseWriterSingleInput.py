@@ -496,7 +496,6 @@ class BaseWriterSingleInput():
 
         # Example:
         # self.output_product_path = '/science/LSAR/GCOV'
-
         self.output_product_path = f'{self.root_path}/{self.product_type}'
 
         self.input_hdf5_obj = h5py.File(self.input_file, mode='r', swmr=True)

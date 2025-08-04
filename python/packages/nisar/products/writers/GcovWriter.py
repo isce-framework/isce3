@@ -814,7 +814,8 @@ class GcovWriter(BaseL2WriterSingleInput):
         GCOV product
         """
         timing_corrections_group_path = \
-            ('science/LSAR/GCOV/metadata/processingInformation/'
+            (self.output_product_path +
+             '/metadata/processingInformation/'
              'timingCorrections')
 
         for frequency in self.input_freq_pols_dict.keys():
