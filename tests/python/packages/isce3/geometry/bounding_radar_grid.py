@@ -378,6 +378,95 @@ class TestGetBoundingRadarGrid:
         assert out_radar_grid.lookside == radar_grid.lookside
         assert out_radar_grid.ref_epoch == radar_grid.ref_epoch
 
+    def test_antimeridian_crossing(self):
+        # An orbit segment spanning a frame that crosses the antimeridian.
+        orbit_xml_path = os.path.join(
+            iscetest.data,
+            "NISAR_ANC_L_PR_FOE_20250806T193246_20230104T061021_20230104T061655.xml",
+        )
+        orbit = nisar.products.readers.orbit.load_orbit_from_xml(orbit_xml_path)
+
+        # Geo grid parameters for a NISAR frame that spans the antimeridian, with 80m
+        # spacing.
+        geo_grid = isce3.product.GeoGridParameters(
+            start_x=591840.0,
+            start_y=8272800.0,
+            spacing_x=80.0,
+            spacing_y=-80.0,
+            width=4167,
+            length=3987,
+            epsg=32760,
+        )
+
+        # Get a radar grid that contains the geo grid.
+        radar_grid = isce3.geometry.get_bounding_radar_grid(
+            geo_grid=geo_grid,
+            az_spacing=0.0006,
+            rg_spacing=6.0,
+            orbit=orbit,
+            look_side="left",
+            wavelength=0.24,
+        )
+
+        # Get the latitude coordinate (in degrees) of the mid-point of the geo grid.
+        x_mid = geo_grid.start_x + 0.5 * geo_grid.spacing_x * geo_grid.width
+        y_mid = geo_grid.start_y + 0.5 * geo_grid.spacing_y * geo_grid.length
+        proj = isce3.core.make_projection(geo_grid.epsg)
+        _, lat_mid, _ = np.rad2deg(proj.inverse((x_mid, y_mid, 0.0)))
+
+        # Check that a pair of points just west and just east of the antimeridian are
+        # both contained within the radar grid.
+        lonlat_proj = isce3.core.make_projection(4326)
+        zero_doppler = isce3.core.LUT2d()
+        for lon in [-179.99, 179.99]:
+            check_radar_grid_contains_geo_pt(
+                radar_grid=radar_grid,
+                geo_pt=(lon, lat_mid, 0.0),
+                proj=lonlat_proj,
+                orbit=orbit,
+                doppler=zero_doppler,
+            )
+
+    def test_pole_crossing(self):
+        # An orbit segment near the South pole.
+        orbit_xml_path = os.path.join(
+            iscetest.data,
+            "NISAR_ANC_L_PR_FOE_20250806T193731_20230105T054735_20230105T055408.xml",
+        )
+        orbit = nisar.products.readers.orbit.load_orbit_from_xml(orbit_xml_path)
+
+        # A geo grid that contains the South pole.
+        geo_grid = isce3.product.GeoGridParameters(
+            start_x=-1.0,
+            start_y=-88.0,
+            spacing_x=0.001,
+            spacing_y=-0.002,
+            width=2001,
+            length=2001,
+            epsg=4326,
+        )
+
+        # Get a radar grid that contains the geo grid.
+        radar_grid = isce3.geometry.get_bounding_radar_grid(
+            geo_grid=geo_grid,
+            az_spacing=0.0006,
+            rg_spacing=6.0,
+            orbit=orbit,
+            look_side="left",
+            wavelength=0.24,
+        )
+
+        # Check that the radar grid contains the pole.
+        lonlat_proj = isce3.core.make_projection(4326)
+        zero_doppler = isce3.core.LUT2d()
+        check_radar_grid_contains_geo_pt(
+            radar_grid=radar_grid,
+            geo_pt=(0.0, -90.0, 0.0),
+            proj=lonlat_proj,
+            orbit=orbit,
+            doppler=zero_doppler,
+        )
+
     def test_bad_height_range(
         self,
         winnipeg_rslc: nisar.products.readers.RSLC,
