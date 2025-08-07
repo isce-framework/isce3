@@ -797,7 +797,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     sr = osr.SpatialReference()
     sr.ImportFromEPSG(epsg_code)
 
-    projds.attrs['grid_mapping_name'] = get_grid_mapping_name(sr)
+    projds.attrs['grid_mapping_name'] = np.bytes_(get_grid_mapping_name(sr))
 
     # Set up units
     # Geodetic latitude / longitude

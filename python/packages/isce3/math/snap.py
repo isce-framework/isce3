@@ -9,7 +9,7 @@ def snap(x, interval, round_func=np.ceil):
     Parameters
     ----------
     x : float
-        An arbitary location on the real line.
+        An arbitrary location on the real line.
     interval : float
         The spacing of a grid with origin at x=0.
         Same units as x.
@@ -32,7 +32,7 @@ def snap_datetime(t, interval, round_func=np.ceil):
     Parameters
     ----------
     t : isce3.core.DateTime
-        An arbitary time point.
+        An arbitrary time point.
     interval : float
         The spacing (in seconds) of a time grid with origin at the midnight on
         or before `t`.

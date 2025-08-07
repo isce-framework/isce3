@@ -211,7 +211,8 @@ def test_ionosphere_filter():
         mask_path=mask_path,
         filtered_output=filt_simul_disp_path,
         filtered_std_dev=filt_simul_disp_sig_path,
-        lines_per_block=500)
+        lines_per_block=500,
+        min_cluster_pixels=0)
 
     filt_iter_1_gdal = gdal.Open(filt_simul_disp_path)
     filt_iter_1 = filt_iter_1_gdal.ReadAsArray()
@@ -233,14 +234,17 @@ def test_ionosphere_filter():
         mask_path=mask_path,
         filtered_output=filt_simul_disp_path,
         filtered_std_dev=filt_simul_disp_sig_path,
-        lines_per_block=500)
+        lines_per_block=500,
+        min_cluster_pixels=0)
 
     filt_iter_3_gdal = gdal.Open(filt_simul_disp_path)
     filt_iter_3 = filt_iter_3_gdal.ReadAsArray()
     filt_iter_3_gdal = None
     del filt_iter_3_gdal
     # only compare the regions which is not affected by invalid region
-    difference = np.sum(np.abs(filt_iter_1[:30, :30] - filt_iter_3[:30, :30] ))
+    difference = np.sum(np.abs(
+        filt_iter_1[int(kernel_azimuth_size/2):30, int(kernel_range_size/2):30] -
+        filt_iter_3[int(kernel_azimuth_size/2):30, int(kernel_range_size/2):30]))
     assert difference < 1e-5
 
 def test_decimate_runw():

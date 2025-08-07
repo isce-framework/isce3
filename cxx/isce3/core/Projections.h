@@ -214,7 +214,7 @@ public:
     /** @copydoc ProjectionBase::print() */
     void print() const override;
 
-    /** Transfrom from llh(rad) to Polar Stereo (m) */
+    /** Transform from llh(rad) to Polar Stereo (m) */
     int forward(const Vec3&, Vec3&) const override;
 
     /** Transform from Polar Stereo (m) to llh (rad) */

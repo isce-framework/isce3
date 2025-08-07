@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from osgeo import gdal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from journal.ext.journal import ApplicationError
+import journal
 
 from isce3.io.gdal.gdal_raster import GDALRaster
 
@@ -37,7 +37,7 @@ def test_lt_1_band_creation(num_bands):
 
         # The class should fail with an ApplicationError if the number of bands given
         # is less than 1.
-        with pytest.raises(ApplicationError):
+        with pytest.raises(journal.ApplicationError):
             GDALRaster.create_dataset_file(
                 filepath=filepath,
                 dtype=np.float64,
@@ -117,13 +117,13 @@ def test_stride_errors(step_size):
 
         # ApplicationErrors should be raised when strided slicing is used in either
         # dimension to access or write to a raster.
-        with pytest.raises(ApplicationError):
+        with pytest.raises(journal.ApplicationError):
             nope = raster[::step_size, :]
-        with pytest.raises(ApplicationError):
+        with pytest.raises(journal.ApplicationError):
             nope = raster[:, ::step_size]
-        with pytest.raises(ApplicationError):
+        with pytest.raises(journal.ApplicationError):
             raster[::step_size, :] = dummy_array
-        with pytest.raises(ApplicationError):
+        with pytest.raises(journal.ApplicationError):
             raster[:, ::step_size] = dummy_array
 
 

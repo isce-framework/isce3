@@ -251,7 +251,7 @@ namespace isce3 { namespace core {
     }
 
     /** making a boolean mask for an array based on noDataValue
-     * @param[in] v inout array
+     * @param[in] v input array
      * @param[in] noDataValue the value used to create the mask
      * @param[out] returns a boolean mask */
     template <typename T>
@@ -269,7 +269,7 @@ namespace isce3 { namespace core {
     }
 
     /** making a boolean mask for an array based on noDataValue
-     * @param[in] v inout array
+     * @param[in] v input array
      * @param[in] noDataValue the value used to create the mask
      * @param[out] returns a boolean mask */
     template <typename T>

@@ -111,7 +111,7 @@ class RxTrmInfo:
         (AC table) in radians with shape
         (total RX channels, number of DBF coeffs).
     fs_win : float, default=240e6
-        Sampling frequency in (Hz) at which fast-time range window paramters
+        Sampling frequency in (Hz) at which fast-time range window parameters
         RD/WD/WL are generated.
     fs_ta : float, default=96e6
         Sampling rate of DBF fast-time indexing in time-to-angle and

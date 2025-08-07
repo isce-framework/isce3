@@ -76,7 +76,7 @@ void detect_edge(int nr_lines, int nr_pixels, float **data, unsigned char **edge
 
 
 
-      if(Ca < C_min) continue;      // Homogenous area with no edge
+      if(Ca < C_min) continue;      // Homogeneous area with no edge
 
 // Check Edge structures ......
       // horizontal edge ......
@@ -342,7 +342,7 @@ void detect_edge(int nr_lines, int nr_pixels, float **data,
       double Ca = sqrt(deviation)/mean;
 
 
-//      if(Ca < coefficient_variance_min) continue;      // Homogenous area with no edge
+//      if(Ca < coefficient_variance_min) continue;      // Homogeneous area with no edge
 
       double weight = (1.0 - Cu2/Ca/Ca)/(1 + Cu2);
       ca_data[line][pixel] = weight;

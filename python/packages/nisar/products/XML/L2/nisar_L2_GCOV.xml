@@ -397,7 +397,7 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
-                      units="1">Covariance betweeen HH and VH</annotation>
+                      units="1">Covariance between HH and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/HHVV"
@@ -474,7 +474,7 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
-                      units="1">Covariance betweeen HH and VV</annotation>
+                      units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/VHVH"
@@ -511,7 +511,7 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
-                      units="1">Covariance betweeen VH and VV</annotation>
+                      units="1">Covariance between VH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/VVVV"
@@ -774,7 +774,7 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
-                      units="1">Covariance betweeen HH and VH</annotation>
+                      units="1">Covariance between HH and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/HHVV"
@@ -851,7 +851,7 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
-                      units="1">Covariance betweeen HH and VV</annotation>
+                      units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/VHVH"
@@ -888,7 +888,7 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
-                      units="1">Covariance betweeen VH and VV</annotation>
+                      units="1">Covariance between VH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/VVVV"
@@ -3482,7 +3482,7 @@
     <shape name="numberOfInputTecFiles"
            order="slowest...fastest">
       <annotation app="conformance"
-                  lang="en">Number of input total electon content (TEC) files</annotation>
+                  lang="en">Number of input total electron content (TEC) files</annotation>
       <dimension extent="0"
                  name="numberOfInputTecFiles"/>
     </shape>

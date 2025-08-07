@@ -30,18 +30,18 @@ def cmd_line_parse():
         fromfile_prefix_chars="@",
     )
     parser.add_argument('l0b_file', type=str, help='L0B path and filename')
-    parser.add_argument('-n', '--num-rng-block', type=int,
+    parser.add_argument('-n', '--num-rng-block', type=int, default=80,
                         dest='num_rng_block',
-                        help=('Number of range blocks. Default is min '
-                              'recommended `2*C-1` where `C` is number of RX '
-                              'channels.')
+                        help=('Number of range blocks. The recommended value '
+                              'shall be at least `2*C-1` where `C` is the '
+                              'number of RX channels.')
                         )
     parser.add_argument('-c', '--cpi', type=int, dest='cpi',
                         help=('Coherent processing interval in number of '
                               'range lines. Only used when algorithm=MEE. '
-                              'Min required value is 2! Default is set to '
-                              'min 3 while the max number of CPI blocks is '
-                              'limited to 8 if possible.')
+                              'Min required value is 2! Default is set to a '
+                              'value within [3, 100] while limiting the max '
+                              'number of CPI blocks to 8 if possible.')
                         )
     parser.add_argument('-a', '--algorithm', dest='algorithm', type=str,
                         default='MEE', choices=('MVE', 'MEE'),
@@ -97,6 +97,13 @@ def cmd_line_parse():
     parser.add_argument('--plot', action='store_true', dest='plot',
                         help='Generates PNG plots of noise power at `output`.'
                         )
+    parser.add_argument('--max-lines', type=int, default=18944,
+                        help=('Max number of noise-only range lines to be '
+                              'extracted from raw raster at a time. This is '
+                              'simply used for noise-only NISAR L0B products '
+                              'with RCID=1,2,3 where all range lines are '
+                              'utilized in noise estimation!')
+                        )
 
     return parser.parse_args()
 
@@ -129,7 +136,8 @@ def run_noise_estimator(args: argparse.Namespace):
         dif_quad=args.diff_quad,
         perc_invalid_rngblk=args.pct_invalid_rngblk,
         exclude_first_last=args.exclude_first_last,
-        logger=logger
+        logger=logger,
+        max_lines=args.max_lines
     )
     # report stats of noise power
     for ns_prod in noise_prods:
@@ -148,9 +156,9 @@ def run_noise_estimator(args: argparse.Namespace):
             plot_name = (f'Plot_Noise_Power_{ns_prod.method}_'
                          f'Freq{ns_prod.freq_band}_'
                          f'Pol{ns_prod.txrx_pol}.png')
-            plt.figure()
-            plt.plot(ns_prod.slant_range * 1e-3,
-                     10 * np.log10(ns_prod.power_linear), 'r*--')
+            sr_km = ns_prod.slant_range * 1e-3
+            plt.figure(figsize=(8, 8))
+            plt.plot(sr_km, 10 * np.log10(ns_prod.power_linear.T), '*--')
             plt.xlabel('Slant Range (km)')
             plt.ylabel(r'Noise Power (${dB_{DN^2}}$)')
             plt.grid(True)

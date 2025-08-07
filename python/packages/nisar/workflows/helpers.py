@@ -591,9 +591,9 @@ def get_pixel_offsets_params(cfg : dict):
     az_start : int
         Start azimuth
     rg_skip : int
-        Pixels skiped across range
+        Pixels skipped across range
     az_skip : int
-        Pixels skiped across the azimth
+        Pixels skipped across the azimth
     rg_search : int
         Window size across range
     az_search : int

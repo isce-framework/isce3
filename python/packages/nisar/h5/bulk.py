@@ -82,7 +82,7 @@ def cp_h5_meta_data(src_h5, dst_h5, src_path, dst_path=None,
     else:
         dst_group = dst_h5[dst_parent_path]
 
-        # if flag_overwrite, delete exising dataset
+        # if flag_overwrite, delete existing dataset
         if flag_overwrite and dst_name in dst_group:
             del dst_group[dst_name]
 

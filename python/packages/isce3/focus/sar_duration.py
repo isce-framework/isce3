@@ -103,7 +103,7 @@ def predict_azimuth_envelope(azres, prf, vs, L=12, n=256, circular=True):
     # processed_angle is the angular extent corresponding to processed
     # azimuth bandwidth.
     processed_angle = wvl / (2 * azres)
-    # total_angle is the angular extent corresonding to given PRF.
+    # total_angle is the angular extent corresponding to given PRF.
     az_spacing = vs / prf
     total_angle = wvl / (2 * az_spacing)
     theta = np.fft.fftfreq(n) * total_angle

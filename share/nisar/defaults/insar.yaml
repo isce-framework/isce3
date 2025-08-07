@@ -270,17 +270,18 @@ runconfig:
                     enabled: True
                     # Filter type for dispersive raster
                     # (median_filter, coherence, connected_components)
-                    filter_mask_type: coherence
+                    # When multiple validation sources are enabled,
+                    # take the intersection of their invalid masks
+                    # to form a combined mask.
+                    filter_mask_type: ['coherence']
                     # Median filter size for mask generation
                     median_filter_size: 15
+                    median_filter_threshold: 0.6
                     # Coherence thresholds 0<= thresholds <=1
                     filter_coherence_threshold: 0.5
                     # Filling method for invalid regions
                     # (nearest, smoothed)
                     filling_method: nearest
-                    # Unwrapping correction bool. If False, only filtering
-                    # is applied
-                    unwrap_correction: False
                     # Kernel size in pixels
                     kernel_range: 800
                     kernel_azimuth: 800
@@ -289,6 +290,30 @@ runconfig:
                     sigma_azimuth: 100
                     # Number of iteration for low pass filtering
                     filter_iterations: 1
+                    # Unwrapping correction bool. If False, only filtering
+                    # is applied
+                    unwrap_correction: True
+                    # Before running dispersive_filter, remove every cluster
+                    # whose size is strictly smaller than `min_cluster_pixels`.
+                    # When `min_cluster_pixels` is 0, this pre-removal step is
+                    # skipped entirely.
+                    min_cluster_pixels: 5
+
+                    # Maximum radius used when bridging disconnected
+                    # regions.
+                    bridge_algorithm_enabled: True
+                    bridge_radius: 500
+                    # Size of the structuring element used for erosion
+                    # during bridge labeling.
+                    bridge_erosion_size: 2
+                    # Minimum number of pixel of connected components
+                    # to retain during processing.
+                    bridge_minimum_samples: 14
+                    # Ramp type to correct before bridge algoritm
+                    bridge_ramp_type:
+                    # During deramping, uniform sampling is applied
+                    # when number of samples is larger than maximum pixel
+                    bridge_ramp_maximum_pixel: 1e6
 
             troposphere_delay:
                 # Boolean flag to activate (True) troposphere delay computation

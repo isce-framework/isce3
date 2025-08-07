@@ -12,6 +12,7 @@ from isce3.io import HDF5OptimizedReader
 from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
+from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
 from nisar.workflows.helpers import (get_cfg_freq_pols,
                                      get_ground_track_velocity_product,
                                      sum_gdal_rasters)
@@ -139,6 +140,12 @@ def run(cfg: dict, output_hdf5: str = None):
                     * ref_zero_doppler_time_spacing
                 offset_rg_prod[...] = offsets[1] * ref_slant_range_spacing
 
+                # Compute statistics for the offsets and correlation peak
+                datasets = [offset_peak_prod, offset_az_prod, offset_rg_prod]
+                for dataset in datasets:
+                    compute_stats_real_hdf5_dataset(dataset)
+
+                # Compute the offsets for fine resampling of secondary RSLC
                 rubber_offs = ['culled_az_offsets', 'culled_rg_offsets']
                 geo_offs = ['azimuth.off', 'range.off']
                 for rubber_off, geo_off in zip(rubber_offs, geo_offs):

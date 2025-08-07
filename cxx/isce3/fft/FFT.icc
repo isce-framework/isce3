@@ -107,109 +107,133 @@ InvFFTPlan<T> planifft2d(T * out, std::complex<T> * in, const int (&dims)[2])
 
 template<typename T>
 inline
-void fft1d(std::complex<T> * out, std::complex<T> * in, int n)
+void fft1d(std::complex<T> * out, const std::complex<T> * in, int n)
 {
-    FwdFFTPlan<T> plan(out, in, n, 1, FFTW_ESTIMATE);
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    FwdFFTPlan<T> plan(out, mutable_in, n, 1, FFTW_ESTIMATE);
     plan.execute();
 }
 
 template<typename T>
 inline
-void fft1d(std::complex<T> * out, T * in, int n)
+void fft1d(std::complex<T> * out, const T * in, int n)
 {
-    FwdFFTPlan<T> plan(out, in, n, 1, FFTW_ESTIMATE);
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<T*>(in);
+    FwdFFTPlan<T> plan(out, mutable_in, n, 1, FFTW_ESTIMATE);
     plan.execute();
 }
 
 template<typename T>
 inline
-void fft1d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2], int axis)
+void fft1d(std::complex<T> * out, const std::complex<T> * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
     int threads = std::min(batch, detail::getMaxThreads());
-    FwdFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    FwdFFTPlan<T> plan(out, mutable_in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
     plan.execute();
 }
 
 template<typename T>
 inline
-void fft1d(std::complex<T> * out, T * in, const int (&dims)[2], int axis)
+void fft1d(std::complex<T> * out, const T * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
     int threads = std::min(batch, detail::getMaxThreads());
-    FwdFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<T*>(in);
+    FwdFFTPlan<T> plan(out, mutable_in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
     plan.execute();
 }
 
 template<typename T>
 inline
-void fft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2])
+void fft2d(std::complex<T> * out, const std::complex<T> * in, const int (&dims)[2])
 {
-    FwdFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    FwdFFTPlan<T> plan(out, mutable_in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
     plan.execute();
 }
 
 template<typename T>
 inline
-void fft2d(std::complex<T> * out, T * in, const int (&dims)[2])
+void fft2d(std::complex<T> * out, const T * in, const int (&dims)[2])
 {
-    FwdFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<T*>(in);
+    FwdFFTPlan<T> plan(out, mutable_in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
     plan.execute();
 }
 
 template<typename T>
 inline
-void ifft1d(std::complex<T> * out, std::complex<T> * in, int n)
+void ifft1d(std::complex<T> * out, const std::complex<T> * in, int n)
 {
-    InvFFTPlan<T> plan(out, in, n, 1, FFTW_ESTIMATE);
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    InvFFTPlan<T> plan(out, mutable_in, n, 1, FFTW_ESTIMATE);
     plan.execute();
 }
 
 template<typename T>
 inline
-void ifft1d(T * out, std::complex<T> * in, int n)
+void ifft1d(T * out, const std::complex<T> * in, int n)
 {
-    InvFFTPlan<T> plan(out, in, n, 1, FFTW_ESTIMATE);
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    InvFFTPlan<T> plan(out, mutable_in, n, 1, FFTW_ESTIMATE);
     plan.execute();
 }
 
 template<typename T>
 inline
-void ifft1d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2], int axis)
+void ifft1d(std::complex<T> * out, const std::complex<T> * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
     int threads = std::min(batch, detail::getMaxThreads());
-    InvFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    InvFFTPlan<T> plan(out, mutable_in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
     plan.execute();
 }
 
 template<typename T>
 inline
-void ifft1d(T * out, std::complex<T> * in, const int (&dims)[2], int axis)
+void ifft1d(T * out, const std::complex<T> * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
     int threads = std::min(batch, detail::getMaxThreads());
-    InvFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    InvFFTPlan<T> plan(out, mutable_in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
     plan.execute();
 }
 
 template<typename T>
 inline
-void ifft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2])
+void ifft2d(std::complex<T> * out, const std::complex<T> * in, const int (&dims)[2])
 {
-    InvFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    InvFFTPlan<T> plan(out, mutable_in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
     plan.execute();
 }
 
 template<typename T>
 inline
-void ifft2d(T * out, std::complex<T> * in, const int (&dims)[2])
+void ifft2d(T * out, const std::complex<T> * in, const int (&dims)[2])
 {
-    InvFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
+    // FFTW_ESTIMATE is a special case where the input arrays are not modified.
+    auto mutable_in = const_cast<std::complex<T>*>(in);
+    InvFFTPlan<T> plan(out, mutable_in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
     plan.execute();
 }
 

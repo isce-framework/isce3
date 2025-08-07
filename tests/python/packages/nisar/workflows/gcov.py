@@ -104,7 +104,7 @@ def test_run_winnipeg():
         gcov_doppler_centroid_lut = gcov_product.getDopplerCentroid()
         assert isinstance(gcov_doppler_centroid_lut, isce3.core.LUT2d)
 
-        # The GCOV Doppler Centroid LUT in radar coordiantes must match
+        # The GCOV Doppler Centroid LUT in radar coordinates must match
         # the RSLC Doppler Centroid LUT
         rslc_product = open_product(f'{iscetest.data}/winnipeg.h5')
         rslc_doppler_centroid_lut = rslc_product.getDopplerCentroid()
@@ -136,6 +136,18 @@ def test_run_winnipeg():
             ('Vector of zero Doppler azimuth times, measured relative to'
              ' a UTC epoch, corresponding to source data processing'
              ' information records')
+
+        for crosstalk_dataset in ['txHorizontalCrosspol',
+                                  'txVerticalCrosspol',
+                                  'rxHorizontalCrosspol',
+                                  'rxVerticalCrosspol']:
+            path = ('/science/LSAR/GCOV/metadata/calibrationInformation/'
+                    f'crosstalk/{crosstalk_dataset}')
+            crosstalk_array = output_h5_obj[path][()]
+
+            # these arrays are created as a linspace(0, 1, 225)
+            assert (np.nanmin(crosstalk_array) >= 0)
+            assert (np.nanmax(crosstalk_array) <= 1)
 
 
 def test_run_envisat():

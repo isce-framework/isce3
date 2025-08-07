@@ -55,6 +55,10 @@ class isce3::core::LUT2d {
         inline double xStart() const { return _xstart; }
         // Get starting Y-coordinate
         inline double yStart() const { return _ystart; }
+        // Get end X-coordinate
+        inline double xEnd() const { return xStart() + (width() - 1) * xSpacing(); }
+        // Get end Y-coordinate
+        inline double yEnd() const { return yStart() + (length() - 1) * ySpacing(); }
         // Get X-spacing
         inline double xSpacing() const { return _dx; }
         // Get Y-spacing
@@ -96,10 +100,8 @@ class isce3::core::LUT2d {
                 return true;
             }
 
-            const auto i = (x - xStart()) / xSpacing();
-            const auto j = (y - yStart()) / ySpacing();
-            return (i >= 0.0 and i <= width() - 1.0) and
-                   (j >= 0.0 and j <= length() - 1.0);
+            return (x >= xStart()) and (x <= xEnd()) and
+                   (y >= yStart()) and (y <= yEnd());
         }
 
     private:

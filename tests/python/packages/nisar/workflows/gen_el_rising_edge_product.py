@@ -56,7 +56,7 @@ def test_gen_el_rising_edge_product_alos():
     # subdirectory for all files
     subdir = 'pointing'
     # ALOS1 L0B filename over amazon, beam # 7
-    l0b_filename = 'ALPSRP264757150-H1.0__A_HH_LINE4000-5000_RANGE0-2200.h5'
+    l0b_filename = 'ALPSRP264757150-H1.0__A_HH_LINE4000-5000_RANGE0-2500.h5'
     # Antenna filename
     ant_filename = 'ALOS1_PALSAR_ANTPAT_BEAM343.h5'
     # Ref/mean height in (m) over most part of Amazon

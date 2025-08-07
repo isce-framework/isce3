@@ -307,6 +307,13 @@ def project_map_to_radar(cfg, input_data_path, freq):
 
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
+    unw_az_looks = cfg["processing"]["phase_unwrap"]["azimuth_looks"]
+    unw_rg_looks = cfg["processing"]["phase_unwrap"]["range_looks"]
+    if unw_az_looks != 1:
+        az_looks = unw_az_looks
+    if unw_rg_looks != 1:
+        rg_looks = unw_rg_looks
+
     # prepare input paths
     topo_paths = {xy: f'{rdr2geo_path}/freq{freq}/{xy}.rdr' for xy in 'xy'}
 

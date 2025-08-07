@@ -24,7 +24,7 @@ class AntElPair:
     Immutable struct for a pair of adjacent antenna
     elevation-cut (EL) patterns with some overlap.
 
-    Atrributes
+    Attributes
     ----------
     pat_left : np.ndarray(complex)
         A vector of complex EL pattern for left beam.
@@ -132,7 +132,7 @@ def el_null_range_from_raw_ant(
         to compare null echo data (measured) versus that of antenna one
         (reference) in EL.
     out_path : str, default='.'
-        Ouput directory for dumping PNG files, if `plot` is True.
+        Output directory for dumping PNG files, if `plot` is True.
     polyfit_deg : int, default=6
         Polyfit degree used in poly fitting echo null power pattern in
         elevation for the sake of smoothing and null location estimation.
@@ -620,7 +620,7 @@ def _pair_num_rgl_slice_gen(num_rgls, num_nulls, num_azimuth_block,
 
 
 def _is_null_valid(rgb_p2p, rgb_valid_sbsw):
-    """Check wehther null is valid or not.
+    """Check whether null is valid or not.
 
     Parameters
     ----------

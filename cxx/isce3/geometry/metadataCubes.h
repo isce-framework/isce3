@@ -110,6 +110,9 @@ void writeVectorDerivedCubes(const int array_pos_i,
  * 
  * The line-of-sight (LOS) and along-track unit vectors are referenced to
  * ENU coordinates computed wrt targets.
+ * 
+ * The along-track unit vectors X and Y are computed at the target location
+ * in ENU coordinates, without the vertical component
  *
  * @param[in]  radar_grid                  Radar grid
  * @param[in]  geogrid                     Geogrid to be
@@ -141,6 +144,11 @@ void writeVectorDerivedCubes(const int array_pos_i,
  * derivative of doppler
  * @param[in]  flag_set_output_rasters_geolocation Set output rasters'
  * geotransform and spatial reference
+ * @param[in] flag_ground_velocity_from_rdr2geo When true, compute ground-track
+ * velocity using a finite-difference approximation between grid locations in
+ * the azimuth direction (`rdr2geo` method). In this case, the azimuth spacing
+ * of the grid affects the accuracy of the approximation. When false, use a
+ * closed-form expression for a geocentric spherical surface model instead.
  */
 void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         const isce3::product::GeoGridParameters& geogrid,
@@ -158,7 +166,8 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster* ground_track_velocity_raster = nullptr,
         const double threshold_geo2rdr = 1e-8, const int numiter_geo2rdr = 100,
         const double delta_range = 1e-8,
-        bool flag_set_output_rasters_geolocation = false);
+        bool flag_set_output_rasters_geolocation = false,
+        const bool flag_ground_velocity_from_rdr2geo = true);
 
 /** Make metadata geolocation grid cubes
  *
@@ -186,6 +195,9 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
  * The line-of-sight (LOS) and along-track unit vectors are referenced to
  * ENU coordinates computed wrt targets.
  *
+ * The along-track unit vectors X and Y are computed at the target location
+ * in ENU coordinates, without the vertical component
+ *
  * @param[in]  radar_grid                Cube radar grid
  * @param[in]  heights                   Cube heights
  * @param[in]  orbit                     Orbit
@@ -211,6 +223,11 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
  * @param[in]  numiter_geo2rdr           Geo2rdr maximum number of iterations
  * @param[in]  delta_range               Step size used for computing
  * derivative of doppler
+ * @param[in] flag_ground_velocity_from_rdr2geo When true, compute ground-track
+ * velocity using a finite-difference approximation between grid locations in
+ * the azimuth direction (`rdr2geo` method). In this case, the azimuth spacing of
+ * the grid affects the accuracy of the approximation. When false, use a closed-form
+ * expression for a geocentric spherical surface model instead.
  */
 void makeGeolocationGridCubes(
         const isce3::product::RadarGridParameters& radar_grid,
@@ -227,6 +244,7 @@ void makeGeolocationGridCubes(
         isce3::io::Raster* elevation_angle_raster = nullptr,
         isce3::io::Raster* ground_track_velocity_raster = nullptr, 
         const double threshold_geo2rdr = 1e-8, const int numiter_geo2rdr = 100,
-        const double delta_range = 1e-8);
+        const double delta_range = 1e-8,
+        const bool flag_ground_velocity_from_rdr2geo = true);
 
 }} // namespace isce3::geocode

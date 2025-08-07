@@ -93,7 +93,7 @@ class gpuCrossmul {
         inline bool multiLookEnabled() const { return _multiLookEnabled; }
 
     private:
-        //Doppler LUT for the refernce SLC
+        //Doppler LUT for the reference SLC
         isce3::core::LUT1d<double> _refDoppler;
 
         //Doppler LUT for the secondary SLC

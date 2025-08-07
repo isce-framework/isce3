@@ -44,11 +44,11 @@ using isce3::cuda::core::gpuSinc2dInterpolator;
   * \param[in]  outWidth        Width of transformed SLC data.
   * \param[in]  outLength       Length of transformed SLC data.
   * \param[in]  inWidth         Width of original SLC data.
-  * \param[in]  inReadableLength    Length of readble original SLC data where buffer for chip and offsets are unaccounted.
+  * \param[in]  inReadableLength    Length of readable original SLC data where buffer for chip and offsets are unaccounted.
   * \param[in]  startingRange       Starting range of the resampled radar grid.
   * \param[in]  rangePixelSpacing   Range pixel spacing of the resampled radar grid.
   * \param[in]  sensingStart        Starting azimuth time of the resampled radar grid.
-  * \param[in]  prf                 Pulse repition frequency of the radar grid.
+  * \param[in]  prf                 Pulse repetition frequency of the radar grid.
   * \param[in]  wavelength          Wavelength of the resampled radar grid.
   * \param[in]  refStartingRange    Staring range of the original/reference radar grid.
   * \param[in]  refRangePixelSpacing    Range pixel spacing of the original/reference radar grid.
@@ -100,7 +100,7 @@ void transformTile(thrust::complex<float> *resampledSlc,
         // resampled value if boundary and LUT2d conditions met.
         resampledSlc[iTileOut] = invalid_value;
 
-        // Retreive offsets for current pixel.
+        // Retrieve offsets for current pixel.
         const double azOff = azOffTile[iTileOut];
         const double rgOff = rgOffTile[iTileOut];
 
@@ -109,7 +109,7 @@ void transformTile(thrust::complex<float> *resampledSlc,
         // * Add azimuth and range offsets to row and column respectively.
         // * Since blocking is performed along rows, add an offset to the row
         //   index to account for difference in number of rows in tile padded
-        //   to accomodate chip used in sinc interpolation.
+        //   to accommodate chip used in sinc interpolation.
         // * No offset needed for column as block processing along rows only.
         const auto iRowResamp = iRow + __double2ll_rn(azOff) + rowOffset;
         const auto iColResamp = iCol + __double2ll_rn(rgOff);

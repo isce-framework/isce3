@@ -340,12 +340,12 @@ inline void saveCalGrid(isce3::io::IGroup & group,
 {
     // Generate uniformly spaced X (slant range) coordinates
     const double x0 = lut.xStart();
-    const double x1 = x0 + lut.xSpacing() * (lut.width() - 1.0);
+    const double x1 = lut.xEnd();
     const std::vector<double> x = isce3::core::linspace(x0, x1, lut.width());
 
     // Generate uniformly spaced Y (zero Doppler time) coordinates
     const double y0 = lut.yStart();
-    const double y1 = y0 + lut.ySpacing() * (lut.length() - 1.0);
+    const double y1 = lut.yEnd();
     const std::vector<double> y = isce3::core::linspace(y0, y1, lut.length());
 
     // Save coordinates

@@ -49,7 +49,7 @@ public:
     int windowSizeHeightRaw;        ///< Template window height (original size)
     int windowSizeWidthRaw;         ///< Template window width (original size)
     int searchWindowSizeHeightRaw;  ///< Search window height (original size)
-    int searchWindowSizeWidthRaw;   ///< Search window width (orignal size)
+    int searchWindowSizeWidthRaw;   ///< Search window width (original size)
 
     int halfSearchRangeDownRaw;   ///< (searchWindowSizeHeightRaw-windowSizeHeightRaw)/2
     int halfSearchRangeAcrossRaw;    ///< (searchWindowSizeWidthRaw-windowSizeWidthRaw)/2

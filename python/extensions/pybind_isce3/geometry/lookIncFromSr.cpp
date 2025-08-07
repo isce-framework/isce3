@@ -44,7 +44,7 @@ slant_range : float
 orbit : isce3.core.orbit
 az_time : float, optional 
     relative azimuth time in seconds w.r.t reference epoch time of orbit object.
-    If not speficied, the mid time of orbit will be used as azimuth time.
+    If not specified, the mid time of orbit will be used as azimuth time.
 dem_interp : isce3.geometry.DEMInterpolator, default=0.0
 ellips : isce3.core.Ellipsoid, default=WGS84
 
@@ -95,7 +95,7 @@ slant_range : numpy.ndarray(float)
 orbit : isce3.core.orbit
 az_time : float, optional 
     relative azimuth time in seconds w.r.t reference epoch time of orbit object.
-    If not speficied, the mid time of orbit will be used as azimuth time.
+    If not specified, the mid time of orbit will be used as azimuth time.
 dem_interp : isce3.geometry.DEMInterpolator, default=0.0
 ellips : isce3.core.Ellipsoid, default=WGS84
 

@@ -15,6 +15,9 @@ namespace isce3 { namespace geogrid {
  * 
  * The target-to-sensor line-of-sight (LOS) and along-track unit vectors are
  * referenced to ENU coordinates computed wrt targets.
+ * 
+ * The along-track unit vectors X and Y are computed at the target location
+ * in ENU coordinates, without the vertical component
  *
  * @param[in]  lookside                    Look side
  * @param[in]  wavelength                  Wavelength

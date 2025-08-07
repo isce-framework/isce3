@@ -45,7 +45,7 @@ def check_errors(infile, layers, tol):
 
 def test_dense_offsets_validate():
     '''
-    Validate dense offsets ouputs
+    Validate dense offsets outputs
     '''
 
     scratch_path = '.'

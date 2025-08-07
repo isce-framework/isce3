@@ -381,7 +381,7 @@ class AzSrgCorrections:
 
             for which_lut, low_res_tec_lut2d in zip(('azimuth TEC correction', 'range TEC correction'),
                                                 (low_res_tec_az, low_res_tec_srange)):
-                lut2d_far_range = low_res_tec_lut2d.x_start + (low_res_tec_lut2d.width - 1) * low_res_tec_lut2d.x_spacing
+                lut2d_far_range = low_res_tec_lut2d.x_end
                 if self.rg_vec[-1] != lut2d_far_range:
                     warning_channel.log('Truncation error detected between '
                                         f'far range of scaled radargrid and {which_lut}. '

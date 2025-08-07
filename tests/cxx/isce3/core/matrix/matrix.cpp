@@ -82,7 +82,7 @@ TEST(MatrixTest, CopyConstructor) {
 
     // Change value of middle element of copied matrix
     N(1, 1) = 20.0;
-    // Check corresponding value in original matrix has NOT been udpated
+    // Check corresponding value in original matrix has NOT been updated
     ASSERT_NEAR(M(1, 1), 4.0, 1.0e-12);
 }
 
