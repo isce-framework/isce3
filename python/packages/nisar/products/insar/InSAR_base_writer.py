@@ -912,6 +912,7 @@ class InSARBaseWriter(h5py.File):
         Add the identification group to the product
         """
         info_channel = journal.info('InSAR_base_writer.add_identification_to_hdf5')
+        warning_channel = journal.warning('InSAR_base_writer.add_identification_to_hdf5')
         radar_band_name = self._get_band_name()
         primary_exec_cfg = self.cfg["primary_executable"]
 
@@ -931,8 +932,10 @@ class InSARBaseWriter(h5py.File):
         else:
             processing_type = np.bytes_('Custom')
             if processing_type != 'OD':
-                info_channel.log(
-                    f"Processing type is {processing_type}. Setting to default of 'Custom'")
+                warning_channel.log(
+                    'The processing type in the runconfig is set to'
+                    f' "{processing_type}", which is not a valid value'
+                    ' for the output product metadata. Defaulting to "Custom"')
 
         # Adopt same logic as RSLC, GSLC, GCOV
         # If no condition is met, assign string from runconfig
