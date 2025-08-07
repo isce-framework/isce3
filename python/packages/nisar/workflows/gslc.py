@@ -205,7 +205,6 @@ def run(cfg):
 
                 # update the numbers for stats computation
                 for i, gslc_data_blk in enumerate(gslc_data_blks):
-                    #stats_complex_list[i].accumulate_complex(gslc_data_blk)
                     stats_complex_list[i].update(gslc_data_blk)
 
                 # write geocoded blocks to respective HDF5 datasets
