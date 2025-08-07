@@ -911,7 +911,6 @@ class InSARBaseWriter(h5py.File):
         """
         Add the identification group to the product
         """
-        info_channel = journal.info('InSAR_base_writer.add_identification_to_hdf5')
         warning_channel = journal.warning('InSAR_base_writer.add_identification_to_hdf5')
         radar_band_name = self._get_band_name()
         primary_exec_cfg = self.cfg["primary_executable"]
