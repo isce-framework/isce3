@@ -1529,7 +1529,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Interpolation algorithm to use for geocoding
         '''
 
-        new_var_array = correction_lut.data
+        # Copy the data to ensure it's writeable since `isce3.io.Raster`
+        # can't write data from const buffers.
+        new_var_array = np.copy(correction_lut.data)
 
         scratch_path = self.cfg['product_path_group']['scratch_path']
         temp_file = tempfile.NamedTemporaryFile(dir=scratch_path,
