@@ -1508,7 +1508,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
     def geocode_isce3_lut(self, correction_lut, lut_name,
                           timing_corrections_group_path, frequency,
-                          metadata_geogrid):
+                          metadata_geogrid, data_interpolator):
         '''
         Geocode ISCE3 look-up table (LUT) object
 
@@ -1525,6 +1525,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Frequency sub-band, used to read the sub-band wavelength
         metadata_geogrid: GeoGridParameters
             GeoGrid parameters of the output raster
+        data_interpolator: str, optional
+            Interpolation algorithm to use for geocoding
         '''
 
         new_var_array = correction_lut.data
@@ -1565,7 +1567,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                             radar_grid,
                             metadata_geogrid,
                             compute_stats=True,
-                            data_interpolator='nearest')
+                            data_interpolator=data_interpolator)
 
     def geocode_lut(self, output_h5_group, input_h5_group=None,
                     frequency=None, output_ds_name_list=None,

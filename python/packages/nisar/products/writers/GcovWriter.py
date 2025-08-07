@@ -832,7 +832,8 @@ class GcovWriter(BaseL2WriterSingleInput):
                 self.geocode_isce3_lut(
                     az_correction_lut, 'azimuthIonosphere',
                     timing_corrections_group_path, frequency,
-                    processing_information_geogrid)
+                    processing_information_geogrid,
+                    data_interpolator='bilinear')
 
             if (self.timing_corrections_dict is not None and
                 frequency in
@@ -843,7 +844,8 @@ class GcovWriter(BaseL2WriterSingleInput):
                 self.geocode_isce3_lut(
                     rg_correction_lut, 'slantRangeIonosphere',
                     timing_corrections_group_path, frequency,
-                    processing_information_geogrid)
+                    processing_information_geogrid,
+                    data_interpolator='bilinear')
 
     def populate_orbit_gcov_specific(self):
         """
