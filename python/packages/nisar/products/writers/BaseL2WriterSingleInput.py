@@ -4,7 +4,6 @@ import numpy as np
 import warnings
 import journal
 import os
-import gc
 
 import isce3
 from nisar.products.writers import BaseWriterSingleInput
