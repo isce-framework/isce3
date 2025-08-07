@@ -73,12 +73,6 @@ void _clip_min_max(std::complex<T>& radar_value, float clip_min, float clip_max)
     */
     using T_real = typename isce3::real<T>::type;
 
-    // no data (complex)
-    if (std::abs(radar_value) == 0) {
-        radar_value *= std::numeric_limits<T_real>::quiet_NaN();
-        return;
-    }
-
     // clip min (complex)
     if (!std::isnan(clip_min) && std::abs(radar_value) < clip_min)
         // update magnitude without changing the phase
