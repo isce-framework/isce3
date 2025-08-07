@@ -1719,7 +1719,13 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
         data_interpolator: str, optional
-            Interpolation algorithm to use for geocoding
+            Interpolation algorithm to use for geocoding.
+            The default interpolation algorithm is determined dynamically
+            based on the dimensions of the LUT. If the LUT contains a single
+            row or column, nearest neighbor interpolation will be used.
+            Otherwise, if the LUT contains < 5 rows or columns, bilinear
+            interpolation will be used. Otherwise, biquintic interpolation
+            will be used.
 
         Returns
         -------
