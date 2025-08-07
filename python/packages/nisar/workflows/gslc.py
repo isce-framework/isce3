@@ -16,7 +16,7 @@ from isce3.math import StatsRealImagFloat32
 
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit
-from nisar.workflows.compute_stats import compute_stats_complex_data, stats_complex, write_stats_complex_data
+from nisar.workflows.compute_stats import write_stats_complex_data
 from nisar.workflows.h5_prep import (add_radar_grid_cubes_to_hdf5,
                                      prep_gslc_dataset)
 from nisar.workflows.geocode_corrections import AzSrgCorrections
@@ -229,7 +229,6 @@ def run(cfg):
 
             # loop over polarizations and compute statistics
             for i, gslc_dataset in enumerate(gslc_datasets):
-                #stats_complex_list[i].update_stat_complex()
                 write_stats_complex_data(gslc_dataset, stats_complex_list[i])
 
         cube_geogrid = isce3.product.GeoGridParameters(

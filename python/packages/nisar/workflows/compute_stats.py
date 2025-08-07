@@ -2,67 +2,6 @@ import isce3
 import numpy as np
 from osgeo import gdal
 
-class stats:
-    '''
-    A class to accumulator and stat computation
-    '''
-    def __init__(self):
-        self.min: float=np.inf
-        self.max: float=-np.inf
-        self.mean: float=np.nan
-        self.sample_stddev: float=0.0
-
-        #numbers to compute the mean and standard deviation
-        self.num_sample: float=0.0
-        self.sum_sample: float=0.0
-        self.sq_sum_sample: float=0.0
-
-
-    def accumulate(self, array):
-        '''
-        accumulate the summation of the valid samples in the array
-
-        Parameters
-        ----------
-        array: np.ndarray
-            input array
-        '''
-        # Skip the accumulation when all values in the array is NaN
-        if np.alltrue(np.isnan(array)):
-            return
-
-        self.num_sample += np.sum(~np.isnan(array))
-        self.sum_sample += np.nansum(array)
-        self.sq_sum_sample += np.nansum(array**2)
-
-        self.min = min(self.min, np.nanmin(array))
-        self.max = max(self.max, np.nanmax(array))
-
-    def update_stat(self):
-        '''
-        update the statistics after the accumulation
-        '''
-        self.mean = self.sum_sample / self.num_sample
-        self.sample_stddev = np.sqrt((self.sq_sum_sample / self.num_sample) - self.mean**2)
-
-
-class stats_complex(stats):
-    '''
-    A class to accumulator and stat computation for complex numbers
-    '''
-
-    def __init__(self):
-        self.imag = stats()
-        self.real = stats()
-
-    def accumulate_complex(self, array):
-        self.real.accumulate(array.real)
-        self.imag.accumulate(array.imag)
-
-    def update_stat_complex(self):
-        self.real.update_stat()
-        self.imag.update_stat()
-
 
 def compute_stats_complex_data(raster, h5_ds):
     """
