@@ -1525,7 +1525,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Frequency sub-band, used to read the sub-band wavelength
         metadata_geogrid: GeoGridParameters
             GeoGrid parameters of the output raster
-        data_interpolator: str, optional
+        data_interpolator: str
             Interpolation algorithm to use for geocoding
         '''
 
