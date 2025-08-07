@@ -48,7 +48,7 @@ __global__ void inverse_g(int code,
 __host__ int ProjectionBase::forward_h(const Vec3& llh, Vec3& xyz) const
 {
     /*
-     * This is to transfrom from LLH to requested projection system on the host.
+     * This is to transform from LLH to requested projection system on the host.
      */
 
     double *llh_d, *xyz_d;
@@ -79,7 +79,7 @@ __host__ int ProjectionBase::forward_h(const Vec3& llh, Vec3& xyz) const
 __host__ int ProjectionBase::inverse_h(const Vec3& xyz, Vec3& llh) const
 {
     /*
-     * This is to transfrom from requested projection system to LLH on the host.
+     * This is to transform from requested projection system to LLH on the host.
      */
     double *llh_d, *xyz_d;
     int *flag_d;

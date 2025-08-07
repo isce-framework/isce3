@@ -97,7 +97,7 @@ __global__ void cudaKernel_elementMulConjugate(float2 *ainout, float2 *bin, int 
 
 /**
  * Perform multiplication of coef*Conjugate[image1]*image2 for each element
- * @param[inout] image1, the first image
+ * @param[in,out] image1, the first image
  * @param[in] image2, the secondary image
  * @param[in] coef, usually the normalization factor
  */

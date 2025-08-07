@@ -589,7 +589,7 @@ def _write_offsets_covariance_data(infile,
         slant_range_cov_ds.write_direct(slant_range_cov_data_block,
                                         dest_sel=output_slice)
 
-        # Convert the cross covriance pixel offsets covariance to meters^2 using the equation
+        # Convert the cross covariance pixel offsets covariance to meters^2 using the equation
         # cross_offset_covaraince_in_meters =
         # cross_offset_covaraince_in_pixels *
         # slant_range_spacing * ground_track_velocity * zero_doppler_spacing_of_RSLC

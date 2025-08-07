@@ -28,7 +28,7 @@ def rcoswin(size, ped=1.0):
         For bad inputs
 
     """
-    assert 0 <= ped and ped <= 1, 'Pedestal value shall be wihtin [0, 1]!'
+    assert 0 <= ped and ped <= 1, 'Pedestal value shall be within [0, 1]!'
     assert size > 0, 'Size must be a positive number!'
     return (1 + ped) / 2. - (1 - ped) / 2. * np.cos(2.0 * np.pi / (size - 1) *
                                                     np.arange(0, size))
@@ -46,7 +46,7 @@ def form_weighted_chirp(bandwidth, duration, prf, pedestal_win):
     prf : float
         PRF in (Hz)
     pedestal_win : float
-        Pedestal of a rasied cosine window
+        Pedestal of a raised cosine window
 
     Returns
     -------
@@ -93,7 +93,7 @@ class TestDopplerEstFunc:
     chirp = form_weighted_chirp(bandwidth, duration, prf, pedestal_win)
 
     # generate complex Gaussian zero-mean random noise,
-    # one indepedent set per range bin used for all dopplers
+    # one independent set per range bin used for all dopplers
     std_iq_noise = 1./np.sqrt(2) * 10 ** (-snr / 20)
     rnd_gen = np.random.RandomState(seed=seed_rnd)
     noise = std_iq_noise * (rnd_gen.randn(chirp.size, num_rgb) +

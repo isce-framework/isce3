@@ -218,7 +218,7 @@ int main() {
             error
                 << pyre::journal::at(__HERE__)
                 << "pair (" << r << "," << c << "): bad location: (" << row << "," << col << ")"
-                << ", mimimum: (" << low << "," << low << ")"
+                << ", minimum: (" << low << "," << low << ")"
                 << ", maximum: (" << high << "," << high << ")"
                 << pyre::journal::endl;
             // bail

@@ -24,6 +24,7 @@ void addsubmodule_focus(py::module & m)
 
     addbinding_backproject(m_focus);
     addbinding_chirp(m_focus);
+    addbinding_tsx_delay(m_focus);
     addbindings_presum(m_focus);
     addbinding(pyRangeComp);
 }

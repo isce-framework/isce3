@@ -87,7 +87,7 @@ class isce3::geometry::DEMInterpolator {
         void computeMinMaxMeanHeight(float &minValue, float &maxValue,
                                      float &meanValue);
 
-        /** Interpolate at a given longitude and latitude */
+        /** Interpolate at a given longitude and latitude (in radians) */
         double interpolateLonLat(double lon, double lat) const;
         /** Interpolate at native XY coordinates of DEM */
         double interpolateXY(double x, double y) const;

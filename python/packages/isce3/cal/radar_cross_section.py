@@ -289,7 +289,7 @@ def measure_target_rcs(
         as a function of azimuth time, in seconds relative to the epoch of `radar_grid`,
         and slant range, in meters. Note that this should be the Doppler associated with
         the image grid, which may in general be different from the native Doppler of the
-        aquired echo data.
+        acquired echo data.
     ellipsoid : isce3.core.Ellipsoid, optional
         The geodetic reference ellipsoid, with dimensions in meters. Defaults to the
         WGS 84 ellipsoid.

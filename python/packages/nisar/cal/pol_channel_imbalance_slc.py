@@ -75,7 +75,7 @@ class PolChannelImbalanceSlc:
     ----------
     slc_ext : nisar.products.readers.SLC
         Radiometrically calibrated quad-pol [linear] RSLC product over
-        homogenous extended scene like Amazon rain forest.
+        homogeneous extended scene like Amazon rain forest.
     slc_cr : nisar.products.readers.SLC
         Radiometrically calibrated quad-pol [linear] RSLC product over corner
         reflector (CR).
@@ -96,7 +96,7 @@ class PolChannelImbalanceSlc:
         any effect.
     pixel_slc_margin : int, default=8
         Number of pixels used as a margin in both range and azimuth to decide
-        whether a CR is wihtin its SLC bound or not. This value will be used as
+        whether a CR is within its SLC bound or not. This value will be used as
         a half of chip size around corner reflector in its RSLC product.
         It must be equal or larger than 2!
     interp_method : {'linear', 'nearest', 'quadratic', 'cubic'},
@@ -539,7 +539,7 @@ class PolChannelImbalanceSlc:
         ------
         OutOfSlcBoundError
             If azimuth time and/or slant range limits are out of SLC boundary
-            for extended homogenous scene.
+            for extended homogeneous scene.
         ValueError
             Unordered values for range and/or azimuth limits
             AZ block size is smaller than `min_frac_sar` of SAR aperture.
@@ -689,7 +689,7 @@ class PolChannelImbalanceSlc:
                     )
                 else:  # Faraday rotation can not be ignored!
                     # phase and amp of the ratio will be calculated
-                    # seperately w/ +/- pi phase ambiguity by using
+                    # separately w/ +/- pi phase ambiguity by using
                     # x-pol products provided scene reflection/AZ symmetry!
                     phs_imb_rx2tx = np.angle(np.nanmean(
                         mmap_blk_hv[:az_blksz, :rg_blksz] *

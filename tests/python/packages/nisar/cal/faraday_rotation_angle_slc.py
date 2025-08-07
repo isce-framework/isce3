@@ -68,7 +68,7 @@ class TestFaradyRotationAngleSlc:
 
     Note that the calculated FR angles based on GPS-measured TEC values are
     lower than RSLC-driven estimates. These values are simply reported in the
-    commented lines for the sake of readers information. None of the refereces
+    commented lines for the sake of readers information. None of the references
     could confirm and validate the estimated data-driven FR angles against
     the calculated ones from coarse GPS-measured TEC maps even after an almost
     perfect polarimetric calibration performed by JAXA for ALOS1 PALSAR RSLC
@@ -170,7 +170,7 @@ class TestFaradyRotationAngleSlc:
         # pass over Rio Branco case (for only SLOPE approach).
         # For cases away from geomagnetic equator like that of Remningstorp,
         # the sign as well as the magnitude is consistent with those obtained
-        # from time domian approach over extended scene and from CRs!
+        # from time domain approach over extended scene and from CRs!
         self._validate(fra_prod, fra_deg, abs_tol_deg, abs_only=True)
 
     def test_faraday_from_corner_reflector(

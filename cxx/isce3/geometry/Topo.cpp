@@ -827,9 +827,19 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double frac2 = (crossTrack - c1) / (c2 - c1);
 
             double x_grid;
-            if (demInterp.epsgCode() != 4326 or std::fabs(x[k] -  x[k+1]) < 180) {
+            /*
+            If the `x` values are not in geographic coordinates (EPSG:4326),
+            or if they are in geographic coordinates but do not cross the
+            antimeridian, then no special handling is required.
+            */
+            if (_epsgOut != 4326 or std::fabs(x[k] -  x[k+1]) < 180) {
+                // Interpolate using linear interpolation.
                 x_grid = x[k] * frac1 + x[k+1] * frac2;
             } else {
+                /*
+                Otherwise, "unwrap" the longitude coordinates within the [0, 360]
+                range and interpolate the `x` values using linear interpolation.
+                */
                 const double x_k_0_360 = x[k] < 0 ? x[k] + 360: x[k];
                 const double x_k_next_0_360 = x[k+1] < 0 ? x[k+1] + 360: x[k+1];
                 x_grid = x_k_0_360 * frac1 + x_k_next_0_360 * frac2;

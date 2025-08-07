@@ -85,13 +85,7 @@ def get_granule_id_single_input(input_obj, partial_granule_id, freq_pols_dict):
         mode_str += mode
 
         pols = freq_pols_dict[freq]
-        pols_code = get_polarization_code(pols, default="XX")
-        if pols_code == "XX":   # pol set not found
-            error_msg = ('Could not find polarization mode for input'
-                         f' set of polarizations: {pols}')
-            error_channel.log(error_msg)
-            raise NotImplementedError(error_msg)
-        pol_mode_str += pols_code
+        pol_mode_str += get_polarization_code(pols, default="XX")
 
     # mode_str should have 4 characters
     if len(mode_str) != 4:
@@ -919,7 +913,7 @@ class BaseWriterSingleInput():
         Parameters
         ----------
         specs_xml_file: str
-            Product specfications XML file
+            Product specifications XML file
         """
 
         specs = ET.ElementTree(file=specs_xml_file)

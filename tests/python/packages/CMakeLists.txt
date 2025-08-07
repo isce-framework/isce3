@@ -82,10 +82,11 @@ nisar/workflows/geocode_corrections.py
 
 if(WITH_CUDA)
     list(APPEND TESTFILES
-            nisar/workflows/dense_offsets.py
-            nisar/workflows/rubbersheet.py
-            nisar/workflows/cuda_insar.py
-        )
+        isce3/cuda/image/resample_slc.py
+        nisar/workflows/dense_offsets.py
+        nisar/workflows/rubbersheet.py
+        nisar/workflows/cuda_insar.py
+    )
 endif()
 
 foreach(TESTFILE ${TESTFILES})

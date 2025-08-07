@@ -40,6 +40,9 @@ void addbinding_get_radar_grid(pybind11::module& m)
              The target-to-sensor line-of-sight (LOS) and along-track unit
              vectors are referenced to ENU coordinates computed wrt targets.
 
+             The along-track unit vectors X and Y are computed at the target location
+             in ENU coordinates, without the vertical component
+
              Parameters
              ----------
              lookside : isce3.core.LookSide

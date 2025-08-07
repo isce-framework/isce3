@@ -313,7 +313,7 @@ def get_raster_lists(all_geocoded_dataset_flags,
         Path to input RUNW or ROFF HDF5
     dst_h5 : h5py.File
         h5py.File object where geocoded data is to be written
-    offset_params: list[tupel[str, isce3.core.DataInterpMethod, float]]
+    offset_params: list[tuple[str, isce3.core.DataInterpMethod, float]]
         List of offset layer geocoding params as tuples. Tuples with each tuple
         consisting of offset layer name, interpolation method, and invalid
         value.
@@ -980,7 +980,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
     unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
 
-    # Only when the input product is RUNW, then we ajust the range and azimuth looks
+    # Only when the input product is RUNW, then we adjust the range and azimuth looks
     if input_product_type is InputProduct.RUNW:
         if unwrap_rg_looks != 1 or unwrap_az_looks != 1:
             rg_looks = unwrap_rg_looks

@@ -155,6 +155,8 @@ runconfig:
                 list_of_frequencies:
                    A: [HH]
                    B: [HH]
+                dispersive_filter:
+                    min_cluster_pixels: 0
 
         output:
             compression_enabled: False

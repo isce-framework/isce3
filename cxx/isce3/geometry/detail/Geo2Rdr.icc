@@ -198,9 +198,7 @@ geo2rdr_bracket(double* aztime,
     }());
     const double t1 = params.time_end.value_or([&]() {
         if (doppler.haveData()) {
-            const double dop_end_time = doppler.yStart() + doppler.ySpacing() *
-                (doppler.length() - 1);
-            return std::min(orbit.endTime(), dop_end_time);
+            return std::min(orbit.endTime(), doppler.yEnd());
         }
         return orbit.endTime();
     }());

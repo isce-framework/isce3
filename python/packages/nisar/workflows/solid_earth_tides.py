@@ -7,7 +7,7 @@ import time
 import isce3
 import journal
 import numpy as np
-from isce3.core import transform_xy_to_latlon
+from isce3.core import interpolate_datacube, transform_xy_to_latlon
 from isce3.io import HDF5OptimizedReader
 from nisar.products.insar.product_paths import GUNWGroupsPaths
 from nisar.workflows.h5_prep import get_products_and_paths
@@ -139,7 +139,7 @@ def solid_grid_pixel_parallel_task(args):
     Parameters
     ----------
     args : tuple
-        the zipped parameters incuding reference epoch,
+        the zipped parameters including reference epoch,
         azimuth time, slant range, longitude, and latitude
 
     Returns
@@ -350,7 +350,7 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
     height_mesh_arr = height_radar_grid[:, None, None] * \
         np.tile(np.ones(lon_2d.shape), tile_dims)
 
-    # Caculate the solid earth tides for the reference RSLC
+    # Calculate the solid earth tides for the reference RSLC
     ref_tide_e, ref_tide_n, ref_tide_u = \
         calculate_solid_earth_tides(ref_ref_epoch,
                                     ref_zero_doppler_azimuth_time,
@@ -359,7 +359,7 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
                                     latitude_mesh_arr,
                                     longitude_mesh_arr)
 
-    # Caculate the solid earth tides for the secondary RSLC
+    # Calculate the solid earth tides for the secondary RSLC
     sec_tide_e, sec_tide_n, sec_tide_u = \
         calculate_solid_earth_tides(sec_ref_epoch,
                                     sec_zero_doppler_azimuth_time,
@@ -410,6 +410,13 @@ def run(cfg: dict, gunw_hdf5_path: str):
 
     # Compute the solid earth tides along los direction
     los_solid_earth_tides = compute_solid_earth_tides(gunw_hdf5_path)
+
+    # Get the radar grid heights and interpolate them
+    radar_grid_cfg = cfg["processing"]["radar_grid_cubes"]
+    heights = radar_grid_cfg["heights"]
+    los_solid_earth_tides = interpolate_datacube(los_solid_earth_tides,
+                                                 [heights[0], heights[-1]],
+                                                 heights)
 
     # Write the solid earth tides to GUNW product
     add_solid_earth_to_gunw_hdf5(los_solid_earth_tides,

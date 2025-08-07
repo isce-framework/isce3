@@ -11,7 +11,7 @@ class TestFaradayRotAngleFromRSlc:
     # List of inputs
     sub_dir = 'faraday_rot'
 
-    # Linear quad-pol RSLC product over homogenous extended scene
+    # Linear quad-pol RSLC product over homogeneous extended scene
     # and corner reflector(s)
     file_slc = 'pol_rad_calib_rslc_Remningstorp_ALPSRP030392430.h5'
 

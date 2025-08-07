@@ -55,7 +55,30 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
                     py::arg("raster"), py::arg("min_x"), py::arg("max_x"),
                     py::arg("min_y"), py::arg("max_y"), py::arg("raster_band") = 1)
 
-            .def("interpolate_lonlat", &DEMInterp::interpolateLonLat)
+            .def("interpolate_lonlat", &DEMInterp::interpolateLonLat,
+                R"(
+                Interpolate the digital elevation model at a given point.
+
+                Parameters
+                ----------
+                longitude : float
+                    Longitude in radians
+                latitude : float
+                    Geodetic latitude in radians
+
+                Returns
+                -------
+                height : float
+                    DEM value interpolated at requested point, or ref_height
+                    if point is not within the spatial extent of the DEM.
+                    This class does not perform any conversions for units or
+                    vertical datum, though many places in ISCE3 assume the value
+                    represents the height in meters above the ellipsoid
+                    associated with the DEM projection.
+                )",
+                py::arg("longitude"),
+                py::arg("latitude")
+            )
             .def("interpolate_xy", &DEMInterp::interpolateXY)
 
             .def_property("ref_height",

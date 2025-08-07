@@ -51,7 +51,7 @@ def cr_llh_from_csv(filename, epoch=None, az_heading=None,
     az_heading : float
         Desired AZ/heading angle in radians w.r.t. geographic North.
     az_atol : float, default=20.0 degrees
-        Absolute tolerance in radians when comapring AZ of CRs with
+        Absolute tolerance in radians when comparing AZ of CRs with
         `az_heading`. The default is around 0.5 * HPBW of an ideal
         triangular trihedral CR (HPBW ~ 40 deg).
         HPBW stands for half power beam width.
@@ -136,7 +136,7 @@ def cmd_line_parser():
     )
     prs.add_argument('--slc-ext', type=str, required=True, dest='slc_ext',
                      help='Filename of quad-pol RSLC HDF5 product over '
-                     'extended homogenous scene')
+                     'extended homogeneous scene')
     prs.add_argument('--slc-cr', type=str, required=True, dest='slc_cr',
                      help='Filename of quad-pol RSLC HDF5 product over corner '
                      'reflector.')
@@ -297,7 +297,7 @@ def pol_channel_imbalance_from_rslc(args):
     slc_ext = SLC(hdf5file=args.slc_ext)
     if args.slc_ext == args.slc_cr:
         logger.warning(f'The same SLC file "{args.slc_ext}" will be used'
-                       ' for homogenous extended scene and CRs!')
+                       ' for homogeneous extended scene and CRs!')
         slc_cr = slc_ext
     # separate product/file for CR(s)
     else:

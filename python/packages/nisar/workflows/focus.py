@@ -292,8 +292,8 @@ def get_total_grid_bounds(rawfiles: list[str]):
 
 def get_total_grid(rawfiles: list[str], dt, dr):
     epoch, tmin, tmax, rmin, rmax = get_total_grid_bounds(rawfiles)
-    nt = int(np.ceil((tmax - tmin) / dt))
-    nr = int(np.ceil((rmax - rmin) / dr))
+    nt = int(np.ceil((tmax - tmin) / dt)) + 1
+    nr = int(np.ceil((rmax - rmin) / dr)) + 1
     t = isce3.core.Linspace(tmin, dt, nt)
     r = isce3.core.Linspace(rmin, dr, nr)
     return epoch, t, r
@@ -1773,6 +1773,10 @@ def focus(runconfig, runconfig_path=""):
             # 80 MHz (A) being mixed with 5 MHz sideband (B).
             rawdata = raw.getRawDataset(channel_in.freq_id, pol)
             log.info(f"Raw data shape = {rawdata.shape}")
+            if rawdata.ndim != 2:
+                raise ValueError("Expected 2D raw data.  For diagnostic mode "
+                    "data (DM2) you must use a separate conversion script "
+                    "like `nisar_l0b_dm2_to_dbf.py` before this one.")
             raw_times, raw_grid = raw.getRadarGrid(channel_in.freq_id,
                                                    tx=pol[0], epoch=grid_epoch)
 
@@ -1784,6 +1788,10 @@ def focus(runconfig, runconfig_path=""):
                 continue
             raw_times = raw_times[pulse_begin:pulse_end]
             raw_grid = raw_grid[pulse_begin:pulse_end, :]
+
+            # Need to correct raw data to have constant phase wrt TX event.
+            log.info("Will apply basebandPhaseCorrection to raw data")
+            bb_phasor = raw.getBasebandPhaseCorrection(channel_in.freq_id, pol)
 
             na = cfg.processing.rangecomp.block_size.azimuth
             nr = rawdata.shape[1]
@@ -1800,9 +1808,10 @@ def focus(runconfig, runconfig_path=""):
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
                 nblock = min(na, rawdata.shape[0] - pulse, raw_mm.shape[0] - i)
-                block_in = np.s_[pulse:pulse+nblock, :]
+                pulse_slice = slice(pulse, pulse + nblock)
+                block_in = np.s_[pulse_slice, :]
                 block_out = np.s_[i:i+nblock, :]
-                z = rawdata[block_in]
+                z = rawdata[block_in] * bb_phasor[pulse_slice, np.newaxis]
                 # Remove NaNs.  TODO could incorporate into gap mask.
                 z[np.isnan(z)] = 0.0
                 if cfg.processing.zero_fill_gaps:

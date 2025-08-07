@@ -7,6 +7,7 @@ from .constants import (
     normalize_look_side,
 )
 from .crop_external_orbit import crop_external_orbit
+from .interpolate_datacube import interpolate_datacube
 from .transform_xy_to_latlon import transform_xy_to_latlon
 from .llh import LLH
 from .orbit import (

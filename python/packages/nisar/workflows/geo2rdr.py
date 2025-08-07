@@ -84,7 +84,7 @@ def run(cfg):
         geo2rdr_obj = Geo2Rdr(radar_grid, orbit, ellipsoid, doppler_grid,
                               threshold, numiter, lines_per_block)
 
-        # Opem Topo Raster
+        # Open Topo Raster
         topo_path = pathlib.Path(cfg['processing']['geo2rdr']['topo_path'])
         rdr2geo_topo_path = topo_path / 'rdr2geo' / f'freq{freq}' / 'topo.vrt'
         topo_raster = isce3.io.Raster(str(rdr2geo_topo_path))

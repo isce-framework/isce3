@@ -5,6 +5,7 @@ import numpy as np
 from .ionosphere_estimation import IonosphereEstimation
 from isce3.signal.interpolate_by_range import decimate_freq_a_array
 
+
 class SplitBandIonosphereEstimation(IonosphereEstimation):
     '''Split band ionosphere estimation
     '''
@@ -123,7 +124,8 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
 
         return dispersive, non_dispersive
 
-    def get_coherence_mask_array(self,
+    def get_coherence_mask_array(
+            self,
             main_array=None,
             side_array=None,
             low_band_array=None,
@@ -162,7 +164,8 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                                    high_band_array, slant_main, slant_side,
                                    threshold)
 
-    def get_conn_component_mask_array(self,
+    def get_conn_component_mask_array(
+            self,
             main_array=None,
             side_array=None,
             low_band_array=None,
@@ -198,7 +201,8 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                                    high_band_array, slant_main, slant_side,
                                    0)
 
-    def get_mask_array(self,
+    def get_mask_array(
+            self,
             main_array=None,
             side_array=None,
             low_band_array=None,
@@ -206,7 +210,9 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             slant_main=None,
             slant_side=None,
             threshold=0.5):
-        """Get mask from coherence
+        """Build a boolean mask of valid pixels based on an invalid_value
+        threshold and NaNs from coherence. This will be used to mask out
+        the low coherence areas.
 
         Parameters
         ----------
@@ -254,6 +260,74 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
 
         mask_array = (high_band_array > threshold) & \
                      (low_band_array > threshold)
+        mask_array = self.remove_single_pixels(mask_array)
+
+        return mask_array
+
+    def get_valid_area(
+            self,
+            main_array=None,
+            side_array=None,
+            low_band_array=None,
+            high_band_array=None,
+            slant_main=None,
+            slant_side=None,
+            invalid_value=0):
+        """Build a boolean mask of valid pixels based on an invalid_value
+        threshold and NaNs.
+        A pixel is considered valid (True) if:
+        - Its value in `main_array` is neither equal to `invalid_value` nor NaN
+        - And, if `side_array` is provided, its value in `side_array` also
+            is neither equal to `invalid_value` nor NaN.
+
+        Parameters
+        ----------
+        main_array : numpy.ndarray
+            image of main-band interferogram
+        side_array : numpy.ndarray
+            image of side-band interferogram
+        low_band_array : numpy.ndarray
+            image of main-band interferogram
+        high_band_array : numpy.ndarray
+            image of side-band interferogram
+        slant_main : numpy.ndarray
+            slant range array of frequency A band
+        slant_side : numpy.ndarray
+            slant range array of frequency B band
+        invalid_value : float
+            invalid_value
+
+        Returns
+        -------
+        mask_array : numpy.ndarray
+            2D mask array extracted from data
+            1: valid pixels,
+            0: invalid pixels.
+        """
+        # decimate coherence or connected components
+        # when side array is also used.
+        if side_array is not None:
+            if slant_main is None:
+                slant_main = self.slant_main
+            if slant_side is None:
+                slant_side = self.slant_side
+
+            if low_band_array is not None:
+                low_band_array = decimate_freq_a_array(
+                    slant_main,
+                    slant_side,
+                    low_band_array)
+            if high_band_array is not None:
+                high_band_array = decimate_freq_a_array(
+                    slant_main,
+                    slant_side,
+                    high_band_array)
+
+        mask_array = (high_band_array != invalid_value) & \
+                     (low_band_array != invalid_value) & \
+                     ~np.isnan(high_band_array) & \
+                     ~np.isnan(low_band_array)
+        mask_array = self.remove_single_pixels(mask_array)
 
         return mask_array
 
@@ -317,8 +391,8 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
 
         sig_phi_iono, sig_nondisp = \
             self.estimate_sigma_split_main_band(
-            sig_phi_low,
-            sig_phi_high)
+                sig_phi_low,
+                sig_phi_high)
 
         return sig_phi_iono, sig_nondisp
 
@@ -349,8 +423,8 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
 
         coef_non = self.f0 / (self.freq_high**2 - self.freq_low**2)
 
-        sig_nondisp = np.sqrt((coef_non**2) * (self.freq_low**2) *\
-                (sig_phi_low**2) + (coef_non**2) *\
+        sig_nondisp = np.sqrt((coef_non**2) * (self.freq_low**2) *
+                (sig_phi_low**2) + (coef_non**2) *
                 (self.freq_high**2) * (sig_phi_high**2))
 
         return sig_iono, sig_nondisp
@@ -440,19 +514,23 @@ def compute_unwrapp_error_split_main_band(
     diff_unw_coeff : numpy.ndarray
         2D differential unwrapping error coefficient array
     """
-
     freq_diff = freq_high - freq_low
     freq_multi = freq_high * freq_low
-
-    diff_unw_coeff = np.round(((high_sub_runw) - (low_sub_runw)\
-        - (freq_diff / f0) * nondisp_array \
-        + ( f0 * freq_diff / freq_multi) * disp_array) /\
+    # Unwrapping errors exists in high-subband interferogram,
+    # but not in low-subband interferogram.
+    diff_unw_coeff = np.round(((high_sub_runw) - (low_sub_runw)
+        - (freq_diff / f0) * nondisp_array
+        + (f0 * freq_diff / freq_multi) * disp_array) /
             2.0 / np.pi)
-    com_unw_coeff = np.round((low_sub_runw + high_sub_runw \
-        - 2.0 * nondisp_array - 2.0 * disp_array ) / 4.0 / np.pi\
-        - diff_unw_coeff / 2)
+    # Unwrapping errors exists in both high and low-subband
+    # interferograms.
+    com_unw_coeff = np.round(
+        (low_sub_runw + high_sub_runw
+         - 2.0 * nondisp_array - 2.0 * disp_array) / 4.0 / np.pi
+         - diff_unw_coeff / 2)
 
     return com_unw_coeff, diff_unw_coeff
+
 
 def estimate_iono_low_high(
         f0,
@@ -487,11 +565,10 @@ def estimate_iono_low_high(
 
     y_size, x_size = phi0_low.shape
     d = np.ones((2, y_size * x_size))
-    d[0,:] = phi0_low.flatten()
-    d[1,:] = phi0_high.flatten()
+    d[0, :] = phi0_low.flatten()
+    d[1, :] = phi0_high.flatten()
     coeff_mat = np.ones((2, 2))
 
-    #import ipdb; ipdb.set_trace()
     coeff_mat[0, 0] = freq_low / f0
     coeff_mat[0, 1] = f0 / freq_low
     coeff_mat[1, 0] = freq_high / f0

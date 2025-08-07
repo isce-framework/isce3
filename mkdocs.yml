@@ -1,0 +1,21 @@
+site_name: ISCE3 Documentation
+theme:
+  name: material
+nav:
+  - Home: index.md
+  - Installation: buildinstall.md
+  - Python API: api/python/isce3/core.html
+  - C++ API (Unstable): isce3/annotated.html
+
+extra_javascript:
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search

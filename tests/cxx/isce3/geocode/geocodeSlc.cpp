@@ -84,7 +84,7 @@ TEST(GeocodeTest, TestGeocodeSlc)
     int numiterGeo2rdr = 25;
     size_t linesPerBlock = 1000;
 
-    // input radar grid (baseline - will be copied and altered as neeed)
+    // input radar grid (baseline - will be copied and altered as need)
     char freq = 'A';
     std::cout << "construct radar grid" << std::endl;
     isce3::product::RadarGridParameters radarGrid(product, freq);
@@ -285,7 +285,7 @@ TEST(GeocodeTest, CheckGeocodeSlc)
                     } // loop over pixel
                 } // loop over line
 
-                // increment fails if maxErr greather than threshold
+                // increment fails if maxErr greater than threshold
                 if (maxErr > 1.0e-6) {
                     nFails++;
                 }
