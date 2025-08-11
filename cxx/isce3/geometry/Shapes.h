@@ -34,34 +34,49 @@ namespace isce3 { namespace geometry {
                 return;
             }
 
+            // After this point, `X` mean longitude in degrees, and we are crossing the antimeridian.
             constexpr double pi = 3.14159265358979323846;
 
-            auto lon_to_unitvec = [](double deg) {
+            // Compute unit vector from longitude in degrees
+            auto deg_to_unitvec = [](double deg) {
                 double rad = deg * pi / 180.0;
                 return std::pair{ std::cos(rad), std::sin(rad) };
             };
 
-            auto [this_lon_x1, this_lon_y1] = lon_to_unitvec(MinX);
-            auto [this_lon_x2, this_lon_y2] = lon_to_unitvec(MaxX);
-            auto [other_lon_x1, other_lon_y1] = lon_to_unitvec(other.MinX);
-            auto [other_lon_x2, other_lon_y2] = lon_to_unitvec(other.MaxX);
+            // Compute dot product of two 2D vectors
+            auto dot = [](auto a, auto b) {
+                return a.first * b.first + a.second * b.second;
+            };
 
-            double lon_cross_1 = this_lon_x1 * other_lon_y1 - this_lon_y1 * other_lon_x1;
+            // Compute cross product (z-component only in 2D)
+            auto cross = [](auto a, auto b) {
+                return a.first * b.second - a.second * b.first;
+            };
 
-            double lon_min_x, lon_min_y;
-            minx_global = (lon_cross_1 >= 0) ? MinX        : other.MinX;
-            lon_min_x   = (lon_cross_1 >= 0) ? this_lon_x1 : other_lon_x1;
-            lon_min_y   = (lon_cross_1 >= 0) ? this_lon_y1 : other_lon_y1;
+            // compute the unit vectors for the min / max longitudes of both bounding boxes
+            auto unitvec_this_minx = deg_to_unitvec(MinX);
+            auto unitvec_this_maxx = deg_to_unitvec(MaxX);
+            auto unitvec_other_minx = deg_to_unitvec(other.MinX);
+            auto unitvec_other_maxx = deg_to_unitvec(other.MaxX);
 
-            double dot_1 = lon_min_x * this_lon_x2 + lon_min_y * this_lon_y2;
-            double dot_2 = lon_min_x * other_lon_x2 + lon_min_y * other_lon_y2;
+            // compute the cross product of the min longitude unit vectors,
+            // which tells us which bounding box is "to the left" of the other
+            double lon_cross_1 = cross(unitvec_this_minx, unitvec_other_minx);
 
+            // Determine which bounding box has to be placed in the left.
+            auto unitvec_min_lon = (lon_cross_1 >= 0) ?
+                                   unitvec_this_minx :
+                                   unitvec_other_minx;
+
+            double dot_1 = dot(unitvec_min_lon, unitvec_this_maxx);
+            double dot_2 = dot(unitvec_min_lon, unitvec_other_maxx);
+
+            minx_global = (lon_cross_1 >= 0) ? MinX : other.MinX;
             maxx_global = (dot_1 < dot_2) ? MaxX : other.MaxX;
             maxx_global += (minx_global > maxx_global) ? 360.0 : 0.0;
 
             MaxX = maxx_global;
             MinX = minx_global;
-
         }
     };
     /** Same as GDAL's OGRTriangle structure. See: https://gdal.org/doxygen/classOGRTriangle.html */
