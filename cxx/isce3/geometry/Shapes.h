@@ -63,10 +63,10 @@ namespace isce3 { namespace geometry {
             auto unitvec_other_minx = deg_to_unitvec(other.MinX);
             auto unitvec_other_maxx = deg_to_unitvec(other.MaxX);
 
-            // Determine which bounding box has to be placed "to the left" by using the cross product
-            double lon_cross_1 = cross(unitvec_this_minx, unitvec_other_minx);
+            // Determine which MinX has to be placed "to the left" by using the cross product
+            double minx_cross = cross(unitvec_this_minx, unitvec_other_minx);
             std::pair<double, double> unitvec_global_min;
-            if (lon_cross_1 >= 0) {
+            if (minx_cross >= 0) {
                 unitvec_global_min = unitvec_this_minx;
                 minx_global = MinX;
             } else {
