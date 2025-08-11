@@ -43,7 +43,7 @@ namespace isce3 { namespace geometry {
             // Compute unit vector from longitude in degrees
             auto deg_to_unitvec = [](double deg) {
                 double rad = deg * pi / 180.0;
-                return std::pair{ std::cos(rad), std::sin(rad) };
+                return std::pair{std::cos(rad), std::sin(rad)};
             };
 
             // Compute dot product of two 2D vectors
@@ -56,26 +56,30 @@ namespace isce3 { namespace geometry {
                 return a.first * b.second - a.second * b.first;
             };
 
-            // compute the unit vectors for the min / max longitudes of both bounding boxes
+            // compute the unit vectors for the min / max longitudes of both bounding boxes for
+            // inner & outer product computations
             auto unitvec_this_minx = deg_to_unitvec(MinX);
             auto unitvec_this_maxx = deg_to_unitvec(MaxX);
             auto unitvec_other_minx = deg_to_unitvec(other.MinX);
             auto unitvec_other_maxx = deg_to_unitvec(other.MaxX);
 
-            // compute the cross product of the min longitude unit vectors,
-            // which tells us which bounding box is "to the left" of the other
+            // Determine which bounding box has to be placed "to the left" by using the cross product
             double lon_cross_1 = cross(unitvec_this_minx, unitvec_other_minx);
+            std::pair<double, double> unitvec_global_min;
+            if (lon_cross_1 >= 0) {
+                unitvec_global_min = unitvec_this_minx;
+                minx_global = MinX;
+            } else {
+                unitvec_global_min = unitvec_other_minx;
+                minx_global = other.MinX;
+            }
 
-            // Determine which bounding box has to be placed in the left.
-            auto unitvec_min_lon = (lon_cross_1 >= 0) ?
-                                   unitvec_this_minx :
-                                   unitvec_other_minx;
+            // Determine which bounding box has to be placed "to the right" by using the dot product
+            double dot_this = dot(unitvec_global_min, unitvec_this_maxx);
+            double dot_other = dot(unitvec_global_min, unitvec_other_maxx);
+            maxx_global = (dot_this < dot_other) ? MaxX : other.MaxX;
 
-            double dot_1 = dot(unitvec_min_lon, unitvec_this_maxx);
-            double dot_2 = dot(unitvec_min_lon, unitvec_other_maxx);
-
-            minx_global = (lon_cross_1 >= 0) ? MinX : other.MinX;
-            maxx_global = (dot_1 < dot_2) ? MaxX : other.MaxX;
+            // Add 360 degrees to the minimum longitude if it is greater than the maximum longitude
             maxx_global += (minx_global > maxx_global) ? 360.0 : 0.0;
 
             MaxX = maxx_global;
