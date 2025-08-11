@@ -813,15 +813,16 @@ class GcovWriter(BaseL2WriterSingleInput):
         Populate the `processingInformation/timingCorrections` group of the
         GCOV product
         """
-        timing_corrections_group_path = \
-            (self.output_product_path +
-             '/metadata/processingInformation/'
-             'timingCorrections')
 
         processing_information_geogrid = self.cfg['processing'][
             'processing_information']['geogrid']
 
         for frequency in self.input_freq_pols_dict.keys():
+
+            timing_corrections_group_path = \
+                (self.output_product_path +
+                 '/metadata/processingInformation/'
+                 f'timingCorrections/frequency{frequency}')
 
             if (self.timing_corrections_dict is not None and
                 frequency in
