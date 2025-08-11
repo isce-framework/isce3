@@ -50,6 +50,7 @@ def get_raster_grid(raster: isce3.io.Raster) -> GeoGridParameters:
 
 
 def winnipeg() -> tuple[GeoGridParameters, DEMInterpolator]:
+    # A DEM raster in geodetic coordinates (EPSG:4326).
     dem_raster_path = os.path.join(iscetest.data, "winnipeg_dem.tif")
     dem_raster = Raster(dem_raster_path)
     geo_grid = get_raster_grid(dem_raster)
@@ -57,7 +58,9 @@ def winnipeg() -> tuple[GeoGridParameters, DEMInterpolator]:
     return geo_grid, dem
 
 
-def south_pole() -> tuple[GeoGridParameters, DEMInterpolator]:
+def antarctica() -> tuple[GeoGridParameters, DEMInterpolator]:
+    # A DEM raster in Antarctic Polar Stereographic coordinates (EPSG:3031).
+    # Note: it does not contain the pole.
     dem_raster_path = os.path.join(iscetest.data, "dem_south_pole.tif")
     dem_raster = Raster(dem_raster_path)
     geo_grid = get_raster_grid(dem_raster)
@@ -160,7 +163,7 @@ def iter_geo_grid_llh_points(
 
 class TestMakeGeoGridBoundingPolygon:
     @pytest.mark.parametrize(
-        "geo_grid,dem", [winnipeg(), south_pole(), antimeridian(), north_down()]
+        "geo_grid,dem", [winnipeg(), antarctica(), antimeridian(), north_down()]
     )
     def test_contains_geo_grid(self, geo_grid: GeoGridParameters, dem: DEMInterpolator):
         ogr_polygon = isce3.geometry.make_geo_grid_bounding_polygon(
@@ -176,7 +179,7 @@ class TestMakeGeoGridBoundingPolygon:
         assert all(polygon.contains(llh) for llh in llh_points)
 
     @pytest.mark.parametrize(
-        "geo_grid,dem", [winnipeg(), south_pole(), antimeridian(), north_down()]
+        "geo_grid,dem", [winnipeg(), antarctica(), antimeridian(), north_down()]
     )
     def test_counter_clockwise(self, geo_grid: GeoGridParameters, dem: DEMInterpolator):
         ogr_polygon = isce3.geometry.make_geo_grid_bounding_polygon(geo_grid, dem)
