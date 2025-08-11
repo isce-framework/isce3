@@ -19,7 +19,10 @@ namespace isce3 { namespace geometry {
         See: https://gdal.org/doxygen/ogr__core_8h_source.html */
     class BoundingBox : public OGREnvelope {
         public:
-        //Overload OGREnvelope::Merge by adding parameter for EPSG in geographic coordinates.
+        // Expose the OGREnvelope::Merge method, so that the old function interface is preserved.
+        using OGREnvelope::Merge;
+
+        //Overload the method by adding parameter for EPSG in geographic coordinates.
         void Merge(const BoundingBox& other, int epsg) {
             double minx_global = std::min(MinX, other.MinX);
             double maxx_global = std::max(MaxX, other.MaxX);
@@ -77,6 +80,10 @@ namespace isce3 { namespace geometry {
 
             MaxX = maxx_global;
             MinX = minx_global;
+
+            // Merge the Y coordinates
+            MinY = std::min(MinY, other.MinY);
+            MaxY = std::max(MaxY, other.MaxY);
         }
     };
     /** Same as GDAL's OGRTriangle structure. See: https://gdal.org/doxygen/classOGRTriangle.html */
