@@ -188,7 +188,7 @@ def run(cfg):
                                           image_grid_doppler, ellipsoid,
                                           threshold_geo2rdr,
                                           iteration_geo2rdr,
-                                          sliced_radargrid=radar_grid,                                           
+                                          sliced_radargrid=radar_grid,
                                           mask_block=mask_data_blk,
                                           first_azimuth_line=az_first,
                                           first_range_sample=rg_first,
