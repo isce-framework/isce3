@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
 import journal
 
+from nisar.products.utils import to_bytes
 from nisar.products.granule_id import get_polarization_code, format_datetime
 from nisar.products.readers import open_product
 from nisar.h5 import cp_h5_meta_data
@@ -746,7 +747,7 @@ class BaseWriterSingleInput():
         if isinstance(data, str):
 
             return self.output_hdf5_obj.create_dataset(
-                path_dataset_in_h5, data=np.bytes_(data))
+                path_dataset_in_h5, data=to_bytes(data))
 
         if isinstance(data, bool):
             return self.output_hdf5_obj.create_dataset(

@@ -8,10 +8,12 @@ import journal
 def to_bytes(s: str | ArrayLike) -> np.ndarray:
     """
     Convert a Unicode string or array of strings into bytes.
+
     Parameters
     ----------
     s : str or array_like
         A Unicode string or array of Unicode strings.
+
     Returns
     -------
     numpy.ndarray
