@@ -470,7 +470,7 @@ def process_l0b_data(
             f"RFI frequency domain detection margin"
         )
         dset_margin.attrs["units"] = "decibel"
-        dset_margin.attrs["dtype"] = "float32"
+        dset_margin.attrs["dtype"] = "float64"
 
         # Copy Identification group from input L0B file
         input_group_path = f'/science/LSAR/identification'
