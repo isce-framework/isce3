@@ -131,7 +131,9 @@ input_subset_options:
 
     # Flag indicating whether the output GCOV product should include
     # off-diagonal covariance elements. If False, only the diagonal
-    # elements are included.
+    # elements are included. If empty, `fullcovariance` is set to
+    # `True` any frequency to be processed includes a full-pol dataset
+    # (3 or 4 polarizations), and `False` otherwise
     fullcovariance: bool(required=False)
 
     # Flag indicating whether polarimetric symmetrization should be

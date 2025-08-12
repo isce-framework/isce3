@@ -3,6 +3,7 @@ import numpy as np
 
 import isce3
 from nisar.workflows.runconfig import RunConfig
+from nisar.products.readers import SLC
 
 
 class GCOVRunConfig(RunConfig):
@@ -16,6 +17,57 @@ class GCOVRunConfig(RunConfig):
         '''
         Load GCOV specific parameters.
         '''
+        warning_channel = journal.warning('GCOVRunConfig.load()')
+
+        flag_fullcovariance = self.cfg['processing']['input_subset'][
+            'fullcovariance']
+
+        # Check if the `fullcovariance` flag field is empty.
+        # If so, the YAML parser assigns it the string value `"None"`.
+        if (flag_fullcovariance is None or
+                (isinstance(flag_fullcovariance, str) and
+                 flag_fullcovariance == 'None')):
+
+            # If empty, `fullcovariance` is set to `True` any frequency
+            # to be processed includes a full-pol dataset
+            # (3 or 4 polarizations), and `False` otherwise.
+            freq_pols_dict = self.cfg['processing']['input_subset'][
+                'list_of_frequencies']
+
+            flag_process_fullpol = False
+            for freq, pol_list in freq_pols_dict.items():
+
+                flag_process_fullpol_this_frequency = \
+                    (all([pol in pol_list
+                         for pol in ['HH', 'VV', 'HV']]) or
+                     all([pol in pol_list
+                         for pol in ['HH', 'VV', 'VH']]))
+
+                if (not flag_process_fullpol and
+                        flag_process_fullpol_this_frequency):
+                    warning_channel.log(
+                        'The `fullcovariance` flag is empty in the runconfig. '
+                        'By default, it is set to `True` if any frequency to'
+                        ' be processed includes a full-pol dataset. This is'
+                        f' the case for frequency {freq} with polarizations'
+                        f' {pol_list}. Setting `fullcovariance` to `True`.')
+
+                flag_process_fullpol |= flag_process_fullpol_this_frequency
+
+            if not flag_fullcovariance:
+                warning_channel.log(
+                    'The `fullcovariance` flag is empty in the runconfig. '
+                    'By default, it is set to `True` if any frequency to be'
+                    ' processed includes a full-pol dataset, which is not the '
+                    'case for the given input RSLC and runconfig. '
+                    'Setting `fullcovariance` to `False`.')
+
+            self.cfg['processing']['input_subset']['fullcovariance'] = \
+                flag_process_fullpol
+
+            flag_fullcovariance = self.cfg['processing']['input_subset'][
+                'fullcovariance']
+
         geocode_dict = self.cfg['processing']['geocode']
         rtc_dict = self.cfg['processing']['rtc']
 
