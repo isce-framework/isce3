@@ -57,13 +57,18 @@ namespace isce3 { namespace geometry {
                 return a.first * b.second - a.second * b.first;
             };
 
+            auto wrap = [](auto angle_a) {
+                return std::fmod(angle_a + 360.0, 360.0);
+            };
+
             // Compute the angle between two longitudes. Positive angle mean counter-clockwise direction.
             auto angle_between = [&](double from, double to){
-                auto unitvec_from = deg_to_unitvec(from);
-                auto unitvec_to = deg_to_unitvec(to);
-                double angle = std::atan2(cross(unitvec_from, unitvec_to), dot(unitvec_from, unitvec_to)) * (180.0 / pi);
-                angle += angle < 0 ? 360.0 : 0.0;
-                return angle;
+                double wrap_from = std::fmod(from + 360.0, 360.0);
+                double wrap_to = std::fmod(to + 360.0, 360.0);
+
+                double diff_angle = wrap_to - wrap_from;
+                diff_angle += diff_angle < 0 ? 360.0 : 0.0;
+                return diff_angle;
             };
 
             auto is_in_between = [&](double from, double to, double check){
