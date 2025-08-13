@@ -30,7 +30,7 @@ namespace isce3 { namespace geometry {
             OGRSpatialReference bbox_srs;
             bbox_srs.importFromEPSG(epsg);
 
-            // Check if wrapping is necessary (i.e. geographic SRS AND crossing antimeridian).
+            // Check if antimeridian handling is necessary (i.e. geographic SRS AND crossing antimeridian).
             // If not, use the method in the base class
             if (!bbox_srs.IsGeographic() || ((maxx_global - minx_global) <= 180.0)) {
                 OGREnvelope::Merge(other);
@@ -41,53 +41,80 @@ namespace isce3 { namespace geometry {
             constexpr double pi = 3.14159265358979323846;
 
             // Compute unit vector from longitude in degrees
-            auto deg_to_unitvec = [](double deg) {
+            auto deg_to_unitvec = [pi](double deg) {
                 double rad = deg * pi / 180.0;
                 return std::pair{std::cos(rad), std::sin(rad)};
             };
 
             // Compute dot product of two 2D vectors
-            auto dot = [](auto a, auto b) {
+            auto dot = [](const auto &a, const auto &b) {
                 return a.first * b.first + a.second * b.second;
+
             };
 
             // Compute cross product (z-component only in 2D)
-            auto cross = [](auto a, auto b) {
+            auto cross = [](const auto &a, const auto &b) {
                 return a.first * b.second - a.second * b.first;
             };
 
-            // compute the unit vectors for the min / max longitudes of both bounding boxes for
-            // inner & outer product computations
-            auto unitvec_this_minx = deg_to_unitvec(MinX);
-            auto unitvec_this_maxx = deg_to_unitvec(MaxX);
-            auto unitvec_other_minx = deg_to_unitvec(other.MinX);
-            auto unitvec_other_maxx = deg_to_unitvec(other.MaxX);
+            // Compute the angle between two longitudes. Positive angle mean counter-clockwise direction.
+            auto angle_between = [&](double from, double to){
+                auto unitvec_from = deg_to_unitvec(from);
+                auto unitvec_to = deg_to_unitvec(to);
+                double angle = std::atan2(cross(unitvec_from, unitvec_to), dot(unitvec_from, unitvec_to)) * (180.0 / pi);
+                angle += angle < 0 ? 360.0 : 0.0;
+                return angle;
+            };
 
-            // Determine which bounding box has to be placed "to the left" by using the cross product
-            double lon_cross_1 = cross(unitvec_this_minx, unitvec_other_minx);
-            std::pair<double, double> unitvec_global_min;
-            if (lon_cross_1 >= 0) {
-                unitvec_global_min = unitvec_this_minx;
-                minx_global = MinX;
-            } else {
-                unitvec_global_min = unitvec_other_minx;
-                minx_global = other.MinX;
+            auto is_in_between = [&](double from, double to, double check){
+                double tolerance = 1.0e-8;
+                double angle_from_to = angle_between(from, to);
+                double angle_from_check = angle_between(from, check);
+                double angle_check_to = angle_between(check, to);
+                return (std::abs(angle_from_to - (angle_from_check + angle_check_to)) < tolerance);
+            };
+
+            // Check if this bbox contains the other bbox
+            if (is_in_between(MinX, MaxX, other.MinX) && is_in_between(MinX, MaxX, other.MaxX)) {
+                // No need to do anything
+                return;
+            }
+            // Check if the other bbox contain this bbox
+            if (is_in_between(other.MinX, other.MaxX, MinX) && is_in_between(other.MinX, other.MaxX, MaxX)) {
+                // Replace this bbox to others
+                MinX = other.MinX;
+                MaxX = other.MaxX;
+                return;
             }
 
-            // Determine which bounding box has to be placed "to the right" by using the dot product
-            double dot_this = dot(unitvec_global_min, unitvec_this_maxx);
-            double dot_other = dot(unitvec_global_min, unitvec_other_maxx);
-            maxx_global = (dot_this < dot_other) ? MaxX : other.MaxX;
+            // try merging other bbox into this bbox
+            double minx_global = MinX;
+            double maxx_global = MaxX;
+            double span_1 = 720.0; // A number sufficiently bigger than a cycle
+            if (is_in_between(MinX, other.MaxX, other.MinX)) {
+                minx_global = MinX;
+                maxx_global = other.MaxX;
+                span_1 = angle_between(minx_global, maxx_global);
+            }
 
-            // Add 360 degrees to the minimum longitude if it is greater than the maximum longitude
-            maxx_global += (minx_global > maxx_global) ? 360.0 : 0.0;
+            // try merging this bbox into other bbox
+            if (is_in_between(other.MinX, MaxX, MinX)) {
+                double span_2 = angle_between(other.MinX, MaxX);
+                if (span_1 > span_2) {
+                    minx_global = other.MinX;
+                    maxx_global = MaxX;
+                }
+            }
 
-            MaxX = maxx_global;
+            maxx_global += maxx_global < minx_global ? 360.0 : 0.0;
+
             MinX = minx_global;
+            MaxX = maxx_global;
 
-            // Merge the Y coordinates
+            // merge y boundary
             MinY = std::min(MinY, other.MinY);
             MaxY = std::max(MaxY, other.MaxY);
+
         }
     };
     /** Same as GDAL's OGRTriangle structure. See: https://gdal.org/doxygen/classOGRTriangle.html */
