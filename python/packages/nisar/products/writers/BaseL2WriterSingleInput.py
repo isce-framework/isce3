@@ -1464,12 +1464,15 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             dry_tropospheric_geolocation_applied_str = '(NOT SPECIFIED)'
         else:
             dry_tropospheric_geolocation_applied_str = \
-                rslc_dry_troposphere_model != 'nodelay'
+                str(rslc_dry_troposphere_model != 'nodelay')
 
         self.set_value(
             f'{parameters_group}/dryTroposphericGeolocationCorrectionApplied',
             dry_tropospheric_geolocation_applied_str)
 
+        # Wet tropospheric geolocation corection is not currently being applied
+        # to RSLC products, and there's currently no dataset indicating
+        # whether this correction is applied.
         self.set_value(
             f'{parameters_group}/wetTroposphericGeolocationCorrectionApplied',
             False)
