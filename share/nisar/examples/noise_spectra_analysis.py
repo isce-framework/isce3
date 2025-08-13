@@ -202,7 +202,7 @@ def update_rfi_hit_stats(
     # Update total hit count
     rfi_freq_bin_hit_count += np.sum(rfi_mask_blk, axis=0)
 
-    # Vectorized max streak computation per frequency bin
+    # Zero-pad start and end of RFI Mask
     diff = np.diff(np.pad(rfi_mask_blk.astype(int), ((1, 1), (0, 0)), mode='constant'), axis=0)
 
     # starts and ends are tuples: starts[0]: pulse idx; starts[1]: freq bin idx
@@ -285,7 +285,7 @@ def process_l0b_data(
         f_out.attrs['num_pulses_block'] = num_pulses_blk
         f_out.attrs['num_fft'] = num_fft
         f_out.attrs['psd_x_axis'] = 'range (axis=1)'
-        f_out.attrs['psd_y_axis'] = 'power (axis=0, dB)'
+        f_out.attrs['psd_y_axis'] = 'power spectra density (axis=0, dB/Hz)'
 
         for freq, pol_list in raw.polarizations.items(): # A, B
             for pol in pol_list: # HH, HV, VV, VH
@@ -336,7 +336,7 @@ def process_l0b_data(
                 dset_fc.attrs["units"] = "Hz"
                 dset_fc.attrs["dtype"] = str(dset_fc.dtype)
 
-                # Center Frequency
+                # Sampling Frequency
                 if "freqSampling" in out_grp:
                     del out_grp["freqSamping"]
                 dset_fs = out_grp.create_dataset('freqSampling', data=fs)
