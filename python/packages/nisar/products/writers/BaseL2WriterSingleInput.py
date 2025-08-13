@@ -1468,11 +1468,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         self.set_value(
             f'{parameters_group}/dryTroposphericGeolocationCorrectionApplied',
-            default=dry_tropospheric_geolocation_applied_str)
+            dry_tropospheric_geolocation_applied_str)
 
-        self.copy_from_input(
+        self.set_value(
             f'{parameters_group}/wetTroposphericGeolocationCorrectionApplied',
-            default=False)
+            False)
 
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
