@@ -37,32 +37,9 @@ namespace isce3 { namespace geometry {
                 return;
             }
 
-            // After this point, `X` mean longitude in degrees, and we are crossing the antimeridian.
-            constexpr double pi = 3.14159265358979323846;
-
-            // Compute unit vector from longitude in degrees
-            auto deg_to_unitvec = [pi](double deg) {
-                double rad = deg * pi / 180.0;
-                return std::pair{std::cos(rad), std::sin(rad)};
-            };
-
-            // Compute dot product of two 2D vectors
-            auto dot = [](const auto &a, const auto &b) {
-                return a.first * b.first + a.second * b.second;
-
-            };
-
-            // Compute cross product (z-component only in 2D)
-            auto cross = [](const auto &a, const auto &b) {
-                return a.first * b.second - a.second * b.first;
-            };
-
-            auto wrap = [](auto angle_a) {
-                return std::fmod(angle_a + 360.0, 360.0);
-            };
-
-            // Compute the angle between two longitudes. Positive angle mean counter-clockwise direction.
-            auto angle_between = [&](double from, double to){
+            // Compute the angle between two longitudes. Always measure the angle in counter-clockwise.
+            // The angle is defined in the range [0, 360).
+            auto angle_between = [](double from, double to){
                 double wrap_from = std::fmod(from + 360.0, 360.0);
                 double wrap_to = std::fmod(to + 360.0, 360.0);
 
@@ -71,6 +48,7 @@ namespace isce3 { namespace geometry {
                 return diff_angle;
             };
 
+            // Check if the angle between two longitudes is within a certain range
             auto is_in_between = [&](double from, double to, double check){
                 double tolerance = 1.0e-8;
                 double angle_from_to = angle_between(from, to);
@@ -111,6 +89,7 @@ namespace isce3 { namespace geometry {
                 }
             }
 
+            // Wrap the 'east' part of the bbox boundary if necessary
             maxx_global += maxx_global < minx_global ? 360.0 : 0.0;
 
             MinX = minx_global;
