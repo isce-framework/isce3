@@ -6,11 +6,11 @@ RFI in terms of power and frequency locations.
 import numpy as np
 import argparse
 import h5py
-from scipy.fft import fft, fftshift
+from scipy.fft import fftshift
 from scipy.signal import welch
 from numpy import linalg as la
 from nisar.products.readers.Raw import Raw
-from collections.abc import Iterator
+from isce3.signal.compute_evd_cpi import slice_gen
 import warnings
 import os
 
@@ -26,7 +26,6 @@ def cmd_line_parse():
         required=True, 
         help='Input L0B file'
     )
-
     parser.add_argument(
         '-o',
         '--output', 
@@ -35,7 +34,6 @@ def cmd_line_parse():
         required=True, 
         help='Output data path. Output file name is input file name + SPECTRA.h5'
     )
-
     parser.add_argument(
         "-c",
         "--cpi",
@@ -45,7 +43,6 @@ def cmd_line_parse():
         default="6",
         help="Number of pulses in a coherent processing interval. Default: 6",
     )
-
     parser.add_argument(
         "-n",
         "--nfft",
@@ -56,7 +53,6 @@ def cmd_line_parse():
              "It is equal to number of FFT to be performed on each segment."
              "Default: 2048"
     )
-
     parser.add_argument(
         "-b",
         "--blk_size",
@@ -66,7 +62,6 @@ def cmd_line_parse():
         default="10000",
         help="Number of pulses per batch to be averaged in Azimuth-Time. Default: 5000",
     )
-
     parser.add_argument(
         "-m",
         "--margin",
@@ -79,45 +74,6 @@ def cmd_line_parse():
     )
 
     return parser.parse_args() 
-
-
-def slice_gen(total_size: int, batch_size: int, combine_rem: bool=True) -> Iterator[slice]:
-    """Generate slices with size defined by batch_size.
-
-    Parameters
-    ----------
-    total_size: int
-        size of data to be manipulated by slice_gen
-    batch_size: int
-        designated data chunk size in which data is sliced into.
-    combine_rem: bool
-        Combine the remaining values with the last complete block if 'True'.
-        If False, ignore the remaining values
-        Default = 'True'
-
-    Yields
-    ------
-    slice: slice obj
-        Iterable slices of data with specified input batch size, bounded by start_idx
-        and stop_idx.
-    """
-
-    num_complete_blks = total_size // batch_size
-    num_total_complete = num_complete_blks * batch_size
-    num_rem = total_size - num_total_complete
-
-    if combine_rem and num_rem > 0:
-        for start_idx in range(0, num_total_complete - batch_size, batch_size):
-            stop_idx = start_idx + batch_size
-            yield slice(start_idx, stop_idx)
-
-        last_blk_start = num_total_complete - batch_size
-        last_blk_stop = total_size
-        yield slice(last_blk_start, last_blk_stop)
-    else:
-        for start_idx in range(0, num_total_complete, batch_size):
-            stop_idx = start_idx + batch_size
-            yield slice(start_idx, stop_idx)
 
 
 def select_pulses_for_estimation(
@@ -277,6 +233,7 @@ def process_l0b_data(
     input_base, input_ext = os.path.splitext(input_filename)
     output_file = os.path.join(output_dir, f'{input_base}_SPECTRA{input_ext}')
     
+    # Print output file information
     print(f'{output_file = }')
     print()
 
