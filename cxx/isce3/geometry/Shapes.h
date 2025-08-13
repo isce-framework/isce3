@@ -88,8 +88,8 @@ namespace isce3 { namespace geometry {
             }
 
             // try merging other bbox into this bbox
-            double minx_global = MinX;
-            double maxx_global = MaxX;
+            minx_global = MinX;
+            maxx_global = MaxX;
             double span_1 = 720.0; // A number sufficiently bigger than a cycle
             if (is_in_between(MinX, other.MaxX, other.MinX)) {
                 minx_global = MinX;
