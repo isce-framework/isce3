@@ -88,28 +88,28 @@ namespace isce3 { namespace geometry {
             }
 
             // try merging other bbox into this bbox
-            double global_xmin = MinX;
-            double global_xmax = MaxX;
+            double minx_global = MinX;
+            double maxx_global = MaxX;
             double span_1 = 720.0; // A number sufficiently bigger than a cycle
             if (is_in_between(MinX, other.MaxX, other.MinX)) {
-                global_xmin = MinX;
-                global_xmax = other.MaxX;
-                span_1 = angle_between(global_xmin, global_xmax);
+                minx_global = MinX;
+                maxx_global = other.MaxX;
+                span_1 = angle_between(minx_global, maxx_global);
             }
 
             // try merging this bbox into other bbox
             if (is_in_between(other.MinX, MaxX, MinX)) {
                 double span_2 = angle_between(other.MinX, MaxX);
                 if (span_1 > span_2) {
-                    global_xmin = other.MinX;
-                    global_xmax = MaxX;
+                    minx_global = other.MinX;
+                    maxx_global = MaxX;
                 }
             }
 
-            global_xmax += global_xmax < global_xmin ? 360.0 : 0.0;
+            maxx_global += maxx_global < minx_global ? 360.0 : 0.0;
 
-            MinX = global_xmin;
-            MaxX = global_xmax;
+            MinX = minx_global;
+            MaxX = maxx_global;
 
             // merge y boundary
             MinY = std::min(MinY, other.MinY);
