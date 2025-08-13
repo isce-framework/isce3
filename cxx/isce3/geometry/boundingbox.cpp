@@ -3,7 +3,6 @@
 
 // cassert for assert()
 #include <cassert>
-#include <algorithm>
 
 // pyre::journal
 #include <pyre/journal.h>
