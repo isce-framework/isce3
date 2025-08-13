@@ -10,7 +10,6 @@
 #include <ogr_spatialref.h>
 #include <cmath>
 #include <algorithm>
-#include <iostream>
 
 namespace isce3 { namespace geometry {
     /** Same as GDAL's OGRLinearRing structure. See: https://gdal.org/doxygen/classOGRLinearRing.html */
