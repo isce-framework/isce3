@@ -35,13 +35,13 @@ def cmd_line_parse():
         help='Output data path. Output file name is input file name + SPECTRA.h5'
     )
     parser.add_argument(
-        "-c",
-        "--cpi",
-        dest="cpi_len",
+        "-p",
+        "--proc-interval",
+        dest="num_pulses_proc",
         type=int,
         required=False,
         default="6",
-        help="Number of pulses in a coherent processing interval. Default: 6",
+        help="Number of pulses to be used to estimate signle pulse power. Default: 6",
     )
     parser.add_argument(
         "-n",
@@ -55,7 +55,7 @@ def cmd_line_parse():
     )
     parser.add_argument(
         "-b",
-        "--blk_size",
+        "--block-size",
         dest="num_pulses_blk",
         type=int,
         required=False,
@@ -78,16 +78,16 @@ def cmd_line_parse():
 
 def select_pulses_for_estimation(
     raw_data: np.ndarray, 
-    cpi_len: int = 6
+    num_pulses_proc: int = 6
 ):
-    """Select pulses for Eigenvalue Decomposition based on cpi_len
+    """Select pulses for Eigenvalue Decomposition based on num_pulses_proc
 
     Parameters
     ----------
     raw_data: complex np.ndarray
         complex input raw data
-    cpi_len: int
-        Number of pulses to be used to estimate noise power of a single pulse
+    num_pulses_proc: int
+        Number of pulses to be used to estimate (noise power) of a single pulse
 
     Returns
     -------
@@ -98,11 +98,11 @@ def select_pulses_for_estimation(
 
     num_pulses = raw_data.shape[0]
 
-    if cpi_len > num_pulses:
-        raise ValueError(f"Requested cpi_len={cpi_len} exceeds number of pulses {num_pulses}")
+    if num_pulses_proc > num_pulses:
+        raise ValueError(f"Requested num_pulses_proc={num_pulses_proc} exceeds number of pulses {num_pulses}")
     
     # Equally spaced indices (without repetition)
-    indices = np.linspace(0, num_pulses - 1, cpi_len, dtype=int)
+    indices = np.linspace(0, num_pulses - 1, num_pulses_proc, dtype=int)
     raw_data_selected = raw_data[indices, :]
 
 
@@ -111,7 +111,7 @@ def select_pulses_for_estimation(
 
 def estimate_noise_pwr_pulse(
     raw_data: np.ndarray, 
-    cpi_len: int = 6
+    num_pulses_proc: int = 6
 ) -> float:
     """Estimate noise power per pulse in the time domain using minimum Eigenvalue
 
@@ -119,7 +119,7 @@ def estimate_noise_pwr_pulse(
     ----------
     raw_data: complex np.ndarray
         complex input raw data
-    cpi_len: int
+    num_pulses_proc: int
         Number of pulses to be used to estimate noise power of a single pulse
         Default: 6 
 
@@ -129,8 +129,8 @@ def estimate_noise_pwr_pulse(
         Estmated noise power per pulse using minimum Eigenvalue
     """
 
-    data_estimate = select_pulses_for_estimation(raw_data, cpi_len)  # [cpi_len, num_range]
-    sample_cov = data_estimate @ data_estimate.conj().T / data_estimate.shape[1]  # [cpi_len x cpi_len]
+    data_estimate = select_pulses_for_estimation(raw_data, num_pulses_proc)  # [num_pulses_proc, num_range]
+    sample_cov = data_estimate @ data_estimate.conj().T / data_estimate.shape[1]  # [num_pulses_proc x num_pulses_proc]
     eig_vals, _ = la.eigh(sample_cov)  # ascending order for Hermitian matrix
 
     noise_pwr_pulse_est_db = 10 * np.log10(eig_vals[0])
@@ -256,7 +256,7 @@ def process_l0b_data(
 
                 # Estimate noise power of each dataset corresponding to a polarization
                 # EVD is used due to unknown RFI situation as a priori
-                noise_pwr_pulse_est_db = estimate_noise_pwr_pulse(raw_data, cpi_len) 
+                noise_pwr_pulse_est_db = estimate_noise_pwr_pulse(raw_data, num_pulses_proc) 
 
                 # Convert Time-Domain Pulse Power to Frequency Domain Threshold in dB/Hz
                 threshold_db_hz = noise_pwr_pulse_est_db - 10*np.log10(fs) + thresh_margin
@@ -440,7 +440,7 @@ if __name__ == "__main__":
 
     input_file = inputs.input_file
     output_dir = inputs.output_dir
-    cpi_len = inputs.cpi_len
+    num_pulses_proc = inputs.num_pulses_proc
     num_pulses_blk = inputs.num_pulses_blk
     num_fft = inputs.num_fft
     thresh_margin = inputs.thresh_margin
