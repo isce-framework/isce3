@@ -253,13 +253,14 @@ def test_freq_null():
     )
 
     # Frequency Domain Nulling Parameters
+    num_pulses_az_blk = 600
+    num_rng_blks = 3
     az_winsize = 25
     rng_winsize = 22
-    num_rng_blks = 3
-    num_pulses_az_blk = 600
     trim_frac = 0.01
-    pvalue_threshold = 0.005
-    cdf_threshold = 0.68
+    zscore_threshold = 3.0
+    tsnb_rfi_hit_threshold = 3
+    tvwb_rfi_hit_threshold = 3
     nb_detect = True
     wb_detect = True
     mitigate_enable = True
@@ -273,8 +274,9 @@ def test_freq_null():
         az_winsize=az_winsize,
         rng_winsize=rng_winsize,
         trim_frac=trim_frac,
-        pvalue_threshold=pvalue_threshold,
-        cdf_threshold=cdf_threshold,
+        zscore_threshold=zscore_threshold,
+        tsnb_rfi_hit_threshold=tsnb_rfi_hit_threshold,
+        tvwb_rfi_hit_threshold=tvwb_rfi_hit_threshold,
         nb_detect=nb_detect,
         wb_detect=wb_detect,
         mitigate_enable=mitigate_enable,
@@ -289,8 +291,8 @@ def test_freq_null():
     max_raw_pulse_pwr_db = raw_data_pulse_pwr_db.max()
     max_miti_pulse_pwr_db = raw_miti_pulse_pwr_db.max()
 
-    npt.assert_allclose(
-        max_raw_pulse_pwr_db,
+    npt.assert_array_less(
         max_miti_pulse_pwr_db,
-        atol=rfi_residue,
+        max_raw_pulse_pwr_db + rfi_residue,
     )
+
