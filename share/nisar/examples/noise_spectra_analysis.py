@@ -58,7 +58,7 @@ def cmd_line_parse():
         dest="num_pulses_blk",
         type=int,
         required=False,
-        default="4000",
+        default="4096",
         help="Number of pulses per batch to be averaged in Azimuth-Time. Default: 5000",
     )
     parser.add_argument(
@@ -286,7 +286,7 @@ def process_l0b_data(
                     del out_grp["centerFrequency"]
                 dset_fc = out_grp.require_dataset('centerFrequency', (), np.float64)
                 dset_fc[()] = fc
-                dset_fc.attrs["description"] = (
+                dset_fc.attrs["description"] = np.bytes_(
                     f"Raw data center frequency"
                 )
                 dset_fc.attrs["units"] = np.bytes_("Hz")
@@ -296,7 +296,7 @@ def process_l0b_data(
                     del out_grp["sampleRate"]
                 dset_fs = out_grp.create_dataset('sampleRate', (), np.float64)
                 dset_fs[()] = fs
-                dset_fs.attrs["description"] = (
+                dset_fs.attrs["description"] = np.bytes_(
                     f"Raw data sampling frequency"
                 )
                 dset_fs.attrs["units"] = np.bytes_("Hz")
@@ -317,14 +317,16 @@ def process_l0b_data(
                 if "noisePowerEstimateDB" in out_grp:
                     del out_grp["Frequency"]
                 dset_noise = out_grp.create_dataset("noisePowerEstimateDB", data=noise_pwr_pulse_est_db)
-                dset_noise.attrs["description"] = f"Estimate of noise floor"
+                dset_noise.attrs["description"] =  np.bytes_(
+                    f"Estimate of noise floor"
+                )
                 dset_noise.attrs["units"] = np.bytes_("decibel re 1 DN^2")
 
                 # Write frequency domain RFI threshold estimate
                 if "rfiDetectionThreshold" in out_grp:
                     del out_grp["rfiDetectionThreshold"]
                 dset_thresh = out_grp.create_dataset('rfiDetectionThreshold', data=threshold_db_hz)
-                dset_thresh.attrs["description"] = (
+                dset_thresh.attrs["description"] =  np.bytes_(
                     f"Threshold used to classify power spectral density values as contaminated "
                     f"by radio frequency interference"
                 )
@@ -365,7 +367,7 @@ def process_l0b_data(
                 if "interferenceHitCount" in out_grp:
                     del out_grp["interferenceHitCount"]
                 dset_hit = out_grp.create_dataset('interferenceHitCount', data=rfi_bin_hit_count)
-                dset_hit.attrs["description"] = (
+                dset_hit.attrs["description"] =  np.bytes_(
                     f"Count of pulses where RFI detection threshold was exceeded "
                     f"(in each frequency bin)"
                 )
@@ -375,7 +377,7 @@ def process_l0b_data(
                 if "interferenceMaxStreak" in out_grp:
                     del out_grp["interferenceMaxStreak"]
                 dset_streak = out_grp.create_dataset('interferenceMaxStreak', data=rfi_bin_max_streak)
-                dset_streak.attrs["description"] = (
+                dset_streak.attrs["description"] =  np.bytes_(
                     f"Maximum number of consecutive pulses where RFI detection threshold was exceeded "
                     f"(in each freuqency bin)"
                 )
@@ -384,7 +386,7 @@ def process_l0b_data(
                 print(f'Processed: frequency{freq} {pol}')
                 print()
             
-            dset_psd.attrs["description"] = (
+            dset_psd.attrs["description"] =  np.bytes_(
                 "Radio frequency coordinates for range power spectra (dtype: dataset[list[float64]])"
             )
             dset_psd.attrs["units"] = np.bytes_("decibel re 1/hertz")
@@ -397,7 +399,7 @@ def process_l0b_data(
             if "listOfPolarizations" in top_grp:
                 del top_grp["listOfPolarizations"]
             dset_pols = top_grp.create_dataset('listOfPolarizations', data=pol_list)
-            dset_pols.attrs["description"] = (
+            dset_pols.attrs["description"] =  np.bytes_(
                 f"Polarizations for Frequency A discovered in input NISAR product"
             )
 
@@ -405,7 +407,7 @@ def process_l0b_data(
             if "rangeSpectraFrequencies" in top_grp:
                 del top_grp["rangeSpectraFrequencies"]
             dset_freq = top_grp.create_dataset('rangeSpectraFrequencies', data=freqs)
-            dset_freq.attrs["description"] = (
+            dset_freq.attrs["description"] =  np.bytes_(
                 f"Radio Frequency (RF) frequency coordinates for range power spectra"
             )
             dset_freq.attrs["units"] = np.bytes_("decibel re 1/hertz")
@@ -414,7 +416,7 @@ def process_l0b_data(
             if "thresholdMargin" in top_grp:
                 del top_grp["thresholdMargin"]
             dset_margin = top_grp.create_dataset('thresholdMargin', data=thresh_margin)
-            dset_margin.attrs["description"] = (
+            dset_margin.attrs["description"] =  np.bytes_(
                 f"RFI frequency domain detection margin"
             )
             dset_margin.attrs["units"] = np.bytes_("decibel")
