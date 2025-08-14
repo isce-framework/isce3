@@ -11,7 +11,6 @@ from scipy.signal import welch
 from numpy import linalg as la
 from nisar.products.readers.Raw import Raw
 from isce3.signal.compute_evd_cpi import slice_gen
-import warnings
 import os
 
 
@@ -59,7 +58,7 @@ def cmd_line_parse():
         dest="num_pulses_blk",
         type=int,
         required=False,
-        default="10000",
+        default="4000",
         help="Number of pulses per batch to be averaged in Azimuth-Time. Default: 5000",
     )
     parser.add_argument(
@@ -68,7 +67,7 @@ def cmd_line_parse():
         dest="thresh_margin",
         type=float,
         required=False,
-        default="6",
+        default="14",
         help="Additional gain to be added to noise power estimate for RFI thresholding." 
              "Default: 6"
     )
@@ -195,7 +194,7 @@ def copy_group_from_input_hdf5(
             # Copy the group
             f_in.copy(input_group_path, f_out[output_group_path])
         else:
-            warnings.warn(f"'{input_group_path}' does NOT exist in the input file.")
+            raise KeyError(f"'{input_group_path}' does NOT exist in the input file.")
 
 def process_l0b_data(
     raw: Raw,
@@ -279,22 +278,24 @@ def process_l0b_data(
                 num_freq_bins = len(freqs)
 
                 # Create output group for output HDF5
-                base_path = f"/science/LSAR/QA/data/freq{freq}/{pol}"
+                base_path = f"/science/LSAR/QA/data/frequency{freq}/{pol}"
                 out_grp = f_out.require_group(base_path)
 
                 # Center Frequency
                 if "centerFrequency" in out_grp:
                     del out_grp["centerFrequency"]
-                dset_fc = out_grp.create_dataset('centerFrequency', data=fc)
+                dset_fc = out_grp.require_dataset('centerFrequency', (), np.float64)
+                dset_fc[()] = fc
                 dset_fc.attrs["description"] = (
                     f"Raw data center frequency"
                 )
                 dset_fc.attrs["units"] = np.bytes_("Hz")
 
                 # Sampling Frequency
-                if "samplingFrequency" in out_grp:
-                    del out_grp["freqSamping"]
-                dset_fs = out_grp.create_dataset('samplingFrequency', data=fs)
+                if "sampleRate" in out_grp:
+                    del out_grp["sampleRate"]
+                dset_fs = out_grp.create_dataset('sampleRate', (), np.float64)
+                dset_fs[()] = fs
                 dset_fs.attrs["description"] = (
                     f"Raw data sampling frequency"
                 )
