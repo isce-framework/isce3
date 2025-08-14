@@ -170,9 +170,8 @@ def update_rfi_hit_stats(
         start_idxs = starts[0][starts[1] == b]
         end_idxs = ends[0][ends[1] == b]
 
-        if len(start_idxs) != len(end_idxs):
-            # If a streak starts but never ends (shouldn't happen with padding)
-             continue
+        # Expected an end to every beginning
+        len(start_idxs) == len(end_idxs)
 
         streaks = end_idxs - start_idxs
         if len(streaks) > 0:
