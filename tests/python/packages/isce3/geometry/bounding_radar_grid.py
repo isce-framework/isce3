@@ -399,6 +399,8 @@ class TestGetBoundingRadarGrid:
         )
 
         # Get a radar grid that contains the geo grid.
+        # (The azimuth/range spacing and wavelength aren't relevant to the test. They're
+        # just assigned arbitrarily-chosen NISAR-like dummy values.)
         radar_grid = isce3.geometry.get_bounding_radar_grid(
             geo_grid=geo_grid,
             az_spacing=0.0006,
@@ -447,6 +449,8 @@ class TestGetBoundingRadarGrid:
         )
 
         # Get a radar grid that contains the geo grid.
+        # (The azimuth/range spacing and wavelength aren't relevant to the test. They're
+        # just assigned arbitrarily-chosen NISAR-like dummy values.)
         radar_grid = isce3.geometry.get_bounding_radar_grid(
             geo_grid=geo_grid,
             az_spacing=0.0006,
