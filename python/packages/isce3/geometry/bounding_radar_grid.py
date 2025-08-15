@@ -384,8 +384,8 @@ def get_bounding_radar_grid(
 
         for z in [min_height, max_height]:
             # Yield points sampled along the top and bottom edges.
-            for x in xcoords:
-                for y in [geo_grid.start_y, geo_grid.end_y]:
+            for y in [geo_grid.start_y, geo_grid.end_y]:
+                for x in xcoords:
                     yield x, y, z
 
             # Yield points sampled along the left and right edges (excluding the four
