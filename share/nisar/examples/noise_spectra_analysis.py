@@ -128,9 +128,9 @@ def estimate_noise_pwr_pulse(
         Estmated noise power per pulse using minimum Eigenvalue
     """
 
-    data_estimate = select_pulses_for_estimation(raw_data, num_pulses_proc)  # [num_pulses_proc, num_range]
-    sample_cov = data_estimate @ data_estimate.conj().T / data_estimate.shape[1]  # [num_pulses_proc x num_pulses_proc]
-    eig_vals, _ = la.eigh(sample_cov)  # ascending order for Hermitian matrix
+    data_estimate = select_pulses_for_estimation(raw_data, num_pulses_proc)
+    sample_cov = data_estimate @ data_estimate.conj().T / data_estimate.shape[1]
+    eig_vals, _ = la.eigh(sample_cov)
 
     noise_pwr_pulse_est_db = 10 * np.log10(eig_vals[0])
 
@@ -244,7 +244,7 @@ def process_l0b_data(
 
         for freq, pol_list in raw.polarizations.items(): # A, B
             for pol in pol_list: # HH, HV, VV, VH
-                print(f'Start Processing: frequency{freq} {pol}')
+                print(f'Start Processing: frequency{freq} {pol}\n')
 
                 # Read raw data
                 raw_data = raw.getRawDataset(freq, pol)
@@ -314,9 +314,9 @@ def process_l0b_data(
                 )
 
                 # Write noise power estimate per pulse
-                if "noisePowerEstimateDB" in out_grp:
+                if "noisePowerEstimate" in out_grp:
                     del out_grp["Frequency"]
-                dset_noise = out_grp.create_dataset("noisePowerEstimateDB", data=noise_pwr_pulse_est_db)
+                dset_noise = out_grp.create_dataset("noisePowerEstimate", data=noise_pwr_pulse_est_db)
                 dset_noise.attrs["description"] =  np.bytes_(
                     f"Estimate of noise floor"
                 )
@@ -422,8 +422,8 @@ def process_l0b_data(
             dset_margin.attrs["units"] = np.bytes_("decibel")
 
         # Copy Identification group from input L0B file
-        input_group_path = f'/science/LSAR/identification'
-        output_group_path = f'/science/LSAR'
+        input_group_path = os.path.join(raw._RootPath, raw._IdentificationPath)
+        output_group_path = raw._RootPath
 
         copy_group_from_input_hdf5(input_file, output_file, input_group_path, output_group_path)
 
