@@ -486,7 +486,7 @@ void Geocode<T>::geocodeInterp(
 
             if (out_geo_rtc_gamma0_to_sigma0 != nullptr && output_rtc_sigma == nullptr) {
                 std::string vsimem_ref = (
-                    "/vsimem/" + getTempString("geocode_cov_areaproj_rtc_sigma0"));
+                    "/vsimem/" + getTempString("geocode_cov_interp_rtc_sigma0"));
                 rtc_raster_sigma0_unique_ptr = 
                     std::make_unique<isce3::io::Raster>(
                         vsimem_ref, radar_grid.width(),
