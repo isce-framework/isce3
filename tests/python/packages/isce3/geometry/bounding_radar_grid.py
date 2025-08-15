@@ -56,6 +56,13 @@ class TestGetBoundingRectangle:
         with pytest.raises(ValueError, match=regex):
             get_bounding_rectangle(pts)
 
+    @pytest.mark.parametrize("val", [np.inf, -np.inf])
+    def test_inf(self, val: float):
+        pts = [(0.0, 1.0), (2.0, 3.0), (4.0, val)]
+        regex = "^bounding box has one or more unbounded extents$"
+        with pytest.raises(ValueError, match=regex):
+            get_bounding_rectangle(pts)
+
 
 class TestGetRadarGridContainingAzRgPts:
     @pytest.fixture
