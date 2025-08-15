@@ -180,6 +180,24 @@ class TestDatasetSpec:
             sample_stddev="Standard deviation of the numeric data points",
             valid_min="0",
             DIMENSION_LIST="HDF5 internal attribute",
+            isReceiveOnlyChannel1=(
+                '"True" if the image from the first polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
+            isReceiveOnlyChannel2=(
+                '"True" if the image from the second polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
             _FillValue="nan",
             grid_mapping="projection",
             units="1",
@@ -206,7 +224,26 @@ class TestDatasetSpec:
             mean_imag_value=template.format("Arithmetic average", "imaginary"),
             min_imag_value=template.format("Minimum value", "imaginary"),
             max_imag_value=template.format("Maximum value", "imaginary"),
-            sample_stddev_imag=template.format("Standard deviation", "imaginary"),
+            sample_stddev_imag=template.format("Standard deviation",
+                                               "imaginary"),
+            isReceiveOnlyChannel1=template.format(
+                '"True" if the image from the first polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
+            isReceiveOnlyChannel2=template.format(
+                '"True" if the image from the second polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
             _FillValue="(nan+nan*j)",
             grid_mapping="projection",
             units="1",
