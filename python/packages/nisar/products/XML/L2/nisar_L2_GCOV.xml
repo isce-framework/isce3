@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.2.1 -->
+<!-- product specification version is 1.2.0 -->
 <algorithm name="L2_GeocodedCovariance"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GCOV_template">
@@ -144,7 +144,7 @@
                 name="/science/LSAR/identification/productLevel"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
+                      lang="en">Product level. "L0A": Unprocessed instrument data; "L0B": Reformatted, unprocessed instrument data; "L1": Processed instrument data in radar coordinates system; and "L2": Processed instrument data in geocoded coordinates system</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isGeocoded"
@@ -194,13 +194,13 @@
                 name="/science/LSAR/identification/isDithered"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">"True" if the pulse timing was varied (dithered) during acquisition, "False" otherwise.</annotation>
+                            lang="en">"True" if the pulse timing was varied (dithered) during acquisition, "False" otherwise</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isMixedMode"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">"True" if this product is a composite of data collected in multiple radar modes, "False" otherwise.</annotation>
+                            lang="en">"True" if this product is a composite of data collected in multiple radar modes, "False" otherwise</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isFullFrame"
@@ -2319,13 +2319,13 @@
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/dryTroposphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if the dry tropospheric correction has been applied</annotation>
+                            lang="en">Flag to indicate if the dry tropospheric correction was applied during the generation of the input RSLC to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/wetTroposphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if the wet tropospheric correction has been applied</annotation>
+                            lang="en">Flag to indicate if the wet tropospheric correction was applied during the generation of the input RSLC to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rangeIonosphericGeolocationCorrectionApplied"
@@ -2343,7 +2343,7 @@
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rfiMitigationApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if an RFI mitigation has been applied</annotation>
+                            lang="en">Flag to indicate if radio frequency interference (RFI) mitigation was applied during the generation of the input RSLC</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/postProcessingFilteringApplied"
@@ -2715,6 +2715,142 @@
                       lang="en">Reference to the geocoding algorithm applied (if applicable)</annotation>
         </string>
 
+        <!-- Timing correction LUTs -->
+        <integer name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/projection"
+                 shape="scalar"
+                 signed="false"
+                 width="32">
+            <annotation app="conformance"
+                        ellipsoid="Projection ellipsoid"
+                        epsg_code="Projection EPSG code"
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
+                        grid_mapping_name="Grid mapping variable name"
+                        inverse_flattening="Inverse flattening of the ellipsoidal figure"
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        semi_major_axis="Semi-major axis"
+                        spatial_ref="Spatial reference"
+                        utm_zone_number="UTM zone number"
+                        lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
+        </integer>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>	
+        </real>	
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>	
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/azimuthIonosphere"
+              shape="calibrationScaleShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
+                      _FillValue="nan"
+                      units="seconds">Azimuth ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
+        </real>
+
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/slantRangeIonosphere"
+              shape="calibrationScaleShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
+                      _FillValue="nan"
+                      units="meters">Slant range ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
+        </real>
+
+        <integer name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/projection"
+                 shape="scalar"
+                 signed="false"
+                 width="32">
+            <annotation app="conformance"
+                        ellipsoid="Projection ellipsoid"
+                        epsg_code="Projection EPSG code"
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
+                        grid_mapping_name="Grid mapping variable name"
+                        inverse_flattening="Inverse flattening of the ellipsoidal figure"
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        semi_major_axis="Semi-major axis"
+                        spatial_ref="Spatial reference"
+                        utm_zone_number="UTM zone number"
+                        lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
+        </integer>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>	
+        </real>	
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>	
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/azimuthIonosphere"
+              shape="calibrationScaleShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
+                      _FillValue="nan"
+                      units="seconds">Azimuth ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/slantRangeIonosphere"
+              shape="calibrationScaleShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
+                      _FillValue="nan"
+                      units="meters">Slant range ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
+        </real>
+
         <!-- Orbit ephemeris -->
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/orbit/interpMethod"
@@ -2841,7 +2977,7 @@
                 name="/science/LSAR/GCOV/metadata/sourceData/productLevel"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Source data product level. Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
+                      lang="en">Source data product level. Product level. "L0A": Unprocessed instrument data; "L0B": Reformatted, unprocessed instrument data; "L1": Processed instrument data in radar coordinates system; and "L2": Processed instrument data in geocoded coordinates system</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/productGeometry"
@@ -3366,7 +3502,8 @@
     <shape name="radarGridShape"
            order="slowest...fastest">
            <annotation app="conformance"
-                       lang="en">Shape associated with 2D rasters on same grid as metadata cubes</annotation>         <dimension extent="0"
+                       lang="en">Shape associated with 2D rasters on same grid as metadata cubes</annotation>
+           <dimension extent="0"
                       name="radarCubeLength"/>
            <dimension extent="0"
                       name="radarCubeWidth"/>

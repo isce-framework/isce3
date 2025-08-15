@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.2.1 -->
+<!-- product specification version is 1.2.0 -->
 <algorithm name="L2_GeocodedSlc"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GSLC_template">
@@ -144,7 +144,7 @@
                 name="/science/LSAR/identification/productLevel"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
+                      lang="en">Product level. "L0A": Unprocessed instrument data; "L0B": Reformatted, unprocessed instrument data; "L1": Processed instrument data in radar coordinates system; and "L2": Processed instrument data in geocoded coordinates system</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isGeocoded"
@@ -194,13 +194,13 @@
                 name="/science/LSAR/identification/isDithered"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">"True" if the pulse timing was varied (dithered) during acquisition, "False" otherwise.</annotation>
+                            lang="en">"True" if the pulse timing was varied (dithered) during acquisition, "False" otherwise</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isMixedMode"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">"True" if this product is a composite of data collected in multiple radar modes, "False" otherwise.</annotation>
+                            lang="en">"True" if this product is a composite of data collected in multiple radar modes, "False" otherwise</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isFullFrame"
@@ -343,7 +343,7 @@
                       grid_mapping="projection"
                       long_name="Valid samples subswath mask"
                       valid_min="0"
-                      _FillValue="255">Mask indicating the subswath number representing valid GSLC samples. Each GSLC pixel is assumed valid if all the pixels in the interpolation window are fully focused in the input RSLC. A value of 0 indicates that at least one RSLC pixel in the interpolation window is partially focused or invalid. Pixels outside of the radar acquisition extent are filled with the value 255.</annotation>
+                      _FillValue="255">Mask indicating the subswath number representing valid GSLC samples. Each GSLC pixel is assumed valid if all the pixels in the interpolation window are fully focused in the input RSLC. A value of 0 indicates that at least one RSLC pixel in the interpolation window is partially focused or invalid. Pixels outside of the radar acquisition extent are filled with the value 255</annotation>
         </integer>
         <real name="/science/LSAR/GSLC/grids/frequencyA/HH"
               shape="complexDataFrequencyAShape"
@@ -596,7 +596,7 @@
                       grid_mapping="projection"
                       long_name="Valid samples subswath mask"
                       valid_min="0"
-                      _FillValue="255">Mask indicating the subswath number representing valid GSLC samples. Each GSLC pixel is assumed valid if all the pixels in the interpolation window are fully focused in the input RSLC. A value of 0 indicates that at least one RSLC pixel in the interpolation window is partially focused or invalid. Pixels outside of the radar acquisition extent are filled with the value 255.</annotation>
+                      _FillValue="255">Mask indicating the subswath number representing valid GSLC samples. Each GSLC pixel is assumed valid if all the pixels in the interpolation window are fully focused in the input RSLC. A value of 0 indicates that at least one RSLC pixel in the interpolation window is partially focused or invalid. Pixels outside of the radar acquisition extent are filled with the value 255</annotation>
         </integer>
         <real name="/science/LSAR/GSLC/grids/frequencyB/HH"
               shape="complexDataFrequencyBShape"
@@ -2109,7 +2109,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      units="1">1-D array in frequency domain for azimuth processing. This is used for processing L0b to L1. FFT length=256 (assumed)</annotation>
+                      units="1">1D array in frequency domain for azimuth processing. This is used for processing L0B to L1. FFT length=256 (assumed)</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/processingInformation/parameters/rangeChirpWeighting"
               shape="chirpWeightingFrequencyLength"
@@ -2118,20 +2118,20 @@
                       lang="en"
                       window_shape="Parameter that controls the shape of the apodization window"
                       window_name='Name of the apodization window, e.g., "Kaiser"'
-                      units="1">1-D array in frequency domain for range processing. This is used for processing L0b to L1. FFT length=256 (assumed)</annotation>
+                      units="1">1D array in frequency domain for range processing. This is used for processing L0B to L1. FFT length=256 (assumed)</annotation>
         </real>
 
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/dryTroposphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if the dry tropospheric correction has been applied to improve geolocation</annotation>
+                            lang="en">Flag to indicate if the dry tropospheric correction was applied during the generation of the input RSLC to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/wetTroposphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if the wet tropospheric correction has been applied to improve geolocation</annotation>
+                            lang="en">Flag to indicate if the wet tropospheric correction was applied during the generation of the input RSLC to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/rangeIonosphericGeolocationCorrectionApplied"
@@ -2149,7 +2149,7 @@
                 name="/science/LSAR/GSLC/metadata/processingInformation/parameters/rfiMitigationApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if an RFI mitigation has been applied</annotation>
+                            lang="en">Flag to indicate if radio frequency interference (RFI) mitigation was applied during the generation of the input RSLC</annotation>
         </string>
 
         <string length="0"
@@ -2332,7 +2332,7 @@
           <annotation app="conformance"
                       lang="en"
                       _FillValue="nan"
-                      units="seconds">2D lookup table of azimuth ionosphere timing correction derived from Total Electron Content data</annotation>
+                      units="seconds">Azimuth ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
         </real>
 
         <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/slantRangeIonosphere"
@@ -2341,7 +2341,7 @@
           <annotation app="conformance"
                       lang="en"
                       _FillValue="nan"
-                      units="meters">2D lookup table of line-of-sight ionosphere timing correction derived from Total Electron Content data</annotation>
+                      units="meters">Slant range ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
         </real>
 
         <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyA/slantRangeSolidEarthTides"
@@ -2391,7 +2391,7 @@
           <annotation app="conformance"
                       lang="en"
                       _FillValue="nan"
-                      units="seconds">2D lookup table of azimuth ionosphere timing correction derived from Total Electron Content data</annotation>
+                      units="seconds">Azimuth ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
         </real>
 
         <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/slantRangeIonosphere"
@@ -2400,7 +2400,7 @@
           <annotation app="conformance"
                       lang="en"
                       _FillValue="nan"
-                      units="meters">2D lookup table of line-of-sight ionosphere timing correction derived from Total Electron Content data</annotation>
+                      units="meters">Slant range ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
         </real>
 
         <real name="/science/LSAR/GSLC/metadata/processingInformation/timingCorrections/frequencyB/slantRangeSolidEarthTides"
@@ -2594,7 +2594,7 @@
                 name="/science/LSAR/GSLC/metadata/sourceData/productLevel"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Source data product level. Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
+                      lang="en">Source data product level. Product level. "L0A": Unprocessed instrument data; "L0B": Reformatted, unprocessed instrument data; "L1": Processed instrument data in radar coordinates system; and "L2": Processed instrument data in geocoded coordinates system</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/productGeometry"
