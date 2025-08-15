@@ -223,7 +223,7 @@ def get_radar_grid_containing_geo_pts(
         supported:
 
         'tol_aztime':
-          Azimuth time convergence tolerance, in seconds.
+          Azimuth time convergence tolerance, in seconds. Defaults to 1e-7.
 
         'time_start':
           Start of search interval, in seconds. Defaults to ``orbit.start_time``.
@@ -340,7 +340,7 @@ def get_bounding_radar_grid(
         supported:
 
         'tol_aztime':
-          Azimuth time convergence tolerance, in seconds.
+          Azimuth time convergence tolerance, in seconds. Defaults to 1e-7.
 
         'time_start':
           Start of search interval, in seconds. Defaults to ``orbit.start_time``.
