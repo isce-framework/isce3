@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.2.0 -->
+<!-- product specification version is 1.3.0 -->
 <algorithm name="L2_GeocodedCovariance"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GCOV_template">
@@ -365,6 +365,8 @@
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and HH</annotation>
           <annotation app="io" />
         </real>
@@ -385,6 +387,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and HV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -405,6 +409,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -425,6 +431,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -442,6 +450,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HV and HV</annotation>
           <annotation app="io" />
         </real>
@@ -462,6 +472,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HV and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -482,6 +494,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -499,6 +513,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VH and VH</annotation>
           <annotation app="io" />
         </real>
@@ -519,6 +535,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -536,6 +554,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VV and VV</annotation>
           <annotation app="io" />
         </real>
@@ -553,6 +573,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RH and RH</annotation>
           <annotation app="io" />
         </real>
@@ -573,6 +595,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RH and RV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -590,6 +614,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RV and RV</annotation>
           <annotation app="io" />
         </real>
@@ -744,6 +770,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and HH</annotation>
           <annotation app="io" />
         </real>
@@ -764,6 +792,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and HV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -784,6 +814,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -804,6 +836,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -821,6 +855,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HV and HV</annotation>
           <annotation app="io" />
         </real>
@@ -841,6 +877,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HV and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -861,6 +899,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -878,6 +918,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VH and VH</annotation>
           <annotation app="io" />
         </real>
@@ -898,6 +940,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -915,6 +959,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VV and VV</annotation>
           <annotation app="io" />
         </real>
@@ -932,6 +978,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RH and RH</annotation>
           <annotation app="io" />
         </real>
@@ -952,6 +1000,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RH and RV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -969,6 +1019,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RV and RV</annotation>
           <annotation app="io" />
         </real>

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.2.0 -->
+<!-- product specification version is 1.3.0 -->
 <algorithm name="L2_GeocodedSlc"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GSLC_template">
@@ -362,6 +362,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (HH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -382,6 +383,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (HV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -402,6 +404,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (VH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -422,6 +425,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (VV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -442,6 +446,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (RH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -462,6 +467,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (RV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -615,6 +621,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (HH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -635,6 +642,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (HV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -655,6 +663,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (VH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -675,6 +684,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (VV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -695,6 +705,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (RH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -715,6 +726,7 @@
                       grid_mapping="projection"
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="(nan+nan*j)"
+                      isReceiveOnly='"True" if image was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Focused SLC image (RV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
