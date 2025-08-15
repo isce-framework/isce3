@@ -336,8 +336,10 @@ def process_l0b_data(
                 rfi_bin_hit_count = np.zeros(num_freq_bins, dtype=int)
                 rfi_bin_max_streak = np.zeros(num_freq_bins, dtype=int) 
                 
+                block_count = 0
                 # Compute averaged power spectra density and RFI hit count
                 for az_idx, az_slice in enumerate(slices):
+                    block_count += 1
                     az_blk = raw_data[az_slice, :]  # Shape: (num_pulses_blk, range_samples)
                     _, psd_az_blk = welch(
                         az_blk, 
@@ -362,6 +364,9 @@ def process_l0b_data(
 
                     # Write PSD of each block
                     dset_psd[az_idx, :] = avg_psd_az_blk_db
+
+                    if block_count % 10 == 0:
+                        print(f"Processed {block_count} blocks")
 
                 # Write RFI Hit Count
                 if "interferenceHitCount" in out_grp:
