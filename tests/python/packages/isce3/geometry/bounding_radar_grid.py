@@ -217,7 +217,7 @@ def test_get_radar_grid_containing_geo_pts(
     # Get the 'projection' object associated with the input EPSG code.
     proj = isce3.core.make_projection(epsg)
 
-    def rdr2geo(az: float, rg: float) -> tuple[float, float, float]:
+    def _rdr2geo(az: float, rg: float) -> tuple[float, float, float]:
         # Convert from radar coordinates -> ECEF -> LLH -> projected coordinates.
         xyz = isce3.geometry.rdr2geo_bracket(
             aztime=az,
@@ -233,7 +233,7 @@ def test_get_radar_grid_containing_geo_pts(
 
     # Lazily transform the radar grid boundary points from (azimuth,range) coordinates
     # to projected coordinates.
-    geo_pts = itertools.starmap(rdr2geo, az_rg_pts)
+    geo_pts = itertools.starmap(_rdr2geo, az_rg_pts)
 
     # Get the output radar grid containing the geocoded points (with a small margin
     # to ensure that the original radar grid is strictly contained within the output
