@@ -25,7 +25,7 @@ def get_bounding_rectangle(pts: Iterable[tuple[float, float]]) -> Rectangle:
     Parameters
     ----------
     pts : iterable of (float, float)
-        A sequence of one or more (x,y) coordinates. Must not contain NaN or (positive
+        An iterable of one or more (x,y) coordinates. Must not contain NaN or (positive
         or negative) infinity values.
 
     Returns
@@ -76,8 +76,8 @@ def get_radar_grid_containing_az_rg_pts(
     Parameters
     ----------
     az_rg_pts : iterable of (float, float)
-        A sequence of one or more (azimuth,range) points with finite values that must be
-        contained within the output radar grid.
+        An iterable of one or more (azimuth,range) points with finite values that must
+        be contained within the output radar grid.
     az_spacing : float
         Azimuth time spacing of the output grid, in seconds. Must be > 0.
     rg_spacing : float
@@ -188,7 +188,7 @@ def get_radar_grid_containing_geo_pts(
     Parameters
     ----------
     geo_pts : iterable of (float, float, float)
-        A sequence of one or more points that must be contained within the output radar
+        An iterable of one or more points that must be contained within the output radar
         grid. Points should be specified as 3-vectors or 3-tuples of coordinates such as
         (longitude,latitude,height) or (easting,northing,height). All points should be
         in a single common coordinate system specified by the `proj` argument.
@@ -219,7 +219,8 @@ def get_radar_grid_containing_geo_pts(
         of the radar grid, in meters. Must be >= 0. Defaults to 0.
     geo2rdr_params : dict or None, optional
         An optional dict of parameters configuring the behavior of the root-finding
-        routine used in geo2rdr. The following keys are supported:
+        routine used in geo2rdr (bracketing implementation). The following keys are
+        supported:
 
         'tol_aztime':
           Azimuth time convergence tolerance, in seconds.
@@ -290,8 +291,8 @@ def get_bounding_radar_grid(
     """
     Get a radar grid that spans an input geocoded grid over a specified height range.
 
-    The output radar grid is chosen such that it contains points sampled along each of
-    the four edges of `geo_grid` at both the specified minimum and maximum height
+    The output radar grid is constructed such that it contains points sampled along each
+    of the four edges of `geo_grid` at both the specified minimum and maximum height
     bounds.
 
     Parameters
@@ -335,7 +336,8 @@ def get_bounding_radar_grid(
         of the radar grid, in meters. Must be >= 0. Defaults to 0.
     geo2rdr_params : dict or None, optional
         An optional dict of parameters configuring the behavior of the root-finding
-        routine used in geo2rdr. The following keys are supported:
+        routine used in geo2rdr (bracketing implementation). The following keys are
+        supported:
 
         'tol_aztime':
           Azimuth time convergence tolerance, in seconds.
