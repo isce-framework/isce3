@@ -394,10 +394,10 @@ def get_bounding_radar_grid(
                 for y in ycoords[1:-1]:
                     yield x, y, z
 
-    # Get a 'projection' object that represents the spatial reference system of
-    # `geo_grid`. The first two coordinates of the projected coordinate system are the
-    # `geo_grid` x & y coordinates, and the third coordinate is assumed to be height
-    # above ellipsoid, in meters.
+    # Get an `isce3.core.ProjectionBase` object that represents the spatial reference
+    # system of `geo_grid`, where the first two coordinates of the projected coordinate
+    # system are the `geo_grid` x & y coordinates, and the third coordinate is assumed
+    # to be height above ellipsoid, in meters.
     proj = isce3.core.make_projection(geo_grid.epsg)
 
     return get_radar_grid_containing_geo_pts(
