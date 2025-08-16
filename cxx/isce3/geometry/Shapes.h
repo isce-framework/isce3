@@ -37,63 +37,16 @@ namespace isce3 { namespace geometry {
                 return;
             }
 
-            // Compute the angle between two longitudes. Always measure the angle in counter-clockwise.
-            // The angle is defined in the range [0, 360).
-            auto angle_between = [](double from, double to){
-                double wrap_from = std::fmod(from + 360.0, 360.0);
-                double wrap_to = std::fmod(to + 360.0, 360.0);
+            double MinX_wrap = std::fmod(MinX + 360.0, 360.0);
+            double MaxX_wrap = std::fmod(MaxX + 360.0, 360.0);
+            double other_MinX_wrap = std::fmod(other.MinX + 360.0, 360.0);
+            double other_MaxX_wrap = std::fmod(other.MaxX + 360.0, 360.0);
 
-                double diff_angle = wrap_to - wrap_from;
-                diff_angle += diff_angle < 0 ? 360.0 : 0.0;
-                return diff_angle;
-            };
+            double global_minx = std::min(MinX_wrap, other_MinX_wrap);
+            double global_maxx = std::max(MaxX_wrap, other_MaxX_wrap);
 
-            // Check if the angle between two longitudes is within a certain range
-            auto is_in_between = [&](double from, double to, double check){
-                double tolerance = 1.0e-8;
-                double angle_from_to = angle_between(from, to);
-                double angle_from_check = angle_between(from, check);
-                double angle_check_to = angle_between(check, to);
-                return (std::abs(angle_from_to - (angle_from_check + angle_check_to)) < tolerance);
-            };
-
-            // Check if this bbox contains the other bbox
-            if (is_in_between(MinX, MaxX, other.MinX) && is_in_between(MinX, MaxX, other.MaxX)) {
-                // No need to do anything
-                return;
-            }
-            // Check if the other bbox contain this bbox
-            if (is_in_between(other.MinX, other.MaxX, MinX) && is_in_between(other.MinX, other.MaxX, MaxX)) {
-                // Replace this bbox to others
-                MinX = other.MinX;
-                MaxX = other.MaxX;
-                return;
-            }
-
-            // try merging other bbox into this bbox
-            minx_global = MinX;
-            maxx_global = MaxX;
-            double span_1 = 720.0; // A number sufficiently bigger than a cycle
-            if (is_in_between(MinX, other.MaxX, other.MinX)) {
-                minx_global = MinX;
-                maxx_global = other.MaxX;
-                span_1 = angle_between(minx_global, maxx_global);
-            }
-
-            // try merging this bbox into other bbox
-            if (is_in_between(other.MinX, MaxX, MinX)) {
-                double span_2 = angle_between(other.MinX, MaxX);
-                if (span_1 > span_2) {
-                    minx_global = other.MinX;
-                    maxx_global = MaxX;
-                }
-            }
-
-            // Wrap the 'east' part of the bbox boundary if necessary
-            maxx_global += maxx_global < minx_global ? 360.0 : 0.0;
-
-            MinX = minx_global;
-            MaxX = maxx_global;
+            MinX = global_minx;
+            MaxX = global_maxx;
 
             // merge y boundary
             MinY = std::min(MinY, other.MinY);
