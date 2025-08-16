@@ -226,7 +226,7 @@ class TestDatasetSpec:
             max_imag_value=template.format("Maximum value", "imaginary"),
             sample_stddev_imag=template.format("Standard deviation",
                                                "imaginary"),
-            isReceiveOnlyChannel1=template.format(
+            isReceiveOnlyChannel1=(
                 '"True" if the image from the first polarimetric '
                 'channel (HH) contributing to the covariance term '
                 'was acquired in a receive-only configuration '
@@ -235,7 +235,7 @@ class TestDatasetSpec:
                 'signals. "False" if acquired in a standard '
                 'configuration where both transmit and receive are '
                 'enabled'),
-            isReceiveOnlyChannel2=template.format(
+            isReceiveOnlyChannel2=(
                 '"True" if the image from the second polarimetric '
                 'channel (HH) contributing to the covariance term '
                 'was acquired in a receive-only configuration '
