@@ -237,7 +237,7 @@ class TestDatasetSpec:
                 'enabled'),
             isReceiveOnlyChannel2=(
                 '"True" if the image from the second polarimetric '
-                'channel (HH) contributing to the covariance term '
+                'channel (VV) contributing to the covariance term '
                 'was acquired in a receive-only configuration '
                 '(transmit disabled), thus recording only thermal '
                 'noise, RFI, leakage, and/or internal calibration '
