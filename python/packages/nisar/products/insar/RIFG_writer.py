@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+from nisar.products.utils import to_bytes
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .InSAR_HDF5_optimizer_config import get_InSAR_output_options
@@ -43,9 +44,9 @@ class RIFGWriter(L1InSARWriter):
         super().add_root_attrs()
 
         # Add additional attributes
-        self.attrs["title"] = np.bytes_("NISAR L1 RIFG Product")
+        self.attrs["title"] = to_bytes("NISAR L1 RIFG Product")
         self.attrs["reference_document"] = \
-            np.bytes_("D-102270 NISAR NASA SDS Product Specification"
+            to_bytes("D-102270 NISAR NASA SDS Product Specification"
                        " L1 Range Doppler Wrapped Interferogram")
 
         ctype = h5py.h5t.py_create(np.complex64)

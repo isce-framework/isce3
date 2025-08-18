@@ -16,6 +16,8 @@ void add_constants(py::module & core)
 
     core.attr("speed_of_light") = py::float_(isce3::core::speed_of_light);
     core.attr("earth_spin_rate") = py::float_(isce3::core::EarthSpinRate);
+    core.attr("GLOBAL_MIN_HEIGHT") = py::float_(isce3::core::GLOBAL_MIN_HEIGHT);
+    core.attr("GLOBAL_MAX_HEIGHT") = py::float_(isce3::core::GLOBAL_MAX_HEIGHT);
     core.attr("WGS84_ELLIPSOID") = isce3::core::Ellipsoid();
     core.attr("SINC_HALF") = isce3::core::SINC_HALF;
 }

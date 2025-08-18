@@ -7,6 +7,8 @@ from pathlib import Path
 import os
 import time
 import tempfile
+from copy import copy
+from datetime import datetime
 
 import numpy as np
 from scipy.signal import fftconvolve
@@ -25,14 +27,26 @@ from isce3.io import Raster
 from nisar.log import set_logger
 from isce3.signal import dbf_onetap_from_dm2, dbf_onetap_from_dm2_seamless
 from isce3.focus import fill_gaps, form_linear_chirp
+from isce3.core import TimeDelta
 from nisar.workflows.helpers import build_uniform_quantizer_lut_l0b, slice_gen
 from isce3.antenna import ant2rgdop
 
 
-def copy_swath_except_echo_h5(fid_in, fid_out, swath_path, frq_pol):
+def _join_paths(path1: str, path2: str) -> str:
+    """Join two paths to be used in HDF5"""
+    sep = '/'
+    if path1.endswith(sep):
+        sep = ''
+    return path1 + sep + path2
+
+
+def copy_swath_except_echo_h5(
+        fid_in, fid_out, swath_path, frq_pol, tx_keys=None, rx_keys=None):
     """
     Copy all groups and datasets under swath from input HDF5 to output
-    HDF5 except for echo products.
+    HDF5 except for echo and optionally for desired datasets under tx and
+    rx group listed by tx_keys and rx_keys.
+    "validSamplesSubSwath*" on tx group will be excluded from being copied.
 
     Parameters
     ----------
@@ -45,15 +59,32 @@ def copy_swath_except_echo_h5(fid_in, fid_out, swath_path, frq_pol):
     frq_pol : dict
         A dict of all frequency bands as keys and list of TxRx
         polarization as values.
+    tx_keys : sequence of str, optional
+        Sequence of dataset names to be excluded from tx group in `fid_out`.
+    rx_keys : sequence of str, optional
+        Sequence of dataset names to be excluded from rx group in `fid_out`.
+        Echo datasets are always excluded from RX group!
 
     """
+    # TX/RX dataset names to be excluded over all frequency bands and pols!
+    tx_names = []
+    if tx_keys is not None:
+        tx_names.extend(tx_keys)
+    rx_names = []
+    if rx_keys is not None:
+        rx_names.extend(rx_keys)
+
     for freq_band in frq_pol:
         # build band path
-        band_path = os.path.join(swath_path, f'frequency{freq_band}/')
+        band_path = _join_paths(swath_path, f'frequency{freq_band}/')
         # create freq band group for output product
         grp_band = fid_out.require_group(band_path)
         # list of all TxRx products
         txrx_pols = frq_pol[freq_band]
+        # form rx datset names plus echo for all pols to be
+        # excluded from output
+        rx_names_echo = copy(txrx_pols)
+        rx_names_echo.extend(rx_names)
         # list of group names txp where "p" is all TX pols
         txp = {f'tx{p[0]}' for p in txrx_pols}
         # list of group names rxp where "p" is all RX pols
@@ -71,11 +102,13 @@ def copy_swath_except_echo_h5(fid_in, fid_out, swath_path, frq_pol):
                         # create RX group for output product
                         grp_rx = fid_out.require_group(rx_path)
                         for rx_item in fid_in[rx_path]:
-                            if rx_item not in txrx_pols:
-                                # copy all RX fields except echo product
+                            if rx_item not in rx_names_echo:
+                                # copy all RX fields except
+                                # echo + rx_keys
                                 fid_in.copy(rx_path + rx_item, grp_rx)
-
-                    else:  # copy the rest of TX as it is
+                    # copy the rest of TX that is not in tx_keys
+                    elif ((tx_item not in tx_names) and
+                          ('validSamplesSubSwath' not in tx_item)):
                         fid_in.copy(tx_path + tx_item, grp_tx)
 
             else:
@@ -117,7 +150,7 @@ def create_echo_dataset_h5(fid_in, fid_out, band_path, txrx_pol,
     in output HDF5
 
     """
-    rx_path = os.path.join(band_path, f'tx{txrx_pol[0]}/rx{txrx_pol[1]}/')
+    rx_path = _join_paths(band_path, f'tx{txrx_pol[0]}/rx{txrx_pol[1]}/')
     # create a place holder for dataset
     grp_rx = fid_out[rx_path]
     dset_prod = grp_rx.create_dataset(
@@ -130,6 +163,137 @@ def create_echo_dataset_h5(fid_in, fid_out, band_path, txrx_pol,
     for a_name, a_val in fid_in[p_path].attrs.items():
         dset_prod.attrs[a_name] = a_val
     return dset_prod
+
+
+def _copy_datasets_truncated(
+        fid_in, fid_out, band_path, pol, pulse_slice, logger, keys):
+    """
+    Copy truncated version of non-echo pulse-dependent datasets under
+    either tx or rx group from input HDF5 to output one given desired
+    input pulse slice.
+    The type of tx or rx is determined by the size of pol.
+    If single char then it is tx group and if two-char str then
+    it will be dataset under rx group
+
+    Paramaters
+    ----------
+    fid_in : h5py.File
+        File-like object for input HDF5 L0B product
+    fid_out : h5py.File
+        File-like object for output HDF5 L0B product
+    band_path : str
+        Frequency band path in L0B HDF5 product.
+    pol : str
+        Either signle-char tx pol or two-char TxRx polarization
+        of the new echo product
+    pulse_slice : slice
+        Desired pulse slice for input HDF5 file.
+    logger: logging.Logger
+    keys: sequence of str
+        Desired keys under RX group to be copied as long as
+        they exist in input hdf5.
+
+    """
+    path = _join_paths(band_path, f'tx{pol[0]}/')
+    if len(pol) == 2:
+        path += f'rx{pol[1]}/'
+    # output group
+    grp_out = fid_out[path]
+    for name in set(keys):
+        try:
+            dset_in = fid_in[path + name]
+        except KeyError as err:
+            logger.warning(
+                f'Missing dataset "{path + name}" in input L0B!'
+                f' Detailed Error -> "{err}"'
+            )
+            continue
+        else:
+            data_in = dset_in[pulse_slice]
+            dset_out = grp_out.require_dataset(
+                name, shape=data_in.shape, dtype=data_in.dtype, data=data_in)
+            # copy attributes for the product from input
+            for a_name, a_val in dset_in.attrs.items():
+                dset_out.attrs[a_name] = a_val
+
+
+def copy_rx_datasets_truncated(
+        fid_in, fid_out, band_path, txrx_pol, pulse_slice, logger,
+        keys=('caltone', 'RD', 'WD', 'WL', 'basebandPhaseCorrection',
+              'TRMDataWindow', 'attenuation')
+):
+    """
+    Copy truncated version of non-echo pulse-dependent datasets under rx group
+    from input HDF5 to output one given desired input pulse slice.
+
+    Paramaters
+    ----------
+    fid_in : h5py.File
+        File-like object for input HDF5 L0B product
+    fid_out : h5py.File
+        File-like object for output HDF5 L0B product
+    band_path : str
+        Frequency band path in L0B HDF5 product.
+    txrx_pol : str
+        TxRx polarization of the new echo product
+    pulse_slice : slice
+        Desired pulse slice for input HDF5 file.
+    logger: logging.Logger
+    keys: sequence of str
+        Desired keys under RX group to be copied as long as
+        they exist in input hdf5.
+        Default is ('caltone', 'RD', 'WD', 'WL', 'basebandPhaseCorrection',
+        'TRMDataWindow', 'attenuation').
+
+    """
+    _copy_datasets_truncated(
+        fid_in, fid_out, band_path, txrx_pol, pulse_slice, logger, keys)
+
+
+def copy_tx_datasets_truncated(
+        fid_in, fid_out, band_path, tx_pol, pulse_slice, logger,
+        keys=('rangeLineIndex', 'radarTime', 'UTCtime', 'txPhase',
+              'calType', 'chirpCorrelator')
+):
+    """
+    Copy truncated version of non-echo pulse-dependent datasets under tx group
+    from input HDF5 to output one given desired input pulse slice.
+
+    Paramaters
+    ----------
+    fid_in : h5py.File
+        File-like object for input HDF5 L0B product
+    fid_out : h5py.File
+        File-like object for output HDF5 L0B product
+    band_path : str
+        Frequency band path in L0B HDF5 product.
+    tx_pol : str
+        Tx polarization of the new echo product
+    pulse_slice : slice
+        Desired pulse slice for input HDF5 file.
+    logger: logging.Logger
+    keys: sequence of str
+        Desired keys under TX group to be copied as long as
+        they exist in input hdf5.
+        Default is
+        ('rangeLineIndex', 'radarTime', 'UTCtime', 'txPhase',
+        'calType', 'chirpCorrelator')
+
+    Notes
+    -----
+    'validSamplesSubSwath*' will be accounted for internally and
+    thus shall be excluded from the `keys`.
+
+    """
+    # form list of keys excluding valid subswath
+    keys_new = [k for k in keys if "validSamplesSubSwath" not in k]
+    # get dataset names for valid subswath and appended them to the new list
+    path = _join_paths(band_path, f'tx{tx_pol[0]}/')
+    num_sbsw = fid_in[path + 'numberOfSubSwaths'][()]
+    for n in range(1, num_sbsw + 1):
+        keys_new.append(f'validSamplesSubSwath{n}')
+    _copy_datasets_truncated(
+        fid_in, fid_out, band_path, tx_pol, pulse_slice, logger, keys_new)
 
 
 def cmd_line_parser():
@@ -167,8 +331,10 @@ def cmd_line_parser():
     prs.add_argument('-p', '--product-name', type=str, dest='prod_name',
                      help=('Product science L0B HDF5 file and path name. '
                            'Default is input L0B filename with suffix '
-                           '"OneTap_DBF" added prior to the extension and is '
-                           'stored at the current directory.')
+                           '"_ONE_TAP_DBF_<utc-first>_<utc-last>" added prior '
+                           'to the extension and is stored at the current '
+                           'directory. First/last UTC is set by first/last '
+                           'pulses to be processed.')
                      )
     prs.add_argument('--num-cpu', type=int, dest='num_cpu',
                      help=('Number of CPU/Workers used in range compression. '
@@ -236,11 +402,29 @@ def cmd_line_parser():
                            'pattern coverage of swath. A positive value used '
                            'only if `rx-antpat-calib`.')
                      )
+    prs.add_argument('--time-start', type=float, default=0,
+                     help=('Start time (seconds) wrt the first range line, '
+                           '>= 0, to be processed. This is inclusive.')
+                     )
+    prs.add_argument('--time-stop', type=float,
+                     help=('Stop time (seconds) wrt the first range line, '
+                           '> 0, to be processed. Must be larger than '
+                           '`time-start`. Its value will be limited by the '
+                           'time of the last range line. This is exclusive. '
+                           'The default is entire L0B.')
+                     )
     return prs.parse_args()
 
 
 def nisar_l0b_dm2_to_dbf(args):
     """Create NISAR one-tap DBFed L0B from DM2 L0B product"""
+    # Const
+    # list of rx/tx dataset keys/names to be resized/reproduced
+    # in truncated output HDF5
+    rx_keys = ('caltone', 'RD', 'WD', 'WL', 'basebandPhaseCorrection',
+               'TRMDataWindow', 'attenuation')
+    tx_keys = ('rangeLineIndex', 'radarTime', 'UTCtime', 'txPhase',
+               'calType', 'chirpCorrelator')
 
     tic = time.time()
     if args.multiplier is not None and args.multiplier < 0:
@@ -298,9 +482,42 @@ def nisar_l0b_dm2_to_dbf(args):
                         ' averaged complex caltones!')
     else:  # No calibration, set cal amplitude to None!
         amp_cal = None
+
     # get ref epoch and build AZ slice generator
     epoch, azt_raw = raw.getPulseTimes(freq_band, txrx_pol[0])
     n_rgl_tot = azt_raw.size
+    logger.info(f'Total available number of pulses in L0B -> {n_rgl_tot}')
+    # Get start and end pulse index of input product to be processed
+    # expect at least one range line to be processed!
+    # Check the start time and get its pulse index
+    azt_rel = azt_raw - azt_raw[0]
+    if (args.time_start < 0) or not (args.time_start < azt_rel[-1]):
+        raise ValueError(
+            f'"time-start" shall be within [0, {azt_rel[-1]}) (sec)!')
+    # start time is inclusive!
+    start_pulse_idx = np.searchsorted(
+        azt_rel, args.time_start, side='right') - 1
+    # Check the stop time and get its pulse index
+    if args.time_stop is None:
+        stop_pulse_idx = n_rgl_tot
+    else:
+        if args.time_stop < azt_rel[start_pulse_idx + 1]:
+            raise ValueError('"time-stop" shall be equal or larger than '
+                             f'{azt_rel[start_pulse_idx + 1]} (sec)')
+        # stop time is exclusive!
+        stop_pulse_idx = np.searchsorted(
+            azt_rel, args.time_stop, side='left') - 1
+    logger.info('(start, stop) 0-based pulse index to be processed -> '
+                f'({start_pulse_idx}, {stop_pulse_idx})')
+    pulse_slice = slice(start_pulse_idx, stop_pulse_idx)
+    # get number of pulses to be processed
+    num_pulses = stop_pulse_idx - start_pulse_idx
+    logger.info(f'Number of pulses for output L0B -> {num_pulses}')
+    # Get start and end UTC datetime for output L0B products
+    start_dt_utc = (epoch + TimeDelta(azt_raw[start_pulse_idx])).isoformat()
+    end_dt_utc = (epoch + TimeDelta(azt_raw[stop_pulse_idx - 1])).isoformat()
+    logger.info('(start, end) datetime for output L0B -> '
+                f'({start_dt_utc}, {end_dt_utc})')
 
     # check the size of the sample delays and reverse the sign
     dset = raw.getRawDataset(freq_band, txrx_pol)
@@ -363,11 +580,17 @@ def nisar_l0b_dm2_to_dbf(args):
     bfpq_uq = build_uniform_quantizer_lut_l0b(nbits)
     max_valid_int = 2**(nbits - 1) - 1
 
+    def utc2filename(dt_utc: str) -> str:
+        """Datetime UTC string into filename string"""
+        return datetime.fromisoformat(dt_utc[:19]).strftime('%Y%m%dT%H%M%S')
+
     # get in/out files and file objects
     p_in = Path(args.l0b_file)
     out_path = Path(args.out_path)
     if args.prod_name is None:
-        suffix = '_OneTap_DBF.h5'
+        utc_first = utc2filename(start_dt_utc)
+        utc_last = utc2filename(end_dt_utc)
+        suffix = f'_ONE_TAP_DBF_{utc_first}_{utc_last}.h5'
         file_out = p_in.stem + suffix
     else:
         file_out = args.prod_name
@@ -387,12 +610,16 @@ def nisar_l0b_dm2_to_dbf(args):
                        f' Detailed Error -> "{err}"')
     # copy the entire identification into the output product
     # but modify diagnostic mode flags from DM2 to DBF
+    # as well as update start and end zero-Doppler datetime!
     grp_root = fid_out.require_group(raw.RootPath)
     fid_in.copy(raw.IdentificationPath, grp_root)
     grp_ident = fid_out[raw.IdentificationPath]
     grp_ident['diagnosticModeFlag'][()] = np.uint8(0)
+    grp_ident['zeroDopplerStartTime'][()] = np.bytes_(start_dt_utc)
+    grp_ident['zeroDopplerEndTime'][()] = np.bytes_(end_dt_utc)
     # copy entire swath except for TxRx echo products
-    copy_swath_except_echo_h5(fid_in, fid_out, raw.SwathPath, frq_pol)
+    copy_swath_except_echo_h5(fid_in, fid_out, raw.SwathPath, frq_pol,
+                              tx_keys=tx_keys, rx_keys=rx_keys)
 
     # get DBF sampling rate
     fs_dbf = raw.getSampleRateDBF(freq_band, txrx_pol)
@@ -400,8 +627,17 @@ def nisar_l0b_dm2_to_dbf(args):
 
     # loop over all products and bands
     # form a vector of range line slices used for all products
-    rgl_slices = list(slice_gen(n_rgl_tot, args.num_rgl))
+    rgl_slices = list(
+        slice_gen(num_pulses, args.num_rgl, idx_start=start_pulse_idx)
+    )
     logger.info(f'Number of AZ blocks -> {len(rgl_slices)}')
+    # Build slices for output L0B that always starts from zero index
+    if start_pulse_idx == 0:
+        rgl_slices_out = rgl_slices
+    else:
+        rgl_slices_out = list(
+            slice_gen(num_pulses, args.num_rgl, idx_start=0)
+        )
 
     for freq_band, sample_delays in zip(frq_pol, sample_delays_all):
         # group path for frequency band
@@ -431,6 +667,11 @@ def nisar_l0b_dm2_to_dbf(args):
                     amp_cal = cal_avg_amp.min() / cal_avg
                 logger.info(f'Final calibration multipliers -> {amp_cal}')
 
+            # copy truncated tx/rx datasets per desired rx/tx keys
+            copy_tx_datasets_truncated(fid_in, fid_out, band_path, txrx_pol[0],
+                                       pulse_slice, logger, keys=tx_keys)
+            copy_rx_datasets_truncated(fid_in, fid_out, band_path, txrx_pol,
+                                       pulse_slice, logger, keys=rx_keys)
             # product group path
             prod_grp = band_path + f'tx{txrx_pol[0]}/rx{txrx_pol[1]}/'
 
@@ -462,12 +703,11 @@ def nisar_l0b_dm2_to_dbf(args):
             # create a placeholder for echo product and use uniform-quantizer
             # BFPQ LUT in place of BFPQ ones.
             dset_prod_out = create_echo_dataset_h5(
-                fid_in, fid_out, band_path, txrx_pol, dset.shape[1:],
+                fid_in, fid_out, band_path, txrx_pol, (num_pulses, sr.size),
                 dset.dtype_storage, args.comp_level_h5)
 
             bfpq_path = prod_grp + 'BFPQLUT'
             fid_out[bfpq_path][:] = bfpq_uq
-
             # Get valid subswath to fill in TX gap regions with zero
             # due to non-mitigated strong TX Cal loop-back chirps.
             sbsw = raw.getSubSwaths(freq_band, txrx_pol[0])
@@ -561,8 +801,10 @@ def nisar_l0b_dm2_to_dbf(args):
                 shape=(num_chanl, num_rgl, sr.size),
                 dtype=dset.dtype)
             # loop over AZ blocks
-            for n_blk, rgl_slice in enumerate(rgl_slices, start=1):
+            for n_blk, (rgl_slice, rgl_slice_o) in enumerate(
+                    zip(rgl_slices, rgl_slices_out), start=1):
                 logger.info(f'Processing AZ block # {n_blk} ...')
+                logger.info(f'Processing input rangelines -> {rgl_slice}')
                 num_rgl = rgl_slice.stop - rgl_slice.start
                 # fill in 3-D memmap complex array with decoded echo,
                 # one channel at a time to avoid memory issue!
@@ -665,20 +907,22 @@ def nisar_l0b_dm2_to_dbf(args):
 
                 # store echo data per AZ block
                 dset_prod_out.write_direct(echo_dbf.astype(
-                    'uint16').view(dset.dtype_storage), dest_sel=rgl_slice)
+                    'uint16').view(dset.dtype_storage), dest_sel=rgl_slice_o)
 
                 # compute WD/WL values to be updated per single-tap DBF
                 # use mid range line values
                 rgb_limits_dbf = _rescale2dbf(rgb_limits)
                 rgl_mid = (rgl_slice.start + rgl_slice.stop) // 2
+                rd_new = rd[rgl_mid]
                 wd_new, wl_new = _wd_wl_single_tap_dbf(
-                    rgb_limits_dbf, dwp_first[rgl_mid], rd[rgl_mid])
+                    rgb_limits_dbf, dwp_first[rgl_mid], rd_new)
                 logger.info(f'New WDs per AZ block # {n_blk} -> {wd_new}')
                 logger.info(f'New WLs per AZ block # {n_blk} -> {wl_new}')
-                # update HDF5 datasets WD/WL per AZ block
+                # update HDF5 datasets RD/WD/WL per AZ block
                 grp_prod = dset_prod_out.parent
-                grp_prod['WD'][rgl_slice] = wd_new
-                grp_prod['WL'][rgl_slice] = wl_new
+                grp_prod['WD'][rgl_slice_o] = wd_new
+                grp_prod['WL'][rgl_slice_o] = wl_new
+                grp_prod['RD'][rgl_slice_o] = rd_new
 
             # destroy memmap and close the temp file
             del dset_azblk, fid_tmp

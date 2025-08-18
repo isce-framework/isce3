@@ -219,6 +219,24 @@ class TestDatasetSpec:
             sample_stddev="Standard deviation of the numeric data points",
             valid_min="0",
             DIMENSION_LIST="HDF5 internal attribute",
+            isReceiveOnlyChannel1=(
+                '"True" if the image from the first polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
+            isReceiveOnlyChannel2=(
+                '"True" if the image from the second polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
             _FillValue="nan",
             grid_mapping="projection",
             units="1",
@@ -245,7 +263,26 @@ class TestDatasetSpec:
             mean_imag_value=template.format("Arithmetic average", "imaginary"),
             min_imag_value=template.format("Minimum value", "imaginary"),
             max_imag_value=template.format("Maximum value", "imaginary"),
-            sample_stddev_imag=template.format("Standard deviation", "imaginary"),
+            sample_stddev_imag=template.format("Standard deviation",
+                                               "imaginary"),
+            isReceiveOnlyChannel1=(
+                '"True" if the image from the first polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
+            isReceiveOnlyChannel2=(
+                '"True" if the image from the second polarimetric '
+                'channel (VV) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
             _FillValue="(nan+nan*j)",
             grid_mapping="projection",
             units="1",
@@ -266,29 +303,29 @@ class TestDatasetSpec:
             epsg_code="Projection EPSG code",
             false_easting=(
                 "The value added to all abscissa values in the rectangular coordinates"
-                " for a map projection."
+                " for a map projection"
             ),
             false_northing=(
                 "The value added to all ordinate values in the rectangular coordinates"
-                " for a map projection."
+                " for a map projection"
             ),
             grid_mapping_name="Grid mapping variable name",
             inverse_flattening="Inverse flattening of the ellipsoidal figure",
             latitude_of_projection_origin=(
                 "The latitude chosen as the origin of rectangular coordinates for a map"
-                " projection."
+                " projection"
             ),
             longitude_of_projection_origin=(
                 "The longitude, with respect to Greenwich, of the prime meridian"
-                " associated with the geodetic datum."
+                " associated with the geodetic datum"
             ),
             longitude_of_central_meridian=(
                 "The line of longitude at the center of a map projection generally used"
-                " as the basis for constructing the projection."
+                " as the basis for constructing the projection"
             ),
             scale_factor_at_central_meridian=(
                 "A multiplier for reducing a distance obtained from a map by"
-                " computation or scaling to the actual distance along the central meridian."
+                " computation or scaling to the actual distance along the central meridian"
             ),
             semi_major_axis="Semi-major axis",
             spatial_ref="Spatial reference",

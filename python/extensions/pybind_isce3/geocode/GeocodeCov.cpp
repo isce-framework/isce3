@@ -106,6 +106,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("slant_range_correction") = isce3::core::LUT2d<double>(),
                     py::arg("input_rtc") = nullptr,
                     py::arg("output_rtc") = nullptr,
+                    py::arg("output_rtc_sigma") = nullptr,
                     py::arg("input_layover_shadow_mask_raster") = nullptr,
                     py::arg("sub_swaths") = nullptr,
                     py::arg("apply_valid_samples_sub_swath_masking") = std::nullopt,
@@ -245,6 +246,8 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         that of the `input_raster` (e.g., beta0). These values
                         are only computed if `flag_apply_rtc` is `true`
                         and `input_rtc` is not provided.
+                    output_rtc_sigma: isce3.io.Raster, optional
+                        Output RTC area factor to sigma-0 (in slant-range)
                     input_layover_shadow_mask_raster: isce3.io.Raster, optional
                         Input layover/shadow mask raster (in radar geometry).
                         Samples identified as SHADOW or LAYOVER_AND_SHADOW are

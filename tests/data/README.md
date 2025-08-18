@@ -583,3 +583,27 @@ Note that a new instrument HDF5 sample file "REE_INSTRUMENT_TABLE_V2P0.h5" of ve
   the two power images was computed.  In the valid data region, the ratio should
   be unity, so the result of `ratio > 0.999` was stored in the HDF5 file as the
   dataset named "mask".
+
+## Static Layers
+
+- **NISAR_ANC_L_PR_FOE_20250806T193246_20230104T061021_20230104T061655.xml**
+
+  A NISAR Orbit Ephemeris (OE) XML file corresponding to a frame that crosses the
+  antimeridian over Fiji.
+
+  The orbit data was generated from predicted NISAR orbits using H. Ghaemi's
+  [`orbit_attitude_from_spice`](https://github.jpl.nasa.gov/NISAR-POINTING/orbit_attitude_from_spice)
+  tool. The start/end time points were extracted from the NISAR Track-Frame Database
+  (TFDB) version dated 03/31/2025 for track 15, frame 97, with 3 minutes of padding on
+  either end.
+
+- **NISAR_ANC_L_PR_FOE_20250806T193731_20230105T054735_20230105T055408.xml**
+
+  A NISAR Orbit Ephemeris (OE) XML file corresponding to a frame that passes near the
+  South pole over Antarctica.
+
+  The orbit data was generated from predicted NISAR orbits using H. Ghaemi's
+  [`orbit_attitude_from_spice`](https://github.jpl.nasa.gov/NISAR-POINTING/orbit_attitude_from_spice)
+  tool. The start/end time points were extracted from the NISAR Track-Frame Database
+  (TFDB) version dated 03/31/2025 for track 29, frame 130, with 3 minutes of padding on
+  either end.

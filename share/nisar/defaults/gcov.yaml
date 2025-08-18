@@ -203,7 +203,7 @@ runconfig:
                 # omitted from the output. If the input data does not contain
                 # HV and VH channels, then the "symmetrize_cross_pol_channels"
                 # flag will be ignored by the workflow.
-                symmetrize_cross_pol_channels:  True
+                symmetrize_cross_pol_channels:  False
 
             # NOT YET IMPLEMENTED - Only checked when internet access is available
             dem_download:

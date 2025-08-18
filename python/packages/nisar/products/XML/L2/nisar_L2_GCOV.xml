@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.2.1 -->
+<!-- product specification version is 1.3.0 -->
 <algorithm name="L2_GeocodedCovariance"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GCOV_template">
@@ -105,7 +105,7 @@
         </string>
         <string length="0"
                 name="/science/LSAR/identification/plannedDatatakeId"
-                shape="numberOfDatatakes">
+                shape="numberOfObservations">
           <annotation app="conformance"
                       lang="en">List of planned datatakes included in the product</annotation>
         </string>
@@ -127,18 +127,24 @@
           <annotation app="conformance"
                       lang="en">List of frequency layers available in the product</annotation>
         </string>
-	  <integer name="/science/LSAR/identification/diagnosticModeFlag"
+        <string length="22"
+                name="/science/LSAR/identification/listOfObservationModes"
+                shape="numberOfObservations">
+          <annotation app="conformance"
+                      lang="en">List of each input raw dataset's observation mode</annotation>
+        </string>
+        <integer name="/science/LSAR/identification/diagnosticModeFlag"
                  shape="scalar"
                  signed="false"
                  width="8">
-	    <annotation app="conformance"
-		      lang="en">Indicates if the radar operation mode is a diagnostic mode (1-2) or DBFed science (0): 0, 1, or 2</annotation>
-	  </integer>
+          <annotation app="conformance"
+                      lang="en">Indicates if the radar operation mode is a diagnostic mode (1-2) or DBFed science (0): 0, 1, or 2</annotation>
+        </integer>
         <string length="0"
                 name="/science/LSAR/identification/productLevel"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
+                      lang="en">Product level. "L0A": Unprocessed instrument data; "L0B": Reformatted, unprocessed instrument data; "L1": Processed instrument data in radar coordinates system; and "L2": Processed instrument data in geocoded coordinates system</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isGeocoded"
@@ -182,19 +188,19 @@
                 name="/science/LSAR/identification/processingType"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Nominal (or) Urgent (or) Custom (or) Undefined</annotation>
+                      lang="en">Processing pipeline used to generate this granule. "Nominal": standard production system; "Urgent": time-sensitive processing in response to urgent response events; "Custom": user-initiated processing outside the nominal production system</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isDithered"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">"True" if the pulse timing was varied (dithered) during acquisition, "False" otherwise.</annotation>
+                            lang="en">"True" if the pulse timing was varied (dithered) during acquisition, "False" otherwise</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isMixedMode"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">"True" if this product is a composite of data collected in multiple radar modes, "False" otherwise.</annotation>
+                            lang="en">"True" if this product is a composite of data collected in multiple radar modes, "False" otherwise</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/identification/isFullFrame"
@@ -273,14 +279,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -298,6 +304,7 @@
                           NAME="HDF5 internal attribute"
                           long_name="X coordinates of projection"
                           standard_name="projection_x_coordinate"
+                          pixel_coordinate_convention="center"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/yCoordinates"
@@ -310,6 +317,7 @@
                           NAME="HDF5 internal attribute"
                           long_name="Y coordinates of projection"
                           standard_name="projection_y_coordinate"
+                          pixel_coordinate_convention="center"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
 
@@ -329,7 +337,7 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Radiometric terrain correction factor to normalize GCOV terms from gamma0 to sigma0</annotation>
+                      units="1">Radiometric terrain correction (RTC) scaling factor to normalize backscatter coefficients from gamma0 to sigma0, accounting for local terrain</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/grids/frequencyA/mask"
               shape="realDataFrequencyAShape"
@@ -341,7 +349,7 @@
                       long_name="Valid samples subswath mask"
                       valid_min="0"
                       _FillValue="255"
-                      grid_mapping="projection">Mask indicating the subswath number associated with valid GCOV samples. A GCOV sample is only considered valid if it is generated from fully-focused radar samples. If at least one radar sample in the averaging set is partially focused or invalid, the corresponding mask pixel will contain the value `0`. GCOV pixels outside of the radar acquisition extent are filled with the value `255`</annotation>
+                      grid_mapping="projection">Mask indicating the subswath number associated with valid GCOV samples. A GCOV sample is only considered valid if it is generated from fully-focused radar samples. If at least one radar sample in the averaging set is partially focused or invalid, the corresponding mask pixel will contain the value 0. GCOV pixels outside of the radar acquisition extent are filled with the value 255</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyA/HHHH"
               shape="realDataFrequencyAShape"
@@ -357,6 +365,8 @@
                       DIMENSION_LIST="HDF5 internal attribute"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and HH</annotation>
           <annotation app="io" />
         </real>
@@ -377,6 +387,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and HV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -397,6 +409,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -417,6 +431,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -434,6 +450,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HV and HV</annotation>
           <annotation app="io" />
         </real>
@@ -454,6 +472,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HV and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -474,6 +494,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -491,6 +513,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VH and VH</annotation>
           <annotation app="io" />
         </real>
@@ -511,6 +535,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -528,6 +554,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VV and VV</annotation>
           <annotation app="io" />
         </real>
@@ -545,6 +573,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RH and RH</annotation>
           <annotation app="io" />
         </real>
@@ -565,6 +595,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RH and RV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -582,6 +614,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RV and RV</annotation>
           <annotation app="io" />
         </real>
@@ -633,14 +667,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -658,6 +692,7 @@
                           NAME="HDF5 internal attribute"
                           long_name="X coordinates of projection"
                           standard_name="projection_x_coordinate"
+                          pixel_coordinate_convention="center"
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/yCoordinates"
@@ -670,6 +705,7 @@
                           NAME="HDF5 internal attribute"
                           long_name="Y coordinates of projection"
                           standard_name="projection_y_coordinate"
+                          pixel_coordinate_convention="center"
                           units="meters">Y coordinates in specified projection</annotation>
         </real>
 
@@ -706,7 +742,7 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
-                      units="1">Radiometric terrain correction factor to normalize GCOV terms from gamma0 to sigma0</annotation>
+                      units="1">Radiometric terrain correction (RTC) scaling factor to normalize backscatter coefficients from gamma0 to sigma0, accounting for local terrain</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/grids/frequencyB/mask"
               shape="realDataFrequencyBShape"
@@ -718,7 +754,7 @@
                       long_name="Valid samples subswath mask"
                       valid_min="0"
                       _FillValue="255"
-                      grid_mapping="projection">Mask indicating the subswath number associated with valid GCOV samples. A GCOV sample is only considered valid if it is generated from fully-focused radar samples. If at least one radar sample in the averaging set is partially focused or invalid, the corresponding mask pixel will contain the value `0`. GCOV pixels outside of the radar acquisition extent are filled with the value `255`</annotation>
+                      grid_mapping="projection">Mask indicating the subswath number associated with valid GCOV samples. A GCOV sample is only considered valid if it is generated from fully-focused radar samples. If at least one radar sample in the averaging set is partially focused or invalid, the corresponding mask pixel will contain the value 0. GCOV pixels outside of the radar acquisition extent are filled with the value 255</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyB/HHHH"
               shape="realDataFrequencyBShape"
@@ -734,6 +770,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and HH</annotation>
           <annotation app="io" />
         </real>
@@ -754,6 +792,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and HV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -774,6 +814,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -794,6 +836,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -811,6 +855,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HV and HV</annotation>
           <annotation app="io" />
         </real>
@@ -831,6 +877,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HV and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -851,6 +899,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (HV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -868,6 +918,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VH and VH</annotation>
           <annotation app="io" />
         </real>
@@ -888,6 +940,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -905,6 +959,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (VV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between VV and VV</annotation>
           <annotation app="io" />
         </real>
@@ -922,6 +978,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RH and RH</annotation>
           <annotation app="io" />
         </real>
@@ -942,6 +1000,8 @@
                       sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                       _FillValue="(nan+nan*j)"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RH) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RH and RV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -959,6 +1019,8 @@
                       valid_min="0"
                       _FillValue="nan"
                       grid_mapping="projection"
+                      isReceiveOnlyChannel1='"True" if the image from the first polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
+                      isReceiveOnlyChannel2='"True" if the image from the second polarimetric channel (RV) contributing to the covariance term was acquired in a receive-only configuration (transmit disabled), thus recording only thermal noise, RFI, leakage, and/or internal calibration signals. "False" if acquired in a standard configuration where both transmit and receive are enabled'
                       units="1">Covariance between RV and RV</annotation>
           <annotation app="io" />
         </real>
@@ -1087,7 +1149,7 @@
                       _FillValue="nan"
                       grid_mapping="projection"
                       long_name="LOS unit vector X"
-                      units="1">East component of unit vector of LOS from target to sensor</annotation>
+                      units="1">East component of the line-of-sight (LOS) unit vector, defined from the target to the sensor, expressed in the east-north-up (ENU) coordinate system with its origin at the target location</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/losUnitVectorY"
               shape="radarCubeShape"
@@ -1100,7 +1162,7 @@
                       _FillValue="nan"
                       grid_mapping="projection"
                       long_name="LOS unit vector Y"
-                      units="1">North component of unit vector of LOS from target to sensor</annotation>
+                      units="1">North component of the line-of-sight (LOS) unit vector, defined from the target to the sensor, expressed in the east-north-up (ENU) coordinate system with its origin at the target location</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/alongTrackUnitVectorX"
               shape="radarCubeShape"
@@ -1113,7 +1175,7 @@
                       _FillValue="nan"
                       grid_mapping="projection"
                       long_name="Along-track unit vector X"
-                      units="1">East component of unit vector along ground track</annotation>
+                      units="1">East component of the along-track unit vector at the target location, expressed in the east-north-up (ENU) coordinate system and projected onto the horizontal plane (i.e., excluding the up component)</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/alongTrackUnitVectorY"
               shape="radarCubeShape"
@@ -1126,7 +1188,7 @@
                       _FillValue="nan"
                       grid_mapping="projection"
                       long_name="Along-track unit vector Y"
-                      units="1">North component of unit vector along ground track</annotation>
+                      units="1">North component of the along-track unit vector at the target location, expressed in the east-north-up (ENU) coordinate system and projected onto the horizontal plane (i.e., excluding the up component)</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/elevationAngle"
               shape="radarCubeShape"
@@ -1160,14 +1222,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -1220,14 +1282,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -1258,7 +1320,7 @@
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/HH"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1269,7 +1331,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/HV"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1280,7 +1342,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/VH"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1291,7 +1353,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/VV"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1302,7 +1364,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/RH"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1313,7 +1375,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/elevationAntennaPattern/RV"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1330,14 +1392,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -1368,7 +1430,7 @@
                           units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/HH"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1379,7 +1441,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/HV"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1390,7 +1452,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/VH"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1401,7 +1463,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/VV"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1412,7 +1474,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/RH"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1423,7 +1485,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/elevationAntennaPattern/RV"
-              shape="antennaPatternComplexShape"
+              shape="calibrationComplexShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1443,14 +1505,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -1585,14 +1647,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -1694,41 +1756,113 @@
         </real>
         <!-- End of noise patterns -->
 
-        <!-- Start of calibration parameters -->
-
         <!-- Crosstalk parameters -->
+        <integer name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/projection"
+                 shape="scalar"
+                 signed="false"
+                 width="32">
+            <annotation app="conformance"
+                        ellipsoid="Projection ellipsoid"
+                        epsg_code="Projection EPSG code"
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
+                        grid_mapping_name="Grid mapping variable name"
+                        inverse_flattening="Inverse flattening of the ellipsoidal figure"
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
+                        semi_major_axis="Semi-major axis"
+                        spatial_ref="Spatial reference"
+                        utm_zone_number="UTM zone number"
+                        lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
+        </integer>
+        <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>
+        </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/txHorizontalCrosspol"
-              shape="crosstalkComplexShape"
+              shape="calibrationComplexShape"
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          DIMENSION_LIST="HDF5 internal attribute"
+                          mean_value="Arithmetic average of the numeric data points"
+                          min_value="Minimum value of the numeric data points"
+                          max_value="Maximum value of the numeric data points"
+                          sample_stddev="Standard deviation of the numeric data points"
+                          _FillValue="(nan+nan*j)"
+                          grid_mapping="projection"
                           units="1">Crosstalk in H-transmit channel expressed as ratio txV / txH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/txVerticalCrosspol"
-              shape="crosstalkComplexShape"
+              shape="calibrationComplexShape"
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          DIMENSION_LIST="HDF5 internal attribute"
+                          mean_value="Arithmetic average of the numeric data points"
+                          min_value="Minimum value of the numeric data points"
+                          max_value="Maximum value of the numeric data points"
+                          sample_stddev="Standard deviation of the numeric data points"
+                          _FillValue="(nan+nan*j)"
+                          grid_mapping="projection"
                           units="1">Crosstalk in V-transmit channel expressed as ratio txH / txV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/rxHorizontalCrosspol"
-              shape="crosstalkComplexShape"
+              shape="calibrationComplexShape"
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          DIMENSION_LIST="HDF5 internal attribute"
+                          mean_value="Arithmetic average of the numeric data points"
+                          min_value="Minimum value of the numeric data points"
+                          max_value="Maximum value of the numeric data points"
+                          sample_stddev="Standard deviation of the numeric data points"
+                          _FillValue="(nan+nan*j)"
+                          grid_mapping="projection"
                           units="1">Crosstalk in H-receive channel expressed as ratio rxV / rxH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/rxVerticalCrosspol"
-              shape="crosstalkComplexShape"
+              shape="calibrationComplexShape"
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          DIMENSION_LIST="HDF5 internal attribute"
+                          mean_value="Arithmetic average of the numeric data points"
+                          min_value="Minimum value of the numeric data points"
+                          max_value="Maximum value of the numeric data points"
+                          sample_stddev="Standard deviation of the numeric data points"
+                          _FillValue="(nan+nan*j)"
+                          grid_mapping="projection"
                           units="1">Crosstalk in V-receive channel expressed as ratio rxH / rxV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
+
+        <!-- End of crosstalk parameters -->
 
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/commonDelay"
               shape="scalar"
@@ -2237,13 +2371,13 @@
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/dryTroposphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if the dry tropospheric correction has been applied</annotation>
+                            lang="en">Flag to indicate if the dry tropospheric correction was applied during the generation of the input RSLC to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/wetTroposphericGeolocationCorrectionApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if the wet tropospheric correction has been applied</annotation>
+                            lang="en">Flag to indicate if the wet tropospheric correction was applied during the generation of the input RSLC to improve geolocation</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rangeIonosphericGeolocationCorrectionApplied"
@@ -2261,7 +2395,7 @@
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rfiMitigationApplied"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Flag to indicate if an RFI mitigation has been applied</annotation>
+                            lang="en">Flag to indicate if radio frequency interference (RFI) mitigation was applied during the generation of the input RSLC</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/postProcessingFilteringApplied"
@@ -2437,14 +2571,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -2475,7 +2609,7 @@
                           lang="en"
                           _FillValue="nan"
                           grid_mapping="projection"
-                          units="meters">Reference Terrain Height as a function of map coordinates</annotation>
+                          units="meters">Reference terrain height as a function of map coordinates</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/metadata/processingInformation/parameters/frequencyA/projection"
                  shape="scalar"
@@ -2484,14 +2618,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -2539,14 +2673,14 @@
             <annotation app="conformance"
                         ellipsoid="Projection ellipsoid"
                         epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
                         grid_mapping_name="Grid mapping variable name"
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection."
-                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian."
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -2632,6 +2766,142 @@
           <annotation app="conformance"
                       lang="en">Reference to the geocoding algorithm applied (if applicable)</annotation>
         </string>
+
+        <!-- Timing correction LUTs -->
+        <integer name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/projection"
+                 shape="scalar"
+                 signed="false"
+                 width="32">
+            <annotation app="conformance"
+                        ellipsoid="Projection ellipsoid"
+                        epsg_code="Projection EPSG code"
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
+                        grid_mapping_name="Grid mapping variable name"
+                        inverse_flattening="Inverse flattening of the ellipsoidal figure"
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        semi_major_axis="Semi-major axis"
+                        spatial_ref="Spatial reference"
+                        utm_zone_number="UTM zone number"
+                        lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
+        </integer>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>	
+        </real>	
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>	
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/azimuthIonosphere"
+              shape="calibrationScaleShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
+                      _FillValue="nan"
+                      units="seconds">Azimuth ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
+        </real>
+
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyA/slantRangeIonosphere"
+              shape="calibrationScaleShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
+                      _FillValue="nan"
+                      units="meters">Slant range ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
+        </real>
+
+        <integer name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/projection"
+                 shape="scalar"
+                 signed="false"
+                 width="32">
+            <annotation app="conformance"
+                        ellipsoid="Projection ellipsoid"
+                        epsg_code="Projection EPSG code"
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
+                        grid_mapping_name="Grid mapping variable name"
+                        inverse_flattening="Inverse flattening of the ellipsoidal figure"
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        semi_major_axis="Semi-major axis"
+                        spatial_ref="Spatial reference"
+                        utm_zone_number="UTM zone number"
+                        lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
+        </integer>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/yCoordinates"
+              shape="calibrationLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>	
+        </real>	
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/xCoordinates"
+              shape="calibrationWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>	
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/azimuthIonosphere"
+              shape="calibrationScaleShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
+                      _FillValue="nan"
+                      units="seconds">Azimuth ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/timingCorrections/frequencyB/slantRangeIonosphere"
+              shape="calibrationScaleShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      mean_value="Arithmetic average of the numeric data points"
+                      min_value="Minimum value of the numeric data points"
+                      max_value="Maximum value of the numeric data points"
+                      sample_stddev="Standard deviation of the numeric data points"
+                      _FillValue="nan"
+                      units="meters">Slant range ionospheric timing correction, derived from Total Electron Content (TEC) data</annotation>
+        </real>
 
         <!-- Orbit ephemeris -->
         <string length="0"
@@ -2759,7 +3029,7 @@
                 name="/science/LSAR/GCOV/metadata/sourceData/productLevel"
                 shape="scalar">
           <annotation app="conformance"
-                      lang="en">Source data product level. Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
+                      lang="en">Source data product level. Product level. "L0A": Unprocessed instrument data; "L0B": Reformatted, unprocessed instrument data; "L1": Processed instrument data in radar coordinates system; and "L2": Processed instrument data in geocoded coordinates system</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/productGeometry"
@@ -3150,20 +3420,11 @@
                   lang="en">scalar values</annotation>
     </shape>
 
-    <!-- Number of data takes in identification -->
-    <shape name="numberOfDatatakes"
-           order="slowest...fastest">
-           <annotation app="conformance"
-                       lang="en">number of datatakes in product</annotation>
-           <dimension extent="0"
-                      name="numberOfDatatakes"/>
-    </shape>
-
     <!-- Number of observations in identification -->
     <shape name="numberOfObservations"
            order="slowest...fastest">
            <annotation app="conformance"
-                       lang="en">number of observations in product</annotation>
+                       lang="en">Number of observations in product</annotation>
            <dimension extent="0"
                       name="numberOfObservations"/>
     </shape>
@@ -3293,7 +3554,8 @@
     <shape name="radarGridShape"
            order="slowest...fastest">
            <annotation app="conformance"
-                       lang="en">Shape associated with 2D rasters on same grid as metadata cubes</annotation>         <dimension extent="0"
+                       lang="en">Shape associated with 2D rasters on same grid as metadata cubes</annotation>
+           <dimension extent="0"
                       name="radarCubeLength"/>
            <dimension extent="0"
                       name="radarCubeWidth"/>
@@ -3372,26 +3634,20 @@
     <shape name="calibrationScaleShape"
            order="slowest...fastest">
            <annotation app="conformance"
-                       lang="en">Shape of calibration LUTs</annotation>
+                       lang="en">Shape of real-valued calibration LUTs</annotation>
            <dimension extent="0"
                       name="calibrationLength"/>
            <dimension extent="0"
                       name="calibrationWidth"/>
     </shape>
-    <shape name="antennaPatternComplexShape"
+    <shape name="calibrationComplexShape"
            order="slowest...fastest">
            <annotation app="conformance"
-                       lang="en">Shape of antenna pattern datasets</annotation>
+                       lang="en">Shape of complex-valued calibration LUTs</annotation>
            <dimension extent="0"
                       name="calibrationLength"/>
            <dimension extent="0"
                       name="calibrationWidth"/>
-           <dimension name="complex" extent="2"/>
-    </shape>
-    <shape name="crosstalkComplexShape"
-           order="slowest...fastest">
-           <annotation app="conformance"
-                       lang="en">Shape of crosstalk datasets</annotation>
            <dimension name="complex" extent="2"/>
     </shape>
 
