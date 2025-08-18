@@ -4,6 +4,7 @@ import numpy as np
 import isce3
 from nisar.workflows.runconfig import RunConfig
 from nisar.products.readers import SLC
+import h5py
 
 
 class GCOVRunConfig(RunConfig):
@@ -22,51 +23,88 @@ class GCOVRunConfig(RunConfig):
         flag_fullcovariance = self.cfg['processing']['input_subset'][
             'fullcovariance']
 
-        # Check if the `fullcovariance` flag field is empty.
+        # Handle the case in which the `fullcovariance` flag field is empty.
         # If so, the YAML parser assigns it the string value `"None"`.
         if (flag_fullcovariance is None or
                 (isinstance(flag_fullcovariance, str) and
                  flag_fullcovariance == 'None')):
 
-            # If empty, `fullcovariance` is set to `True` any frequency
-            # to be processed includes a full-pol dataset
-            # (3 or 4 polarizations), and `False` otherwise.
+            # The choice on whether to process in full-covariance mode
+            # or not will depend on the list of frequency and polarizations
+            # to process. This list has already been been verified based
+            # on the runconfig and available RSLC polarimetric channels
             freq_pols_dict = self.cfg['processing']['input_subset'][
                 'list_of_frequencies']
 
-            flag_process_fullpol = False
+            # By default, datasets with both receive-only (noise-only) and
+            # nominal (non receive-only) polarimetric channels are NOT
+            # processed in full-covariance mode.
+            #
+            # To verify this, we open the H5 datasets corresponding to the
+            # SLCs to process, defined in `freq_pols_dict()`, and look for
+            # the attribute `isReceiveOnly`.
+            #
+            # We count the number of "receive-only" and nominal channels.
+            # If both are greater than zero, we set the value associated
+            # with the key `frequency` in the dictionary
+            # `has_mixed_nominal_and_receive_only` to `True`; or `False`,
+            # otherwise.
+            has_mixed_nominal_and_receive_only = {}
+            input_file_path = self.cfg['input_file_group']['input_file_path']
+            slc_obj = SLC(hdf5file=input_file_path)
+
+            with h5py.File(input_file_path, 'r') as h5_obj:
+                for freq, pol_list in freq_pols_dict.items():
+                    n_nominal_pol = 0
+                    n_receive_only_pol = 0
+                    for pol in pol_list:
+                        slc_pol_path = (f'{slc_obj.ProductPath}/swaths/'
+                                        f'frequency{freq}/{pol}')
+                        slc_pol_dataset = h5_obj[slc_pol_path]
+                        is_receive_only = False
+                        if 'isReceiveOnly' in slc_pol_dataset.attrs.keys():
+                            receive_only_attr = slc_pol_dataset.attrs[
+                                'isReceiveOnly']
+                            if not isinstance(receive_only_attr, str):
+                                receive_only_attr = \
+                                    receive_only_attr.tobytes().decode()
+                            is_receive_only = \
+                                receive_only_attr.title() == 'True'
+
+                        n_nominal_pol += int(not is_receive_only)
+                        n_receive_only_pol += int(is_receive_only)
+
+                    has_mixed_nominal_and_receive_only[freq] = \
+                        n_nominal_pol > 0 and n_receive_only_pol > 0
+
+            # Finally, `fullcovariance` is set to `True` if any frequency
+            # to be processed includes a full-pol dataset
+            # (3 or 4 polarizations) and it does not contain a
+            # mix of "receive-only" and nominal channels; otherwise,
+            # `fullcovariance` is set to `False`.
+            flag_fullcovariance = False
             for freq, pol_list in freq_pols_dict.items():
+                if has_mixed_nominal_and_receive_only[freq]:
+                    continue
 
-                flag_process_fullpol_this_frequency = \
-                    (all([pol in pol_list
-                         for pol in ['HH', 'VV', 'HV']]) or
-                     all([pol in pol_list
-                         for pol in ['HH', 'VV', 'VH']]))
-
-                if (not flag_process_fullpol and
-                        flag_process_fullpol_this_frequency):
+                # Verify if frequency to process is full-pol
+                if (all([pol in pol_list
+                        for pol in ['HH', 'VV', 'HV']]) or
+                    all([pol in pol_list
+                        for pol in ['HH', 'VV', 'VH']])):
                     warning_channel.log(
-                        'The `fullcovariance` flag is empty in the runconfig. '
-                        'By default, it is set to `True` if any frequency to'
-                        ' be processed includes a full-pol dataset. This is'
+                        'The `fullcovariance` field is empty in the runconfig.'
+                        ' By default, it is set to `True` if any frequency to'
+                        ' be processed includes a full-pol dataset and does'
+                        ' not contain a mix of nominal and receive-only'
+                        ' polarimetric channel. This is'
                         f' the case for frequency {freq} with polarizations'
                         f' {pol_list}. Setting `fullcovariance` to `True`.')
-
-                flag_process_fullpol |= flag_process_fullpol_this_frequency
-
-            if not flag_fullcovariance:
-                warning_channel.log(
-                    'The `fullcovariance` flag is empty in the runconfig. '
-                    'By default, it is set to `True` if any frequency to be'
-                    ' processed includes a full-pol dataset, which is not the '
-                    'case for the given input RSLC and runconfig. '
-                    'Setting `fullcovariance` to `False`.')
+                    flag_fullcovariance = True
+                    break
 
             self.cfg['processing']['input_subset']['fullcovariance'] = \
-                flag_process_fullpol
-
-            flag_fullcovariance = self.cfg['processing']['input_subset'][
-                'fullcovariance']
+                flag_fullcovariance
 
         geocode_dict = self.cfg['processing']['geocode']
         rtc_dict = self.cfg['processing']['rtc']
