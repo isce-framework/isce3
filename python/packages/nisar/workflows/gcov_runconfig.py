@@ -53,7 +53,7 @@ class GCOVRunConfig(RunConfig):
             input_file_path = self.cfg['input_file_group']['input_file_path']
             slc_obj = SLC(hdf5file=input_file_path)
 
-            with h5py.File(input_file_path, 'r') as h5_obj:
+            with h5py.File(input_file_path, 'r', swmr=True) as h5_obj:
                 for freq, pol_list in freq_pols_dict.items():
                     n_nominal_pol = 0
                     n_receive_only_pol = 0
