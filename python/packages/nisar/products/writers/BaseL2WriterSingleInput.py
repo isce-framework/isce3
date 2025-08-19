@@ -849,8 +849,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         self.set_value(
             '{PRODUCT}/metadata/ceosAnalysisReadyData/staticLayersDataAccess',
             'ceos_analysis_ready_data/static_layers_data_access',
-            static_layers_data_access,
-            default='(NOT SPECIFIED)')
+            static_layers_data_access)
 
         ceos_ard_document_identifier = \
             ('https://ceos.org/ard/files/PFS/SAR/v1.0/CEOS-ARD_PFS'
