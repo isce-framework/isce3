@@ -202,13 +202,10 @@ def run(cfg):
                                           srange_correction=srg_correction,
                                           subswaths=sub_swaths)
 
-                # update the numbers for stats computation
-                for i, gslc_data_blk in enumerate(gslc_data_blks):
-                    stats_complex_list[i].update(gslc_data_blk)
-
                 # write geocoded blocks to respective HDF5 datasets
-                for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
-                                                       gslc_data_blks):
+                for stats_complex, gslc_dataset, gslc_data_blk in zip(stats_complex_list,
+                                                                      gslc_datasets,
+                                                                      gslc_data_blks):
                     # only convert/modify output if type not 'complex64'
                     # do nothing if type is 'complex64'
                     output_type = cfg['output']['data_type']
@@ -221,6 +218,8 @@ def run(cfg):
                     # write to GSLC block HDF5
                     gslc_dataset.write_direct(gslc_data_blk,
                                               dest_sel=geo_blk_slice)
+                    # update the stats
+                    stats_complex.update(gslc_data_blk)
 
                 # write to mask block HDF5
                 mask_dataset.write_direct(mask_data_blk, dest_sel=geo_blk_slice)
