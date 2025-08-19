@@ -22,7 +22,10 @@ namespace isce3 { namespace geometry {
         // Expose the OGREnvelope::Merge method, so that the old function interface is preserved.
         using OGREnvelope::Merge;
 
-        //Overload the method by adding parameter for EPSG in geographic coordinates.
+        // Overload the method by adding parameter for EPSG in geographic coordinates.
+        // If the bounding boxes are in geographic coordinates, the overall longitude
+        // extent is assumed to be <= 180 degrees. If an antimeridian crossing is
+        // detected, the longitude coordinates are re-wrapped to the interval [0, 360).
         void Merge(const BoundingBox& other, int epsg) {
             double minx_global = std::min(MinX, other.MinX);
             double maxx_global = std::max(MaxX, other.MaxX);
@@ -37,16 +40,33 @@ namespace isce3 { namespace geometry {
                 return;
             }
 
-            double MinX_wrap = std::fmod(MinX + 360.0, 360.0);
-            double MaxX_wrap = std::fmod(MaxX + 360.0, 360.0);
-            double other_MinX_wrap = std::fmod(other.MinX + 360.0, 360.0);
-            double other_MaxX_wrap = std::fmod(other.MaxX + 360.0, 360.0);
+            // Wrap the input angle (in degrees) to the interval [0, 360).
+            auto wrap360 = [](double x) {
+                auto y = std::fmod(x, 360.0);
+                if (y < 0.0) {
+                    y += 360.0;
+                }
+                return y;
+            };
 
-            double global_minx = std::min(MinX_wrap, other_MinX_wrap);
-            double global_maxx = std::max(MaxX_wrap, other_MaxX_wrap);
+            double MinX_wrap = wrap360(MinX);
+            double MaxX_wrap = wrap360(MaxX);
 
-            MinX = global_minx;
-            MaxX = global_maxx;
+            double other_MinX_wrap = wrap360(other.MinX);
+            double other_MaxX_wrap = wrap360(other.MaxX);
+
+
+            // longitudinal arc longer than 180 degrees mean that
+            // the min / max needs to be swapped because it violates the assumption.
+            if (MaxX - MinX > 180.0) {
+                std::swap(MinX_wrap, MaxX_wrap);
+            }
+            if (other.MaxX - other.MinX > 180.0) {
+                std::swap(other_MinX_wrap, other_MaxX_wrap);
+            }
+
+            MinX = std::min(MinX_wrap, other_MinX_wrap);
+            MaxX = std::max(MaxX_wrap, other_MaxX_wrap);
 
             // merge y boundary
             MinY = std::min(MinY, other.MinY);
