@@ -931,7 +931,7 @@ class BaseWriterSingleInput():
         input_h5_dataset_obj = self.input_hdf5_obj[input_h5_field_path]
 
         # check if dataset contains a string. If so, read it using method
-        # `asstr()``
+        # `asstr()`
         # NOTE: It is necessary to check the object's shape to determine
         # whether it is a single string or a list of strings. If it is a
         # list of string, then it will be kept as it is.
