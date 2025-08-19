@@ -804,11 +804,44 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'identification/platformName',
             default='(NOT SPECIFIED)')
 
+    def get_static_layers_data_access(self):
+        """
+        Read static layers URL template from the input runconfig field
+        `static_layers_data_access` and replace placeholders with
+        the actual values.
+
+        Returns
+        -------
+        static_layers_data_access : str
+            An URL representing the static layers data access with all
+            placeholders replaced.
+        """
+
+        static_layers_data_access = \
+            self.cfg['ceos_analysis_ready_data']['static_layers_data_access']
+        if '{granule_id}' in static_layers_data_access:
+            if self.granule_id == '(NOT SPECIFIED)':
+                error_msg = ('The placeholder "{granule_id}" is included in'
+                             ' the runconfig field'
+                             ' "static_layers_data_access", but the'
+                             ' field "partial_granule_id" was not provided')
+                error_channel = journal.error('get_static_layers_data_access')
+                error_channel.log(error_msg)
+                raise NotImplementedError(error_msg)
+
+            static_layers_data_access = \
+                static_layers_data_access.replace('{granule_id}',
+                                                  self.granule_id)
+        return static_layers_data_access
+
     def populate_ceos_analysis_ready_data_parameters_l2_common(self):
 
-        self.copy_from_runconfig(
+        static_layers_data_access = self.get_static_layers_data_access()
+
+        self.set_value(
             '{PRODUCT}/metadata/ceosAnalysisReadyData/staticLayersDataAccess',
             'ceos_analysis_ready_data/static_layers_data_access',
+            static_layers_data_access,
             default='(NOT SPECIFIED)')
 
         ceos_ard_document_identifier = \
