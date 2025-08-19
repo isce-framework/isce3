@@ -823,6 +823,10 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         static_layers_data_access = \
             self.cfg['ceos_analysis_ready_data']['static_layers_data_access']
+
+        if not static_layers_data_access:
+            return ''
+
         if '{granule_id}' in static_layers_data_access:
             if self.granule_id == '(NOT SPECIFIED)':
                 error_msg = ('The placeholder "{granule_id}" is included in'
