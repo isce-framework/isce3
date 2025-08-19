@@ -8,6 +8,7 @@
 
 #include <ogr_geometry.h>
 #include <ogr_spatialref.h>
+#include <cmath>
 #include <algorithm>
 
 namespace isce3 { namespace geometry {
