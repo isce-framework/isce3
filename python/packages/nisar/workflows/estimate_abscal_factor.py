@@ -10,6 +10,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
+import numpy as np
 import shapely
 
 import isce3
@@ -136,6 +137,18 @@ def estimate_abscal_factor(
         'absolute_calibration_factor': float
           The absolute radiometric calibration error for the corner reflector (the ratio
           of the measured RCS to the predicted RCS), in linear units.
+
+        'latitude_deg': float
+          The geodetic latitude, in degrees, of the corner reflector at the time it was
+          surveyed.
+
+        'longitude_deg': float
+          The longitude, in degrees, of the corner reflector at the time it was
+          surveyed.
+
+        'height_above_ellipsoid': float
+          The height of the corner reflector at the time it was surveyed, in meters
+          above the WGS 84 reference ellipsoid.
 
         'elevation_angle': float
           The elevation angle of the corner reflector, in radians. Elevation is measured
@@ -286,6 +299,9 @@ def estimate_abscal_factor(
         cr_info = {
             "id": cr.id,
             "absolute_calibration_factor": abscal_error,
+            "latitude_deg": np.rad2deg(cr.llh.latitude),
+            "longitude_deg": np.rad2deg(cr.llh.longitude),
+            "height_above_ellipsoid": cr.llh.height,
             "elevation_angle": el_angle,
             "timestamp": az_datetime,
             "frequency": freq,

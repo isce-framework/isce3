@@ -547,7 +547,7 @@ def analyze_gslc_point_targets_csv(
     y_spacing = geogrid.spacing_y
 
     orbit = gslc.getOrbit()
-    
+
     if dem_path is not None:
         dem_raster = Raster(os.fspath(dem_path))
         dem_interpolator = dem_raster_to_interpolator(dem_raster, geogrid)
@@ -654,6 +654,9 @@ def analyze_gslc_point_targets_csv(
         perf_dict.update(
             {
                 "id": cr.id,
+                "latitude_deg": np.rad2deg(cr.llh.latitude),
+                "longitude_deg": np.rad2deg(cr.llh.longitude),
+                "height_above_ellipsoid": cr.llh.height,
                 "frequency": freq,
                 "polarization": pol,
                 "elevation_angle": el_angle,
@@ -785,7 +788,7 @@ def analyze_gslc_point_target_llh(
     y_spacing = geogrid.spacing_y
 
     orbit = gslc.getOrbit()
-    
+
     if dem_path is not None:
         dem_raster = Raster(os.fspath(dem_path))
         dem_interpolator = dem_raster_to_interpolator(dem_raster, geogrid)

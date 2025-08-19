@@ -6,7 +6,7 @@ runconfig:
             pge_name: GCOV_L_PGE
 
         input_file_group:
-            # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
+            # REQUIRED - One NISAR L1 RSLC formatted HDF5 file
             input_file_path:
 
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
@@ -20,7 +20,8 @@ runconfig:
             # REQUIRED - Digital elevation model
             dem_file:
 
-            # OPTIONAL - Digital elevation model file description, optional
+            # Description of the digital elevation model (DEM) file  
+            # to be included in the output product metadata
             dem_file_description:
 
             # External orbit file
@@ -37,8 +38,7 @@ runconfig:
             # Directory where SAS can write temporary data
             scratch_path: .
 
-            # SAS writes output product to the following file. PGE may rename.
-            # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
+            # Output file in the HDF5 format
             sas_output_file: gcov.h5
 
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
@@ -46,13 +46,13 @@ runconfig:
             # Defaults to './qa'
             qa_output_dir: ./qa
 
-        # Output options
         output:
 
             # HDF5 file space management strategy.  In our tests, the "page"
             # strategy works well for accessing files stored on the cloud by
             # reducing the number of high-latency REST API calls needed to read
             # datasets and their metadata.
+            # Options: "fsm", "page", "aggregate", and "none"
             fs_strategy: page
 
             # HDF5 file space page size.  Only relevant when fs_strategy="page".
@@ -62,13 +62,14 @@ runconfig:
 
             # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
             output_gcov_terms:
-                # PLACEHOLDER - Output format
+                # NOT YET IMPLEMENTED - Output format
                 format: HDF5
 
                 # Enable/disable compression of output raster
                 compression_enabled: True
 
                 # Compression type. 'none' for no compression
+                # Options: "gzip", "lzf", and "szip"
                 compression_type: gzip
 
                 # Compression level
@@ -93,7 +94,7 @@ runconfig:
 
             # Output options for secondary layers (e.g., number of looks, RTC ANF)
             output_secondary_layers:
-                # PLACEHOLDER - Output format
+                # NOT YET IMPLEMENTED - Output format
                 format: HDF5
 
                 # Enable/disable compression of output raster
@@ -123,30 +124,50 @@ runconfig:
                 mantissa_nbits:
 
         primary_executable:
+            # Product type ("GCOV")
             product_type: GCOV
+
+            # Product version
             product_version: 0.1.0
+
+            # Product Digital Object Identifier (DOI). If not provided,
+            # the corresponding metadata field will be set to "(NOT SPECIFIED)".
             product_doi:
+
+            # Composite release ID (CRID). If not provided, the corresponding
+            # metadata field will be set to b'A10000'.
             composite_release_id:
+
+            # Processing center. If not provided, the corresponding metadata
+            # field will be set to "Undefined".
             processing_type:
+
+            # Processing center. If not provided, the corresponding metadata
+            # field will be set to "(NOT SPECIFIED)".
             processing_center:
+
+            # Processing center. If not provided, the metadata field 
+            # `granuleId` will be set to "(NOT SPECIFIED)".
             partial_granule_id:
 
         debug_level_group:
+            # NOT YET IMPLEMENTED
             debug_switch: false
 
-        # TODO OPTIONAL - To setup type of worker
+        # NOT YET IMPLEMENTED - To setup type of worker
         worker:
-            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
+            # NOT YET IMPLEMENTED - To prevent downloading DEM / other data
+            # automatically. Default True
             internet_access: False
 
-            # OPTIONAL - To explicitly use GPU capability if available. Default False
+            # NOT YET IMPLEMENTED -  To explicitly use GPU capability if available. Default False
             gpu_enabled: False
 
-            # Index of the GPU to use for processing, optional. Defaults to the
+            # NOT YET IMPLEMENTED - Index of the GPU to use for processing. Defaults to the
             # first available CUDA device. Ignored if *gpu_enabled* is False.
             gpu_id: 0
 
-        #adt section - isce3 + pyre workflow
+        # Processing options
         processing:
             input_subset:
                 # Frequencies and polarizations to process
@@ -166,73 +187,86 @@ runconfig:
                 #         A: [HH, HV]  # process only polarizations HH and HV from frequency A
                 #         B:           # process all polarizations from frequency B
                 #
-                #
                 list_of_frequencies:
 
-                # OPTIONAL - If we want full covariance instead of diagonals only. Default False
+                # Flag indicating whether the output GCOV product should include
+                # off-diagonal covariance elements. If False, only the diagonal
+                # elements are included.
                 fullcovariance:   False
 
-                # Perform polarimetric symmetrization. It's only applicable
-                # for quad-polarimetric datasets (i.e. datasets that include
-                # HV and VH), otherwise, the flag is ignored.
-                # If enabled, the output product's "HV" dataset will contain symmetrized
-                # HV/VH data and the "VH" dataset will be omitted from the output.
-                symmetrize_cross_pol_channels:  True
+                # Flag indicating whether polarimetric symmetrization should be
+                # applied to datasets that include both HV and VH polarimetric
+                # channels. If enabled, the output product's "HV" dataset will
+                # contain symmetrized HV/VH data and the "VH" dataset will be
+                # omitted from the output. If the input data does not contain
+                # HV and VH channels, then the "symmetrize_cross_pol_channels"
+                # flag will be ignored by the workflow.
+                symmetrize_cross_pol_channels:  False
 
-            # TODO OPTIONAL - Only checked when internet access is available
+            # NOT YET IMPLEMENTED - Only checked when internet access is available
             dem_download:
-                # OPTIONAL - s3 bucket / curl URL / local file
+                # NOT YET IMPLEMENTED - s3 bucket / curl URL / local file
                 source:
                 top_left:
+                    # NOT YET IMPLEMENTED - Top-left X coordinate
                     x:
+                    # NOT YET IMPLEMENTED - Top-left Y coordinate
                     y:
                 bottom_right:
+                    # NOT YET IMPLEMENTED - Bottom-right X coordinate
                     x:
+                    # NOT YET IMPLEMENTED - Bottom-right Y coordinate
                     y:
 
-            # OPTIONAL - if amplitude data needs to be mulitlooked before GCOV generation
             pre_process:
+                # NOT YET IMPLEMENTED - Number of looks in azimuth
                azimuth_looks: 1
+                # NOT YET IMPLEMENTED - Number of looks in range
                range_looks:   1
 
-            # OPTIONAL - to control behavior of RTC module
-            # (only applicable if geocode.apply_rtc is True)
+            # Radiometric Terrain Correction (RTC) options
+            # Only relevant if `apply_rtc` is enabled in the `geocode` group
             rtc:
-                # OPTIONAL - Choices:
+                # Output type (defines the terrain radiometry convention for
+                # the output). Choices:
                 # "gamma0" (default)
                 # "sigma0"
                 output_type: gamma0
 
-                # OPTIONAL - Choices:
-                # "bilinear_distribution" (default)
-                # "area_projection"
+                # RTC algorithm type. Choices:
+                # "bilinear_distribution"
+                # "area_projection" (default)
                 algorithm_type: area_projection
 
-                # OPTIONAL - Choices:
+                # Input terrain radiometry convention. Choices:
                 # "beta0" (default)
                 # "sigma0"
                 input_terrain_radiometry: beta0
 
-                # OPTIONAL - Minimum RTC area factor in dB
+                # Minimum RTC area factor (in dB). Specifies the lowest
+                # allowable denominator (in dB) for dividing GCOV samples.
+                # If not set, no minimum is enforced, which may lead
+                # to divisions by very small values and result in infinite
+                # or inaccurate outputs.
                 rtc_min_value_db:
 
-                # RTC DEM upsampling
+                # RTC DEM upsampling factor
                 dem_upsampling: 2
 
                 # RTC area beta mode. Options:
-                # 'auto' - Default value is defined by the RTC algorithm that is being
-                #     executed, i.e., 'pixel_area' for 'algorithm_type' equal to
-                #     'bilinear_distribution' and 'projection_angle' for
-                #     'algorithm_type' equal to 'area_projection'
                 #  'pixel_area' - Estimate the beta surface reference area `A_beta`
                 #     using the pixel area, which is the product of the range spacing
                 #     by the azimuth spacing (computed using the ground velocity)
                 #  'projection_angle' - estimate the beta surface reference area `A_beta`
                 #     using the projection angle method:
                 #     `A_beta = A_sigma * cos(projection_angle)`
+                # 'auto' - Default value is defined by the RTC algorithm that is being
+                #     executed, i.e., 'pixel_area' for 'algorithm_type' equal to
+                #     'bilinear_distribution' and 'projection_angle' for
+                #     'algorithm_type' equal to 'area_projection'
                 area_beta_mode: auto
 
-            # OPTIONAL - Mechanism to specify output posting and DEM
+            # Mechanism to specify output posting and DEM
             geocode:
 
                 # Geocoding algorithm type. Choices "area_projection"
@@ -241,15 +275,16 @@ runconfig:
                 algorithm_type: area_projection
 
                 # Apply radiometric terrain correction
+                # If `False`, the entire `rtc` group is ignored.
                 apply_rtc: True
 
-                # PLACEHOLDER (it is expected that the RSLC product already
+                # NOT YET IMPLEMENTED (it is expected that the RSLC product already
                 # incorporates static tropospheric delay corrections --
                 # no additional correction is currently applied)
                 # Apply dry tropospheric delay correction
                 apply_dry_tropospheric_delay_correction: False
 
-                # PLACEHOLDER (it is expected that the RSLC product already
+                # NOT YET IMPLEMENTED (it is expected that the RSLC product already
                 # incorporates static tropospheric delay corrections --
                 # no additional correction is currently applied)
                 # Apply wet tropospheric delay correction
@@ -268,13 +303,28 @@ runconfig:
                 # Apply RSLC metadata valid-samples sub-swath masking
                 apply_valid_samples_sub_swath_masking: False
 
-                # Apply shadow masking
-                apply_shadow_masking: True
+                # NOT YET IMPLEMENTED - Apply shadow masking
+                apply_shadow_masking: False
 
-                # Memory mode. Choices: "single_block", "geogrid", "geogrid_and_radargrid", and "auto" (default)
+                # Memory mode
+                # Enumeration specifying memory management strategies for
+                # geocoding operations. These modes determine how input data
+                # is loaded and processed in memory, allowing trade-offs
+                # between performance and memory usage depending on system
+                # resources. Choices:
+                # - "auto": Automatically selects the optimal memory mode
+                # based on the module's defaults.
+                # - "single_block": Disables block processing by loading
+                # and processing the entire dataset at once.
+                # - "geogrid": Enables block-wise processing over the geogrid;
+                # the full SLC is loaded once and reused for each geogrid
+                # block.
+                # - "geogrid_and_radargrid": Enables full block-wise
+                # processing over both geogrid and radar grid; the SLC is
+                # loaded in segments per geogrid block.
                 memory_mode: auto
 
-                # OPTIONAL - Processing upsampling factor applied to input geogrid
+                # Processing upsampling factor applied to input geogrid
                 geogrid_upsampling: 1
 
                 # Save the number of looks used to compute GCOV
@@ -293,44 +343,59 @@ runconfig:
                 # Save the mask layer
                 save_mask: True
 
-                # PLACEHOLDER - Save interpolated DEM used to compute GCOV
+                # NOT YET IMPLEMENTED - Save interpolated DEM used to compute GCOV
                 save_dem: False
 
-                # PLACEHOLDER - Save the layover shadow mask
+                # NOT YET IMPLEMENTED - Save the layover shadow mask
                 save_layover_shadow_mask: False
 
-                # PLACEHOLDER - Save the incidence angle
+                # NOT YET IMPLEMENTED - Save the incidence angle
                 save_incidence_angle: False
 
-                # PLACEHOLDER - Save the local-incidence angle
+                # NOT YET IMPLEMENTED - Save the local-incidence angle
                 save_local_inc_angle: False
 
-                # PLACEHOLDER - Save the projection angle
+                # NOT YET IMPLEMENTED - Save the projection angle
                 save_projection_angle: False
 
-                # PLACEHOLDER - Save the range slope angle
+                # NOT YET IMPLEMENTED - Save the range slope angle
                 save_range_slope: False
 
-                # OPTIONAL - Absolute radiometric correction
+                # Absolute radiometric calibration factor (in power or
+                # intensity units). This factor is applied to the output
+                # pixels. If the output is complex-valued,
+                # the square root of this factor is applied instead.
                 abs_rad_cal: 1
 
-                # OPTIONAL - Clip values above threshold
+                # Clip values above the threshold. If empty, no max. value
+                # clipping occurs.
                 clip_max:
 
-                # OPTIONAL - Clip values below threshold
+                # Clip values below the threshold. If empty, no min. value
+                # clipping occurs.
                 clip_min:
 
-                # OPTIONAL - Double sampling of the radar-grid
-                # input sampling in the range direction
+                # Doubles the sampling rate of the input RSLC in the range
+                # direction to reduce aliasing during covariance
+                # multiplication. Note: Enabling this may significantly
+                # increase memory usage and runtime.
                 upsample_radargrid: False
 
-                # OPTIONAL - Same as input DEM if not provided.
+                # EPSG code of the output product, including GCOV terms
+                # and all metadata LUTs (excluding radar grid cubes)
+                # Defaults to the DEM EPSG code, if not provided.
                 output_epsg:
 
-                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
-                # If not provided, spacing values will be taken from provided DEM.
-                # All postings/spacings must be > 0.
-                # ISCE3 output rasters always have North-up West-left orientation
+                # Pixel spacing in the units of the output EPSG coordinate
+                # system (output_epsg).
+                # 
+                # If not specified and `output_epsg` differs from the DEM’s EPSG:
+                #   - Defaults to 0.00017966305682390427 degrees for geographic
+                # coordinate systems.
+                #   - Defaults to 20 meters for projected coordinate systems.
+                #
+                # If not specified and `output_epsg` matches the DEM’s EPSG,
+                # spacing will be taken from the input DEM.
                 output_posting:
                     A:
                         x_posting:
@@ -339,20 +404,34 @@ runconfig:
                         x_posting:
                         y_posting:
 
-                # OPTIONAL - To control output grid in same units as output EPSG
+                # Snap-to-grid interval along the Y-direction, in same units as
+                # output EPSG `output_epsg`.
+                # This parameter aligns the output grid in the Y-direction such
+                # that its origin and spacing are rounded to the nearest
+                # multiple of `y_snap`.
                 y_snap:
 
-                # OPTIONAL - To control output grid in same units as output EPSG
+                # Snap-to-grid interval along the X-direction, in same units as
+                # output EPSG `output_epsg`.
+                # This parameter aligns the output grid in the X-direction such
+                # that its origin and spacing are rounded to the nearest
+                # multiple of `x_snap`.
                 x_snap:
 
-                # OPTIONAL - Can control with absolute values or with snap values
+                # Coordinates of the top-left pixel corner,
+                # expressed in the output EPSG's coordinate
+                # system, prior to grid snapping.
                 top_left:
-                    # OPTIONAL - Set top-left y in same units as output EPSG
+                    # Set top-left y in same units as output EPSG
                     y_abs:
-                    # OPTIONAL - Set top-left x in same units as output EPSG
+                    # Set top-left x in same units as output EPSG
                     x_abs:
 
-                # OPTIONAL - Can control with absolute values or with snap values
+                # Coordinates of the bottom-right pixel corner in the
+                # output EPSG coordinate system.
+                # These coordinates will be adjusted based on
+                # the provided top-left coordinate, to ensure
+                # alignment with grid snapping and pixel spacing.
                 bottom_right:
                     y_abs:
                     x_abs:
@@ -363,81 +442,108 @@ runconfig:
                 # Maximum block size in MB per thread
                 max_block_size:
 
+            # Group to define parameters for radar grid cubes.
+            # Radar grid cubes describe the radar geometry in the form of
+            # 3D data cubes. The representation as data cubes,
+            # rather than two-dimensional arrays, is used to reduce storage
+            # requirements for NISAR L2 products. This is possible because
+            # radar geometry values vary slowly in space and can be accurately
+            # captured using a low-resolution three-dimensional grid
             radar_grid_cubes:
 
-                # List of heights in meters
+                # List of heights (in meters) above the WGS84 ellipsoid
+                # representing metadata cube layers along the Z-direction.
                 heights:
 
-                # OPTIONAL - Same as the geocode group output_epsg if not provided
+                # Output EPSG code for the radar grid cubes
+                # Defaults to `output_epsg` in the `geocode` group
                 output_epsg:
 
-                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
-                # If not provided, spacing values will be taken from geocode group
-                # parameters.
+                # Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
                 # ISCE3 output rasters always have North-up West-left orientation
+                # If not provided, coarser spacing values will be inferred
+                # based on the `output_epsg` and the DEM
                 output_posting:
                     x_posting:
                     y_posting:
 
-                # OPTIONAL - To control output grid in same units as output EPSG
+                # Snap-to-grid interval along the Y-direction, in same units as
+                # output EPSG `output_epsg`.
+                # This parameter aligns the output grid in the Y-direction such
+                # that its origin and spacing are rounded to the nearest
+                # multiple of `y_snap`.
                 y_snap:
 
-                # OPTIONAL - To control output grid in same units as output EPSG
+                # Snap-to-grid interval along the X-direction, in same units as
+                # output EPSG `output_epsg`.
+                # This parameter aligns the output grid in the X-direction such
+                # that its origin and spacing are rounded to the nearest
+                # multiple of `x_snap`.
                 x_snap:
 
-                # OPTIONAL - Can control with absolute values or with snap values
+                # Coordinates of the top-left pixel corner,
+                # expressed in the output EPSG's coordinate
+                # system, prior to grid snapping.
                 top_left:
-                    # OPTIONAL - Set top-left y in same units as output EPSG
+                    # Set top-left y in same units as output EPSG
                     y_abs:
-                    # OPTIONAL - Set top-left x in same units as output EPSG
+                    # Set top-left x in same units as output EPSG
                     x_abs:
 
-                # OPTIONAL - Can control with absolute values or with snap values
+                # Coordinates of the bottom-right pixel corner in the
+                # output EPSG coordinate system.
+                # These coordinates will be adjusted based on
+                # the provided top-left coordinate, to ensure
+                # alignment with grid snapping and pixel spacing.
                 bottom_right:
                     y_abs:
                     x_abs:
 
             calibration_information:
 
-                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
+                # If not provided, coarser spacing values will be inferred
+                # based on the `output_epsg` and the DEM
                 output_posting:
                     x_posting:
                     y_posting:
 
             processing_information:
 
-                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # Spacing between pixels, in same units as output EPSG.
                 # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
+                # If not provided, coarser spacing values will be inferred
+                # based on the `output_epsg` and the DEM
                 output_posting:
                     x_posting:
                     y_posting:
 
             geo2rdr:
+                # Convergence threshold for geo2rdr algorithm
                 threshold: 1.0e-7
+                # Maximum number of iterations
                 maxiter: 50
 
+            # DEM interpolation method
+            # Options: "sinc", "bilinear", "bicubic", "nearest", and "biquintic"
             dem_interpolation_method: biquintic
 
-            # OPTIONAL
             noise_correction:
                 # Enable/disable noise correction
                 apply_correction: False
 
-                # PLACEHOLDER
+                # NOT YET IMPLEMENTED
                 correction_type:
 
-        # OPTIONAL - Group containing CEOS Analysis Ready Data (CARD) parameters
+        # Group containing CEOS Analysis Ready Data (CARD) parameters
         # to populate the output product's metadata
         ceos_analysis_ready_data:
 
-            # Data access for the source data (URL or DOI)
-            source_data_access:
-
-            # Data access for the output product (URL or DOI)
-            product_data_access:
-
+            # NOT YET IMPLEMENTED
             # Data access for the static layers product associated with the output product (URL or DOI)
             static_layers_data_access:
 

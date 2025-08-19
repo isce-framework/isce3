@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterator
 from functools import cached_property
@@ -270,6 +271,32 @@ class DatasetSpec:
         }
 
 
+def get_product_spec_version(xml_string: str) -> str:
+    """
+    Get the product specification version by parsing the XML contents.
+
+    Parameters
+    ----------
+    xml_string : str
+        The contents of a NISAR product specification XML file.
+
+    Returns
+    -------
+    str
+        The product specification version string.
+    """
+    # The version string is expected to follow the format '<MAJOR>.<MINOR>.<PATCH>', but
+    # this may change in the future. This regex should be format-agnostic.
+    regex = re.compile(
+        r"^<!-- product specification version is (?P<version>\S+) -->$",
+        flags=(re.MULTILINE | re.IGNORECASE),
+    )
+    if (match := regex.search(xml_string)) is not None:
+        return match["version"]
+
+    raise RuntimeError("unable to parse product specification version string from xml")
+
+
 class ProductSpec:
     """
     NISAR product specification.
@@ -279,21 +306,47 @@ class ProductSpec:
 
     Attributes
     ----------
+    version : str
+        The product specification version string.
     global_attrs : dict
         A dict of global attributes found in the specification document. The contents of
         the dict are attributes that the root HDF5 Group is expected to contain.
     """
 
-    def __init__(self, tree: ET.ElementTree):
+    def __init__(self, tree: ET.ElementTree, version: str):
         """
         Create a new `ProductSpec` object.
 
+        This constructor typically shouldn't be called directly. Instead, the
+        `from_file` and `from_string` methods provide convenient ways to create
+        `ProductSpec` objects from XML files and strings.
+
         Parameters
         ----------
-        element : xml.etree.ElementTree.ElementTree
+        tree : xml.etree.ElementTree.ElementTree
             The XML element tree containing the product specification.
+        version : str
+            The product specification version string (for example, '1.2.3').
         """
         self._tree = tree
+        self.version = version
+
+    @classmethod
+    def from_string(cls: type[ProductSpecT], xml_string: str) -> ProductSpecT:
+        """
+        Create a new `ProductSpec` from an XML file.
+
+        Parameters
+        ----------
+        xml_string : str
+            The contents of a NISAR product specification XML file. Must be a string in
+            XML syntax conforming to the NISAR product specification XML format.
+        """
+        # `ET.fromstring` (and `ET.parse`) skip over comments, so we need to parse the
+        # version string separately from the other XML contents.
+        tree = ET.fromstring(xml_string)
+        version = get_product_spec_version(xml_string)
+        return cls(tree, version)
 
     @classmethod
     def from_file(cls: type[ProductSpecT], xml_path: str | os.PathLike) -> ProductSpecT:
@@ -303,10 +356,11 @@ class ProductSpec:
         Parameters
         ----------
         xml_path : path-like
-            The path to the XML file.
+            The path to the XML file. Must be a valid XML file conforming to the NISAR
+            product specification XML format.
         """
-        tree = ET.parse(xml_path)
-        return cls(tree)
+        xml_string = Path(xml_path).read_text()
+        return cls.from_string(xml_string)
 
     @cached_property
     def global_attrs(self) -> dict[str, str]:

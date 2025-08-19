@@ -271,6 +271,9 @@ def test_nisar_corner_reflector_csv():
         expected_keys = {
             "id",
             "absolute_calibration_factor",
+            "latitude_deg",
+            "longitude_deg",
+            "height_above_ellipsoid",
             "elevation_angle",
             "timestamp",
             "frequency",

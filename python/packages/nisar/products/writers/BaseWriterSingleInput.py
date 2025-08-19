@@ -496,7 +496,6 @@ class BaseWriterSingleInput():
 
         # Example:
         # self.output_product_path = '/science/LSAR/GCOV'
-
         self.output_product_path = f'{self.root_path}/{self.product_type}'
 
         self.input_hdf5_obj = h5py.File(self.input_file, mode='r', swmr=True)
@@ -664,10 +663,16 @@ class BaseWriterSingleInput():
             processing_type = np.bytes_('Nominal')
         elif processing_type_runconfig == 'UR':
             processing_type = np.bytes_('Urgent')
-        elif processing_type_runconfig == 'OD':
-            processing_type = np.bytes_('Custom')
         else:
-            processing_type = np.bytes_('Undefined')
+            if processing_type_runconfig != 'OD':
+                warning_channel = journal.warning(
+                    'BaseWriterSingleInput.populate_identification_common()')
+                warning_channel.log(
+                    'The processing type in the runconfig is set to'
+                    f' "{processing_type_runconfig}", which is not a valid value'
+                    ' for the output product metadata. Defaulting to "Custom"')
+            processing_type = np.bytes_('Custom')
+
         self.set_value(
             'identification/processingType',
             processing_type,

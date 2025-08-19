@@ -420,6 +420,11 @@ class GcovWriter(BaseL2WriterSingleInput):
 
     def __init__(self, runconfig, *args, **kwargs):
 
+        # store az. and rg. corrections (LUTs) that were used in the
+        # processing (if available)
+        self.timing_corrections_dict = kwargs.pop('timing_corrections_dict',
+                                                  None)
+
         super().__init__(runconfig, *args, **kwargs)
 
         self.input_freq_pols_dict = self.cfg['processing']['input_subset'][
@@ -456,6 +461,7 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.populate_source_data()
         self.populate_processing_information_l2_common()
         self.populate_processing_information()
+        self.populate_processing_information_timing_corrections()
         self.populate_orbit()
         self.populate_orbit_gcov_specific()
         self.populate_attitude()
@@ -499,12 +505,20 @@ class GcovWriter(BaseL2WriterSingleInput):
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
             output_grids_freq_path = ('{PRODUCT}/grids/'
-                                       f'frequency{frequency}')
+                                      f'frequency{frequency}')
 
             self.copy_from_input(
                 f'{output_grids_freq_path}/numberOfSubSwaths',
                 f'{input_swaths_freq_path}/numberOfSubSwaths',
                 skip_if_not_present=True)
+
+            output_grids_freq_full_path = (f'{self.output_product_path}'
+                                           f'/grids/frequency{frequency}')
+
+            for axis in ['xCoordinates', 'yCoordinates']:
+                axis_path = f'{output_grids_freq_full_path}/{axis}'
+                self.output_hdf5_obj[axis_path].attrs[
+                    "pixel_coordinate_convention"] = np.bytes_('center')
 
     def populate_processing_information(self):
         """
@@ -608,7 +622,8 @@ class GcovWriter(BaseL2WriterSingleInput):
             'algorithm_type']
         if geocoding_algorithm == 'area_projection':
             geocoding_algorithm_name = ('Area-Based SAR Geocoding with'
-                                        ' Adaptive Multilooking (GEO-AP)')
+                                        ' Adaptive Multilooking (GEO-AP).'
+                                        ' DOI: 10.1109/TGRS.2022.3147472')
         else:
             geocoding_algorithm_name = geocoding_algorithm
 
@@ -622,7 +637,8 @@ class GcovWriter(BaseL2WriterSingleInput):
             'algorithm_type']
         if rtc_algorithm == 'area_projection':
             rtc_algorithm_name = ('Area-Based SAR Radiometric Terrain'
-                                  ' Correction (RTC-AP)')
+                                  ' Correction (RTC-AP).'
+                                  ' DOI: 10.1109/TGRS.2022.3147472')
         else:
             rtc_algorithm_name = rtc_algorithm
 
@@ -791,6 +807,46 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.set_value(
             f'{parameters_group}/geo2rdr/deltaRange',
             1.0e-8)
+
+    def populate_processing_information_timing_corrections(self):
+        """
+        Populate the `processingInformation/timingCorrections` group of the
+        GCOV product
+        """
+
+        processing_information_geogrid = self.cfg['processing'][
+            'processing_information']['geogrid']
+
+        for frequency in self.input_freq_pols_dict.keys():
+
+            timing_corrections_group_path = \
+                (self.output_product_path +
+                 '/metadata/processingInformation/'
+                 f'timingCorrections/frequency{frequency}')
+
+            if (self.timing_corrections_dict is not None and
+                frequency in
+                    self.timing_corrections_dict['az_correction'].keys()):
+                az_correction_lut = \
+                    self.timing_corrections_dict['az_correction'][frequency]
+
+                self.geocode_isce3_lut(
+                    az_correction_lut, 'azimuthIonosphere',
+                    timing_corrections_group_path, frequency,
+                    processing_information_geogrid,
+                    data_interpolator='bilinear')
+
+            if (self.timing_corrections_dict is not None and
+                frequency in
+                    self.timing_corrections_dict['rg_correction'].keys()):
+                rg_correction_lut = \
+                    self.timing_corrections_dict['rg_correction'][frequency]
+
+                self.geocode_isce3_lut(
+                    rg_correction_lut, 'slantRangeIonosphere',
+                    timing_corrections_group_path, frequency,
+                    processing_information_geogrid,
+                    data_interpolator='bilinear')
 
     def populate_orbit_gcov_specific(self):
         """

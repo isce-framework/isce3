@@ -4,6 +4,7 @@ from itertools import product
 from typing import Any, Optional, Union
 
 import h5py
+import journal
 import numpy as np
 from isce3.core import crop_external_orbit
 from isce3.core.types import complex32, to_complex32
@@ -12,6 +13,7 @@ from isce3.product import GeoGridParameters, RadarGridParameters
 from nisar.products import descriptions
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.utils import to_bytes
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
@@ -129,6 +131,15 @@ class InSARBaseWriter(h5py.File):
         # Product information
         self.product_info = InSARProductsInfo.Base()
 
+        # DEM file
+        self.dem_file = \
+            self.cfg["dynamic_ancillary_file_group"]["dem_file"]
+
+        ancillary_group = self.cfg["dynamic_ancillary_file_group"]
+        self.dem_source = ancillary_group["dem_file_description"]
+        if self.dem_source is None:
+            self.dem_source = "None"
+
         # Check if reference and secondary exists as files
         orbit_files = \
             self.cfg["dynamic_ancillary_file_group"]["orbit_files"]
@@ -179,10 +190,10 @@ class InSARBaseWriter(h5py.File):
         """
         Write attributes to the HDF5 root that are common to all InSAR products
         """
-        self.attrs["Conventions"] = np.bytes_("CF-1.7")
-        self.attrs["contact"] = np.bytes_("nisar-sds-ops@jpl.nasa.gov")
-        self.attrs["institution"] = np.bytes_("NASA JPL")
-        self.attrs["mission_name"] = np.bytes_("NISAR")
+        self.attrs["Conventions"] = to_bytes("CF-1.7")
+        self.attrs["contact"] = to_bytes("nisar-sds-ops@jpl.nasa.gov")
+        self.attrs["institution"] = to_bytes("NASA JPL")
+        self.attrs["mission_name"] = to_bytes("NISAR")
 
     def save_to_hdf5(self):
         """
@@ -270,14 +281,14 @@ class InSARBaseWriter(h5py.File):
                         )
 
             ds.attrs['_FillValue'] = np.nan
-            ds.attrs['description'] = np.bytes_(f"{baseline_name.capitalize()}"
+            ds.attrs['description'] = to_bytes(f"{baseline_name.capitalize()}"
                                                  " component of the InSAR baseline")
-            ds.attrs['units'] = Units.meter
-            ds.attrs['long_name'] = np.bytes_(f"{baseline_name.capitalize()} baseline")
+            ds.attrs['units'] = to_bytes(Units.meter)
+            ds.attrs['long_name'] = to_bytes(f"{baseline_name.capitalize()} baseline")
 
             # The radarGrid group to attach the x, y, and z coordinates
             if is_geogrid:
-                ds.attrs['grid_mapping'] = np.bytes_('projection')
+                ds.attrs['grid_mapping'] = to_bytes('projection')
                 ds.dims[1].attach_scale(cube_group['yCoordinates'])
                 ds.dims[2].attach_scale(cube_group['xCoordinates'])
                 ds.dims[0].attach_scale(cube_group['heightAboveEllipsoid'])
@@ -308,9 +319,9 @@ class InSARBaseWriter(h5py.File):
             # Should those also be updated in the crossmul module?
             doppler_centroid_group.copy("dopplerCentroid", common_group)
             common_group["dopplerCentroid"].attrs['description'] = \
-                np.bytes_("2D LUT of common Doppler centroid between reference and secondary RSLCs")
+                to_bytes("2D LUT of common Doppler centroid between reference and secondary RSLCs")
             common_group["dopplerCentroid"].attrs['units'] = \
-                Units.hertz
+                to_bytes(Units.hertz)
 
             doppler_bandwidth_group.copy(
                 "processedAzimuthBandwidth",
@@ -318,8 +329,8 @@ class InSARBaseWriter(h5py.File):
                 "dopplerBandwidth",
             )
             common_group["dopplerBandwidth"].attrs['description'] = \
-                np.bytes_("Common Doppler bandwidth between reference and secondary RSLCs")
-            common_group["dopplerBandwidth"].attrs['units'] = Units.hertz
+                to_bytes("Common Doppler bandwidth between reference and secondary RSLCs")
+            common_group["dopplerBandwidth"].attrs['units'] = to_bytes(Units.hertz)
 
     def add_RSLC_to_procinfo_params_group(self, rslc_name: str):
         """
@@ -380,13 +391,13 @@ class InSARBaseWriter(h5py.File):
 
         reference_terrain_height = "referenceTerrainHeight"
         reference_terrain_height_description = \
-            f"Reference Terrain Height as a function of time for {rslc_name} RSLC"
+            f"Reference terrain height as a function of time for {rslc_name} RSLC"
         if reference_terrain_height in src_param_group:
             src_param_group.copy(reference_terrain_height, dst_param_group)
             dst_param_group[reference_terrain_height].attrs['description'] = \
-                np.bytes_(reference_terrain_height_description)
+                to_bytes(reference_terrain_height_description)
             dst_param_group[reference_terrain_height].attrs['units'] = \
-                np.bytes_(Units.meter)
+                to_bytes(Units.meter)
         else:
             ds_param = DatasetParams(
                 "referenceTerrainHeight",
@@ -416,7 +427,7 @@ class InSARBaseWriter(h5py.File):
                                        rslc_frequency_group)
             rslc_frequency_group['slantRangeSpacing'].attrs['description'] = \
                  f"Slant range spacing of {rslc_name} RSLC"
-            rslc_frequency_group['slantRangeSpacing'].attrs['units'] = Units.meter
+            rslc_frequency_group['slantRangeSpacing'].attrs['units'] = to_bytes(Units.meter)
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
@@ -427,8 +438,8 @@ class InSARBaseWriter(h5py.File):
                 "rangeBandwidth",
             )
             rslc_frequency_group['rangeBandwidth'].attrs['description'] = \
-                 np.bytes_(f"Processed slant range bandwidth for {rslc_name} RSLC")
-            rslc_frequency_group['rangeBandwidth'].attrs['units'] = Units.hertz
+                 to_bytes(f"Processed slant range bandwidth for {rslc_name} RSLC")
+            rslc_frequency_group['rangeBandwidth'].attrs['units'] = to_bytes(Units.hertz)
 
             swath_frequency_group.copy(
                 "processedAzimuthBandwidth",
@@ -436,16 +447,16 @@ class InSARBaseWriter(h5py.File):
                 "azimuthBandwidth",
             )
             rslc_frequency_group['azimuthBandwidth'].attrs['description'] = \
-                np.bytes_(f"Processed azimuth bandwidth for {rslc_name} RSLC")
-            rslc_frequency_group['azimuthBandwidth'].attrs['units'] = Units.hertz
+                to_bytes(f"Processed azimuth bandwidth for {rslc_name} RSLC")
+            rslc_frequency_group['azimuthBandwidth'].attrs['units'] = to_bytes(Units.hertz)
 
             swath_group = rslc_h5py_file_obj[rslc.SwathPath]
             swath_group.copy("zeroDopplerTimeSpacing", rslc_frequency_group)
             rslc_frequency_group['zeroDopplerTimeSpacing'].attrs['description'] = \
-               np.bytes_(
+               to_bytes(
                    f"Time interval in the along-track direction for {rslc_name} RSLC raster layers"
                )
-            rslc_frequency_group['zeroDopplerTimeSpacing'].attrs['units'] = Units.second
+            rslc_frequency_group['zeroDopplerTimeSpacing'].attrs['units'] = to_bytes(Units.second)
 
             # Copy the zero-Dopper information from the source RSLC to the RSLC group
             for doppler_time, start_stop in zip(['zeroDopplerStartTime',
@@ -455,7 +466,7 @@ class InSARBaseWriter(h5py.File):
                 # Update the description attributes of the zeroDopplerTime
                 ds_zerodopp = rslc_frequency_group[doppler_time]
                 ds_zerodopp.attrs['description'] = \
-                    np.bytes_(f"Azimuth {start_stop} time (in UTC) of the {rslc_name}"
+                    to_bytes(f"Azimuth {start_stop} time (in UTC) of the {rslc_name}"
                               " RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss")
 
             rg_names_to_be_created = [
@@ -488,8 +499,8 @@ class InSARBaseWriter(h5py.File):
                 "dopplerCentroid", rslc_frequency_group
             )
             rslc_frequency_group['dopplerCentroid'].attrs['description'] = \
-                np.bytes_(f"2D LUT of Doppler centroid for frequency {freq}")
-            rslc_frequency_group['dopplerCentroid'].attrs['units'] = Units.hertz
+                to_bytes(f"2D LUT of Doppler centroid for frequency {freq}")
+            rslc_frequency_group['dopplerCentroid'].attrs['units'] = to_bytes(Units.hertz)
 
     def add_coregistration_to_algo_group(self):
         """
@@ -721,7 +732,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "isOffsetsBlendingApplied",
-                np.bytes_(str(merge_gross_offset)),
+                str(merge_gross_offset),
                 (
                     "Flag to indicate if pixel offsets are the results of"
                     " blending multi-resolution layers of pixel offsets"
@@ -748,7 +759,7 @@ class InSARBaseWriter(h5py.File):
 
         runconfig_contents = DatasetParams(
             "runConfigurationContents",
-            np.bytes_(self.cfg),
+            str(self.cfg),
             (
                 "Contents of the run configuration file with parameters"
                 " used for processing"
@@ -769,14 +780,6 @@ class InSARBaseWriter(h5py.File):
                 _orbit_file = f"used RSLC internal {idx} orbit file"
             orbit_file.append(_orbit_file)
 
-        # DEM source
-        dem_source = \
-            ancillary_group["dem_file_description"]
-
-        # if dem source is None, then replace it with None
-        if dem_source is None:
-            dem_source = "None"
-
         inputs_ds_params = [
             DatasetParams(
                 "configFiles",
@@ -785,22 +788,22 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "demSource",
-                dem_source,
+                self.dem_source,
                 "Description of the input digital elevation model (DEM)",
             ),
             DatasetParams(
                 "l1ReferenceSlcGranules",
-                np.bytes_([os.path.basename(self.ref_h5_slc_file)]),
+                to_bytes([os.path.basename(self.ref_h5_slc_file)]),
                 "List of input reference L1 RSLC products used",
             ),
             DatasetParams(
                 "l1SecondarySlcGranules",
-                np.bytes_([os.path.basename(self.sec_h5_slc_file)]),
+                to_bytes([os.path.basename(self.sec_h5_slc_file)]),
                 "List of input secondary L1 RSLC products used",
             ),
             DatasetParams(
                 "orbitFiles",
-                np.bytes_([orbit_file]),
+                to_bytes(orbit_file),
                 "List of input orbit files used",
             ),
         ]
@@ -848,7 +851,7 @@ class InSARBaseWriter(h5py.File):
 
             # Modify description of attribute type
             dst_attitude_group['attitudeType'].attrs['description'] = \
-                np.bytes_('Attitude type, either "FRP", "NRP", "PRP, or '
+                to_bytes('Attitude type, either "FRP", "NRP", "PRP, or '
                            '"Custom", where "FRP" stands for Forecast Radar Pointing, '
                            '"NRP" is Near Real-time Pointing, and "PRP" is Precise Radar Pointing')
 
@@ -859,41 +862,41 @@ class InSARBaseWriter(h5py.File):
                                                                'seconds since ')
 
             if attitude_time_units is not None:
-                attitude_time.attrs['units'] = np.bytes_(attitude_time_units)
+                attitude_time.attrs['units'] = to_bytes(attitude_time_units)
 
             dst_attitude_group["quaternions"].attrs["units"] = \
-                Units.unitless
+                to_bytes(Units.unitless)
 
             dst_orbit_group = self.require_group(f'{self.group_paths.MetadataPath}/orbit/{group}')
             orbit_to_save.save_to_h5(dst_orbit_group)
 
             # Orbit time
             orbit_time = dst_orbit_group["time"]
-            orbit_time.attrs['description'] = np.bytes_(
+            orbit_time.attrs['description'] = to_bytes(
                 "Time vector record. This record contains the time since UTC epoch corresponding to position and velocity records")
             orbit_time_units = orbit_time.attrs['units']
             orbit_time_units = extract_datetime_from_string(str(orbit_time_units), 'seconds since ')
             if orbit_time_units is not None:
-                orbit_time.attrs['units'] = np.bytes_(orbit_time_units)
+                orbit_time.attrs['units'] = to_bytes(orbit_time_units)
 
             # Update the description of orbit position
-            dst_orbit_group["position"].attrs["description"] = np.bytes_(
+            dst_orbit_group["position"].attrs["description"] = to_bytes(
                 "Position vector record. This record contains the platform "
                 "position data with respect to WGS84 G1762 reference frame")
 
             # Update the description of orbit velocity
-            dst_orbit_group["velocity"].attrs["description"] = np.bytes_(
+            dst_orbit_group["velocity"].attrs["description"] = to_bytes(
                 'Velocity vector record. This record contains the platform velocity data '
                 'with respect to WGS84 G1762 reference frame')
-            dst_orbit_group["velocity"].attrs["units"] = Units.meter_per_second
+            dst_orbit_group["velocity"].attrs["units"] = to_bytes(Units.meter_per_second)
 
             # Update orbitType description
-            dst_orbit_group['orbitType'].attrs['description'] = np.bytes_(
+            dst_orbit_group['orbitType'].attrs['description'] = to_bytes(
                 'Orbit product type, either "FOE", "NOE", "MOE", "POE", or "Custom", where "FOE" stands for '
                 'Forecast Orbit Ephemeris, "NOE" is Near real-time Orbit Ephemeris, "MOE" is Medium precision '
                 'Orbit Ephemeris, and "POE" is Precise Orbit Ephemeris')
             # Add description of the orbit interpolation file
-            dst_orbit_group['interpMethod'].attrs['description'] = np.bytes_(
+            dst_orbit_group['interpMethod'].attrs['description'] = to_bytes(
                 'Orbit interpolation method, either "Hermite" or "Legendre"'
             )
 
@@ -910,6 +913,7 @@ class InSARBaseWriter(h5py.File):
         """
         Add the identification group to the product
         """
+        warning_channel = journal.warning('InSAR_base_writer.add_identification_to_hdf5')
         radar_band_name = self._get_band_name()
         primary_exec_cfg = self.cfg["primary_executable"]
 
@@ -923,13 +927,16 @@ class InSARBaseWriter(h5py.File):
 
         # Determine processingType
         if processing_type == 'PR':
-            processing_type = np.bytes_('Nominal')
+            processing_type = to_bytes('Nominal')
         elif processing_type == 'UR':
-            processing_type = np.bytes_('Urgent')
-        elif processing_type == 'OD':
-            processing_type = np.bytes_('Custom')
+            processing_type = to_bytes('Urgent')
         else:
-            processing_type = np.bytes_('Undefined')
+            processing_type = to_bytes('Custom')
+            if processing_type != 'OD':
+                warning_channel.log(
+                    'The processing type in the runconfig is set to'
+                    f' "{processing_type}", which is not a valid value'
+                    ' for the output product metadata. Defaulting to "Custom"')
 
         # Adopt same logic as RSLC, GSLC, GCOV
         # If no condition is met, assign string from runconfig
@@ -1011,16 +1018,6 @@ class InSARBaseWriter(h5py.File):
                 'Orbit direction, either "Ascending" or "Descending"',
             ),
             DatasetParams(
-                "plannedDatatakeId",
-                "None",
-                "List of planned datatakes included in the product",
-            ),
-            DatasetParams(
-                "plannedObservationId",
-                "None",
-                "List of planned observations included in the product",
-            ),
-            DatasetParams(
                 "isUrgentObservation",
                 "None",
                 'Flag indicating if observation is nominal ("False") or urgent ("True")',
@@ -1057,7 +1054,9 @@ class InSARBaseWriter(h5py.File):
         datasets_to_copy = ["zeroDopplerStartTime",
                             "zeroDopplerEndTime",
                             "absoluteOrbitNumber",
-                            "isJointObservation"]
+                            "isJointObservation",
+                            "plannedObservationId",
+                            "plannedDatatakeId"]
         cap = lambda x: f"{x[0].upper()}{x[1:]}"
 
         for ds_name in datasets_to_copy:
@@ -1081,10 +1080,18 @@ class InSARBaseWriter(h5py.File):
                 f"Azimuth {time_in_description} time (in UTC) of {rslc_name} RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss"
 
         for rslc_name in ['reference', 'secondary']:
-             # Update the description for the absolute orbit numbers
+             # Update descriptions for absolute orbit number, planned datatakes and observation
             ds = dst_id_group[f"{rslc_name}AbsoluteOrbitNumber"]
             ds.attrs['description'] = \
             f'Absolute orbit number for the {rslc_name} RSLC'
+
+            ds = dst_id_group[f"{rslc_name}PlannedDatatakeId"]
+            ds.attrs['description'] = \
+            f'List of planned datatakes included in the {rslc_name} RSLC'
+
+            ds = dst_id_group[f"{rslc_name}PlannedObservationId"]
+            ds.attrs['description'] = \
+            f'List of planned observations included in the {rslc_name} RSLC'
 
             #  Update the description for the isJointObservation
             #  If there is no isJointObservation in the identification group,
@@ -1095,7 +1102,7 @@ class InSARBaseWriter(h5py.File):
                 '(e.g., L-band and S-band simultaneously), "False" otherwise'
             if ds_name in dst_id_group:
                 ds = dst_id_group[ds_name]
-                ds.attrs['description'] = np.bytes_(description)
+                ds.attrs['description'] = to_bytes(description)
             else:
                 add_dataset_and_attrs(dst_id_group, DatasetParams(
                     ds_name,
@@ -1123,7 +1130,7 @@ class InSARBaseWriter(h5py.File):
         id_ds_names_to_be_created = [
             DatasetParams(
                 "compositeReleaseId",
-                np.bytes_(crid),
+                to_bytes(crid),
                 "Unique version identifier of the science data production system",
             ),
             DatasetParams(
@@ -1142,7 +1149,7 @@ class InSARBaseWriter(h5py.File):
             self._get_mixed_mode(),
             DatasetParams(
                 "listOfFrequencies",
-                np.bytes_(list(self.freq_pols)),
+                to_bytes(list(self.freq_pols)),
                 "List of frequency layers available in the product",
             ),
             DatasetParams(
@@ -1158,7 +1165,10 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "processingType",
                 processing_type,
-                "Nominal (or) Urgent (or) Custom (or) Undefined",
+                'Processing pipeline used to generate this granule. ' \
+                '"Nominal": standard production system; "Urgent": time-sensitive ' \
+                'processing in response to urgent response events; ' \
+                '"Custom": user-initiated processing outside the nominal production system',
             ),
             DatasetParams(
                 "radarBand", radar_band_name,
@@ -1200,7 +1210,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "isGeocoded",
-                np.bytes_(str(self.product_info.isGeocoded)),
+                str(self.product_info.isGeocoded),
                 'Flag to indicate if the product data is in the radar geometry ("False") '
                 'or in the map geometry ("True")',
             ),
@@ -1265,7 +1275,7 @@ class InSARBaseWriter(h5py.File):
 
         return DatasetParams(
             "isMixedMode",
-            np.bytes_(str(mixed_mode)),
+            str(mixed_mode),
             (
                 '"True" if this product is generated from reference and'
                 ' secondary RSLCs with different range bandwidths, "False"'
@@ -1357,19 +1367,19 @@ class InSARBaseWriter(h5py.File):
             **create_dataset_kwargs)
 
         # set attributes
-        ds.attrs["description"] = np.bytes_(description)
+        ds.attrs["description"] = to_bytes(description)
 
         if units is not None:
-            ds.attrs["units"] = np.bytes_(units)
+            ds.attrs["units"] = to_bytes(units)
 
         if grid_mapping is not None:
-            ds.attrs["grid_mapping"] = np.bytes_(grid_mapping)
+            ds.attrs["grid_mapping"] = to_bytes(grid_mapping)
 
         if standard_name is not None:
-            ds.attrs["standard_name"] = np.bytes_(standard_name)
+            ds.attrs["standard_name"] = to_bytes(standard_name)
 
         if long_name is not None:
-            ds.attrs["long_name"] = np.bytes_(long_name)
+            ds.attrs["long_name"] = to_bytes(long_name)
 
         if yds is not None:
             ds.dims[0].attach_scale(yds)

@@ -1,6 +1,7 @@
 """
 Functions and classes for noise power estimation from Raw data
 """
+from __future__ import annotations
 from warnings import warn
 from dataclasses import dataclass
 from collections.abc import Iterator

@@ -7,14 +7,13 @@ import os
 
 import h5py
 import isce3
-from isce3.product.cf_conventions import get_grid_mapping_name
 import journal
 import numpy as np
 from isce3.core.types import complex32, to_complex32
 from isce3.io import HDF5OptimizedReader, optimize_chunk_size
 from nisar.h5 import cp_h5_meta_data
+from nisar.products.projection import build_projection_dataset_attrs_dict
 from nisar.products.readers import SLC
-from osgeo import osr
 
 
 def get_dataset_output_options(cfg: dict):
@@ -769,99 +768,18 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                                       shape=(),
                                       dtype=np.uint32,
                                       data=epsg_code)
-    # Set up osr for wkt
-    srs = osr.SpatialReference()
-    srs.ImportFromEPSG(epsg_code)
+
+    projds_attrs = build_projection_dataset_attrs_dict(epsg_code)
+    projds.attrs.update(projds_attrs)
 
     # Add projection description
     projds.attrs['description'] = np.bytes_('Product map grid projection: EPSG code, '
                                              'with additional projection information as HDF5 Attributes')
 
-    # WGS84 ellipsoid
-    projds.attrs['semi_major_axis'] = 6378137.0
-    projds.attrs['inverse_flattening'] = 298.257223563
-    projds.attrs['ellipsoid'] = np.bytes_("WGS84")
-
-    # Additional fields
-    projds.attrs['epsg_code'] = epsg_code
-
-    # CF 1.7+ requires this attribute to be named "crs_wkt"
-    # spatial_ref is old GDAL way. Using that for testing only.
-    # For NISAR replace with "crs_wkt"
-    projds.attrs['spatial_ref'] = np.bytes_(srs.ExportToWkt())
-
-    # Here we have handcoded the attributes for the different cases
-    # Recommended method is to use pyproj.CRS.to_cf() as shown above
-    # To get complete set of attributes.
-
-    sr = osr.SpatialReference()
-    sr.ImportFromEPSG(epsg_code)
-
-    projds.attrs['grid_mapping_name'] = np.bytes_(get_grid_mapping_name(sr))
-
-    # Set up units
-    # Geodetic latitude / longitude
-    if epsg_code == 4326:
-        # Set up grid mapping
-        projds.attrs['longitude_of_prime_meridian'] = 0.0
-    else:
-        # UTM zones
-        if ((epsg_code > 32600 and
-             epsg_code < 32661) or
-                (epsg_code > 32700 and
-                 epsg_code < 32761)):
-            # Set up grid mapping
-            projds.attrs['utm_zone_number'] = epsg_code % 100
-            projds.attrs["longitude_of_central_meridian"] = srs.GetProjParm(
-                osr.SRS_PP_CENTRAL_MERIDIAN)
-            projds.attrs["scale_factor_at_central_meridian"] = srs.GetProjParm(
-                osr.SRS_PP_SCALE_FACTOR)
-
-        # Polar Stereo North
-        elif epsg_code == 3413:
-            # Set up grid mapping
-            projds.attrs['latitude_of_projection_origin'] = 90.0
-            projds.attrs['standard_parallel'] = 70.0
-            projds.attrs['straight_vertical_longitude_from_pole'] = -45.0
-
-        # Polar Stereo south
-        elif epsg_code == 3031:
-            # Set up grid mapping
-            projds.attrs['latitude_of_projection_origin'] = -90.0
-            projds.attrs['standard_parallel'] = -71.0
-            projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
-
-        # EASE 2 for soil moisture L3
-        elif epsg_code == 6933:
-            # Set up grid mapping
-            projds.attrs['longitude_of_central_meridian'] = 0.0
-            projds.attrs['standard_parallel'] = 30.0
-
-        # Europe Equal Area for Deformation map (to be implemented in isce3)
-        elif epsg_code == 3035:
-            # Set up grid mapping
-            projds.attrs['standard_parallel'] = -71.0
-            projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
-
-        else:
-            raise NotImplementedError(
-                f'EPSG {epsg_code} waiting for implementation / not supported in ISCE3')
-
+    if epsg_code != 4326:
         # Setup common parameters
         xds.attrs['long_name'] = np.bytes_("X coordinate of projection")
         yds.attrs['long_name'] = np.bytes_("Y coordinate of projection")
-
-        projds.attrs['false_easting'] = sr.GetProjParm(osr.SRS_PP_FALSE_EASTING)
-        projds.attrs['false_northing'] = sr.GetProjParm(
-            osr.SRS_PP_FALSE_NORTHING)
-
-        projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(
-            osr.SRS_PP_LONGITUDE_OF_ORIGIN)
-
-        if epsg_code not in [3413, 3031]:
-            projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(
-                osr.SRS_PP_LATITUDE_OF_ORIGIN)
-
 
     if z_vect is not None:
         return zds, yds, xds
@@ -924,25 +842,33 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
-        descr='East component of unit vector of LOS from target to sensor',
+        descr='East component of the line-of-sight (LOS) unit vector, defined from ' \
+              'the target to the sensor, expressed in the east-north-up (ENU) coordinate ' \
+              'system with its origin at the target location',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
-        descr='North component of unit vector of LOS from target to sensor',
+        descr='North component of the line-of-sight (LOS) unit vector, defined from ' \
+              'the target to the sensor, expressed in the east-north-up (ENU) coordinate ' \
+              'system with its origin at the target location',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
-        descr='East component of unit vector along ground track',
+        descr='East component of the along-track unit vector at the target location, ' \
+              'expressed in the east-north-up (ENU) coordinate system and projected ' \
+              'onto the horizontal plane (i.e., excluding the up component)',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
-        descr='North component of unit vector along ground track',
+        descr='North component of the along-track unit vector at the target location, ' \
+              'expressed in the east-north-up (ENU) coordinate system and projected ' \
+              'onto the horizontal plane (i.e., excluding the up component)',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,

@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import Optional
 
 import h5py
+import isce3
+import journal
 import numpy as np
 from isce3.core import crop_external_orbit
 from nisar.products.readers import SLC
@@ -369,6 +371,128 @@ def _compute_subswath_mask_id(azi_idx,
         int(10 * ref_subswath_num + sec_subswath_num)
 
     return subswath_mask_id
+
+def save_to_hdf5_ds(input_file_path,
+                    hdf5_ds_obj,
+                    lines_per_block = 1000):
+    """
+    Save the data to the HDF5 dataset
+
+    Parameters
+    ---------
+    input_file_path : str
+        Path of the input file
+    hdf5_ds_obj : h5py.Dataset
+        The HDF5 dataset object
+    lines_per_block : integer (default: 1000)
+         Lines per block to write the data to the hard drive
+    """
+
+    input_src = gdal.Open(input_file_path)
+    width = input_src.RasterXSize
+    length = input_src.RasterYSize
+
+    # Write data block by block
+    for line in range(0, length, lines_per_block):
+        line_blocks = lines_per_block
+        if (line + lines_per_block) > length:
+            line_blocks = length - line
+        data = input_src.GetRasterBand(1).ReadAsArray(0,line, width, line_blocks)
+        hdf5_ds_obj.write_direct(data,
+                                 dest_sel=np.s_[line : line + line_blocks, : width])
+
+    input_src = None
+
+def generate_dem_rdr(radar_grid_obj,
+                     orbit_obj,
+                     dem_file,
+                     out_dem_rdr_path,
+                     use_gpu = True,
+                     dem_interp_method = 'BIQUINTIC',
+                     threshold = 1.0e-7,
+                     numiter = 25,
+                     extraiter = 10,
+                     lines_per_block = 1000):
+    """
+    Generate the DEM in radar grid
+
+    Parameters
+    ---------
+    radar_grid_obj : isce3.product.RadarGridParameters
+        The radar grid object for the reference RSLC
+    orbit_obj : isce3.core.Orbit
+        The SLC object for the secondary RSLC
+    dem_file  : str
+        Input DEM file in geocoded coordinates
+    out_dem_rdr_path : str
+        output path of the DEM in radar grid
+    use_gpu : boolean (default: True)
+        Indicator to use the GPU for rdr2geo computations
+    dem_interp_method : str (default: BIQUINTIC)
+        DEM interpolation method, one of 'BILINEAR', 'BICUBIC', 'NEAREST', and 'BIQUINTIC'
+    threshold : float (default: 1.0e-7)
+        The rdr2geo absolute slant range convergence tolerance (m)
+    numiter : integer (default: 25)
+        Maximum number of primary Newton-Raphson iterations
+    extraiter : integer (default: 10)
+         Maximum number of secondary iterations
+    lines_per_block : integer (default: 1000)
+         Lines per block to run rdr2geo
+    """
+
+    error_journal = journal.error('utils.generate_insar_dem')
+    grid_doppler = isce3.core.LUT2d()
+
+    dem_raster = isce3.io.Raster(dem_file)
+    if dem_raster is None:
+        err_str = f'Can not open the DEM file {dem_raster}'
+        error_journal.log(err_str)
+        raise ValueError(err_str)
+    epsg = dem_raster.get_epsg()
+    proj = isce3.core.make_projection(epsg)
+    ellipsoid = proj.ellipsoid
+
+    try:
+         interp_method = getattr(isce3.core.DataInterpMethod, dem_interp_method)
+    except AttributeError:
+         err_str = f"invalid interpolation method: {dem_interp_method}"
+         error_journal.log(err_str)
+         raise ValueError(err_str)
+
+    # Use the GPU or CPU version
+    if use_gpu:
+        Rdr2Geo = isce3.cuda.geometry.Rdr2Geo
+    else:
+        Rdr2Geo = isce3.geometry.Rdr2Geo
+
+    # Create the DEM in the range Doppler coordinates
+    dem_src = isce3.io.Raster(out_dem_rdr_path,
+                              radar_grid_obj.width,
+                              radar_grid_obj.length, 1,
+                              gdal.GDT_Float32, 'ENVI')
+
+    # Build the Rdr2Geo object
+    rdr2geo_obj = Rdr2Geo(radar_grid_obj, orbit_obj, ellipsoid, grid_doppler,
+                          dem_interp_method=interp_method,
+                          threshold=threshold, numiter=numiter,
+                          extraiter=extraiter,
+                          lines_per_block=lines_per_block)
+
+    x_raster, y_raster, incidence_raster,\
+        heading_raster, local_incidence_raster, local_psi_raster,\
+            simulated_amplitude_raster, shadow_raster,\
+                ground_to_sat_x_ratser, ground_to_sat_y_raster= [None] * 10
+    rdr2geo_obj.topo(dem_raster, x_raster, y_raster, dem_src,
+                     incidence_raster, heading_raster, local_incidence_raster,
+                     local_psi_raster, simulated_amplitude_raster,
+                     shadow_raster,
+                     ground_to_sat_x_ratser, ground_to_sat_y_raster)
+
+    # Clean the memory
+    dem_raster = None
+    rdr2geo_obj = None
+    dem_src = None
+
 
 def generate_insar_subswath_mask(ref_rslc_obj,
                                  sec_rslc_obj,

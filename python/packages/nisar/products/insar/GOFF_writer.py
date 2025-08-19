@@ -1,4 +1,5 @@
 import numpy as np
+from nisar.products.utils import to_bytes
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.workflows.helpers import get_cfg_freq_pols
 
@@ -9,6 +10,7 @@ from .InSAR_products_info import InSARProductsInfo
 from .product_paths import GOFFGroupsPaths
 from .ROFF_writer import ROFFWriter
 from .units import Units
+
 
 class GOFFWriter(ROFFWriter, L2InSARWriter):
     """
@@ -47,7 +49,7 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
 
         self.attrs["title"] = "NISAR L2 GOFF Product"
         self.attrs["reference_document"] = \
-            np.bytes_("D-105010 NISAR NASA SDS Product Specification"
+            to_bytes("D-105010 NISAR NASA SDS Product Specification"
                        " L2 Geocoded Pixel Offsets")
 
     def add_algorithms_to_procinfo_group(self):
@@ -69,10 +71,10 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
         for rslc_name in ['reference', 'secondary']:
             rslc = self[self.group_paths.ParametersPath][rslc_name]
             rslc['referenceTerrainHeight'].attrs['description'] = \
-                np.bytes_("Reference Terrain Height as a function of"
+                to_bytes("Reference terrain height as a function of"
                            f" map coordinates for {rslc_name} RSLC")
             rslc['referenceTerrainHeight'].attrs['units'] = \
-                Units.meter
+                to_bytes(Units.meter)
 
 
     def add_grids_to_hdf5(self):
@@ -83,7 +85,7 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
 
         proc_cfg = self.cfg["processing"]
         geogrids = proc_cfg["geocode"]["geogrids"]
-        grids_val = np.bytes_("projection")
+        grids_val = "projection"
 
         # Extract offset layer names for later processing
         layers = [
@@ -124,7 +126,7 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                  " where 1 is water and 0 is non-water;"
                  " the second digit represents the subswath number of that pixel in the reference RSLC;"
                  " the least-significant digit represents the subswath number of that pixel in the secondary RSLC."
-                 " A value of '0' in either subswath digit indicates an invalid sample in the corresponding RSLC"),
+                 " A value of 0 in either subswath digit indicates an invalid sample in the corresponding RSLC"),
                 grid_mapping=grids_val,
                 xds=xds,
                 yds=yds,
@@ -155,13 +157,13 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                     pixeloffsets_pol_layer_group['projection'][...] = \
                         pixeloffsets_pol_layer_group['projection'][()].astype(np.uint32)
                     pixeloffsets_pol_layer_group['yCoordinateSpacing'].attrs['long_name'] = \
-                        np.bytes_("Y coordinates spacing")
+                        to_bytes("Y coordinates spacing")
                     pixeloffsets_pol_layer_group['xCoordinateSpacing'].attrs['long_name'] = \
-                        np.bytes_("X coordinates spacing")
+                        to_bytes("X coordinates spacing")
                     pixeloffsets_pol_layer_group['xCoordinates'].attrs['long_name'] = \
-                        np.bytes_("X coordinates of projection")
+                        to_bytes("X coordinates of projection")
                     pixeloffsets_pol_layer_group['yCoordinates'].attrs['long_name'] = \
-                        np.bytes_("Y coordinates of projection")
+                        to_bytes("Y coordinates of projection")
 
                     #pixeloffsets dataset parameters as tuples in the following
                     #order: dataset name, description, and units

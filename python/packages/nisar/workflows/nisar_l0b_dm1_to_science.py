@@ -7,6 +7,8 @@ from pathlib import Path
 import os
 import time
 from warnings import warn
+from datetime import datetime
+from copy import copy
 
 import numpy as np
 from scipy import fft
@@ -18,7 +20,7 @@ except ImportError:
 
 from nisar.products.readers.Raw import Raw
 from nisar.log import set_logger
-from isce3.core import Linspace, speed_of_light
+from isce3.core import Linspace, speed_of_light, TimeDelta
 from isce3.signal import build_multi_rate_fir_filter
 from nisar.workflows.helpers import build_uniform_quantizer_lut_l0b, slice_gen
 
@@ -40,8 +42,10 @@ def cmd_line_parser():
     prs.add_argument('-p', '--product-name', type=str, dest='prod_name',
                      help=('Product science L0B HDF5 file and path name. '
                            'Default is input L0B filename with suffix '
-                           '"Science" added prior to the extension and is '
-                           'stored at the current directory.')
+                           '"_SCIENCE_<utc-first>_<utc-last>" added prior to '
+                           'the extension and is stored at the current '
+                           'directory. First/last UTC is set by first/last '
+                           'pulses to be processed.')
                      )
     prs.add_argument('--num-cpu', type=int, dest='num_cpu',
                      help=('Number of CPU/Workers used in filtering.'
@@ -72,6 +76,17 @@ def cmd_line_parser():
     prs.add_argument('--nbits', type=int, dest='nbits', default=12,
                      help='Number of bits representing full dynamic'
                      ' range of valid encoded echo samples.')
+    prs.add_argument('--time-start', type=float, default=0,
+                     help=('Start time (seconds) wrt the first range line, '
+                           '>= 0, to be processed. This is inclusive.')
+                     )
+    prs.add_argument('--time-stop', type=float,
+                     help=('Stop time (seconds) wrt the first range line, '
+                           '> 0, to be processed. Must be larger than '
+                           '`time-start`. Its value will be limited by the '
+                           'time of the last range line. This is exclusive. '
+                           'The default is entire L0B.')
+                     )
     return prs.parse_args()
 
 
@@ -136,12 +151,16 @@ def _join_paths(path1: str, path2: str) -> str:
 
 
 def copy_swath_except_echo_sr_h5(fid_in, fid_out, swath_path,
-                                 frq_pol, freq_band_in='A', n_sbsw=1):
+                                 frq_pol, freq_band_in='A', n_sbsw=1,
+                                 tx_keys=None, rx_keys=None):
     """
     Copy all groups and datasets under swath from input HDF5 to output
-    HDF5 except for echo products and slant range vector.
-    Slant range and echo fields are skipped because those need to be
-    updated with new size and shape after filtering in range direction.
+    HDF5 except for echo products, slant range vector and optionally for
+    desired datasets under tx and rx group listed by tx_keys and rx_keys.
+    "validSamplesSubSwath*" on tx group will be excluded from being copied..
+    These fields are skipped because those need to be
+    updated with new size and shape after filtering in range direction and
+    slicing in azimuth.
     Given output may have two frequency bands as opposed to the input, e.g.,
     in QQ case, the input values are repeated for output products.
 
@@ -162,8 +181,19 @@ def copy_swath_except_echo_sr_h5(fid_in, fid_out, swath_path,
         "A" or "B" for DM1 not both!
     n_sbsw : int, default=1
         Number of valid subswath with valid values for the output L0B.
+    tx_keys : sequence of str, optional
+        Sequence of dataset names to be excluded from tx group in `fid_out`.
+    rx_keys : sequence of str, optional
+        Sequence of dataset names to be excluded from rx group in `fid_out`.
+        Echo datasets are always excluded from RX group!
 
     """
+    tx_names = ['slantRange']
+    if tx_keys is not None:
+        tx_names.extend(tx_keys)
+    rx_names = []
+    if rx_keys is not None:
+        rx_names.extend(rx_keys)
     # form input single freq-band path.
     band_path_in = _join_paths(swath_path, f'frequency{freq_band_in}/')
     for freq_band in frq_pol:
@@ -173,6 +203,10 @@ def copy_swath_except_echo_sr_h5(fid_in, fid_out, swath_path,
         grp_band = fid_out.require_group(band_path)
         # list of all TxRx products
         txrx_pols = frq_pol[freq_band]
+        # form rx datset names plus echo for all pols to be
+        # excluded from output
+        rx_names_echo = copy(txrx_pols)
+        rx_names_echo.extend(rx_names)
         # list of group names txp where "p" is all TX pols
         # TX is either H or V per output freq_band!
         txp = {f'tx{p[0]}' for p in txrx_pols}
@@ -196,22 +230,13 @@ def copy_swath_except_echo_sr_h5(fid_in, fid_out, swath_path,
                             # create RX group for output product
                             grp_rx = fid_out.require_group(rx_path)
                             for rx_item in fid_in[rx_path_in]:
-                                if rx_item not in txrx_pols:
+                                if rx_item not in rx_names_echo:
                                     # copy all RX fields except echo product
                                     fid_in.copy(rx_path_in + rx_item, grp_rx)
-                    elif tx_item == 'slantRange':
-                        continue
-
-                    elif 'validSamplesSubSwath' in tx_item:
-                        # simply copy good subswaths
-                        if int(tx_item[-1]) <= n_sbsw:
-                            fid_in.copy(tx_path_in + tx_item, grp_tx)
-
-                    else:  # copy the rest of TX as it is
+                    # copy the rest of TX that is not in tx_keys
+                    elif ((tx_item not in tx_names) and
+                          ('validSamplesSubSwath' not in tx_item)):
                         fid_in.copy(tx_path_in + tx_item, grp_tx)
-                        # update number of good subswath
-                        if tx_item == 'numberOfSubSwaths':
-                            grp_tx[tx_item][()] = n_sbsw
 
             else:
                 if band_item[:2] != 'tx':
@@ -222,11 +247,11 @@ def copy_swath_except_echo_sr_h5(fid_in, fid_out, swath_path,
 
 
 def copy_update_identification_h5(
-        fid_in, fid_out, ident_path, list_freqs):
+        fid_in, fid_out, ident_path, list_freqs, **kwargs):
     """
     Copy all items of identification group from input file and update
-    a couple of items for the output product such as DM flag and
-    list of frequencies.
+    a couple of items for the output product such as those in kwargs
+    and the list of frequencies.
 
     Parameters
     ----------
@@ -238,6 +263,9 @@ def copy_update_identification_h5(
         HDF5 path for identification.
     list_freqs : list(str)
         List of frequency band chars.
+    kwargs : dict
+        A dict containing dataset names and values under
+        identification group of HDF5.
 
     """
     grp_ident = fid_out.require_group(ident_path)
@@ -251,8 +279,9 @@ def copy_update_identification_h5(
                 ds.attrs[a_name] = a_val
         else:  # copy everything else
             fid_in.copy(p, grp_ident)
-    # fix DM flag
-    grp_ident['diagnosticModeFlag'][()] = np.uint8(0)
+    # update some fields in kwargs
+    for key, val in kwargs.items():
+        grp_ident[key][()] = val
 
 
 def create_echo_dataset_h5(fid_in, fid_out, band_path, txrx_pol,
@@ -348,25 +377,94 @@ def create_slantrange_update_range_h5(
         fid_out[item_path][()] = val
 
 
-def update_subswath_h5(fid_out, sbsw_path_prefix, sbswath):
+def dump_subswath_h5(fid_out, tx_path, sbswath):
     """
-    Update valid subswath values for an existing fields in new hdf5
-    product.
+    Dump valid subswath values to output HDF5 product.
 
     Parameters
     ----------
     fid_out : h5py.File
         File-like object for output HDF5 L0B product
-    sbsw_path_prefix : str
-        Path prefix for all validsubswath datasets in L0B HDF5 product.
+    tx_path : str
+        TX path where datasets "validSamplesSubSwath*" are located.
     sbswath : np.ndarray(int)
         3-D array for all valid subswaths to be used for the output product.
 
     """
-    num_sbsw, _, _ = sbswath.shape
+    num_sbsw, nrgls, nitems = sbswath.shape
+    shape_sbsw = (nrgls, nitems)
+    grp = fid_out[tx_path]
+    # update number of subswath
+    grp['numberOfSubSwaths'][()] = num_sbsw
+    # create/dump validsubswath datasets
     for n in range(num_sbsw):
-        sbsw_path = sbsw_path_prefix + f'{n + 1}'
-        fid_out[sbsw_path][...] = sbswath[n]
+        sbsw_name = f'validSamplesSubSwath{n + 1}'
+        grp.require_dataset(
+            sbsw_name, shape=shape_sbsw, dtype=sbswath.dtype, data=sbswath[n]
+        )
+
+
+def copy_datasets_truncated_dm1(
+        fid_in, fid_out, band_path_in, band_path, pol, pulse_slice,
+        logger, keys):
+    """
+    Copy truncated version of non-echo pulse-dependent datasets under
+    either tx or rx group from input DM1 HDF5 to output one given desired
+    input pulse slice.
+    The type of tx or rx is determined by the size of pol.
+    If single char then it is tx group and if two-char str then
+    it will be dataset under rx group
+
+    Paramaters
+    ----------
+    fid_in : h5py.File
+        File-like object for input HDF5 L0B product
+    fid_out : h5py.File
+        File-like object for output HDF5 L0B product
+    band_path_in : str
+        Frequency band path of input L0B HDF5 product.
+    band_path : str
+        Frequency band path of output L0B HDF5 product.
+    pol : str
+        Either signle-char tx pol or two-char TxRx polarization
+        of the new echo product
+    pulse_slice : slice
+        Desired pulse slice from input HDF5 file.
+    logger: logging.Logger
+    keys: sequence of str
+        Desired keys under RX group to be copied as long as
+        they exist in input hdf5.
+
+    Notes
+    -----
+    For input DM1, RX and TX pols are the same and they are sitting
+    under the same frequency band as opposed to the output science version.
+
+    """
+    path_in = _join_paths(band_path_in, f'tx{pol[0]}/')
+    path = _join_paths(band_path, f'tx{pol[0]}/')
+    if len(pol) == 2:
+        # XXX for input DM1, RX and TX pols are the same!
+        path_in += f'rx{pol[0]}/'
+        path += f'rx{pol[1]}/'
+    # output group
+    grp_out = fid_out[path]
+    for name in set(keys):
+        try:
+            dset_in = fid_in[path_in + name]
+        except KeyError as err:
+            logger.warning(
+                f'Missing dataset "{path_in + name}" in input L0B!'
+                f' Detailed Error -> "{err}"'
+            )
+            continue
+        else:
+            data_in = dset_in[pulse_slice]
+            dset_out = grp_out.require_dataset(
+                name, shape=data_in.shape, dtype=data_in.dtype, data=data_in)
+            # copy attributes for the product from input
+            for a_name, a_val in dset_in.attrs.items():
+                dset_out.attrs[a_name] = a_val
 
 
 def form_products_dm1(raw: Raw):
@@ -451,6 +549,13 @@ def number_valid_subswath(sbsw):
 
 def nisar_l0b_dm1_to_science(args):
     """Create NISAR science L0B from DM1 L0B product"""
+    # Const
+    # list of rx/tx dataset keys/names to be resized/reproduced
+    # in truncated output HDF5
+    rx_keys = ('caltone', 'RD', 'WD', 'WL', 'basebandPhaseCorrection',
+               'TRMDataWindow', 'attenuation')
+    tx_keys = ('rangeLineIndex', 'radarTime', 'UTCtime', 'txPhase',
+               'calType', 'chirpCorrelator')
 
     tic = time.time()
     # set logger
@@ -499,6 +604,39 @@ def nisar_l0b_dm1_to_science(args):
     # get ref epoch and build AZ slice generator
     epoch, azt_raw = raw.getPulseTimes(freq_band_in, txrx_pol[0])
     n_rgl_tot = azt_raw.size
+    logger.info(f'Total available number of pulses in L0B -> {n_rgl_tot}')
+
+    # Get start and end pulse index of input product to be processed
+    # expect at least one range line to be processed!
+    # Check the start time and get its pulse index
+    azt_rel = azt_raw - azt_raw[0]
+    if (args.time_start < 0) or not (args.time_start < azt_rel[-1]):
+        raise ValueError(
+            f'"time-start" shall be within [0, {azt_rel[-1]}) (sec)!')
+    # start time is inclusive!
+    start_pulse_idx = np.searchsorted(
+        azt_rel, args.time_start, side='right') - 1
+    # Check the stop time and get its pulse index
+    if args.time_stop is None:
+        stop_pulse_idx = n_rgl_tot
+    else:
+        if args.time_stop < azt_rel[start_pulse_idx + 1]:
+            raise ValueError('"time-stop" shall be equal or larger than '
+                             f'{azt_rel[start_pulse_idx + 1]} (sec)')
+        # stop time is exclusive!
+        stop_pulse_idx = np.searchsorted(
+            azt_rel, args.time_stop, side='left') - 1
+    logger.info('(start, stop) 0-based pulse index to be processed -> '
+                f'({start_pulse_idx}, {stop_pulse_idx})')
+    pulse_slice = slice(start_pulse_idx, stop_pulse_idx)
+    # get number of pulses to be processed
+    num_pulses = stop_pulse_idx - start_pulse_idx
+    logger.info(f'Number of pulses for output L0B -> {num_pulses}')
+    # Get start and end UTC datetime for output L0B products
+    start_dt_utc = (epoch + TimeDelta(azt_raw[start_pulse_idx])).isoformat()
+    end_dt_utc = (epoch + TimeDelta(azt_raw[stop_pulse_idx - 1])).isoformat()
+    logger.info('(start, end) datetime for output L0B -> '
+                f'({start_dt_utc}, {end_dt_utc})')
 
     # form BFPQ LUT for uniform quantizer to be used for output product
     if args.sign_mag:
@@ -513,11 +651,17 @@ def nisar_l0b_dm1_to_science(args):
     # BFPQ decoder for basebanded requantized 16-bit output raw echo
     bfpq_uq_16bit = build_uniform_quantizer_lut_l0b(16)
 
+    def utc2filename(dt_utc: str) -> str:
+        """Datetime UTC string into filename string"""
+        return datetime.fromisoformat(dt_utc[:19]).strftime('%Y%m%dT%H%M%S')
+
     # get in/out files and file objects
     p_in = Path(args.l0b_file)
     out_path = Path(args.out_path)
     if args.prod_name is None:
-        suffix = '_Science.h5'
+        utc_first = utc2filename(start_dt_utc)
+        utc_last = utc2filename(end_dt_utc)
+        suffix = f'_SCIENCE_{utc_first}_{utc_last}.h5'
         file_out = p_in.stem + suffix
     else:
         file_out = args.prod_name
@@ -536,10 +680,15 @@ def nisar_l0b_dm1_to_science(args):
         logger.warning(f'Missing group "{hrt_path}" in input L0B!'
                        f' Detailed Error -> "{err}"')
     # copy the entire identification into the output product
-    # but modify diagnostic mode flags from DM2 to DBF
-    # and update list of frequencies
+    # but modify diagnostic mode flags from DM2 to DBF,
+    # update start/end zero-Doppler time, and update list of frequencies
+    kwarg_ident = dict()
+    kwarg_ident['diagnosticModeFlag'] = np.uint8(0)
+    kwarg_ident['zeroDopplerStartTime'] = np.bytes_(start_dt_utc)
+    kwarg_ident['zeroDopplerEndTime'] = np.bytes_(end_dt_utc)
     copy_update_identification_h5(
-        fid_in, fid_out, raw.IdentificationPath, list(frq_pol_out))
+        fid_in, fid_out, raw.IdentificationPath, list(frq_pol_out),
+        **kwarg_ident)
 
     # get number of valid subswath
     sbswath = raw.getSubSwaths(freq_band_in, txrx_pol[0])
@@ -550,15 +699,25 @@ def nisar_l0b_dm1_to_science(args):
     logger.info(
         f'Number of subswath in the output file -> {n_sbsw}'
     )
-    # copy entire swath except for TxRx echo products and slant range
+    # copy entire swath except for TxRx echo products and slant range,
+    # validsubswaths and optional TX/RX keys
     copy_swath_except_echo_sr_h5(
-        fid_in, fid_out, raw.SwathPath, frq_pol_out, freq_band_in, n_sbsw)
-
-    # loop over all products and bands
+        fid_in, fid_out, raw.SwathPath, frq_pol_out, freq_band_in, n_sbsw,
+        tx_keys=tx_keys, rx_keys=rx_keys
+    )
     # form a vector of range line slices used for all products
-    rgl_slices = list(slice_gen(n_rgl_tot, args.num_rgl))
+    rgl_slices = list(
+        slice_gen(num_pulses, args.num_rgl, idx_start=start_pulse_idx)
+    )
     logger.info(f'Number of AZ blocks -> {len(rgl_slices)}')
-
+    # Build slices for output L0B that always starts from zero index
+    if start_pulse_idx == 0:
+        rgl_slices_out = rgl_slices
+    else:
+        rgl_slices_out = list(
+            slice_gen(num_pulses, args.num_rgl, idx_start=0)
+        )
+    # loop over all output products and bands
     for freq_band in frq_pol_out:
         # group path for frequency band
         band_path = raw.BandPath(freq_band) + '/'
@@ -567,6 +726,16 @@ def nisar_l0b_dm1_to_science(args):
             logger.info(
                 f'Processing frequency band {freq_band} and Pol '
                 f'{txrx_pol} ...')
+
+            # copy truncated tx/rx datasets per desired rx/tx keys
+            copy_datasets_truncated_dm1(
+                fid_in, fid_out, band_path_in, band_path, txrx_pol[0],
+                pulse_slice, logger, keys=tx_keys
+            )
+            copy_datasets_truncated_dm1(
+                fid_in, fid_out, band_path_in, band_path, txrx_pol,
+                pulse_slice, logger, keys=rx_keys
+            )
 
             # product group path
             tx_grp = band_path + f'tx{txrx_pol[0]}/'
@@ -612,7 +781,7 @@ def nisar_l0b_dm1_to_science(args):
                     'It will be replaced!')
                 dset.table[...] = bfpq_uq
 
-            nazb, nrgb_in = dset.shape
+            _, nrgb_in = dset.shape
             nrgb_up = nrgb_in * flt.upfact
             nrgb_out = round(nrgb_up / flt.downfact)
             logger.info(f'Number of output complex samples -> {nrgb_out}')
@@ -655,26 +824,27 @@ def nisar_l0b_dm1_to_science(args):
             rgb_scalar = 1 / rng_space_scalar
             def scale_rgb(b): return np.int_(np.round(b * rgb_scalar))
             # adjust the range bins in valid sub swath array
-            sbswath = raw.getSubSwaths(freq_band_in, txrx_pol[0])[:n_sbsw]
+            sbswath = raw.getSubSwaths(
+                freq_band_in, txrx_pol[0])[:n_sbsw, pulse_slice]
             sbswath[...] = scale_rgb(sbswath)
             sbswath[sbswath > nrgb_out] = nrgb_out
-            # update valid subswaths values in L0B
-            sbsw_path_prefix = tx_grp + 'validSamplesSubSwath'
-            update_subswath_h5(fid_out, sbsw_path_prefix, sbswath)
+            # copy valid subswaths in L0B
+            dump_subswath_h5(fid_out, tx_grp, sbswath)
 
             # create a placeholder for echo product and use uniform-quantizer
             # BFPQ LUT in place of BFPQ ones.
             dset_prod_out = create_echo_dataset_h5(
-                fid_in, fid_out, band_path, txrx_pol, (nazb, nrgb_out),
+                fid_in, fid_out, band_path, txrx_pol, (num_pulses, nrgb_out),
                 dset.dtype_storage, args.comp_level_h5, band_path_in)
 
             bfpq_path = prod_grp + 'BFPQLUT'
             fid_out[bfpq_path][:] = bfpq_uq_16bit
 
             # loop over AZ blocks
-            for n_blk, rgl_slice in enumerate(rgl_slices, start=1):
+            for n_blk, (rgl_slice, rgl_slice_o) in enumerate(
+                    zip(rgl_slices, rgl_slices_out), start=1):
                 logger.info(f'Processing AZ block # {n_blk} ...')
-
+                logger.info(f'Processing input rangelines -> {rgl_slice}')
                 # perform filtering in range per AZ block
                 echo_flt = range_filtering_per_az_block(
                     dset[rgl_slice], coefs_flt_fft, flt, n_cpu
@@ -701,7 +871,7 @@ def nisar_l0b_dm1_to_science(args):
                 # quantize and recast
                 dset_prod_out.write_direct(
                     echo_flt.view('f4').round().astype('uint16').view(
-                        dset.dtype_storage), dest_sel=rgl_slice)
+                        dset.dtype_storage), dest_sel=rgl_slice_o)
 
     # close in/out HDF5 files
     fid_in.close()

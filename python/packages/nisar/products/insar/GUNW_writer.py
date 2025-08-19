@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 from isce3.io import optimize_chunk_size
+from nisar.products.utils import to_bytes
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.workflows.helpers import get_cfg_freq_pols
 
@@ -48,9 +49,9 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         """
         InSARBaseWriter.add_root_attrs(self)
 
-        self.attrs["title"] = np.bytes_("NISAR L2 GUNW Product")
+        self.attrs["title"] = to_bytes("NISAR L2 GUNW Product")
         self.attrs["reference_document"] = \
-            np.bytes_("D-102272 NISAR NASA SDS Product Specification"
+            to_bytes("D-102272 NISAR NASA SDS Product Specification"
                        " L2 Geocoded Unwrapped Interferogram")
 
         ctype = h5py.h5t.py_create(np.complex64)
@@ -126,9 +127,9 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                             **create_dataset_kwargs)
 
                 ds.attrs['_FillValue'] = np.nan
-                ds.attrs['description'] = np.bytes_(descr)
-                ds.attrs['units'] = Units.radian
-                ds.attrs['grid_mapping'] = np.bytes_('projection')
+                ds.attrs['description'] = to_bytes(descr)
+                ds.attrs['units'] = to_bytes(Units.radian)
+                ds.attrs['grid_mapping'] = to_bytes('projection')
 
                 ds.dims[0].attach_scale(zds)
                 ds.dims[1].attach_scale(yds)
@@ -163,11 +164,11 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
             number_of_slant_range_looks = \
                 self[f'{new_igram_group_name}/frequency{freq}/numberOfRangeLooks']
             number_of_azimuth_looks.attrs['description'] = \
-                np.bytes_('Number of looks applied in the'
+                to_bytes('Number of looks applied in the'
                           ' along-track direction to form the'
                           ' unwrapped interferogram')
             number_of_slant_range_looks.attrs['description'] = \
-                np.bytes_('Number of looks applied in the'
+                to_bytes('Number of looks applied in the'
                           ' slant range direction to form the'
                           ' unwrapped interferogram')
 
@@ -186,10 +187,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         for rslc_name in ['reference', 'secondary']:
             rslc = self[self.group_paths.ParametersPath][rslc_name]
             rslc['referenceTerrainHeight'].attrs['description'] = \
-                np.bytes_("Reference Terrain Height as a function of"
+                to_bytes("Reference terrain height as a function of"
                            f" map coordinates for {rslc_name} RSLC")
             rslc['referenceTerrainHeight'].attrs['units'] = \
-                Units.meter
+               to_bytes(Units.meter)
 
     def add_grids_to_hdf5(self):
         """
@@ -201,7 +202,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         geogrids = pcfg["geocode"]["geogrids"]
         wrapped_igram_geogrids = pcfg["geocode"]["wrapped_igram_geogrids"]
 
-        grids_val = np.bytes_("projection")
+        grids_val = "projection"
 
         # Only add the common fields such as list of polarizations, pixel offsets, and center frequency
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
@@ -273,7 +274,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                      " where 1 is water and 0 is non-water;"
                      " the second digit represents the subswath number of that pixel in the reference RSLC;"
                      " the least-significant digit represents the subswath number of that pixel in the secondary RSLC."
-                     " A value of '0' in either subswath digit indicates an invalid sample in the corresponding RSLC"),
+                     " A value of 0 in either subswath digit indicates an invalid sample in the corresponding RSLC"),
                     grid_mapping=grids_val,
                     xds=xds,
                     yds=yds,

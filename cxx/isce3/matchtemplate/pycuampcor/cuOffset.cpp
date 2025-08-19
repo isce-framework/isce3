@@ -21,7 +21,7 @@ void  cudaKernel_maxloc2D(const float* const images, int2* maxloc, float* maxval
     const int imageSize = imageNX * imageNY;
 
     for (int bid = 0; bid < nImages; bid++) {
-        float my_maxval = std::numeric_limits<float>::min();
+        float my_maxval = std::numeric_limits<float>::lowest();
         int2 my_maxloc;
         const float* image = &images[bid * imageSize];
         for (int i = 0; i < imageSize; i++) {

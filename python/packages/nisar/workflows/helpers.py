@@ -6,6 +6,7 @@ import datetime
 import os
 import pathlib
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 import json
 import h5py
@@ -69,7 +70,8 @@ def build_uniform_quantizer_lut_l0b(
     return bfpq_uq
 
 
-def slice_gen(n_smp: int, n_smp_blk: int) -> slice:
+def slice_gen(
+        n_smp: int, n_smp_blk: int, idx_start: int = 0) -> Iterator[slice]:
     """slice generator.
 
     Parameters
@@ -78,6 +80,8 @@ def slice_gen(n_smp: int, n_smp_blk: int) -> slice:
         Total number of samples
     n_smp_blk : int
         Number of samples per full block
+    idx_start : int, default=0
+        Start index.
 
     Yields
     ------
@@ -87,17 +91,16 @@ def slice_gen(n_smp: int, n_smp_blk: int) -> slice:
         number of samples than `n_smp_blk`!
 
     """
-    n_blk = int(np.ceil(n_smp / n_smp_blk))
-    for n in range(n_blk):
-        i_start = n * n_smp_blk
-        i_stop = min(n_smp, i_start + n_smp_blk)
+    idx_max = n_smp + idx_start
+    for i_start in range(idx_start, idx_max, n_smp_blk):
+        i_stop = min(idx_max, i_start + n_smp_blk)
         yield slice(i_start, i_stop)
 
 
 def copols_or_desired_pols_from_raw(
         raw: 'nisar.products.readers.Raw',
         freq_band: str | None = None,
-        txrx_pol:str | None = None
+        txrx_pol: str | None = None
         ) -> dict[str, list[str]]:
     """
     Get list of transmit-receive polarization names of either all co-pol
