@@ -946,10 +946,11 @@ class BaseWriterSingleInput():
         for runconfig_line in runconfig_str.split("\n"):
             if ':' not in runconfig_line:
                 continue
-            var_name = runconfig_line.split(':')[0].strip()
+            runconfig_line_splitted = runconfig_line.split(':')
+            var_name = runconfig_line_splitted[0].strip()
 
             if field_name == var_name:
-                return runconfig_line.split(':')[1].strip()
+                return runconfig_line_splitted[1].strip()
         return
 
     def check_and_decorate_product_using_specs_xml(self, specs_xml_file,
