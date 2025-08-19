@@ -911,7 +911,7 @@ class BaseWriterSingleInput():
         Parameters
         ----------
         field_name: str
-            Field name from input product
+            Field name from the runconfig associated with the input product.
 
         Returns
         -------
