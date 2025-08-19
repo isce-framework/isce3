@@ -138,7 +138,6 @@ def run(cfg):
             rslc_datasets = []
             gslc_datasets = []
 
-            #stats_complex_list = [stats_complex() for _ in pol_list]
             stats_complex_list = [StatsRealImagFloat32() for _ in pol_list]
 
             for polarization in pol_list:
