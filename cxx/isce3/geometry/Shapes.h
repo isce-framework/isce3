@@ -56,8 +56,14 @@ namespace isce3 { namespace geometry {
             double other_MaxX_wrap = wrap360(other.MaxX);
 
 
-            // longitudinal arc longer than 180 degrees mean that
-            // the min / max needs to be swapped because it violates the assumption.
+            // In general, `MinX` is the east edge and `MaxX` is the west edge,
+            // unless the bounding box contained the antimeridian and the
+            // coordinates weren't "unwrapped" (such as if the bounding box
+            // was created using `Perimeter::getEnvelope()`). We assume this is
+            // the case if the difference between `MaxX` and `MinX` exceeds 180
+            // degrees. In this case, we can normalize the bounding box by
+            // swapping `MinX` and `MaxX` and re-wrapping the coordinates to the
+            // interval [0, 360).
             if (MaxX - MinX > 180.0) {
                 std::swap(MinX_wrap, MaxX_wrap);
             }
