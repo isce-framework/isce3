@@ -42,6 +42,7 @@ geometry/geometry/geometry_equator.cpp
 geometry/rtc/rtc.cpp
 geometry/topo/topo.cpp
 geometry/bbox/geoperimeter_equator.cpp
+geometry/bbox/merge.cpp
 geometry/metadata_cubes/metadata_cubes.cpp
 geogrid/relocate_raster.cpp
 image/resampslc/resampslc.cpp

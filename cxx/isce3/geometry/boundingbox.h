@@ -146,7 +146,7 @@ BoundingBox getGeoBoundingBoxHeightSearch(
  * outwardly expand each geogrid corner to search for geo2rdr convergence. An
  * outward extension shifts a corner by (geogrid.dx, geogrid.dy) (default: 100)
  * @returns                 RadarGridBoundingBox object defines radar grid
- *      bouding box - contains indices of first_azimuth_line,
+ *      bounding box - contains indices of first_azimuth_line,
  *      last_azimuth_line, first_range_sample, last_range_sample
  */
 RadarGridBoundingBox getRadarBoundingBox(
@@ -192,7 +192,7 @@ RadarGridBoundingBox getRadarBoundingBox(
  * outwardly expand each geogrid corner to search for geo2rdr convergence. An
  * outward extension shifts a corner by (geogrid.dx, geogrid.dy) (default: 100)
  * @returns                 RadarGridBoundingBox object defines radar grid
- *      bouding box - contains indices of first_azimuth_line,
+ *      bounding box - contains indices of first_azimuth_line,
  *      last_azimuth_line, first_range_sample, last_range_sample
  */
 RadarGridBoundingBox getRadarBoundingBox(
