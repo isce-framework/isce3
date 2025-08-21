@@ -61,19 +61,18 @@ def get_static_layers_data_access(static_layers_data_access_runconfig,
     -------
     static_layers_data_access: str
         An URL representing the static layers data access with all
-        placeholders replaced.
+        placeholders replaced. Returns "(NOT SPECIFIED)" if
+        `static_layers_data_access_runconfig` is None or an empty
+        string.
     """
 
     if not static_layers_data_access_runconfig:
-        return
+        return '(NOT SPECIFIED)'
 
     static_layers_data_access = static_layers_data_access_runconfig
 
-    if not static_layers_data_access:
-        return '(NOT SPECIFIED)'
-
     if '{granule_id}' in static_layers_data_access_runconfig:
-        if granule_id == '(NOT SPECIFIED)':
+        if not granule_id or granule_id == '(NOT SPECIFIED)':
             error_msg = ('The placeholder "{granule_id}" is included in'
                          ' the runconfig field'
                          ' "static_layers_data_access", but the'
