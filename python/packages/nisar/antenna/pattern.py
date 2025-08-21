@@ -150,6 +150,12 @@ class AntennaPattern:
         vairations expected to be less than 0.05 dB and 0.25 deg, respectively.
         This can speed up the antenna pattern computation. If None, it will be
         ignored.
+    max_p2p_gain : float or None, default=12.0
+        Max relative peak-to-peak dynamic range of two-way antenna gain over
+        entire swath in (dB) for all polarization combinations in`raw`.
+        This normalization will preserve relative gain changes over various
+        polarizations. Must be a value > 0 dB. If None, it will preserve full
+        dynamic range of the antenna gain over the entire swath.
 
     """
 
@@ -158,7 +164,8 @@ class AntennaPattern:
                  orbit: Orbit, attitude: Attitude,
                  *, el_lut=None,
                  norm_weight=True,
-                 el_spacing_min=8.72665e-5):
+                 el_spacing_min=8.72665e-5,
+                 max_p2p_gain=12.0):
 
         self.orbit = orbit.copy()
         self.attitude = attitude.copy()
@@ -166,7 +173,15 @@ class AntennaPattern:
         self.norm_weight = norm_weight
         self.el_spacing_min = el_spacing_min
         self.el_lut = el_lut
-
+        # get min/max amp rato in linear scale
+        # for limiting dynamic range of 2-way antenna gain
+        if max_p2p_gain is None:
+            self.min2max_amp_lin = None
+        else:
+            if not (max_p2p_gain > 0):
+                raise ValueError('"max_p2p_gain" must be a positive value '
+                                 f'but got {max_p2p_gain}')
+            self.min2max_amp_lin = 10 ** (-max_p2p_gain/20)
         # get pols
         channels = PolChannelSet.from_raw(raw)
         freqs = tuple({chan.freq_id for chan in channels})
@@ -429,5 +444,22 @@ class AntennaPattern:
         for pol in txrx_pols:
             tx_p, rx_p = pol[0], pol[1]
             pat2w[pol] = np.squeeze(tx_bmf_pat[tx_p] * rx_dbf_pat[rx_p])
+
+        # limit the dynamic range
+        if self.min2max_amp_lin is not None:
+            pat2w_amp = dict.fromkeys(pat2w)
+            # get the amp and max 2-way amplitude over all pols
+            max_amp = 0
+            for pol in txrx_pols:
+                pat2w_amp[pol] = np.abs(pat2w[pol])
+                max_amp = max(max_amp, np.nanmax(pat2w_amp[pol]))
+            if not np.isclose(max_amp, 0, atol=1e-7):
+                min_amp = self.min2max_amp_lin * max_amp
+                # limit min amp to `min_amp` over all pols while
+                # preserving the phase
+                for pol in txrx_pols:
+                    mask_low = (pat2w_amp[pol] < min_amp)
+                    pat2w[pol][mask_low] = min_amp * np.exp(
+                        1j * np.angle(pat2w[pol][mask_low]))
 
         return pat2w
