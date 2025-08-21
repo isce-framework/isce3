@@ -71,7 +71,8 @@ class GCOVRunConfig(RunConfig):
                 if has_mixed_nominal_and_receive_only[freq]:
                     continue
 
-                # Verify if frequency to process is full-pol
+                # Verify if frequency to process is full-pol. It's considered
+                # full-pol if it contains both co-pols and at least one cross-pol.
                 if (all([pol in pol_list
                         for pol in ['HH', 'VV', 'HV']]) or
                     all([pol in pol_list
