@@ -190,8 +190,10 @@ runconfig:
                 list_of_frequencies:
 
                 # Flag indicating whether the output GCOV product should include
-                # off-diagonal covariance elements. If False, only the diagonal
-                # elements are included. If empty, `fullcovariance` is set to
+                # off-diagonal covariance elements. If `False`, only the diagonal
+                # elements are included.
+                #
+                # If empty, `fullcovariance` is set to
                 # `True` any frequency to be processed includes a full-pol dataset
                 # (i.e. includes both co-pols and at least one cross-pol), and
                 # `False` otherwise. 

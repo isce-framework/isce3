@@ -55,8 +55,8 @@ class GCOVRunConfig(RunConfig):
                 for pol in pol_list:
                     is_receive_only = slc_obj.isSlcDatasetReceiveOnly(
                         frequency=freq, polarization=pol)
-                        n_nominal_pol += int(not is_receive_only)
-                        n_receive_only_pol += int(is_receive_only)
+                    n_nominal_pol += int(not is_receive_only)
+                    n_receive_only_pol += int(is_receive_only)
 
                 has_mixed_nominal_and_receive_only[freq] = \
                     n_nominal_pol > 0 and n_receive_only_pol > 0
