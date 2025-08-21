@@ -62,10 +62,10 @@ class GCOVRunConfig(RunConfig):
                     n_nominal_pol > 0 and n_receive_only_pol > 0
 
             # Finally, `fullcovariance` is set to `True` if any frequency
-            # to be processed includes a full-pol dataset
-            # (3 or 4 polarizations) and it does not contain a
-            # mix of "receive-only" and nominal channels; otherwise,
-            # `fullcovariance` is set to `False`.
+            # to be processed includes a full-pol dataset,
+            # i.e., includes both co-pols and at least one cross-pol,
+            # and it does not contain a mix of "receive-only" and nominal
+            # channels; otherwise, `fullcovariance` is set to `False`.
             flag_fullcovariance = False
             for freq, pol_list in freq_pols_dict.items():
                 if has_mixed_nominal_and_receive_only[freq]:
