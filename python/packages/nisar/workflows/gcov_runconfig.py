@@ -24,10 +24,7 @@ class GCOVRunConfig(RunConfig):
             'fullcovariance']
 
         # Handle the case in which the `fullcovariance` flag field is empty.
-        # If so, the YAML parser assigns it the string value `"None"`.
-        if (flag_fullcovariance is None or
-                (isinstance(flag_fullcovariance, str) and
-                 flag_fullcovariance == 'None')):
+        if flag_fullcovariance is None:
 
             # The choice on whether to process in full-covariance mode
             # or not will depend on the list of frequency and polarizations
