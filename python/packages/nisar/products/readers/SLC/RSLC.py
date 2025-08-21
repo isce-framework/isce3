@@ -12,6 +12,7 @@ import isce3
 from nisar.noise import NoiseEquivalentBackscatterProduct
 from isce3.core import DateTime
 from isce3.core.types import ComplexFloat16Decoder, is_complex32
+from nisar.products.readers.Base import get_attribute_from_h5_dataset
 
 from .SLCBase import SLCBase
 
@@ -91,14 +92,11 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
         slc_pol_dataset = self.getSlcDatasetAsNativeComplex(
             frequency=frequency, polarization=polarization)
 
-        if 'isReceiveOnly' not in slc_pol_dataset.attrs.keys():
-            return
+        receive_only_attr = \
+            get_attribute_from_h5_dataset(slc_pol_dataset,
+                                          'isReceiveOnly',
+                                          format_function=str)
 
-        receive_only_attr = slc_pol_dataset.attrs[
-            'isReceiveOnly']
-        if not isinstance(receive_only_attr, str):
-            receive_only_attr = \
-                receive_only_attr.tobytes().decode()
         return receive_only_attr.title() == 'True'
 
     def getProductLevel(self):

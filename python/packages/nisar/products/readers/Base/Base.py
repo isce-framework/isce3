@@ -6,6 +6,44 @@ import journal
 import pyre
 import isce3
 from ..protocols import ProductReader
+import numpy as np
+
+
+def get_attribute_from_h5_dataset(h5_dataset, attribute_name,
+                                  default=None,
+                                  format_function=None):
+    '''
+    Return attribute from an H5 dataset.
+
+    Parameters
+    ----------
+    h5_dataset: h5py.Dataset
+        H5 dataset containing the returning attribute
+    attribute_name: str
+        Name of the attribute to return
+    default: scalar
+        Default value to return if attribute does not
+        exist
+    format_function: function, optional
+        Function to format attribute values
+
+    Returns
+    -------
+    h5_attribute: scalar
+        H5 attribute
+    '''
+    if attribute_name not in h5_dataset.attrs.keys():
+        return default
+
+    h5_attribute = h5_dataset.attrs[attribute_name]
+    if format_function is None:
+        return h5_attribute
+
+    if (format_function == str and
+            isinstance(h5_attribute, np.bytes_)):
+        h5_attribute = h5_attribute.decode()
+
+    return format_function(h5_attribute)
 
 
 def get_hdf5_file_root_path(filename: str, root_path: str = None) -> str:
