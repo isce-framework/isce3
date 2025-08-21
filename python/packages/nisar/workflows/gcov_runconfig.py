@@ -4,7 +4,6 @@ import numpy as np
 import isce3
 from nisar.workflows.runconfig import RunConfig
 from nisar.products.readers import SLC
-import h5py
 
 
 class GCOVRunConfig(RunConfig):
@@ -50,29 +49,17 @@ class GCOVRunConfig(RunConfig):
             input_file_path = self.cfg['input_file_group']['input_file_path']
             slc_obj = SLC(hdf5file=input_file_path)
 
-            with h5py.File(input_file_path, 'r', swmr=True) as h5_obj:
-                for freq, pol_list in freq_pols_dict.items():
-                    n_nominal_pol = 0
-                    n_receive_only_pol = 0
-                    for pol in pol_list:
-                        slc_pol_path = (f'{slc_obj.ProductPath}/swaths/'
-                                        f'frequency{freq}/{pol}')
-                        slc_pol_dataset = h5_obj[slc_pol_path]
-                        is_receive_only = False
-                        if 'isReceiveOnly' in slc_pol_dataset.attrs.keys():
-                            receive_only_attr = slc_pol_dataset.attrs[
-                                'isReceiveOnly']
-                            if not isinstance(receive_only_attr, str):
-                                receive_only_attr = \
-                                    receive_only_attr.tobytes().decode()
-                            is_receive_only = \
-                                receive_only_attr.title() == 'True'
-
+            for freq, pol_list in freq_pols_dict.items():
+                n_nominal_pol = 0
+                n_receive_only_pol = 0
+                for pol in pol_list:
+                    is_receive_only = slc_obj.isSlcDatasetReceiveOnly(
+                        frequency=freq, polarization=pol)
                         n_nominal_pol += int(not is_receive_only)
                         n_receive_only_pol += int(is_receive_only)
 
-                    has_mixed_nominal_and_receive_only[freq] = \
-                        n_nominal_pol > 0 and n_receive_only_pol > 0
+                has_mixed_nominal_and_receive_only[freq] = \
+                    n_nominal_pol > 0 and n_receive_only_pol > 0
 
             # Finally, `fullcovariance` is set to `True` if any frequency
             # to be processed includes a full-pol dataset

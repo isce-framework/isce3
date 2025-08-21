@@ -84,6 +84,23 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
         else:
             return dataset
 
+    def isSlcDatasetReceiveOnly(
+            self,
+            frequency: str,
+            polarization: str):
+        slc_pol_dataset = self.getSlcDatasetAsNativeComplex(
+            frequency=frequency, polarization=polarization)
+
+        if 'isReceiveOnly' not in slc_pol_dataset.attrs.keys():
+            return
+
+        receive_only_attr = slc_pol_dataset.attrs[
+            'isReceiveOnly']
+        if not isinstance(receive_only_attr, str):
+            receive_only_attr = \
+                receive_only_attr.tobytes().decode()
+        return receive_only_attr.title() == 'True'
+
     def getProductLevel(self):
         """
         Returns the product level
