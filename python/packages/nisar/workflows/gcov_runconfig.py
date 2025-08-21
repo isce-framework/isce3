@@ -55,6 +55,12 @@ class GCOVRunConfig(RunConfig):
                 for pol in pol_list:
                     is_receive_only = slc_obj.isSlcDatasetReceiveOnly(
                         frequency=freq, polarization=pol)
+
+                    # if undetermined if the channel has been acquired
+                    # in receive-only, assume it has been acquired
+                    # nominally (i.e., is_receive_only = False)
+                    if is_receive_only is None:
+                        is_receive_only = False
                     n_nominal_pol += int(not is_receive_only)
                     n_receive_only_pol += int(is_receive_only)
 
