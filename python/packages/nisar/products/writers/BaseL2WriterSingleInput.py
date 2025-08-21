@@ -860,7 +860,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         static_layers_data_access_runconfig = \
             self.cfg['ceos_analysis_ready_data']['static_layers_data_access']
 
-        static_layers_data_access = self.get_static_layers_data_access(
+        static_layers_data_access = get_static_layers_data_access(
             static_layers_data_access_runconfig, self.granule_id)
 
         self.set_value(
