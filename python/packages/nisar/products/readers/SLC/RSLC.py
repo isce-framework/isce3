@@ -89,6 +89,23 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
             self,
             frequency: str,
             polarization: str):
+        '''
+        Returns if an SLC dataset has been acquired in "receive-only"
+        mode
+
+        Parameters
+        ----------
+        freq : "A" or "B"
+            The frequency letter, either "A" or "B".
+        pol: str
+            The polarization term associated with the SLC dataset
+
+        Returns
+        -------
+        is_receive_only: bool or None
+            Flag indicating whether the SLC has been acquired in
+            receive-only mode, or None if undetermined.
+        '''
         slc_pol_dataset = self.getSlcDatasetAsNativeComplex(
             frequency=frequency, polarization=polarization)
 
@@ -96,6 +113,8 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
             get_attribute_from_h5_dataset(slc_pol_dataset,
                                           'isReceiveOnly',
                                           format_function=str)
+        if receive_only_attr is None:
+            return
 
         return receive_only_attr.title() == 'True'
 
