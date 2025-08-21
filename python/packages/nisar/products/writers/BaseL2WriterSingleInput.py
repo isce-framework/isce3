@@ -42,6 +42,53 @@ LUT_1D_AZ_DATASETS_LUT_EXPANSION_ALONG_RG_MARGIN_IN_PIXELS = 5
 LUT_1D_RG_DATASETS_LUT_EXPANSION_ALONG_AZ_MARGIN_IN_PIXELS = 5
 
 
+def get_static_layers_data_access(static_layers_data_access_runconfig,
+                                  granule_id):
+    """
+    Read static layers data access template from the input runconfig field
+    `static_layers_data_access` and replace placeholder(s) with
+    the actual values.
+
+    Parameters
+    ----------
+    static_layers_data_access_runconfig: scalar
+        Value from runconfig field
+        `ceos_analysis_ready_data.static_layers_data_access`
+    granule_id: str
+        Product's granule ID
+
+    Returns
+    -------
+    static_layers_data_access: str
+        An URL representing the static layers data access with all
+        placeholders replaced.
+    """
+
+    if not static_layers_data_access_runconfig:
+        return
+
+    static_layers_data_access = static_layers_data_access_runconfig
+
+    if not static_layers_data_access:
+        return '(NOT SPECIFIED)'
+
+    if '{granule_id}' in static_layers_data_access_runconfig:
+        if granule_id == '(NOT SPECIFIED)':
+            error_msg = ('The placeholder "{granule_id}" is included in'
+                         ' the runconfig field'
+                         ' "static_layers_data_access", but the'
+                         ' field "partial_granule_id" was not provided')
+            error_channel = journal.error('get_static_layers_data_access')
+            error_channel.log(error_msg)
+            raise NotImplementedError(error_msg)
+
+        static_layers_data_access = \
+            static_layers_data_access_runconfig.replace('{granule_id}',
+                                                        granule_id)
+
+    return static_layers_data_access
+
+
 def _get_attribute_dict(band,
                         standard_name=None,
                         long_name=None,
@@ -808,48 +855,17 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'identification/platformName',
             default='(NOT SPECIFIED)')
 
-    def get_static_layers_data_access(self):
-        """
-        Read static layers URL template from the input runconfig field
-        `static_layers_data_access` and replace placeholders with
-        the actual values.
-
-        Returns
-        -------
-        static_layers_data_access : str
-            An URL representing the static layers data access with all
-            placeholders replaced.
-        """
-
-        static_layers_data_access = \
-            self.cfg['ceos_analysis_ready_data']['static_layers_data_access']
-
-        if not static_layers_data_access:
-            return
-
-        if '{granule_id}' in static_layers_data_access:
-            if self.granule_id == '(NOT SPECIFIED)':
-                error_msg = ('The placeholder "{granule_id}" is included in'
-                             ' the runconfig field'
-                             ' "static_layers_data_access", but the'
-                             ' field "partial_granule_id" was not provided')
-                error_channel = journal.error('get_static_layers_data_access')
-                error_channel.log(error_msg)
-                raise NotImplementedError(error_msg)
-
-            static_layers_data_access = \
-                static_layers_data_access.replace('{granule_id}',
-                                                  self.granule_id)
-        return static_layers_data_access
-
     def populate_ceos_analysis_ready_data_parameters_l2_common(self):
 
-        static_layers_data_access = self.get_static_layers_data_access()
+        static_layers_data_access_runconfig = \
+            self.cfg['ceos_analysis_ready_data']['static_layers_data_access']
+
+        static_layers_data_access = self.get_static_layers_data_access(
+            static_layers_data_access_runconfig, self.granule_id)
 
         self.set_value(
             '{PRODUCT}/metadata/ceosAnalysisReadyData/staticLayersDataAccess',
-            static_layers_data_access,
-            default='(NOT SPECIFIED)')
+            static_layers_data_access)
 
         ceos_ard_document_identifier = \
             ('https://ceos.org/ard/files/PFS/SAR/v1.0/CEOS-ARD_PFS'
