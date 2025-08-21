@@ -193,7 +193,8 @@ runconfig:
                 # off-diagonal covariance elements. If False, only the diagonal
                 # elements are included. If empty, `fullcovariance` is set to
                 # `True` any frequency to be processed includes a full-pol dataset
-                # (3 or 4 polarizations), and `False` otherwise
+                # (i.e. includes both co-pols and at least one cross-pol), and
+                # `False` otherwise. 
                 fullcovariance:
 
                 # Flag indicating whether polarimetric symmetrization should be
