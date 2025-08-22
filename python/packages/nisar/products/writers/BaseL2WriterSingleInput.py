@@ -42,36 +42,42 @@ LUT_1D_AZ_DATASETS_LUT_EXPANSION_ALONG_RG_MARGIN_IN_PIXELS = 5
 LUT_1D_RG_DATASETS_LUT_EXPANSION_ALONG_AZ_MARGIN_IN_PIXELS = 5
 
 
-def get_static_layers_data_access(static_layers_data_access_runconfig,
-                                  granule_id):
+def get_static_layers_data_access(
+        static_layers_data_access_template: str | None,
+        granule_id: str | None) -> str:
     """
-    Read static layers data access template from the input runconfig field
-    `static_layers_data_access` and replace placeholder(s) with
-    the actual values.
+    Read the static layers data access template and replace the placeholder
+     "{granule_id}" with the product's granule ID.
 
     Parameters
     ----------
-    static_layers_data_access_runconfig: scalar
-        Value from runconfig field
-        `ceos_analysis_ready_data.static_layers_data_access`
-    granule_id: str
-        Product's granule ID
+    static_layers_data_access_template: str or None
+        Template string for static layers data access. The string may contain
+        the substring "{granule_id}", which will be replaced with the product’s
+        granule ID.
+        If set to `None` or an empty string, the function returns
+        "(NOT SPECIFIED)"
+    granule_id: str or None
+        The granule ID, which will be used to replace the substring
+        "{granule_id}" in `static_layers_data_access_template`.
+        If the granule ID is required but not provided (i.e., `None`,
+         empty string, or "(NOT SPECIFIED)"), the function raises an error.
 
     Returns
     -------
     static_layers_data_access: str
-        An URL representing the static layers data access with all
-        placeholders replaced. Returns "(NOT SPECIFIED)" if
-        `static_layers_data_access_runconfig` is None or an empty
+        The static layers data access string with "{granule_id}" placeholder
+        replaced. Returns "(NOT SPECIFIED)" if
+        `static_layers_data_access_template` is `None` or an empty
         string.
     """
 
-    if not static_layers_data_access_runconfig:
+    if not static_layers_data_access_template:
         return '(NOT SPECIFIED)'
 
-    static_layers_data_access = static_layers_data_access_runconfig
+    static_layers_data_access = static_layers_data_access_template
 
-    if '{granule_id}' in static_layers_data_access_runconfig:
+    if '{granule_id}' in static_layers_data_access_template:
         if not granule_id or granule_id == '(NOT SPECIFIED)':
             error_msg = ('The placeholder "{granule_id}" is included in'
                          ' the runconfig field'
@@ -79,11 +85,11 @@ def get_static_layers_data_access(static_layers_data_access_runconfig,
                          ' field "partial_granule_id" was not provided')
             error_channel = journal.error('get_static_layers_data_access')
             error_channel.log(error_msg)
-            raise NotImplementedError(error_msg)
+            raise ValueError(error_msg)
 
         static_layers_data_access = \
-            static_layers_data_access_runconfig.replace('{granule_id}',
-                                                        granule_id)
+            static_layers_data_access_template.replace('{granule_id}',
+                                                       granule_id)
 
     return static_layers_data_access
 
