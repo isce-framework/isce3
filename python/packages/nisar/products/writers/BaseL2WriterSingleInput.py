@@ -80,9 +80,9 @@ def get_static_layers_data_access(
     if '{granule_id}' in static_layers_data_access_template:
         if not granule_id or granule_id == '(NOT SPECIFIED)':
             error_msg = ('The placeholder "{granule_id}" is included in'
-                         ' the runconfig field'
-                         ' "static_layers_data_access", but the'
-                         ' field "partial_granule_id" was not provided')
+                         ' the static layers data access template,'
+                         ' but the `granule_id` was not provided'
+                         " or is invalid")
             error_channel = journal.error('get_static_layers_data_access')
             error_channel.log(error_msg)
             raise ValueError(error_msg)
