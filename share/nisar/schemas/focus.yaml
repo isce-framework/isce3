@@ -253,6 +253,12 @@ runconfig:
       # If true, fill transmit gaps with zeros to remove loop-back cal pulses.
       zero_fill_gaps: bool(required=False)
 
+      # If true, subtract the azimuth mean from the raw data, which is useful
+      # when the caltone is nearly constant in azimuth but not stationary in
+      # range.  Calculating the mean and subtracting it is done in blocks using
+      # rangecomp.block_size
+      nullify_azimuth_mean: bool(required=False)
+
       # Processing stage switches, mostly for debug.
       # Any missing stages assumed True
       is_enabled:
