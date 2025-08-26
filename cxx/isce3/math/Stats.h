@@ -68,7 +68,19 @@ struct StatsRealImag {
     void update(const std::complex<T>& value);
 
     /** Calculate stats of a new block of data using Welford's algorithm and
-     *  update current estimate with Chan's method. */
+     *  update current estimate with Chan's method.
+     *
+     * @param[in] values    Array of values
+     * @param[in] size      Length of `values`
+     * @param[in] stride    Stride between entries in `values`, such that
+     *                      entry `i` is indexed as `values[i * stride]`
+     * @param[in] parallel  Whether to compute stats in parallel by equally
+     *                      dividing the block among threads.  Supplying `true`
+     *                      or `std::nullopt` both signify parallel processing
+     *                      when compiled with OpenMP.  That is, you must
+     *                      explicity opt out of parallel processing by
+     *                      supplying `false`.
+     */
     void update(const std::complex<T>* values, size_t size, size_t stride = 1,
         const std::optional<bool>& parallel = std::nullopt);
 

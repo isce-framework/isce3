@@ -122,9 +122,20 @@ void addbinding(py::class_<StatsRealImag<T>>& pyStatsRealImag)
         }
     },
     py::arg("x"),
-    py::arg("parallel") = py::none(),
-    R"(Calculate stats of a new block of data using Welford's algorithm and
-    update current estimate with Chan's method.)");
+    py::arg("parallel") = py::none(), R"(
+    Calculate stats of a new block of data using Welford's algorithm and
+    update current estimate with Chan's method.
+
+    Parameters
+    ----------
+    x : array_like
+        Array of complex values
+    parallel : bool, optional
+        Whether to compute stats in parallel by equally dividing the block among
+        threads.  Supplying `True` or `None` both signify parallel processing
+        when compiled with OpenMP.  That is, you must explicity opt out of
+        parallel processing by supplying `False`.
+     )");
 
     pyStatsRealImag.def("update", [](StatsRealImag<T>& self,
             const StatsRealImag<T>& other) {
