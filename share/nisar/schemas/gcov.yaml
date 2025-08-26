@@ -268,6 +268,7 @@ geo2rdr_options:
 qa_options:
     # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
     workflows: include('workflows_options', required=False)
+    software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('qa_reports_options', required=False)
 
@@ -275,8 +276,12 @@ workflows_options:
     validate: bool(required=False)
     qa_reports: bool(required=False)
 
+qa_software_config_options:
+    use_cache: bool(required=False)
+    delete_qa_scratch_files: bool(required=False)
+
 qa_validation_options:
-    metadata_cubes_fail_if_all_nan: bool(required=False)
+    metadata_luts_fail_if_all_nan: bool(required=False)
 
 qa_reports_options:
     backscatter_img:
