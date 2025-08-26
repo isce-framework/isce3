@@ -2,7 +2,6 @@
 #include <isce3/core/Constants.h>
 #include <isce3/core/blockProcessing.h>
 #include <isce3/io/Raster.h>
-#include <optional>
 
 namespace isce3 { namespace math {
 
@@ -79,7 +78,7 @@ struct StatsRealImag {
      *                      ignored when the compiler does not support OpenMP.
      */
     void update(const std::complex<T>* values, size_t size, size_t stride = 1,
-        const bool& parallel = true);
+        bool parallel = true);
 
     /** Initialize from block of data (using Welford's algorithm).
      *
@@ -92,7 +91,7 @@ struct StatsRealImag {
      *                      ignored when the compiler does not support OpenMP.
      */
     StatsRealImag(const std::complex<T>* values, size_t size, size_t stride = 1,
-        const bool& parallel = true);
+        bool parallel = true);
 
     StatsRealImag() = default;
 };

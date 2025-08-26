@@ -147,7 +147,7 @@ void StatsRealImag<T>::update(const StatsRealImag<T>& other)
 
 template<class T>
 StatsRealImag<T>::StatsRealImag(const std::complex<T>* values,
-        size_t size, size_t stride, const bool& parallel)
+        size_t size, size_t stride, bool parallel)
 {
     const auto end = values + size * stride;
     if (parallel) {
@@ -171,7 +171,7 @@ StatsRealImag<T>::StatsRealImag(const std::complex<T>* values,
 
 template<class T>
 void StatsRealImag<T>::update(const std::complex<T>* values,
-        size_t size, size_t stride, const bool& parallel)
+        size_t size, size_t stride, bool parallel)
 {
     const StatsRealImag<T> block_stats(values, size, stride, parallel);
     update(block_stats);
