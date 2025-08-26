@@ -32,54 +32,17 @@ class GCOVRunConfig(RunConfig):
             freq_pols_dict = self.cfg['processing']['input_subset'][
                 'list_of_frequencies']
 
-            # By default, datasets with both receive-only (noise-only) and
-            # nominal (non receive-only) polarimetric channels are NOT
-            # processed in full-covariance mode.
-            #
-            # To verify this, we open the H5 datasets corresponding to the
-            # SLCs to process, defined in `freq_pols_dict()`, and look for
-            # the attribute `isReceiveOnly`.
-            #
-            # We count the number of "receive-only" and nominal channels.
-            # If both are greater than zero, we set the value associated
-            # with the key `frequency` in the dictionary
-            # `has_mixed_nominal_and_receive_only` to `True`; or `False`,
-            # otherwise.
-            has_mixed_nominal_and_receive_only = {}
-            input_file_path = self.cfg['input_file_group']['input_file_path']
-            slc_obj = SLC(hdf5file=input_file_path)
-
-            for freq, pol_list in freq_pols_dict.items():
-                n_nominal_pol = 0
-                n_receive_only_pol = 0
-                for pol in pol_list:
-                    is_receive_only = slc_obj.isSlcDatasetReceiveOnly(
-                        frequency=freq, polarization=pol)
-
-                    # if undetermined if the channel has been acquired
-                    # in receive-only, assume it has been acquired
-                    # nominally (i.e., is_receive_only = False)
-                    if is_receive_only is None:
-                        is_receive_only = False
-                    n_nominal_pol += int(not is_receive_only)
-                    n_receive_only_pol += int(is_receive_only)
-
-                has_mixed_nominal_and_receive_only[freq] = \
-                    n_nominal_pol > 0 and n_receive_only_pol > 0
-
-            # Finally, `fullcovariance` is set to `True` if any frequency
+            # `fullcovariance` is set to `True` if any frequency
             # to be processed includes a full-pol dataset,
-            # i.e., includes both co-pols and at least one cross-pol,
-            # and it does not contain a mix of "receive-only" and nominal
-            # channels; otherwise, `fullcovariance` is set to `False`.
+            # i.e., includes both co-pols HH and VV
+            # and at least one cross-pol HV or VH.
             flag_fullcovariance = False
             for freq, pol_list in freq_pols_dict.items():
-                if has_mixed_nominal_and_receive_only[freq]:
-                    continue
 
                 # Verify if frequency to process is full-pol. It's considered
-                # full-pol if it contains both co-pols and at least one cross-pol.
-                if (('HH' in pol_list) and ('VV' in pol_list) and 
+                # full-pol if it contains both co-pols and at least one
+                # cross-pol.
+                if (('HH' in pol_list) and ('VV' in pol_list) and
                    ('HV' in pol_list or 'VH' in pol_list)):
                     warning_channel.log(
                         'The `fullcovariance` field is empty in the runconfig.'

@@ -195,9 +195,7 @@ runconfig:
                 #
                 # If empty, `fullcovariance` defaults to `True` if any frequency
                 # to be processed includes a full-pol dataset, i.e., includes
-                # both co-pols and at least one cross-pol, and it does not
-                # contain a mix of "receive-only" and nominal channels;
-                # otherwise, `fullcovariance` is set to `False`.
+                # both co-pols HH and VV and at least one cross-pol HV or VH.
                 fullcovariance:
 
                 # Flag indicating whether polarimetric symmetrization should be
