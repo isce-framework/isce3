@@ -1,0 +1,418 @@
+# Run configuration parameters for NISAR STATIC workflow.
+runconfig:
+  groups:
+    dynamic_ancillary_file_group:
+      # [REQUIRED] File path or URL of the input Digital Elevation Model (DEM) raster
+      # file.
+      # Must be an existing file in a GDAL-compatible raster format that spans the
+      # region of interest.
+      # The raster contents should represent height, in meters, above the reference
+      # ellipsoid associated with the coordinate reference system of the raster dataset.
+      dem_raster_file:
+      # [REQUIRED] File path or URL of the input water mask raster file.
+      # Must be an existing file in a GDAL-compatible raster format that spans the
+      # region of interest and conforms to the NISAR Water Mask Product Specification
+      # (JPL D-107710).
+      water_mask_raster_file:
+      # [REQUIRED] Path to the input orbit ephemeris XML file.
+      # Must be an existing XML file conforming to the NISAR Orbit Ephemeris Product
+      # Specification (JPL D-102253) and spanning the desired radar observation time
+      # interval.
+      orbit_xml_file:
+      # [REQUIRED] Path to the input radar pointing XML file.
+      # Must be an existing XML file conforming to the NISAR Radar Pointing Product
+      # Specification (JPL D-102264) and spanning the desired radar observation time
+      # interval.
+      pointing_xml_file:
+
+    product_path_group:
+      # [OPTIONAL] Output product file path.
+      # If the file already exists, it will be overwritten. If the parent directory does
+      # not exist, it will be created.
+      # If not specified, defaults to a file in the current working directory named
+      # according to the naming convention described in the NISAR Static Layers Product
+      # Specification (JPL D-107727).
+      output_hdf5_file:
+      # [OPTIONAL] Directory where the software may write temporary data.
+      # If the directory does not exist, it will be created.
+      # Defaults to a directory named 'scratch' in the current working directory.
+      scratch_dir: scratch
+      # [OPTIONAL] Whether to delete the scratch directory when finished.
+      # Defaults to true.
+      delete_scratch_dir: true
+
+    primary_executable:
+      # [OPTIONAL] Product version string.
+      # Used to populate the '/science/{L,S}SAR/identification/productVersion' dataset
+      # in the output product.
+      # Defaults to '0.0.0'.
+      product_version: "0.0.0"
+      # [OPTIONAL] Digital Object Identifier (DOI) for the product.
+      # Used to populate the '/science/{L,S}SAR/identification/productDoi' dataset in
+      # the output product.
+      # Defaults to '(NOT SPECIFIED)'.
+      product_doi: (NOT SPECIFIED)
+      # [OPTIONAL] Unique 6-digit alphanumeric product version identifier in the science
+      # data production system.
+      # Used to form the granule ID and populate the
+      # '/science/{L,S}SAR/identification/compositeReleaseId' dataset in the output
+      # product.
+      # Must conform to the Composite Release Identifier (CRID) format specified in the
+      # L-SAR Product File Naming Conventions document (JPL D-102255).
+      # Defaults to 'D99999'.
+      composite_release_id: D99999
+      # [OPTIONAL] Processing type.
+      # Used to populate the '/science/{L,S}SAR/identification/processingType' dataset
+      # in the output product.
+      # Must be one of:
+      #   - 'PR': nominal (production)
+      #   - 'OD': custom (on-demand)
+      # Defaults to 'OD'.
+      processing_type: OD
+      # [OPTIONAL] Mission identifier.
+      # Used to form the granule ID and populate the
+      # '/science/{L,S}SAR/identification/missionId' dataset in the output product.
+      # Defaults to 'NISAR'.
+      mission_id: NISAR
+      # [OPTIONAL] Platform name.
+      # Used to populate the '/science/{L,S}SAR/identification/platformName' dataset
+      # in the output product.
+      # Defaults to 'NISAR'.
+      platform_name: NISAR
+      # [OPTIONAL] Instrument name.
+      # Used to populate the '/science/{L,S}SAR/identification/instrumentName' dataset
+      # in the output product.
+      # Defaults to 'L-SAR'.
+      instrument_name: L-SAR
+      # [OPTIONAL] Radio frequency band.
+      # Used to form the granule ID and populate the
+      # '/science/{L,S}SAR/identification/radarBand' dataset in the output product.
+      # Defaults to 'L'.
+      radar_band: L
+      # [OPTIONAL] Data processing center.
+      # Used to form the granule ID and populate the
+      # '/science/{L,S}SAR/identification/processingCenter' dataset in the output
+      # product.
+      # Defaults to '(NOT SPECIFIED)'.
+      processing_center: (NOT SPECIFIED)
+      # [OPTIONAL] UTC date and time of the start of the validity date range for the
+      # resulting product, as a string in ISO 8601 format with integer seconds
+      # precision.
+      # The output STATIC product is valid for use with NISAR products with observation
+      # datetimes not earlier than this datetime but earlier than the validity start
+      # datetime of any future superseding STATIC product.
+      # Defaults to '1970-01-01T00:00:00'.
+      validity_start_datetime: 1970-01-01T00:00:00
+      # [OPTIONAL] Product counter.
+      # An integer in the range [1, 999].
+      # May be used to distinguish multiple products generated with the same inputs and
+      # software version. Should be reset to 1 whenever the CRID is updated.
+      # Defaults to 1.
+      product_counter: 1
+
+    geometry:
+      # [OPTIONAL] Integer identifier of the corresponding NISAR track.
+      # Used to form the granule ID and populate the
+      # '/science/{L,S}SAR/identification/trackNumber' dataset in the output product.
+      # Defaults to 0.
+      relative_orbit_number: 0
+      # [OPTIONAL] Integer identifier of the corresponding NISAR frame.
+      # Used to form the granule ID and populate the
+      # '/science/{L,S}SAR/identification/frameNumber' dataset in the output product.
+      # Defaults to 0.
+      frame_number: 0
+
+    processing:
+      geo_grid:
+        # [OPTIONAL] EPSG code indicating the spatial reference system of the desired
+        # output geographic coordinate grid.
+        # Must be a valid integer EPSG code supported by ISCE3.
+        # Defaults to the same EPSG code as the input DEM raster file.
+        epsg:
+        # [OPTIONAL] X and Y coordinates of the upper-left corner pixel in the output
+        # grid, in the coordinate system and units described by `epsg`.
+        # Defaults to the coordinates of the upper-left corner of the input DEM raster.
+        top_left:
+          x:
+          y:
+        # [OPTIONAL] X and Y coordinates of the lower-right corner pixel in the output
+        # grid, in the coordinate system and units described by `epsg`.
+        # Must satisfy `bottom_right.x` >= `top_left.x` and `bottom_right.y` <=
+        # `top_left.y`.
+        # The exact lower-right corner of the output grid may differ from the
+        # coordinates specified here if `bottom_right.x` - `top_left.x` is not an
+        # integer multiple of `posting.x` or `top_left.y` - `bottom_right.y` is not an
+        # integer multiple of `posting.y`.
+        # Defaults to the coordinates of the lower-right corner of the input DEM raster.
+        bottom_right:
+          x:
+          y:
+        # [OPTIONAL] X and Y spacing between pixels in the output grid, in units
+        # determined by `epsg`.
+        # Must be > 0 (the output grid always has North-up, West-left orientation).
+        # Defaults to the pixel spacing values of the input DEM raster.
+        posting:
+          x:
+          y:
+
+      ephemeris:
+        # [OPTIONAL] UTC date and time of the start of the radar observation, as a
+        # string in ISO 8601 format with up to nanosecond precision.
+        # Orbit and attitude state vectors with earlier time tags will be discarded in
+        # order to avoid geo2rdr convergence errors due to orbit ambiguity.
+        # Must be <= `end_time`.
+        # Defaults to the start time of the orbit data in `orbit_xml_file`.
+        start_time:
+        # [OPTIONAL] UTC date and time of the end of the radar observation, as a string
+        # in ISO 8601 format with up to nanosecond precision.
+        # Orbit and attitude state vectors with later time tags will be discarded in
+        # order to avoid geo2rdr convergence errors due to orbit ambiguity.
+        # Must be >= `start_time`.
+        # Defaults to the end time of the orbit data in `orbit_xml_file`.
+        end_time:
+        # [OPTIONAL] Additional padding, in seconds, beyond the specified `start_time`
+        # and `end_time` to retain when cropping orbit and attitude data.
+        # Must be >= 0.
+        # Defaults to 120.
+        padding: 120.0
+
+      doppler:
+        # [OPTIONAL] Azimuth time spacing, in seconds, of the Doppler lookup table
+        # (LUT).
+        # Must be > 0.
+        # Defaults to 1.
+        az_spacing: 1.0
+        # [OPTIONAL] Slant range spacing, in meters, of the Doppler LUT.
+        # Must be > 0.
+        # Defaults to 2000.
+        rg_spacing: 2000.0
+        # [OPTIONAL] Interpolation method used for sampling the Doppler LUT.
+        # Must be one of:
+        #   - 'nearest': nearest neighbor interpolation
+        #   - 'bilinear': bilinear interpolation
+        #   - 'bicubic': bicubic interpolation
+        #   - 'biquintic': biquintic spline interpolation
+        #   - 'sinc': interpolation using a separable 9x9 sinc kernel
+        # Defaults to 'bilinear'.
+        interp_method: bilinear
+        # [OPTIONAL] Whether to treat out-of-bounds Doppler LUT lookups as fatal errors.
+        # Defaults to true.
+        bounds_error: true
+
+      radar_grid:
+        # [OPTIONAL] Look direction of the radar instrument.
+        # Must be one of {'left', 'right'}.
+        # Defaults to 'left'.
+        look_side: left
+        # [OPTIONAL] The radar center wavelength, in meters.
+        # Defaults to 0.24.
+        wavelength: 0.24
+        spacing:
+          # [OPTIONAL] Side length of the NxN grid of samples used to estimate the
+          # required radar grid pixel spacing necessary to avoid undersampling the
+          # output geocoded grid.
+          # Must be >= 2.
+          # Defaults to 5.
+          pts_per_side: 5
+        bounding_box:
+          # [OPTIONAL] Lower bound on the height of targets within the region of interest,
+          # in meters above the reference ellipsoid of the output product.
+          # Used to estimate the bounds of a radar grid that spans the region of interest.
+          # Must be <= `max_height`.
+          # Defaults to -500.
+          min_height: -500.0
+          # [OPTIONAL] Upper bound on the height of targets within the region of interest,
+          # in meters above the reference ellipsoid of the output product.
+          # Used to estimate the bounds of a radar grid that spans the region of interest.
+          # Must be >= `min_height`.
+          # Defaults to 9000.
+          max_height: 9000.0
+          # [OPTIONAL] Number of perimeter points to sample along each edge of the output
+          # geographic grid in order to estimate the bounds of a radar grid that spans the
+          # region of interest.
+          # Must be >= 2.
+          # Defaults to 11.
+          pts_per_edge: 11
+          # [OPTIONAL] Additional azimuth time margin, in seconds, to add to the start
+          # and end of the radar grid used to form static layers.
+          # Must be >= 0.
+          # Defaults to 0.
+          az_margin: 0.0
+          # [OPTIONAL] Additional slant range margin, in meters, to add to the near and
+          # far edges of the radar grid used to form static layers.
+          # Must be >= 0.
+          # Defaults to 0.
+          rg_margin: 0.0
+
+      dem:
+        # [OPTIONAL] Interpolation method used for sampling the input DEM raster.
+        # Must be one of:
+        #   - 'nearest': nearest neighbor interpolation
+        #   - 'bilinear': bilinear interpolation
+        #   - 'bicubic': bicubic interpolation
+        #   - 'biquintic': biquintic spline interpolation
+        #   - 'sinc': interpolation using a separable 9x9 sinc kernel
+        # Defaults to 'biquintic'.
+        interp_method: biquintic
+
+      water_mask:
+        # [OPTIONAL] Algorithm to use for resampling the input water mask to the desired
+        # output geographic coordinate grid.
+        # Must be one of:
+        #   - 'near': nearest neighbor resampling
+        #   - 'mode': mode resampling (selects the value which appears most often among
+        #     sampled points)
+        # Defaults to 'mode'.
+        resample_algorithm: mode
+
+      topo:
+        # [OPTIONAL] Number of range lines per block used by the topo algorithm to
+        # compute the layover/shadow mask.
+        # Must be >= 1.
+        # Defaults to 1024.
+        lines_per_block: 1024
+
+      geocode:
+        # [OPTIONAL] Algorithm used for geocoding.
+        # Must be one of:
+        #   - 'interp': interpolation
+        #   - 'area_projection': pixel area-based adaptive multilooking algorithm
+        # Defaults to 'area_projection'.
+        output_mode: area_projection
+        # [OPTIONAL] Interpolation method used for geocoding.
+        # Only relevant when `output_mode`='interp'. Ignored otherwise.
+        # Must be one of:
+        #   - 'nearest': nearest neighbor interpolation
+        #   - 'bilinear': bilinear interpolation
+        #   - 'bicubic': bicubic interpolation
+        #   - 'biquintic': biquintic spline interpolation
+        #   - 'sinc': interpolation using a separable 9x9 sinc kernel
+        # Defaults to 'biquintic'.
+        interp_method: biquintic
+        # [OPTIONAL] Block processing mode to use for geocoding.
+        # The choice of block processing mode may affect the peak memory utilization and
+        # runtime of the process.
+        # Must be one of:
+        #   - 'single_block': process the full scene as a single block
+        #   - 'geogrid': partition the geographic image grid into sub-blocks; process
+        #     the full radar image grid as a single block
+        #   - 'geogrid_and_radargrid': partition the geographic and radar image grids
+        #     into sub-blocks
+        #   - 'auto': the block processing mode is chosen by the software
+        # Defaults to 'geogrid_and_radargrid'.
+        memory_mode: geogrid_and_radargrid
+        # [OPTIONAL] Minimum block size for geocoding, per thread, in bytes.
+        # The block size is chosen dynamically based on the image dimensions to
+        # partition work uniformly across available threads, bounded by `min_block_size`
+        # and `max_block_size`. The number of threads may be controlled by the
+        # `OMP_NUM_THREADS` environment variable.
+        # Ignored if `memory_mode` is 'single_block'.
+        # Must be <= `max_block_size`.
+        # Defaults to 33,554,432 (32 MB).
+        min_block_size: 33554432
+        # [OPTIONAL] Maximum block size for geocoding, per thread, in bytes.
+        # The block size is chosen dynamically based on the image dimensions to
+        # partition work uniformly across available threads, bounded by `min_block_size`
+        # and `max_block_size`. The number of threads may be controlled by the
+        # `OMP_NUM_THREADS` environment variable.
+        # Ignored if `memory_mode` is 'single_block'.
+        # Must be >= `min_block_size`.
+        # Defaults to 268,435,456 (256 MB).
+        max_block_size: 268435456
+
+      rtc:
+        # [OPTIONAL] Algorithm used for Radiometric Terrain Correction (RTC).
+        # Must be one of:
+        #   - 'bilinear_distribution': bilinear resampling method
+        #   - 'area_projection': pixel area-based adaptive multilooking algorithm
+        # Defaults to 'area_projection'.
+        algorithm: area_projection
+        # [OPTIONAL] Method for estimating the area of the beta naught reference
+        # surface, $A_\beta$.
+        # Must be one of:
+        #   - 'pixel_area': uses the pixel area, which is the product of the range and
+        #     azimuth spacing (computed using the ground velocity)
+        #   - 'projection_angle': uses the projection angle ($\psi$):
+        #     $A_\beta = A_\sigma * \cos(\psi)$
+        #   - 'auto': the area beta mode is chosen by the software
+        # Defaults to 'auto'.
+        area_beta_mode: auto
+        # [OPTIONAL] Minimum pixel area threshold for RTC, in dB.
+        # If set to NaN, no minimum is enforced, which may lead to division by very
+        # small values and result in infinite or inaccurate outputs.
+        # Defaults to NaN.
+        min_area_factor: .NAN
+        # [OPTIONAL] DEM upsampling factor used for RTC.
+        # Defaults to 2.
+        dem_upsample_factor: 2.0
+
+      geo2rdr:
+        # [OPTIONAL] Absolute azimuth time convergence tolerance, in seconds, for the
+        # root-finding procedure in geo2rdr.
+        # Must be >= 0.
+        # Defaults to 1e-7.
+        threshold: 1e-7
+        # [OPTIONAL] Maximum number of Newton-Raphson iterations used by the
+        # root-finding procedure in geo2rdr.
+        # Must be >= 1.
+        # Defaults to 50.
+        maxiter: 50
+
+      rdr2geo:
+        # [OPTIONAL] Absolute slant range convergence tolerance, in meters, for the
+        # root-finding procedure in rdr2geo.
+        # Must be >= 0.
+        # Defaults to 1e-7.
+        threshold: 1e-7
+        # [OPTIONAL] Maximum number of primary Newton-Raphson iterations used by the
+        # root-finding procedure in rdr2geo.
+        # Must be >= 1.
+        # Defaults to 25.
+        numiter: 25
+        # [OPTIONAL] Maximum number of secondary iterations used by the root-finding
+        # procedure in rdr2geo.
+        # Must be >= 1.
+        # Defaults to 10.
+        extraiter: 10
+
+    output:
+      dataset:
+        # [OPTIONAL] Chunk dimensions of 2-D raster datasets in the output product.
+        # Setting `chunk_size` to [-1, -1] will disable chunked storage.
+        # Defaults to [512, 512].
+        chunk_size: [512, 512]
+        # [OPTIONAL] Enable HDF5 compression of raster datasets in the output product.
+        # If chunked storage is disabled (see `chunk_size`), this option is ignored and
+        # data compression is disabled.
+        # Defaults to true.
+        compression_enabled: true
+        # [OPTIONAL] HDF5 compression filter.
+        # Typically one of {'gzip', 'lzf', 'szip'}. See
+        # https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline for details.
+        # Ignored if `compression_enabled` is false.
+        # Defaults to 'gzip'.
+        compression_type: gzip
+        # [OPTIONAL] Level of compression applied by the GZIP compression filter.
+        # Must be an integer from 0 to 9 (inclusive).
+        # Ignored if `compression_enabled` is false or `compression_type` is not 'gzip'.
+        # Defaults to 4.
+        compression_level: 4
+        # [OPTIONAL] Enable shuffle filtering during data compression.
+        # Ignored if `compression_enabled` is false.
+        # Defaults to true.
+        shuffle: true
+      file:
+        # [OPTIONAL] HDF5 file space management strategy.
+        # Must be one of {'fsm', 'page', 'aggregate', 'none'}. See
+        # https://docs.h5py.org/en/stable/high/file.html#h5py.File for details.
+        # In internal testing, the 'page' strategy works well for accessing files stored
+        # in the cloud by reducing the number of high-latency REST API calls needed to
+        # read datasets and their metadata.
+        # Defaults to 'page'.
+        fs_strategy: page
+        # [OPTIONAL] HDF5 file space page size, in bytes.
+        # Only relevant when `fs_strategy`='page'. Ignored otherwise.
+        # Ideally at least large enough to hold `chunk_size` amount of uncompressed data
+        # as well as its metadata.
+        # Defaults to 4,194,304 (4 MB).
+        fs_page_size: 4194304
