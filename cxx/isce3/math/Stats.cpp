@@ -150,22 +150,11 @@ void StatsRealImag<T>::update(const StatsRealImag<T>& other)
 
 template<class T>
 StatsRealImag<T>::StatsRealImag(const std::complex<T>* values,
-        size_t size, size_t stride)
+        size_t size, size_t stride, const bool& parallel)
 {
-    using C = std::complex<T>;
-    const C* end = values + size * stride;
-    for (const C* ptr = values; ptr < end; ptr += stride) {
-        update(*ptr);
-    }
-}
-
-
-template<class T>
-void StatsRealImag<T>::update(const std::complex<T>* values,
-        size_t size, size_t stride, const std::optional<bool>& parallel)
-{
+    const auto end = values + size * stride;
 #ifdef _OPENMP
-    if (parallel.value_or(true)) {
+    if (parallel) {
         std::vector<StatsRealImag<T>> partial_stats;
         #pragma omp parallel
         {
@@ -175,10 +164,10 @@ void StatsRealImag<T>::update(const std::complex<T>* values,
             {
                 partial_stats.resize(threads);
             }
-            const auto max_chunk_size = (size + threads - 1) / threads;
-            const auto start = tid * max_chunk_size;
-            const auto end = std::min(start + max_chunk_size, size);
-            partial_stats[tid].update(values + start, end - start, stride, false);
+            #pragma omp for
+            for (auto ptr = values; ptr < end; ptr += stride) {
+                partial_stats[tid].update(*ptr);
+            }
         }
         for (const auto& stats : partial_stats) {
             update(stats);
@@ -186,7 +175,17 @@ void StatsRealImag<T>::update(const std::complex<T>* values,
         return;
     }
 #endif
-    const StatsRealImag<T> block_stats(values, size, stride);
+    for (auto ptr = values; ptr < end; ptr += stride) {
+        update(*ptr);
+    }
+}
+
+
+template<class T>
+void StatsRealImag<T>::update(const std::complex<T>* values,
+        size_t size, size_t stride, const bool& parallel)
+{
+    const StatsRealImag<T> block_stats(values, size, stride, parallel);
     update(block_stats);
 }
 

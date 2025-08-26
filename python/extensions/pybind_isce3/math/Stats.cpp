@@ -108,12 +108,23 @@ void addbinding(py::class_<StatsRealImag<T>>& pyStatsRealImag)
 
     using ArrayT = py::array_t<std::complex<T>, py::array::c_style>;
 
-    pyStatsRealImag.def(py::init([](ArrayT x) {
-        return StatsRealImag<T>(x.data(), x.size());
+    pyStatsRealImag.def(py::init([](ArrayT x, bool parallel) {
+        return StatsRealImag<T>(x.data(), x.size(), 1, parallel);
     }),
-    "Calculate statistics of a block of data using Welford's algorithm.");
+    py::arg("x"),
+    py::arg("parallel") = true, R"(
+    Calculate statistics of a block of data using Welford's algorithm.
 
-    pyStatsRealImag.def("update", [](StatsRealImag<T>& self, ArrayT x, std::optional<bool> parallel) {
+    Parameters
+    ----------
+    x : array_like
+        Array of complex values
+    parallel : bool, optional
+        Whether to compute stats in parallel by equally dividing the block among
+        threads.  Ignored when library was compiled without OpenMP support.
+    )");
+
+    pyStatsRealImag.def("update", [](StatsRealImag<T>& self, ArrayT x, bool parallel) {
         const auto px = x.data();
         const size_t n = x.size();
         {
@@ -122,7 +133,7 @@ void addbinding(py::class_<StatsRealImag<T>>& pyStatsRealImag)
         }
     },
     py::arg("x"),
-    py::arg("parallel") = py::none(), R"(
+    py::arg("parallel") = true, R"(
     Calculate stats of a new block of data using Welford's algorithm and
     update current estimate with Chan's method.
 
@@ -132,9 +143,7 @@ void addbinding(py::class_<StatsRealImag<T>>& pyStatsRealImag)
         Array of complex values
     parallel : bool, optional
         Whether to compute stats in parallel by equally dividing the block among
-        threads.  Supplying `True` or `None` both signify parallel processing
-        when compiled with OpenMP.  That is, you must explicity opt out of
-        parallel processing by supplying `False`.
+        threads.  Ignored when library was compiled without OpenMP support.
      )");
 
     pyStatsRealImag.def("update", [](StatsRealImag<T>& self,
