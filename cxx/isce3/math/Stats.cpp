@@ -206,7 +206,7 @@ template<class StatsT>
 StatsT _aggregateStats(std::vector<StatsT>& statsvec)
 {
     StatsT allstats;
-    for (const auto stats : statsvec) {
+    for (const auto& stats : statsvec) {
         allstats.update(stats);
     }
     return allstats;
