@@ -2,9 +2,6 @@
 
 #include <pyre/journal.h>
 #include <isce3/math/complexOperations.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 
 namespace isce3 {
@@ -153,30 +150,21 @@ StatsRealImag<T>::StatsRealImag(const std::complex<T>* values,
         size_t size, size_t stride, const bool& parallel)
 {
     const auto end = values + size * stride;
-#ifdef _OPENMP
     if (parallel) {
-        std::vector<StatsRealImag<T>> partial_stats;
         #pragma omp parallel
         {
-            const auto tid = omp_get_thread_num();
-            const auto threads = omp_get_num_threads();
-            #pragma omp single
-            {
-                partial_stats.resize(threads);
-            }
+            StatsRealImag<T> partial_stats;
             #pragma omp for
             for (auto ptr = values; ptr < end; ptr += stride) {
-                partial_stats[tid].update(*ptr);
+                partial_stats.update(*ptr);
             }
+            #pragma omp critical
+            update(partial_stats);
         }
-        for (const auto& stats : partial_stats) {
-            update(stats);
+    } else {
+        for (auto ptr = values; ptr < end; ptr += stride) {
+            update(*ptr);
         }
-        return;
-    }
-#endif
-    for (auto ptr = values; ptr < end; ptr += stride) {
-        update(*ptr);
     }
 }
 
