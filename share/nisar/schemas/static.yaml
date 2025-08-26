@@ -1,0 +1,153 @@
+runconfig:
+  groups:
+    dynamic_ancillary_file_group:
+      dem_raster_file: str()
+      water_mask_raster_file: str()
+      orbit_xml_file: str()
+      pointing_xml_file: str()
+    product_path_group: include('product_path_group_options', required=False)
+    primary_executable: include('primary_executable_options', required=False)
+    geometry: include('geometry_options', required=False)
+    processing: include('processing_options', required=False)
+    output: include('output_options', required=False)
+---
+product_path_group_options:
+  output_hdf5_file: str(required=False)
+  scratch_dir: str(required=False)
+  delete_scratch_dir: bool(required=False)
+
+primary_executable_options:
+  product_version: str(required=False)
+  product_doi: str(required=False)
+  composite_release_id: str(required=False)
+  processing_type: enum('PR', 'OD', required=False)
+  mission_id: str(required=False)
+  platform_name: str(required=False)
+  instrument_name: str(required=False)
+  radar_band: str(required=False)
+  processing_center: str(required=False)
+  validity_start_datetime: >-
+    any(
+      timestamp(),
+      regex(r'^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}:\d{2})?$'),
+      required=False
+    )
+  product_counter: int(min=1, max=999, required=False)
+
+geometry_options:
+  relative_orbit_number: int(min=0, max=999, required=False)
+  frame_number: int(min=0, max=999, required=False)
+
+processing_options:
+  geo_grid: include('geo_grid_options', required=False)
+  ephemeris: include('ephemeris_options', required=False)
+  doppler: include('doppler_options', required=False)
+  radar_grid: include('radar_grid_options', required=False)
+  dem: include('dem_options', required=False)
+  water_mask: include('water_mask_options', required=False)
+  topo: include('topo_options', required=False)
+  geocode: include('geocode_options', required=False)
+  rtc: include('rtc_options', required=False)
+  geo2rdr: include('geo2rdr_options', required=False)
+  rdr2geo: include('rdr2geo_options', required=False)
+
+geo_grid_options:
+  epsg: int(required=False)
+  top_left: include('xy_options', required=False)
+  bottom_right: include('xy_options', required=False)
+  posting: include('nonnegative_xy_options', required=False)
+
+xy_options:
+  x: num(required=False)
+  y: num(required=False)
+
+nonnegative_xy_options:
+  x: num(min=0.0, required=False)
+  y: num(min=0.0, required=False)
+
+ephemeris_options:
+  start_time: >-
+    any(
+      timestamp(),
+      regex(r'^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,9})?$'),
+      required=False
+    )
+  end_time: >-
+    any(
+      timestamp(),
+      regex(r'^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,9})?$'),
+      required=False
+    )
+  padding: num(min=0.0, required=False)
+
+doppler_options:
+  az_spacing: num(min=0.0, required=False)
+  rg_spacing: num(min=0.0, required=False)
+  interp_method: >-
+    enum('nearest', 'bilinear', 'bicubic', 'biquintic', 'sinc', required=False)
+  bounds_error: bool(required=False)
+
+radar_grid_options:
+  look_side: enum('left', 'right', required=False)
+  wavelength: num(required=False)
+  spacing: include('radar_grid_spacing_options', required=False)
+  bounding_box: include('radar_grid_bounding_box_options', required=False)
+
+radar_grid_spacing_options:
+  pts_per_side: int(min=2, required=False)
+
+radar_grid_bounding_box_options:
+  min_height: num(required=False)
+  max_height: num(required=False)
+  pts_per_edge: int(min=2, required=False)
+  az_margin: num(min=0.0, required=False)
+  rg_margin: num(min=0.0, required=False)
+
+dem_options:
+  interp_method: >-
+    enum('nearest', 'bilinear', 'bicubic', 'biquintic', 'sinc', required=False)
+
+water_mask_options:
+  resample_algorithm: enum('near', 'mode', required=False)
+
+topo_options:
+  lines_per_block: int(min=1, required=False)
+
+geocode_options:
+  output_mode: enum('interp', 'area_projection', required=False)
+  interp_method: >-
+    enum('nearest', 'bilinear', 'bicubic', 'biquintic', 'sinc', required=False)
+  memory_mode: >-
+    enum('auto', 'single_block', 'geogrid', 'geogrid_and_radargrid', required=False)
+  min_block_size: int(min=1, required=False)
+  max_block_size: int(min=1, required=False)
+
+rtc_options:
+  algorithm: enum('area_projection', 'bilinear_distribution', required=False)
+  area_beta_mode: enum('auto', 'pixel_area', 'projection_angle', required=False)
+  min_area_factor: num(required=False)
+  dem_upsample_factor: num(min=1.0, required=False)
+
+geo2rdr_options:
+  threshold: num(min=0.0, required=False)
+  maxiter: int(min=1, required=False)
+
+rdr2geo_options:
+  threshold: num(min=0.0, required=False)
+  numiter: int(min=1, required=False)
+  extraiter: int(min=1, required=False)
+
+output_options:
+  dataset: include('dataset_options', required=False)
+  file: include('file_options', required=False)
+
+dataset_options:
+  chunk_size: list(int(min=-1), min=2, max=2, required=False)
+  compression_enabled: bool(required=False)
+  compression_type: str(required=False)
+  compression_level: int(min=1, max=9, required=False)
+  shuffle: bool(required=False)
+
+file_options:
+  fs_strategy: enum('fsm', 'page', 'aggregate', 'none', required=False)
+  fs_page_size: int(min=1, required=False)

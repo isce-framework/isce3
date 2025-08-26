@@ -1,0 +1,24 @@
+<VRTDataset rasterXSize="1041" rasterYSize="998">
+  <SRS dataAxisToSRSAxisMapping="2,1">GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]</SRS>
+  <GeoTransform>  1.7984736111111113e+02,  2.7777777777777778e-04,  0.0000000000000000e+00, -1.6903750000000002e+01,  0.0000000000000000e+00, -2.7777777777777778e-04</GeoTransform>
+  <Metadata>
+    <MDI key="dem_description">Digital Elevation Model (DEM) for the NASA-ISRO NISAR mission, version 1.2, based on the Copernicus DEM 30-m (2023_1), referenced to the WGS84 ellipsoid. This digital elevation model (DEM) was prepared at the Jet Propulsion Laboratory, California Institute of Technology, under contract with the National Aeronautics and Space Administration, using the Copernicus DEM 30-m COP-DEM_GLO-30-DGED/2023_1 model, provided by the European Space Agency (ESA). The Copernicus DEM 30-m was produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved. The organizations in charge of the NISAR mission or the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30. Users, including those who redistribute, adapt, modify, or combine the data contained in this DEM, must comply with the terms of the Copernicus DEM 30-m License Agreement. For additional information, please refer to https://doi.org/10.5067/NIDEM-1 and https://doi.org/10.5270/ESA-c5d3d65.</MDI>
+  </Metadata>
+  <VRTRasterBand dataType="Float32" band="1">
+    <ColorInterp>Gray</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">DEM_fiji_track15_frame97_small_0.tiff</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="492" RasterYSize="998" DataType="Float32" BlockXSize="492" BlockYSize="4" />
+      <SrcRect xOff="0" yOff="0" xSize="492" ySize="998" />
+      <DstRect xOff="549" yOff="0" xSize="492" ySize="998" />
+    </SimpleSource>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">DEM_fiji_track15_frame97_small_1.tiff</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="549" RasterYSize="998" DataType="Float32" BlockXSize="549" BlockYSize="3" />
+      <SrcRect xOff="0" yOff="0" xSize="549" ySize="998" />
+      <DstRect xOff="0" yOff="0" xSize="549" ySize="998" />
+    </SimpleSource>
+  </VRTRasterBand>
+</VRTDataset>

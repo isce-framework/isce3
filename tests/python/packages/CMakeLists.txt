@@ -16,6 +16,7 @@ isce3/geocode/geocode_slc.py
 isce3/geometry/bounding_polygon.py
 isce3/geometry/bounding_radar_grid.py
 isce3/geometry/polygons.py
+isce3/geometry/radar_grid_spacing.py
 isce3/image/resample_slc.py
 isce3/io/gdal/gdal_raster.py
 isce3/io/background.py
@@ -50,6 +51,12 @@ nisar/products/readers/rslc_cal.py
 nisar/products/product_spec.py
 nisar/products/projection.py
 nisar/products/utils.py
+nisar/static/ephemeris.py
+nisar/static/geo_grid.py
+nisar/static/granule_id.py
+nisar/static/product.py
+nisar/static/runconfig.py
+nisar/static/water_mask.py
 nisar/workflows/crossmul.py
 nisar/workflows/estimate_abscal_factor.py
 nisar/workflows/faraday_rot_angle_from_rslc.py
@@ -75,6 +82,7 @@ nisar/workflows/process_args.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/resample_slc_v2.py
+nisar/workflows/static.py
 nisar/workflows/unwrap.py
 nisar/workflows/point_target_analysis.py
 nisar/workflows/nisar_l0b_dm1_to_science.py
