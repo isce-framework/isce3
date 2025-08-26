@@ -71,7 +71,7 @@ struct StatsRealImag {
      *  update current estimate with Chan's method.
      *
      * @param[in] values    Array of values
-     * @param[in] size      Length of `values`
+     * @param[in] size      Number of entries to access in `values`
      * @param[in] stride    Stride between entries in `values`, such that
      *                      entry `i` is indexed as `values[i * stride]`
      * @param[in] parallel  Whether to compute stats in parallel by equally
@@ -84,7 +84,7 @@ struct StatsRealImag {
     /** Initialize from block of data (using Welford's algorithm).
      *
      * @param[in] values    Array of values
-     * @param[in] size      Length of `values`
+     * @param[in] size      Number of entries to access in `values`
      * @param[in] stride    Stride between entries in `values`, such that
      *                      entry `i` is indexed as `values[i * stride]`
      * @param[in] parallel  Whether to compute stats in parallel by equally
