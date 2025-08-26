@@ -113,14 +113,16 @@ void addbinding(py::class_<StatsRealImag<T>>& pyStatsRealImag)
     }),
     "Calculate statistics of a block of data using Welford's algorithm.");
 
-    pyStatsRealImag.def("update", [](StatsRealImag<T>& self, ArrayT x) {
+    pyStatsRealImag.def("update", [](StatsRealImag<T>& self, ArrayT x, std::optional<bool> parallel) {
         const auto px = x.data();
         const size_t n = x.size();
         {
             py::gil_scoped_release release;
-            self.update(px, n);
+            self.update(px, n, 1, parallel);
         }
     },
+    py::arg("x"),
+    py::arg("parallel") = py::none(),
     R"(Calculate stats of a new block of data using Welford's algorithm and
     update current estimate with Chan's method.)");
 

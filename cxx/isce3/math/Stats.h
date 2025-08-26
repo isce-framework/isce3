@@ -2,6 +2,7 @@
 #include <isce3/core/Constants.h>
 #include <isce3/core/blockProcessing.h>
 #include <isce3/io/Raster.h>
+#include <optional>
 
 namespace isce3 { namespace math {
 
@@ -68,7 +69,8 @@ struct StatsRealImag {
 
     /** Calculate stats of a new block of data using Welford's algorithm and
      *  update current estimate with Chan's method. */
-    void update(const std::complex<T>* values, size_t size, size_t stride = 1);
+    void update(const std::complex<T>* values, size_t size, size_t stride = 1,
+        const std::optional<bool>& parallel = std::nullopt);
 
     /** Initialize from block of data. */
     StatsRealImag(const std::complex<T>* values, size_t size, size_t stride = 1);

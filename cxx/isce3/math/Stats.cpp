@@ -2,6 +2,9 @@
 
 #include <pyre/journal.h>
 #include <isce3/math/complexOperations.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 
 namespace isce3 {
@@ -159,8 +162,30 @@ StatsRealImag<T>::StatsRealImag(const std::complex<T>* values,
 
 template<class T>
 void StatsRealImag<T>::update(const std::complex<T>* values,
-        size_t size, size_t stride)
+        size_t size, size_t stride, const std::optional<bool>& parallel)
 {
+#ifdef _OPENMP
+    if (parallel.value_or(true)) {
+        std::vector<StatsRealImag<T>> partial_stats;
+        #pragma omp parallel
+        {
+            const auto tid = omp_get_thread_num();
+            const auto threads = omp_get_num_threads();
+            #pragma omp single
+            {
+                partial_stats.resize(threads);
+            } 
+            const auto max_chunk_size = (size + threads - 1) / threads;
+            const auto start = tid * max_chunk_size;
+            const auto end = std::min(start + max_chunk_size, size);
+            partial_stats[tid].update(values + start, end - start, stride, false);
+        }
+        for (const auto& stats : partial_stats) {
+            update(stats);
+        }
+        return;
+    }
+#endif
     const StatsRealImag<T> block_stats(values, size, stride);
     update(block_stats);
 }
