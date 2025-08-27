@@ -45,15 +45,23 @@ class GCOVRunConfig(RunConfig):
                 if (('HH' in pol_list) and ('VV' in pol_list) and
                    ('HV' in pol_list or 'VH' in pol_list)):
                     warning_channel.log(
-                        'The `fullcovariance` field is empty in the runconfig.'
-                        ' By default, it is set to `True` if any frequency to'
-                        ' be processed includes a full-pol dataset and does'
-                        ' not contain a mix of nominal and receive-only'
-                        ' polarimetric channel. This is'
-                        f' the case for frequency {freq} with polarizations'
-                        f' {pol_list}. Setting `fullcovariance` to `True`.')
+                        'The `fullcovariance` field is not specified in the'
+                        'runconfig. By default, it is set to `True` if any'
+                        'processed frequency includes a full-pol dataset,'
+                        ' and `False` otherwise.'
+                        f'Since frequency {freq} contains polarizations'
+                        f'{pol_list}, `fullcovariance` is set to `True`.')
                     flag_fullcovariance = True
                     break
+            else:
+                warning_channel.log(
+                    'The `fullcovariance` field is not specified in the'
+                    'runconfig. By default, it is set to `True` if any'
+                    'processed frequency includes a full-pol dataset,'
+                    ' and `False` otherwise.'
+                    'Since the output product will not contain a full-'
+                    'polarimetric dataset, `fullcovariance` is set to'
+                    ' `False`.')
 
             self.cfg['processing']['input_subset']['fullcovariance'] = \
                 flag_fullcovariance
