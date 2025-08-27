@@ -860,8 +860,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'identification/platformName',
             default='(NOT SPECIFIED)')
 
-    def populate_ceos_analysis_ready_data_parameters_l2_common(self):
-
         static_layers_data_access_runconfig = \
             self.cfg['ceos_analysis_ready_data']['static_layers_data_access']
 
@@ -869,8 +867,10 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             static_layers_data_access_runconfig, self.granule_id)
 
         self.set_value(
-            '{PRODUCT}/metadata/ceosAnalysisReadyData/staticLayersDataAccess',
+            'identification/staticLayersDataAccess',
             static_layers_data_access)
+
+    def populate_ceos_analysis_ready_data_parameters_l2_common(self):
 
         ceos_ard_document_identifier = \
             ('https://ceos.org/ard/files/PFS/SAR/v1.0/CEOS-ARD_PFS'
