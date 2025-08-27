@@ -222,6 +222,12 @@
                 <annotation app="conformance"
                             lang="en">"True" if any portion of this product was acquired in a joint observation mode (e.g., L-band and S-band simultaneously), "False" otherwise</annotation>
         </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/identification/staticLayersDataAccess"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Location of the static layers product associated with this product (URL or DOI)</annotation>
+        </string>
         <!-- End of product identification -->
 
         <!-- Main layers for frequencyA -->
@@ -1042,12 +1048,6 @@
                 <annotation app="conformance"
                             epsg="EPSG code"
                             lang="en">OGR compatible WKT representing the bounding box of the product (the union of the geocoded grid for available frequency A and frequency B image datasets). Horizontal coordinates are X and Y directions of the geocoded grid coordinate system, and the vertical coordinate is the height above the WGS84 ellipsoid in meters. The first point corresponds to the top left edge of the bounding box. The remaining points are traversed in counterclockwise order on the map. The fifth point closes the bounding box by repeating the first point</annotation>
-        </string>
-        <string length="0"
-                name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/staticLayersDataAccess"
-                shape="scalar">
-          <annotation app="conformance"
-                      lang="en">Location of the static layers product associated with this product (URL or DOI)</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/outputBackscatterDecibelConversionFormula"
