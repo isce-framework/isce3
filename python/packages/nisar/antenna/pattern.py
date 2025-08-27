@@ -150,7 +150,7 @@ class AntennaPattern:
         vairations expected to be less than 0.05 dB and 0.25 deg, respectively.
         This can speed up the antenna pattern computation. If None, it will be
         ignored.
-    max_p2p_gain : float or None, default=12.0
+    max_p2p_gain : float or None, default=None
         Max relative peak-to-peak dynamic range of two-way antenna gain over
         entire swath in (dB) for all polarization combinations in`raw`.
         This normalization will preserve relative gain changes over various
@@ -165,7 +165,7 @@ class AntennaPattern:
                  *, el_lut=None,
                  norm_weight=True,
                  el_spacing_min=8.72665e-5,
-                 max_p2p_gain=12.0):
+                 max_p2p_gain=None):
 
         self.orbit = orbit.copy()
         self.attitude = attitude.copy()
