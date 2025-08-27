@@ -399,6 +399,13 @@ runconfig:
                 range: 12.0
                 azimuth: 12.0
 
+            # Maximum allowed dynamic range of the elevation antenna pattern
+            # correction.  This is useful when the swath contains regions with
+            # very small antenna gain and one wants to avoid unduly amplifying
+            # the noise in these regions.  Disabled when set to null (the
+            # default).
+            eap_dynamic_range_limit_db: null
+
             # Scale factor to apply to data before float16 encoding, optional.
             # Default is 1.0.
             # The largest representable float16 value is 65504.

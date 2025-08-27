@@ -1841,9 +1841,10 @@ def focus(runconfig, runconfig_path=""):
 
             # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
+                limit = cfg.processing.eap_dynamic_range_limit_db
                 antpat = AntennaPattern(raw, dem, antparser,
                                         instparser, orbit, attitude,
-                                        el_lut=el_lut)
+                                        el_lut=el_lut, max_p2p_gain=limit)
 
                 log.info("Precomputing antenna patterns")
                 i = np.arange(rc_grid.shape[0])
