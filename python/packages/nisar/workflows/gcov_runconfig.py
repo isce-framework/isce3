@@ -46,11 +46,11 @@ class GCOVRunConfig(RunConfig):
                    ('HV' in pol_list or 'VH' in pol_list)):
                     warning_channel.log(
                         'The `fullcovariance` field is not specified in the'
-                        'runconfig. By default, it is set to `True` if any'
-                        'processed frequency includes a full-pol dataset,'
+                        ' runconfig. By default, it is set to `True` if any'
+                        ' processed frequency includes a full-pol dataset,'
                         ' and `False` otherwise.'
-                        f'Since frequency {freq} contains polarizations'
-                        f'{pol_list}, `fullcovariance` is set to `True`.')
+                        f' Since frequency {freq} contains polarizations'
+                        f' {pol_list}, `fullcovariance` is set to `True`.')
                     flag_fullcovariance = True
                     break
             else:
