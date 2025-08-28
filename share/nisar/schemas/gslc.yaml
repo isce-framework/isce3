@@ -63,6 +63,11 @@ runconfig:
             product_type: enum('GSLC')
             product_version: str('^\d+\.\d+\.\d+$', required=False)
             product_doi: str(required=False)
+
+            # Data access for the static layers product associated with the output
+            # product (URL or DOI)
+            static_layers_data_access: str(required=False)
+
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', 'OD', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
@@ -301,10 +306,6 @@ geocode_options:
         x_abs: num(required=False)
 
 ceos_analysis_ready_data_options:
-
-    # NOT YET IMPLEMENTED
-    # Data access for the static layers product associated with the output product (URL or DOI)
-    static_layers_data_access: str(required=False)
 
     # Estimated geometric accuracy (bias and standard deviation)
     # in meters in the X- and Y-directions over the coordinate

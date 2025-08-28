@@ -67,6 +67,12 @@ runconfig:
             product_type: GSLC
             product_version: 0.1.0
             product_doi:
+
+            # Data access for the static layers product associated with the
+            # output product (URL or DOI). If not provided, the corresponding
+            # metadata field will be set to "(NOT SPECIFIED)".
+            static_layers_data_access:
+
             composite_release_id:
             processing_type:
             processing_center:
@@ -326,10 +332,6 @@ runconfig:
         # OPTIONAL - Group containing CEOS Analysis Ready Data (CARD) parameters
         # to populate the output product's metadata
         ceos_analysis_ready_data:
-
-            # NOT YET IMPLEMENTED
-            # Data access for the static layers product associated with the output product (URL or DOI)
-            static_layers_data_access:
 
             # Estimated geometric accuracy (bias and standard deviation)
             # in meters in the X- and Y-directions over the coordinate
