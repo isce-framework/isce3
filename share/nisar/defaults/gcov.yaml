@@ -137,6 +137,8 @@ runconfig:
             # Data access for the static layers product associated with the
             # output product (URL or DOI). If not provided, the corresponding
             # metadata field will be set to "(NOT SPECIFIED)".
+            # If this string contains the substring "{granule_id}", that substring
+            # will be replaced with the granule ID.
             static_layers_data_access:
 
             # Composite release ID (CRID). If not provided, the corresponding
