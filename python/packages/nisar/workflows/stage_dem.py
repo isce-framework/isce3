@@ -394,7 +394,7 @@ def download_dem(polys, epsgs, outfile, version):
     # Add license text to GeoTiff files
     for dem_file in dem_list:
         ds = gdal.Open(dem_file, gdal.GA_Update)
-        ds.SetMetadataItem("LICENSE", full_descr)
+        ds.SetMetadataItem("dem_description", full_descr)
 
 
 def get_readme_contents(
