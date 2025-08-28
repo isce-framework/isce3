@@ -47,14 +47,14 @@ def get_static_layers_data_access(
         granule_id: str | None) -> str:
     """
     Read the static layers data access template and replace the placeholder
-     "{granule_id}" with the product's granule ID.
+     "{granule_id}" with the granule ID, if provided.
 
     Parameters
     ----------
     static_layers_data_access_template: str or None
-        Template string for static layers data access. The string may contain
-        the substring "{granule_id}", which will be replaced with the product’s
-        granule ID.
+        Template string for static layers data access. If the string contains
+        the substring "{granule_id}", that substring will be replaced with
+        the contents of `granule_id`.
         If set to `None` or an empty string, the function returns
         "(NOT SPECIFIED)"
     granule_id: str or None
@@ -861,7 +861,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             default='(NOT SPECIFIED)')
 
         static_layers_data_access_runconfig = \
-            self.cfg['ceos_analysis_ready_data']['static_layers_data_access']
+            self.cfg['primary_executable']['static_layers_data_access']
 
         static_layers_data_access = get_static_layers_data_access(
             static_layers_data_access_runconfig, self.granule_id)
