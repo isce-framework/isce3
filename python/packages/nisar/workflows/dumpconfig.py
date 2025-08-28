@@ -610,7 +610,22 @@ def dumpconfig_gslc_gcov(
     if scratch_path is not None:
         scratch_path = Path(scratch_path).expanduser().resolve()
         product_path_group["scratch_path"] = os.fspath(scratch_path)
-    
+
+    if workflow == "gcov":
+
+        # the method `getSwathMetadata()` without an argument returns
+        # the swath metadata for the first available frequency
+        first_frequency_bandwidth = int(np.round(
+            rslc.getSwathMetadata().processed_range_bandwidth / 1e6))
+
+        # By default GCOV products are generated with RTC DEM upsampling
+        # set to `2`. However, 40 MHz products require much more memory
+        # and therefore are processed with the RTC DEM upsampling set
+        # to `1`
+        if first_frequency_bandwidth == 40:
+            rtc_group = groups["processing"]["rtc"]
+            rtc_group["dem_upsampling"] = 1
+
     geocode_group = groups["processing"]["geocode"]
     radar_grid_cubes_group = groups["processing"]["radar_grid_cubes"]
 
