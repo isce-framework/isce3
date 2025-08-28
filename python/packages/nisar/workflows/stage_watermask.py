@@ -41,8 +41,8 @@ def cmdLineParse():
     parser.add_argument('-f', '--path', type=str, action='store',
                         dest='filepath', default='file',
                         help='Filepath to user water mask.')
-    parser.add_argument('-m', '--margin', type=int, action='store',
-                        default=5, help='Margin for water mask bounding box (km)')
+    parser.add_argument('-m', '--margin', type=float, action='store',
+                        default=5.0, help='Margin for water mask bounding box (km)')
     parser.add_argument('-v', '--version', type=str, action='store',
                         dest='version', default='0.5',
                         help='Version for water mask')
@@ -575,7 +575,7 @@ def check_aws_connection(version):
         raise ValueError(errmsg)
 
 
-def apply_margin_polygon(polygon, margin_in_km=5):
+def apply_margin_polygon(polygon, margin_in_km=5.0):
     '''
     Convert margin from km to degrees and
     apply to polygon

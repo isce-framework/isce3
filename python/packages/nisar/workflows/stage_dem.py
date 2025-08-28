@@ -39,8 +39,8 @@ def cmdLineParse():
     parser.add_argument('-f', '--path', type=str, action='store',
                         dest='filepath', default='file',
                         help='Filepath to user DEM.')
-    parser.add_argument('-m', '--margin', type=int, action='store',
-                        default=5, help='Margin for DEM bounding box (km)')
+    parser.add_argument('-m', '--margin', type=float, action='store',
+                        default=5.0, help='Margin for DEM bounding box (km)')
     parser.add_argument('-b', '--bbox', type=float, nargs=4,
                         help=('Spatial bounding box as minX, minY, maxX, maxY '
                              'in Spatial Reference System specified by epsg. '
@@ -764,7 +764,7 @@ def check_aws_connection(version='1.2'):
         raise ValueError(errmsg)
 
 
-def apply_margin_to_geographic_box(polygon, margin_in_km=5):
+def apply_margin_to_geographic_box(polygon, margin_in_km=5.0):
     '''
     Assuming the polygon is in epsg 4326
     Convert margin from km to degrees and
@@ -798,7 +798,7 @@ def apply_margin_to_geographic_box(polygon, margin_in_km=5):
     return poly_with_margin
 
 
-def apply_margin_to_projected_box(polygon, margin_in_km=5):
+def apply_margin_to_projected_box(polygon, margin_in_km=5.0):
     '''
     Assuming the polygon is in UTM or Polar Stereo
     add a margin in km to the polygon
