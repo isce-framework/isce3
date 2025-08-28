@@ -183,7 +183,7 @@ topo(Raster & demRaster, TopoLayers & layers)
         // Get the midpoint of the DEM block in LLH coordinates.
         // This should always be safe since the call to `computeDEMBounds()`
         // above loads a block of the DEM raster.
-        assert(demInterp.hasRaster());
+        assert(demInterp.haveRaster());
         const auto dem_midpoint = demInterp.midLonLat();
 
         #pragma omp parallel
