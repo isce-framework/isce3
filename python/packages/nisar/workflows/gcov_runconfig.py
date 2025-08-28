@@ -60,7 +60,7 @@ class GCOVRunConfig(RunConfig):
                     ' processed frequency includes a full-pol dataset,'
                     ' and `False` otherwise.'
                     ' Since the output product will not contain a full-'
-                    ' polarimetric dataset, `fullcovariance` is set to'
+                    'polarimetric dataset, `fullcovariance` is set to'
                     ' `False`.')
 
             self.cfg['processing']['input_subset']['fullcovariance'] = \
