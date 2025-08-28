@@ -594,8 +594,9 @@ runconfig:
 
                 # True to raise an exception if one or more metadata LUTs
                 # contain all non-finite (e.g. Nan, +/- Inf) values, or if one or more
-                # z-dimension height layers in a 3D LUT has all non-finite values.
-                # False to quiet the exception (although it will still be logged).
+                # z-dimension height layers in a 3D LUT ("metadata cube") has
+                # all non-finite values. False to quiet the exception (although
+                # it will still be logged).
                 # Default: True
                 metadata_luts_fail_if_all_nan: true
 
