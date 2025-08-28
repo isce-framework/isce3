@@ -499,7 +499,8 @@ runconfig:
 
             software_config:
 
-                # True to use memory map(s) to cache select Dataset(s).
+                # True to cache selected dataset(s) into intermediate
+                # memory-mapped flat file(s), which speeds up repeat access.
                 # False to always read data directly from the input file.
                 # Generally, enabling caching should reduce runtime.
                 # Default: True
