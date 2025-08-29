@@ -184,7 +184,8 @@ def init_argparse():
             "are suited to the workflow and bandwidth of the frequencies in the RSLC "
             "product. Only valid for products with 5, 10, 20, or 77 MHz bandwidths for "
             "all frequencies. This is suggested for use in conjunction with the "
-            "--generate-epsg parameter."
+            "--generate-epsg parameter. For GCOV products, this argument may also "
+            "modify the RTC value to the NISAR default value for their band."
         ),
     )
     geometry_group.add_argument(
