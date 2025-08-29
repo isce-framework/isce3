@@ -11,6 +11,7 @@ from nisar.workflows.h5_prep import set_get_geo_info
 from isce3.core.types import truncate_mantissa
 from isce3.geometry import get_near_and_far_range_incidence_angles
 from nisar.products.readers.orbit import load_orbit
+from nisar.products.utils import get_static_layers_data_access
 
 
 LEXICOGRAPHIC_BASE_POLS = ['HH', 'HV', 'VH', 'VV']
@@ -40,62 +41,6 @@ LUT_1D_RG_DATASETS_LUT_EXPANSION_ALONG_AZ_N_POINTS = 21
 # boundary of the valid data.
 LUT_1D_AZ_DATASETS_LUT_EXPANSION_ALONG_RG_MARGIN_IN_PIXELS = 5
 LUT_1D_RG_DATASETS_LUT_EXPANSION_ALONG_AZ_MARGIN_IN_PIXELS = 5
-
-
-def get_static_layers_data_access(
-        static_layers_data_access_template: str | None,
-        granule_id: str | None) -> str:
-    """
-    Read the static layers data access template and replace the placeholder
-     "{granule_id}" with the granule ID, if provided.
-
-    Parameters
-    ----------
-    static_layers_data_access_template: str or None
-        Template string for static layers data access. If the string contains
-        the substring "{granule_id}", that substring will be replaced with
-        the contents of `granule_id`.
-        If set to `None` or an empty string, the function returns
-        "(NOT SPECIFIED)"
-        If the string is valid, i.e., it is not `None` or an empty string,
-        and it does not contain the substring "{granule_id}", then
-        `granule_id` is ignored.
-    granule_id: str or None
-        The granule ID, which will be used to replace the substring
-        "{granule_id}" in `static_layers_data_access_template`.
-        If the template string contains "{granule_id}", but `granule_id` is
-        `None`, empty string, or "(NOT SPECIFIED)"), the function raises an
-        error.
-
-    Returns
-    -------
-    static_layers_data_access: str
-        The static layers data access string with "{granule_id}" placeholder
-        replaced. Returns "(NOT SPECIFIED)" if
-        `static_layers_data_access_template` is `None` or an empty
-        string.
-    """
-
-    if not static_layers_data_access_template:
-        return '(NOT SPECIFIED)'
-
-    static_layers_data_access = static_layers_data_access_template
-
-    if '{granule_id}' in static_layers_data_access_template:
-        if not granule_id or granule_id == '(NOT SPECIFIED)':
-            error_msg = ('The placeholder "{granule_id}" is included in'
-                         ' the static layers data access template,'
-                         ' but the `granule_id` was not provided'
-                         " or is invalid")
-            error_channel = journal.error('get_static_layers_data_access')
-            error_channel.log(error_msg)
-            raise ValueError(error_msg)
-
-        static_layers_data_access = \
-            static_layers_data_access_template.replace('{granule_id}',
-                                                       granule_id)
-
-    return static_layers_data_access
 
 
 def _get_attribute_dict(band,

@@ -11,3 +11,4 @@ from .product_spec import (
     populate_dataset_attrs_from_spec,
 )
 from .projection import build_projection_dataset_attrs_dict
+from .utils import get_static_layers_data_access
