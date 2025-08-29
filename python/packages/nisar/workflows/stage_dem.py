@@ -397,10 +397,7 @@ def download_dem(polys, epsgs, outfile, version):
         ds.SetMetadataItem("dem_description", full_descr)
 
 
-def get_readme_contents(
-    in_readme_path: str,
-    max_size_bytes: int = 1_048_576,  # 1 MiB
-) -> str:
+def get_readme_contents(in_readme_path: str) -> str:
     """
     Get the contents of a README file in the nisar-dem S3 bucket.
 
@@ -409,28 +406,24 @@ def get_readme_contents(
     in_readme_path : str
         Path to the README file in the nisar-dem S3 bucket (e.g.
         '/vsis3/nisar-dem/v1.2/EPSG4326/README.txt').
-    max_size_bytes : int, optional
-        The maximum size, in bytes, to read from the README file.
-        Defaults to 1,048,576 (1 MiB).
 
     Returns
     -------
     str
         The contents of the README file.
-
-    Warnings
-    --------
-    The README file is expected to be <= `max_size_bytes` bytes in size. If the
-    file is larger, only the first `max_size_bytes` bytes will be read.
     """
     # JPL internal s3 buckets are not accessible via
     # https addresses due to cybersecurity concerns. This
     # excludes using "requests". Using boto3 and its AWS s3
     # API would add another unnecessary dependency to ISCE3.
     # Therefore, we use GDAL to read a remote text file.
+    stat = gdal.VSIStatL(in_readme_path)
+    if stat is None:
+        raise ValueError(f"Failed to access README file {in_readme_path!r}")
+
     fp = gdal.VSIFOpenL(in_readme_path, "rb")
     try:
-        text = gdal.VSIFReadL(1, max_size_bytes, fp).decode()
+        text = gdal.VSIFReadL(1, stat.size, fp).decode()
     finally:
         gdal.VSIFCloseL(fp)
     return text
