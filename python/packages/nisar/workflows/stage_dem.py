@@ -385,6 +385,12 @@ def download_dem(polys, epsgs, outfile, version):
     readme_text = get_readme_contents(in_readme_path)
     short_descr = extract_readme_bullet_item(readme_text, "Short description")
     notes = extract_readme_bullet_item(readme_text, "Notes")
+
+    # Some older versions of the README are missing a period at the end of the 'Short
+    # description'.
+    if not short_descr.endswith("."):
+        short_descr += "."
+
     full_descr = short_descr + " " + notes
 
     # Build vrt with downloaded DEMs and add dem_descr in metadata
