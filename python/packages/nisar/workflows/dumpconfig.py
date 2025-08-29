@@ -304,8 +304,10 @@ def init_argparse():
         "--rtc-dem-upsampling",
         dest="rtc_dem_upsampling",
         type=int,
+        required=False,
         help=(
-            "RTC DEM upsampling."
+             "Sets the RTC DEM upsampling value. Setting this value overrides the "
+             "automatic RTC setting behavior of the --nisar-defaults parameter."
         ),
     )
 
