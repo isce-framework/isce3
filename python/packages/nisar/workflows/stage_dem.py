@@ -42,7 +42,7 @@ def cmdLineParse():
     parser.add_argument('-m', '--margin', type=int, action='store',
                         default=5, help='Margin for DEM bounding box (km)')
     parser.add_argument('-b', '--bbox', type=float, action='store',
-                        dest='bbox', default=None, nargs='+',
+                        dest='bbox', default=None, nargs=4,
                         help='Spatial bounding box in latitude/longitude (WSEN, decimal degrees)')
     parser.add_argument('-v', '--version', type=str, action='store',
                         default='1.2', dest='version',
