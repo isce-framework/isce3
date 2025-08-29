@@ -88,8 +88,8 @@ def test_dem_description(version: str):
 
         for tiff_file in tiff_files:
             ds = gdal.Open(tiff_file, gdal.GA_ReadOnly)
-            tiff_license = ds.GetMetadataItem("LICENSE")
-            assert tiff_license == vrt_descr
+            tiff_descr = ds.GetMetadataItem("dem_description")
+            assert tiff_descr == vrt_descr
 
 
 if __name__ == "__main__":
@@ -97,4 +97,3 @@ if __name__ == "__main__":
     test_point2epsg()
     test_run_stage_dem()
     test_check_overlap()
-
