@@ -258,7 +258,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
 
         # Assign product specification version
         dst_h5[f'{ident_path}/productSpecificationVersion'] = \
-            np.bytes_('1.3.0')
+            np.bytes_('1.4.0')
 
         # Assign granule ID
         dst_h5[f'{ident_path}/granuleId'] = \
