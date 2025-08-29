@@ -42,7 +42,7 @@ def get_static_layers_data_access(
         The granule ID, which will be used to replace the substring
         "{granule_id}" in `static_layers_data_access_template`.
         If the template string contains "{granule_id}", but `granule_id` is
-        `None`, empty string, or "(NOT SPECIFIED)"), the function raises an
+        `None`, empty string, or "(NOT SPECIFIED)", the function raises an
         error.
 
     Returns
