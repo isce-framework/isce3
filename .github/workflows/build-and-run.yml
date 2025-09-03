@@ -45,9 +45,7 @@ jobs:
           - label: Latest
         build-type: [ Release, Debug ]
         include:
-          - os:
-              label: Linux
-            deps:
+          - deps:
               label: Minimum Python supported
               extra-specs: |
                 python=3.9
