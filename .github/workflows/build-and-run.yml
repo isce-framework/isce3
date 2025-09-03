@@ -24,6 +24,7 @@ jobs:
       env-file: ${{ matrix.deps.env-file || 'environment.yml' }}
       ctest-exclude: ${{ matrix.os.ctest_exclude || '-E ".*($ALL_EXCLUDE)"'}}
       extra-specs: ${{ matrix.deps.extra-specs || '' }}
+      build-type: ${{ matrix.build-type || 'RelWithDebInfo' }}
 
     defaults:
       run:
@@ -50,7 +51,6 @@ jobs:
               label: Minimum Python supported
               extra-specs: |
                 python=3.9
-            build-type: RelWithDebInfo
 
     name: Build And Test - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
     runs-on: ${{ matrix.os.runner || 'ubuntu-latest' }}
@@ -64,7 +64,7 @@ jobs:
         run: |
           echo Runner OS: ${{ matrix.os.runner || 'ubuntu-latest' }}
           echo Environment: ${{ env.env-file }}
-          echo Build Type: ${{ matrix.build-type }}
+          echo Build Type: ${{ env.build-type }}
           echo ctest exclude command: ${{ env.ctest_exclude }}
           echo Dependencies: ${{ env.extra-specs }}
 
@@ -97,7 +97,7 @@ jobs:
           cmake \
             -B build \
             -G Ninja \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+            -DCMAKE_BUILD_TYPE=${{ env.build-type }} \
             -DCMAKE_INSTALL_PREFIX=$ISCE3_PREFIX \
             -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
             .
