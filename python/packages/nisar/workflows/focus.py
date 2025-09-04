@@ -30,7 +30,8 @@ from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
 from isce3.focus import make_los_luts, fill_gaps, make_cal_luts, Notch
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
-from isce3.product import RadarGridParameters
+from isce3.product import (RadarGridParameters,
+    get_radar_grid_nominal_ground_spacing)
 from nisar.workflows.yaml_argparse import YamlArgparse
 import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
@@ -1193,7 +1194,8 @@ def get_max_prf(rawlist: Iterable[Raw]) -> float:
     return max(prfs)
 
 
-def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None):
+def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None,
+                   area=1.0):
     """Setup range compression.
 
     Parameters
@@ -1211,6 +1213,8 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None):
     cal : Optional[RslcCalibration]
         RSLC calibration data.  Will apply gain and delay calibrations to chirp
         and grid if provided.
+    area : Optional[float]
+        Area in m^2 to use for backscatter normalization
 
     Returns
     -------
@@ -1281,6 +1285,9 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None):
         scale, delay = get_scale_and_delay(cal, channel_in.pol)
         log.info(f"Scaling chirp by calibration factor = {scale}")
         chirp *= scale
+
+    log.info(f"Scaling chirp by 1 / sqrt({area} m^2) for area normalization")
+    chirp *= 1.0 / np.sqrt(area)
 
     rcmode = parse_rangecomp_mode(cfg.processing.rangecomp.mode)
     log.info(f"Preparing range compressor with mode={rcmode}")
@@ -1610,7 +1617,7 @@ def focus(runconfig, runconfig_path=""):
     beta0_lut, sigma0_lut, gamma0_lut = make_cal_luts(inc_lut)
 
     # Frequency A/B specific setup for output grid, doppler, and blocks.
-    ogrid, dop, blocks_bounds = dict(), dict(), dict()
+    ogrid, dop, blocks_bounds, areas = dict(), dict(), dict(), dict()
     for frequency, band in get_bands(common_mode).items():
         # Ensure aligned grids between A and B by just using an integer skip.
         # Sample rate of A is always an integer multiple of B for NISAR.
@@ -1622,6 +1629,9 @@ def focus(runconfig, runconfig_path=""):
         dop[frequency] = scale_doppler(dop_ref, band.center / fc_ref)
         blocks_bounds[frequency] = plan_processing_blocks(cfg, ogrid[frequency],
                                         dop[frequency], dem, orbit)
+        # So does output pixel area (beta0 convention).
+        daz, _ = get_radar_grid_nominal_ground_spacing(ogrid[frequency], orbit)
+        areas[frequency] = daz * ogrid[frequency].range_pixel_spacing
 
     # NOTE SAR duration depends on frequency, so check all subbands.
     proc_begin, proc_end = total_bounds(list(chain(*blocks_bounds.values())))
@@ -1839,7 +1849,8 @@ def focus(runconfig, runconfig_path=""):
 
             # Do range compression.
             rc, rc_grid, shift, deramp_rc = prep_rangecomp(cfg, raw, raw_grid,
-                                        channel_in, channel_out, cal)
+                                        channel_in, channel_out, cal,
+                                        areas[frequency])
 
             # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
