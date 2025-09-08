@@ -15,7 +15,7 @@ def run_slow_time_evd(
     num_max_trim=0,
     num_min_trim=0,
     max_num_rfi_ev=2,
-    num_rng_blks=1,
+    num_samples_rng_blk=256,
     threshold_params: ThresholdParams = ThresholdParams(),
     num_cpi_tb=20,
     mitigate_enable=False,
@@ -48,9 +48,9 @@ def run_slow_time_evd(
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
-    num_rng_blks: int, default=1
-        Number of range bin blocks to be processed for EVD, default=1
-        When num_rng_blks=1, all range samples are used to compute EVD
+    num_samples_rng_blk: int
+        Number of range samples per range block for computation of sample covariance matrix.
+        default=256, in general num_samples_rng_blk > 2 x cpi_len is needed
     threshold_params: ThresholdParams object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
         ratio between maximum and minimum Eigenvalue slopes (MMES) of the
@@ -86,7 +86,7 @@ def run_slow_time_evd(
     """
 
     num_pulses, num_rng_samples = raw_data.shape
-    num_samples_rng_blk = num_rng_samples // num_rng_blks
+    num_rng_blks = num_rng_samples // num_samples_rng_blk
 
     # If the number of pulses is not an integer multiple of TB size, following
     # operations will ensue. If the number of remaining pulses is greater than
