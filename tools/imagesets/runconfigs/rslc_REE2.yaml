@@ -123,11 +123,15 @@ runconfig:
                 # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
                 # eigenvalue decomposition.
                 mitigation_algorithm: ST-EVD
-                # Number of subdivisions in range.  Defaults to 1.
-                num_range_blocks: 1
+
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.
                     cpi_length: 32
+                    # Number of range samples per range block when data blocking
+                    # is applied in range diretion. It is recommended that this
+                    # parameter is at least 2 x cpi_len to avoid sample covariance
+                    # estimation loss and 5 x cpi_len to have a desirable performance.
+                    num_samples_rng_blk: 256
                     # Maximum allowable number of emitters can be detected and
                     # suppressed per CPI. ST-EVD would ignore emitters exceeding
                     # this limit. This number should be less than cpi_length.
