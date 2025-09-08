@@ -370,7 +370,7 @@ slow_time_evd_options:
   # is applied in range diretion. It is recommended that this
   # parameter is at least 2 x cpi_len to avoid sample covariance
   # estimation loss and 5 x cpi_len to have a desirable performance.
-  num_samples_rng_blk: 256
+  num_samples_rng_blk: int(min=1, required=False)
   # Maximum allowable number of emitters can be detected and suppressed per CPI.
   # ST-EVD would ignore emitters exceeding this limit. This number should be
   # less than cpi_length. Defaults to 16.
