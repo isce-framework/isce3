@@ -62,7 +62,7 @@ def run_freq_notch(
     raw_data: np.ndarray,
     num_pulses_az,
     *,
-    num_rng_blks: int = 1,
+    num_samples_rng_blk: int = 256,
     az_winsize: int = 256,
     rng_winsize: int = 100,
     trim_frac: float = 0.01,
@@ -85,10 +85,12 @@ def run_freq_notch(
         Number of azimuth pulses within the raw data to be processed at once
         It is desirable to divide the raw data into processing blocks
         consisted of dimensions [num_pulses_az x num_samples_rng_blk]
-    num_rng_blks: int, default=1
-        Number of blocks in the range dimension, default=1
-        When num_rng_blks=1, all the range samples of the pulses within a 
-        processing block are used to estimate detection mask.
+    num_samples_rng_blk: int, default=256
+        Number of range samples per range block when data blockin is applied 
+        in range direction. It is recommended that this parameter is at least 
+        5 x cpi_len to avoid SINR degradation. In addition, in order to avoid 
+        a run-time error for ST-EVD this parameter needs to be at least 
+        2 x cpi + 1.
     az_winsize: int, default=256
         The size (in number of pulses) of moving average Azimuth window 
         in which the averaged range spectrum is computed for narrowband detector.
@@ -149,7 +151,7 @@ def run_freq_notch(
             )
 
     num_pulses, num_rng_samples = raw_data.shape
-    num_samples_rng_blk = num_rng_samples // num_rng_blks
+    num_rng_blks = num_rng_samples // num_samples_rng_blk
 
     # Count the total number of detected RFI frequency bins
     rfi_pulse_count_sum = 0

@@ -48,9 +48,11 @@ def run_slow_time_evd(
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
-    num_samples_rng_blk: int
-        Number of range samples per range block for computation of sample covariance matrix.
-        default=256, in general num_samples_rng_blk > 2 x cpi_len is needed
+    num_samples_rng_blk: int, default=256
+        Number of range samples per range block when data blockin is applied in range direction. 
+        It is recommended that this parameter is at least 5 x cpi_len to avoid SINR degradation.
+        In addition, in order to avoid a run-time error for ST-EVD this parameter needs to be 
+        at least 2 x cpi + 1.
     threshold_params: ThresholdParams object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
         ratio between maximum and minimum Eigenvalue slopes (MMES) of the
