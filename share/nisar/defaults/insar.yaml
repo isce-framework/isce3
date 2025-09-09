@@ -1595,8 +1595,6 @@ runconfig:
 
                     ionosphere_phase_screen:
 
-                    ionosphere_phase_screen:
-
                         # *** Threshold Percentage Parameters ***
                         # Check for malformed datasets using these threshold percentages.
                         # An exception is raised if the percent of pixels with the corresponding value
