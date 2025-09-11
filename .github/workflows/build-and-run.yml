@@ -6,6 +6,7 @@ on:
     branches:
       - develop
       - release-*
+      - docs-action
     tags:
       - v*.*.*
 
