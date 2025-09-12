@@ -1,13 +1,13 @@
-#include "pycuampcor.h"
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <isce3/cuda/matchtemplate/pycuampcor/cuAmpcorController.h>
-#include <isce3/cuda/matchtemplate/pycuampcor/cuAmpcorParameter.h>
+#include "cuAmpcorController.h"
+#include "cuAmpcorParameter.h"
 
-void addbinding_pycuampcor(pybind11::module& m)
+PYBIND11_MODULE(PyCuAmpcor, m)
 {
+    m.doc() = "Python module controller for underlying CUDA-Ampcor code";
+
     using str = std::string;
     using cls = cuAmpcorController;
 

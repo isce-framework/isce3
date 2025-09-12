@@ -158,7 +158,7 @@ def run(cfg: dict, output_hdf5: str = None):
                             layer_scratch_path / 'gross_offset')
                     ampcor.snrImageName = str(layer_scratch_path / 'snr')
                     ampcor.covImageName = str(layer_scratch_path / 'covariance')
-                    ampcor.corrImageName = str(layer_scratch_path/ 'correlation_peak')
+                    ampcor.peakValueImageName = str(layer_scratch_path/ 'correlation_peak')
 
                     create_empty_dataset(str(layer_scratch_path / 'dense_offsets'),
                                          ampcor.numberWindowAcross,

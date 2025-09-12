@@ -15,18 +15,19 @@
 #ifndef CU_AMPCOR_CONTROLLER_H
 #define CU_AMPCOR_CONTROLLER_H
 
-#include <memory>
-
 // dependencies
 #include "cuAmpcorParameter.h"
 
 class cuAmpcorController {
 public:
-    std::unique_ptr<cuAmpcorParameter> param;  ///< the parameter set
+    cuAmpcorParameter *param;  ///< the parameter set
     // constructor
     cuAmpcorController();
+    // destructor
+    ~cuAmpcorController();
     // run interface
     void runAmpcor();
+    bool isDoublePrecision();
 };
 #endif
 

@@ -13,7 +13,7 @@
 #define __CUNORMALIZER_H
 
 #include "cuArrays.h"
-#include "cudaUtil.h"
+#include "data_types.h"
 
 /**
  * Abstract class interface for correlation surface normalization processor
@@ -22,46 +22,34 @@
 class cuNormalizeProcessor {
 public:
     // default constructor and destructor
-    cuNormalizeProcessor() {}
-    ~cuNormalizeProcessor() {}
+    cuNormalizeProcessor() = default;
+    virtual ~cuNormalizeProcessor() = default;
     // execute interface
-    virtual void execute(cuArrays<float> * correlation, cuArrays<float> *reference, cuArrays<float> *secondary, cudaStream_t stream) = 0;
+    virtual void execute(cuArrays<real_type> * correlation, cuArrays<real_type> *reference, cuArrays<real_type> *secondary, cudaStream_t stream) = 0;
 };
 
-class cuNormalizer {
-private:
-    cuNormalizeProcessor *processor;
-public:
-     // disable the default constructor
-     cuNormalizer() = delete;
-     // constructor with the secondary dimension
-     cuNormalizer(int secondaryNX, int secondaryNY, int count);
-     // destructor
-     ~cuNormalizer();
-     // execute correlation surface normalization
-     void execute(cuArrays<float> *correlation, cuArrays<float> *reference, cuArrays<float> *secondary,
-        cudaStream_t stream);
-};
+// factory with the secondary dimension
+cuNormalizeProcessor* newCuNormalizer(int NX, int NY, int count);
 
 
 template<int Size>
 class cuNormalizeFixed : public cuNormalizeProcessor
 {
 public:
-    void execute(cuArrays<float> * correlation, cuArrays<float> *reference, cuArrays<float> *search, cudaStream_t stream) override;
+    void execute(cuArrays<real_type> * correlation, cuArrays<real_type> *reference, cuArrays<real_type> *search, cudaStream_t stream) override;
 };
 
 class cuNormalizeSAT : public cuNormalizeProcessor
 {
 private:
-    cuArrays<float> *referenceSum2;
-    cuArrays<float> *secondarySAT;
-    cuArrays<float> *secondarySAT2;
+    cuArrays<real_type> *referenceSum2;
+    cuArrays<real_type> *secondarySAT;
+    cuArrays<real_type> *secondarySAT2;
 
 public:
     cuNormalizeSAT(int secondaryNX, int secondaryNY, int count);
     ~cuNormalizeSAT();
-    void execute(cuArrays<float> * correlation, cuArrays<float> *reference, cuArrays<float> *search, cudaStream_t stream) override;
+    void execute(cuArrays<real_type> * correlation, cuArrays<real_type> *reference, cuArrays<real_type> *search, cudaStream_t stream) override;
 };
 
 #endif
