@@ -1378,8 +1378,8 @@ def set_algorithm_metadata(cfg: Struct, slc: SLC, is_dithered: bool = False):
     rfi = cfg.processing.radio_frequency_interference
     slc.set_algorithms(
         demInterpolation=cfg.processing.dem.interp_method,
-        rfiDetection="ST-EVD" if rfi.detection_enabled else "disabled",
-        rfiMitigation="ST-EVD" if rfi.mitigation_enabled else "disabled",
+        rfiDetection=rfi.mitigation_algorithm if rfi.detection_enabled else "disabled",
+        rfiMitigation=rfi.mitigation_algorithm if rfi.mitigation_enabled else "disabled",
         elevationAntennaPatternCorrection=cfg.processing.is_enabled.eap,
         rangeSpreadingLossCorrection=cfg.processing.is_enabled.range_cor,
         azimuthPresumming="BLU" if is_dithered else "disabled")
