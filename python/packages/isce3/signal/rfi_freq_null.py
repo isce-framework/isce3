@@ -8,8 +8,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.fft import fft, ifft
 from numpy.polynomial import Polynomial
-from scipy import stats
-from collections.abc import Iterator
+from typing import Iterator
 
 def overlap_slice_gen(total_size: int, batch_size: int, overlap: int=0) -> Iterator[slice]:
     """Generate slices with size defined by batch_size and number of 
@@ -66,8 +65,9 @@ def run_freq_notch(
     az_winsize: int = 256,
     rng_winsize: int = 100,
     trim_frac: float = 0.01,
-    pvalue_threshold: float = 0.005,
-    cdf_threshold: float = 0.1,
+    zscore_threshold: float = 2.0,
+    tsnb_rfi_hit_threshold: int = 3,
+    tvwb_rfi_hit_threshold: int = 3,
     nb_detect: bool = True,
     wb_detect: bool = True,
     mitigate_enable=False,
@@ -99,18 +99,27 @@ def run_freq_notch(
     trim_frac: float, optional
         Total proportion of data to trim. `trim_frac/2` is cut off of both tails
         of the distribution. Defaults to 0.01.
-    pvalue_threshold: float, default=0.005
-        Confidence Level = 1 - pvalue_threshold
-        Null hypothesis: No RFI
-        Alternative hypothesis: RFI is present
-        If p-value of the range-frequency power spectra is less than p-value threshold, 
-        alternative hypothesis is accepted. Otherwise, null hypothesis is accepted.
-    cdf_threshold: float, default=0.1
-        It is a threshold for the cumulative probability density function (CDF) 
-        of the input Time Stationary Narrowband (TSNB) and Time Varying Wideband 
-        (TVWB) masks. It represents an estimate of the probability of RFI likelihood
-        in the input raw_data. A small cdf_threshold value results in a high threshold 
-        for RFI detection.
+    zscore_threshold: float
+        This threshold represents the number of standard deviations (from the data mean).
+        If the zscore of a frequency bin is greater than this threshold, then that 
+        frequency bin is marked as RFI in the TSNB and TVWB detectors.
+        Default: 3.0
+    tsnb_rfi_hit_threshold: int
+        The TSNB RFI mask counts the number of times that a frequency bin is detected 
+        as RFI-contaminated in the TSNB detector. In the final step of generating a 
+        binary frequency-domain RFI mask, a frequency bin is determined to be 
+        RFI-contaminated only if its RFI count is greater than this threshold. This is
+        to filter out incidental detections, ensuring that only persistent RFI events
+        are marked in the binary mask.
+        Default: 3
+    tvwb_rfi_hit_threshold: int
+        The TVWB RFI mask counts the number of times that a frequency bin is detected 
+        as RFI-contaminated in the TSNB detector. In the final step of generating a 
+        binary frequency-domain RFI mask, a frequency bin is determined to be 
+        RFI-contaminated only if its RFI count is greater than this threshold. This is
+        to filter out incidental detections, ensuring that only persistent RFI events
+        are marked in the binary mask.
+        Default: 3
     nb_detect: bool, default=True
         Controls whether narrowband RFI detection mask should be generated.
         If false, narrowband RFI detection mask are populated by zeros.
@@ -148,6 +157,13 @@ def run_freq_notch(
                 " as the input data"
             )
 
+    # Max number of RFI hit count is limited by azimuth and range averaging window sizes
+    if (tsnb_rfi_hit_threshold > az_winsize):
+        warnings.warn(f'tsnb_rfi_hit_threshold shall be equal to or less than {az_winsize}.')
+
+    if (tvwb_rfi_hit_threshold > rng_winsize):
+        warnings.warn(f'tsnb_rfi_hit_threshold shall be equal to or less than {rng_winsize}.')
+
     num_pulses, num_rng_samples = raw_data.shape
     num_samples_rng_blk = num_rng_samples // num_rng_blks
 
@@ -168,10 +184,11 @@ def run_freq_notch(
                 az_winsize=az_winsize,
                 rng_winsize=rng_winsize,
                 trim_frac=trim_frac,
-                pvalue_threshold=pvalue_threshold,
-                cdf_threshold=cdf_threshold,
+                zscore_threshold=zscore_threshold,
+                tsnb_rfi_hit_threshold=tsnb_rfi_hit_threshold,
+                tvwb_rfi_hit_threshold=tvwb_rfi_hit_threshold,
                 nb_detect=nb_detect,
-                wb_detect=nb_detect,
+                wb_detect=wb_detect,
                 mitigate_enable=mitigate_enable,
                 raw_data_mitigated=raw_data_mitigated[blk_slow_time, blk_fast_time],
             )
@@ -191,8 +208,9 @@ def rfi_freq_notch(
     az_winsize=256,
     rng_winsize=100,
     trim_frac=0.01,
-    pvalue_threshold=0.005,
-    cdf_threshold=0.1,
+    zscore_threshold=3.0,
+    tsnb_rfi_hit_threshold=3,
+    tvwb_rfi_hit_threshold=3,
     nb_detect=True,
     wb_detect=True,
     mitigate_enable=False,
@@ -218,18 +236,27 @@ def rfi_freq_notch(
     trim_frac: float, optional
         Total proportion of data to trim. `trim_frac/2` is cut off of both tails
         of the distribution. Defaults to 0.01.
-    pvalue_threshold: float, default=0.005
-        Confidence Level = 1 - pvalue_threshold
-        Null hypothesis: No RFI
-        Alternative hypothesis: RFI is present
-        If p-value of the range-frequency power spectra is less than p-value threshold, 
-        alternative hypothesis is accepted. Otherwise, null hypothesis is accepted.
-    cdf_threshold: float, default=0.1
-        It is a threshold for the cumulative probability density function (CDF) 
-        of the input Time Stationary Narrowband (TSNB) and Time Varying Wideband 
-        (TVWB) masks. It represents an estimate of the probability of RFI likelihood
-        in the input raw_data. A small cdf_threshold value results in a high threshold 
-        for RFI detection.
+    zscore_threshold: float
+        This threshold represents the number of standard deviations (from the data mean).
+        If the zscore of a frequency bin is greater than this threshold, then that 
+        frequency bin is marked as RFI in the TSNB and TVWB detectors.
+        Default: 3.0
+    tsnb_rfi_hit_threshold: int
+        The TSNB RFI mask counts the number of times that a frequency bin is detected 
+        as RFI-contaminated in the TSNB detector. In the final step of generating a 
+        binary frequency-domain RFI mask, a frequency bin is determined to be 
+        RFI-contaminated only if its RFI count is greater than this threshold. This is
+        to filter out incidental detections, ensuring that only persistent RFI events
+        are marked in the binary mask.
+        Default: 3
+    tvwb_rfi_hit_threshold: int
+        The TVWB RFI mask counts the number of times that a frequency bin is detected 
+        as RFI-contaminated in the TSNB detector. In the final step of generating a 
+        binary frequency-domain RFI mask, a frequency bin is determined to be 
+        RFI-contaminated only if its RFI count is greater than this threshold. This is
+        to filter out incidental detections, ensuring that only persistent RFI events
+        are marked in the binary mask.
+        Default: 3
     nb_detect: bool, default=True
         Controls whether narrowband RFI detection mask should be generated.
         If false, narrowband RFI detection mask are populated by zeros.
@@ -268,7 +295,6 @@ def rfi_freq_notch(
             "Data type mismatch: raw_data_mitigated should be complex."
         )
 
-    num_rng_samples = raw_data.shape[1]
     raw_data_fft = fft(raw_data, axis=1)
     raw_data_freq_psd = np.abs(raw_data_fft)**2
 
@@ -277,14 +303,20 @@ def rfi_freq_notch(
         mask_tsnb = detect_rfi_tsnb(
             raw_data_freq_psd, 
             az_winsize, 
-            pvalue_threshold
+            zscore_threshold,
+            trim_frac
         )
     else:
         mask_tsnb = np.zeros(raw_data_fft.shape, dtype=np.int32)
 
     # Enable wideband RFI detection
     if wb_detect:
-        mask_tvwb = detect_rfi_tvwb(raw_data_freq_psd, rng_winsize, pvalue_threshold)
+        mask_tvwb = detect_rfi_tvwb(
+            raw_data_freq_psd, 
+            rng_winsize, 
+            zscore_threshold, 
+            trim_frac
+        )
     else:
         mask_tvwb = np.zeros(raw_data_fft.shape, dtype=np.int32) # image mask
 
@@ -292,7 +324,8 @@ def rfi_freq_notch(
     rfi_detect_mask = gen_rfi_detect_mask(
         mask_tsnb, 
         mask_tvwb, 
-        cdf_threshold,
+        tsnb_rfi_hit_threshold,
+        tvwb_rfi_hit_threshold
     )
 
     # Remove RFI using combined detection mask
@@ -356,7 +389,7 @@ def trim_mean_and_std(a, trim_frac=0.01, axis=0):
 def detect_rfi_tsnb(
     raw_data_fft_psd, 
     az_winsize=256, 
-    pvalue_threshold=0.005,
+    zscore_threshold=3.0,
     trim_frac=0.01
 ):
     """Estimate Time-Stationary Narrowband (TSNB) frequency domain RFI mask.
@@ -373,14 +406,11 @@ def detect_rfi_tsnb(
     az_winsize: int, default=256
         The size (in number of pulses) of moving average Azimuth window 
         in which the averaged range spectrum is computed for narrowband detector.
-    pvalue_threshold: float, default=0.005
-        Time Stationary Narrowband (TSNB) p-value threshold. 
-        Confidence Level = 1 - pvalue_threshold
-        If p-value of the range-frequency power spectra is less than TSNB
-        p-value threshold, alternative hypothesis is accepted.  
-        Otherwise, null hypothesis is accepted.
-        Null hypothesis: No TSNB RFI
-        Alternative hypothesis: TSNB RFI is present
+   zscore_threshold: float
+        This threshold represents the number of standard deviations (from the data mean).
+        If the zscore of a frequency bin is greater than this threshold, then that 
+        frequency bin is marked as RFI in the TSNB and TVWB detectors.
+        Default: 3.0
     trim_frac: float, optional
         Total proportion of data to trim. `trim_frac/2` is cut off of both tails
         of the distribution. Defaults to 0.01.
@@ -407,23 +437,22 @@ def detect_rfi_tsnb(
         az_block = raw_data_fft_psd[i : i + az_winsize]
         avg_az_time = np.mean(az_block, axis=0)  # Average in Azimuth time
 
-        #compute Z-Scores of data which indicates the number of
-        #standard deviations a data value lies from the mean
+        # compute Z-Scores of data which meausures the number of
+        # standard deviations a data value lies from the data mean
         mu, sigma = trim_mean_and_std(avg_az_time, trim_frac, axis=0)
         zscores = (avg_az_time - mu) / sigma
 
-        # Convert Z-Scores to one-tailed P-Values
-        pvalues = stats.norm.sf(zscores)
-        
-        # Isolate significant values (p < threshold) and convert to ints
-        # The results are significant (alternative hypothesis is True) if
-        # p < threshold and vice versa.
-        rfi_hit_tsnb = (pvalues < pvalue_threshold).astype(int)
+        # Compare with zscore_threshold
+        rfi_hit_tsnb = (zscores > zscore_threshold).astype(int)
+
+        #  Update RFI hit buffer
         tsnb_hits_buffer += rfi_hit_tsnb  # Add RFI hits to overall mask
 
+        # Write to RFI mask
         count = i % az_winsize
         mask_tsnb[i] = tsnb_hits_buffer[count].astype(np.int32)
 
+        # Zero out the row that gets written into the RFI mask
         tsnb_hits_buffer[count] = 0  # Zero out mask line
 
     return mask_tsnb
@@ -432,7 +461,7 @@ def detect_rfi_tsnb(
 def detect_rfi_tvwb(
     raw_data_fft_psd, 
     rng_winsize=100, 
-    pvalue_threshold=0.005, 
+    zscore_threshold=3.0, 
     trim_frac=0.01
 ):
     """Estimate Time-Varying Wideband (TVWB) frequency-domain RFI mask.
@@ -448,14 +477,11 @@ def detect_rfi_tvwb(
         The size (in number of range bins) of moving average Range window 
         in which the total power in range spectrum is computed for wideband
         detector.
-    pvalue_threshold: float, default=0.005
-        Time Varying Wideband (TVWB) p-value threshold. 
-        Confidence Level = 1 - pvalue_threshold
-        If p-value of the range-frequency power spectra is less than TVWB 
-        p-value threshold, alternative hypothesis is accepted.  
-        Otherwise, null hypothesis is accepted.
-        Null hypothesis: No TVWB  RFI
-        Alternative hypothesis: TVWB RFI is present
+    zscore_threshold: float
+        This threshold represents the number of standard deviations (from the data mean).
+        If the zscore of a frequency bin is greater than this threshold, then that 
+        frequency bin is marked as RFI in the TSNB and TVWB detectors.
+        Default: 3.0
     trim_frac: float, optional
         Total proportion of data to trim. `trim_frac/2` is cut off of both tails
         of the distribution. Defaults to 0.01.
@@ -505,16 +531,17 @@ def detect_rfi_tvwb(
         mu, sigma = trim_mean_and_std(avg_rng_freq_db, trim_frac, axis=0)
         zscores = (avg_rng_freq_db - mu) / sigma
 
-        # Isolate significant values (p < threshold) and convert to ints
-        # The results are significant (alternative hypothesis is True) if
-        # p < alpha and vice versa.
-        pvalues = stats.norm.sf(zscores)
+        # Compare with zscore_threshold
+        rfi_hit_tvwb = (zscores > zscore_threshold).astype(int)
 
-        rfi_hit_tvwb = (pvalues < pvalue_threshold).astype(int)
-        tvwb_hits_buffer += rfi_hit_tvwb
+        # Update RFI hit buffer
+        tvwb_hits_buffer += rfi_hit_tvwb # Add RFI hits to overall mask
 
+        # Write to RFI mask
         count = i % rng_winsize
         mask_tvwb[:, i] = tvwb_hits_buffer[count].astype(np.int32)
+
+        # Zero out the row that gets written into the RFI mask
         tvwb_hits_buffer[count] = 0
 
     return mask_tvwb
@@ -523,7 +550,8 @@ def detect_rfi_tvwb(
 def gen_rfi_detect_mask(
     mask_tsnb,
     mask_tvwb,
-    cdf_threshold=0.1,
+    tsnb_rfi_hit_threshold,
+    tvwb_rfi_hit_threshold,
 ):
     """Estimate combined frequency-domain RFI mask using input
     TSNB and TVWB masks.
@@ -537,12 +565,22 @@ def gen_rfi_detect_mask(
         Frequency domain TVWB hit mask based on p-value of the probability
         density function (PDF) of range frequency power spectra. Must be
         of the same shape as 'mask_tsnb'.
-    cdf_threshold: float, default=0.1
-        This is the  threshold for the cumulative probability density function (CDF) 
-        of the input Time Stationary Narrowband (TSNB) and Time Varying Wideband 
-        (TVWB) masks. It represents an estimate of the probability of RFI likelihood
-        in the input raw_data. A small cdf_threshold value results in a high threshold 
-        for RFI detection.
+    tsnb_rfi_hit_threshold: int
+        The TSNB RFI mask counts the number of times that a frequency bin is detected 
+        as RFI-contaminated in the TSNB detector. In the final step of generating a 
+        binary frequency-domain RFI mask, a frequency bin is determined to be 
+        RFI-contaminated only if its RFI count is greater than this threshold. This is
+        to filter out incidental detections, ensuring that only persistent RFI events
+        are marked in the binary mask.
+        Default: 3
+    tvwb_rfi_hit_threshold: int
+        The TVWB RFI mask counts the number of times that a frequency bin is detected 
+        as RFI-contaminated in the TSNB detector. In the final step of generating a 
+        binary frequency-domain RFI mask, a frequency bin is determined to be 
+        RFI-contaminated only if its RFI count is greater than this threshold. This is
+        to filter out incidental detections, ensuring that only persistent RFI events
+        are marked in the binary mask.
+        Default: 3
 
     Returns
     -------
@@ -555,12 +593,9 @@ def gen_rfi_detect_mask(
     if mask_tsnb.shape != mask_tvwb.shape:
         raise ValueError("shape mismatch: RFI masks must have the same shape")
 
-    tsnb_thresh = np.quantile(mask_tsnb, 1.0 - cdf_threshold)
-    tvwb_thresh = np.quantile(mask_tvwb, 1.0 - cdf_threshold)
-
     # Generate Binary RFI mask for TSNB and TVWB
-    tsnb_detect = (mask_tsnb > tsnb_thresh)
-    tvwb_detect = (mask_tvwb > tvwb_thresh)
+    tsnb_detect = mask_tsnb > tsnb_rfi_hit_threshold
+    tvwb_detect = mask_tvwb > tvwb_rfi_hit_threshold
 
     # Generate final combined RFI mask
     rfi_detect_mask = tsnb_detect | tvwb_detect
