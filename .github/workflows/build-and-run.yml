@@ -52,7 +52,7 @@ jobs:
                 python=3.9
           - deps:
               label: Documentation
-              extra-specs: |
+              extra-specs: >-
                 doxygen
                 mkdocs
                 mkdocs-material
