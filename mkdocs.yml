@@ -5,7 +5,7 @@ nav:
   - Home: index.md
   - Installation: buildinstall.md
   - Python API: api/python/isce3/core.html
-  - C++ API (Unstable): isce3/annotated.html
+  - C++ API (Unstable): api/cxx
 
 extra_javascript:
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
