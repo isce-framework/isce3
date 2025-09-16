@@ -50,6 +50,19 @@ jobs:
               label: Minimum Python supported
               extra-specs: |
                 python=3.9
+          - deps:
+              label: Documentation
+              extra-specs: |
+                doxygen
+                mkdocs
+                mkdocs-material
+                pdoc
+                pymdown-extensions
+            # Build with CUDA so the Python CUDA extension is documented,
+            # but don't try to run the tests since we're on a CPU-only builder.
+            extra-cmake-args: -DWITH_CUDA=ON
+            os:
+              - ctest_exclude: -E ".*($ALL_EXCLUDE|cuda)"
 
     name: Build And Test - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
     runs-on: ${{ matrix.os.runner || 'ubuntu-latest' }}
@@ -76,6 +89,11 @@ jobs:
           create-args: >-
             ${{ env.extra-specs }}
 
+      - name: Install CUDA Toolkit
+        if: matrix.deps.label == 'Documentation'
+        run: |
+          micromamba install -c nvidia cuda
+
       # Fix missing conda command on macOS
       - name: macOS conda command fixup
         if: runner.os == 'macOS'
@@ -99,6 +117,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ env.build-type }} \
             -DCMAKE_INSTALL_PREFIX=$ISCE3_PREFIX \
             -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
+            ${{ matrix.extra-cmake-args }} \
             .
 
       # Build the project
@@ -132,11 +151,8 @@ jobs:
           ctest --output-on-failure ${{ env.ctest-exclude }}
 
       - name: Build documentation
-        # Make sure we just run this step once
-        if: matrix.os.label == 'Linux' && matrix.deps.label == 'Latest' && matrix.build-type == 'Release'
+        if: matrix.deps.label == 'Documentation'
         run: |
-          micromamba install pdoc doxygen sphinx mkdocs mkdocs-material pymdown-extensions
-
           mkdocs build -d build/docs-output
 
           # XXX Manually create doxygen output dir, why doesn't CREATE_SUBDIRS in the config work?
@@ -154,7 +170,7 @@ jobs:
           find build/docs-output/api/python/ -type f -name '*.html' -print0 | xargs -0 sed -i '/polyfill.io/d'
 
       - name: Deploy documentation
-        if: matrix.os.label == 'Linux' && matrix.deps.label == 'Latest' && matrix.build-type == 'Release'
+        if: matrix.deps.label == 'Documentation'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
