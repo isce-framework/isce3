@@ -406,7 +406,7 @@ __global__ void sumCoherentBatch(
         const double* __restrict__ tau_atm_in,
         const int* __restrict__ kstart_in, const int* __restrict__ kstop_in,
         const size_t n, const double fc, const Kernel kernel,
-        const int batch_start, const int batch_stop)
+        const int batch_start, const int batch_stop, const float pedestal = 1.0f)
 {
     // thread index (1d grid of 1d blocks)
     const auto tid = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
@@ -434,6 +434,10 @@ __global__ void sumCoherentBatch(
     const double dtau = sampling_window.spacing();
     const auto samples = static_cast<size_t>(sampling_window.size());
 
+    const float win0 = 0.5f * (1.0f + pedestal);
+    const float win1 = 1.0f - win0;
+    const float win_freq = 2.0f * M_PI / (kstop - kstart - 1);
+
     // loop over lines in batch
     thrust::complex<double> batch_sum = {0., 0.};
     for (int k = batch_start; k < batch_stop; ++k) {
@@ -456,7 +460,8 @@ __global__ void sumCoherentBatch(
         ::sincospi(2. * fc * tau, &sin_phi, &cos_phi);
         z *= thrust::complex<double>(cos_phi, sin_phi);
 
-        batch_sum += z;
+        const float window = win0 - win1 * std::cos(win_freq * (k - kstart));
+        batch_sum += window * z;
     }
 
     // add batch sum to total
@@ -474,7 +479,7 @@ ErrorCode backproject(std::complex<float>* out,
                       const Kernel& kernel, DryTroposphereModel dry_tropo_model,
                       const Rdr2GeoBracketParams& rdr2geo_params,
                       const Geo2RdrBracketParams& geo2rdr_params, int batch,
-                      float* height)
+                      float* height, float pedestal)
 {
     // XXX input reference epoch must match output reference epoch
     if (out_geometry.referenceEpoch() != in_geometry.referenceEpoch()) {
@@ -681,7 +686,7 @@ ErrorCode backproject(std::complex<float>* out,
                 img.data().get(), rc.data().get(), pos.data().get(),
                 vel.data().get(), sampling_window, x.data().get(),
                 tau_atm.data().get(), kstart.data().get(), kstop.data().get(),
-                out_grid_size, fc, kernel, k, k + curr_batch);
+                out_grid_size, fc, kernel, k, k + curr_batch, pedestal);
 
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
@@ -704,7 +709,7 @@ ErrorCode backproject(std::complex<float>* out,
                       DryTroposphereModel dry_tropo_model,
                       const Rdr2GeoBracketParams& rdr2geo_params,
                       const Geo2RdrBracketParams& geo2rdr_params, int batch,
-                      float* height)
+                      float* height, float pedestal)
 {
     // copy inputs to device
     const DeviceRadarGeometry d_out_geometry(out_geometry);
@@ -717,35 +722,35 @@ ErrorCode backproject(std::complex<float>* out,
                 dynamic_cast<const HostBartlettKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, height);
+                         geo2rdr_params, batch, height, pedestal);
     }
     else if (typeid(kernel) == typeid(HostLinearKernel<float>)) {
         const DeviceLinearKernel<float> d_kernel(
                 dynamic_cast<const HostLinearKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, height);
+                         geo2rdr_params, batch, height, pedestal);
     }
     else if (typeid(kernel) == typeid(HostKnabKernel<float>)) {
         const DeviceKnabKernel<float> d_kernel(
                 dynamic_cast<const HostKnabKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, height);
+                         geo2rdr_params, batch, height, pedestal);
     }
     else if (typeid(kernel) == typeid(HostTabulatedKernel<float>)) {
         const DeviceTabulatedKernel<float> d_kernel(
                 dynamic_cast<const HostTabulatedKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, height);
+                         geo2rdr_params, batch, height, pedestal);
     }
     else if (typeid(kernel) == typeid(HostChebyKernel<float>)) {
         const DeviceChebyKernel<float> d_kernel(
                 dynamic_cast<const HostChebyKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, height);
+                         geo2rdr_params, batch, height, pedestal);
     }
     else {
         throw isce3::except::RuntimeError(ISCE_SRCINFO(), "not implemented");

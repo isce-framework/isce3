@@ -36,6 +36,7 @@ using isce3::geometry::detail::Rdr2GeoBracketParams;
  * \param[in]  geo2rdr_params  geo2rdr configuration parameters
  * \param[in]  batch           Number of range-compressed data lines per batch
  * \param[out] height          Height of each pixel in meters above ellipsoid
+ * \param[in]  pedestal        Raised cosine window parameter (value at edge)
  *
  * \returns Non-zero error code if geometry fails to converge for any pixel,
  *          and the values for these pixels are set to NaN.
@@ -53,7 +54,7 @@ backproject(std::complex<float>* out,
             DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
             const Rdr2GeoBracketParams& rdr2geo_params = {},
             const Geo2RdrBracketParams& geo2rdr_params = {},
-            int batch = 1024, float* height = nullptr);
+            int batch = 1024, float* height = nullptr, float pedestal = 1.0f);
 
 /**
  * Focus in azimuth via time-domain backprojection
@@ -71,6 +72,7 @@ backproject(std::complex<float>* out,
  * \param[in]  geo2rdr_params  geo2rdr configuration parameters
  * \param[in]  batch           Number of range-compressed data lines per batch
  * \param[out] height          Height of each pixel in meters above ellipsoid
+ * \param[in]  pedestal        Raised cosine window parameter (value at edge)
  *
  * \returns Non-zero error code if geometry fails to converge for any pixel,
  *          and the values for these pixels are set to NaN.
@@ -85,6 +87,6 @@ backproject(std::complex<float>* out,
             DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
             const Rdr2GeoBracketParams& rdr2geo_params = {},
             const Geo2RdrBracketParams& geo2rdr_params = {},
-            int batch = 1024, float* height = nullptr);
+            int batch = 1024, float* height = nullptr, float pedestal = 1.0f);
 
 }}} // namespace isce3::cuda::focus

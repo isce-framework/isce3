@@ -30,6 +30,7 @@ namespace focus {
  * \param[in]  r2g_params      rdr2geo configuration parameters
  * \param[in]  g2r_params      geo2rdr configuration parameters
  * \param[out] height          Height of each pixel in meters above ellipsoid
+ * \param[in]  pedestal        Raised cosine window parameter (value at edge)
  *
  * \returns Non-zero error code if geometry fails to converge for any pixel,
  *          and the values for these pixels are set to NaN.
@@ -44,7 +45,8 @@ backproject(std::complex<float>* out,
         DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params = {},
-        float* height = nullptr);
+        float* height = nullptr,
+        float pedestal = 1.0f);
 
 } // namespace focus
 } // namespace isce3

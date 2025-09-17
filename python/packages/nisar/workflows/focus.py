@@ -1747,6 +1747,11 @@ def focus(runconfig, runconfig_path=""):
 
     rfi_results = defaultdict(list)
 
+    win_kind, pedestal = check_window_input(cfg.processing.azimuth_window,
+        msg="Azimuth window  ")
+    if win_kind != "cosine":
+        raise NotImplementedError("Only cosine window is implemented in azimuth.")
+
     # main processing loop
     for channel_out in common_mode:
         frequency, pol = channel_out.freq_id, channel_out.pol
@@ -2015,7 +2020,8 @@ def focus(runconfig, runconfig_path=""):
                 err = backproject(z, ogeom, rcfile.data, igeom, dem,
                             channel_out.band.center, azres,
                             kernel, atmos, get_rdr2geo_params(cfg),
-                            get_geo2rdr_params(cfg, orbit), height=hgt)
+                            get_geo2rdr_params(cfg, orbit), height=hgt,
+                            pedestal=pedestal)
                 if err:
                     log.warning("azcomp block contains some invalid pixels")
                 writer.queue_write(z, block)
