@@ -27,7 +27,8 @@ import nisar
 import numpy as np
 import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
-from isce3.focus import make_los_luts, fill_gaps, make_cal_luts, Notch
+from isce3.focus import (make_los_luts, fill_gaps, make_cal_luts, Notch,
+    get_window_approximation)
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import RadarGridParameters
@@ -1747,10 +1748,8 @@ def focus(runconfig, runconfig_path=""):
 
     rfi_results = defaultdict(list)
 
-    win_kind, pedestal = check_window_input(cfg.processing.azimuth_window,
-        msg="Azimuth window  ")
-    if win_kind != "cosine":
-        raise NotImplementedError("Only cosine window is implemented in azimuth.")
+    azwin = get_window_approximation(*check_window_input(
+        cfg.processing.azimuth_window, msg="Azimuth window  "))
 
     # main processing loop
     for channel_out in common_mode:
@@ -2020,8 +2019,8 @@ def focus(runconfig, runconfig_path=""):
                 err = backproject(z, ogeom, rcfile.data, igeom, dem,
                             channel_out.band.center, azres,
                             kernel, atmos, get_rdr2geo_params(cfg),
-                            get_geo2rdr_params(cfg, orbit), height=hgt,
-                            pedestal=pedestal)
+                            get_geo2rdr_params(cfg, orbit), window=azwin,
+                            height=hgt)
                 if err:
                     log.warning("azcomp block contains some invalid pixels")
                 writer.queue_write(z, block)
