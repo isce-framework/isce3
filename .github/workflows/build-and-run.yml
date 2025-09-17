@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build_and_test:
     env:
-      ALL_EXCLUDE: stage_dem|pybind\.unwrap\.phass|isce3\.container\.rsd|isce3\.io\.gdal\.gdal-raster|pybind\.io\.gdal\.raster
+      ALL_EXCLUDE: cuda|stage_dem|pybind\.unwrap\.phass|isce3\.container\.rsd|isce3\.io\.gdal\.gdal-raster|pybind\.io\.gdal\.raster
       # stage_dem requires AWS permissions to access the S3 bucket containing the DEM data.
       # pybind.unwrap.phass occasionally segfaults on GHA runners.
 
@@ -61,8 +61,6 @@ jobs:
             # Build with CUDA so the Python CUDA extension is documented,
             # but don't try to run the tests since we're on a CPU-only builder.
             extra-cmake-args: -DWITH_CUDA=ON
-            os:
-              - ctest_exclude: -E ".*($ALL_EXCLUDE|cuda)"
 
     name: Build And Test - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
     runs-on: ${{ matrix.os.runner || 'ubuntu-latest' }}
