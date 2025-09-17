@@ -6,6 +6,7 @@
 #include <isce3/geometry/forward.h>
 
 #include <complex>
+#include <optional>
 
 #include <isce3/core/Kernels.h>
 #include <isce3/error/ErrorCode.h>
@@ -35,8 +36,8 @@ using isce3::geometry::detail::Rdr2GeoBracketParams;
  * \param[in]  rdr2geo_params  rdr2geo configuration parameters
  * \param[in]  geo2rdr_params  geo2rdr configuration parameters
  * \param[in]  batch           Number of range-compressed data lines per batch
+ * \param[in]  window          Fit to apodization window on interval [-0.5, 0.5]
  * \param[out] height          Height of each pixel in meters above ellipsoid
- * \param[in]  pedestal        Raised cosine window parameter (value at edge)
  *
  * \returns Non-zero error code if geometry fails to converge for any pixel,
  *          and the values for these pixels are set to NaN.
@@ -54,7 +55,9 @@ backproject(std::complex<float>* out,
             DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
             const Rdr2GeoBracketParams& rdr2geo_params = {},
             const Geo2RdrBracketParams& geo2rdr_params = {},
-            int batch = 1024, float* height = nullptr, float pedestal = 1.0f);
+            int batch = 1024,
+            const std::optional<isce3::core::ChebyKernel<float>> window = std::nullopt,
+            float* height = nullptr);
 
 /**
  * Focus in azimuth via time-domain backprojection
@@ -71,8 +74,8 @@ backproject(std::complex<float>* out,
  * \param[in]  rdr2geo_params  rdr2geo configuration parameters
  * \param[in]  geo2rdr_params  geo2rdr configuration parameters
  * \param[in]  batch           Number of range-compressed data lines per batch
+ * \param[in]  window          Fit to apodization window on interval [-0.5, 0.5]
  * \param[out] height          Height of each pixel in meters above ellipsoid
- * \param[in]  pedestal        Raised cosine window parameter (value at edge)
  *
  * \returns Non-zero error code if geometry fails to converge for any pixel,
  *          and the values for these pixels are set to NaN.
@@ -87,6 +90,8 @@ backproject(std::complex<float>* out,
             DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
             const Rdr2GeoBracketParams& rdr2geo_params = {},
             const Geo2RdrBracketParams& geo2rdr_params = {},
-            int batch = 1024, float* height = nullptr, float pedestal = 1.0f);
+            int batch = 1024,
+            const std::optional<isce3::core::ChebyKernel<float>> window = std::nullopt,
+            float* height = nullptr);
 
 }}} // namespace isce3::cuda::focus

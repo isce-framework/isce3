@@ -42,7 +42,7 @@ inline std::complex<float> sumCoherent(const std::complex<float>* data,
 {
     using namespace isce3::math::complex_operations;
 
-    float kscale = 1.0f / (kstop - kstart - 1);
+    const float kscale = 1.0f / (kstop - kstart - 1);
 
     // loop over pulses within integration window
     std::complex<double> sum(0., 0.);
