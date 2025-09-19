@@ -1805,6 +1805,17 @@ def focus(runconfig, runconfig_path=""):
             if cfg.processing.zero_fill_gaps:
                 log.info("Will fill gaps between sub-swaths with zeros.")
 
+            fs = raw.getChirpParameters(channel_in.freq_id, pol[0])[1]
+            wavelets = isce3.focus.ToneRemover(
+                (cfg.processing.caltone.frequency - channel_in.band.center) / fs,
+                raw_grid.shape[1],
+                cfg.processing.caltone.wavelet_size)
+
+            if cfg.processing.caltone.algorithm == "azimuth_mean":
+                log.info("Will remove azimuth mean from each block")
+            elif cfg.processing.caltone.algorithm == "wavelet":
+                log.info("Will remove wavelet caltone estimate from each pulse")
+
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
                 nblock = min(na, rawdata.shape[0] - pulse, raw_mm.shape[0] - i)
@@ -1816,8 +1827,11 @@ def focus(runconfig, runconfig_path=""):
                 z[np.isnan(z)] = 0.0
                 if cfg.processing.zero_fill_gaps:
                     fill_gaps(z, swaths[:, pulse:pulse+nblock, :], 0.0)
-                if cfg.processing.nullify_azimuth_mean:
+                if cfg.processing.caltone.algorithm == "azimuth_mean":
                     z -= z.mean(axis=0)
+                elif cfg.processing.caltone.algorithm == "wavelet":
+                    for k in range(z.shape[0]):
+                        z[k] = wavelets.remove_tone(z[k])
                 raw_mm[block_out] = z
 
             raw_clean, rfi_likelihood = process_rfi(cfg, raw_mm, temp)
