@@ -12,6 +12,7 @@
 #include <isce3/geometry/geometry.h>
 #include <isce3/geometry/rdr2geo_roots.h>
 #include <isce3/geometry/geo2rdr_roots.h>
+#include <isce3/math/complexOperations.h>
 #include <limits>
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@ using namespace isce3::geometry;
 using isce3::error::ErrorCode;
 
 using isce3::container::RadarGeometry;
+using Window = isce3::core::ChebyKernel<float>;
 
 namespace isce3 {
 namespace focus {
@@ -35,8 +37,13 @@ inline std::complex<float> sumCoherent(const std::complex<float>* data,
                                        double fc,
                                        double tau_atm,
                                        const Kernel<float>& kernel,
-                                       int kstart, int kstop)
+                                       int kstart, int kstop,
+                                       const std::optional<Window> window = std::nullopt)
 {
+    using namespace isce3::math::complex_operations;
+
+    const float kscale = 1.0f / (kstop - kstart - 1);
+
     // loop over pulses within integration window
     std::complex<double> sum(0., 0.);
     for (int k = kstart; k < kstop; ++k) {
@@ -54,9 +61,15 @@ inline std::complex<float> sumCoherent(const std::complex<float>* data,
         double phi = 2. * M_PI * fc * tau;
         s *= std::complex<double>(std::cos(phi), std::sin(phi));
 
-        // worst-case numerical error increases linearly, accumulate using
-        // double precision to mitigate errors
-        sum += s;
+        // assume branch prediction works better than an unnecessary multiply
+        if (window.has_value()) {
+            const auto x = (k - kstart) * kscale - 0.5f;
+            sum += window.value()(x) * s;
+        } else {
+            // worst-case numerical error increases linearly, accumulate using
+            // double precision to mitigate errors
+            sum += s;
+        }
     }
 
     return std::complex<float>(sum);
@@ -69,6 +82,7 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
         const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+        const std::optional<Window> window,
         float* height)
 {
     static constexpr double c = isce3::core::speed_of_light;
@@ -201,7 +215,7 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
             // integrate pulses
             out[j * out_geometry.gridWidth() + i] =
                     sumCoherent(in, sampling_window, pos, vel, x, fc, tau_atm,
-                                kernel, kstart, kstop);
+                                kernel, kstart, kstop, window);
         }
     }
 

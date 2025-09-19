@@ -1184,16 +1184,16 @@ runconfig:
                         # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
 
                         # Percent of NaN pixels per total raster area allowed
-                        # Default: 95.0
-                        nan_threshold: 95.0
+                        # Default: -1
+                        nan_threshold: -1
 
                         # Percent of +/- Inf pixels per total raster area allowed
                         # Default: 95.0
                         inf_threshold: 95.0
 
                         # Percent of Fill-valued pixels per total raster area allowed
-                        # Default: 95.0
-                        fill_threshold: 95.0
+                        # Default: -1
+                        fill_threshold: -1
 
                         # Percent of Near-zero pixels per total raster area allowed
                         # Default: -1
@@ -1201,8 +1201,8 @@ runconfig:
 
                         # Percent of total invalid pixels per total raster area allowed
                         # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
-                        # Default: 95.0
-                        total_invalid_threshold: 95.0
+                        # Default: -1
+                        total_invalid_threshold: -1
 
                         # Absolute tolerance for determining if a raster pixel is 'near zero'.
                         # Default: 1e-06
@@ -1603,16 +1603,16 @@ runconfig:
                         # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
 
                         # Percent of NaN pixels per total raster area allowed
-                        # Default: 99.0
-                        nan_threshold: 99.0
+                        # Default: -1
+                        nan_threshold: -1
 
                         # Percent of +/- Inf pixels per total raster area allowed
                         # Default: 99.0
                         inf_threshold: 99.0
 
                         # Percent of Fill-valued pixels per total raster area allowed
-                        # Default: 99.0
-                        fill_threshold: 99.0
+                        # Default: -1
+                        fill_threshold: -1
 
                         # Percent of Near-zero pixels per total raster area allowed
                         # Default: -1
@@ -1620,8 +1620,8 @@ runconfig:
 
                         # Percent of total invalid pixels per total raster area allowed
                         # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
-                        # Default: 99.0
-                        total_invalid_threshold: 99.0
+                        # Default: -1
+                        total_invalid_threshold: -1
 
                         # Absolute tolerance for determining if a raster pixel is 'near zero'.
                         # Default: 1e-06

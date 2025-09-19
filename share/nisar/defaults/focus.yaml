@@ -156,8 +156,8 @@ runconfig:
 
             # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
-                kind: Kaiser
-                shape: 0.0
+                kind: Cosine
+                shape: 1.0
 
             # Elevation antenna pattern, optional.
             elevation_antenna_pattern:

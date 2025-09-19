@@ -461,6 +461,16 @@ def compute_differential_phase(phase_first,
         The differential phase data is written directly to the specified
         output datasets. This function does not return any data.
     """
+    def _to_complex_if_needed(arr):
+        """
+        Ensure an array is complex. If it's already complex, return as-is.
+        Otherwise interpret values as phase (radians) and convert with exp(j*phi).
+        """
+        if np.iscomplexobj(arr):
+            return arr
+        # Cast to float to avoid integer exponentiation issues
+        return np.exp(1j * arr)
+
     # Check if reading and writing will happen on the same file
     is_same_file_first_output = (phase_first == output_path)
     is_same_file_first_second = (phase_first == phase_second)
@@ -521,13 +531,19 @@ def compute_differential_phase(phase_first,
                         second_data_block = get_raster_block(
                             phase_second_raster,
                             block_param_side)
-                        block_param = block_param_side
+                        chosen_block_param = block_param_side
                     else:
                         second_data_block = get_raster_block(
                             phase_second_raster,
                             block_param_main)
-                        block_param = block_param_main
+                        chosen_block_param = block_param_main
 
+                    # Ensure complex (convert real-valued phase in radians to
+                    # complex phase)
+                    first_data_block = _to_complex_if_needed(first_data_block)
+                    second_data_block = _to_complex_if_needed(second_data_block)
+
+                    # Optional resampling of FIRST to SECOND grid
                     if resampling_flag:
                         first_data_block = decimate_freq_a_array(
                             main_slant,
@@ -539,7 +555,7 @@ def compute_differential_phase(phase_first,
 
                     # Write result block to output
                     write_raster_block(output_data_raster,
-                                       diff_phase, block_param)
+                                       diff_phase, chosen_block_param)
         finally:
             # Close the output file if it was opened separately
             if not is_same_file_first_second:
@@ -826,7 +842,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
         if iono_method == 'main_diff_ms_band':
             diff_dir = pathlib.Path(orig_scratch_path,
                                     'ionosphere', 'diff_ms')
-            phase_first = original_out_paths['RIFG']
+            phase_first = original_out_paths['RUNW']
             if rerun_insar_pairs > 0:
                 additional_runw = f'{new_scratch}/RUNW.h5'
                 phase_second = pathlib.Path(orig_scratch_path,
@@ -860,14 +876,16 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             pol_list_a = iono_freq_pols['A']
             pol_list_b = iono_freq_pols['B']
             swath_path = RIFGGroupsPaths().SwathsPath
+            runw_swath_path = RUNWGroupsPaths().SwathsPath
+
             first_data_path = []
             for pol_a in pol_list_a:
 
-                dest_freq_path = f"{swath_path}/frequencyA"
+                dest_freq_path = f"{runw_swath_path}/frequencyA"
                 dest_pol_path = f"{dest_freq_path}/interferogram/{pol_a}"
-                rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
+                runw_path_freq = f"{dest_pol_path}/unwrappedPhase"
 
-                first_data_path.append(rifg_path_freq)
+                first_data_path.append(runw_path_freq)
             first_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             second_data_path = []
             for pol_b in pol_list_b:
