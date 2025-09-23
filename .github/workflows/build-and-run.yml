@@ -160,8 +160,6 @@ jobs:
           doxygen build/doc/doxygen/Doxyfile
           export PYTHONPATH="$PYTHONPATH:$ISCE3_PREFIX/packages"
 
-          # XXX pdoc breaks on unimportable CUDA extension for CPU-only builds
-          rm -r install/packages/isce3/cuda
           pdoc -o build/docs-output/api/python --math install/packages/isce3
 
           # XXX remove references to polyfill.io in pdoc output
