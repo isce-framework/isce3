@@ -162,10 +162,6 @@ jobs:
 
           pdoc -o build/docs-output/api/python --math install/packages/isce3
 
-          # XXX remove references to polyfill.io in pdoc output
-          # Can remove when pdoc is bumped to v14.5.1+
-          find build/docs-output/api/python/ -type f -name '*.html' -print0 | xargs -0 sed -i '/polyfill.io/d'
-
       - name: Deploy documentation
         if: matrix.deps.label == 'Documentation'
         uses: peaceiris/actions-gh-pages@v4
