@@ -142,6 +142,9 @@ runconfig:
                 # Irrelevant when start_range is not null.
                 range_snap_interval: 24.982704833333333
 
+            # Beam index (starting at 0) to use for diagnostic mode 2 (DM2) data
+            dm2_channel_index: 0
+
             # Min amount of padding (in seconds) beyond raw data start and stop
             # times to retain when cropping the orbit and attitude data.
             ephemeris_crop_pad: 10.0
