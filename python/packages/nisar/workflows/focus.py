@@ -1794,10 +1794,8 @@ def focus(runconfig, runconfig_path=""):
             # 80 MHz (A) being mixed with 5 MHz sideband (B).
             rawdata = raw.getRawDataset(channel_in.freq_id, pol)
             log.info(f"Raw data shape = {rawdata.shape}")
-            if rawdata.ndim != 2:
-                raise ValueError("Expected 2D raw data.  For diagnostic mode "
-                    "data (DM2) you must use a separate conversion script "
-                    "like `nisar_l0b_dm2_to_dbf.py` before this one.")
+            if rawdata.ndim == 3:
+                log.info(f"Processing DM2 channel {cfg.processing.dm2_channel_index}")
             raw_times, raw_grid = raw.getRadarGrid(channel_in.freq_id,
                                                    tx=pol[0], epoch=grid_epoch)
 
@@ -1815,7 +1813,7 @@ def focus(runconfig, runconfig_path=""):
             bb_phasor = raw.getBasebandPhaseCorrection(channel_in.freq_id, pol)
 
             na = cfg.processing.rangecomp.block_size.azimuth
-            nr = rawdata.shape[1]
+            nr = rawdata.shape[-1]
             swaths = raw.getSubSwaths(channel_in.freq_id, tx=pol[0])
             log.info(f"Number of sub-swaths = {swaths.shape[0]}")
 
@@ -1839,9 +1837,11 @@ def focus(runconfig, runconfig_path=""):
 
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
-                nblock = min(na, rawdata.shape[0] - pulse, raw_mm.shape[0] - i)
+                nblock = min(na, rawdata.shape[-2] - pulse, raw_mm.shape[0] - i)
                 pulse_slice = slice(pulse, pulse + nblock)
                 block_in = np.s_[pulse_slice, :]
+                if rawdata.ndim == 3:
+                    block_in = (cfg.processing.dm2_channel_index,) + block_in
                 block_out = np.s_[i:i+nblock, :]
                 z = rawdata[block_in] * bb_phasor[pulse_slice, np.newaxis]
                 # Remove NaNs.  TODO could incorporate into gap mask.
