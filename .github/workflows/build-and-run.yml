@@ -143,6 +143,7 @@ jobs:
 
       # Run ctest on the project with the intended test exclusions for this run
       - name: Test Project
+        if: matrix.deps.label != 'Documentation'
         run: |
           cd build
           export GDAL_MEM_ENABLE_OPEN=YES
