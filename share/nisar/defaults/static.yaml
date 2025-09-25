@@ -382,8 +382,7 @@ runconfig:
         # Defaults to [512, 512].
         chunk_size: [512, 512]
         # [OPTIONAL] Enable HDF5 compression of raster datasets in the output product.
-        # If chunked storage is disabled (see `chunk_size`), this option is ignored and
-        # data compression is disabled.
+        # Has no effect if chunked storage is disabled (see `chunk_size`).
         # Defaults to true.
         compression_enabled: true
         # [OPTIONAL] HDF5 compression filter.

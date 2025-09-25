@@ -40,8 +40,7 @@ def build_hdf5_dataset_creation_kwds_dict(
     chunk_size : (int, int)
         Chunk dimensions. Setting `chunk_size` to (-1, -1) will disable chunked storage.
     compression_enabled : bool
-        True to enable HDF5 compression. If chunked storage is disabled (see
-        `chunk_size`), this option is ignored and data compression is disabled.
+        True to enable HDF5 compression.
     compression_type : str
         HDF5 compression filter. Typically one of {'gzip', 'lzf', 'szip'}. See
         https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline for details.
@@ -64,11 +63,11 @@ def build_hdf5_dataset_creation_kwds_dict(
     kwds = {}
     if chunk_size != (-1, -1):
         kwds["chunks"] = chunk_size
-        if compression_enabled:
-            kwds["compression"] = compression_type
-            kwds["shuffle"] = shuffle
-            if compression_type == "gzip":
-                kwds["compression_opts"] = compression_level
+    if compression_enabled:
+        kwds["compression"] = compression_type
+        kwds["shuffle"] = shuffle
+        if compression_type == "gzip":
+            kwds["compression_opts"] = compression_level
 
     return kwds
 
