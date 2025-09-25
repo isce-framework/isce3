@@ -472,6 +472,7 @@ qa_reports_options:
     gamma: num(min=0.0, required=False)
     nan_color_in_pdf: str(required=False)
     tile_shape: list(int(min=-1), min=2, max=2, required=False)
+    output_individual_pngs: bool(required=False)
   histogram:
     decimation_ratio: list(int(min=1), min=2, max=2, required=False)
     backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
