@@ -123,6 +123,8 @@ def log_elapsed_time(
         '<what> took <elapsed>'.
     """
     tic = datetime.now()
-    yield
-    toc = datetime.now()
-    log_func(f"{what} took {toc - tic}")
+    try:
+        yield
+    finally:
+        toc = datetime.now()
+        log_func(f"{what} took {toc - tic}")

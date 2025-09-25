@@ -186,10 +186,11 @@ def scratch_directory(
         else:
             scratchdir.mkdir(parents=True)
 
-    yield scratchdir
-
-    if delete:
-        shutil.rmtree(scratchdir)
+    try:
+        yield scratchdir
+    finally:
+        if delete:
+            shutil.rmtree(scratchdir)
 
 
 def make_scratch_file(
