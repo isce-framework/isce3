@@ -99,13 +99,24 @@ def create_dataset(
     h5py.Dataset
         The dataset that was created.
     """
+    # Convert `data` to a NumPy array with the datatype specified in the spec. If the
+    # spec designates the datatype as bytes (i.e. string-valued data), encode the data
+    # to a bytestring in 'utf-8' encoding, or an array of such bytestrings.
     if np.issubdtype(dataset_spec.dtype, np.bytes_):
         data = to_bytes(data)
     else:
         data = np.asanyarray(data, dtype=dataset_spec.dtype)
 
+    # Create the dataset.
     dataset = hdf5_file.create_dataset(name=dataset_spec.name, data=data, **kwds)
+
+    # Populate some (not all) attributes from the spec. Note that this only populates
+    # common attributes whose values are provided in the spec. Notably, it excludes the
+    # 'units' attribute, since its value may depend on a reference epoch. The full set
+    # of possible attributes is enumerated in the docstring of
+    # `populate_dataset_attrs_from_spec()`.
     nisar.products.populate_dataset_attrs_from_spec(dataset, dataset_spec)
+
     return dataset
 
 
@@ -266,6 +277,8 @@ def populate_identification_group(
     create_identification_dataset("validityStartDateTime", validity_start_datetime)
     create_identification_dataset("compositeReleaseId", composite_release_id)
 
+    # The bounding polygon is always in geodetic coordinates w.r.t the WGS 84 ellipsoid
+    # (EPSG:4326).
     polygon_dataset = create_identification_dataset("boundingPolygon", bounding_polygon)
     polygon_dataset.attrs["ogr_geometry"] = to_bytes("polygon")
     polygon_dataset.attrs["epsg"] = 4326

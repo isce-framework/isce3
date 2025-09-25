@@ -35,7 +35,8 @@ def binarize_nisar_water_mask(water_distance: ArrayLike) -> np.ndarray:
     """
     water_distance = np.asanyarray(water_distance)
 
-    # Get a binary mask of (ocean or inland) water pixels.
+    # Compute a binary mask where the value 1 represents (ocean or inland) water pixels
+    # and the value 0 represents non-water pixels.
     water = water_distance == 0
 
     # Get a binary mask of invalid pixels (i.e. pixels whose value is equal to the fill
