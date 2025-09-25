@@ -29,7 +29,6 @@ class ParamDict(TypedDict):
     orbit_xml_file: Path
     pointing_xml_file: Path
     geo_grid: isce3.product.GeoGridParameters
-    chunk_size: tuple[int, int]
 
 
 # Test case covering a region of Antarctica in Polar Stereographic projection.
@@ -62,7 +61,6 @@ def antartica_params() -> ParamDict:
         orbit_xml_file=orbit_xml_file,
         pointing_xml_file=pointing_xml_file,
         geo_grid=geo_grid,
-        chunk_size=(128, 128),
     )
 
 
@@ -96,7 +94,6 @@ def fiji_params() -> ParamDict:
         orbit_xml_file=orbit_xml_file,
         pointing_xml_file=pointing_xml_file,
         geo_grid=geo_grid,
-        chunk_size=(128, 128),
     )
 
 
@@ -108,7 +105,6 @@ def make_tmp_runconfig_file(
     orbit_xml_file: os.PathLike | str,
     pointing_xml_file: os.PathLike | str,
     geo_grid: isce3.product.GeoGridParameters,
-    chunk_size: tuple[int, int] = (512, 512),
 ) -> Generator[Path, None, None]:
     """
     A context manager that creates a temporary Static Layers runconfig file.
@@ -132,8 +128,6 @@ def make_tmp_runconfig_file(
     geo_grid : isce3.product.GeoGridParameters
         The geocoded coordinate grid on which the layers in the output product will be
         computed.
-    chunk_size : (int, int)
-        The chunk shape of raster layers in the output product.
 
     Yields
     ------
@@ -165,10 +159,6 @@ def make_tmp_runconfig_file(
                 posting:
                   x: {abs(geo_grid.spacing_x)}
                   y: {abs(geo_grid.spacing_y)}
-
-            output:
-              dataset:
-                chunk_size: {list(chunk_size)}
         """
     )
     with create_tmp_text_file(contents, suffix=".yml") as f:

@@ -25,6 +25,7 @@ from .util import (
 
 
 def build_hdf5_dataset_creation_kwds_dict(
+    dataset_shape: tuple[int, int],
     *,
     chunk_size: tuple[int, int],
     compression_enabled: bool,
@@ -37,6 +38,9 @@ def build_hdf5_dataset_creation_kwds_dict(
 
     Parameters
     ----------
+    dataset_shape : (int, int)
+        The shape of the HDF5 dataset. The chunk dimensions will be clipped to avoid
+        exceeding the dataset dimensions.
     chunk_size : (int, int)
         Chunk dimensions. Setting `chunk_size` to (-1, -1) will disable chunked storage.
     compression_enabled : bool
@@ -58,7 +62,9 @@ def build_hdf5_dataset_creation_kwds_dict(
     dict
         Dict of keyword arguments to pass to `h5py.Group.create_dataset()`.
     """
-    chunk_size = tuple(chunk_size)
+    # If any chunk dimension exceeds the corresponding dataset dimension, clip it to the
+    # dataset dimension.
+    chunk_size = tuple(min(a, b) for a, b in zip(chunk_size, dataset_shape))
 
     kwds = {}
     if chunk_size != (-1, -1):

@@ -314,6 +314,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             logger.info("Populate raster layers and grid coordinates in output HDF5")
             grids_group = instrument_group.create_group("STATIC/grids")
             dataset_creation_kwds = build_hdf5_dataset_creation_kwds_dict(
+                dataset_shape=(geo_grid.length, geo_grid.width),
                 **output_params["dataset"]
             )
             with log_elapsed_time(logger.info, "Writing raster layers to output HDF5"):
