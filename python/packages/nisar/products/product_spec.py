@@ -405,8 +405,9 @@ def get_product_spec(product_type: str) -> ProductSpec:
 
     Parameters
     ----------
-    product_type : {'GCOV', 'GSLC'}
-        The NISAR product type. Only 'GCOV' and 'GSLC' are currently supported.
+    product_type : {'GCOV', 'GSLC', 'STATIC'}
+        The NISAR product type. Only 'GCOV', 'GSLC', and 'STATIC' are currently
+        supported.
 
     Returns
     -------
