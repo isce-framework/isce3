@@ -19,6 +19,7 @@ from nisar.products import descriptions
 from nisar.products.granule_id import get_polarization_code, format_datetime
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.rslc_cal import RslcCalibration
+from nisar.products.utils import to_bytes
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
 from nisar.workflows.compute_stats import write_stats_complex_data
 
@@ -130,7 +131,7 @@ def write_dataset(group: h5py.Group, name: str, dtype: np.dtype, value,
     is_strlist = (isinstance(value, list)
         and all(isinstance(v, str) for v in value))
     if isinstance(value, str) or is_strlist:
-        value = np.bytes_(value)
+        value = to_bytes(value)
         # If user requested string then let numpy determine length, otherwise
         # throw error.
         if dtype != np.bytes_:
@@ -687,7 +688,7 @@ class SLC(h5py.File):
                             planned_observation_id: Optional[str] = None,
                             is_urgent: Optional[bool] = None,
                             is_joint: Optional[bool] = None,
-                            product_spec_version: str = "1.3.0",
+                            product_spec_version: str = "1.4.0",
                             processing_center: str = "JPL",
                             granule_id: str = "None",
                             product_version: str = "0.1.0",

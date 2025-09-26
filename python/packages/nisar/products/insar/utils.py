@@ -572,4 +572,3 @@ def generate_insar_subswath_mask(ref_rslc_obj,
     return np.array(subswath_mask).reshape(
         (len(azi_idx_arr),
          len(rg_idx_arr))).astype(np.uint8)
-

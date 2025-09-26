@@ -67,11 +67,31 @@ struct StatsRealImag {
     void update(const std::complex<T>& value);
 
     /** Calculate stats of a new block of data using Welford's algorithm and
-     *  update current estimate with Chan's method. */
-    void update(const std::complex<T>* values, size_t size, size_t stride = 1);
+     *  update current estimate with Chan's method.
+     *
+     * @param[in] values    Array of values
+     * @param[in] size      Number of entries to access in `values`
+     * @param[in] stride    Stride between entries in `values`, such that
+     *                      entry `i` is indexed as `values[i * stride]`
+     * @param[in] parallel  Whether to compute stats in parallel by equally
+     *                      dividing the block among threads.  This argument is
+     *                      ignored when the compiler does not support OpenMP.
+     */
+    void update(const std::complex<T>* values, size_t size, size_t stride = 1,
+        bool parallel = true);
 
-    /** Initialize from block of data. */
-    StatsRealImag(const std::complex<T>* values, size_t size, size_t stride = 1);
+    /** Initialize from block of data (using Welford's algorithm).
+     *
+     * @param[in] values    Array of values
+     * @param[in] size      Number of entries to access in `values`
+     * @param[in] stride    Stride between entries in `values`, such that
+     *                      entry `i` is indexed as `values[i * stride]`
+     * @param[in] parallel  Whether to compute stats in parallel by equally
+     *                      dividing the block among threads.  This argument is
+     *                      ignored when the compiler does not support OpenMP.
+     */
+    StatsRealImag(const std::complex<T>* values, size_t size, size_t stride = 1,
+        bool parallel = true);
 
     StatsRealImag() = default;
 };

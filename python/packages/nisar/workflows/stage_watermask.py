@@ -4,8 +4,10 @@
 
 import argparse
 import os
-import backoff
+import re
+import warnings
 
+import backoff
 import numpy as np
 import shapely.ops
 import shapely.wkt
@@ -25,7 +27,7 @@ WATER_MASK_VSIS3_PATH = f'/vsis3/{STATIC_REPO}/WATER_MASK'
 
 def cmdLineParse():
     """
-     Command line parser
+    Command line parser
     """
     parser = argparse.ArgumentParser(description="""
                                      Stage and verify WATERMASK for processing. """,
@@ -42,7 +44,7 @@ def cmdLineParse():
     parser.add_argument('-m', '--margin', type=int, action='store',
                         default=5, help='Margin for water mask bounding box (km)')
     parser.add_argument('-v', '--version', type=str, action='store',
-                        dest='version', default='0.3',
+                        dest='version', default='0.5',
                         help='Version for water mask')
     parser.add_argument('-b', '--bbox', type=float, action='store',
                         dest='bbox', default=None, nargs='+',
@@ -68,7 +70,7 @@ def check_dateline(poly):
 
     xmin, _, xmax, _ = poly.bounds
     # Check dateline crossing
-    if (xmax - xmin) > 180.0:
+    if ((xmax - xmin > 180.0) or (xmin <= 180.0 <= xmax) or (xmin <= -180.0 <= xmax)):
         dateline = shapely.wkt.loads('LINESTRING( 180.0 -90.0, 180.0 90.0)')
 
         # build new polygon with all longitudes between 0 and 360
@@ -84,11 +86,11 @@ def check_dateline(poly):
 
         polys = list(decomp)
 
-        # The Copernicus DEM used for NISAR processing has a longitude
+        # The water mask used for NISAR processing has a longitude
         # range [-180, +180]. The current version of gdal.Translate
         # does not allow to perform dateline wrapping. Therefore, coordinates
-        # above 180 need to be wrapped down to -180 to match the Copernicus
-        # DEM longitude range
+        # above 180 need to be wrapped down to -180 to match the water mask
+        # longitude range
         for polygon_count in range(2):
             x, y = polys[polygon_count].exterior.coords.xy
             if not any([k > 180 for k in x]):  # pylint: disable=use-a-generator
@@ -98,7 +100,7 @@ def check_dateline(poly):
             x_wrapped_minus_360 = np.asarray(x) - 360
             polys[polygon_count] = Polygon(zip(x_wrapped_minus_360, y))
 
-        assert len(polys) == 2
+        assert (len(polys) == 2)
     else:
         # If dateline is not crossed, treat input poly as list
         polys = [poly]
@@ -110,7 +112,7 @@ def determine_polygon(ref_slc, bbox=None):
     """Determine bounding polygon using RSLC radar grid/orbit
     or user-defined bounding box
 
-    Parameters:
+    Parameters
     ----------
     ref_slc: str
         Filepath to reference RSLC product
@@ -118,7 +120,7 @@ def determine_polygon(ref_slc, bbox=None):
         Bounding box with lat/lon coordinates (decimal degrees)
         in the form of [West, South, East, North]
 
-    Returns:
+    Returns
     -------
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter
@@ -137,14 +139,14 @@ def determine_polygon(ref_slc, bbox=None):
 def point2epsg(lon, lat):
     """Return EPSG code based on point lat/lon
 
-    Parameters:
+    Parameters
     ----------
     lat: float
         Latitude coordinate of the point
     lon: float
         Longitude coordinate of the point
 
-    Returns:
+    Returns
     -------
     epsg code corresponding to the point lat/lon coordinates
     """
@@ -167,8 +169,8 @@ def get_geo_polygon(ref_slc, min_height=-500.,
                     max_height=9000., pts_per_edge=5):
     """Create polygon (EPSG:4326) using RSLC radar grid and orbits
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ref_slc: str
         Path to RSLC product to stage the water mask for
     min_height: float
@@ -178,7 +180,7 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     pts_per_edge: float
         Number of points per edge for min/max bounding box computation
 
-    Returns:
+    Returns
     -------
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter on the ground
@@ -220,13 +222,13 @@ def determine_projection(polys):
     EPSG is computed for a regular list of points. EPSG
     is assigned based on a majority criteria.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     polys: shapely.Geometry.Polygon
         List of shapely Polygons
 
-    Returns:
-    --------
+    Returns
+    -------
     epsg:
         List of EPSG codes corresponding to elements in polys
     """
@@ -268,7 +270,7 @@ def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max):
        throttling (see "Query throttling" section at
        https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html).
 
-    Parameters:
+    Parameters
     ----------
     vrt_filename: str
         Path to the input VRT file
@@ -289,6 +291,20 @@ def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     input_x_min, xres, _, input_y_max, _, yres = ds.GetGeoTransform()
     length = ds.GetRasterBand(1).YSize
     width = ds.GetRasterBand(1).XSize
+
+    # Declare function to snap min/max X and Y
+    # coordinates over the water grid
+    def snap_coord(val, snap, offset, round_func):
+        return round_func((val - offset) / snap) * snap + offset
+
+    # Snap edge coordinates using the raster pixel spacing
+    # and starting coordinates. Max values are rounded
+    # using np.ceil and min values are rounded with np.floor
+    x_min = snap_coord(x_min, xres, input_x_min, np.floor)
+    x_max = snap_coord(x_max, xres, input_x_min, np.ceil)
+    y_min = snap_coord(y_min, yres, input_y_max, np.floor)
+    y_max = snap_coord(y_max, yres, input_y_max, np.ceil)
+
     input_y_min = input_y_max + (length * yres)
     input_x_max = input_x_min + (width * xres)
 
@@ -305,9 +321,9 @@ def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     # bbox crosses the anti-meridian, the script divides it in two
     # bboxes neighboring the anti-meridian. Here, x_min and x_max
     # represent the min and max longitude coordinates of one of these
-    # bboxes. We Add 360 deg if the min longitude of the downloaded DEM
+    # bboxes. We Add 360 deg if the min longitude of the downloaded water mask
     # tile is < 180 deg i.e., there is a dateline crossing.
-    # This ensure that the mosaicked DEM VRT will span a min
+    # This ensure that the mosaicked water mask VRT will span a min
     # range of longitudes rather than the full [-180, 180] deg
     sr = osr.SpatialReference(ds.GetProjection())
     epsg_str = sr.GetAttrValue("AUTHORITY", 1)
@@ -324,13 +340,13 @@ def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max):
 def download_watermask(polys, epsgs, outfile, version):
     """Download water mask from nisar-WATERMASK bucket
 
-    Parameters:
+    Parameters
     ----------
     polys: shapely.geometry.Polygon
         List of shapely polygons
     epsg: str, list
         List of EPSG codes corresponding to polys
-    outfile:
+    outfile: str
         Path to the output WATERMASK file to be staged
     version: str
         Water mask version
@@ -367,18 +383,101 @@ def download_watermask(polys, epsgs, outfile, version):
             translate_watermask(vrt_filename, outpath, xmin, xmax, ymin, ymax)
 
         # Build vrt with downloaded watermasks
-        gdal.BuildVRT(outfile, watermask_list)
-    except Exception:
+        vrt_dataset = gdal.BuildVRT(outfile, watermask_list)
+
+        # Get the WATER description from the LICENSE.txt file using GDAL
+        in_license_path = vrt_filename.replace(f'EPSG{epsg}.vrt',
+                                               f'EPSG{epsg}/LICENSE.txt')
+        license_exists = gdal.VSIStatL(in_license_path) is not None
+
+        if license_exists:
+            try:
+                water_descr = parse_shortdesc_and_notes(in_license_path)
+                vrt_dataset.SetMetadataItem("water_mask_description",
+                                            water_descr)
+
+            except Exception as e:
+                warnings.warn(
+                    f"Found {in_license_path} but could not parse it ({e}). "
+                    "Proceeding without metadata."
+                )
+        else:
+            warnings.warn(
+                f"No LICENSE.txt found at {in_license_path} "
+                f"(expected for WATERMASK v0.4+). Proceeding without metadata."
+            )
+    except Exception as e:
         errmsg = f'Failed to download NISAR WATERMASK {version} from s3 bucket. ' \
                  f'Maybe {version} is not currently supported.'
-        raise ValueError(errmsg)
+        raise ValueError(errmsg) from e
+
+
+def parse_shortdesc_and_notes(license_path: str,
+                        encoding: str = "utf-8") -> str | None:
+    """
+    Extract the multi-line text of the “Notes” bullet from
+    a LICENSE.txt in an S3 bucket via GDAL and return the
+    value without the leading "- Notes:" header.
+
+    Parameters
+    ----------
+    license_path : str
+        `/vsis3/.../LICENSE.txt` or any other GDAL compatible URI.
+    encoding : str, default "utf-8"
+        Text encoding to decode the bytes.
+
+    Returns
+    -------
+    str | None
+        The extracted Notes text (possibly multi-line) with surrounding
+        whitespace stripped, or None if no “Notes” bullet is found.
+    """
+    stat = gdal.VSIStatL(license_path)
+    if stat is None:
+        raise ValueError(f"No LICENSE.txt found at {license_path}")
+
+    fp = gdal.VSIFOpenL(license_path, "rb")
+    if fp is None:
+        raise IOError(f"Could not open {license_path} via GDAL")
+    try:
+        data = gdal.VSIFReadL(1, stat.size, fp)
+    finally:
+        gdal.VSIFCloseL(fp)
+
+    if not data:
+        raise IOError(f"Failed to read any data from {license_path}")
+
+    text = data.decode(encoding, errors="replace")
+
+    if "notes:" not in text.lower():
+        warnings.warn(f'No "Notes" field found in {license_path}')
+        return None
+
+    NEXT_BULLET = r"(?=^\s*-\s+[^:\n]+:\s*|\Z)"
+
+    def _grab(header: str) -> str | None:
+        pat = re.compile(
+            rf"^\s*-\s*{re.escape(header)}\s*:\s*(.*?){NEXT_BULLET}",
+            flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,
+        )
+        m = pat.search(text)
+        return m.group(1).strip() if (m is not None) else None
+
+    shortdesc = _grab("Short description")
+    notes = _grab("Notes")
+
+    if not (shortdesc and notes):
+        raise ValueError(
+            f'Missing "Short description" or "Notes" in {license_path}')
+
+    return ' '.join([shortdesc, notes])
 
 
 def transform_polygon_coords(polys, epsgs):
     """Transform coordinates of polys (list of polygons)
        to target epsgs (list of EPSG codes)
 
-    Parameters:
+    Parameters
     ----------
     polys: shapely.Geometry.Polygon
         List of shapely polygons
@@ -421,14 +520,14 @@ def check_watermask_overlap(watermaskFilepath, polys):
        and WATERMASK that stage_watermask.py would download
        based on RSLC or bbox provided information
 
-    Parameters:
+    Parameters
     ----------
     watermaskFilepath: str
         Filepath to the user-provided WATERMASK
     polys: shapely.geometry.Polygon
         List of polygons computed from RSLC or bbox
 
-    Returns:
+    Returns
     -------
     perc_area: float
         Area (in percentage) covered by the intersection between the
@@ -455,7 +554,7 @@ def check_watermask_overlap(watermaskFilepath, polys):
     return perc_area
 
 
-def check_aws_connection():
+def check_aws_connection(version):
     """Check connection to AWS s3://nisar-static-repo/WATER_MASK bucket
        Throw exception if no connection is established
 
@@ -467,7 +566,7 @@ def check_aws_connection():
     import boto3
     s3 = boto3.resource('s3')
     # Check only AWS connection using currently available vrt file.
-    obj = s3.Object(f'{STATIC_REPO}', 'WATER_MASK/v0.3/EPSG4326.vrt')
+    obj = s3.Object(f'{STATIC_REPO}', f'WATER_MASK/v{version}/EPSG4326.vrt')
     try:
         obj.get()['Body'].read()
     except Exception:
@@ -485,7 +584,7 @@ def apply_margin_polygon(polygon, margin_in_km=5):
     ----------
     polygon: shapely.Geometry.Polygon
         Bounding polygon covering the area on the
-        ground over which download the DEM
+        ground over which download the water mask
     margin_in_km: np.float
         Buffer in km to add to polygon
 
@@ -500,6 +599,9 @@ def apply_margin_polygon(polygon, margin_in_km=5):
     # Convert margin from km to degrees
     lat_margin = margin_km_to_deg(margin_in_km)
     lon_margin = margin_km_to_longitude_deg(margin_in_km, lat=lat_worst_case)
+
+    if lon_max - lon_min > 180:
+        lon_min, lon_max = lon_max, lon_min
 
     poly_with_margin = box(lon_min - lon_margin, max([lat_min - lat_margin, -90]),
                            lon_max + lon_margin, min([lat_max + lat_margin, 90]))
@@ -552,7 +654,7 @@ def margin_km_to_longitude_deg(margin_in_km, lat=0):
 def main(opts):
     """Main script to execute water mask staging
 
-    Parameters:
+    Parameters
     ----------
     opts : argparse.ArgumentParser
         Argument parser
@@ -585,9 +687,9 @@ def main(opts):
             print('Insufficient water mask coverage. Errors might occur')
         print(f'water mask coverage is {overlap} %')
     else:
-        # Check connection to AWS s3 nisar-WATERMASK  ucket
+        # Check connection to AWS s3 nisar-WATERMASK bucket
         try:
-            check_aws_connection()
+            check_aws_connection(opts.version)
         except ImportError:
             import warnings
             warnings.warn('boto3 is required to verify AWS connection '

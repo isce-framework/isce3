@@ -131,6 +131,9 @@ class InSARBaseWriter(h5py.File):
         # Product information
         self.product_info = InSARProductsInfo.Base()
 
+        # Granule ID
+        self.granule_id = '(NOT SPECIFIED)'
+
         # DEM file
         self.dem_file = \
             self.cfg["dynamic_ancillary_file_group"]["dem_file"]
@@ -1147,14 +1150,16 @@ class InSARBaseWriter(h5py.File):
         # NISAR_{Level}_PR_{ProductType}_001_001_A_001_003_{MODE}_{PO}_A_{StartDateTime}_{EndDateTime}_D00341_P_C_J_001_.h5)
 
         if partial_granule_id is None:
-            granule_id = "None"
+            self.granule_id = '(NOT SPECIFIED)'
         else:
             # Get the first frequency to process and corresponding polarizations
             frequency = list(self.freq_pols.keys())[0]
-            granule_id = get_insar_granule_id(self.ref_h5_slc_file, self.sec_h5_slc_file,
-                                              partial_granule_id, freq=frequency,
-                                              pol_process=self.freq_pols.get(frequency),
-                                              product_type=self.product_info.ProductType)
+            self.granule_id = get_insar_granule_id(
+                self.ref_h5_slc_file, self.sec_h5_slc_file,
+                partial_granule_id, freq=frequency,
+                pol_process=self.freq_pols.get(frequency),
+                product_type=self.product_info.ProductType)
+
         if product_version is None:
             product_version = \
                 self.product_info.ProductVersion
@@ -1167,7 +1172,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "granuleId",
-                granule_id,
+                self.granule_id,
                 "Unique granule identification name",
             ),
             DatasetParams(

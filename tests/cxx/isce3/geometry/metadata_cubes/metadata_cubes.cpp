@@ -1,8 +1,10 @@
 #include <complex>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -236,22 +238,12 @@ void _compareArrays(isce3::core::Matrix<T>& topo_array,
     if (!flag_geo) {
         ASSERT_TRUE(percent_valid == 100);
     }
-    if (flag_geo && std::is_same<T, float>::value) {
-        // geo and float
+    if (std::is_same_v<T, float>) {
         ASSERT_TRUE(rmse < 1e-5);
         ASSERT_TRUE(max_abs_error < 1e-5);
-    } else if (std::is_same<T, float>::value) {
-        // slant-range and float
-        ASSERT_TRUE(rmse < 1e-7);
-        ASSERT_TRUE(max_abs_error < 1e-6);
-    } else if (flag_geo) {
-        // geo and double
-        ASSERT_TRUE(rmse < 1e-7);
-        ASSERT_TRUE(max_abs_error < 1e-6);
     } else {
-        // slant-range and double
-        ASSERT_TRUE(rmse < 1e-15);
-        ASSERT_TRUE(max_abs_error < 1e-13);
+        ASSERT_TRUE(rmse < 1e-7);
+        ASSERT_TRUE(max_abs_error < 1e-6);
     }
 }
 
@@ -342,6 +334,48 @@ void _compareHeading(std::string topo_file, std::string cube_x_file,
         }
     }
     _compareArrays(topo_array, heading_array, width, length);
+}
+
+/** Get a unique filename that does not name a currently existing file. */
+static std::string _tempFilename()
+{
+    return std::string(std::tmpnam(nullptr));
+}
+
+/**
+ * Create a fixed-height DEM raster.
+ *
+ * @param[in] height
+ *     The height of the DEM.
+ * @param[in] geogrid
+ *     The geocoded grid that the DEM raster will be sampled on.
+ * @param[in] filepath
+ *     The file path of the output raster.
+ * @param[in] driver
+ *     The GDAL raster driver to use. Defaults to "GTiff".
+ *
+ * @returns
+ *     The DEM raster.
+ */
+static isce3::io::Raster _createFixedHeightDem(double height,
+        const isce3::product::GeoGridParameters& geogrid,
+        const std::string& filepath, const std::string& driver = "GTiff")
+{
+    // Create a single-band output raster.
+    auto raster = isce3::io::Raster(filepath, geogrid.width(), geogrid.length(),
+            1, GDT_Float64, driver);
+
+    // Fill the raster with `height` values.
+    auto data = std::vector<double>(geogrid.length() * geogrid.width(), height);
+    raster.setBlock(data, 0, 0, geogrid.width(), geogrid.length());
+
+    // Set output raster geotransform and CRS.
+    double geotransform[] = {geogrid.startX(), geogrid.spacingX(), 0.0,
+            geogrid.startY(), 0.0, geogrid.spacingY()};
+    raster.setGeoTransform(geotransform);
+    raster.setEPSG(geogrid.epsg());
+
+    return raster;
 }
 
 TEST(radarGridCubeTest, testRadarGridCube)
@@ -584,18 +618,10 @@ TEST(radarGridCubeTest, testRadarGridCube)
              ++layer_counter) {
 
             auto height = heights[layer_counter];
-            std::cout << "preparing DEM interpolator for height: " << height
-                      << std::endl;
-            isce3::geometry::DEMInterpolator dem(height);
-
-            // Setup DEM interpolator
-            dem.epsgCode(epsg_dem);
-            dem.xStart(dem_x0);
-            dem.yStart(dem_y0);
-            dem.deltaX(dem_dx);
-            dem.deltaY(dem_dy);
-            dem.length(dem_length);
-            dem.width(dem_width);
+            auto dem_geogrid = isce3::product::GeoGridParameters(dem_x0, dem_y0,
+                    dem_dx, dem_dy, dem_width, dem_length, epsg_dem);
+            auto dem =
+                    _createFixedHeightDem(height, dem_geogrid, _tempFilename());
 
             // Run topo
             const std::string outdir = ".";
@@ -748,18 +774,12 @@ TEST(metadataCubesTest, testMetadataCubes) {
 
     for (std::size_t layer_counter = 0; layer_counter < heights.size();
          ++layer_counter) {
-        std::cout << "preparing DEM interpolator for height: "
-                  << heights[layer_counter] << std::endl;
-        isce3::geometry::DEMInterpolator dem(heights[layer_counter]);
 
-        // UAVSAR (NISAR) Winipeg
-        dem.epsgCode(4326);
-        dem.xStart(-98.444);
-        dem.yStart(49.991);
-        dem.deltaX(0.0002);
-        dem.deltaY(-0.0002);
-        dem.length(3240);
-        dem.width(3805);
+        // UAVSAR (NISAR) Winnipeg
+        auto dem_geogrid = isce3::product::GeoGridParameters(
+                -98.444, 49.991, 0.0002, -0.0002, 3805, 3240, 4326);
+        auto dem = _createFixedHeightDem(
+                heights[layer_counter], dem_geogrid, _tempFilename());
 
         const std::string outdir = ".";
         std::cout << "running topo for height: " << heights[layer_counter]

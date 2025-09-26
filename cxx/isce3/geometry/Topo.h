@@ -251,71 +251,6 @@ public:
               isce3::io::Raster* groundToSatNorthRaster = nullptr);
 
     /**
-     * Main entry point for the module; internal creation of topo rasters
-     *
-     * This is the main topo driver. The pixel-by-pixel output file names are
-     * fixed for now <ul>
-     * <li> x.rdr - X coordinate in requested projection system (meters or degrees)
-     * <li> y.rdr - Y coordinate in requested projection system (meters or degrees)
-     * <li> z.rdr - Height above ellipsoid (meters)
-     * <li> inc.rdr - Incidence angle (degrees) computed from vertical at target
-     * <li> localInc.rdr - Local incidence angle (degrees) at target
-     * <li> locaPsi.rdr - Local projection angle (degrees) at target
-     * <li> simamp.rdr - Simulated amplitude image.
-     * <li> los_east.rdr - East component of ground to satellite unit vector
-     * <li> los_north.rdr - North component of ground to satellite unit vector
-     * </ul>
-     *
-     * @param[in] demInterp input DEM interpolator
-     * @param[in] outdir  directory to write outputs to
-     */
-    void topo(isce3::geometry::DEMInterpolator& demInterp,
-              const std::string& outdir);
-
-    /**
-     * Run topo with externally created topo rasters in TopoLayers object
-     *
-     * @param[in] demInterp input DEM interpolator
-     * @param[in] layers TopoLayers object for storing and writing results
-     */
-    void topo(isce3::geometry::DEMInterpolator& demInterp, TopoLayers& layers);
-
-    /**
-     * Run topo with externally created topo rasters; generate mask
-     *
-     * @param[in] demInterp input DEM interpolator
-     * @param[in] xRaster output raster for X coordinate in requested projection
-     * system (meters or degrees)
-     * @param[in] yRaster output raster for Y coordinate in requested
-     * projection system (meters or degrees)
-     * @param[in] zRaster output raster for height above ellipsoid (meters)
-     * @param[in] incRaster output raster for incidence angle (degrees) computed
-     * from vertical at target
-     * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
-     * anti-clockwise from EAST (Right hand rule)
-     * @param[in] localIncRaster output raster for local incidence angle
-     * (degrees) at target
-     * @param[in] localPsiRaster output raster for local projection angle
-     * (degrees) at target
-     * @param[in] simRaster output raster for simulated amplitude image.
-     * @param[in] maskRaster output raster for layover/shadow mask.
-     * @param[in] groundToSatEastRaster output for east component of ground to satellite unit vector
-     * @param[in] groundToSatNorthRaster output for north component of ground to satellite unit vector
-     */
-    void topo(isce3::geometry::DEMInterpolator& demInterp,
-              isce3::io::Raster* xRaster,
-              isce3::io::Raster* yRaster,
-              isce3::io::Raster* heightRaster,
-              isce3::io::Raster* incRaster,
-              isce3::io::Raster* hdgRaster,
-              isce3::io::Raster* localIncRaster,
-              isce3::io::Raster* localPsiRaster,
-              isce3::io::Raster* simRaster,
-              isce3::io::Raster* maskRaster,
-              isce3::io::Raster* groundToSatEastRaster,
-              isce3::io::Raster* groundToSatNorthRaster);
-
-    /**
      * Compute layover/shadow masks
      *
      * @param[in] layers Object containing output layers
@@ -370,14 +305,14 @@ private:
      * @param[in] TCNbasis basis for the line under consideration
      * @param[in] demInterp DEM interpolator object used to compute local slope
      */
-    void _setOutputTopoLayers(isce3::core::Vec3 &,
-                              TopoLayers &,
-                              size_t,
-                              isce3::core::Pixel &,
-                              isce3::core::Vec3& pos,
-                              isce3::core::Vec3& vel,
-                              isce3::core::Basis &,
-                              DEMInterpolator &);
+    void _setOutputTopoLayers(const isce3::core::Vec3& llh,
+                              TopoLayers& layers,
+                              size_t line,
+                              const isce3::core::Pixel& pixel,
+                              const isce3::core::Vec3& pos,
+                              const isce3::core::Vec3& vel,
+                              const isce3::core::Basis& TCNbasis,
+                              const DEMInterpolator& demInterp);
 
     /** Main entry point for the module; internal creation of topo rasters */
     template<typename T> void _topo(T& dem, const std::string& outdir);

@@ -41,9 +41,26 @@ def cmdLineParse():
                         help='Filepath to user DEM.')
     parser.add_argument('-m', '--margin', type=int, action='store',
                         default=5, help='Margin for DEM bounding box (km)')
-    parser.add_argument('-b', '--bbox', type=float, action='store',
-                        dest='bbox', default=None, nargs='+',
-                        help='Spatial bounding box in latitude/longitude (WSEN, decimal degrees)')
+    parser.add_argument('-b', '--bbox', type=float, nargs=4,
+                        help=('Spatial bounding box as minX, minY, maxX, maxY '
+                             'in Spatial Reference System specified by epsg. '
+                             'For default epsg=4326, these are west, south, '
+                             'east, north bounds in decimal degrees.'))
+    parser.add_argument('-e', '--bbox-epsg', type=int, choices=[4326, 3031, 3413],
+                        default=4326,
+                        help='EPSG code corresponding to the bbox coordinates. '
+                             'Must be one of 4326, 3413, or 3031.')
+    parser.add_argument('-d', '--dem-epsg', type=int, choices=[4326, 3031, 3413],
+                        default=None,
+                        help='EPSG code corresponding to the output DEM projection system.'
+                             ' Must be one of 4326, 3413, or 3031.'
+                             ' If not provided it is assumed to be the same as bbox epsg or'
+                             ' the same as the epsg of the input product polygon. The output ' \
+                             ' epsg falls back to 4326 if the user requests 3031 or 3413, but the'
+                             ' input DEM with that epsg code did not cover the specified bbox or'
+                             ' the bbox falls outside the valid region of the DEM. The DEM in 3413 is ' \
+                             ' considered valid for latitudes above 70 degrees North and the DEM in' \
+                             ' epsg 3031 is considered valid below latitude 70 degrees South.')
     parser.add_argument('-v', '--version', type=str, action='store',
                         default='1.2', dest='version',
                         help='DEM version in the form of major_number.minor_number')
@@ -91,7 +108,7 @@ def check_dateline(poly):
         # DEM longitude range
         for polygon_count in range(2):
             x, y = polys[polygon_count].exterior.coords.xy
-            if not any([k > 180 for k in x]):  # pylint: disable=use-a-generator
+            if not any([k > 180 for k in x]): # pylint: disable=use-a-generator
                 continue
 
             # Otherwise, wrap longitude values down to 360 deg
@@ -105,8 +122,65 @@ def check_dateline(poly):
 
     return polys
 
+def adjust_lat_lon_coordinates(x_min, y_min, x_max, y_max, vrt_filename):
+    """Adjust a bbox to fall within the bounds of input Raster (vrt_filename)
 
-def determine_polygon(ref_slc, bbox=None):
+    Parameters
+    ----------
+    x_min: float
+        Minimum X coordinate of the bbox
+    y_min: float
+        Minimum Y coordinate of the bbox
+    x_max: float
+        Maximum X coordinate of the bbox
+    y_max: float
+        Maximum Y coordinate of the bbox
+    vrt_filename: str
+        The VRT filename of the input Raster (DEM)
+
+    Returns
+    -------
+    x_min: float
+        Adjusted minimum X coordinate of the bbox
+    y_min: float
+        Adjusted minimum Y coordinate of the bbox
+    x_max: float
+        Adjusted maximum X coordinate of the bbox
+    y_max: float
+        Adjusted maximum Y coordinate of the bbox
+    """
+    # the original COPERNICUS DEM and consequently the COPERNICUS DEM for NISAR
+    # has a coverage of -180.0001388888889 to 179.9998611111111 in longitude
+    # and a coverage of -89.99986111111112 to 90.00013888888888 in latitude.
+    # This non-integer coverage makes it difficult to check if the DEM covers
+    # the bounding box when the bbox includes the nominal boundaries of the DEM.
+    # For example when we split a polygon crossing antimeridian to two polygons then
+    # we may have a polygon that goes from 179.0 to 180.0 degrees in longitude.
+    # In such situation, we may get a coverage error as the DEM goes up to 179.9998611111111
+    # and does not cover the 180.0. Therefore a workaround is to adjust the bbox
+    # to not go over the DEM's actual limits for epsg 4326
+
+    ds = gdal.Open(vrt_filename, gdal.GA_ReadOnly)
+
+    input_x_min, xres, row_rotation, input_y_max, col_rotation, yres = ds.GetGeoTransform()
+    assert row_rotation == 0.0
+    assert col_rotation == 0.0
+    length = ds.GetRasterBand(1).YSize
+    width = ds.GetRasterBand(1).XSize
+
+    input_y_min = input_y_max + length * yres
+    input_x_max = input_x_min + width * xres
+    input_x_min, input_x_max = sorted((input_x_min, input_x_max))
+    input_y_min, input_y_max = sorted((input_y_min, input_y_max))
+
+    x_min = max(x_min, input_x_min)
+    x_max = min(x_max, input_x_max)
+    y_min = max(y_min, input_y_min)
+    y_max = min(y_max, input_y_max)
+
+    return x_min, y_min, x_max, y_max
+
+def determine_polygon(ref_slc, bbox, bbox_epsg):
     """Determine bounding polygon using RSLC radar grid/orbit
     or user-defined bounding box
 
@@ -115,23 +189,33 @@ def determine_polygon(ref_slc, bbox=None):
     ref_slc: str
         Filepath to reference RSLC product
     bbox: list, float
-        Bounding box with lat/lon coordinates (decimal degrees)
+        Bounding box with Xmin, Ymin, Xmax, Ymax
+        For epsg 4326, it should be in with lat/lon coordinates (decimal degrees)
         in the form of [West, South, East, North]
+    bbox_epsg: int
+        EPSG code corresponding to the bbox
 
     Returns
     -------
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter
         or bbox shape on the ground
+    epsg: int
+        epsg corresponding to the returned polygon.
+        The returned epsg is the same input epsg when
+        a bounding box passed to the function. When a
+        NISAR RSLC product is passed the epsg is assumed
+        to be 4326.
     """
     if bbox is not None:
         print('Determine polygon from bounding box')
         poly = box(bbox[0], bbox[1], bbox[2], bbox[3])
+        epsg = bbox_epsg
     else:
         print('Determine polygon from RSLC radar grid and orbit')
         poly = get_geo_polygon(ref_slc)
-
-    return poly
+        epsg = 4326
+    return poly, epsg
 
 
 def point2epsg(lon, lat):
@@ -185,14 +269,15 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     """
     from isce3.core import LUT2d  # pylint: disable=import-error
     from isce3.geometry import DEMInterpolator, get_geo_perimeter_wkt  # pylint: disable=import-error
-    from nisar.products.readers import SLC  # pylint: disable=import-error
+    from nisar.products.readers import RSLC  # pylint: disable=import-error
 
     # Prepare SLC dataset input
-    productSlc = SLC(hdf5file=ref_slc)
+    productSlc = RSLC(hdf5file=ref_slc)
 
-    # Extract orbits, radar grid, and doppler for frequency A
+    # Extract orbits, radar grid, and doppler for frequency A or B
     orbit = productSlc.getOrbit()
-    radar_grid = productSlc.getRadarGrid(frequency='A')
+    freq = productSlc.identification.listOfFrequencies[0]
+    radar_grid = productSlc.getRadarGrid(frequency=freq)
     doppler = LUT2d()
 
     # Get min and max global height DEM interpolators
@@ -259,7 +344,7 @@ def determine_projection(polys):
 
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=8, max_value=32)
-def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
+def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max, epsg):
     """Translate DEM from nisar-dem bucket. This
        function is decorated to perform retries
        using exponential backoff to make the remote
@@ -282,13 +367,19 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
         Minimum latitude bound of the subwindow
     y_max: float
         Maximum latitude bound of the subwindow
+    epsg: int
+        EPSG code representing the projection system of x/y coordinates
     """
 
     ds = gdal.Open(vrt_filename, gdal.GA_ReadOnly)
+    srs = osr.SpatialReference(wkt=ds.GetProjection())
+    dem_epsg = int(srs.GetAttrValue("AUTHORITY", 1))
+    if epsg != dem_epsg:
+        raise ValueError("Crop bounds must be given "
+                f"in the same projection as DEM (EPSG:{dem_epsg}) but they "
+                f"were given in EPSG:{epsg} instead.")
 
     input_x_min, xres, _, input_y_max, _, yres = ds.GetGeoTransform()
-    length = ds.GetRasterBand(1).YSize
-    width = ds.GetRasterBand(1).XSize
 
     # Declare lambda function to snap min/max X and Y
     # coordinates over the DEM grid
@@ -303,17 +394,9 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     y_min = snap_coord(y_min, yres, input_y_max, np.floor)
     y_max = snap_coord(y_max, yres, input_y_max, np.ceil)
 
-    input_y_min = input_y_max + length * yres
-    input_x_max = input_x_min + width * xres
-
-    x_min = max(x_min, input_x_min)
-    x_max = min(x_max, input_x_max)
-    y_min = max(y_min, input_y_min)
-    y_max = min(y_max, input_y_max)
-
     gdal.Translate(outpath, ds, format='GTiff',
                    projWin=[x_min, y_max, x_max, y_min])
-
+    
     # stage_dem.py takes a bbox as an input. The longitude coordinates
     # of this bbox are unwrapped i.e., range in [0, 360] deg. If the
     # bbox crosses the anti-meridian, the script divides it in two
@@ -323,10 +406,7 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     # tile is < 180 deg i.e., there is a dateline crossing.
     # This ensure that the mosaicked DEM VRT will span a min
     # range of longitudes rather than the full [-180, 180] deg
-    sr = osr.SpatialReference(ds.GetProjection())
-    epsg_str = sr.GetAttrValue("AUTHORITY", 1)
-
-    if x_min <= -180.0 and epsg_str == '4326':
+    if x_min <= -180.0 and dem_epsg == 4326:
         ds = gdal.Open(outpath, gdal.GA_Update)
         geotransform = list(ds.GetGeoTransform())
         geotransform[0] += 360.0
@@ -335,15 +415,15 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     ds = None
 
 
-def download_dem(polys, epsgs, outfile, version):
+def download_dem(polys, epsg, outfile, version):
     """Download DEM from nisar-dem bucket
 
     Parameters
     ----------
     polys: shapely.geometry.Polygon
         List of shapely polygons
-    epsg: str, list
-        List of EPSG codes corresponding to polys
+    epsg: int
+        The EPSG code corresponding to polys
     outfile: str
         Path to the output DEM file to be staged
     version: str
@@ -351,121 +431,242 @@ def download_dem(polys, epsgs, outfile, version):
         the DEM VRTs (e.g., s3://nisar-dem/v1.2/EPSG4326/<EPSG4326_FILES>).
         DEM version is in the form of major_version.minor_version
     """
-
-    if 3031 in epsgs:
-        epsgs = [3031] * len(epsgs)
-        polys = transform_polygon_coords(polys, epsgs)
-        # Need one EPSG as in polar stereo we have one big polygon
-        epsgs = [3031]
-    elif 3413 in epsgs:
-        epsgs = [3413] * len(epsgs)
-        polys = transform_polygon_coords(polys, epsgs)
-        # Need one EPSG as in polar stereo we have one big polygon
-        epsgs = [3413]
-    else:
-        # set epsg to 4326 for each element in the list
-        epsgs = [4326] * len(epsgs)
-        # convert margin to degree (approx formula)
-
     # Download DEM for each polygon/epsg
     file_prefix = os.path.splitext(outfile)[0]
     dem_list = []
-    for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
+    for n, poly in enumerate(polys):
         vrt_filename = f'/vsis3/{bucket_name}/v{version}/EPSG{epsg}/EPSG{epsg}.vrt'
         outpath = f'{file_prefix}_{n}.tiff'
         dem_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
-        translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax)
+        if epsg == 4326:
+            xmin, ymin, xmax, ymax = adjust_lat_lon_coordinates(xmin, ymin, xmax, ymax, vrt_filename)
 
+        translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax, epsg)
+            
     # Get the DEM description from the README.txt file using GDAL
+    # The full description consists of the 'Short description' (which includes
+    # the version number) and 'Notes' (which includes the license info)
+    # concatenated together.
     in_readme_path = vrt_filename.replace(f'EPSG{epsg}.vrt', 'README.txt')  # pylint: disable=undefined-loop-variable
-    dem_descr = extract_dem_description(in_readme_path)
+    readme_text = get_readme_contents(in_readme_path)
+    short_descr = extract_readme_bullet_item(readme_text, "Short description")
+    notes = extract_readme_bullet_item(readme_text, "Notes")
+
+    # Some older versions of the README are missing a period at the end of the 'Short
+    # description'.
+    if not short_descr.endswith("."):
+        short_descr += "."
+
+    full_descr = short_descr + " " + notes
 
     # Build vrt with downloaded DEMs and add dem_descr in metadata
     vrt_dataset = gdal.BuildVRT(outfile, dem_list)
-    vrt_dataset.SetMetadataItem("dem_description", f'{dem_descr}')
+    vrt_dataset.SetMetadataItem("dem_description", full_descr)
 
     # Add license text to GeoTiff files
     for dem_file in dem_list:
-        add_dem_license_to_tiff(dem_file)
+        ds = gdal.Open(dem_file, gdal.GA_Update)
+        ds.SetMetadataItem("dem_description", full_descr)
 
-
-def extract_dem_description(in_readme_path):
-    """Extract DEM description from README.txt on nisar-dem
-       s3 bucket
+def dem_covers_bbox_polar_stereo(vrt_filename, x_min, x_max, y_min, y_max, epsg):
+    """Check if the DEM in polar stereo covers the bbox and if the bbox falls in the valid region of the DEM
+    For epsg 3413, the DEM is considered valid above 65 degrees North
+    For epsg 3031, the DEM is considered valid below 65 degrees South
 
     Parameters
     ----------
-    in_readme_path: str
-        Path to the README.txt on the nisar-dem
-        s3 bucket
+    vrt_filename: str
+        Path to the input VRT file
+    x_min: float
+        Minimum X coordinate bound of the subwindow, in the coordinate system determined by `epsg`
+    x_max: float
+        Maximum X coordinate bound of the subwindow, in the coordinate system determined by `epsg`
+    y_min: float
+        Minimum Y coordinate bound of the subwindow, in the coordinate system determined by `epsg`
+    y_max: float
+        Maximum Y coordinate bound of the subwindow, in the coordinate system determined by `epsg`
+    epsg: int
+        The EPSG code corresponding to the input bounding box
+
+    Returns:
+    --------
+    coverage_status: bool
+        A boolean flag indicating if the DEM covers the bbox (True) or not (False)
+    """
+    assert epsg in [3031, 3413]
+    ds = gdal.Open(vrt_filename, gdal.GA_ReadOnly)
+    srs = osr.SpatialReference(wkt=ds.GetProjection())
+    dem_epsg = int(srs.GetAttrValue("AUTHORITY", 1))
+    if epsg != dem_epsg:
+        raise ValueError("The coordinates of the bounds must be given "
+                f"in the same projection as DEM (EPSG:{dem_epsg}) but they "
+                f"were given in EPSG:{epsg} instead.")
+
+    input_x_min, xres, row_rotation, input_y_max, col_rotation, yres = ds.GetGeoTransform()
+    assert row_rotation == 0.0
+    assert col_rotation == 0.0
+    length = ds.GetRasterBand(1).YSize
+    width = ds.GetRasterBand(1).XSize
+
+    input_y_min = input_y_max + length * yres
+    input_x_max = input_x_min + width * xres
+    input_x_min, input_x_max = sorted((input_x_min, input_x_max))
+    input_y_min, input_y_max = sorted((input_y_min, input_y_max))
+
+    print("Requested bounding box (x_min, x_max, y_min, y_max):", x_min, x_max, y_min, y_max)
+    print("Source DEM coverage:", input_x_min, input_x_max, input_y_min, input_y_max)
+    # Let's check if the DEM in the given EPSG that we are looking at
+    # covers the coordinates of the snapped bbox
+    if (x_min < input_x_min or x_max > input_x_max
+            or y_min < input_y_min or y_max > input_y_max):
+        # the DEM does not cover the bbox
+        print("The DEM does NOT cover the bbox.")
+        return False
+    
+    # the DEM covers the bbox
+    print("The DEM covers the bbox.")
+    
+    # If epsg in [3031, 3413] we need an extra check
+    # to make sure the bbox is in valid region of the DEM
+    # The copernicus DEM for NISAR projected to 3031
+    # and 3413 are latitude based and therefore the
+    # DEMs in these EPSGs are valid within a circle
+    # above latitude 60 N for 3413 (Polar Stereo)  and
+    # below 60 S for epsg 3031 (Antarctica). The diagram
+    # below shows the situation where the DEM is valid
+    # within the circle and invalid at the corners of the DEM
+    # coverage outside the circle. Therefore it is important
+    # to check not only the geometrical coverage of the DEM
+    # and bbox as done above, but also check if the bbox is
+    # in the valid region of the DEM.
+    #
+    #            -----------+-------------
+    #            |        .-''+''-.  Invalid
+    #            |     .-'           '-.  |
+    #            |   .'                 '.|
+    #            | /                     \|
+    #            |                        |      
+    #            |    VALID    REGION     |      
+    #            |                        |      
+    #            | \                     /|       
+    #            |  '.                 .' |       
+    #            |   '-.             .-'  |        
+    #            |       '-..-+-..-'      |       
+    #            -----------+--------------
+    #
+    poly = box(x_min, y_min, x_max, y_max)
+    poly_lat_lon = transform_bbox_to_latlon(poly, epsg)
+    lons, lats = poly_lat_lon.boundary.coords.xy
+    if epsg == 3413 and min(lats) > 65:
+        dem_is_valid = True
+    elif epsg == 3031 and max(lats) < -65:
+        dem_is_valid = True
+    else:
+        dem_is_valid = False
+
+    if not dem_is_valid:
+        print(f"The bbox is not in the valid region of the DEM in epsg {epsg}.")
+    return dem_is_valid
+
+def get_readme_contents(in_readme_path: str) -> str:
+    """
+    Get the contents of a README file in the nisar-dem S3 bucket.
+
+    Parameters
+    ----------
+    in_readme_path : str
+        Path to the README file in the nisar-dem S3 bucket (e.g.
+        '/vsis3/nisar-dem/v1.2/EPSG4326/README.txt').
 
     Returns
     -------
-    dem_descr: str
-        String containing the "dem description"
-        extracted from the README.txt
+    str
+        The contents of the README file.
     """
-    pattern = r'^\s*- Short description: (.+)$'
-
     # JPL internal s3 buckets are not accessible via
     # https addresses due to cybersecurity concerns. This
     # excludes using "requests". Using boto3 and its AWS s3
     # API would add another unnecessary dependency to ISCE3.
     # Therefore, we use GDAL to read a remote text file.
+    stat = gdal.VSIStatL(in_readme_path)
+    if stat is None:
+        raise ValueError(f"Failed to access README file {in_readme_path!r}")
+
     fp = gdal.VSIFOpenL(in_readme_path, "rb")
-    text = gdal.VSIFReadL(1, 100000, fp).decode()
-    gdal.VSIFCloseL(fp)
-
-    match = re.search(pattern, text, re.MULTILINE)
-    if match:
-        dem_descr = match.group(1)
-    else:
-        err_str = 'Line with "Short Description" not found in README.txt'
-        raise ValueError(err_str)
-
-    return dem_descr
+    try:
+        text = gdal.VSIFReadL(1, stat.size, fp).decode()
+    finally:
+        gdal.VSIFCloseL(fp)
+    return text
 
 
-def add_dem_license_to_tiff(dem_file):
-    '''
-    Add DEM license statement to downloaded DEM files
+def extract_readme_bullet_item(readme_text: str, name: str) -> str:
+    """
+    Extract an item from the NISAR DEM README.
+
+    The README file is expected to contain a bulleted list of colon-separated
+    key-value pairs, e.g.
+
+    ```
+    - Name: Copernicus DEM for NISAR v1.2 (EPSG 4326)
+    - Version: 1.2
+    - EPSG code: 4326
+    [...]
+    ```
+
+    This function extracts the value of one of the bullet items, given the
+    corresponding key.
 
     Parameters
     ----------
-    dem_file: str
-        Path to DEM Tiff
-    '''
-    license_text = "This digital elevation model (DEM) was prepared at the Jet Propulsion Laboratory, " \
-                   "California Institute of Technology, under contract with the National Aeronautics and " \
-                   "Space Administration, using the Copernicus DEM 30-m and Copernicus DEM 90-m models " \
-                   "provided by the European Space Agency. The Copernicus DEM 30-m and Copernicus DEM " \
-                   "90-m were produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus " \
-                   "Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and " \
-                   "ESA; all rights reserved. The organizations in charge of the NISAR mission by law or by " \
-                   "delegation do not incur any liability for any use of this DEM. The organisations in charge " \
-                   "of the Copernicus programme by law or by delegation do not incur any liability for any use " \
-                   "of the Copernicus WorldDEM-30."
+    readme_text : str
+        The contents of the README file. The string is expected to consist of a
+        bulleted list of colon-separated key-value pairs, delimited by newlines
+        (and optional whitespace).
+    name : str
+        The key of the bullet item to extract (e.g. 'Short description').
 
-    ds = gdal.Open(dem_file, gdal.GA_Update)
-    ds.SetMetadataItem("LICENSE", license_text)
+    Returns
+    -------
+    str
+        The value of the bullet item, after the colon (`:`), with leading and
+        trailing whitespace removed.
+
+    Raises
+    ------
+    ValueError
+        If `name` was not a valid name of any bullet item in the README
+        contents.
+    """
+    pattern = rf"^\s*- {name}:\s*(.+?)\s*$"
+    if (match := re.search(pattern, readme_text, re.MULTILINE)) is not None:
+        return match.group(1)
+
+    raise ValueError(f"{name!r} not found in README file")
 
 
 def transform_polygon_coords(polys, epsgs):
     """Transform coordinates of polys (list of polygons)
-       to target epsgs (list of EPSG codes)
+       from epsg 4326 to to target epsgs (list of EPSG codes)
 
     Parameters
     ----------
     polys: shapely.Geometry.Polygon
-        List of shapely polygons
+        List of shapely polygons or a single shapely polygon
     epsg: list, str
         List of EPSG codes corresponding to
-        elements in polys
+        elements in polys or a single EPSG code
     """
 
+    # If polys or epsgs is a single element, convert them to a list
+    if not isinstance(polys, list):
+        polys = [polys]
+    if not isinstance(epsgs, list):
+        epsgs = [epsgs]
+
     # Assert validity of inputs
-    assert (len(polys) == len(epsgs))
+    assert len(polys) == len(epsgs)
 
     # Transform each point of the perimeter in target EPSG coordinates
     llh = osr.SpatialReference()
@@ -487,11 +688,50 @@ def transform_polygon_coords(polys, epsgs):
         xmax.append(max(tgt_x))
         ymax.append(max(tgt_y))
     # return a polygon
-    poly = [Polygon([(min(xmin), min(ymin)), (min(xmin), max(ymax)),
-                     (max(xmax), max(ymax)), (max(xmax), min(ymin))])]
+    poly = Polygon([(min(xmin), min(ymin)), (min(xmin), max(ymax)),
+                     (max(xmax), max(ymax)), (max(xmax), min(ymin))])
 
     return poly
 
+def transform_bbox_to_latlon(poly, epsg):
+    """Transform the coordinates of a bounding box
+    in a given epsg to the coordinates in lat/lon (epsg 4326)
+
+    Parameters
+    ----------
+    poly: shapely.Geometry.Polygon 
+        Input bbox in form of shapely polygon
+    epsg: int
+        Epsg code corresponding to input poly
+
+    Returns
+    -------
+    poly: shapely.Geometry.Polygon 
+        Output bbox in epsg 4326
+    """
+
+    epsg_latlon = 4326
+    xmin, ymin, xmax, ymax = poly.bounds
+    # Create source spatial reference
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(epsg)
+
+    # Create target spatial reference for epsg 4326
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(epsg_latlon)
+
+    # Create the coordinate transformation object
+    transformer = osr.CoordinateTransformation(source, target)
+
+    ul_latitude, ul_longitude, _ = transformer.TransformPoint(xmin, ymax)
+    lr_latitude, lr_longitude, _ = transformer.TransformPoint(xmax, ymin)
+    ur_latitude, ur_longitude, _ = transformer.TransformPoint(xmax, ymax)
+    ll_latitude, ll_longitude, _ = transformer.TransformPoint(xmin, ymin)
+
+    poly = Polygon([(ul_longitude, ul_latitude), (ur_longitude, ur_latitude),
+                   (lr_longitude, lr_latitude),(ll_longitude, ll_latitude)])
+    
+    return poly
 
 def check_dem_overlap(DEMFilepath, polys):
     """Evaluate overlap between user-provided DEM
@@ -524,11 +764,12 @@ def check_dem_overlap(DEMFilepath, polys):
     epsg = [DEM.get_epsg()] * len(polys)
 
     if DEM.get_epsg() != 4326:
-        polys = transform_polygon_coords(polys, epsg)
+        polys = [transform_polygon_coords(polys, epsg)]
 
     perc_area = 0
     for poly in polys:
         perc_area += (poly.intersection(poly_dem).area / poly.area) * 100
+
     return perc_area
 
 
@@ -552,8 +793,9 @@ def check_aws_connection(version='1.2'):
         raise ValueError(errmsg)
 
 
-def apply_margin_polygon(polygon, margin_in_km=5):
+def apply_margin_to_geographic_box(polygon, margin_in_km=5):
     '''
+    Assuming the polygon is in epsg 4326
     Convert margin from km to degrees and
     apply to polygon
 
@@ -584,6 +826,31 @@ def apply_margin_polygon(polygon, margin_in_km=5):
                            lon_max + lon_margin, min([lat_max + lat_margin, 90]))
     return poly_with_margin
 
+
+def apply_margin_to_projected_box(polygon, margin_in_km=5):
+    '''
+    Assuming the polygon is in UTM or Polar Stereo
+    add a margin in km to the polygon
+    Parameters
+    ----------
+    polygon: shapely.Geometry.Polygon
+        Bounding polygon covering the area on the
+        ground to download the DEM
+    margin_in_km: np.float
+        Buffer in km to add to the polygon
+
+    Returns
+    ------
+    poly_with_margin: shapely.Geometry.box
+        Bounding box with margin applied
+    '''
+    x_min, y_min, x_max, y_max = polygon.bounds
+    assert x_max >= x_min
+    assert y_max >= y_min
+    margin_in_meters = margin_in_km*1000.0
+    poly_with_margin = box(x_min - margin_in_meters, y_min-margin_in_meters,
+                           x_max + margin_in_meters, y_max + margin_in_meters)
+    return poly_with_margin
 
 def margin_km_to_deg(margin_in_km):
     '''
@@ -648,15 +915,59 @@ def main(opts):
         err_msg = "DEM output filename extension is not .vrt"
         raise ValueError(err_msg)
 
-    # Determine polygon based on RSLC info or bbox
-    poly = determine_polygon(opts.product, opts.bbox)
+    # Determine polygon based on RSLC info or bbox. Priority is given to bbox
+    # and the returned epsg is the input epsg. If bbox is not provided but an
+    # RSLC product provided, then epsg is assumed to be 4326
+    poly, bbox_epsg = determine_polygon(opts.product, opts.bbox, opts.bbox_epsg)
 
-    # Apply margin to the identified polygon in lat/lon
-    poly = apply_margin_polygon(poly, opts.margin)
+    # the epsg of the output DEM if not specified is assumed to be
+    # the same as the epsg of the bounding box
+    dem_epsg = opts.dem_epsg or bbox_epsg
+    
+    # The Copernicus DEM for NISAR only contains three EPSG codes
+    valid_epsg_values = {4326, 3413, 3031}
+    if bbox_epsg not in valid_epsg_values or dem_epsg not in valid_epsg_values:
+        raise ValueError("Both bbox_epsg and dem_epsg must be one of 4326, 3413, or 3031.")
+    
+    if bbox_epsg != dem_epsg:
+        if bbox_epsg != 4326:
+            # Users are allowed to provide bbox_epsg in lat/lon (epsg 4326) and ask for a DEM
+            # in dem_epsg different than bbox_epsg (i.e., 3413, 3031). However, we do 
+            # not encourage the opposite. 
+            raise ValueError("If bbox epsg and dem_epsg are different, then bbox epsg cannot be 3413 or 3031.")
+        # Transform the polygon in 4326 to polar stereo 
+        poly = transform_polygon_coords(poly, dem_epsg)
 
-    # Check dateline crossing. Returns list of polygons
-    polys = check_dateline(poly)
+    # At this point the polygon is at dem_epsg projection. 
+    # So no more use for bbox_epsg from this point  
 
+    if dem_epsg == 4326:
+        # Apply margin to the identified polygon in lat/lon
+        poly = apply_margin_to_geographic_box(poly, opts.margin)
+    
+        # Check dateline crossing. Returns list of polygons
+        polys = check_dateline(poly)
+    else:
+        # epsg is 3031 or 3413
+        # Apply margin to the identified polygon in polar stereo
+        poly = apply_margin_to_projected_box(poly, opts.margin)
+        polys = [poly]
+        
+    # check if the DEM in epsg 3031 or 3413 covers the bbox and if the bbox falls
+    # to the valid part of the DEM. If the DEM does not cover the bbox, or if 
+    # the bbox is not in the valid part of the DEM, transform the bbox to 
+    # epsg 4326 and update dem_epsg to be 4326
+    if dem_epsg in [3031, 3413]:
+        vrt_filename = f'/vsis3/{bucket_name}/v{opts.version}/EPSG{dem_epsg}/EPSG{dem_epsg}.vrt'
+        xmin, ymin, xmax, ymax = polys[0].bounds
+        covers_bbox = dem_covers_bbox_polar_stereo(vrt_filename, xmin, xmax, ymin, ymax, dem_epsg)
+        if not covers_bbox:
+            print(f"DEM in epsg {dem_epsg} does not cover bbox. Transforming to lat/lon")
+            print(f"Transforming the bbox to lat/lon (epsg 4326) and download a DEM in epsg 4326 ")
+            poly = transform_bbox_to_latlon(polys[0], dem_epsg)
+            dem_epsg = 4326
+            polys = check_dateline(poly)
+        
     if os.path.isfile(opts.filepath):
         print('Check overlap with user-provided DEM')
         overlap = check_dem_overlap(opts.filepath, polys)
@@ -671,10 +982,8 @@ def main(opts):
             import warnings
             warnings.warn('boto3 is require to verify AWS connection '
                           'proceeding without verifying connection')
-        # Determine EPSG code
-        epsg = determine_projection(polys)
         # Download DEM
-        download_dem(polys, epsg, opts.outfile, opts.version)
+        download_dem(polys, dem_epsg, opts.outfile, opts.version)
         print('Done, DEM store locally')
 
 

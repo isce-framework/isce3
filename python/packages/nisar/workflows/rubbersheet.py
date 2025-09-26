@@ -239,7 +239,7 @@ def identify_outliers(offsets_dir, rubbersheet_params):
     window_rg, window_az = rubbersheet_params['median_filter_size_range'], rubbersheet_params['median_filter_size_azimuth']
     metric = rubbersheet_params['culling_metric']
     error_channel = journal.error('rubbersheet.run.identify_outliers')
-    
+
     # Load data based on metric
     if metric == 'snr':
         mask_data = _open_raster(f'{offsets_dir}/snr', 1) < threshold
@@ -254,10 +254,10 @@ def identify_outliers(offsets_dir, rubbersheet_params):
     else:
         error_channel.log(f"{metric} is an invalid metric to filter outliers")
         raise ValueError(f"Invalid metric: {metric}")
-    
+
     # Apply mask
     offset_az[mask_data], offset_rg[mask_data] = np.nan, np.nan
-    
+
     # Optional refinement
     if rubbersheet_params.get('mask_refine_enabled', False):
         filter_size = rubbersheet_params['mask_refine_filter_size']
@@ -267,7 +267,7 @@ def identify_outliers(offsets_dir, rubbersheet_params):
         offset_az[mask_final], offset_rg[mask_final] = np.nan, np.nan
         offset_az = remove_pixels_with_many_nans(offset_az, filter_size, max_nan_neighbors)
         offset_rg = remove_pixels_with_many_nans(offset_rg, filter_size, max_nan_neighbors)
-    
+
     return offset_az, offset_rg
 
 
@@ -318,7 +318,7 @@ def compute_mad_mask(offset, window_az, window_rg, threshold):
     Parameters
     ----------
     offset: np.ndarray
-        2D array of offset values from image matching to 
+        2D array of offset values from image matching to
         be analyzed for outliers
     window_az: int
         Size of the filtering window along the row direction
@@ -336,17 +336,17 @@ def compute_mad_mask(offset, window_az, window_rg, threshold):
     '''
     # Mask the NaN values in the input array
     masked_offset = np.ma.masked_invalid(offset)
-    
+
     # Apply median filter, ignoring NaNs
     median_off = ndimage.median_filter(masked_offset, [window_az, window_rg])
-    
+
     # Compute the absolute deviation from the median
-    mad = np.abs(offset - median_off) 
-    
+    mad = np.abs(offset - median_off)
+
     # Create a mask for pixels where MAD exceeds the threshold
     outliers_mask = mad > threshold
-    
-    return outliers_mask  
+
+    return outliers_mask
 
 
 def fill_outliers_holes(offset, rubbersheet_params):
@@ -448,7 +448,7 @@ def _fill_nan_with_mean(arr_in, arr_out, neighborhood_size):
 
     return filled_arr
 
-    
+
 def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
     '''
     Blends offsets layers at different resolution. Implements a
@@ -496,7 +496,7 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
             _, offset_rg_culled = identify_outliers(str(off_product_dir / layer_key),
                                                     rubbersheet_params)
             offset_rg = _fill_nan_with_mean(offset_rg, offset_rg_culled, filter_size)
-    
+
     # Fill remaining holes by iteratively filling the output offset layer
     offset_az = fill_outliers_holes(offset_az,
                                     rubbersheet_params)

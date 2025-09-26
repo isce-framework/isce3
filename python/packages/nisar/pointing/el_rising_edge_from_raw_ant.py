@@ -23,8 +23,8 @@ from nisar.antenna import TxTrmInfo, compute_transmit_pattern_weights
 
 def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                                 freq_band='A', txrx_pol=None,
-                                orbit=None, attitude=None,
-                                az_block_dur=3.0, beam_num=None,
+                                orbit=None, attitude=None, az_block_dur=3.0,
+                                rangeline_limit=None, beam_num=None,
                                 dbf_pow_norm=True, apply_weight=True,
                                 plot=False, out_path='.', logger=None):
     """
@@ -63,6 +63,10 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         duration of echo if it is too large.
         The min block duration must be equal or larger than nominal mean
         PRI (pulse repetition interval).
+    rangeline_limit : tuple[int | None, int | None], optional
+        0-based range line [start, stop) indices to limit echo range lines to
+        be processed. Default is all range lines. The start/stop will be
+        limited to within [0, total rangelines)!
     beam_num : int, optional
         Beam number used for fetching a desired beam from antenna object simply
         for single-channel raw echo. It will be ignored for SweepSAR case!
@@ -223,9 +227,25 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
 
     # Get raw dataset
     raw_dset = raw.getRawDataset(freq_band, txrx_pol)
-    num_rgls, num_rgbs = raw_dset.shape
+    num_rgls_tot, num_rgbs = raw_dset.shape
     logger.info('Shape of the Raw echo data (pulses, ranges) -> '
-                f'({num_rgls, num_rgbs})')
+                f'({num_rgls_tot, num_rgbs})')
+    # set range line slice of echo
+    rgl_start_stop = [0, num_rgls_tot]
+    if rangeline_limit is not None:
+        if rangeline_limit[0] is not None:
+            rgl_start_stop[0] = min(
+                max(rangeline_limit[0], 0),
+                num_rgls_tot - 1)
+        if rangeline_limit[1] is not None:
+            rgl_start_stop[1] = max(
+                min(rangeline_limit[1], num_rgls_tot),
+                rgl_start_stop[0] + 1)
+    logger.info('(start, stop) range line index to be processed -> '
+                f'{rgl_start_stop}')
+    # update number of range lines to be processed
+    num_rgls = rgl_start_stop[1] - rgl_start_stop[0]
+    logger.info(f'Number of range lines to be processed -> {num_rgls}')
 
     # EL angle margin  and resolution in radians
     el_margin = np.deg2rad(el_margin_deg)
@@ -509,7 +529,9 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
             tx_trm_info, norm=True)
 
     # generate rangeline slices
-    rgl_slices = _rgl_slice_gen(num_rgls, num_azimuth_block, num_rgl_block)
+    rgl_slices = _rgl_slice_gen(
+        num_rgls, num_azimuth_block, num_rgl_block, idx_start=rgl_start_stop[0]
+    )
 
     # build ElPatternEst object used for 2-way power pattern est from echo
     # within only rising edge with 3rd-order to be used in roll cost function
@@ -594,10 +616,19 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         idx_el_ant_str = bisect.bisect_left(rx_beams_el.angle, el_ant_min)
         idx_el_ant_stp = bisect.bisect_right(rx_beams_el.angle, el_ant_max)
         el_ant_slice = slice(idx_el_ant_str, idx_el_ant_stp)
-        ant_el = rx_beams_el.angle[el_ant_slice]
         logger.info(
-            f'(min, max) antenna EL coverage -> ({np.rad2deg(ant_el[0]):.3f}'
-            f', {np.rad2deg(ant_el[-1]):.3f}) (deg, deg)'
+            '(min, max) EL angle coverage used from antenna file (deg, deg) '
+            f'-> ({np.rad2deg(el_ant_min):.3f}, {np.rad2deg(el_ant_max):.3f})'
+        )
+        ant_el = rx_beams_el.angle[el_ant_slice]
+        if ant_el.size < 2:
+            raise RuntimeError(
+                f'Not enough antenna EL angles w/ size {ant_el.size} to '
+                'polyfit EL vs slant range'
+            )
+        logger.info(
+            '(min, max) antenna EL coverage used in edge method (deg, deg) '
+            f'-> ({np.rad2deg(ant_el[0]):.3f}, {np.rad2deg(ant_el[-1]):.3f})'
         )
         # convert antenna EL angles to slant range and then compute weighting
         # factor based on relative SNR used in weighing cost function of
@@ -613,12 +644,9 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         # build polyfit coeffs to represent EL (deg) as a function
         # of slant range (km) with either first or second order within
         # a relatively small rising edge region!
-        if ant_el.size < 2:
-            raise RuntimeError(
-                'Not enough antenna EL angles to polyfit EL vs slant range')
         pf_sr2el = np.polyfit(
             ant_sr * 1e-3, np.rad2deg(ant_el), deg=min(ant_el.size - 1, 2)
-            )
+        )
         logger.info('Slantrange-to-elevation polyfit coeffs for AZ block # '
                     f'{n_azblk} -> {pf_sr2el}')
         def _slantrange_to_elevation(
@@ -647,7 +675,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
             slice_el_all = _dbf_windows_to_ant_el_coverge_slice(
                 dwp_dbf[s_rgl], wl_dbf[s_rgl], rgb_first, sr_start,
                 sr_spacing, ant_el, _rgb_dbf2echo, _slantrange_to_elevation
-                )
+            )
             # exclude the portion outside the EL coverage by zeroing out
             # its values.
             for cc, slice_el in enumerate(slice_el_all):
@@ -986,7 +1014,7 @@ def _form_ant2way_sweepsar(ant_pat_tx, ant_pat_rx, ant_el, tx_wgt,
     return pow2db(ant_powpat_2way)
 
 
-def _rgl_slice_gen(num_rgls, num_azimuth_block, num_rgl_block):
+def _rgl_slice_gen(num_rgls, num_azimuth_block, num_rgl_block, idx_start=0):
     """Generates pair number and respective range line slice.
 
     Parameters
@@ -997,6 +1025,8 @@ def _rgl_slice_gen(num_rgls, num_azimuth_block, num_rgl_block):
         Number of azimuth blocks.
     num_rgl_block : int
         Number of range lines per azimuth block
+    idx_start : int, default=0
+        Start index.
 
     Yields
     ------
@@ -1004,15 +1034,16 @@ def _rgl_slice_gen(num_rgls, num_azimuth_block, num_rgl_block):
         Range line slices
 
     """
-    i_start = 0
-    i_stop = 0
-    for cc in range(1, num_azimuth_block + 1):
+    for cc, i_start in enumerate(
+            range(idx_start,
+                  idx_start + num_azimuth_block * num_rgl_block,
+                  num_rgl_block),
+            start=1):
         if cc == num_azimuth_block:
-            i_stop = num_rgls
+            i_stop = idx_start + num_rgls
         else:
-            i_stop += num_rgl_block
+            i_stop = i_start + num_rgl_block
         yield slice(i_start, i_stop)
-        i_start += num_rgl_block
 
 
 def _is_rising_edge_valid(rgb_fl, rgb_valid_sbsw):

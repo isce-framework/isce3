@@ -21,7 +21,8 @@ from nisar.log import set_logger
 def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
                          orbit=None, attitude=None, ant=None,
                          dem=None, num_rgb_avg=8, az_block_dur=4.0,
-                         time_interval=2.0, dop_method='CDE', subband=False,
+                         rangeline_limit=None, time_interval=2.0,
+                         dop_method='CDE', subband=False,
                          polyfit_deg=3, polyfit=False, exclude_beams=None,
                          out_path='.', plot=False, logger=None):
     """Generates 2-D Doppler LUT as a function of slant range and azimuth time.
@@ -77,6 +78,10 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
     az_block_dur : float, default=4.0
         Azimuth block duration in seconds defining time-domain correlator
         length used in Doppler estimator.
+    rangeline_limit : tuple[int | None, int | None], optional
+        0-based range line [start, stop) indices to limit echo range lines to
+        be processed. Default is all range lines. The start/stop will be
+        limited to within [0, total rangelines)!
     time_interval : float, default=2.0
         Time stamp interval between azimuth blocks in seconds.
         It should not be larger than "az_block_dur".
@@ -269,10 +274,10 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
                 logger.warning(
                     f'Excluded beams {exclude_beams} is out of range of '
                     f'active RX channels {list_rx_active}!'
-                    )
+                )
                 exclude_beams.intersection_update(list_rx_active)
                 logger.warning(
-                        f'Updated list of excluded beams -> {exclude_beams}')
+                    f'Updated list of excluded beams -> {exclude_beams}')
         # initialize DEM object if None
         if dem is None:
             dem = DEMInterpolator()
@@ -417,9 +422,26 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
     sr_stop = sr_start + (num_blk_rg - 1) * sr_spacing
     slrg_per_blk = np.linspace(sr_start, sr_stop, num=num_blk_rg)
 
+    # set range line slice of echo
+    rgl_start_stop = [0, tot_pulses]
+    if rangeline_limit is not None:
+        if rangeline_limit[0] is not None:
+            rgl_start_stop[0] = min(
+                max(rangeline_limit[0], 0),
+                tot_pulses - 1)
+        if rangeline_limit[1] is not None:
+            rgl_start_stop[1] = max(
+                min(rangeline_limit[1], tot_pulses),
+                rgl_start_stop[0] + 1)
+    logger.info('[start, stop) range line index to be processed -> '
+                f'{rgl_start_stop}')
+    # update number of range lines to be processed
+    num_rgls = rgl_start_stop[1] - rgl_start_stop[0]
+    logger.info(f'Number of range lines to be processed -> {num_rgls}')
+
     # form the blocks of range lines / azimuth bins
     len_az_blk_dur, len_tm_int, num_blk_az = _get_az_block_interval_len(
-        tot_pulses, az_block_dur, prf, time_interval)
+        num_rgls, az_block_dur, prf, time_interval)
 
     logger.info(
         f'Final full azimuth block duration -> {len_az_blk_dur/prf:.3f} (sec)')
@@ -434,7 +456,9 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
     logger.info(f'Total number of azimuth blocks -> {num_blk_az}')
 
     slice_lines = _azblk_slice_gen(
-        tot_pulses, len_az_blk_dur, len_tm_int, num_blk_az)
+        num_rgls, len_az_blk_dur, len_tm_int,
+        num_blk_az, idx_start=rgl_start_stop[0]
+    )
 
     # parse valid subswath index for all range lines used later
     valid_sbsw_all = raw.getSubSwaths(freq_band, txrx_pol[0])
@@ -447,8 +471,10 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
 
     # initialize the azimuth time block and set an intermediate var
     half_az_blk_dur = (len_az_blk_dur - 1) / 2
-    az_time_blk = np.full(num_blk_az, az_time[0] + half_az_blk_dur * pri,
-                          dtype=float)
+    az_time_blk = np.full(
+        num_blk_az,
+        az_time[rgl_start_stop[0]] + half_az_blk_dur * pri,
+        dtype=float)
     tm_int_pri_prod = len_tm_int * pri
 
     # doppler centroid map is azimuth block by slant-range block
@@ -479,7 +505,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
             echo, rgb_limits = form_single_tap_dbf_echo(
                 raw_dset, slice_line, el_trans, az_trans,
                 pos_mid, vel_mid, quat_mid, sr_lsp, dem
-                )
+            )
             if exclude_beams is not None:
                 mask_bad = np.zeros(rgb_limits[-1], dtype='bool')
                 for n_b in exclude_beams:
@@ -489,7 +515,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
                         f'For AZ block # {n_azblk + 1}, exclude slant ranges '
                         f'(m, m) within -> ({sr_lsp[rgb_slice.start] :.3f}, '
                         f'{sr_lsp[rgb_slice.stop - 1]:.3f}) '
-                        )
+                    )
         else:  # single channel
             echo = raw_dset[slice_line]
 
@@ -844,7 +870,8 @@ def _get_az_block_interval_len(num_pls: int, az_block_dur: float, prf: float,
     # if the block_dur + interval is too large then raise an exception!
     if (len_tm_int + len_az_blk_dur) > num_pls:
         raise ValueError(
-            'Sum of azimuth block duration and time interval is large than '
+            f'Sum of azimuth block duration {len_az_blk_dur / prf} (sec) '
+            f'and time interval {len_tm_int / prf} (sec) is longer than '
             f'echo duration {(num_pls - 1) / prf} (sec)!'
         )
     # get number of blocks which must be at least 2!
@@ -858,15 +885,14 @@ def _get_az_block_interval_len(num_pls: int, az_block_dur: float, prf: float,
 
 
 def _azblk_slice_gen(num_pls: int, len_az_blk_dur: int, len_tm_int: int,
-                     num_blk_az: int):
+                     num_blk_az: int, idx_start: int = 0):
     """Slice index generator for azimuth blocks/range lines"""
     # generate slice for azimuth block indexing
-    i_str = 0
-    i_stp = len_az_blk_dur
-    for bb in range(num_blk_az):
+    i_max = idx_start + num_pls
+    for i_str in range(
+            idx_start, idx_start + num_blk_az * len_tm_int, len_tm_int):
+        i_stp = min(i_str + len_az_blk_dur, i_max)
         yield slice(i_str, i_stp)
-        i_str += len_tm_int
-        i_stp = min(i_str + len_az_blk_dur, num_pls)
 
 
 def _form_mask_valid_range(tot_rgbs, rgb_valid_sbsw):

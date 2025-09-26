@@ -44,6 +44,7 @@ class TestGenDopplerRangeProduct:
         subband=False, polyfit=False, polyfit_deg=3, dem_file=None,
         plot=True, out_path='.', orbit_file=None,
         attitude_file=None, exclude_beams=None,
+        time_start=0, time_dur_max=None,
         antenna_file=os.path.join(iscetest.data, ant_alos1))
 
     # set input arguments for DBF NISAR case
@@ -53,6 +54,7 @@ class TestGenDopplerRangeProduct:
         dop_method='CDE', az_block_dur=1.0, time_interval=0.5, dem_file=None,
         subband=False, polyfit=True, polyfit_deg=3, plot=False,
         out_path='.', exclude_beams=None,
+        time_start=0.0, time_dur_max=None,
         orbit_file=os.path.join(iscetest.data, sub_dir, orb_nisar),
         attitude_file=os.path.join(iscetest.data, sub_dir, att_nisar),
         antenna_file=os.path.join(iscetest.data, sub_dir, ant_nisar))
@@ -64,6 +66,7 @@ class TestGenDopplerRangeProduct:
         dop_method='CDE', az_block_dur=2.5, time_interval=0.11,
         subband=False, polyfit=True, polyfit_deg=3, exclude_beams=[3],
         plot=False, out_path='.', orbit_file=None, attitude_file=None,
+        time_start=0.0, time_dur_max=None,
         antenna_file=os.path.join(iscetest.data, subdir_dm2, ant_dm2),
         dem_file=os.path.join(iscetest.data, subdir_dm2, dem_dm2))
 
@@ -82,12 +85,31 @@ class TestGenDopplerRangeProduct:
         # use NISAR DBF set for this test
         gen_doppler_range_product(self.args_nisar)
 
+    def test_limit_aztime_dbf(self):
+        # use NISAR DBF set for this test
+        self.args_nisar.time_start = 0.1
+        self.args_nisar.time_interval = 0.2
+        self.args_nisar.time_dur_max = 1.3
+        gen_doppler_range_product(self.args_nisar)
+
     def test_dm2_dem_ant(self):
         # use NISAR DM2 case for this test
         # check if subdir "dm2" exists and then
         # run the test
         dm2_dir = os.path.join(iscetest.data, self.subdir_dm2)
         if os.path.exists(dm2_dir):
+            gen_doppler_range_product(self.args_dm2)
+        else:
+            warnings.warn(
+                f'Subdir "{self.subdir_dm2}" with DM2 files does not exist!')
+
+    def test_limit_aztime_dm2(self):
+        # use NISAR DM2 set for this test if exists
+        dm2_dir = os.path.join(iscetest.data, self.subdir_dm2)
+        if os.path.exists(dm2_dir):
+            self.args_dm2.time_start = 0.15
+            self.args_dm2.az_block_dur = 2.0
+            self.args_dm2.time_dur_max = 2.3
             gen_doppler_range_product(self.args_dm2)
         else:
             warnings.warn(

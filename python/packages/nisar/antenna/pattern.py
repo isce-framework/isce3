@@ -400,27 +400,27 @@ class AntennaPattern:
             if tx_pol == "L":
                 tx_bmf_pat[tx_pol] = (
                     self.tx_bmf['H'].form_pattern(
-                        t, slant_range, nearest=nearest,
+                        tseq, slant_range, nearest=nearest,
                         channel_adj_factors=self.channel_adj_fact_tx['H']) +
                     1j * self.tx_bmf['V'].form_pattern(
-                        t, slant_range, nearest=nearest,
+                        tseq, slant_range, nearest=nearest,
                         channel_adj_factors=self.channel_adj_fact_tx['V'])
                 ).astype(np.complex64)
 
             elif tx_pol == "R":
                 tx_bmf_pat[tx_pol] = (
                     self.tx_bmf['H'].form_pattern(
-                        t, slant_range, nearest=nearest,
+                        tseq, slant_range, nearest=nearest,
                         channel_adj_factors=self.channel_adj_fact_tx['H']) -
                     1j * self.tx_bmf['V'].form_pattern(
-                        t, slant_range, nearest=nearest,
+                        tseq, slant_range, nearest=nearest,
                         channel_adj_factors=self.channel_adj_fact_tx['V'])
                 ).astype(np.complex64)
 
             else:  # other non-compact pol types
                 adj = self.channel_adj_fact_tx[tx_pol]
                 tx_bmf_pat[tx_pol] = self.tx_bmf[tx_pol].form_pattern(
-                        t, slant_range, nearest=nearest, channel_adj_factors=adj
+                        tseq, slant_range, nearest=nearest, channel_adj_factors=adj
                     ).astype(np.complex64)
 
         # build two-way pattern for all unique TxRx products obtained from all

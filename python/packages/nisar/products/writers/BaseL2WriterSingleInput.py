@@ -11,6 +11,7 @@ from nisar.workflows.h5_prep import set_get_geo_info
 from isce3.core.types import truncate_mantissa
 from isce3.geometry import get_near_and_far_range_incidence_angles
 from nisar.products.readers.orbit import load_orbit
+from nisar.products.utils import get_static_layers_data_access
 
 
 LEXICOGRAPHIC_BASE_POLS = ['HH', 'HV', 'VH', 'VV']
@@ -808,12 +809,17 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'identification/platformName',
             default='(NOT SPECIFIED)')
 
-    def populate_ceos_analysis_ready_data_parameters_l2_common(self):
+        static_layers_data_access_runconfig = \
+            self.cfg['primary_executable']['static_layers_data_access']
 
-        self.copy_from_runconfig(
-            '{PRODUCT}/metadata/ceosAnalysisReadyData/staticLayersDataAccess',
-            'ceos_analysis_ready_data/static_layers_data_access',
-            default='(NOT SPECIFIED)')
+        static_layers_data_access = get_static_layers_data_access(
+            static_layers_data_access_runconfig, self.granule_id)
+
+        self.set_value(
+            'identification/staticLayersDataAccess',
+            static_layers_data_access)
+
+    def populate_ceos_analysis_ready_data_parameters_l2_common(self):
 
         ceos_ard_document_identifier = \
             ('https://ceos.org/ard/files/PFS/SAR/v1.0/CEOS-ARD_PFS'

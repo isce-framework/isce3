@@ -97,6 +97,15 @@ def cmd_line_parser():
     prs.add_argument('--no_weight', action='store_true', dest='no_weight',
                      help='Do not apply SNR-based weights to the cost function'
                      )
+    prs.add_argument('--time-start', type=float, default=0.0,
+                     help=('Start time (seconds) of L0B relative to time of '
+                           'the first range line to be processed.')
+                     )
+    prs.add_argument('--time-dur-max', type=float,
+                     help=('Max time duration (seconds) w.r.t `time-start`. '
+                           'Default is entire L0B duration starting from '
+                           '`time-start`.')
+                     )
     return prs.parse_args()
 
 
@@ -167,6 +176,28 @@ def gen_el_rising_edge_product(args):
     frq_pol = copols_or_desired_pols_from_raw(
         raw, freq_band=args.freq_band, txrx_pol=args.txrx_pol)
     logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
+    # determine [start, stop] range lines of echo to be processed.
+    freq_band = list(frq_pol.keys())[0]
+    txrx_pol = frq_pol[freq_band][0]
+    _, tm = raw.getPulseTimes(freq_band, txrx_pol[0])
+    tm_rel = tm - tm[0]
+    t_start = args.time_start
+    if t_start < 0 or t_start > tm_rel[-2]:
+        raise ValueError(f'time-start {t_start} is out of valid '
+                         f'range [0, {tm_rel[-2]}] (sec, sec)!')
+    t_end = tm_rel[-1]
+    if args.time_dur_max is not None:
+        if not (args.time_dur_max > 0):
+            raise ValueError(f'"time_dur_max" {args.time_dur_max} '
+                             'must be a positive value!')
+        t_end = min(t_end, t_start + args.time_dur_max)
+    logger.info('Time (start, end) of echo wrt first range line to be '
+                f'processed (sec, sec) -> ({t_start}, {t_end})')
+    idx_start = np.searchsorted(tm_rel, t_start, side='left')
+    idx_stop = np.searchsorted(tm_rel, t_end, side='right')
+    logger.info('Range line (start, stop) 0-based indices of echo to be '
+                f'processed -> ({idx_start}, {idx_stop})')
+    rangeline_limit = (idx_start, idx_stop)
 
     # get keyword args for function "el_rising_edge_from_raw_ant"
     kwargs = {key: val for key, val in vars(args).items() if
@@ -190,7 +221,8 @@ def gen_el_rising_edge_product(args):
                  attitude=attitude, logger=logger,
                  dbf_pow_norm=not args.no_dbf_norm,
                  apply_weight=not args.no_weight, freq_band=freq_band,
-                 txrx_pol=txrx_pol, **kwargs
+                 txrx_pol=txrx_pol, rangeline_limit=rangeline_limit,
+                 **kwargs
                  )
             # get the first and last utc azimuth time w/o fractional seconds
             # in "%Y%m%dT%H%M%S" format to be used as part of CSV product

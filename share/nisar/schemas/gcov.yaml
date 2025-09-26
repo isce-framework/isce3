@@ -62,6 +62,11 @@ runconfig:
             product_type: enum('GCOV')
             product_version: str('^\d+\.\d+\.\d+$', required=False)
             product_doi: str(required=False)
+
+            # Data access for the static layers product associated with the output
+            # product (URL or DOI)
+            static_layers_data_access: str(required=False)
+
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', 'OD', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
@@ -130,8 +135,12 @@ input_subset_options:
     list_of_frequencies: include('list_of_frequencies_options', required=False)
 
     # Flag indicating whether the output GCOV product should include
-    # off-diagonal covariance elements. If False, only the diagonal
+    # off-diagonal covariance elements. If `False`, only the diagonal
     # elements are included.
+    #
+    # If empty, `fullcovariance` defaults to `True` if any frequency
+    # to be processed includes a full-pol dataset, i.e., include
+    # both co-pols HH and VV and at least one cross-pol HV or VH.
     fullcovariance: bool(required=False)
 
     # Flag indicating whether polarimetric symmetrization should be
@@ -259,6 +268,7 @@ geo2rdr_options:
 qa_options:
     # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
     workflows: include('workflows_options', required=False)
+    software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('qa_reports_options', required=False)
 
@@ -266,8 +276,12 @@ workflows_options:
     validate: bool(required=False)
     qa_reports: bool(required=False)
 
+qa_software_config_options:
+    use_cache: bool(required=False)
+    delete_qa_scratch_files: bool(required=False)
+
 qa_validation_options:
-    metadata_cubes_fail_if_all_nan: bool(required=False)
+    metadata_luts_fail_if_all_nan: bool(required=False)
 
 qa_reports_options:
     backscatter_img:
@@ -279,6 +293,7 @@ qa_reports_options:
         gamma: num(min=0.0, required=False)
         nan_color_in_pdf: str(required=False)
         tile_shape: list(int(min=-1), min=2, max=2, required=False)
+        output_individual_pngs: bool(required=False)
     histogram:
         decimation_ratio: list(int(min=1), min=2, max=2, required=False)
         backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
@@ -532,11 +547,6 @@ geocode_options:
     max_block_size: num(min=0, required=False)
 
 ceos_analysis_ready_data_options:
-
-    # NOT YET IMPLEMENTED
-    # Data access for the static layers product associated with the output
-    # product (URL or DOI)
-    static_layers_data_access: str(required=False)
 
     # Estimated geometric accuracy (bias and standard deviation)
     # in meters in the X- and Y-directions over the coordinate

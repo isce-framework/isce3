@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.3.0 -->
+<!-- product specification version is 1.4.0 -->
 <algorithm name="L2_GeocodedCovariance"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GCOV_template">
@@ -127,11 +127,11 @@
           <annotation app="conformance"
                       lang="en">List of frequency layers available in the product</annotation>
         </string>
-        <string length="22"
+        <string length="0"
                 name="/science/LSAR/identification/listOfObservationModes"
                 shape="numberOfObservations">
           <annotation app="conformance"
-                      lang="en">List of each input raw dataset's observation mode</annotation>
+                      lang="en">List of observation modes of the L0B granules used to generate the input RSLC (one mode per L0B)</annotation>
         </string>
         <integer name="/science/LSAR/identification/diagnosticModeFlag"
                  shape="scalar"
@@ -221,6 +221,12 @@
                 shape="scalar">
                 <annotation app="conformance"
                             lang="en">"True" if any portion of this product was acquired in a joint observation mode (e.g., L-band and S-band simultaneously), "False" otherwise</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GCOV/identification/staticLayersDataAccess"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Location of the static layers product associated with this product (URL or DOI)</annotation>
         </string>
         <!-- End of product identification -->
 
@@ -1042,12 +1048,6 @@
                 <annotation app="conformance"
                             epsg="EPSG code"
                             lang="en">OGR compatible WKT representing the bounding box of the product (the union of the geocoded grid for available frequency A and frequency B image datasets). Horizontal coordinates are X and Y directions of the geocoded grid coordinate system, and the vertical coordinate is the height above the WGS84 ellipsoid in meters. The first point corresponds to the top left edge of the bounding box. The remaining points are traversed in counterclockwise order on the map. The fifth point closes the bounding box by repeating the first point</annotation>
-        </string>
-        <string length="0"
-                name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/staticLayersDataAccess"
-                shape="scalar">
-          <annotation app="conformance"
-                      lang="en">Location of the static layers product associated with this product (URL or DOI)</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/ceosAnalysisReadyData/outputBackscatterDecibelConversionFormula"

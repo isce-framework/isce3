@@ -1,7 +1,7 @@
 import isce3
 import numpy as np
 from isce3.core import LUT2d
-from nisar.products.utils import to_bytes
+from nisar.products.utils import get_static_layers_data_access,to_bytes
 from nisar.workflows.h5_prep import (_get_raster_from_hdf5_ds,
                                      add_radar_grid_cubes_to_hdf5,
                                      set_get_geo_info)
@@ -37,6 +37,39 @@ class L2InSARWriter(L1InSARWriter):
 
         self.add_radar_grid_cubes()
         self.add_grids_to_hdf5()
+
+
+    def add_identification_to_hdf5(self):
+        """
+        Add the identification group
+        """
+        L1InSARWriter.add_identification_to_hdf5(self)
+
+        # Add the static layers data access to identification group
+        self.add_static_layers_data_access_to_id_group()
+
+    def add_static_layers_data_access_to_id_group(self):
+        """
+        Add the static layers data access to the identification group
+        """
+
+        primary_executale_cfg = self.cfg['primary_executable']
+        static_layers_data_access = \
+            primary_executale_cfg.get('static_layers_data_access')
+
+        static_layers_data_access_url = \
+            get_static_layers_data_access(static_layers_data_access,
+                                          self.granule_id)
+        static_layers_data_access_url = to_bytes(static_layers_data_access_url)
+
+        # Create the staticLayersDataAccess dataset
+        id_group = self.require_group(self.group_paths.IdentificationPath)
+        ds = id_group.require_dataset('staticLayersDataAccess',
+                                      dtype=static_layers_data_access_url.dtype,
+                                      shape=())
+        ds[...] = static_layers_data_access_url
+        ds.attrs['description'] = to_bytes('Location of the static layers product '
+                                           'associated with this product (URL or DOI)')
 
     def add_secondary_radar_grid_cube(self, sec_cube_group_path,
                                        geogrid, heights, radar_grid, orbit,

@@ -184,7 +184,8 @@ def init_argparse():
             "are suited to the workflow and bandwidth of the frequencies in the RSLC "
             "product. Only valid for products with 5, 10, 20, or 77 MHz bandwidths for "
             "all frequencies. This is suggested for use in conjunction with the "
-            "--generate-epsg parameter."
+            "--generate-epsg parameter. For GCOV products, this argument may also "
+            "modify the RTC value to the NISAR default value for their band."
         ),
     )
     geometry_group.add_argument(
@@ -283,12 +284,32 @@ def init_argparse():
             "behavior for the source runconfig."
         ),
     )
-    
-    subparsers.add_parser(
+
+    gcov_sub = subparsers.add_parser(
         "gcov",
         parents=[geo_parse],
         formatter_class=help_formatter,
         help="Create a GCOV runconfig.",
+    )
+
+    # This method enables adding an argument to an argument group in a parent parser of
+    # a subparser without adding it to that same group in other subparsers.
+    geocoding_group = next(
+        filter(
+            lambda group: group.title == geocoding_group_title,
+            gcov_sub._action_groups,
+        ),
+        None,
+    )
+    geocoding_group.add_argument(
+        "--rtc-dem-upsampling",
+        dest="rtc_dem_upsampling",
+        type=int,
+        required=False,
+        help=(
+             "Sets the RTC DEM upsampling value. Setting this value overrides the "
+             "automatic RTC setting behavior of the --nisar-defaults parameter."
+        ),
     )
 
     return parser
@@ -413,6 +434,7 @@ def dumpconfig_gslc_gcov(
     bottom_right: Sequence[Decimal | float] | None = None,
     use_gpu: bool = False,
     flatten: bool | None = None,
+    rtc_dem_upsampling: int | None = None,
     access_internet: bool = False,
     generate_epsg: bool = False,
     nisar_defaults: bool = False,
@@ -481,6 +503,8 @@ def dumpconfig_gslc_gcov(
     flatten : bool or None, optional
         Whether or not to flatten the GSLC output. If None, use the default behavior for
         the workflow. Not used for GCOV. Defaults to None.
+    rtc_dem_upsampling: int or None, optional
+        RTC DEM upsampling
     access_internet : bool, optional
         If True, activate internet access functionality in the runconfig.
         Defaults to False.
@@ -610,7 +634,28 @@ def dumpconfig_gslc_gcov(
     if scratch_path is not None:
         scratch_path = Path(scratch_path).expanduser().resolve()
         product_path_group["scratch_path"] = os.fspath(scratch_path)
-    
+
+    if workflow == "gcov":
+
+        rtc_group = groups["processing"]["rtc"]
+
+        if rtc_dem_upsampling is not None:
+            rtc_group["dem_upsampling"] = rtc_dem_upsampling
+
+        elif nisar_defaults:
+
+            # the method `getSwathMetadata()` without an argument returns
+            # the swath metadata for the first available frequency
+            first_frequency_bandwidth = int(np.round(
+                rslc.getSwathMetadata().processed_range_bandwidth / 1e6))
+
+            # By default GCOV products are generated with RTC DEM upsampling
+            # set to `2`. However, 40 MHz products require much more memory
+            # and therefore are processed with the RTC DEM upsampling set
+            # to `1`
+            if first_frequency_bandwidth == 40:
+                rtc_group["dem_upsampling"] = 1
+
     geocode_group = groups["processing"]["geocode"]
     radar_grid_cubes_group = groups["processing"]["radar_grid_cubes"]
 

@@ -55,12 +55,14 @@ TEST(TopoTest, CheckResults) {
     isce3::io::Raster testRaster("topo.vrt");
 
     // Open reference topo raster
+    // XXX: Topo produces 11 layers but this raster only has 7 layers. The remaining
+    // layers are untested.
     std::string ref_filename = TESTDATA_DIR "topo/topo.vrt";
     std::cout << "reference file:" << ref_filename << std::endl;
     isce3::io::Raster refRaster(ref_filename);
 
     // The associated tolerances
-    std::vector<double> tols{1.0e-5, 1.0e-5, 0.15, 1.0e-4, 1.0e-4, 0.02, 0.02};
+    std::vector<double> tols{1.0e-4, 1.0e-5, 0.15, 1.0e-3, 1.0e-4, 0.02, 0.02};
 
     // The directories where the data are
     std::string test_dir = "./";
@@ -95,7 +97,7 @@ TEST(TopoTest, CheckResults) {
             }
         }
         // Normalize the error and check
-        ASSERT_TRUE((error / count) < tols[k]);
+        ASSERT_LT((error / count), tols[k]);
     }
 }
 

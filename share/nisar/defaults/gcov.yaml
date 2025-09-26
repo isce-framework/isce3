@@ -134,6 +134,13 @@ runconfig:
             # the corresponding metadata field will be set to "(NOT SPECIFIED)".
             product_doi:
 
+            # Data access for the static layers product associated with the
+            # output product (URL or DOI). If not provided, the corresponding
+            # metadata field will be set to "(NOT SPECIFIED)".
+            # If this string contains the substring "{granule_id}", that substring
+            # will be replaced with the granule ID.
+            static_layers_data_access:
+
             # Composite release ID (CRID). If not provided, the corresponding
             # metadata field will be set to b'A10000'.
             composite_release_id:
@@ -190,9 +197,13 @@ runconfig:
                 list_of_frequencies:
 
                 # Flag indicating whether the output GCOV product should include
-                # off-diagonal covariance elements. If False, only the diagonal
+                # off-diagonal covariance elements. If `False`, only the diagonal
                 # elements are included.
-                fullcovariance:   False
+                #
+                # If empty, `fullcovariance` defaults to `True` if any frequency
+                # to be processed includes a full-pol dataset, i.e., includes
+                # both co-pols HH and VV and at least one cross-pol HV or VH.
+                fullcovariance:
 
                 # Flag indicating whether polarimetric symmetrization should be
                 # applied to datasets that include both HV and VH polarimetric
@@ -543,10 +554,6 @@ runconfig:
         # to populate the output product's metadata
         ceos_analysis_ready_data:
 
-            # NOT YET IMPLEMENTED
-            # Data access for the static layers product associated with the output product (URL or DOI)
-            static_layers_data_access:
-
             # Estimated geometric accuracy (bias and standard deviation)
             # in meters in the X- and Y-directions over the coordinate
             # system defined by the product's EPSG code
@@ -570,14 +577,29 @@ runconfig:
                 # Default: True
                 qa_reports: true
 
+            software_config:
+
+                # True to cache selected dataset(s) into intermediate
+                # memory-mapped flat file(s), which speeds up repeat access.
+                # False to always read data directly from the input file.
+                # Generally, enabling caching should reduce runtime.
+                # Default: True
+                use_cache: true
+
+                # True to delete the nested QA scratch directory in
+                # `scratch_path` and its contents when QA SAS is finished.
+                # Default: True
+                delete_qa_scratch_files: true
+
             validation:
 
-                # True to raise an exception if one or more metadata cubes contains
-                # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
-                # z-dimension height layers in a 3D cube has all non-finite values.
-                # False to quiet the exception (although it will still be logged).
+                # True to raise an exception if one or more metadata LUTs
+                # contain all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                # z-dimension height layers in a 3D LUT ("metadata cube") has
+                # all non-finite values. False to quiet the exception (although
+                # it will still be logged).
                 # Default: True
-                metadata_cubes_fail_if_all_nan: true
+                metadata_luts_fail_if_all_nan: true
 
             qa_reports:
 
@@ -646,6 +668,17 @@ runconfig:
                     # -1 to indicate all rows / all columns (respectively).
                     # Default: (1024, 1024)
                     tile_shape: [1024, 1024]
+
+                    # True to output one grayscale PNG+KML pair per raster image layer; these
+                    # will be generated in addition to the standard browse image PNG+KML.
+                    # The filename of each additional file will include a suffix noting
+                    # that image's frequency and polarization.
+                    # False to have the primary browse image be the only PNG+KML generated.
+                    # Note: If True, and if the input granule contains only one image,
+                    # then the additional individual PNG will be a duplicate image to the
+                    # primary browse image PNG, but with more descriptive filename.
+                    # Default: False
+                    output_individual_pngs: false
 
                 histogram:
 

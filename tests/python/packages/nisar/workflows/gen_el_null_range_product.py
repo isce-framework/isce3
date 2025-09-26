@@ -28,7 +28,8 @@ class TestGenElNullRangeProduct:
         az_block_dur=2.0, out_path='.', ref_height=-100.0,
         orbit_file=None, attitude_file=None, plot=False, polyfit_deg=6,
         exclude_nulls=None, sample_delays=None, sample_delays2=None,
-        amp_ratio_imbalances=None, phase_diff_imbalances=None
+        amp_ratio_imbalances=None, phase_diff_imbalances=None,
+        time_start=0.0, time_dur_max=None
     )
 
     def test_correct_args(self):
@@ -77,4 +78,9 @@ class TestGenElNullRangeProduct:
 
     def test_imbalances(self):
         self.args.phase_diff_imbalances = [-1.5, 0.0, 2.3]
+        gen_el_null_range_product(self.args)
+
+    def test_aztime_limits(self):
+        self.args.time_start = 0.1
+        self.args.time_dur_max = 1.2
         gen_el_null_range_product(self.args)

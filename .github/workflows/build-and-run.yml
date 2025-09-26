@@ -20,6 +20,12 @@ jobs:
       # stage_dem requires AWS permissions to access the S3 bucket containing the DEM data.
       # pybind.unwrap.phass occasionally segfaults on GHA runners.
 
+      # Default values for optional matrix parameters
+      env-file: ${{ matrix.deps.env-file || 'environment.yml' }}
+      ctest-exclude: ${{ matrix.os.ctest_exclude || '-E ".*($ALL_EXCLUDE)"'}}
+      extra-specs: ${{ matrix.deps.extra-specs || '' }}
+      build-type: ${{ matrix.build-type || 'RelWithDebInfo' }}
+
     defaults:
       run:
         shell: bash -l {0}
@@ -29,23 +35,23 @@ jobs:
       matrix:
         os:
           - label: Linux
-            runner: ubuntu-latest
-            ctest_exclude: -E ".*($ALL_EXCLUDE)"
-          - runner: macos-latest
-            label: macOS
+          - label: macOS
+            runner: macos-latest
             ctest_exclude: -E ".*($ALL_EXCLUDE|io\.gdal\.raster|unwrap\.snaphu|background)"
             # io.gdal.raster and unwrap.snaphu tests fail due to known unresolved issues
             # with GDAL memory mapping on macOS.
             # background reader/writer test sometimes fails on macOS due to slow runtimes.
         deps:
           - label: Latest
-            env-file: environment.yml
-            extra-specs: ""
         build-type: [ Release, Debug ]
-
+        include:
+          - deps:
+              label: Minimum Python supported
+              extra-specs: |
+                python=3.9
 
     name: Build And Test - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
-    runs-on: ${{ matrix.os.runner }}
+    runs-on: ${{ matrix.os.runner || 'ubuntu-latest' }}
     steps:
       # Typical github repo checkout step
       - name: Github Repo Checkout
@@ -54,20 +60,20 @@ jobs:
       # Prints the variables for this run to simplify debugging
       - name: Print Run Variables
         run: |
-          echo Runner OS: ${{ matrix.os.runner }}
-          echo Environment: ${{ matrix.deps.env-file }}
-          echo Build Type: ${{ matrix.build-type }}
-          echo ctest exclude command: ${{ matrix.os.ctest_exclude }}
-          echo Depenencies: ${{ matrix.deps.extra-specs }}
+          echo Runner OS: ${{ matrix.os.runner || 'ubuntu-latest' }}
+          echo Environment: ${{ env.env-file }}
+          echo Build Type: ${{ env.build-type }}
+          echo ctest exclude command: ${{ env.ctest_exclude }}
+          echo Dependencies: ${{ env.extra-specs }}
 
       # Set the conda environment up using Mamba and the dependencies for this run
       - name: Setup Environment
         uses: mamba-org/setup-micromamba@v2
         with:
-          environment-file: ${{ matrix.deps.env-file }}
+          environment-file: ${{ env.env-file }}
           environment-name: isce3
           create-args: >-
-            ${{ matrix.deps.extra-specs }}
+            ${{ env.extra-specs }}
 
       # Fix missing conda command on macOS
       - name: macOS conda command fixup
@@ -89,7 +95,7 @@ jobs:
           cmake \
             -B build \
             -G Ninja \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+            -DCMAKE_BUILD_TYPE=${{ env.build-type }} \
             -DCMAKE_INSTALL_PREFIX=$ISCE3_PREFIX \
             -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
             .
@@ -122,4 +128,4 @@ jobs:
         run: |
           cd build
           export GDAL_MEM_ENABLE_OPEN=YES
-          ctest --output-on-failure ${{ matrix.os.ctest_exclude }}
+          ctest --output-on-failure ${{ env.ctest-exclude }}

@@ -55,6 +55,7 @@ def el_null_range_from_raw_ant(
         orbit=None,
         attitude=None,
         az_block_dur=3.0,
+        rangeline_limit=None,
         apply_caltone=False,
         imbalances_right2left=None,
         sample_delays_wrt_left=None,
@@ -98,6 +99,10 @@ def el_null_range_from_raw_ant(
         duration of echo if it is too large.
         The min block duration must be equal or larger than nominal mean
         PRI (pulse repetition interval).
+    rangeline_limit : tuple[int | None, int | None], optional
+        0-based range line [start, stop) indices to limit echo range lines to
+        be processed. Default is all range lines. The start/stop will be
+        limited to within [0, total rangelines)!
     apply_caltone : bool, default=False
         Apply caltone coefficients to RX channels prior to Null formation.
     imbalances_right2left : sequence or array of complex float, optional
@@ -226,9 +231,25 @@ def el_null_range_from_raw_ant(
     if raw_dset.ndim != 3:
         raise RuntimeError(
             'Expected Multi-channel Raw echo aka Diagnostic Mode #2 (DM2)!')
-    num_channels, num_rgls, num_rgbs = raw_dset.shape
+    num_channels, num_rgls_tot, num_rgbs = raw_dset.shape
     logger.info('Shape of the echo data (channels, pulses, ranges) -> '
-                f'({num_channels, num_rgls, num_rgbs})')
+                f'({num_channels, num_rgls_tot, num_rgbs})')
+    # set range line slice of echo
+    rgl_start_stop = [0, num_rgls_tot]
+    if rangeline_limit is not None:
+        if rangeline_limit[0] is not None:
+            rgl_start_stop[0] = min(
+                max(rangeline_limit[0], 0),
+                num_rgls_tot - 1)
+        if rangeline_limit[1] is not None:
+            rgl_start_stop[1] = max(
+                min(rangeline_limit[1], num_rgls_tot),
+                rgl_start_stop[0] + 1)
+    logger.info('[start, stop) range line index to be processed -> '
+                f'{rgl_start_stop}')
+    # update number of range lines to be processed
+    num_rgls = rgl_start_stop[1] - rgl_start_stop[0]
+    logger.info(f'Number of range lines to be processed -> {num_rgls}')
 
     # number of nulls
     num_nulls = num_channels - 1
@@ -277,8 +298,11 @@ def el_null_range_from_raw_ant(
     # [1, num_rgls]
     num_rgl_block = round(az_block_dur * prf)
     if num_rgl_block > num_rgls:
-        logger.warning('Azimuth block duration exceeds max duration. '
-                       'It will be limited to total azimuth duration!')
+        logger.warning(
+            f'Azimuth block duration w/ lines # {num_rgl_block} exceeds max '
+            f'duration w/ lines # {num_rgls}. It will be limited to total '
+            'azimuth duration!'
+        )
         num_rgl_block = num_rgls
     if num_rgl_block < 1:
         raise ValueError('Azimuth block duration is smaller than mean PRI!')
@@ -393,7 +417,9 @@ def el_null_range_from_raw_ant(
 
     # get pair number and range line slice generator
     pairnum_rglslice = _pair_num_rgl_slice_gen(
-        num_rgls, num_nulls, num_azimuth_block, num_rgl_block)
+        num_rgls, num_nulls, num_azimuth_block, num_rgl_block,
+        idx_start=rgl_start_stop[0]
+    )
 
     # check if there is matplotlib package needed for plotting if requested
     if plot and plt is None:
@@ -583,7 +609,7 @@ def form_overlap_antenna_pairs(ant, list_rx, rx_pol, is_half_p2p=False):
 
 
 def _pair_num_rgl_slice_gen(num_rgls, num_nulls, num_azimuth_block,
-                            num_rgl_block):
+                            num_rgl_block, idx_start=0):
     """Generates pair number and respective range line slice.
 
     Parameters
@@ -596,6 +622,8 @@ def _pair_num_rgl_slice_gen(num_rgls, num_nulls, num_azimuth_block,
         Number of azimuth blocks.
     num_rgl_block : int
         Number of range lines per azimuth block
+    idx_start : int, default=0
+        Start range line index.
 
     Yields
     ------
@@ -607,16 +635,17 @@ def _pair_num_rgl_slice_gen(num_rgls, num_nulls, num_azimuth_block,
         AZ block number starting from 1
 
     """
-    i_start = 0
-    i_stop = 0
-    for cc in range(1, num_azimuth_block + 1):
+    for cc, i_start in enumerate(
+            range(idx_start,
+                  idx_start + num_azimuth_block * num_rgl_block, num_rgl_block
+                  ),
+            start=1):
         if cc == num_azimuth_block:
-            i_stop = num_rgls
+            i_stop = idx_start + num_rgls
         else:
-            i_stop += num_rgl_block
+            i_stop = i_start + num_rgl_block
         for nn in range(num_nulls):
             yield nn, slice(i_start, i_stop), cc
-        i_start += num_rgl_block
 
 
 def _is_null_valid(rgb_p2p, rgb_valid_sbsw):

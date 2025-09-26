@@ -147,21 +147,33 @@ void StatsRealImag<T>::update(const StatsRealImag<T>& other)
 
 template<class T>
 StatsRealImag<T>::StatsRealImag(const std::complex<T>* values,
-        size_t size, size_t stride)
+        size_t size, size_t stride, bool parallel)
 {
-    using C = std::complex<T>;
-    const C* end = values + size * stride;
-    for (const C* ptr = values; ptr < end; ptr += stride) {
-        update(*ptr);
+    const auto end = values + size * stride;
+    if (parallel) {
+        #pragma omp parallel
+        {
+            StatsRealImag<T> partial_stats;
+            #pragma omp for
+            for (auto ptr = values; ptr < end; ptr += stride) {
+                partial_stats.update(*ptr);
+            }
+            #pragma omp critical
+            update(partial_stats);
+        }
+    } else {
+        for (auto ptr = values; ptr < end; ptr += stride) {
+            update(*ptr);
+        }
     }
 }
 
 
 template<class T>
 void StatsRealImag<T>::update(const std::complex<T>* values,
-        size_t size, size_t stride)
+        size_t size, size_t stride, bool parallel)
 {
-    const StatsRealImag<T> block_stats(values, size, stride);
+    const StatsRealImag<T> block_stats(values, size, stride, parallel);
     update(block_stats);
 }
 
@@ -182,7 +194,7 @@ template<class StatsT>
 StatsT _aggregateStats(std::vector<StatsT>& statsvec)
 {
     StatsT allstats;
-    for (const auto stats : statsvec) {
+    for (const auto& stats : statsvec) {
         allstats.update(stats);
     }
     return allstats;
@@ -203,7 +215,7 @@ void _runBlock(isce3::io::Raster& input_raster,
 
     _Pragma("omp critical")
     {
-        input_raster.getBlock(block_array.data(), 
+        input_raster.getBlock(block_array.data(),
                               x0, y0, block_width,
                               block_length, band + 1);
     }
@@ -249,8 +261,8 @@ std::vector<Stats<T>> computeRasterStats(
         block_length = input_raster.length();
     } else {
         isce3::core::getBlockProcessingParametersY(
-            input_raster.length(), input_raster.width(), 
-            nbands, GDALGetDataTypeSizeBytes(input_raster.dtype()), 
+            input_raster.length(), input_raster.width(),
+            nbands, GDALGetDataTypeSizeBytes(input_raster.dtype()),
             &info, &block_length, &nblocks);
     }
 
@@ -274,23 +286,23 @@ std::vector<Stats<T>> computeRasterStats(
 
         }
     }
-        
-    const auto n_elements = (static_cast<long long>(input_raster.width()) * 
+
+    const auto n_elements = (static_cast<long long>(input_raster.width()) *
                              input_raster.length());
-    
+
     for (int band = 0; band < nbands; ++band) {
 
         stats_vector[band] = _aggregateStats(block_stats_vector[band]);
 
         info << "band: " << band + 1 << pyre::journal::newline
-             << "    n. valid: " << stats_vector[band].n_valid 
+             << "    n. valid: " << stats_vector[band].n_valid
              << " (" << 100 * stats_vector[band].n_valid / n_elements
              << "%) " << pyre::journal::newline
              << "    min: " << stats_vector[band].min
              << ", mean: " << stats_vector[band].mean
              << ", max: " << stats_vector[band].max
-             << ", sample stddev: " << stats_vector[band].sample_stddev() 
-             << pyre::journal::endl; 
+             << ", sample stddev: " << stats_vector[band].sample_stddev()
+             << pyre::journal::endl;
 
     }
     return stats_vector;
@@ -337,11 +349,11 @@ std::vector<StatsRealImag<T>> computeRasterStatsRealImag(
         block_length = input_raster.length();
     } else {
         isce3::core::getBlockProcessingParametersY(
-            input_raster.length(), input_raster.width(), 
-            nbands, GDALGetDataTypeSizeBytes(input_raster.dtype()), 
+            input_raster.length(), input_raster.width(),
+            nbands, GDALGetDataTypeSizeBytes(input_raster.dtype()),
             &info, &block_length, &nblocks);
     }
-    
+
     std::vector<StatsRealImag<T>> stats_vector(nbands);
     std::vector<std::vector<StatsRealImag<T>>> block_stats_vector(
         nbands, std::vector<StatsRealImag<T>>(nblocks));
@@ -360,16 +372,16 @@ std::vector<StatsRealImag<T>> computeRasterStatsRealImag(
                       x0, block_width, y0, this_block_length, band);
         }
     }
-        
-    const auto n_elements = (static_cast<long long>(input_raster.width()) * 
+
+    const auto n_elements = (static_cast<long long>(input_raster.width()) *
                              input_raster.length());
-    
+
     for (int band = 0; band < nbands; ++band) {
 
         stats_vector[band] = _aggregateStats(block_stats_vector[band]);
 
         info << "band: " << band + 1 << pyre::journal::newline
-             << "    n. valid: " << stats_vector[band].n_valid 
+             << "    n. valid: " << stats_vector[band].n_valid
              << " (" << 100 * stats_vector[band].n_valid / n_elements
              << "%) " << pyre::journal::newline
 
@@ -383,7 +395,7 @@ std::vector<StatsRealImag<T>> computeRasterStatsRealImag(
              << ", mean (imag): " << stats_vector[band].imag.mean
              << ", max (imag): " << stats_vector[band].imag.max
              << ", sample stddev (imag): " << stats_vector[band].imag.sample_stddev()
-             << pyre::journal::endl; 
+             << pyre::journal::endl;
 
     }
     return stats_vector;
