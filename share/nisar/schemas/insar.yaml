@@ -953,13 +953,9 @@ qa_cc_options:
     max_num_cc: int(min=0.0, required=False)
 
 qa_browse_png_wrapped_options:
-    browse_image: enum('phase', 'hsi', required=False)
-    equalize_browse: bool(required=False)
     longest_side_max: int(min=1, required=False)
 
 qa_browse_png_unwrapped_options:
-    browse_image: enum('phase', 'hsi', required=False)
-    equalize_browse: bool(required=False)
     longest_side_max: int(min=1, required=False)
     rewrap: num(min=0.0, required=False)
 

@@ -104,7 +104,13 @@ inline void gpuDeviceList()
     while (current_device < device_count)
     {
         checkCudaErrors(cudaGetDeviceProperties(&deviceProp, current_device));
-        if (deviceProp.computeMode == cudaComputeModeProhibited)
+        int compute_mode;
+#if defined(CUDART_VERSION) && CUDART_VERSION < 13000
+        compute_mode = deviceProp.computeMode;
+#else
+        checkCudaErrors(cudaDeviceGetAttribute(&compute_mode, cudaDevAttrComputeMode, current_device));
+#endif
+        if (compute_mode == cudaComputeModeProhibited)
         {
             fprintf(stderr, "CUDA Device [%d]: \"%s\" is not available: device is running in <Compute Mode Prohibited> \n", current_device, deviceProp.name);
         }
