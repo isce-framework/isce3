@@ -134,7 +134,9 @@ runconfig:
         epsg:
         # [OPTIONAL] X and Y coordinates of the upper-left corner pixel in the output
         # grid, in the coordinate system and units described by `epsg`.
-        # Defaults to the coordinates of the upper-left corner of the input DEM raster.
+        # If `epsg` was specified and differs from the DEM raster EPSG code, these
+        # parameters are required. Otherwise, they default to the coordinates of the
+        # upper-left corner of the input DEM raster.
         top_left:
           x:
           y:
@@ -146,14 +148,18 @@ runconfig:
         # coordinates specified here if `bottom_right.x` - `top_left.x` is not an
         # integer multiple of `posting.x` or `top_left.y` - `bottom_right.y` is not an
         # integer multiple of `posting.y`.
-        # Defaults to the coordinates of the lower-right corner of the input DEM raster.
+        # If `epsg` was specified and differs from the DEM raster EPSG code, these
+        # parameters are required. Otherwise, they default to the coordinates of the
+        # lower-right corner of the input DEM raster.
         bottom_right:
           x:
           y:
         # [OPTIONAL] X and Y spacing between pixels in the output grid, in units
         # determined by `epsg`.
         # Must be > 0 (the output grid always has North-up, West-left orientation).
-        # Defaults to the pixel spacing values of the input DEM raster.
+        # If `epsg` was specified and differs from the DEM raster EPSG code, these
+        # parameters are required. Otherwise, they default to the pixel spacing values
+        # of the input DEM raster.
         posting:
           x:
           y:
