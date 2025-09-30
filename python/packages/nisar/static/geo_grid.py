@@ -40,7 +40,8 @@ def get_output_geo_grid(
         The X and Y pixel spacing of the output grid, in the native units of the CRS
         defined by the `epsg` argument. A dict containing 'x' and 'y' keys. If either
         value in the dict is `None`, it is inferred from the pixel spacing of
-        `dem_raster`.
+        `dem_raster`. The spacing should always be positive-valued (the output grid
+        always has north-up, west-left orientation).
     epsg : int or None
         The EPSG code of the CRS of the output geocoded grid. If None, the EPSG code of
         `dem_raster` is used.
