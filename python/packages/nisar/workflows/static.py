@@ -210,7 +210,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         orbit_pass_direction = isce3.core.get_orbit_pass_direction(orbit)
 
         # Pop 'product_counter' from the dict. This parameter is used to form the
-        # granule ID but doesn't correspond to any dataset in the `identification' group
+        # granule ID but doesn't correspond to any dataset in the 'identification' group
         # of the product. The other dict contents will be passed as keyword arguments to
         # `populate_identification_group()` below.
         product_counter = primary_executable_params.pop("product_counter")
@@ -269,7 +269,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             processing_datetime = datetime.now(timezone.utc).replace(microsecond=0)
 
             # XXX: It's not really obvious what should go in the `zeroDopplerStartTime`
-            # and `zeroDopplerEndTime` datasets in the `identification` group. For now,
+            # and `zeroDopplerEndTime` datasets in the 'identification' group. For now,
             # we'll use the start & stop time of the radar grid, which is roughly
             # analogous what they represent in other NISAR L2 products.
             img_grid_start_datetime = radar_grid.ref_epoch + isce3.core.TimeDelta(

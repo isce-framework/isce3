@@ -390,7 +390,7 @@ def populate_grids_group(
     x_coords_dataset = create_grids_dataset("xCoordinates", x_coords)
     y_coords_dataset = create_grids_dataset("yCoordinates", y_coords)
 
-    # Treat `xCoordinates` and `yCoordinates` as dimension scales. Other NISAR workflows
+    # Treat 'xCoordinates' and 'yCoordinates' as dimension scales. Other NISAR workflows
     # don't assign names to dimension scales so let's take the same approach here.
     x_coords_dataset.make_scale()
     y_coords_dataset.make_scale()
@@ -603,7 +603,7 @@ def save_doppler_lut2d_to_hdf5_group(
     azimuth_dataset = create_doppler_dataset("zeroDopplerTime", doppler.y_axis)
     add_reference_epoch_units_attr(azimuth_dataset, epoch)
 
-    # Treat `slantRange` and `zeroDopplerTime` as dimension scales. Other NISAR
+    # Treat 'slantRange' and 'zeroDopplerTime' as dimension scales. Other NISAR
     # workflows don't assign names to dimension scales so let's take the same approach
     # here.
     range_dataset.make_scale()
@@ -655,7 +655,7 @@ def save_radar_grid_to_hdf5_group(
     azimuth_dataset = create_radar_grid_dataset("zeroDopplerTime", azimuth)
     add_reference_epoch_units_attr(azimuth_dataset, radar_grid.ref_epoch)
 
-    # Treat `slantRange` and `zeroDopplerTime` as dimension scales. Other NISAR
+    # Treat 'slantRange' and 'zeroDopplerTime' as dimension scales. Other NISAR
     # workflows don't assign names to dimension scales so let's take the same approach
     # here.
     range_dataset.make_scale()
