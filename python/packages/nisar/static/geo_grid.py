@@ -110,7 +110,7 @@ def get_output_geo_grid(
     if not (xmax >= xmin) or not (ymax >= ymin):
         raise ValueError(
             f"invalid bounding box: {xmax=} must be >= {xmin=} and {ymax=} must be >="
-            f" {ymin}"
+            f" {ymin=}"
         )
 
     # Divide `num` by `den` and round the result to the nearest integer.
