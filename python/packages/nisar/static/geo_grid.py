@@ -107,9 +107,9 @@ def get_output_geo_grid(
         )
 
     # Ensure that the bounding box is valid.
-    if not (xmax >= xmin) or not (ymax >= ymin):
+    if not (xmax > xmin) or not (ymax > ymin):
         raise ValueError(
-            f"invalid bounding box: {xmax=} must be >= {xmin=} and {ymax=} must be >="
+            f"invalid bounding box: {xmax=} must be > {xmin=} and {ymax=} must be >"
             f" {ymin=}"
         )
 
