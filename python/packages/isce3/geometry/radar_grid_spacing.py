@@ -48,18 +48,17 @@ def infer_radar_grid_spacing_from_geo_grid(
         Defaults to 5.
     geo2rdr_params : dict or None, optional
         An optional dict of parameters configuring the behavior of the root-finding
-        routine used in geo2rdr (Newton-Raphson implementation). The following keys are
+        routine used in geo2rdr (bracketing implementation). The following keys are
         supported:
 
-        'threshold':
-          Absolute azimuth time convergence tolerance, in seconds. Defaults to 1e-8.
+        'tol_aztime':
+          Azimuth time convergence tolerance, in seconds. Defaults to 1e-7.
 
-        'maxiter':
-          Maximum number of Newton-Raphson iterations. Defaults to 50.
+        'time_start':
+          Start of search interval, in seconds. Defaults to ``orbit.start_time``.
 
-        'delta_range':
-          Step size for computing the numerical partial derivative of Doppler w.r.t
-          range, in meters. Defaults to 10.
+        'time_end':
+          End of search interval, in seconds. Defaults to ``orbit.end_time``.
 
     Returns
     -------
