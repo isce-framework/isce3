@@ -121,7 +121,8 @@ def get_output_geo_grid(
     # XXX: It seems more sensible to always round up rather than rounding to the nearest
     # integer to ensure the geo grid covers the entire requested bounding box, but the
     # other L2 SAS workflows do it this way. We should ensure this works the same way so
-    # that the grids for any particular frame are consistent.
+    # that the grids for any particular frame are consistent. See
+    # https://github.com/isce-framework/isce3/issues/155.
     length = round_divide(ymin - ymax, dy)
     width = round_divide(xmax - xmin, dx)
 
