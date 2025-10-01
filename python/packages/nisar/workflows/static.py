@@ -60,8 +60,6 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     water_mask_raster_file = dynamic_ancillary_files["water_mask_raster_file"]
     logger.info(f"Open DEM raster file {dem_raster_file}")
     dem_raster = isce3.io.Raster(dem_raster_file)
-    logger.info(f"Open water mask raster file {water_mask_raster_file}")
-    water_mask_raster = isce3.io.Raster(water_mask_raster_file)
 
     # Construct a DEM interpolator.
     dem_interp_method = processing_params["dem"]["interp_method"]
@@ -181,7 +179,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         logger.info("Compute re-projected binary water mask layer")
         with log_elapsed_time(logger.info, "Computing re-projected binary water mask"):
             binary_water_mask = binarize_and_reproject_water_mask(
-                water_distance=water_mask_raster,
+                water_distance_raster_file=water_mask_raster_file,
                 geo_grid=geo_grid,
                 scratch_dir=scratch_dir,
                 **processing_params["water_mask"],

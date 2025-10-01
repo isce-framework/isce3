@@ -281,8 +281,8 @@ runconfig:
         #   - 'near': nearest neighbor resampling
         #   - 'mode': mode resampling (selects the value which appears most often among
         #     sampled points)
-        # Defaults to 'mode'.
-        resample_algorithm: mode
+        # Defaults to 'near'.
+        resample_algorithm: near
 
       topo:
         # [OPTIONAL] Number of range lines per block used by the topo algorithm to

@@ -8,7 +8,7 @@ from osgeo import gdal
 
 import isce3
 
-from .util import create_single_band_gtiff, make_scratch_file, unary_transform_blockwise
+from .util import make_scratch_file, make_scratch_gtiff, unary_transform_blockwise
 
 
 def binarize_nisar_water_mask(water_distance: ArrayLike) -> np.ndarray:
@@ -85,19 +85,23 @@ def reproject_raster(
 
 
 def binarize_and_reproject_water_mask(
-    water_distance: isce3.io.Raster,
+    water_distance_raster_file: os.PathLike | str,
     geo_grid: isce3.product.GeoGridParameters,
     *,
     scratch_dir: os.PathLike | str | None = None,
     resample_algorithm: str = "near",
 ) -> isce3.io.Raster:
     """
-    Compute a binary water mask from `water_distance` and re-project it onto `geo_grid`.
+    Re-project the input water distance map and convert it to a binary mask.
+
+    Re-project the input water distance map raster onto `geo_grid` and convert it to a
+    binary mask of water/not-water pixels.
 
     Parameters
     ----------
-    water_distance : isce3.io.Raster
-        The input water distance map, in the format specified by the NISAR Water Mask
+    water_distance_raster_file : path-like
+        The file path or name of the input water distance map file. It must be a
+        GDAL-compatible raster file in the format specified by the NISAR Water Mask
         Product Specification\ [1]_. A value of 0 indicates a water pixel. A value of
         255 represents a no-data (invalid) pixel. Values in 1-200 represent non-water
         pixels.
@@ -108,15 +112,15 @@ def binarize_and_reproject_water_mask(
         this function. If None, a platform-specific default temporary directory will be
         used. Otherwise, it must be the file system path to an existing directory.
         Defaults to None.
-    resample_algorithm : {'mode', 'near'}
+    resample_algorithm : {'near', 'mode'}, optional
         Resampling method.
+
+        'near':
+          Nearest neighbor resampling. The default method.
 
         'mode':
           Mode resampling (selects the value which appears most often among sampled
-          points). The default method.
-
-        'near':
-          Nearest neighbor resampling.
+          points).
 
     Returns
     -------
@@ -125,39 +129,33 @@ def binarize_and_reproject_water_mask(
         or inland water), 0 indicates a not-water pixel, and 255 represents a no-data
         (invalid) pixel.
     """
-    water_mask_raster_file = make_scratch_file(
+    # Make a temporary file in the scratch directory to store the intermediate
+    # re-projected water distance map raster.
+    reprojected_water_distance_raster_file = make_scratch_file(
         dir_=scratch_dir,
-        prefix="water-mask_",
+        prefix="reprojected-water-distance-map_",
         suffix=".tif",
     )
-    water_mask = create_single_band_gtiff(
-        water_mask_raster_file,
+
+    # Re-project the raster onto the output grid.
+    reproject_raster(
+        water_distance_raster_file,
+        reprojected_water_distance_raster_file,
+        geo_grid=geo_grid,
+        algorithm=resample_algorithm,
+    )
+
+    # Open the new water distance raster and create a new raster to store the binary
+    # water mask data.
+    water_distance = isce3.io.Raster(str(reprojected_water_distance_raster_file))
+    water_mask = make_scratch_gtiff(
         shape=(water_distance.length, water_distance.width),
         dtype=np.uint8,
+        dir_=scratch_dir,
+        prefix="water-mask_",
     )
 
     # Convert the water distance map to a binary mask.
     unary_transform_blockwise(binarize_nisar_water_mask, water_distance, water_mask)
 
-    # Copy geotransform and CRS information from the input water distance map raster to
-    # the output binary water mask raster.
-    water_mask.set_geotransform(water_distance.get_geotransform())
-    water_mask.set_epsg(water_distance.get_epsg())
-
-    # Ensure changes are flushed to the dataset and close it.
-    water_mask.close_dataset()
-
-    reprojected_water_mask_raster_file = make_scratch_file(
-        dir_=scratch_dir,
-        prefix="reprojected-water-mask_",
-        suffix=".tif",
-    )
-
-    reproject_raster(
-        water_mask_raster_file,
-        reprojected_water_mask_raster_file,
-        geo_grid=geo_grid,
-        algorithm=resample_algorithm,
-    )
-
-    return isce3.io.Raster(os.fsdecode(reprojected_water_mask_raster_file))
+    return water_mask
