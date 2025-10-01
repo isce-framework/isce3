@@ -974,21 +974,6 @@ runconfig:
 
                     browse_png:
 
-                        # The image to use as the basis for the browse image PNG. Options:
-                        # "phase" : Wrapped phase.
-                        # "hsi" : An HSI image with phase information encoded as Hue and
-                        # coherence encoded as Intensity.
-                        # Default: phase
-                        browse_image: phase
-
-                        # Only used if `browse_image` is set to "hsi".
-                        # True to perform histogram equalization on the Intensity channel
-                        # (the coherence magnitude layer) in the browse image PNG.
-                        # False to not apply the equalization.
-                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: False
-                        equalize_browse: false
-
                         # The maximum number of pixels allowed for the longest
                         # side of the final 2D browse image.
                         # Default: 2048
@@ -1344,21 +1329,6 @@ runconfig:
 
                     browse_png:
 
-                        # The image to use as the basis for the browse image PNG. Options:
-                        # "phase" : (Optionally re-wrapped) unwrapped phase.
-                        # "hsi" : An HSI image with phase information encoded as Hue and
-                        # coherence encoded as Intensity.
-                        # Default: phase
-                        browse_image: phase
-
-                        # Only used if `browse_image` is set to "hsi".
-                        # True to perform histogram equalization on the Intensity channel
-                        # (the coherence magnitude layer) in the browse image PNG.
-                        # False to not apply the equalization.
-                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: False
-                        equalize_browse: false
-
                         # The maximum number of pixels allowed for the longest
                         # side of the final 2D browse image.
                         # Default: 2048
@@ -1367,7 +1337,6 @@ runconfig:
                         # The multiple of pi to rewrap the unwrapped phase image
                         # when generating the browse PNG. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-
                         # Default: 7
                         rewrap: 7
 
@@ -1763,21 +1732,6 @@ runconfig:
 
                     browse_png:
 
-                        # The image to use as the basis for the browse image PNG. Options:
-                        # "phase" : (Optionally re-wrapped) unwrapped phase.
-                        # "hsi" : An HSI image with phase information encoded as Hue and
-                        # coherence encoded as Intensity.
-                        # Default: phase
-                        browse_image: phase
-
-                        # Only used if `browse_image` is set to "hsi".
-                        # True to perform histogram equalization on the Intensity channel
-                        # (the coherence magnitude layer) in the browse image PNG.
-                        # False to not apply the equalization.
-                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: False
-                        equalize_browse: false
-
                         # The maximum number of pixels allowed for the longest
                         # side of the final 2D browse image.
                         # Default: 2048
@@ -1786,7 +1740,6 @@ runconfig:
                         # The multiple of pi to rewrap the unwrapped phase image
                         # when generating the browse PNG. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-
                         # Default: 7
                         rewrap: 7
 
