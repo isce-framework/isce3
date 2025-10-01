@@ -172,7 +172,8 @@ def geocode_layover_shadow_mask(
         'maxiter':
           Maximum number of Newton-Raphson iterations. Defaults to 50.
     memory_mode : isce3.core.GeocodeMemoryMode, optional
-        Block processing mode to use for geocoding. Defaults to ???.
+        Block processing mode to use for geocoding. The default value is internally
+        defined.
     min_block_size : int, optional
         Minimum block size for geocoding, per thread, in bytes. The block size is chosen
         dynamically based on the image dimensions to partition work uniformly across
@@ -322,7 +323,8 @@ def compute_geocoded_layover_shadow_mask(
         'maxiter':
           Maximum number of Newton-Raphson iterations. Defaults to 50.
     memory_mode : isce3.core.GeocodeMemoryMode, optional
-        Block processing mode to use for geocoding. Defaults to ???.
+        Block processing mode to use for geocoding. The default value is internally
+        defined.
     min_block_size : int, optional
         Minimum block size for geocoding, per thread, in bytes. The block size is chosen
         dynamically based on the image dimensions to partition work uniformly across

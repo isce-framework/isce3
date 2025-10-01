@@ -99,7 +99,8 @@ def compute_rtc_anf_layers(
         Interpolation method used for geocoding. Only relevant when `output_mode` is set
         to interpolation. Ignored otherwise. Defaults to biquintic interpolation.
     memory_mode : isce3.core.GeocodeMemoryMode, optional
-        Block processing mode to use for geocoding. Defaults to ???.
+        Block processing mode to use for geocoding. The default value is internally
+        defined.
     min_block_size : int, optional
         Minimum block size for geocoding, per thread, in bytes. The block size is chosen
         dynamically based on the image dimensions to partition work uniformly across
@@ -121,8 +122,8 @@ def compute_rtc_anf_layers(
     algorithm : isce3.geometry.RtcAlgorithm or str, optional
         Algorithm used for RTC. Defaults to the area projection algorithm.
     area_beta_mode : isce3.geometry.RtcAreaBetaMode or str or None, optional
-        Method for estimating the area of the beta naught reference surface. Defaults to
-        ???.
+        Method for estimating the area of the beta naught reference surface. The default
+        value is internally defined.
 
     Returns
     -------
