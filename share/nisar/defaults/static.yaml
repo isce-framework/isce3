@@ -66,7 +66,7 @@ runconfig:
       # in the output product.
       # Must be one of:
       #   - 'PR': nominal (production)
-      #   - 'OD': custom (on-demand)
+      #   - 'OD': custom (off-nominal on-demand processing)
       # Defaults to 'OD'.
       processing_type: OD
       # [OPTIONAL] Mission identifier.
