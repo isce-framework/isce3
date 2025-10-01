@@ -136,7 +136,7 @@ def compute_rtc_anf_layers(
     if geo2rdr_params is None:
         geo2rdr_params = {}
 
-    geocode = isce3.geocode.GeocodeCFloat32()
+    geocode = isce3.geocode.GeocodeFloat32()
     geocode.orbit = orbit
     geocode.doppler = img_grid_doppler
     geocode.native_doppler = native_doppler
@@ -162,7 +162,7 @@ def compute_rtc_anf_layers(
     # so simply pass in dummy rasters.
     dummy_slc = make_scratch_gtiff(
         shape=(radar_grid.length, radar_grid.width),
-        dtype=np.complex64,
+        dtype=np.float32,
         dir_=scratch_dir,
         prefix="dummy-slc_",
     )
