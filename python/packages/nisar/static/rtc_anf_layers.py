@@ -203,8 +203,6 @@ def compute_rtc_anf_layers(
         prefix="dummy-output-rtc-sigma_",
     )
 
-    # TODO: Should we pass in an input layover/shadow mask? Currently, GCOV doesn't seem
-    # to do this. We should probably adopt the same strategy here in Static Layers.
     geocode.geocode(
         radar_grid=radar_grid,
         input_raster=dummy_slc,
