@@ -36,10 +36,12 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     """
     Run the NISAR Static Layers workflow with the specified run configuration file.
 
+    Will generate a single STATIC HDF5 granule, as specified in the runconfig.
+
     Parameters
     ----------
     config_file : path-like
-        The file path of the runconfig YAML file.
+        The file path to the input STATIC layers runconfig YAML file.
     """
     logger = get_logger()
 
@@ -364,7 +366,9 @@ def main(args: Sequence[str] | None = None) -> None:
     # Setup the argument parser.
     parser = argparse.ArgumentParser(description="Run the NISAR Static Layers workflow")
     parser.add_argument(
-        "config_file", type=Path, help="The run configuration YAML file"
+        "config_file",
+        type=Path,
+        help="Run configuration YAML file for the STATIC workflow",
     )
 
     # Parse the arguments and convert the result to a dict of keyword arguments.
