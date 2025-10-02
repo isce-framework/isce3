@@ -27,7 +27,7 @@
       <tab type="user" url="http://trac.osgeo.org/gdal/wiki/DownloadSource" title="Source"/>
       <tab type="user" url="http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries" title="Binaries"/>
     </tab> -->
-    <tab type="user" url="/isce3-ci-sandbox/api/python" title="Python API"/>
+    <tab type="user" url="/isce3/api/python" title="Python API"/>
     <tab type="user" url="https://github.com/isce-framework/isce3/issues" title="Issue Tracker"/>
     <!-- end ISCE customization -->
   </navindex>
