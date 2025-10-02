@@ -27,8 +27,8 @@ def make_linear_orbit(
         The velocity of the platform, in meters per second, in the same coordinate
         system as `initial_position`.
     times : iterable of float
-        The timepoints at which to sample the orbit state vectors, in seconds relative
-        to `epoch`.
+        The timepoints at which to sample the orbit state vectors, in seconds since
+        `epoch`.
     epoch : isce3.core.DateTime, optional
         The UTC date and time of the timepoint t=0. Defaults to
         `DateTime('2000-01-01')`.
