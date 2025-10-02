@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build_and_test:
     env:
-      ALL_EXCLUDE: cuda|stage_dem|pybind\.unwrap\.phass|isce3\.container\.rsd|isce3\.io\.gdal\.gdal-raster|pybind\.io\.gdal\.raster
+      ALL_EXCLUDE: stage_dem|pybind\.unwrap\.phass
       # stage_dem requires AWS permissions to access the S3 bucket containing the DEM data.
       # pybind.unwrap.phass occasionally segfaults on GHA runners.
 
