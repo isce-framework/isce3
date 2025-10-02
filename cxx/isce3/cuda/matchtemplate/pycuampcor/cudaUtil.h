@@ -105,7 +105,7 @@ inline void gpuDeviceList()
     {
         checkCudaErrors(cudaGetDeviceProperties(&deviceProp, current_device));
         int compute_mode;
-#if CUDART_VERSION < 13000
+#if defined(CUDART_VERSION) && CUDART_VERSION < 13000
         compute_mode = deviceProp.computeMode;
 #else
         checkCudaErrors(cudaDeviceGetAttribute(&compute_mode, cudaDevAttrComputeMode, current_device));

@@ -669,6 +669,17 @@ runconfig:
                     # Default: (1024, 1024)
                     tile_shape: [1024, 1024]
 
+                    # True to output one grayscale PNG+KML pair per raster image layer; these
+                    # will be generated in addition to the standard browse image PNG+KML.
+                    # The filename of each additional file will include a suffix noting
+                    # that image's frequency and polarization.
+                    # False to have the primary browse image be the only PNG+KML generated.
+                    # Note: If True, and if the input granule contains only one image,
+                    # then the additional individual PNG will be a duplicate image to the
+                    # primary browse image PNG, but with more descriptive filename.
+                    # Default: False
+                    output_individual_pngs: false
+
                 histogram:
 
                     # Step size to decimate the input array for computing
