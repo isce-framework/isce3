@@ -92,7 +92,8 @@ runconfig:
       # [OPTIONAL] Data processing center.
       # Used to form the granule ID and populate the
       # '/science/{L,S}SAR/identification/processingCenter' dataset in the output
-      # product.
+      # product. If 'JPL' is specified, the processing center character in the granule
+      # ID will be populated with a 'J'. Otherwise, it will be populated with an 'X'.
       # Defaults to '(NOT SPECIFIED)'.
       processing_center: (NOT SPECIFIED)
       # [OPTIONAL] UTC date and time of the start of the validity date range for the
