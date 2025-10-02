@@ -139,8 +139,8 @@ runconfig:
           y:
         # [OPTIONAL] X and Y coordinates of the lower-right corner pixel in the output
         # grid, in the coordinate system and units described by `epsg`.
-        # Must satisfy `bottom_right.x` > `top_left.x` and `bottom_right.y` <
-        # `top_left.y`.
+        # Must satisfy `top_left.x` < `bottom_right.x` and `top_left.y` >
+        # `bottom_right.y`.
         # The exact lower-right corner of the output grid may differ from the
         # coordinates specified here if `bottom_right.x` - `top_left.x` is not an
         # integer multiple of `posting.x` or `top_left.y` - `bottom_right.y` is not an
