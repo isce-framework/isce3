@@ -102,9 +102,6 @@ runconfig:
       # datetimes not earlier than this datetime but earlier than the validity start
       # datetime of any future superseding STATIC product.
       # Defaults to '1970-01-01T00:00:00'.
-      # WARNING: Due to limitations with the way this YAML file is parsed, datetimes
-      # with sub-microsecond precision will be truncated to integer microseconds
-      # precision unless surrounded in quotes.
       validity_start_datetime: 1970-01-01T00:00:00
       # [OPTIONAL] Product counter.
       # An integer in the range [1, 999].
