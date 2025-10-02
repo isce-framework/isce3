@@ -1,5 +1,4 @@
 from isce3.ext.isce3.core import *
-import isce3.ext.isce3.core as extcore
 from . import block_param_generator
 from . import gpu_check
 from .constants import (
@@ -20,5 +19,3 @@ from .block_param_generator import BlockParam
 from .projections import is_utm
 from .serialization import load_orbit_from_h5_group
 from . import types
-
-__all__ = [name for name in vars(extcore) if not name.startswith("__")]
