@@ -318,8 +318,8 @@ runconfig:
         #   - 'geogrid_and_radargrid': partition the geographic and radar image grids
         #     into sub-blocks
         #   - 'auto': the block processing mode is chosen by the software
-        # Defaults to 'geogrid_and_radargrid'.
-        memory_mode: geogrid_and_radargrid
+        # Defaults to 'auto'.
+        memory_mode: auto
         # [OPTIONAL] Minimum block size for geocoding, per thread, in bytes.
         # The block size is chosen dynamically based on the image dimensions to
         # partition work uniformly across available threads, bounded by `min_block_size`
@@ -413,8 +413,8 @@ runconfig:
         # [OPTIONAL] Level of compression applied by the GZIP compression filter.
         # Must be an integer from 0 to 9 (inclusive).
         # Ignored if `compression_enabled` is false or `compression_type` is not 'gzip'.
-        # Defaults to 4.
-        compression_level: 4
+        # Defaults to 1.
+        compression_level: 1
         # [OPTIONAL] Enable shuffle filtering during data compression.
         # Ignored if `compression_enabled` is false.
         # Defaults to true.
