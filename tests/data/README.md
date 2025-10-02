@@ -597,6 +597,53 @@ Note that a new instrument HDF5 sample file "REE_INSTRUMENT_TABLE_V2P0.h5" of ve
   (TFDB) version dated 03/31/2025 for track 15, frame 97, with 3 minutes of padding on
   either end.
 
+- **NISAR_ANC_L_PR_FRP_20250910T221957_20230104T061021_20230104T061655.xml**
+
+  A NISAR Radar Pointing (RP) XML file corresponding to a frame that crosses the
+  antimeridian over Fiji.
+
+  The orbit data was generated from predicted NISAR orbits using H. Ghaemi's
+  [`orbit_attitude_from_spice`](https://github.jpl.nasa.gov/NISAR-POINTING/orbit_attitude_from_spice)
+  tool. The start/end time points were extracted from the NISAR Track-Frame Database
+  (TFDB) version dated 03/31/2025 for track 15, frame 97, with 3 minutes of padding on
+  either end.
+
+- **DEM_fiji_track15_frame97_small.vrt**
+
+  A small DEM raster file covering a region of Fiji and spanning the antimeridian. The
+  DEM measures topographic height, in meters, above the WGS 84 reference ellipsoid. The
+  raster grid is in geodetic coordinates (EPSG:4326), sampled at ~0.278 millidegree
+  posting.
+
+  The file was generated using `stage_dem.py` (ISCE3 v0.25.2) from the Copernicus DEM
+  for NISAR v1.2.
+
+  The VRT file points to two GeoTIFF files, **DEM_fiji_track15_frame97_small_0.tiff**
+  and **DEM_fiji_track15_frame97_small_1.tiff**, that cover regions on either side of
+  the antimeridian.
+
+  The DEM covers a small subset of the frame bounds of track 15, frame 97 from the NISAR
+  Track-Frame Database (TFDB) version dated 03/31/2025.
+
+- **WATERMASK_fiji_track15_frame97_small.vrt**
+
+  A small water distance map raster file covering a region of Fiji and spanning the
+  antimeridian. The raster data measures distance, in kilometers, from ocean or inland
+  water, in the format described by the NISAR Water Mask Product Specification (JPL
+  D-107710). The raster grid is in geodetic coordinates (EPSG:4326), sampled at 0.25
+  millidegree posting.
+
+  The file was generated using `stage_watermask.py` (ISCE3 v0.25.2) from the NISAR Water
+  Mask v0.5.
+
+  The VRT file points to two GeoTIFF files,
+  **WATERMASK_fiji_track15_frame97_small_0.tiff** and
+  **WATERMASK_fiji_track15_frame97_small_1.tiff**, that cover regions on either side of
+  the antimeridian.
+
+  The water distance map covers a small subset of the frame bounds of track 15, frame
+  97 from the NISAR Track-Frame Database (TFDB) version dated 03/31/2025.
+
 - **NISAR_ANC_L_PR_FOE_20250806T193731_20230105T054735_20230105T055408.xml**
 
   A NISAR Orbit Ephemeris (OE) XML file corresponding to a frame that passes near the
@@ -607,3 +654,40 @@ Note that a new instrument HDF5 sample file "REE_INSTRUMENT_TABLE_V2P0.h5" of ve
   tool. The start/end time points were extracted from the NISAR Track-Frame Database
   (TFDB) version dated 03/31/2025 for track 29, frame 130, with 3 minutes of padding on
   either end.
+
+- **NISAR_ANC_L_PR_FRP_20250910T222200_20230105T054735_20230105T055408.xml**
+
+  A NISAR Radar Pointing (RP) XML file corresponding to a frame that passes near the
+  South pole over Antarctica.
+
+  The orbit data was generated from predicted NISAR orbits using H. Ghaemi's
+  [`orbit_attitude_from_spice`](https://github.jpl.nasa.gov/NISAR-POINTING/orbit_attitude_from_spice)
+  tool. The start/end time points were extracted from the NISAR Track-Frame Database
+  (TFDB) version dated 03/31/2025 for track 29, frame 130, with 3 minutes of padding on
+  either end.
+
+- **DEM_antarctica_track29_frame130_small.tiff**
+
+  A small DEM raster file covering a region of Antarctica. The DEM measures topographic
+  height, in meters, above the WGS 84 reference ellipsoid. The raster grid is in the
+  Antarctic Polar Stereographic projection (EPSG:3031), sampled at 20 meter posting.
+
+  The file was generated using `stage_dem.py` (ISCE3 v0.25.2) from the Copernicus DEM
+  for NISAR v1.2.
+
+  The DEM covers a small subset of the frame bounds of track 29, frame 130 from the
+  NISAR Track-Frame Database (TFDB) version dated 03/31/2025.
+
+- **WATERMASK_antarctica_track29_frame130_small.tiff**
+
+  A small water distance map raster file covering a region of Antarctica. The raster
+  data measures distance, in kilometers, from ocean or inland water, in the format
+  described by the NISAR Water Mask Product Specification (JPL D-107710). The raster
+  grid is in the Antarctic Polar Stereographic projection (EPSG:3031), sampled at 30
+  meter posting.
+
+  The file was generated using `stage_watermask.py` (ISCE3 v0.25.2) from the NISAR Water
+  Mask v0.5.
+
+  The water distance map covers a small subset of the frame bounds of track 29, frame
+  130 from the NISAR Track-Frame Database (TFDB) version dated 03/31/2025.
