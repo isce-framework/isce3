@@ -290,6 +290,9 @@ runconfig:
 
       geocode:
         # [OPTIONAL] Algorithm used for geocoding.
+        # This affects the computation of Radiometric Terrain Correction (RTC) Area
+        # Normalization Factor (ANF) layers in the output product. The layover/shadow
+        # mask layer will always be geocoded using nearest neighbor interpolation.
         # Must be one of:
         #   - 'interp': interpolation
         #   - 'area_projection': pixel area-based adaptive multilooking algorithm
@@ -297,6 +300,9 @@ runconfig:
         output_mode: area_projection
         # [OPTIONAL] Interpolation method used for geocoding.
         # Only relevant when `output_mode`='interp'. Ignored otherwise.
+        # This affects the computation of RTC ANF layers in the output product. The
+        # layover/shadow mask layer will always be geocoded using nearest neighbor
+        # interpolation.
         # Must be one of:
         #   - 'nearest': nearest neighbor interpolation
         #   - 'bilinear': bilinear interpolation
