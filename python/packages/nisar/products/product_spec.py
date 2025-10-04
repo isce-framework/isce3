@@ -405,8 +405,9 @@ def get_product_spec(product_type: str) -> ProductSpec:
 
     Parameters
     ----------
-    product_type : {'GCOV', 'GSLC'}
-        The NISAR product type. Only 'GCOV' and 'GSLC' are currently supported.
+    product_type : {'GCOV', 'GSLC', 'STATIC'}
+        The NISAR product type. Only 'GCOV', 'GSLC', and 'STATIC' are currently
+        supported.
 
     Returns
     -------
@@ -415,9 +416,9 @@ def get_product_spec(product_type: str) -> ProductSpec:
     """
     product_type = product_type.upper()
 
-    if product_type in {"GCOV", "GSLC"}:
+    if product_type in {"GCOV", "GSLC", "STATIC"}:
         xml_path = XML_SPECS_DIR / f"L2/nisar_L2_{product_type}.xml"
-    elif product_type in {"GOFF", "GUNW", "RIFG", "ROFF", "RSLC", "RUNW", "STATIC"}:
+    elif product_type in {"GOFF", "GUNW", "RIFG", "ROFF", "RSLC", "RUNW"}:
         raise NotImplementedError(f"unsupported product type {product_type!r}")
     else:
         raise ValueError(f"unexpected product type {product_type!r}")

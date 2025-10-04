@@ -1,0 +1,617 @@
+<?xml version="1.0"?>
+<!-- product specification version is 1.4.0 -->
+<algorithm name="L2_StaticLayers"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <product template="L2_STATIC_template">
+    <!-- Start of the science section of product -->
+    <science uid="sci_1">
+      <!-- Global attributes for the product -->
+      <annotation app="conformance" Conventions="CF-1.7"
+                                    title="NISAR L2 STATIC LAYERS Product"
+                                    institution="NASA JPL"
+                                    mission_name="NISAR"
+                                    reference_document="D-102268 NASA SDS Product Specification for Level-2 Static Layers"
+                                    contact="nisar-sds-ops@jpl.nasa.gov"/>
+      <!-- End of global attributes for the product -->
+
+      <nodes>
+        <!-- Product Identification -->
+        <integer name="/science/LSAR/identification/trackNumber"
+                 shape="scalar"
+                 signed="false"
+                 width="32">
+          <annotation app="conformance"
+                      lang="en">Track number</annotation>
+        </integer>
+        <integer name="/science/LSAR/identification/frameNumber"
+                 shape="scalar"
+                 signed="false"
+                 width="16">
+          <annotation app="conformance"
+                      lang="en">Frame number</annotation>
+        </integer>
+        <string length="0"
+                name="/science/LSAR/identification/missionId"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Mission identifier</annotation>
+        </string>
+        <string length="0"
+            name="/science/LSAR/identification/platformName"
+            shape="scalar">
+            <annotation app="conformance"
+                        lang="en">Name of the platform associated with the static layers included in this granule</annotation>
+        </string>
+        <string length="0"
+            name="/science/LSAR/identification/instrumentName"
+            shape="scalar">
+            <annotation app="conformance"
+                        lang="en">Name of the instrument associated with the static layers included in this granule</annotation>
+        </string>
+        <string length="0"
+            name="/science/LSAR/identification/radarBand"
+            shape="scalar">
+            <annotation app="conformance"
+                        lang="en">Frequency band associated with the static layers included in this granule, either "L" or "S"</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/processingCenter"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Data processing center</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/processingType"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Processing pipeline used to generate this granule. "Nominal": standard production system; "Custom": user-initiated processing outside the nominal production system</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/productType"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Product type</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/granuleId"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Unique granule identification name</annotation>
+        </string>
+        <string length="0"
+                 name="/science/LSAR/identification/productDoi"
+                 shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Digital Object Identifier (DOI) for the product</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/productVersion"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Product version which represents the structure of the product and the science content governed by the algorithm, input data, and processing parameters</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/productSpecificationVersion"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Product specification version which represents the schema of this product</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/lookDirection"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Look direction, either "Left" or "Right"</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/orbitPassDirection"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Orbit direction, either "Ascending" or "Descending"</annotation>
+        </string>
+        <string length="29"
+                name="/science/LSAR/identification/zeroDopplerStartTime"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Azimuth start time (in UTC) of the product based on the time of the orbit state vectors used to generate the product, in the format YYYY-mm-ddTHH:MM:SS.sssssssss</annotation>
+        </string>
+        <string length="29"
+                name="/science/LSAR/identification/zeroDopplerEndTime"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Azimuth stop time (in UTC) of the product based on the time of the orbit state vectors used to generate the product, in the format YYYY-mm-ddTHH:MM:SS.sssssssss</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/productLevel"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Product level. "L0A": Unprocessed instrument data; "L0B": Reformatted, unprocessed instrument data; "L1": Processed instrument data in radar coordinates system; and "L2": Processed instrument data in geocoded coordinates system</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/isGeocoded"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Flag to indicate if the product data is in the radar geometry ("False") or in the map geometry ("True")</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/boundingPolygon"
+                shape="scalar">
+                <annotation app="conformance"
+                            ogr_geometry="polygon"
+                            epsg="4326"
+                            lang="en">OGR compatible WKT representing the bounding polygon of the raster data. Horizontal coordinates are WGS84 longitude followed by latitude (both in degrees), and the vertical coordinate is the height above the WGS84 ellipsoid in meters. The first point corresponds to the the starting X and Y coordinate of the raster grid in the product's native coordinate system, and the perimeter is traversed in counterclockwise order on the ellipsoid. The polygon includes the four corners of the raster grid, with equal numbers of points distributed evenly in native coordinates of the product along each edge</annotation>
+        </string>
+        <string length="19"
+              name="/science/LSAR/identification/processingDateTime"
+              shape="scalar">
+              <annotation app="conformance"
+                          lang="en">Processing date and time (in UTC) in the format YYYY-mm-ddTHH:MM:SS</annotation>
+        </string>
+        <string length="19"
+              name="/science/LSAR/identification/validityStartDateTime"
+              shape="scalar">
+              <annotation app="conformance"
+                          lang="en">Starting date and time (in UTC) for when the parameters in this granule are valid for the NISAR data acquired, in the format YYYY-mm-ddTHH:MM:SS</annotation>
+        </string>
+        <string length="6"
+                name="/science/LSAR/identification/compositeReleaseId"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Unique version identifier of the science data production system</annotation>
+        </string>
+        <!-- End of product identification -->
+
+        <!-- Static Layer rasters -->
+        <real name="/science/LSAR/STATIC/grids/digitalElevationModel"
+              shape="staticLayerShape"
+              width="32">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      standard_name="height_above_reference_ellipsoid"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      disclaimer="Disclaimer for DEM"
+                      units="meters">Topographic height above the reference ellipsoid, derived from the input Digital Elevation Model (DEM)</annotation>
+        </real>
+        <integer name="/science/LSAR/STATIC/grids/layoverShadowMask"
+              shape="staticLayerShape"
+              signed="false"
+              width="8">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      valid_max="3"
+                      valid_min="0"
+                      _FillValue="255"
+                      grid_mapping="projection">Pixel-wise classification of layover and shadow, where 0 indicates a sample not affected by layover or shadow, 1 indicates a sample affected by shadow, 2 indicates a sample affected by layover, and 3 indicates a sample affected by both layover and shadow</annotation>
+        </integer>
+        <real name="/science/LSAR/STATIC/grids/localIncidenceAngle"
+              shape="staticLayerShape"
+              width="32">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      valid_max="180.0"
+                      valid_min="0.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      units="degrees">Local incidence angle is defined as the angle between the target-to-platform line-of-sight vector and the terrain normal</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/grids/losUnitVectorX"
+              shape="staticLayerShape"
+              width="32">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      _FillValue="nan"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      grid_mapping="projection"
+                      units="1">East component of the line-of-sight (LOS) unit vector, defined from the target to the sensor, expressed in the east-north-up (ENU) coordinate system with its origin at the target location</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/grids/losUnitVectorY"
+              shape="staticLayerShape"
+              width="32">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      _FillValue="nan"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      grid_mapping="projection"
+                      units="1">North component of the line-of-sight (LOS) unit vector, defined from the target to the sensor, expressed in the east-north-up (ENU) coordinate system with its origin at the target location</annotation>
+        </real>
+        <integer name="/science/LSAR/STATIC/grids/waterMask"
+              shape="staticLayerShape"
+              signed="false"
+              width="8">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      valid_max="1"
+                      valid_min="0"
+                      _FillValue="255"
+                      disclaimer="Disclaimer for water mask"
+                      grid_mapping="projection">Binary mask where 1 indicates a water pixel (ocean or inland water) and 0 indicates a not-water pixel</annotation>
+        </integer>
+        <real name="/science/LSAR/STATIC/grids/rtcGammaToSigmaFactor"
+              shape="staticLayerShape"
+              width="32">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      _FillValue="nan"
+                      valid_min="0"
+                      grid_mapping="projection"
+                      units="1">Radiometric terrain correction (RTC) scaling factor to normalize backscatter coefficients from gamma0 to sigma0, accounting for local terrain</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/grids/rtcGammaToBetaFactor"
+              shape="staticLayerShape"
+              width="32">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      _FillValue="nan"
+                      valid_min="0"
+                      grid_mapping="projection"
+                      units="1">Radiometric terrain correction (RTC) scaling factor to normalize backscatter coefficients from gamma0 to beta0, accounting for local terrain</annotation>
+        </real>
+
+        <!-- Start of Georeferencing Datasets for Static Layer datasets -->
+        <real name="/science/LSAR/STATIC/grids/yCoordinateSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      long_name="Y coordinates spacing"
+                      units="meters">Nominal spacing in meters between consecutive lines</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/grids/xCoordinateSpacing"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      long_name="X coordinates spacing"
+                      units="meters">Nominal spacing in meters between consecutive pixels</annotation>
+        </real>
+        <integer name="/science/LSAR/STATIC/grids/projection"
+                 shape="scalar"
+                 signed="false"
+                 width="32">
+            <annotation app="conformance"
+                        ellipsoid="Projection ellipsoid"
+                        epsg_code="Projection EPSG code"
+                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection"
+                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection"
+                        grid_mapping_name="Grid mapping variable name"
+                        inverse_flattening="Inverse flattening of the ellipsoidal figure"
+                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
+                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
+                        semi_major_axis="Semi-major axis"
+                        spatial_ref="Spatial reference"
+                        utm_zone_number="UTM zone number"
+                        lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
+        </integer>
+        <real name="/science/LSAR/STATIC/grids/xCoordinates"
+              shape="staticLayerWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="X coordinates of projection"
+                          standard_name="projection_x_coordinate"
+                          units="meters">X coordinates in specified projection</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/grids/yCoordinates"
+              shape="staticLayerLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          long_name="Y coordinates of projection"
+                          standard_name="projection_y_coordinate"
+                          units="meters">Y coordinates in specified projection</annotation>
+        </real>
+        <!-- End of Georeferencing Datasets -->
+
+
+        <!-- Start of Metadata -->
+        <!-- Orbit ephemeris -->
+        <string length="0"
+                name="/science/LSAR/STATIC/metadata/orbit/interpMethod"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Orbit interpolation method, either "Hermite" or "Legendre"</annotation>
+       </string>
+        <real name="/science/LSAR/STATIC/metadata/orbit/time"
+              shape="orbitListLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Time vector record. This record contains the time since UTC epoch corresponding to position and velocity records</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/orbit/position"
+              shape="orbitShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters">Position vector record. This record contains the platform position data with respect to WGS84 G1762 reference frame</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/orbit/velocity"
+              shape="orbitShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="meters / second">Velocity vector record. This record contains the platform velocity data with respect to WGS84 G1762 reference frame</annotation>
+        </real>
+        <string length="0"
+                name="/science/LSAR/STATIC/metadata/orbit/orbitType"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Orbit product type, either "FOE", "NOE", "MOE", "POE", or "Custom", where "FOE" stands for Forecast Orbit Ephemeris, "NOE" is Near real-time Orbit Ephemeris, "MOE" is Medium precision Orbit Ephemeris, and "POE" is Precise Orbit Ephemeris</annotation>
+        </string>
+
+        <!-- Attitude records -->
+        <real name="/science/LSAR/STATIC/metadata/attitude/time"
+              shape="attitudeListLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Time vector record. This record contains the time since UTC epoch corresponding to attitude and quaternion records</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/attitude/quaternions"
+              shape="attitudeQuaternionShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="1">Attitude quaternions (q0, q1, q2, q3)</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/attitude/eulerAngles"
+              shape="attitudeShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="degrees">Attitude Euler angles (roll, pitch, yaw)</annotation>
+        </real>
+        <string length="0"
+                name="/science/LSAR/STATIC/metadata/attitude/attitudeType"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Attitude type, either "FRP", "NRP", "PRP, or "Custom", where "FRP" stands for Forecast Radar Pointing, "NRP" is Near Real-time Pointing, and "PRP" is Precise Radar Pointing</annotation>
+        </string>
+
+
+        <!-- Native Doppler Grid -->
+        <real name="/science/LSAR/STATIC/metadata/nativeDoppler/dopplerCentroid"
+              shape="nativeDopplerShape"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          DIMENSION_LIST="HDF5 internal attribute"
+                          _FillValue="nan"
+                          grid_mapping="projection"
+                          units="hertz">2D lookup table of Doppler centroid</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/nativeDoppler/slantRange"
+              shape="nativeDopplerWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          units="meters">Slant range values corresponding to the native Doppler grid</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/nativeDoppler/zeroDopplerTime"
+              shape="nativeDopplerLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch values corresponding to the native Doppler grid</annotation>
+        </real>
+
+
+        <!-- Radar Grid (Range/Azimuth Grid) Parameters -->
+        <real name="/science/LSAR/STATIC/metadata/radarGridParameters/slantRange"
+              shape="radarGridParamsWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          units="meters">Slant range values corresponding to the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/radarGridParameters/slantRangeSpacing"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range spacing of the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry. Same as difference between consecutive samples in slantRange array</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/radarGridParameters/zeroDopplerTime"
+              shape="radarGridParamsLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch values corresponding to the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/radarGridParameters/zeroDopplerTimeSpacing"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds">Time interval in the along-track direction for the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry. This is same as the spacing between consecutive entries in the zeroDopplerTime array</annotation>
+        </real>
+        <real name="/science/LSAR/STATIC/metadata/radarGridParameters/centerFrequency"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Center frequency of the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry</annotation>
+        </real>
+
+
+        <!-- Processing Information -->
+        <!-- Processing Information: Algorithms -->
+        <string length="0"
+                name="/science/LSAR/STATIC/metadata/processingInformation/softwareVersion"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Software version used for processing</annotation>
+        </string>
+        <!-- Processing Information: Inputs -->
+        <string name="/science/LSAR/STATIC/metadata/processingInformation/demSource"
+              shape="scalar"
+              length="0">
+          <annotation app="conformance"
+                      lang="en">Description of the input digital elevation model (DEM)</annotation>
+        </string>
+        <string name="/science/LSAR/STATIC/metadata/processingInformation/waterMaskSource"
+              shape="scalar"
+              length="0">
+          <annotation app="conformance"
+                      lang="en">Description of the input water mask</annotation>
+        </string>
+        <!-- Processing Information: Parameters -->
+        <string name="/science/LSAR/STATIC/metadata/processingInformation/runConfigurationContents"
+              length="0"
+              shape="scalar">
+              <annotation app="conformance"
+                          lang="en">Contents of the run configuration file with parameters used for processing</annotation>
+        </string>
+      </nodes>
+    </science>
+
+
+    <!-- Different shapes used in this XML for defining layers -->
+    <!-- Simple scalar -->
+    <shape name="scalar"
+           order="irrelevant">
+      <annotation app="conformance"
+                  lang="en">scalar values</annotation>
+    </shape>
+
+    <!-- Static Layers related shapes -->
+    <shape name="staticLayerLength"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Length dimension of the static layer datasets</annotation>
+           <dimension extent="0"
+                      name="staticLayerLength"/>
+    </shape>
+    <shape name="staticLayerWidth"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Width dimension of the static layer datasets</annotation>
+           <dimension extent="0"
+                      name="staticLayerWidth"/>
+    </shape>
+    <shape name="staticLayerShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape associated with static layer datasets</annotation>
+           <dimension extent="0"
+                      name="staticLayerLength"/>
+           <dimension extent="0"
+                      name="staticLayerWidth"/>
+    </shape>
+
+    <!-- Orbit related shapes -->
+    <shape name="orbitListLength"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Number of orbit state vectors</annotation>
+           <dimension extent="0"
+                      name="orbitListLength"/>
+    </shape>
+    <shape name="orbitShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape of orbit state vector triplets dataset</annotation>
+           <dimension extent="0"
+                      name="orbitListLength"/>
+           <dimension extent="3"
+                      name="tripletxyz"/>
+    </shape>
+
+
+    <!-- Attitude related shape -->
+    <shape name="attitudeListLength"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Number of attitude state vectors</annotation>
+           <dimension extent="0"
+                      name="attitudeListLength"/>
+    </shape>
+    <shape name="attitudeQuaternionShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape of attitude quaternion dataset</annotation>
+           <dimension extent="0"
+                      name="attitudeListLength"/>
+           <dimension extent="4"
+                      name="quaternions"/>
+    </shape>
+    <shape name="attitudeShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape of attitude Euler angle triplets dataset</annotation>
+           <dimension extent="0"
+                      name="attitudeListLength"/>
+           <dimension extent="3"
+                      name="tripletxyz"/>
+    </shape>
+
+    <!-- Native Doppler related shapes -->
+    <shape name="nativeDopplerLength"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Length dimension of the native Doppler grid datasets</annotation>
+           <dimension extent="0"
+                      name="nativeDopplerLength"/>
+    </shape>
+    <shape name="nativeDopplerWidth"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Width dimension of the native Doppler grid datasets</annotation>
+           <dimension extent="0"
+                      name="nativeDopplerWidth"/>
+    </shape>
+    <shape name="nativeDopplerShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape associated with native Doppler grid datasets</annotation>
+           <dimension extent="0"
+                      name="nativeDopplerLength"/>
+           <dimension extent="0"
+                      name="nativeDopplerWidth"/>
+    </shape>
+
+    <!-- Radar Grid related shapes -->
+    <shape name="radarGridParamsWidth"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Width dimension of the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry</annotation>
+           <dimension extent="0"
+                      name="radarGridParamsWidth"/>
+    </shape>
+    <shape name="radarGridParamsLength"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Length dimension of the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry</annotation>
+           <dimension extent="0"
+                      name="radarGridParamsLength"/>
+    </shape>
+  </product>
+</algorithm>
