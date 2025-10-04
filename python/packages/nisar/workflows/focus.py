@@ -1797,7 +1797,7 @@ def focus(runconfig, runconfig_path=""):
             swaths = swaths[:, pulse_begin:pulse_end, :]
             log.info(f"Number of sub-swaths = {swaths.shape[0]}")
 
-            rawfd = temp("_raw.c8")
+            rawfd = temp(f"_{frequency}{pol}_raw.c8")
             log.info(f"Decoding raw data to memory map {rawfd.name}.")
             raw_mm = np.memmap(rawfd, mode="w+", shape=raw_grid.shape,
                                dtype=np.complex64)
@@ -1829,7 +1829,7 @@ def focus(runconfig, runconfig_path=""):
                 log.info("Uniform PRF, using raw data directly.")
                 regridded, regridfd = raw_clean, None
             else:
-                regridfd = temp("_regrid.c8")
+                regridfd = temp(f"_{frequency}{pol}_regrid.c8")
                 log.info(f"Resampling non-uniform raw data to {regridfd.name}.")
                 regridded = resample(raw_clean, raw_times, raw_grid, swaths, orbit,
                                     dop[frequency], fn=regridfd,
@@ -1857,7 +1857,7 @@ def focus(runconfig, runconfig_path=""):
                 patterns = antpat.form_pattern(
                     ti, pat_ranges, nearest=not uniform_pri, txrx_pols=[pol])
 
-            fd = temp("_rc.c8")
+            fd = temp(f"_{frequency}{pol}_rc.c8")
             log.info(f"Writing range compressed data to {fd.name}")
             rcfile = Raster(fd.name, rc.output_size, rc_grid.shape[0], GDT_CFloat32)
             log.info(f"Range compressed data shape = {rcfile.data.shape}")
@@ -1891,7 +1891,7 @@ def focus(runconfig, runconfig_path=""):
                 log.info(f'Number of noise-only range lines is {nrgl_noise}')
                 # create a dedicated memory map for noise data and processing.
                 # set the number of range bins to rangecomp output size.
-                fid_noise = temp("_noise.c8")
+                fid_noise = temp(f"_{frequency}{pol}_noise.c8")
                 data_noise = np.memmap(
                     fid_noise, mode='w+', shape=(nrgl_noise, rc.output_size),
                     dtype=np.complex64)
@@ -1989,7 +1989,7 @@ def focus(runconfig, runconfig_path=""):
             del regridded, regridfd
 
             if dump_height:
-                fd_hgt = temp(f"_height_{frequency}{pol}.f4")
+                fd_hgt = temp(f"_{frequency}{pol}_height.f4")
                 shape = ogrid[frequency].shape
                 hgt_mm = np.memmap(fd_hgt, mode="w+", shape=shape, dtype='f4')
                 log.debug(f"Dumping height to {fd_hgt.name} with shape {shape}")
