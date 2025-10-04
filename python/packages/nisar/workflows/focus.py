@@ -1794,6 +1794,7 @@ def focus(runconfig, runconfig_path=""):
             na = cfg.processing.rangecomp.block_size.azimuth
             nr = rawdata.shape[1]
             swaths = raw.getSubSwaths(channel_in.freq_id, tx=pol[0])
+            swaths = swaths[:, pulse_begin:pulse_end, :]
             log.info(f"Number of sub-swaths = {swaths.shape[0]}")
 
             rawfd = temp("_raw.c8")
@@ -1813,7 +1814,7 @@ def focus(runconfig, runconfig_path=""):
                 # Remove NaNs.  TODO could incorporate into gap mask.
                 z[np.isnan(z)] = 0.0
                 if cfg.processing.zero_fill_gaps:
-                    fill_gaps(z, swaths[:, pulse:pulse+nblock, :], 0.0)
+                    fill_gaps(z, swaths[:, i:i+nblock, :], 0.0)
                 if cfg.processing.nullify_azimuth_mean:
                     z -= z.mean(axis=0)
                 raw_mm[block_out] = z
@@ -1941,8 +1942,7 @@ def focus(runconfig, runconfig_path=""):
                     rc_grid.starting_range)
                 # perform noise estimation
                 # get valid subswath for noise-only range lines
-                idx_noise_abs = pulse_begin + np.asarray(idx_noise)
-                sbsw_noise = swaths[:, idx_noise_abs]
+                sbsw_noise = swaths[:, idx_noise]
                 pow_noise, sr_noise_rc = est_noise_power_in_focus(
                     data_noise, rc_grid.slant_ranges, sbsw_noise,
                     logger=log,
