@@ -985,12 +985,10 @@ def resample(raw: np.ndarray, t: np.ndarray,
     assert raw.shape == (grid.length, grid.width)
     assert len(t) == raw.shape[0]
     assert grid.ref_epoch == orbit.reference_epoch
-    # Compute uniform time samples for given raw data grid
-    out_times = t[0] + np.arange(grid.length) / grid.prf
     # Ranges are the same.
     r = grid.starting_range + grid.range_pixel_spacing * np.arange(grid.width)
     regridded = np.memmap(fn, mode="w+", shape=grid.shape, dtype=np.complex64)
-    for i, tout in enumerate(out_times):
+    for i, tout in enumerate(grid.sensing_times):
         # Get velocity for scaling autocorrelation function.  Won't change much
         # but update every pulse to avoid artifacts across images.
         v = np.linalg.norm(orbit.interpolate(tout)[1])
