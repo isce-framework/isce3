@@ -83,6 +83,7 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
         const std::optional<Window> window,
+        const std::optional<std::vector<double>>& pulse_times,
         float* height)
 {
     static constexpr double c = isce3::core::speed_of_light;
@@ -97,7 +98,22 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
     }
 
     // get input & output radar grid azimuth time & slant range
-    Linspace<double> in_azimuth_time = in_geometry.sensingTime();
+    std::vector<double> in_azimuth_time(in_geometry.gridLength());
+    if (pulse_times.has_value()) {
+        const std::vector<double>& t = pulse_times.value();
+        if (t.size() != in_geometry.gridLength()) {
+            throw isce3::except::LengthError(ISCE_SRCINFO(),
+                "got " + std::to_string(t.size()) + " pulse times for " +
+                std::to_string(in_geometry.gridLength()) +
+                " rows in input grid");
+        }
+        in_azimuth_time = t;
+    } else {
+        const auto nt = in_geometry.gridLength();
+        for (auto i = decltype(nt)(0); i < nt; ++i) {
+            in_azimuth_time[i] = in_geometry.sensingTime()[i];
+        }
+    }
     Linspace<double> in_slant_range = in_geometry.slantRange();
     Linspace<double> out_azimuth_time = out_geometry.sensingTime();
     Linspace<double> out_slant_range = out_geometry.slantRange();
@@ -190,12 +206,17 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
             // get coherent integration bounds (pulse indices)
             double tstart = t - 0.5 * cpi;
             double tstop = t + 0.5 * cpi;
-            double t0 = in_azimuth_time.first();
-            double dt = in_azimuth_time.spacing();
-            auto kstart = static_cast<int>(std::floor((tstart - t0) / dt));
-            auto kstop = static_cast<int>(std::ceil((tstop - t0) / dt));
-            kstart = std::max(kstart, 0);
-            kstop = std::min(kstop, in_azimuth_time.size());
+            // XXX Binary search requires log2(nt) comparisons.  A secant search
+            // would have much better asymptotic complexity for nearly uniform
+            // data, however it'd require floating point arithmetic.  If the PRI
+            // pattern repeats with period P (e.g., P=173 for NISAR DS2), then
+            // we could use one division to get within one period of the answer
+            // and then do log2(P) comparisons.
+            const auto begin = in_azimuth_time.begin(), end = in_azimuth_time.end();
+            auto kstart = static_cast<int>(std::distance(begin,
+                std::lower_bound(begin, end, tstart)));
+            auto kstop = static_cast<int>(std::distance(begin,
+                std::upper_bound(begin, end, tstop)));
 
             // estimate dry troposphere delay
             double tau_atm = 0.;

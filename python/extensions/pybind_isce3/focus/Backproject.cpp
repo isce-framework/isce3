@@ -93,6 +93,7 @@ void addbinding_backproject(py::module& m)
                 py::dict rdr2geo_params,
                 py::dict geo2rdr_params,
                 const std::optional<isce3::core::ChebyKernel<float>> window,
+                std::optional<py::array_t<double>> pulse_times,
                 std::optional<py::array_t<float, py::array::c_style>> height) {
 
             if (out.ndim() != 2) {
@@ -135,6 +136,17 @@ void addbinding_backproject(py::module& m)
                 height_data = h.mutable_data();
             }
 
+            std::optional<std::vector<double>> pulse_times_vec;
+            if (pulse_times.has_value()) {
+                const auto& t = pulse_times.value();
+                if (t.ndim() != 1) {
+                    throw InvalidArgument(ISCE_SRCINFO(),
+                        "expected 1d array of pulse times");
+                }
+                const double* buf = static_cast<const double*>(t.request().ptr);
+                pulse_times_vec = std::vector(buf, buf + t.size());
+            }
+
             DryTroposphereModel atm = parseDryTropoModel(dry_tropo_model);
 
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
@@ -145,7 +157,7 @@ void addbinding_backproject(py::module& m)
                 py::gil_scoped_release release;
                 err = backproject(out_data, out_geometry, in_data, in_geometry,
                     dem, fc, ds, kernel, atm, r2gparams, g2rparams, window,
-                    height_data);
+                    pulse_times_vec, height_data);
             }
             // TODO bind ErrorCode class.  For now return nonzero on failure.
             return err != ErrorCode::Success;
@@ -165,5 +177,6 @@ void addbinding_backproject(py::module& m)
             py::arg("rdr2geo_params") = py::dict(),
             py::arg("geo2rdr_params") = py::dict(),
             py::arg("window") = py::none(),
+            py::arg("pulse_times") = py::none(),
             py::arg("height") = py::none());
 }

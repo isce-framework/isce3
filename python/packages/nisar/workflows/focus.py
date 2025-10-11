@@ -1885,17 +1885,21 @@ def focus(runconfig, runconfig_path=""):
                 (rfi_likelihood, raw_clean.shape[0]))
             del raw_mm, rawfd
 
+            presum_times = np.array(raw_grid.sensing_times)
             uniform_pri = not raw.isDithered(channel_in.freq_id)
             if uniform_pri:
                 log.info("Uniform PRF, using raw data directly.")
                 regridded, regridfd = raw_clean, None
-            else:
+            elif cfg.processing.is_enabled.presum_blu:
                 regridfd = temp(f"_{frequency}{pol}_regrid.c8")
                 log.info(f"Resampling non-uniform raw data to {regridfd.name}.")
                 regridded = resample(raw_clean, raw_times, raw_grid, swaths,
                                     flown_orbit, dop[frequency], fn=regridfd,
                                     L=cfg.processing.nominal_antenna_size.azimuth)
-
+            else:
+                log.info("Using non-uniform pulse times without any"
+                    " gap-filling or resampling step.")
+                presum_times = raw_times
 
             # Do range compression.
             rc, rc_grid, shift, deramp_rc = prep_rangecomp(cfg, raw, raw_grid,
@@ -1910,15 +1914,13 @@ def focus(runconfig, runconfig_path=""):
                                         el_lut=el_lut, max_p2p_gain=limit)
 
                 log.info("Precomputing antenna patterns")
-                i = np.arange(rc_grid.shape[0])
-                ti = np.array(rc_grid.sensing_start + i / rc_grid.prf)
-
                 spacing = cfg.processing.elevation_antenna_pattern.spacing
                 span = rc_grid.slant_ranges[-1] - rc_grid.slant_ranges[0]
                 nbins = math.ceil(span / spacing) + 1
                 pat_ranges = isce3.core.Linspace(rc_grid.slant_ranges[0], spacing, nbins)
-                patterns = antpat.form_pattern(
-                    ti, pat_ranges, nearest=not uniform_pri, txrx_pols=[pol])
+                patterns = antpat.form_pattern(presum_times, pat_ranges,
+                    nearest=not uniform_pri and cfg.processing.is_enabled.presum,
+                    txrx_pols=[pol])
 
             fd = temp(f"_{frequency}{pol}_rc.c8")
             log.info(f"Writing range compressed data to {fd.name}")
@@ -2078,7 +2080,7 @@ def focus(runconfig, runconfig_path=""):
                             channel_out.band.center, azres,
                             kernel, atmos, get_rdr2geo_params(cfg),
                             get_geo2rdr_params(cfg, flown_orbit), window=azwin,
-                            height=hgt)
+                            pulse_times=presum_times, height=hgt)
                 if err:
                     log.warning("azcomp block contains some invalid pixels")
                 writer.queue_write(z, block)
