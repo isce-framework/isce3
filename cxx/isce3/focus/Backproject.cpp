@@ -216,7 +216,7 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
             auto kstart = static_cast<int>(std::distance(begin,
                 std::lower_bound(begin, end, tstart)));
             auto kstop = static_cast<int>(std::distance(begin,
-                std::upper_bound(begin, end, tstop)));
+                std::upper_bound(begin + kstart, end, tstop)));
 
             // estimate dry troposphere delay
             double tau_atm = 0.;
