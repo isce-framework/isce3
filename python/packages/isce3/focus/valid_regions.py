@@ -235,9 +235,10 @@ def _flatten_nested_lists(list_of_lists):
     return [item for _list in list_of_lists for item in _list]
 
 
-def transform_polygons_raw2image(*, raw_polygon_lists, orbit, lookside,
+def transform_polygons_raw2image(*, raw_polygon_lists, flown_orbit, lookside,
                                  native_doppler, wavelength,
                                  image_grid_doppler=isce3.core.LUT2d(),
+                                 image_grid_orbit=None,
                                  dem=isce3.geometry.DEMInterpolator(),
                                  max_segment_length=5000.0,
                                  rdr2geo_params=dict(),
@@ -251,7 +252,7 @@ def transform_polygons_raw2image(*, raw_polygon_lists, orbit, lookside,
     raw_polygon_lists : list[list[shapely.Polygon]]
         List of valid data regions for each file/observation specified in
         raw radar (x=range, y=time) coordinates (e.g., native Doppler).
-    orbit : isce3.core.Orbit
+    flown_orbit : isce3.core.Orbit
         Trajectory of radar antenna phase center.
     lookside : isce3.core.LookSide
         Side that radar observes (Left or Right)
@@ -263,6 +264,8 @@ def transform_polygons_raw2image(*, raw_polygon_lists, orbit, lookside,
     image_grid_doppler : isce3.core.LUT2d, optional
         Doppler (in Hz) associated with focused image grid geometry.
         Defaults to zero-Doppler (NISAR convention).
+    image_grid_orbit: isce3.core.Orbit, optional
+        Orbit associated with output image grid.  Defaults to `flown_orbit`.
     dem : isce3.geometry.DEMInterpolator, optional
         Digital elevation model.  Defaults to 0 m above WGS84 ellipsoid.
     max_segment_length : float, optional
@@ -283,7 +286,7 @@ def transform_polygons_raw2image(*, raw_polygon_lists, orbit, lookside,
     # length units so we can segmentize polygon somewhat uniformly.
     mid_time = np.mean([poly.centroid.y for poly in _flatten_nested_lists(
         raw_polygon_lists)])
-    _, vel = orbit.interpolate(mid_time)
+    _, vel = flown_orbit.interpolate(mid_time)
     vs = np.linalg.norm(vel)
 
     # For debugging, it's more intuitive if we remove the time offset.
@@ -318,10 +321,11 @@ def transform_polygons_raw2image(*, raw_polygon_lists, orbit, lookside,
             # (always zero for NISAR).
             slc_coords = []
             for (raw_range, raw_time) in zip(*raw_poly.boundary.coords.xy):
-                t, r = isce3.geometry.rdr2rdr(raw_time, raw_range, orbit,
+                t, r = isce3.geometry.rdr2rdr(raw_time, raw_range, flown_orbit,
                     lookside, native_doppler, wavelength, dem,
                     ellipsoid=dem.ellipsoid,
                     doppler_out=image_grid_doppler,
+                    orbit_out=image_grid_orbit,
                     rdr2geo_params=rdr2geo_params,
                     geo2rdr_params=geo2rdr_params)
                 slc_coords.append((r, t))
@@ -433,10 +437,11 @@ def rasterize_subswath_polygons(slc_polygon_lists, slc_grid, threshold=2):
     return swaths
 
 
-def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
+def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, flown_orbit,
                            native_doppler, azres, grid,
                            dem=isce3.geometry.DEMInterpolator(),
                            image_grid_doppler=isce3.core.LUT2d(),
+                           image_grid_orbit=None,
                            rdr2geo_params=dict(),
                            geo2rdr_params=dict(), max_segment_length=5000,
                            convolution_mode="valid",
@@ -453,7 +458,7 @@ def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
         reference epoch.
     chirp_durations : list[float]
         Duration of transmit chirp for each raw data file.
-    orbit : isce3.core.Orbit
+    flown_orbit : isce3.core.Orbit
         Trajectory of radar antenna phase center.
     native_doppler : isce3.core.LUT2d
         Doppler centroid in Hz.  Time should be referenced to the same epoch
@@ -467,6 +472,8 @@ def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
     image_grid_doppler : isce3.core.LUT2d, optional
         Doppler (in Hz) associated with focused image grid geometry.
         Defaults to zero-Doppler (NISAR convention).
+    image_grid_orbit: isce3.core.Orbit, optional
+        Orbit associated with output image grid.  Defaults to `flown_orbit`.
     rdr2geo_params : dict, optional
         Parameters for rdr2geo_bracket
     geo2rdr_params : dict, optional
@@ -497,15 +504,17 @@ def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
         of the focused image grid.
     """
     raw_polygons = get_raw_sub_swath_polygons(raw_bbox_lists=raw_bbox_lists,
-        chirp_durations=chirp_durations, orbit=orbit,
+        chirp_durations=chirp_durations, orbit=flown_orbit,
         wavelength=grid.wavelength, azres=azres, prf=grid.prf,
         ellipsoid=dem.ellipsoid, convolution_mode=convolution_mode,
         allowed_azimuth_gap=allowed_azimuth_gap)
 
     slc_polygons = transform_polygons_raw2image(raw_polygon_lists=raw_polygons,
-        orbit=orbit, lookside=grid.lookside, native_doppler=native_doppler,
+        flown_orbit=flown_orbit, lookside=grid.lookside,
+        native_doppler=native_doppler,
         wavelength=grid.wavelength, dem=dem,
         image_grid_doppler=image_grid_doppler,
+        image_grid_orbit=image_grid_orbit,
         max_segment_length=max_segment_length,
         rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params)
 

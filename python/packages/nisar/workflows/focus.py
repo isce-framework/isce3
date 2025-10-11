@@ -477,7 +477,8 @@ def make_output_grid(cfg: Struct,
                      orbit: Orbit,
                      fc_ref: float, doppler: LUT2d,
                      chirplen_meters: float,
-                     dem: isce3.geometry.DEMInterpolator) -> RadarGridParameters:
+                     dem: isce3.geometry.DEMInterpolator,
+                     ref_orbit: Optional[Orbit] = None) -> RadarGridParameters:
     """
     Given the available raw data extent (in slow time and slant range) figure
     out a reasonable output extent that:
@@ -492,7 +493,7 @@ def make_output_grid(cfg: Struct,
     cfg : Struct
         RSLC runconfig data.
     epoch : DateTime
-        Reference for all time tags.
+        Reference for given time tags.
     t0 : float
         First pulse time available in all raw data, in seconds since epoch.
     t1 : float
@@ -508,7 +509,7 @@ def make_output_grid(cfg: Struct,
     side : {"left", "right"} or isce3.core.LookSide
         Radar look direction
     orbit : Orbit
-        Radar orbit
+        Radar orbit (actual trajectory of sensor)
     fc_ref : float
         Radar center frequency corresponding to `doppler` object.  Also
         used to determine CPI and populate wavelength in output grid object.
@@ -520,6 +521,10 @@ def make_output_grid(cfg: Struct,
     dem : isce3.geometry.DEMInterpolator
         Digital elevation model containing height above WGS84 ellipsoid,
         in meters.
+    ref_orbit : Orbit, optional
+        Orbit that defines reference track of output image grid.
+        Grid time tags will be relative to ref_orbit.reference_epoch.
+        Defaults to flown orbit.
 
     Returns
     -------
@@ -527,6 +532,7 @@ def make_output_grid(cfg: Struct,
         Zero-Doppler grid suitable for focusing.
     """
     assert orbit.reference_epoch == epoch
+    ref_orbit = ref_orbit if ref_orbit is not None else orbit
     ac = cfg.processing.azcomp
     wavelength = isce3.core.speed_of_light / fc_ref
 
@@ -549,11 +555,11 @@ def make_output_grid(cfg: Struct,
     # enclose the image.  Take extrema as default processing box.
     # Define a capture to save some typing
     zerodop = isce3.core.LUT2d()
-    def reskew_to_zerodop(t, r):
+    def reskew_to_ref_geom(t, r):
         return isce3.geometry.rdr2rdr(t, r, orbit, side, doppler, wavelength,
-            dem, doppler_out=zerodop,
+            dem, doppler_out=zerodop, orbit_out=ref_orbit,
             rdr2geo_params=get_rdr2geo_params(cfg),
-            geo2rdr_params=get_geo2rdr_params(cfg, orbit))
+            geo2rdr_params=get_geo2rdr_params(cfg, ref_orbit))
 
     # One annoying case is where the orbit data covers the raw pulse times
     # and nothing else.  The code can crash when trying to compute positions on
@@ -568,8 +574,8 @@ def make_output_grid(cfg: Struct,
         # backwards).
         while (tstop - (t + offset)) * step > 0:
             try:
-                ta, ra = reskew_to_zerodop(t + offset, r0)
-                tb, rb = reskew_to_zerodop(t + offset, r1)
+                ta, ra = reskew_to_ref_geom(t + offset, r0)
+                tb, rb = reskew_to_ref_geom(t + offset, r1)
                 return offset, ta, ra, tb, rb
             except RuntimeError:
                 log.info(f"nudging by step={step}")
@@ -595,13 +601,15 @@ def make_output_grid(cfg: Struct,
     r0z = max(ra, rc)
     t1z = min(tc, td)
     r1z = min(rb, rd)
-    log.debug(f"Reskew time offset at start {t0z - t0 - offset0} s")
-    log.debug(f"Reskew time offset at end {t1z - t1 - offset1} s")
+    # This only makes sense if time tags are on the same scale.
+    if orbit.reference_epoch == ref_orbit.reference_epoch:
+        log.debug(f"Reskew time offset at start {t0z - t0 - offset0} s")
+        log.debug(f"Reskew time offset at end {t1z - t1 - offset1} s")
     log.debug(f"Reskew range offset at start {r0z - r0} m")
     log.debug(f"Reskew range offset at end {r1z - r1} m")
 
-    dt0 = epoch + isce3.core.TimeDelta(t0z)
-    dt1 = epoch + isce3.core.TimeDelta(t1z)
+    dt0 = ref_orbit.reference_epoch + isce3.core.TimeDelta(t0z)
+    dt1 = ref_orbit.reference_epoch + isce3.core.TimeDelta(t1z)
     log.info(f"Approximate fully focusable time interval is [{dt0}, {dt1}]")
     log.info(f"Approximate fully focusable range interval is [{r0z}, {r1z}]")
 
@@ -621,7 +629,7 @@ def make_output_grid(cfg: Struct,
     # to snap the frequencyA grid to the coarser frequencyB spacing.
     dt0 = isce3.math.snap_datetime(dt0,
         p.time_snap_interval if p.time_snap_interval is not None else 1 / prf)
-    t0z = (dt0 - epoch).total_seconds()
+    t0z = (dt0 - ref_orbit.reference_epoch).total_seconds()
     r0z = isce3.math.snap(r0z,
         p.range_snap_interval if p.range_snap_interval is not None else dr)
 
@@ -629,9 +637,9 @@ def make_output_grid(cfg: Struct,
     log.info(f"Snapped default start range to {r0z} m")
 
     if p.start_time:
-        t0z = (DateTime(p.start_time) - epoch).total_seconds()
+        t0z = (DateTime(p.start_time) - ref_orbit.reference_epoch).total_seconds()
     if p.end_time:
-        t1z = (DateTime(p.end_time) - epoch).total_seconds()
+        t1z = (DateTime(p.end_time) - ref_orbit.reference_epoch).total_seconds()
     r0z = p.start_range if (p.start_range is not None) else r0z
     r1z = p.end_range if (p.end_range is not None) else r1z
 
@@ -639,7 +647,7 @@ def make_output_grid(cfg: Struct,
     nt = round((t1z - t0z) * prf)
     assert (nr > 0) and (nt > 0)
     return RadarGridParameters(t0z, wavelength, prf, r0z, dr, side, nt, nr,
-                               epoch)
+                               ref_orbit.reference_epoch)
 
 
 def get_rdr2geo_params(cfg: Struct) -> dict:
@@ -688,7 +696,7 @@ def get_geo2rdr_params(cfg: Struct, orbit: Optional[Orbit] = None) -> dict:
     geo2rdr_params : dict
         A dict with the three keys {"time_start", "time_end", "tol_aztime"}
     """
-    geo2rdr_params = vars(cfg.processing.geo2rdr)
+    geo2rdr_params = vars(cfg.processing.geo2rdr).copy()
     t0 = geo2rdr_params.get("time_start", None)
     t1 = geo2rdr_params.get("time_end", None)
     if orbit is not None:
@@ -705,7 +713,8 @@ BlockPlan = list[tuple[Selection2d, TimeBounds]]
 
 def plan_processing_blocks(cfg: Struct, grid: RadarGridParameters,
                            doppler: LUT2d, dem: isce3.geometry.DEMInterpolator,
-                           orbit: Orbit, pad: float = 0.1) -> BlockPlan:
+                           flown_orbit: Orbit, ref_orbit: Optional[Orbit] = None,
+                           pad: float = 0.1) -> BlockPlan:
     """
     Subdivide output grid into processing blocks and find time bounds of raw
     data needed to focus each one.
@@ -742,10 +751,11 @@ def plan_processing_blocks(cfg: Struct, grid: RadarGridParameters,
             t = grid.sensing_start + u / grid.prf
             r = grid.starting_range + v * grid.range_pixel_spacing
             try:
-                traw, _ = isce3.geometry.rdr2rdr(t, r, orbit, grid.lookside,
-                    zerodop, grid.wavelength, dem, doppler_out=doppler,
+                traw, _ = isce3.geometry.rdr2rdr(t, r, ref_orbit,
+                    grid.lookside, zerodop, grid.wavelength, dem,
+                    doppler_out=doppler, orbit_out=flown_orbit,
                     rdr2geo_params=get_rdr2geo_params(cfg),
-                    geo2rdr_params=get_geo2rdr_params(cfg, orbit))
+                    geo2rdr_params=get_geo2rdr_params(cfg, flown_orbit))
             except RuntimeError as e:
                 dt = grid.ref_epoch + isce3.core.TimeDelta(t)
                 log.error(f"Reskew zero-to-native failed at t={dt} r={r}")
@@ -753,7 +763,7 @@ def plan_processing_blocks(cfg: Struct, grid: RadarGridParameters,
             raw_times.append(traw)
         sub_grid = grid[rows, cols]
         cpi = isce3.focus.get_sar_duration(sub_grid.sensing_mid,
-                                    sub_grid.end_range, orbit,
+                                    sub_grid.end_range, ref_orbit,
                                     isce3.core.Ellipsoid(),
                                     ac.azimuth_resolution, sub_grid.wavelength)
         cpi *= 1.0 + pad
@@ -1486,7 +1496,8 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
     return range_spacings
 
 
-def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
+def get_focused_sub_swaths(rawlist, out_chan, grid, flown_orbit, doppler, dem,
+                           azres, ref_orbit=None,
                            rdr2geo_params=dict(), geo2rdr_params=dict(),
                            ignore_failure=False):
     """
@@ -1502,7 +1513,7 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         using mixed-mode logic).
     grid : RadarGridParameters
         Grid for focused image (zero-Doppler).
-    orbit : Orbit
+    flown_orbit : Orbit
         Trajectory of antenna phase center.  Its time span must cover the entire
         collection of raw data plus any reskew time offset between the native-
         and zero-Doppler radar coordinate systems.
@@ -1512,6 +1523,8 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         Digital elevation model.
     azres : float
         Processed azimuth resolution, in meters.
+    ref_orbit : isce3.core.Orbit, optional
+        Orbit associated with output image grid.  Defaults to `flown_orbit`.
     rdr2geo_params : dict
         Parameters for rdr2geo_bracket
     geo2rdr_params : dict
@@ -1530,13 +1543,14 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         where nswath is the number of valid sub-swaths and npulse is the length
         of the focused image grid.
     """
+    ref_orbit = ref_orbit if ref_orbit is not None else flown_orbit
     raw_bbox_lists = []
     chirp_durations = []
     for raw in rawlist:
         raw_chan = find_overlapping_channel(raw, out_chan)
 
         freq = raw_chan.freq_id
-        bboxes = raw.getSubSwathBboxes(freq, epoch=orbit.reference_epoch)
+        bboxes = raw.getSubSwathBboxes(freq, epoch=flown_orbit.reference_epoch)
         raw_bbox_lists.append(bboxes)
 
         txpol = raw_chan.pol[0]
@@ -1544,7 +1558,8 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
 
     try:
         swaths = isce3.focus.get_focused_sub_swaths(raw_bbox_lists,
-            chirp_durations, orbit, doppler, azres, grid, dem=dem,
+            chirp_durations, flown_orbit, doppler, azres, grid, dem=dem,
+            image_grid_orbit=ref_orbit,
             rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params)
     except Exception as e:
         if ignore_failure:
@@ -1601,14 +1616,19 @@ def focus(runconfig, runconfig_path=""):
     grid_epoch, t0, t1, r0, r1 = get_total_grid_bounds(rawnames)
     log.info(f"Raw data time spans [{t0}, {t1}] seconds since {grid_epoch}.")
     log.info(f"Raw data range swath spans [{r0}, {r1}] meters.")
-    orbit = get_orbit(cfg)
+    flown_orbit = get_orbit(cfg)
     attitude = get_attitude(cfg)
+    # TODO cropping reference orbit is potentially quite tricky...
+    # Maybe only crop if start/end time are given?
+    fn = cfg.processing.output_grid.reference_orbit
+    ref_orbit = (nisar.products.readers.orbit.load_orbit_from_xml(fn)
+        if fn is not None else flown_orbit)
     # Need orbit and attitude over whole raw domain in order to generate
     # Doppler LUT.  Check explicitly in order to provide a sensible error.
     log.info("Verifying ephemeris covers time span of raw data.")
-    require_ephemeris_overlap(orbit, t0, t1, "Orbit")
+    require_ephemeris_overlap(flown_orbit, t0, t1, "Orbit")
     require_ephemeris_overlap(attitude, t0, t1, "Attitude")
-    fc_ref, dop_ref = make_doppler(cfg, epoch=grid_epoch, orbit=orbit,
+    fc_ref, dop_ref = make_doppler(cfg, epoch=grid_epoch, orbit=flown_orbit,
         attitude=attitude, dem=dem)
 
     max_chirplen = get_max_chirp_duration(cfg) * isce3.core.speed_of_light / 2
@@ -1617,11 +1637,12 @@ def focus(runconfig, runconfig_path=""):
     max_prf = get_max_prf(rawlist)
     side = require_constant_look_side(rawlist)
     ref_grid = make_output_grid(cfg, grid_epoch, t0, t1, max_prf, r0, r1, dr,
-                                side, orbit, fc_ref, dop_ref, max_chirplen, dem)
+                                side, flown_orbit, fc_ref, dop_ref,
+                                max_chirplen, dem, ref_orbit=ref_orbit)
 
     wvl_ref = isce3.core.speed_of_light / fc_ref
-    el_lut, inc_lut, _ = make_los_luts(orbit, attitude, side, dop_ref, wvl_ref,
-                                       dem, get_rdr2geo_params(cfg))
+    el_lut, inc_lut, _ = make_los_luts(flown_orbit, attitude, side, dop_ref,
+                                       wvl_ref, dem, get_rdr2geo_params(cfg))
     beta0_lut, sigma0_lut, gamma0_lut = make_cal_luts(inc_lut)
 
     # Frequency A/B specific setup for output grid, doppler, and blocks.
@@ -1636,9 +1657,10 @@ def focus(runconfig, runconfig_path=""):
         # Doppler depends on center frequency.
         dop[frequency] = scale_doppler(dop_ref, band.center / fc_ref)
         blocks_bounds[frequency] = plan_processing_blocks(cfg, ogrid[frequency],
-                                        dop[frequency], dem, orbit)
+                                        dop[frequency], dem, flown_orbit,
+                                        ref_orbit)
         # So does output pixel area (beta0 convention).
-        daz, _ = get_radar_grid_nominal_ground_spacing(ogrid[frequency], orbit)
+        daz, _ = get_radar_grid_nominal_ground_spacing(ogrid[frequency], ref_orbit)
         areas[frequency] = daz * ogrid[frequency].range_pixel_spacing
 
     # NOTE SAR duration depends on frequency, so check all subbands.
@@ -1646,7 +1668,7 @@ def focus(runconfig, runconfig_path=""):
     log.info(f"Need to process raw data time span [{proc_begin}, {proc_end}]"
              f" seconds since {grid_epoch} to produce requested output grid.")
 
-    polygon = isce3.geometry.get_geo_perimeter_wkt(ref_grid, orbit,
+    polygon = isce3.geometry.get_geo_perimeter_wkt(ref_grid, ref_orbit,
                                                    zerodop, dem)
 
     output_slc_path = os.path.abspath(cfg.product_path_group.sas_output_file)
@@ -1660,8 +1682,9 @@ def focus(runconfig, runconfig_path=""):
     slc = SLC(output_slc_path, mode="w", product=product,
         fs_strategy=cfg.output.fs_strategy,
         fs_page_size=cfg.output.fs_page_size)
-    slc.set_orbit(orbit)
-    slc.set_attitude(attitude, orbit)
+    slc.set_orbit(ref_orbit)
+    # TODO write flown_orbit to file?  Check how UAVSAR does this.
+    slc.set_attitude(attitude, flown_orbit)  # different reference_epoch ...
 
     id_data = get_identification_data_from_runconfig(cfg)
     id_data.update(get_identification_data_from_raw(rawlist))
@@ -1697,7 +1720,7 @@ def focus(runconfig, runconfig_path=""):
             f"of two of the mid-swath range ({og.mid_range} m).  Range "
             "fading correction will impart a large scaling.")
 
-    vs, _ = isce3.focus.get_radar_velocities(orbit)
+    vs, _ = isce3.focus.get_radar_velocities(flown_orbit)
     azenv = isce3.focus.predict_azimuth_envelope(azres, og.prf, vs,
         L=cfg.processing.nominal_antenna_size.azimuth)
     azimuth_bandwidth = vs / azres
@@ -1706,7 +1729,7 @@ def focus(runconfig, runconfig_path=""):
     for frequency, band in get_bands(common_mode).items():
         rgres = isce3.core.speed_of_light / (2 * band.width)
         oversample = rgres / og.range_pixel_spacing
-        slc.set_parameters(dop[frequency], orbit.reference_epoch, frequency,
+        slc.set_parameters(dop[frequency], ref_orbit.reference_epoch, frequency,
             cfg.processing.range_window.kind, cfg.processing.range_window.shape,
             oversample, azenv, dump_config_str(cfg))
         og = ogrid[frequency]
@@ -1718,26 +1741,29 @@ def focus(runconfig, runconfig_path=""):
             rawlist, chan)
 
         log.info("computing valid swaths")
-        valid_swaths = get_focused_sub_swaths(rawlist, chan, og, orbit,
-            dop[frequency], dem, azres, rdr2geo_params=get_rdr2geo_params(cfg),
+        valid_swaths = get_focused_sub_swaths(rawlist, chan, og, flown_orbit,
+            dop[frequency], dem, azres, ref_orbit=ref_orbit,
+            rdr2geo_params=get_rdr2geo_params(cfg),
             geo2rdr_params=get_geo2rdr_params(cfg), ignore_failure=False)
 
-        slc.update_swath(og, orbit, band.width, frequency,  azimuth_bandwidth,
-            acquired_prf, acquired_bw, acquired_fc, valid_swaths)
+        slc.update_swath(og, ref_orbit, band.width, frequency,
+            azimuth_bandwidth, acquired_prf, acquired_bw, acquired_fc,
+            valid_swaths)
         cal = get_calibration(cfg, band.width)
         slc.set_calibration(cal, frequency)
 
         # add calibration section for each polarization
         for pol in pols:
             slc.add_calibration_section(frequency, pol, og.sensing_times,
-                                        orbit.reference_epoch, og.slant_ranges,
+                                        ref_orbit.reference_epoch,
+                                        og.slant_ranges,
                                         beta0_lut, sigma0_lut, gamma0_lut)
 
 
     freq = next(iter(get_bands(common_mode)))
-    slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
+    slc.set_geolocation_grid(ref_orbit, ogrid[freq], dop[freq],
                              epsg=cfg.processing.metadata_cube_epsg, dem=dem,
-                             **get_geo2rdr_params(cfg, orbit))
+                             **get_geo2rdr_params(cfg, ref_orbit))
 
     # Scratch directory for intermediate outputs
     scratch_dir = os.path.abspath(cfg.product_path_group.scratch_path)
@@ -1866,8 +1892,8 @@ def focus(runconfig, runconfig_path=""):
             else:
                 regridfd = temp(f"_{frequency}{pol}_regrid.c8")
                 log.info(f"Resampling non-uniform raw data to {regridfd.name}.")
-                regridded = resample(raw_clean, raw_times, raw_grid, swaths, orbit,
-                                    dop[frequency], fn=regridfd,
+                regridded = resample(raw_clean, raw_times, raw_grid, swaths,
+                                    flown_orbit, dop[frequency], fn=regridfd,
                                     L=cfg.processing.nominal_antenna_size.azimuth)
 
 
@@ -1880,7 +1906,7 @@ def focus(runconfig, runconfig_path=""):
             if cfg.processing.is_enabled.eap:
                 limit = cfg.processing.eap_dynamic_range_limit_db
                 antpat = AntennaPattern(raw, dem, antparser,
-                                        instparser, orbit, attitude,
+                                        instparser, flown_orbit, attitude,
                                         el_lut=el_lut, max_p2p_gain=limit)
 
                 log.info("Precomputing antenna patterns")
@@ -1968,7 +1994,7 @@ def focus(runconfig, runconfig_path=""):
                 # range line.
                 tm_mid_noise = raw_times[idx_noise[nrgl_noise // 2]]
                 sar_dur_near = isce3.focus.get_sar_duration(
-                    tm_mid_noise, rc_grid.starting_range, orbit,
+                    tm_mid_noise, rc_grid.starting_range, flown_orbit,
                     isce3.core.Ellipsoid(), azres, rc_grid.wavelength
                     )
                 n_pulse_sar =  sar_dur_near * rc_grid.prf
@@ -2032,7 +2058,8 @@ def focus(runconfig, runconfig_path=""):
                 log.debug(f"Dumping height to {fd_hgt.name} with shape {shape}")
 
             # Do azimuth compression.
-            igeom = isce3.container.RadarGeometry(rc_grid, orbit, dop[frequency])
+            igeom = isce3.container.RadarGeometry(rc_grid, flown_orbit,
+                                        dop[frequency])
 
             for block, (t0, t1) in blocks_bounds[frequency]:
                 description = f"(i, j) = ({block[0].start}, {block[1].start})"
@@ -2044,13 +2071,13 @@ def focus(runconfig, runconfig_path=""):
                     continue
                 log.info(f"Azcomp block at {description}")
                 bgrid = ogrid[frequency][block]
-                ogeom = isce3.container.RadarGeometry(bgrid, orbit, zerodop)
+                ogeom = isce3.container.RadarGeometry(bgrid, ref_orbit, zerodop)
                 z = np.zeros(bgrid.shape, 'c8')
                 hgt = hgt_mm[block] if dump_height else None
                 err = backproject(z, ogeom, rcfile.data, igeom, dem,
                             channel_out.band.center, azres,
                             kernel, atmos, get_rdr2geo_params(cfg),
-                            get_geo2rdr_params(cfg, orbit), window=azwin,
+                            get_geo2rdr_params(cfg, flown_orbit), window=azwin,
                             height=hgt)
                 if err:
                     log.warning("azcomp block contains some invalid pixels")

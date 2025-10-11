@@ -96,15 +96,6 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
     }
 
-    // XXX not very nice to throw here instead of simply adjusting the epoch
-    // XXX but doing so at this point would require making a copy of the input
-    // XXX radar grid, orbit, and Doppler - so this is just a stopgap for now
-    if (out_geometry.referenceEpoch() != in_geometry.referenceEpoch()) {
-        std::string errmsg = "input reference epoch must match output "
-                             "reference epoch";
-        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
-    }
-
     // get input & output radar grid azimuth time & slant range
     Linspace<double> in_azimuth_time = in_geometry.sensingTime();
     Linspace<double> in_slant_range = in_geometry.slantRange();

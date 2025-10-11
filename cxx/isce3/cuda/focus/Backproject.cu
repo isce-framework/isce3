@@ -491,13 +491,6 @@ ErrorCode backproject(std::complex<float>* out,
                       const std::optional<DeviceWindowView> window,
                       float* height)
 {
-    // XXX input reference epoch must match output reference epoch
-    if (out_geometry.referenceEpoch() != in_geometry.referenceEpoch()) {
-        std::string errmsg = "input reference epoch must match output "
-                             "reference epoch";
-        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
-    }
-
     // init device variable to return error codes from device code
     thrust::device_vector<ErrorCode> errc(1, ErrorCode::Success);
 

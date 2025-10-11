@@ -96,6 +96,10 @@ runconfig:
 
     processing:
       output_grid:
+        # Orbit that defines track used for output image grid.
+        # Defaults to flown track.
+        reference_orbit: str(required=False)
+
         # Azimuth bounds of output SLC.  Defaults to max fully-focused region.
         # Marked as required since NISAR PGE must populate start/end that align
         # with frame boundaries.
@@ -315,11 +319,15 @@ rdr2geo_options:
 geo2rdr_options:
   # Allowable azimuth time error in s
   tol_aztime: num(required=False)
-  # Earliest time in search interval, in s past orbit reference epoch
+  # Earliest time in search interval, in s past reference epoch
+  # of `reference_orbit`
   # null for automatic selection
+  # XXX broken if reference_orbit != orbit
   time_start: num(required=False)
-  # Latest time in search interval, in s past orbit reference epoch
+  # Latest time in search interval, in s past reference epoch
+  # of `reference_orbit`
   # null for automatic selection
+  # XXX broken if reference_orbit != orbit
   time_end: num(required=False)
 
 nesz_options:

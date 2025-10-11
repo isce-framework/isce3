@@ -107,6 +107,10 @@ runconfig:
 
         processing:
             output_grid:
+                # Orbit that defines track used for output image grid.
+                # Defaults to flown track.
+                reference_orbit: null
+
                 # Azimuth bounds of output SLC, optional.
                 # Defaults to extent of raw data minus sythetic aperture and
                 # shifted by squint.
@@ -322,9 +326,11 @@ runconfig:
                 tol_aztime: 1e-7
                 # Earliest time in search interval, in s past orbit reference
                 # epoch.  null for automatic selection
+                # XXX broken if reference_orbit != orbit
                 time_start: null
                 # Latest time in search interval, in s past orbit reference
                 # epoch.  null for automatic selection
+                # XXX broken if reference_orbit != orbit
                 time_end: null
 
             doppler:
