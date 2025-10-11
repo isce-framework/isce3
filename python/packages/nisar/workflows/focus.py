@@ -27,7 +27,8 @@ import nisar
 import numpy as np
 import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
-from isce3.focus import make_los_luts, fill_gaps, make_cal_luts, Notch
+from isce3.focus import (make_los_luts, fill_gaps, make_cal_luts, Notch,
+    get_window_approximation)
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import RadarGridParameters
@@ -1551,6 +1552,15 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     return swaths
 
 
+def get_azimuth_window(cfg: Struct):
+    kind, shape = check_window_input(cfg.processing.azimuth_window,
+        msg="Azimuth window  ")
+    if (kind == "cosine" and shape == 1) or (kind == "kaiser" and shape == 0):
+        log.info("Azimuth window disabled based on shape parameter.")
+        return None
+    return get_window_approximation(kind, shape)
+
+
 def focus(runconfig, runconfig_path=""):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -1746,6 +1756,7 @@ def focus(runconfig, runconfig_path=""):
 
 
     rfi_results = defaultdict(list)
+    azwin = get_azimuth_window(cfg)
 
     # main processing loop
     for channel_out in common_mode:
@@ -2015,7 +2026,8 @@ def focus(runconfig, runconfig_path=""):
                 err = backproject(z, ogeom, rcfile.data, igeom, dem,
                             channel_out.band.center, azres,
                             kernel, atmos, get_rdr2geo_params(cfg),
-                            get_geo2rdr_params(cfg, orbit), height=hgt)
+                            get_geo2rdr_params(cfg, orbit), window=azwin,
+                            height=hgt)
                 if err:
                     log.warning("azcomp block contains some invalid pixels")
                 writer.queue_write(z, block)

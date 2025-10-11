@@ -4,4 +4,5 @@ from .sar_duration import (get_sar_duration, get_radar_velocities,
 from .valid_regions import (RadarPoint, RadarBoundingBox,
 	get_focused_sub_swaths, fill_gaps)
 from .calibration_luts import make_los_luts, make_cal_luts
+from .cheby_windows import get_window_approximation, WindowKind
 from .notch import Notch, FrequencyDomain
