@@ -328,6 +328,7 @@ __global__ void estimateDryTropoDelayTSX(double* tau_atm, const Vec3* p,
  * \param[in]  v_in         Platform velocity at each target's azimuth time (m)
  * \param[in]  n            Number of targets
  * \param[in]  azimuth_time Azim. time of each pulse w.r.t. reference epoch (s)
+ * \param[in]  np           Number of pulses
  * \param[in]  wvl          Radar wavelength (m)
  * \param[in]  ds           Desired azimuth resolution (m)
  */
@@ -335,7 +336,7 @@ __global__ void getCPIBounds(int* kstart_out, int* kstop_out,
                              const double* t_in, const double* r_in,
                              const Vec3* x_in, const Vec3* p_in,
                              const Vec3* v_in, const size_t n,
-                             const Linspace<double> azimuth_time,
+                             const double* azimuth_time, const size_t np,
                              const double wvl, const double ds)
 {
     // thread index (1d grid of 1d blocks)
@@ -365,13 +366,12 @@ __global__ void getCPIBounds(int* kstart_out, int* kstop_out,
     const double tstop = t + 0.5 * cpi;
 
     // convert CPI bounds to pulse indices
-    const double t0 = azimuth_time.first();
-    const double dt = azimuth_time.spacing();
-    const auto kstart = static_cast<int>(std::floor((tstart - t0) / dt));
-    const auto kstop = static_cast<int>(std::ceil((tstop - t0) / dt));
+    thrust::device_ptr<double> begin(azimuth_time);
+    const auto kstart = thrust::lower_bound(begin, begin + np, tstart);
+    const auto kstop = thrust::upper_bound(begin + kstart, begin + np, tstop);
 
-    kstart_out[tid] = std::max(kstart, 0);
-    kstop_out[tid] = std::min(kstop, azimuth_time.size());
+    kstart_out[tid] = static_cast<int>(thrust::distance(begin, kstart));
+    kstop_out[tid] = static_cast<int>(thrust::distance(begin, kstop));
 }
 
 /**
@@ -489,6 +489,7 @@ ErrorCode backproject(std::complex<float>* out,
                       const Rdr2GeoBracketParams& rdr2geo_params,
                       const Geo2RdrBracketParams& geo2rdr_params, int batch,
                       const std::optional<DeviceWindowView> window,
+                      thrust::device_vector<double> pulse_times,
                       float* height)
 {
     // init device variable to return error codes from device code
@@ -641,7 +642,7 @@ ErrorCode backproject(std::complex<float>* out,
         getCPIBounds<<<grid, block>>>(
                 kstart.data().get(), kstop.data().get(), t.data().get(),
                 r.data().get(), x.data().get(), p.data().get(), v.data().get(),
-                out_grid_size, in_azimuth_time, wvl, ds);
+                out_grid_size, pulse_times.data(), pulse_times.size(), wvl, ds);
 
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
@@ -713,6 +714,7 @@ ErrorCode backproject(std::complex<float>* out,
                       const Rdr2GeoBracketParams& rdr2geo_params,
                       const Geo2RdrBracketParams& geo2rdr_params, int batch,
                       const std::optional<HostWindow> window,
+                      const std::optional<std::vector<double>>& pulse_times,
                       float* height)
 {
     // copy inputs to device
@@ -729,40 +731,65 @@ ErrorCode backproject(std::complex<float>* out,
     }
     ErrorCode ec;
 
+    // don't bother with optional pulse times, just always force search
+    thrust::device_vector<double> d_pulse_times(in_geometry.gridLength());
+    if (pulse_times.has_value()) {
+        const std::vector<double>& t = pulse_times.value();
+        if (t.size() != in_geometry.gridLength()) {
+            throw isce3::except::LengthError(ISCE_SRCINFO(),
+                "got " + std::to_string(t.size()) + " pulse times for " +
+                std::to_string(in_geometry.gridLength()) +
+                " rows in input grid");
+        }
+        d_pulse_times = t;
+    } else {
+        const auto nt = in_geometry.gridLength();
+        std::vector<double> h_pulse_times(in_geometry.gridLength());
+        for (auto i = decltype(nt)(0); i < nt; ++i) {
+            h_pulse_times[i] = in_geometry.sensingTime()[i];
+        }
+        d_pulse_times = h_pulse_times;
+    }
+
     if (typeid(kernel) == typeid(HostBartlettKernel<float>)) {
         const DeviceBartlettKernel<float> d_kernel(
                 dynamic_cast<const HostBartlettKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, dv_window, height);
+                         geo2rdr_params, batch, dv_window, d_pulse_times,
+                         height);
     }
     else if (typeid(kernel) == typeid(HostLinearKernel<float>)) {
         const DeviceLinearKernel<float> d_kernel(
                 dynamic_cast<const HostLinearKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, dv_window, height);
+                         geo2rdr_params, batch, dv_window, d_pulse_times,
+                         height);
     }
     else if (typeid(kernel) == typeid(HostKnabKernel<float>)) {
         const DeviceKnabKernel<float> d_kernel(
                 dynamic_cast<const HostKnabKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, dv_window, height);
+                         geo2rdr_params, batch, dv_window, d_pulse_times,
+                         height);
     }
     else if (typeid(kernel) == typeid(HostTabulatedKernel<float>)) {
         const DeviceTabulatedKernel<float> d_kernel(
                 dynamic_cast<const HostTabulatedKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, dv_window, height);
+                         geo2rdr_params, batch, dv_window, d_pulse_times,
+                         height);
     }
     else if (typeid(kernel) == typeid(HostChebyKernel<float>)) {
         const DeviceChebyKernel<float> d_kernel(
                 dynamic_cast<const HostChebyKernel<float>&>(kernel));
         ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
                          d_kernel, dry_tropo_model, rdr2geo_params,
-                         geo2rdr_params, batch, dv_window, height);
+                         geo2rdr_params, batch, dv_window, d_pulse_times,
+                         height);
     }
     else {
         throw isce3::except::RuntimeError(ISCE_SRCINFO(), "not implemented");

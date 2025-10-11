@@ -37,6 +37,8 @@ using isce3::geometry::detail::Rdr2GeoBracketParams;
  * \param[in]  geo2rdr_params  geo2rdr configuration parameters
  * \param[in]  batch           Number of range-compressed data lines per batch
  * \param[in]  window          Fit to apodization window on interval [-0.5, 0.5]
+ * \param[in]  pulse_times     Time tag for each pulse, if different from
+ *                             in_geometry.sensingTime().
  * \param[out] height          Height of each pixel in meters above ellipsoid
  *
  * \returns Non-zero error code if geometry fails to converge for any pixel,
@@ -57,6 +59,7 @@ backproject(std::complex<float>* out,
             const Geo2RdrBracketParams& geo2rdr_params = {},
             int batch = 1024,
             const std::optional<isce3::core::ChebyKernel<float>> window = std::nullopt,
+            const std::optional<std::vector<double>>& pulse_times = std::nullopt,
             float* height = nullptr);
 
 /**
@@ -75,6 +78,8 @@ backproject(std::complex<float>* out,
  * \param[in]  geo2rdr_params  geo2rdr configuration parameters
  * \param[in]  batch           Number of range-compressed data lines per batch
  * \param[in]  window          Fit to apodization window on interval [-0.5, 0.5]
+ * \param[in]  pulse_times     Time tag for each pulse, if different from
+ *                             in_geometry.sensingTime().
  * \param[out] height          Height of each pixel in meters above ellipsoid
  *
  * \returns Non-zero error code if geometry fails to converge for any pixel,
@@ -92,6 +97,7 @@ backproject(std::complex<float>* out,
             const Geo2RdrBracketParams& geo2rdr_params = {},
             int batch = 1024,
             const std::optional<isce3::core::ChebyKernel<float>> window = std::nullopt,
+            const std::optional<std::vector<double>>& pulse_times = std::nullopt,
             float* height = nullptr);
 
 }}} // namespace isce3::cuda::focus
