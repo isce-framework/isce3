@@ -4,7 +4,7 @@ theme:
 nav:
   - Home: index.md
   - Installation: buildinstall.md
-  - Python API: api/python/isce3/core.html
+  - Python API: api/python/isce3.html
   - C++ API (Unstable): api/cxx
 
 extra_javascript:
