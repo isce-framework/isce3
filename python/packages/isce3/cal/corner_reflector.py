@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional
 
 import numpy as np
@@ -11,9 +12,12 @@ from numpy.typing import ArrayLike
 
 import isce3
 
+class CRShape(str, Enum):
+    SQUARE = "square"
+    TRIANGULAR = "triangular"
 
 @dataclass(frozen=True)
-class TriangularTrihedralCornerReflector:
+class TrihedralCornerReflector:
     """
     A triangular trihedral corner reflector (CR).
 
@@ -40,6 +44,7 @@ class TriangularTrihedralCornerReflector:
     elevation: float
     azimuth: float
     side_length: float
+    shape: CRShape
 
 
 def parse_triangular_trihedral_cr_csv(
@@ -270,8 +275,8 @@ def target2platform_unit_vector(
     return normalize_vector(platform_xyz - target_xyz)
 
 
-def predict_triangular_trihedral_cr_rcs(
-    cr: TriangularTrihedralCornerReflector,
+def predict_trihedral_cr_rcs(
+    cr: TrihedralCornerReflector,
     orbit: isce3.core.Orbit,
     doppler: isce3.core.LUT2d,
     wavelength: float,
@@ -280,9 +285,9 @@ def predict_triangular_trihedral_cr_rcs(
     geo2rdr_params: Optional[Mapping[str, float]] = None,
 ) -> float:
     r"""
-    Predict the radar cross-section (RCS) of a triangular trihedral corner reflector.
+    Predict the radar cross-section (RCS) of a trihedral corner reflector.
 
-    Calculate the predicted monostatic RCS of a triangular trihedral corner reflector,
+    Calculate the predicted monostatic RCS of a trihedral corner reflector,
     given the corner reflector dimensions and imaging geometry\ [1]_.
 
     Parameters
@@ -323,6 +328,9 @@ def predict_triangular_trihedral_cr_rcs(
        Cross-Sections - VI. Cross-sections of corner reflectors and other multiple
        scatterers at microwave frequencies,” University of Michigan Radiation
        Laboratory, Tech. Rep., October 1953.
+    .. [2] Armin W. Doerry and Billy C. Brock, "Radar Cross Section of
+       Triangular Trihedral Reflector with Extended Bottom Plate," Sandia
+       Report SAND2009-2993, May 2009, p. 21.
     """
     # Get the target-to-platform line-of-sight vector in ECEF coordinates.
     los_vec_ecef = target2platform_unit_vector(
@@ -341,18 +349,25 @@ def predict_triangular_trihedral_cr_rcs(
     )
     los_vec_cr = enu_to_cr_rotation(cr.elevation, cr.azimuth).rotate(los_vec_enu)
 
-    # Get the CR boresight unit vector in the same coordinates.
-    boresight_vec = normalize_vector([1.0, 1.0, 1.0])
-
-    # Get the direction cosines between the two vectors, sorted in ascending order.
-    p1, p2, p3 = np.sort(los_vec_cr * boresight_vec)
+    # Get the direction cosines sorted in ascending order.
+    p1, p2, p3 = np.sort(los_vec_cr)
 
     # Compute expected RCS.
-    a = p1 + p2 + p3
-    if (p1 + p2) > p3:
-        b = np.sqrt(3.0) * a - 2.0 / (np.sqrt(3.0) * a)
+    if cr.shape == "triangular":
+        a = p1 + p2 + p3
+        if (p1 + p2) > p3:
+            # typical case close to boresight
+            b = a - 2.0 / a
+        else:
+            b = 4.0 * p1 * p2 / a
+    elif cr.shape == "square":
+        if p2 >= (p3 / 2):
+            # typical case close to boresight
+            b = p1 * (4 - p3 / p2)
+        else:
+            b = 4 * p1 * p2 / p3
     else:
-        b = 4.0 * p1 * p2 / a
+        raise ValueError(f"invalid trihedral shape={cr.shape}")
 
     return 4.0 * np.pi * cr.side_length ** 4 * b ** 2 / wavelength ** 2
 

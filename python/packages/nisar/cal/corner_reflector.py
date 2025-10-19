@@ -25,17 +25,26 @@ class CRValidity(IntFlag):
     References
     ----------
     .. [1] B. Hawkins, "Corner Reflector Software Interface Specification," JPL
-       D-107698 (2023).
+       D-107698 (2025).
     """
 
     INVALID = 0
     """Not valid for any usage (out of service)."""
-    IPR = 1
-    """Usable for assessing shape of impulse response (ISLR, PSLR, resolution)."""
-    RAD_POL = 2
-    """Usable for radiometric and polarimetric calibration."""
+    LSAR_IPR = 1
+    """Usable for assessing shape of LSAR impulse response (ISLR, PSLR, resolution)."""
+    LSAR_RAD_POL = 2
+    """Usable for LSAR radiometric and polarimetric calibration."""
     GEOM = 4
     """Usable for geometric calibration."""
+    SSAR_IPR = 8
+    """Usable for assessing shape of SSAR impulse response (ISLR, PSLR, resolution)."""
+    SSAR_RAD_POL = 16
+    """Usable for SSAR radiometric and polarimetric calibration."""
+
+
+class CRShape(str, Enum):
+    SQUARE_TRIHEDRAL = "square"
+    TRIANGULAR_TRIHEDRAL = "triangular"
 
 
 @dataclass(frozen=True)
@@ -299,7 +308,7 @@ def get_valid_crs(
         Validity flag(s) to check for. If None, only corner reflectors that are out of
         service (i.e. with validity code == 0) are filtered out. Otherwise, corner
         reflectors that do not have any of the specified validity flags set will be
-        filtered out. For example, using ``flags=CRValidity.RAD_POL | CRValidity.GEOM``
+        filtered out. For example, using ``flags=CRValidity.LSAR_RAD_POL | CRValidity.GEOM``
         would yield only those corner reflectors that were valid for either
         radiometric/polarimetric calibration or geometric calibration activities.
         Defaults to None.
@@ -355,7 +364,7 @@ def parse_and_filter_corner_reflector_csv(
         Validity flag(s) to check for. If None, only corner reflectors that are out of
         service (i.e. with validity code == 0) are filtered out. Otherwise, corner
         reflectors that do not have any of the specified validity flags set will be
-        filtered out. For example, using ``flags=CRValidity.RAD_POL | CRValidity.GEOM``
+        filtered out. For example, using ``flags=CRValidity.LSAR_RAD_POL | CRValidity.GEOM``
         would yield only those corner reflectors that were valid for either
         radiometric/polarimetric calibration or geometric calibration activities.
         Defaults to None.
