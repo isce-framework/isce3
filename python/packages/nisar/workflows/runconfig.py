@@ -180,7 +180,7 @@ class RunConfig:
 
             freq_pols_from_rslc = {}
             for freq, pol_list in slc.polarizations.items():
-                freq_pols_from_rslc[freq] = pol_list
+                freq_pols_from_rslc[freq] = sorted(pol_list)
             self.cfg['processing']['input_subset']['list_of_frequencies'] = \
                 freq_pols_from_rslc
             return
