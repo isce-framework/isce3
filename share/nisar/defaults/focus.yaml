@@ -425,7 +425,11 @@ runconfig:
                 # No correction when null.
                 # wavelet | azimuth_mean | null
                 algorithm: azimuth_mean
-                frequency: 1216.904e6
+                # NOTE Caltone frequency changed for most modes between mode
+                # table v50 and v51, which went went into operations on
+                # 2025-10-17T00:00:00Z.  The v50 frequency is 1216.904297e6 Hz
+                # while the v51 frequency is 1214.882813e6 Hz.
+                frequency: 1214.882813e6
                 wavelet_size: 64
 
             # Processing stage switches, mostly for debug.
