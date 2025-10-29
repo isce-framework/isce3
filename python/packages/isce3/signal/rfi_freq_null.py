@@ -88,12 +88,11 @@ def run_freq_notch(
         consisted of dimensions [num_pulses_az x num_samples_rng_blk]
     num_samples_rng_blk: int, default=256
         Number of range samples per range block when data blockin is applied 
-        in range direction. It is recommended that this parameter is at least 
-        5 x cpi_len to avoid SINR degradation. In addition, in order to avoid 
-        a run-time error for ST-EVD this parameter needs to be at least 
-        2 x cpi + 1.
+        in range direction. This parameter needs to be greater than or equal
+        to rng_winsize.
     use_entire_pulse: bool
-        Use all samples in the slow-time pulses for detection if this is True
+        Ignore any value passed for num_samples_rng_blk and instead Use all samples 
+        in the slow-time pulses for detection if this is True
         default = False
     az_winsize: int, default=256
         The size (in number of pulses) of moving average Azimuth window 
@@ -156,10 +155,24 @@ def run_freq_notch(
 
     num_pulses, num_rng_samples = raw_data.shape
 
+    # Override num_rng_samples parameter if use_entire_pulse is True
     if use_entire_pulse:
         num_samples_rng_blk = num_rng_samples
 
     num_rng_blks = num_rng_samples // num_samples_rng_blk
+
+    # Verify data blocking dimensions
+    if num_samples_rng_blk < rng_winsize:
+        raise ValueError(
+            f'Number of range samples per block {num_samples_rng_blk} is less than'
+            f'range window size {rng_winsize}'
+        )
+
+    if num_pulses_az < az_winsize:
+        raise ValueError(
+            f'Number of pulses per block {num_pulses_az} is less than'
+            f'azimuth window size {az_winsize}'
+        )
 
     # Count the total number of detected RFI frequency bins
     rfi_pulse_count_sum = 0

@@ -49,13 +49,16 @@ def run_slow_time_evd(
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
-    num_samples_rng_blk: int, default=256
-        Number of range samples per range block when data blockin is applied in range direction. 
-        It is recommended that this parameter is at least 5 x cpi_len to avoid SINR degradation.
-        In addition, in order to avoid a run-time error for ST-EVD this parameter needs to be 
-        at least 2 x cpi + 1.
+    num_samples_rng_blk: int
+        Number of range samples per range block when data blockin is applied in range direction
+        for sample covariance matrix estimation. It is recommended that this parameter is at 
+        least 5 x cpi_len to avoid discrepancy from true sample covaraince matrix. In addition, 
+        in order to avoid a run-time error for ST-EVD, this parameter needs to be 
+        at least 2 x cpi.
+        default = 256
     use_entire_pulse: bool
-        Use all samples in the slow-time pulses for detection if this is True
+        Ignore any value passed for num_samples_rng_blk and instead Use all samples
+        in the slow-time pulses for detection if this is True
         default = False
     threshold_params: ThresholdParams object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
@@ -93,6 +96,7 @@ def run_slow_time_evd(
 
     num_pulses, num_rng_samples = raw_data.shape
 
+    # Override num_rng_samples_blk if use_entire_pulse is True
     if use_entire_pulse:
         num_samples_rng_blk = num_rng_samples
 
