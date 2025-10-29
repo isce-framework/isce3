@@ -45,17 +45,18 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Initialize parameters share by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
-    ref_radar_grid = ref_slc.getRadarGrid()
-
-    # Get the slant range and zero doppler time spacing
-    ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
-    ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
 
     # Pull the slant range and zero doppler time of the pixel offsets product
     # at frequencyA
     with HDF5OptimizedReader(name=output_hdf5, mode='r+', libver='latest', swmr=True) as dst_h5:
 
         for freq, _, pol_list in get_cfg_freq_pols(cfg):
+            ref_radar_grid = ref_slc.getRadarGrid(freq)
+
+            # Get the slant range and zero doppler time spacing
+            ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
+            ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
+
             freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
             pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
             geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'
