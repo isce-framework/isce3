@@ -403,7 +403,7 @@ def filter_crs_per_az_heading(crs, az_heading, az_atol=np.deg2rad(30.0)):
     az_atol : float, default=pi/6 (30 degrees)
         Absolute tolerance in radians when comparing AZ of CRs with
         `az_heading`. The default is slightly larger than the half of the
-        half-power beam width (BPBW) of an ideal triangular trihedral CR
+        half-power beam width (HPBW) of an ideal triangular trihedral CR
         (HPBW ~ 40 deg).
 
     Yields
