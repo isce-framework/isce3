@@ -13,7 +13,7 @@ def cola_windows(n: int, window_size: int = 64) -> Iterator[tuple[slice, np.ndar
     n : int
         Length of array to analyze.
     window_size : int, optional
-        Length of analysis blocks.
+        Length of analysis blocks. Must be even-valued. Defaults to 64.
 
     Yields
     -------

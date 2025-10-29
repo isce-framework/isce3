@@ -13,8 +13,8 @@ def test_caltone_removal():
     remover = ToneRemover(f, n)
     estimated = remover.synthesize(remover.analyze(modulated_tone))
 
-    assert all(np.abs(np.abs(estimated) - np.abs(modulated_tone)) < 0.02)
-    assert all(np.abs(np.angle(estimated * modulated_tone.conjugate())) < 0.1)
+    np.testing.assert_array_less(np.abs(np.abs(estimated) - np.abs(modulated_tone)), 0.02)
+    np.testing.assert_array_less(np.abs(np.angle(estimated * modulated_tone.conjugate())), 0.1)
 
     removed = remover.remove_tone(modulated_tone)
-    assert all(np.abs(removed) < 0.1)
+    np.testing.assert_array_less(np.abs(removed), 0.1)
