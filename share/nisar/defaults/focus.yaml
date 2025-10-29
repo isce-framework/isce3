@@ -422,9 +422,11 @@ runconfig:
                 # and subtracting it is done in blocks using
                 # rangecomp.block_size
                 # If "wavelet" then subtract an estimate that varies in 2D.
-                # No correction when null.
-                # wavelet | azimuth_mean | null
-                algorithm: azimuth_mean
+                # No correction when "disabled".
+                # Option "auto" means "wavelet" if dithered else "azimuth_mean",
+                # which is a sensible default for NISAR LSAR.
+                # auto | wavelet | azimuth_mean | disabled
+                algorithm: auto
                 # NOTE Caltone frequency changed for most modes between mode
                 # table v50 and v51, which went went into operations on
                 # 2025-10-17T00:00:00Z.  The v50 frequency is 1216.904297e6 Hz
