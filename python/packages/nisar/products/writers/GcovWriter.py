@@ -579,11 +579,10 @@ class GcovWriter(BaseL2WriterSingleInput):
         flag_symmetrized_runconfig = self.cfg['processing']['input_subset'][
             'symmetrize_cross_pol_channels']
 
-        flag_has_hv_and_vh = False
-        for _, pol_list in self.input_freq_pols_dict.items():
-            if 'HV' in pol_list and 'VH' in pol_list:
-                flag_has_hv_and_vh = True
-                break
+        flag_has_hv_and_vh = any(
+            "HV" in pol_list and "VH" in pol_list
+            for pol_list in self.input_freq_pols_dict.values()
+        )
 
         flag_symmetrized = (flag_symmetrized_runconfig and
                             flag_has_hv_and_vh)
