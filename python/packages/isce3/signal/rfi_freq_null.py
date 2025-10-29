@@ -62,12 +62,13 @@ def run_freq_notch(
     raw_data: np.ndarray,
     num_pulses_az,
     *,
-    num_samples_rng_blk: int = 256,
+    num_samples_rng_blk: int = 1000,
     az_winsize: int = 256,
     rng_winsize: int = 100,
     trim_frac: float = 0.01,
     pvalue_threshold: float = 0.005,
     cdf_threshold: float = 0.1,
+    use_entire_pulse: bool = False,
     nb_detect: bool = True,
     wb_detect: bool = True,
     mitigate_enable=False,
@@ -91,6 +92,9 @@ def run_freq_notch(
         5 x cpi_len to avoid SINR degradation. In addition, in order to avoid 
         a run-time error for ST-EVD this parameter needs to be at least 
         2 x cpi + 1.
+    use_entire_pulse: bool
+        Use all samples in the slow-time pulses for detection if this is True
+        default = False
     az_winsize: int, default=256
         The size (in number of pulses) of moving average Azimuth window 
         in which the averaged range spectrum is computed for narrowband detector.
@@ -151,6 +155,10 @@ def run_freq_notch(
             )
 
     num_pulses, num_rng_samples = raw_data.shape
+
+    if use_entire_pulse:
+        num_samples_rng_blk = num_rng_samples
+
     num_rng_blks = num_rng_samples // num_samples_rng_blk
 
     # Count the total number of detected RFI frequency bins

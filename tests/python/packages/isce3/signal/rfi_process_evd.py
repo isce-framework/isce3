@@ -170,13 +170,13 @@ def rfi_wb_gen(
 
 
 @pytest.mark.parametrize(
-    "cpi_len, num_samples_rng_blk, num_cpi_tb, max_deg_freedom, num_max_trim, num_min_trim, max_num_rfi_ev, mitigate_enable, test_case",
+    "cpi_len, num_samples_rng_blk, num_cpi_tb, max_deg_freedom, num_max_trim, num_min_trim, max_num_rfi_ev, use_entire_pulse, mitigate_enable, test_case",
     [  
-        (32, 2148, 20, 16, 1, 1, 2, True, 'mitigate'),  # No range blks
-        (32, 256, 20, 16, 1, 1, 2, True, 'mitigate'),  # 256 range samples / range blocks
-        (32, 2148, 20, 16, 0, 0, 2, True, 'no-op'),  # No-op: no rng blks
-        (32, 256, 20, 16, 0, 0, 2, True, 'no-op'),  # No-op: 256 range samples / range block
-        (32, 2148, 20, 16, 0, 0, 2, False,'no-op'),  # No-op: detection only
+        (32, 2148, 20, 16, 1, 1, 2, True, True, 'mitigate'),  # No range blks
+        (32, 256, 20, 16, 1, 1, 2, False, True, 'mitigate'),  # 256 range samples / range blocks
+        (32, 2148, 20, 16, 0, 0, 2, True, True, 'no-op'),  # No-op: no rng blks
+        (32, 256, 20, 16, 0, 0, 2, False, True, 'no-op'),  # No-op: 256 range samples / range block
+        (32, 2148, 20, 16, 0, 0, 2, True, False,'no-op'),  # No-op: detection only
     ],
 )
 def test_slow_time_evd(
@@ -187,6 +187,7 @@ def test_slow_time_evd(
     num_max_trim,
     num_min_trim,
     max_num_rfi_ev,
+    use_entire_pulse,
     mitigate_enable,
     test_case,
 ):
@@ -306,6 +307,7 @@ def test_slow_time_evd(
         num_min_trim=num_min_trim,
         max_num_rfi_ev=max_num_rfi_ev,
         num_samples_rng_blk=num_samples_rng_blk,
+        use_entire_pulse=use_entire_pulse,
         threshold_params=threshold_params,
         num_cpi_tb=num_cpi_tb,
         mitigate_enable=mitigate_enable,

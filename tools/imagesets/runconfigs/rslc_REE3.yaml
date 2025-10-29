@@ -69,6 +69,8 @@ runconfig:
                 # In addition, in order to avoid a run-time error for ST-EVD,
                 # this parameter needs to be at least 2 x cpi + 1
                 num_samples_rng_blk: 256
+                # Use all samples in the pulse if this is enabled.
+                use_entire_pulse: False
 
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.

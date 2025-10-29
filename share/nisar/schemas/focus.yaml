@@ -253,11 +253,10 @@ runconfig:
       # If true, fill transmit gaps with zeros to remove loop-back cal pulses.
       zero_fill_gaps: bool(required=False)
 
-      # If true, subtract the azimuth mean from the raw data, which is useful
-      # when the caltone is nearly constant in azimuth but not stationary in
-      # range.  Calculating the mean and subtracting it is done in blocks using
-      # rangecomp.block_size
-      nullify_azimuth_mean: bool(required=False)
+      caltone:
+          frequency: num(min=0, required=False)
+          algorithm: enum('wavelet', 'azimuth_mean', required=False)
+          block_size: num(min=2, required=False)
 
       # Processing stage switches, mostly for debug.
       # Any missing stages assumed True
@@ -360,6 +359,7 @@ rfi_options:
   #   - 'FDNF': frequency domain notch filtering algorithm
   # Defaults to 'ST-EVD'.
   mitigation_algorithm: enum('ST-EVD', 'FDNF', required=False)
+  # Number of subdivisions in range.  Defaults to 1.
   slow_time_evd: include('slow_time_evd_options', required=False)
   freq_notch_filter: include('freq_notch_filter_options', required=False)
   # Number of range samples per range block when data blocking
@@ -368,6 +368,8 @@ rfi_options:
   # In addition, in order to avoid a run-time error for ST-EVD,
   # this parameter needs to be at least 2 x cpi + 1
   num_samples_rng_blk: int(min=1, required=False)
+  # Use all samples in the pulse if this is enabled.
+  use_entire_pulse: bool(required=False)
 
 slow_time_evd_options:
   # Coherent processing interval length (pulses).  Defaults to 32.

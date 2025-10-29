@@ -16,6 +16,7 @@ def run_slow_time_evd(
     num_min_trim=0,
     max_num_rfi_ev=2,
     num_samples_rng_blk=256,
+    use_entire_pulse=False,
     threshold_params: ThresholdParams = ThresholdParams(),
     num_cpi_tb=20,
     mitigate_enable=False,
@@ -53,6 +54,9 @@ def run_slow_time_evd(
         It is recommended that this parameter is at least 5 x cpi_len to avoid SINR degradation.
         In addition, in order to avoid a run-time error for ST-EVD this parameter needs to be 
         at least 2 x cpi + 1.
+    use_entire_pulse: bool
+        Use all samples in the slow-time pulses for detection if this is True
+        default = False
     threshold_params: ThresholdParams object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
         ratio between maximum and minimum Eigenvalue slopes (MMES) of the
@@ -88,6 +92,10 @@ def run_slow_time_evd(
     """
 
     num_pulses, num_rng_samples = raw_data.shape
+
+    if use_entire_pulse:
+        num_samples_rng_blk = num_rng_samples
+
     num_rng_blks = num_rng_samples // num_samples_rng_blk
 
     # If the number of pulses is not an integer multiple of TB size, following

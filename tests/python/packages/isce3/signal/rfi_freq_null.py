@@ -260,6 +260,7 @@ def test_freq_null():
     trim_frac = 0.01
     pvalue_threshold = 0.005
     cdf_threshold = 0.68
+    use_entire_pulse = True
     nb_detect = True
     wb_detect = True
     mitigate_enable = True
@@ -275,6 +276,7 @@ def test_freq_null():
         trim_frac=trim_frac,
         pvalue_threshold=pvalue_threshold,
         cdf_threshold=cdf_threshold,
+        use_entire_pulse=use_entire_pulse,
         nb_detect=nb_detect,
         wb_detect=wb_detect,
         mitigate_enable=mitigate_enable,
