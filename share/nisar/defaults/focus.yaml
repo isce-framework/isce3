@@ -214,14 +214,15 @@ runconfig:
                 #   - 'FDNF': frequency domain notch filtering algorithm
                 # Defaults to 'ST-EVD'.
                 mitigation_algorithm: ST-EVD
-                # Number of subdivisions in range.  Defaults to 1.
                 # Number of range samples per range block when data blocking
-                # is applied in range direction. It is recommended that this
-                # parameter is at least 5 x cpi_len to avoid SINR degradation.
+                # is applied in range direction for sample covariance matrix
+                # estimation. It is recommended that this parameter is at least 
+                # 5 x cpi_len to avoid discrepancy from true covariance matrix.
                 # In addition, in order to avoid a run-time error for ST-EVD,
-                # this parameter needs to be at least 2 x cpi + 1
+                # this parameter needs to be at least 2 x cpi
                 num_samples_rng_blk: 256
-                # Use all samples in the pulse if this is enabled.
+                # Ignore any values passed in for parameter num_samples_rng_blk.
+                # Instead use all samples in the pulses for detection if this is true.
                 use_entire_pulse: False
 
                 slow_time_evd:
@@ -601,17 +602,6 @@ runconfig:
                     # -1 to indicate all rows / all columns (respectively).
                     # Default: (1024, 1024)
                     tile_shape: [1024, 1024]
-
-                    # True to output one grayscale PNG+KML pair per raster image layer; these
-                    # will be generated in addition to the standard browse image PNG+KML.
-                    # The filename of each additional file will include a suffix noting
-                    # that image's frequency and polarization.
-                    # False to have the primary browse image be the only PNG+KML generated.
-                    # Note: If True, and if the input granule contains only one image,
-                    # then the additional individual PNG will be a duplicate image to the
-                    # primary browse image PNG, but with more descriptive filename.
-                    # Default: False
-                    output_individual_pngs: false
 
                 histogram:
 
