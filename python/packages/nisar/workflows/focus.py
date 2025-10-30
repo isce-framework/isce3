@@ -1558,6 +1558,51 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     return swaths
 
 
+def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
+    """Helper for configuring caltone removal.
+
+    Parameters
+    ----------
+    cfg : Struct
+        RSLC runconfig data.
+    fc : float
+        Center frequency in Hz.
+    fs : float
+        Sample rate in Hz.
+    n : int
+        Number of samples in raw data.
+    is_dithered : bool
+        Whether we're analyzing a mode with dithered PRI.
+
+    Returns
+    -------
+    algorithm : str in {"azimuth_mean", "wavelet", "none"}
+        What algorithm to use ("auto" is reduced to one of the above)
+    wavelets : isce3.focus.ToneRemover | None
+        Object that can do caltone removal.
+    """
+    algorithm = str(cfg.processing.caltone.algorithm).lower()
+    # In dithered NISAR modes the caltone phase varies across each pulse,
+    # so removing the mean won't work.  Otherwise assume it's fine to remove
+    # azimuth mean in NISAR data since DC is outside the azimuth passband.
+    # For other systems like ALOS that's not such a great assumption.
+    if algorithm == "auto":
+        algorithm = "wavelet" if is_dithered else "azimuth_mean"
+
+    wavelets = None
+    if algorithm == "azimuth_mean":
+        log.info("Will remove azimuth mean from each block.")
+    elif algorithm == "wavelet":
+        log.info("Will remove wavelet caltone estimate from each pulse.")
+        wavelets = isce3.focus.ToneRemover(
+            (cfg.processing.caltone.frequency - fc) / fs,
+            n, cfg.processing.caltone.wavelet_size)
+    else:
+        algorithm = "disabled"
+        log.info("No caltone removal requested.")
+
+    return algorithm, wavelets
+
 def focus(runconfig, runconfig_path=""):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -1815,6 +1860,11 @@ def focus(runconfig, runconfig_path=""):
             if cfg.processing.zero_fill_gaps:
                 log.info("Will fill gaps between sub-swaths with zeros.")
 
+            fs = raw.getChirpParameters(channel_in.freq_id, pol[0])[1]
+            caltone_algorithm, wavelets = get_caltone_algorithm(cfg,
+                channel_in.band.center, fs, raw_grid.shape[1],
+                raw.isDithered(channel_in.freq_id))
+
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
                 nblock = min(na, rawdata.shape[0] - pulse, raw_mm.shape[0] - i)
@@ -1826,6 +1876,11 @@ def focus(runconfig, runconfig_path=""):
                 z[np.isnan(z)] = 0.0
                 if cfg.processing.zero_fill_gaps:
                     fill_gaps(z, swaths[:, pulse:pulse+nblock, :], 0.0)
+                if caltone_algorithm == "azimuth_mean":
+                    z -= z.mean(axis=0)
+                elif caltone_algorithm == "wavelet":
+                    for k in range(z.shape[0]):
+                        z[k] = wavelets.remove_tone(z[k])
                 raw_mm[block_out] = z
 
             raw_clean, rfi_likelihood = process_rfi(cfg, raw_mm, temp)
