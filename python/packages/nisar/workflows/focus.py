@@ -30,7 +30,8 @@ from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
 from isce3.focus import make_los_luts, fill_gaps, make_cal_luts, Notch
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
-from isce3.product import RadarGridParameters
+from isce3.product import (RadarGridParameters,
+    get_radar_grid_nominal_ground_spacing)
 from nisar.workflows.yaml_argparse import YamlArgparse
 import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
@@ -1191,7 +1192,8 @@ def get_max_prf(rawlist: Iterable[Raw]) -> float:
     return max(prfs)
 
 
-def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None):
+def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None,
+                   area=1.0):
     """Setup range compression.
 
     Parameters
@@ -1209,6 +1211,8 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None):
     cal : Optional[RslcCalibration]
         RSLC calibration data.  Will apply gain and delay calibrations to chirp
         and grid if provided.
+    area : Optional[float]
+        Area in m^2 to use for backscatter normalization
 
     Returns
     -------
@@ -1279,6 +1283,9 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None):
         scale, delay = get_scale_and_delay(cal, channel_in.pol)
         log.info(f"Scaling chirp by calibration factor = {scale}")
         chirp *= scale
+
+    log.info(f"Scaling chirp by 1 / sqrt({area} m^2) for area normalization")
+    chirp *= 1.0 / np.sqrt(area)
 
     rcmode = parse_rangecomp_mode(cfg.processing.rangecomp.mode)
     log.info(f"Preparing range compressor with mode={rcmode}")
@@ -1376,8 +1383,8 @@ def set_algorithm_metadata(cfg: Struct, slc: SLC, is_dithered: bool = False):
     rfi = cfg.processing.radio_frequency_interference
     slc.set_algorithms(
         demInterpolation=cfg.processing.dem.interp_method,
-        rfiDetection="ST-EVD" if rfi.detection_enabled else "disabled",
-        rfiMitigation="ST-EVD" if rfi.mitigation_enabled else "disabled",
+        rfiDetection=rfi.mitigation_algorithm if rfi.detection_enabled else "disabled",
+        rfiMitigation=rfi.mitigation_algorithm if rfi.mitigation_enabled else "disabled",
         elevationAntennaPatternCorrection=cfg.processing.is_enabled.eap,
         rangeSpreadingLossCorrection=cfg.processing.is_enabled.range_cor,
         azimuthPresumming="BLU" if is_dithered else "disabled")
@@ -1549,6 +1556,51 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     return swaths
 
 
+def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
+    """Helper for configuring caltone removal.
+
+    Parameters
+    ----------
+    cfg : Struct
+        RSLC runconfig data.
+    fc : float
+        Center frequency in Hz.
+    fs : float
+        Sample rate in Hz.
+    n : int
+        Number of samples in raw data.
+    is_dithered : bool
+        Whether we're analyzing a mode with dithered PRI.
+
+    Returns
+    -------
+    algorithm : str in {"azimuth_mean", "wavelet", "none"}
+        What algorithm to use ("auto" is reduced to one of the above)
+    wavelets : isce3.focus.ToneRemover | None
+        Object that can do caltone removal.
+    """
+    algorithm = str(cfg.processing.caltone.algorithm).lower()
+    # In dithered NISAR modes the caltone phase varies across each pulse,
+    # so removing the mean won't work.  Otherwise assume it's fine to remove
+    # azimuth mean in NISAR data since DC is outside the azimuth passband.
+    # For other systems like ALOS that's not such a great assumption.
+    if algorithm == "auto":
+        algorithm = "wavelet" if is_dithered else "azimuth_mean"
+
+    wavelets = None
+    if algorithm == "azimuth_mean":
+        log.info("Will remove azimuth mean from each block.")
+    elif algorithm == "wavelet":
+        log.info("Will remove wavelet caltone estimate from each pulse.")
+        wavelets = isce3.focus.ToneRemover(
+            (cfg.processing.caltone.frequency - fc) / fs,
+            n, cfg.processing.caltone.wavelet_size)
+    else:
+        algorithm = "disabled"
+        log.info("No caltone removal requested.")
+
+    return algorithm, wavelets
+
 def focus(runconfig, runconfig_path=""):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -1608,7 +1660,7 @@ def focus(runconfig, runconfig_path=""):
     beta0_lut, sigma0_lut, gamma0_lut = make_cal_luts(inc_lut)
 
     # Frequency A/B specific setup for output grid, doppler, and blocks.
-    ogrid, dop, blocks_bounds = dict(), dict(), dict()
+    ogrid, dop, blocks_bounds, areas = dict(), dict(), dict(), dict()
     for frequency, band in get_bands(common_mode).items():
         # Ensure aligned grids between A and B by just using an integer skip.
         # Sample rate of A is always an integer multiple of B for NISAR.
@@ -1620,6 +1672,9 @@ def focus(runconfig, runconfig_path=""):
         dop[frequency] = scale_doppler(dop_ref, band.center / fc_ref)
         blocks_bounds[frequency] = plan_processing_blocks(cfg, ogrid[frequency],
                                         dop[frequency], dem, orbit)
+        # So does output pixel area (beta0 convention).
+        daz, _ = get_radar_grid_nominal_ground_spacing(ogrid[frequency], orbit)
+        areas[frequency] = daz * ogrid[frequency].range_pixel_spacing
 
     # NOTE SAR duration depends on frequency, so check all subbands.
     proc_begin, proc_end = total_bounds(list(chain(*blocks_bounds.values())))
@@ -1804,6 +1859,11 @@ def focus(runconfig, runconfig_path=""):
             if cfg.processing.zero_fill_gaps:
                 log.info("Will fill gaps between sub-swaths with zeros.")
 
+            fs = raw.getChirpParameters(channel_in.freq_id, pol[0])[1]
+            caltone_algorithm, wavelets = get_caltone_algorithm(cfg,
+                channel_in.band.center, fs, raw_grid.shape[1],
+                raw.isDithered(channel_in.freq_id))
+
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
                 nblock = min(na, rawdata.shape[0] - pulse, raw_mm.shape[0] - i)
@@ -1815,8 +1875,11 @@ def focus(runconfig, runconfig_path=""):
                 z[np.isnan(z)] = 0.0
                 if cfg.processing.zero_fill_gaps:
                     fill_gaps(z, swaths[:, i:i+nblock, :], 0.0)
-                if cfg.processing.nullify_azimuth_mean:
+                if caltone_algorithm == "azimuth_mean":
                     z -= z.mean(axis=0)
+                elif caltone_algorithm == "wavelet":
+                    for k in range(z.shape[0]):
+                        z[k] = wavelets.remove_tone(z[k])
                 raw_mm[block_out] = z
 
             raw_clean, rfi_likelihood = process_rfi(cfg, raw_mm, temp)
@@ -1838,7 +1901,8 @@ def focus(runconfig, runconfig_path=""):
 
             # Do range compression.
             rc, rc_grid, shift, deramp_rc = prep_rangecomp(cfg, raw, raw_grid,
-                                        channel_in, channel_out, cal)
+                                        channel_in, channel_out, cal,
+                                        areas[frequency])
 
             # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
