@@ -15,7 +15,8 @@ def run_slow_time_evd(
     num_max_trim=0,
     num_min_trim=0,
     max_num_rfi_ev=2,
-    num_rng_blks=1,
+    num_samples_rng_blk=256,
+    use_entire_pulse=False,
     threshold_params: ThresholdParams = ThresholdParams(),
     num_cpi_tb=20,
     mitigate_enable=False,
@@ -48,9 +49,17 @@ def run_slow_time_evd(
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
-    num_rng_blks: int, default=1
-        Number of range bin blocks to be processed for EVD, default=1
-        When num_rng_blks=1, all range samples are used to compute EVD
+    num_samples_rng_blk: int
+        Number of range samples per range block when data blockin is applied in range direction
+        for sample covariance matrix estimation. It is recommended that this parameter is at 
+        least 5 x cpi_len to avoid discrepancy from true sample covaraince matrix. In addition, 
+        in order to avoid a run-time error for ST-EVD, this parameter needs to be 
+        at least 2 x cpi.
+        default = 256
+    use_entire_pulse: bool
+        Ignore any value passed for num_samples_rng_blk and instead Use all samples
+        in the slow-time pulses for detection if this is True
+        default = False
     threshold_params: ThresholdParams object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
         ratio between maximum and minimum Eigenvalue slopes (MMES) of the
@@ -86,7 +95,12 @@ def run_slow_time_evd(
     """
 
     num_pulses, num_rng_samples = raw_data.shape
-    num_samples_rng_blk = num_rng_samples // num_rng_blks
+
+    # Override num_rng_samples_blk if use_entire_pulse is True
+    if use_entire_pulse:
+        num_samples_rng_blk = num_rng_samples
+
+    num_rng_blks = num_rng_samples // num_samples_rng_blk
 
     # If the number of pulses is not an integer multiple of TB size, following
     # operations will ensue. If the number of remaining pulses is greater than
