@@ -986,12 +986,10 @@ def resample(raw: np.ndarray, t: np.ndarray,
     assert raw.shape == (grid.length, grid.width)
     assert len(t) == raw.shape[0]
     assert grid.ref_epoch == orbit.reference_epoch
-    # Compute uniform time samples for given raw data grid
-    out_times = t[0] + np.arange(grid.length) / grid.prf
     # Ranges are the same.
     r = grid.starting_range + grid.range_pixel_spacing * np.arange(grid.width)
     regridded = np.memmap(fn, mode="w+", shape=grid.shape, dtype=np.complex64)
-    for i, tout in enumerate(out_times):
+    for i, tout in enumerate(grid.sensing_times):
         # Get velocity for scaling autocorrelation function.  Won't change much
         # but update every pulse to avoid artifacts across images.
         v = np.linalg.norm(orbit.interpolate(tout)[1])
@@ -1851,9 +1849,10 @@ def focus(runconfig, runconfig_path=""):
             na = cfg.processing.rangecomp.block_size.azimuth
             nr = rawdata.shape[1]
             swaths = raw.getSubSwaths(channel_in.freq_id, tx=pol[0])
+            swaths = swaths[:, pulse_begin:pulse_end, :]
             log.info(f"Number of sub-swaths = {swaths.shape[0]}")
 
-            rawfd = temp("_raw.c8")
+            rawfd = temp(f"_{frequency}{pol}_raw.c8")
             log.info(f"Decoding raw data to memory map {rawfd.name}.")
             raw_mm = np.memmap(rawfd, mode="w+", shape=raw_grid.shape,
                                dtype=np.complex64)
@@ -1875,7 +1874,7 @@ def focus(runconfig, runconfig_path=""):
                 # Remove NaNs.  TODO could incorporate into gap mask.
                 z[np.isnan(z)] = 0.0
                 if cfg.processing.zero_fill_gaps:
-                    fill_gaps(z, swaths[:, pulse:pulse+nblock, :], 0.0)
+                    fill_gaps(z, swaths[:, i:i+nblock, :], 0.0)
                 if caltone_algorithm == "azimuth_mean":
                     z -= z.mean(axis=0)
                 elif caltone_algorithm == "wavelet":
@@ -1893,7 +1892,7 @@ def focus(runconfig, runconfig_path=""):
                 log.info("Uniform PRF, using raw data directly.")
                 regridded, regridfd = raw_clean, None
             else:
-                regridfd = temp("_regrid.c8")
+                regridfd = temp(f"_{frequency}{pol}_regrid.c8")
                 log.info(f"Resampling non-uniform raw data to {regridfd.name}.")
                 regridded = resample(raw_clean, raw_times, raw_grid, swaths, orbit,
                                     dop[frequency], fn=regridfd,
@@ -1922,7 +1921,7 @@ def focus(runconfig, runconfig_path=""):
                 patterns = antpat.form_pattern(
                     ti, pat_ranges, nearest=not uniform_pri, txrx_pols=[pol])
 
-            fd = temp("_rc.c8")
+            fd = temp(f"_{frequency}{pol}_rc.c8")
             log.info(f"Writing range compressed data to {fd.name}")
             rcfile = Raster(fd.name, rc.output_size, rc_grid.shape[0], GDT_CFloat32)
             log.info(f"Range compressed data shape = {rcfile.data.shape}")
@@ -1956,7 +1955,7 @@ def focus(runconfig, runconfig_path=""):
                 log.info(f'Number of noise-only range lines is {nrgl_noise}')
                 # create a dedicated memory map for noise data and processing.
                 # set the number of range bins to rangecomp output size.
-                fid_noise = temp("_noise.c8")
+                fid_noise = temp(f"_{frequency}{pol}_noise.c8")
                 data_noise = np.memmap(
                     fid_noise, mode='w+', shape=(nrgl_noise, rc.output_size),
                     dtype=np.complex64)
@@ -2007,8 +2006,7 @@ def focus(runconfig, runconfig_path=""):
                     rc_grid.starting_range)
                 # perform noise estimation
                 # get valid subswath for noise-only range lines
-                idx_noise_abs = pulse_begin + np.asarray(idx_noise)
-                sbsw_noise = swaths[:, idx_noise_abs]
+                sbsw_noise = swaths[:, idx_noise]
                 pow_noise, sr_noise_rc = est_noise_power_in_focus(
                     data_noise, rc_grid.slant_ranges, sbsw_noise,
                     logger=log,
@@ -2055,7 +2053,7 @@ def focus(runconfig, runconfig_path=""):
             del regridded, regridfd
 
             if dump_height:
-                fd_hgt = temp(f"_height_{frequency}{pol}.f4")
+                fd_hgt = temp(f"_{frequency}{pol}_height.f4")
                 shape = ogrid[frequency].shape
                 hgt_mm = np.memmap(fd_hgt, mode="w+", shape=shape, dtype='f4')
                 log.debug(f"Dumping height to {fd_hgt.name} with shape {shape}")
