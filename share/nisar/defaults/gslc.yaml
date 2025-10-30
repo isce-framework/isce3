@@ -368,8 +368,8 @@ runconfig:
                 # memory-mapped flat file(s), which speeds up repeat access.
                 # False to always read data directly from the input file.
                 # Generally, enabling caching should reduce runtime.
-                # Default: True
-                use_cache: true
+                # Default: False
+                use_cache: false
 
                 # True to delete the nested QA scratch directory in
                 # `scratch_path` and its contents when QA SAS is finished.
