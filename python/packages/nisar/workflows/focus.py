@@ -2099,14 +2099,15 @@ def focus(runconfig, runconfig_path=""):
         slc.set_rfi_results(rfi_results)
 
         # Dump the noise product for a certain band and pol over entire
-        # AZ times covering all Raw files.
-        noise_prod = NoiseEquivalentBackscatterProduct(
-            np.asarray(pow_noise_all), sr_noise, np.asarray(azt_noise_all),
-            grid_epoch, frequency, pol
-            )
-        # dump the noise product into RSLC product
-        slc.set_noise(noise_prod)
-        del pow_noise_all, azt_noise_all, sr_noise
+        # AZ times covering all Raw files if any.
+        if len(pow_noise_all) > 0:
+            noise_prod = NoiseEquivalentBackscatterProduct(
+                np.asarray(pow_noise_all), sr_noise, np.asarray(azt_noise_all),
+                grid_epoch, frequency, pol
+                )
+            # dump the noise product into RSLC product
+            slc.set_noise(noise_prod)
+            del pow_noise_all, azt_noise_all, sr_noise
 
     log.info("All done!")
 
