@@ -575,9 +575,21 @@ class GcovWriter(BaseL2WriterSingleInput):
             f'{parameters_group}/shadowMaskingApplied',
             False)
 
-        self.copy_from_runconfig(
+        # Add geocoding algorithm reference
+        flag_symmetrized_runconfig = self.cfg['processing']['input_subset'][
+            'symmetrize_cross_pol_channels']
+
+        flag_has_hv_and_vh = any(
+            "HV" in pol_list and "VH" in pol_list
+            for pol_list in self.input_freq_pols_dict.values()
+        )
+
+        flag_symmetrized = (flag_symmetrized_runconfig and
+                            flag_has_hv_and_vh)
+
+        self.set_value(
             f'{parameters_group}/polarimetricSymmetrizationApplied',
-            'processing/input_subset/symmetrize_cross_pol_channels')
+            flag_symmetrized)
 
         # Populate algorithms parameters
 
@@ -637,22 +649,14 @@ class GcovWriter(BaseL2WriterSingleInput):
             'radiometricTerrainCorrection',
             rtc_algorithm_name)
 
-        input_pol_list = list(self.input_freq_pols_dict.keys())
-        flag_hv_and_vh_in_pol_list = ['HV' in input_pol_list and
-                                      'VH' in input_pol_list]
-
-        flag_symmetrize = (flag_hv_and_vh_in_pol_list and
-                           self.cfg['processing']['input_subset'][
-                            'symmetrize_cross_pol_channels'])
-
         flag_full_covariance = self.cfg['processing']['input_subset'][
             'fullcovariance']
 
-        if flag_symmetrize and not flag_full_covariance:
+        if flag_symmetrized and not flag_full_covariance:
             symmetrization_algorithm = \
                 ('Cross-Polarimetric Channels HV and VH Backscatter Average'
                  ' (Incoherent Average)')
-        elif flag_symmetrize:
+        elif flag_symmetrized:
             symmetrization_algorithm = \
                 ('Cross-Polarimetric Channels HV and VH SLCs Average'
                  ' (Coherent Average)')

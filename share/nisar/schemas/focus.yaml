@@ -253,11 +253,7 @@ runconfig:
       # If true, fill transmit gaps with zeros to remove loop-back cal pulses.
       zero_fill_gaps: bool(required=False)
 
-      # If true, subtract the azimuth mean from the raw data, which is useful
-      # when the caltone is nearly constant in azimuth but not stationary in
-      # range.  Calculating the mean and subtracting it is done in blocks using
-      # rangecomp.block_size
-      nullify_azimuth_mean: bool(required=False)
+      caltone: include('caltone_options', required=False)
 
       # Processing stage switches, mostly for debug.
       # Any missing stages assumed True
@@ -284,6 +280,11 @@ notch:
   frequency: num()
   bandwidth: num(min=0.0)
   domain: enum('baseband', 'radio_frequency')
+
+caltone_options:
+  frequency: num(min=0, required=False)
+  algorithm: enum('wavelet', 'azimuth_mean', 'auto', 'disabled', required=False)
+  block_size: num(min=2, required=False)
 
 spectral_window:
   kind: enum('Kaiser', 'Cosine', required=False)
@@ -361,9 +362,19 @@ rfi_options:
   # Defaults to 'ST-EVD'.
   mitigation_algorithm: enum('ST-EVD', 'FDNF', required=False)
   # Number of subdivisions in range.  Defaults to 1.
-  num_range_blocks: int(min=1, required=False)
   slow_time_evd: include('slow_time_evd_options', required=False)
   freq_notch_filter: include('freq_notch_filter_options', required=False)
+  # Number of range samples per range block when data blocking
+  # is applied in range direction for sample covariance matrix
+  # estimation. It is recommended that this parameter is at least
+  # 5 x cpi_len to avoid discrepancy from true covariance matrix.
+  # In addition, in order to avoid a run-time error for ST-EVD,
+  # this parameter needs to be at least 2 x cpi
+  num_samples_rng_blk: int(min=1, required=False)
+  # Ignore any values passed in for parameter num_samples_rng_blk.
+  # Instead use all samples in the pulses for detection if this is true.
+  # use_entire_pulse: False
+  use_entire_pulse: bool(required=False)
 
 slow_time_evd_options:
   # Coherent processing interval length (pulses).  Defaults to 32.

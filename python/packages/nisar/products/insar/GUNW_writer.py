@@ -148,6 +148,20 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         """
         RUNWWriter.add_parameters_to_procinfo_group(self)
 
+        # Get the number of looks for both unwrapped and wrapped interferogram
+        proc_cfg = self.cfg["processing"]
+        wrap_igram_range_looks = proc_cfg["crossmul"]["range_looks"]
+        wrap_igram_azimuth_looks = proc_cfg["crossmul"]["azimuth_looks"]
+        unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
+        unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
+
+        if (unwrap_az_looks != 1) or (unwrap_rg_looks != 1):
+            unwrap_igram_range_looks = unwrap_rg_looks
+            unwrap_igram_azimuth_looks = unwrap_az_looks
+        else:
+            unwrap_igram_range_looks = wrap_igram_range_looks
+            unwrap_igram_azimuth_looks = wrap_igram_azimuth_looks
+            
         # the unwrappedInterfergram group under the processingInformation/parameters
         # group is copied from the RUNW product, but the name in RUNW product is
         # 'interferogram', while in GUNW its name is 'unwrappedInterferogram'. Here
@@ -161,8 +175,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         for freq, *_ in get_cfg_freq_pols(self.cfg):
             number_of_azimuth_looks = \
                 self[f'{new_igram_group_name}/frequency{freq}/numberOfAzimuthLooks']
+            number_of_azimuth_looks[...] = unwrap_igram_azimuth_looks
             number_of_slant_range_looks = \
                 self[f'{new_igram_group_name}/frequency{freq}/numberOfRangeLooks']
+            number_of_slant_range_looks[...] = unwrap_igram_range_looks
             number_of_azimuth_looks.attrs['description'] = \
                 to_bytes('Number of looks applied in the'
                           ' along-track direction to form the'
@@ -177,9 +193,18 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         # 'interferogram', while in GUNW its name is 'wrappedInterferogram'. Here
         # is to rename the interfegram group name to wrappedInterferogram group name
         RIFGWriter.add_interferogram_to_procinfo_params_group(self)
+
         new_igram_group_name = \
             f"{self.group_paths.ParametersPath}/wrappedInterferogram"
         self.move(old_igram_group_name, new_igram_group_name)
+
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
+            number_of_azimuth_looks = \
+                self[f'{new_igram_group_name}/frequency{freq}/numberOfAzimuthLooks']
+            number_of_azimuth_looks[...] = wrap_igram_azimuth_looks
+            number_of_slant_range_looks = \
+                self[f'{new_igram_group_name}/frequency{freq}/numberOfRangeLooks']
+            number_of_slant_range_looks[...] = wrap_igram_range_looks
 
         L2InSARWriter.add_geocoding_to_procinfo_params_group(self)
 

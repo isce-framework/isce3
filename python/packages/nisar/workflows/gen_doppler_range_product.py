@@ -74,11 +74,11 @@ def cmd_line_parser():
                      help='Number of range bins to be averaged in Doppler '
                      'Estimator block. Shall be equal or larger than 1.')
     prs.add_argument('-a', '--az_block_dur', type=float, dest='az_block_dur',
-                     default=4.0,
+                     default=10.0,
                      help='Azimuth block duration in seconds defining time-'
                      'domain correlator length used in Doppler estimator.')
     prs.add_argument('-t', '--time_interval', type=float, dest='time_interval',
-                     default=2.0,
+                     default=5.0,
                      help='Time stamp interval between azimuth blocks in '
                      'seconds. Must not be larger than "az_block_dur".')
     prs.add_argument('-m', '--method', type=str, dest='dop_method',
@@ -97,8 +97,8 @@ def cmd_line_parser():
                      help='Plot Doppler centroids and save them in '
                      '*.png files at the specified output path')
     prs.add_argument('-o', '--out', type=str, dest='out_path', default='.',
-                     help='Output directory to dump Doppler product as well as'
-                     'PNG plots.')
+                     help='Output directory to dump Doppler product as well '
+                     'as PNG plots.')
     prs.add_argument('--orbit', type=str, dest='orbit_file',
                      help='Filename of an external orbit XML file. The orbit '
                      'data will be used in place of those in L0B. Default is '
@@ -123,6 +123,14 @@ def cmd_line_parser():
                      help=('Max time duration (seconds) w.r.t `time-start`. '
                            'Default is entire L0B duration starting from '
                            '`time-start`.')
+                     )
+    prs.add_argument('--duration-dc-remove-az', type=float, default=0.5,
+                     help=('Time duration (seconds) of AZ blocks for DC '
+                           'removal in AZ in order to mitigate Caltone and '
+                           'internal signal biasing Doppler Est. Must be a '
+                           'positive value not greater than `az_block_dur`! '
+                           'Its value may be modified to make it an integer '
+                           'fraction of `az_block_dur`.')
                      )
     return prs.parse_args()
 

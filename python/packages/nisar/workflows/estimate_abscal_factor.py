@@ -227,6 +227,9 @@ def estimate_abscal_factor(
     # that the focused data was projected onto (always zero Doppler for NISAR
     # radar-domain products).
     native_doppler = rslc.getDopplerCentroid(freq)
+    # Allow extrapolation of LUT so we can do searches whose endpoints may run
+    # out of bounds.
+    native_doppler.bounds_error = False
     image_grid_doppler = isce3.core.LUT2d()
 
     # Reference ellipsoid is assumed to be WGS 84 for corner reflector data and for
