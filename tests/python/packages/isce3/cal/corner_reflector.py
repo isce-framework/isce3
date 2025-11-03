@@ -34,7 +34,7 @@ def angle_between(u: ArrayLike, v: ArrayLike, *, degrees: bool = False) -> float
     return theta
 
 
-class TestParseTriangularTrihedralCornerReflectorCSV:
+class TestParseTrihedralCornerReflectorCSV:
     def test_parse_csv(self):
         # Parse CSV file containing 3 Northeast-looking corner reflectors.
         csv = Path(iscetest.data) / "abscal/REE_CORNER_REFLECTORS_INFO.csv"
@@ -268,12 +268,13 @@ def test_get_crs_in_polygon():
 
     # Make a list of corner reflectors with unique IDs, one at each lon/lat location.
     crs = [
-        isce3.cal.TriangularTrihedralCornerReflector(
+        isce3.cal.TrihedralCornerReflector(
             id=f"CR{i}",
             llh=isce3.core.LLH(np.deg2rad(lon), np.deg2rad(lat), 0.0),
             elevation=0.0,
             azimuth=0.0,
             side_length=1.0,
+            shape="triangular",
         )
         for i, (lon, lat) in enumerate(cr_lonlats)
     ]

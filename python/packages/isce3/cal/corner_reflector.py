@@ -19,7 +19,7 @@ class CRShape(str, Enum):
 @dataclass(frozen=True)
 class TrihedralCornerReflector:
     """
-    A triangular trihedral corner reflector (CR).
+    A trihedral corner reflector (CR).
 
     Parameters
     ----------
@@ -37,6 +37,8 @@ class TrihedralCornerReflector:
         geographic East, measured clockwise positive in the E-N plane.
     side_length : float
         The length of each leg of the trihedral, in meters.
+    shape : CRShape
+        The shape of the faces (triangular or square).
     """
 
     id: str
@@ -49,7 +51,7 @@ class TrihedralCornerReflector:
 
 def parse_triangular_trihedral_cr_csv(
     csvfile: os.PathLike,
-) -> Iterator[TriangularTrihedralCornerReflector]:
+) -> Iterator[TrihedralCornerReflector]:
     """
     Parse a CSV file containing triangular trihedral corner reflector (CR) data.
 
@@ -74,7 +76,7 @@ def parse_triangular_trihedral_cr_csv(
 
     Yields
     ------
-    cr : TriangularTrihedralCornerReflector
+    cr : TrihedralCornerReflector
         A corner reflector.
     """
     dtype = np.dtype(
@@ -108,10 +110,13 @@ def parse_triangular_trihedral_cr_csv(
     for attr in ["lat", "lon", "az", "el"]:
         crs[attr] = np.deg2rad(crs[attr])
 
+    # Old format, assume all corners are triangular.
+    shape = "triangular"
+
     for cr in crs:
         id, lat, lon, height, az, el, side_length = cr
         llh = isce3.core.LLH(lon, lat, height)
-        yield TriangularTrihedralCornerReflector(id, llh, el, az, side_length)
+        yield TrihedralCornerReflector(id, llh, el, az, side_length, shape)
 
 
 def cr_to_enu_rotation(el: float, az: float) -> isce3.core.Quaternion:
@@ -344,7 +349,7 @@ def predict_trihedral_cr_rcs(
 
     Parameters
     ----------
-    cr : TriangularTrihedralCornerReflector
+    cr : TrihedralCornerReflector
         The corner reflector position, orientation, and size.
     orbit : isce3.core.Orbit
         The trajectory of the radar antenna phase center.
@@ -501,10 +506,10 @@ def get_target_observation_time_and_elevation(
 
 
 def get_crs_in_polygon(
-    crs: Iterable[TriangularTrihedralCornerReflector],
+    crs: Iterable[TrihedralCornerReflector],
     polygon: shapely.Polygon,
     buffer: float | None = None,
-) -> Iterator[TriangularTrihedralCornerReflector]:
+) -> Iterator[TrihedralCornerReflector]:
     """
     Filter out corner reflectors located outside of a Lon/Lat polygon.
 
@@ -517,7 +522,7 @@ def get_crs_in_polygon(
 
     Parameters
     ----------
-    crs : iterable of TriangularTrihedralCornerReflector
+    crs : iterable of TrihedralCornerReflector
         Input iterable of corner reflector data.
     polygon : shapely.Polygon
         A convex polygon, in geodetic Lon/Lat coordinates w.r.t the WGS 84 ellipsoid,
@@ -532,7 +537,7 @@ def get_crs_in_polygon(
 
     Yields
     ------
-    cr : TriangularTrihedralCornerReflector
+    cr : TrihedralCornerReflector
         A corner reflector from the input iterable that was contained within the
         polygon.
 
