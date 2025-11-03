@@ -275,6 +275,58 @@ def target2platform_unit_vector(
     return normalize_vector(platform_xyz - target_xyz)
 
 
+def eval_trihedral_rcs_model(los, side_length, wavelength, shape):
+    """
+    Calculate RCS of a trihedral corner reflector (CR).
+
+    Parameters
+    ----------
+    los : array_like
+        Line-of-sight direction from the corner reflector vertex to target,
+        expressed as a unit-vector in the right-handed coordinate system
+        defined by the legs of the corner reflector (Z-up).
+    side_length : float
+        Length of a leg of the corner reflector (e.g., the shorter side for
+        triangular trihedrals) in m.
+    wavelength : float
+        Wavelength of the sensor in m.
+    shape : CRShape | str
+        Shape of each panel.
+
+    Returns
+    -------
+    rcs : float
+        Radar cross section in m^2
+    """
+    # Get the direction cosines sorted in ascending order.
+    p1, p2, p3 = np.sort(los)
+    if p1 < 0.0:
+        raise ValueError("invalid corner reflector viewing geometry"
+            f" los={los}")
+    # Require unit vector.
+    if not np.isclose(np.linalg.norm(los), 1.0):
+        raise ValueError("line-of-sight direction must be a unit vector")
+
+    # Compute expected RCS.
+    if shape == "triangular":
+        a = p1 + p2 + p3
+        if (p1 + p2) > p3:
+            # typical case close to boresight
+            b = a - 2.0 / a
+        else:
+            b = 4.0 * p1 * p2 / a
+    elif shape == "square":
+        if p2 >= (p3 / 2):
+            # typical case close to boresight
+            b = p1 * (4 - p3 / p2)
+        else:
+            b = 4 * p1 * p2 / p3
+    else:
+        raise ValueError(f"invalid trihedral shape={shape}")
+
+    return 4.0 * np.pi * (side_length**2 * b / wavelength)**2
+
+
 def predict_trihedral_cr_rcs(
     cr: TrihedralCornerReflector,
     orbit: isce3.core.Orbit,
@@ -349,27 +401,8 @@ def predict_trihedral_cr_rcs(
     )
     los_vec_cr = enu_to_cr_rotation(cr.elevation, cr.azimuth).rotate(los_vec_enu)
 
-    # Get the direction cosines sorted in ascending order.
-    p1, p2, p3 = np.sort(los_vec_cr)
-
-    # Compute expected RCS.
-    if cr.shape == "triangular":
-        a = p1 + p2 + p3
-        if (p1 + p2) > p3:
-            # typical case close to boresight
-            b = a - 2.0 / a
-        else:
-            b = 4.0 * p1 * p2 / a
-    elif cr.shape == "square":
-        if p2 >= (p3 / 2):
-            # typical case close to boresight
-            b = p1 * (4 - p3 / p2)
-        else:
-            b = 4 * p1 * p2 / p3
-    else:
-        raise ValueError(f"invalid trihedral shape={cr.shape}")
-
-    return 4.0 * np.pi * cr.side_length ** 4 * b ** 2 / wavelength ** 2
+    return eval_trihedral_rcs_model(los_vec_cr, cr.side_length, wavelength,
+        cr.shape)
 
 
 def get_target_observation_time_and_elevation(
