@@ -42,7 +42,7 @@ def create_tmp_text_file(contents: str, suffix: str | None = None) -> Iterator[P
         yield filepath
 
 
-@pytest.mark.parametrize("validity", [-1, 8])
+@pytest.mark.parametrize("validity", [-1, 32])
 def test_bad_corner_reflector_validity(validity: int):
     errmsg = "validity flag has invalid value"
     with pytest.raises(ValueError, match=errmsg):
@@ -55,6 +55,7 @@ def test_bad_corner_reflector_validity(validity: int):
             survey_date=isce3.core.DateTime("1970-01-01"),
             validity=validity,
             velocity=[0.0, 0.0, 0.0],
+            shape="triangular",
         )
 
 
