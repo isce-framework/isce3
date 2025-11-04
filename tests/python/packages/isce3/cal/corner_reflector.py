@@ -325,3 +325,25 @@ def test_peak_rcs(side_length, wavelength, shape):
     else:
         assert False, "invalid CR shape in unit test"
     assert np.isclose(pow2db(rcs), pow2db(expected_rcs), rtol=0, atol=0.01)
+
+
+# There's a branch in the RCS vs angle model, so make sure the RCS is continuous
+
+@pytest.mark.parametrize("shape", ["triangular", "square"])
+def test_rcs_continuity(shape):
+    az = np.deg2rad(45)
+    el = np.deg2rad(np.linspace(15, 75, 361))
+    los = np.array([
+        np.cos(az) * np.cos(el),
+        np.sin(az) * np.cos(el),
+        np.sin(el)
+    ]).transpose()
+    a = 1.5
+    λ = 0.23
+    rcs = np.array([eval_trihedral_rcs_model(los[i], a, λ, shape)
+        for i in range(len(el))])
+    rcs_db = pow2db(rcs)
+    eld_step = np.rad2deg(el[1] - el[0])
+    diff_rcs_db = np.diff(rcs_db) / eld_step
+    max_diff = 1.5  # dB / deg
+    npt.assert_array_less(np.abs(diff_rcs_db), max_diff)
