@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 import isce3
-from isce3.cal import TrihedralCornerReflector
+from isce3.cal import CRShape, TrihedralCornerReflector
 
 
 class CRValidity(IntFlag):
@@ -68,6 +68,8 @@ class CornerReflector(TrihedralCornerReflector):
         the clockwise direction.
     side_length : float
         The length of each leg of the trihedral, in meters.
+    shape : CRShape
+        The shape of the faces (triangular or square).
     survey_date : isce3.core.DateTime
         UTC date and time when the corner reflector survey was conducted.
     validity : CRValidity
@@ -77,8 +79,6 @@ class CornerReflector(TrihedralCornerReflector):
         motion. Velocity should be provided in a local East-North-Up (ENU) coordinate
         system with respect to the WGS 84 reference ellipsoid with its origin at the CR
         location.
-    shape : CRShape
-        The shape of the faces (triangular or square).
 
     See Also
     --------
@@ -221,7 +221,7 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
         validity = CRValidity(int(d[8]))
         velocity = np.asarray([d[9], d[10], d[11]], dtype=np.float64)
         if "shape" in dtype.fields:
-            shape = d["shape"].strip()
+            shape = d["shape"].strip().lower()
         else:
             shape = "triangular"
 
@@ -231,10 +231,10 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
             elevation=d[5],
             azimuth=d[4],
             side_length=d[6],
+            shape=CRShape(shape),
             survey_date=survey_date,
             validity=validity,
             velocity=velocity,
-            shape=shape,
         )
 
 

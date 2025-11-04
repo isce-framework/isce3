@@ -1,5 +1,6 @@
 from . import point_target_info
 from .corner_reflector import (
+    CRShape,
     TrihedralCornerReflector,
     get_crs_in_polygon,
     get_target_observation_time_and_elevation,
