@@ -21,7 +21,7 @@ import isce3
 from isce3.cal import (
     parse_triangular_trihedral_cr_csv,
     point_target_info as pti,
-    TriangularTrihedralCornerReflector as CornerReflector,
+    TrihedralCornerReflector as CornerReflector,
 )
 
 import nisar
@@ -426,7 +426,7 @@ def slc_pt_performance(
 
 
 CornerReflectorIterable = Union[
-    Iterable[isce3.cal.TriangularTrihedralCornerReflector],
+    Iterable[isce3.cal.TrihedralCornerReflector],
     Iterable[nisar.cal.CornerReflector],
 ]
 
@@ -532,7 +532,7 @@ def analyze_corner_reflectors(
     ----------
     corner_reflectors : iterable
         Iterable of corner reflectors in the scene. The elements may be instances of
-        `isce3.cal.TriangularTrihedralCornerReflector` or `nisar.cal.CornerReflector`.
+        `isce3.cal.TrihedralCornerReflector` or `nisar.cal.CornerReflector`.
         In the latter case, additional information about the survey date, validity, and
         plate motion velocity of each corner reflector is populated in the output.
     rslc : nisar.products.readers.RSLC
@@ -844,7 +844,7 @@ def get_corner_reflectors_from_csv(
 
     Returns
     ------
-    Iterator of isce3.cal.TriangularTrihedralCornerReflector
+    Iterator of isce3.cal.TrihedralCornerReflector
         An iterator over the set of corner reflectors.
     """
     if format == "nisar":
