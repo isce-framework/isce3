@@ -322,7 +322,7 @@ def get_valid_crs(
         Validity flag(s) to check for. If None, only corner reflectors that are out of
         service (i.e. with validity code == 0) are filtered out. Otherwise, corner
         reflectors that do not have any of the specified validity flags set will be
-        filtered out. For example, using ``flags=CRValidity.LSAR_RAD_POL | CRValidity.GEOM``
+        filtered out. For example, using ``flags=CRValidity.RAD_POL | CRValidity.GEOM``
         would yield only those corner reflectors that were valid for either
         radiometric/polarimetric calibration or geometric calibration activities.
         Defaults to None.
@@ -378,7 +378,7 @@ def parse_and_filter_corner_reflector_csv(
         Validity flag(s) to check for. If None, only corner reflectors that are out of
         service (i.e. with validity code == 0) are filtered out. Otherwise, corner
         reflectors that do not have any of the specified validity flags set will be
-        filtered out. For example, using ``flags=CRValidity.LSAR_RAD_POL | CRValidity.GEOM``
+        filtered out. For example, using ``flags=CRValidity.RAD_POL | CRValidity.GEOM``
         would yield only those corner reflectors that were valid for either
         radiometric/polarimetric calibration or geometric calibration activities.
         Defaults to None.
