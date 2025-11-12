@@ -1764,12 +1764,26 @@ def focus(runconfig, runconfig_path=""):
         cal = get_calibration(cfg, band.width)
         slc.set_calibration(cal, frequency)
 
-        # add calibration section for each polarization
-        for pol in pols:
-            slc.add_calibration_section(frequency, pol, og.sensing_times,
-                                        orbit.reference_epoch, og.slant_ranges,
-                                        beta0_lut, sigma0_lut, gamma0_lut)
+        # add calibration section using as reference a radar grid
+        # downsampled with a factor of `50`` and with `11`` extra
+        # points on each direction
 
+        # TODO agree on LUT postings.
+        calibration_section_sampling = 50
+        extra_points = 11
+
+        multilooked_radar_grid = og.multilook(calibration_section_sampling,
+                                              calibration_section_sampling)
+
+        extended_radar_grid = multilooked_radar_grid.add_margin(extra_points,
+                                                                extra_points)
+
+        for pol in pols:
+            slc.add_calibration_section(frequency, pol,
+                                        extended_radar_grid.sensing_times,
+                                        orbit.reference_epoch,
+                                        extended_radar_grid.slant_ranges,
+                                        beta0_lut, sigma0_lut, gamma0_lut)
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
