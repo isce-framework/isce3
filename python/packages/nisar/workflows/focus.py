@@ -291,12 +291,12 @@ def get_total_grid_bounds(rawfiles: list[str]):
     return epoch, tmin, tmax, rmin, rmax
 
 
-def get_total_grid(rawfiles: list[str], dt, dr):
+def get_total_grid(rawfiles: list[str], dt, dr, extra_margin_in_pixels=0):
     epoch, tmin, tmax, rmin, rmax = get_total_grid_bounds(rawfiles)
-    nt = int(np.ceil((tmax - tmin) / dt)) + 1
-    nr = int(np.ceil((rmax - rmin) / dr)) + 1
-    t = isce3.core.Linspace(tmin, dt, nt)
-    r = isce3.core.Linspace(rmin, dr, nr)
+    nt = int(np.ceil((tmax - tmin) / dt)) + 1 + 2 * extra_margin_in_pixels
+    nr = int(np.ceil((rmax - rmin) / dr)) + 1 + 2 * extra_margin_in_pixels
+    t = isce3.core.Linspace(tmin - extra_margin_in_pixels * dt, dt, nt)
+    r = isce3.core.Linspace(rmin - extra_margin_in_pixels * dr, dr, nr)
     return epoch, t, r
 
 
@@ -397,7 +397,13 @@ def make_doppler_lut(rawfiles: list[str],
 
     # Now do the actual calculations.
     wvl = isce3.core.speed_of_light / fc
-    epoch_in, t, r = get_total_grid(rawfiles, azimuth_spacing, range_spacing)
+
+    # Get grid for Doppler LUT with an extra margin to ensure that, after
+    # geocoding with an interpolation algoritm (e.g., bicubic spline),
+    # the LUT fully covers the geocoded imagery extents.
+    epoch_in, t, r = get_total_grid(
+        rawfiles, azimuth_spacing, range_spacing,
+        extra_margin_in_pixels=isce3.core.RSLC_LUTS_EXTRA_MARGIN_IN_PIXELS)
 
     # If timespan is too small, only one time may be provided, causing the LUT
     # construction to fail. Fall back to t ± Δt/2 to preserve az spacing.
@@ -1764,19 +1770,19 @@ def focus(runconfig, runconfig_path=""):
         cal = get_calibration(cfg, band.width)
         slc.set_calibration(cal, frequency)
 
-        # add calibration section using as reference a radar grid
-        # downsampled with a factor of `50`` and with `11`` extra
-        # points on each direction
+        # add calibration section based on a downsampled radar grid,
+        # including an extra margin to ensure that, after geocoding
+        # with an interpolation algoritm (e.g., bicubic spline),
+        # the LUTs fully cover the geocoded imagery extents.
+        calibration_section_sampling = \
+            isce3.core.RSLC_LUTS_EXTRA_MARGIN_IN_PIXELS
+        multilooked_radar_grid = og.multilook(
+            calibration_section_sampling, calibration_section_sampling)
 
-        # TODO agree on LUT postings.
-        calibration_section_sampling = 50
-        extra_points = 11
-
-        multilooked_radar_grid = og.multilook(calibration_section_sampling,
-                                              calibration_section_sampling)
-
-        extended_radar_grid = multilooked_radar_grid.add_margin(extra_points,
-                                                                extra_points)
+        luts_extra_margin_in_pixels = \
+            isce3.core.RSLC_LUTS_EXTRA_MARGIN_IN_PIXELS
+        extended_radar_grid = multilooked_radar_grid.add_margin(
+            luts_extra_margin_in_pixels, luts_extra_margin_in_pixels)
 
         for pol in pols:
             slc.add_calibration_section(frequency, pol,

@@ -131,7 +131,13 @@ def make_doppler_lut_from_attitude(
     # computed.
     dem.compute_min_max_mean_height()
 
-    dop = np.zeros((len(az_time), len(slant_range)))
+    min_time = max([orbit.start_time, attitude.start_time])
+    max_time = min([orbit.end_time, attitude.end_time])
+
+    # crop az_time using orbit and attitude extents
+    az_time = az_time[(az_time > min_time) & (az_time < max_time)]
+
+    dop = np.full((len(az_time), len(slant_range)), np.nan)
 
     # Using the default EL bounds [-45, 45] deg can cause trouble when looking
     # near nadir, as this large interval can span both sides of the left-right

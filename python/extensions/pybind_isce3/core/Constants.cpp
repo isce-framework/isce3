@@ -20,4 +20,12 @@ void add_constants(py::module & core)
     core.attr("GLOBAL_MAX_HEIGHT") = py::float_(isce3::core::GLOBAL_MAX_HEIGHT);
     core.attr("WGS84_ELLIPSOID") = isce3::core::Ellipsoid();
     core.attr("SINC_HALF") = isce3::core::SINC_HALF;
+
+    // TODO agree on LUT postings.
+    core.attr("RSLC_CALIBRATION_SECTION_SAMPLING") = 50;
+
+    // Extra margin added to RSLC LUTs to ensure that, after
+    // geocoding with an interpolation algoritm (e.g., bicubic spline),
+    // the LUTs fully cover the geocoded imagery extents.
+    core.attr("RSLC_LUTS_EXTRA_MARGIN_IN_PIXELS") = 11;
 }
