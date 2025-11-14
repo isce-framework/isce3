@@ -155,51 +155,27 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         - output_runw
         - offsets_dir
     """
-    # InSAR scratch path
-    scratch_path = pathlib.Path(original_dict['scratch_path'])
-    # ionosphere scratch path
-    iono_dir_path = pathlib.Path(iono_insar_cfg['product_path_group'][
-                'scratch_path'])
     # parameters
     blocksize = iono_insar_cfg['processing']['ionosphere_phase_correction'][
                 'lines_per_block']
-    freq_pols = iono_insar_cfg['processing']['input_subset'][
-                'list_of_frequencies']
-    runw_freq_a_str = original_dict['output_runw']
-    runw_freq_b_str = iono_insar_cfg['product_path_group']['sas_output_file']
+
     offsets_dir = original_dict['offsets_dir']
 
+    ref_slc_path = original_dict['reference_rslc_file']
     if iono_insar_cfg['processing']['fine_resample']['enabled']:
         resample_type = 'fine'
     else:
         resample_type = 'coarse'
     decimated_offset_dir = offsets_dir
 
-    # Instantiate a RUNW object to get path to RUNW datasets
-    runw_obj = RUNWGroupsPaths()
+    # Instantiate a RSLC Swath object to get slant range for frequency A and B
+    slc_swath_obj_freqa = isce3.product.Swath(ref_slc_path, 'A')
+    slc_swath_obj_freqb = isce3.product.Swath(ref_slc_path, 'B')
 
-    # Set up for decimation
-    swath_path = runw_obj.SwathsPath
-    dest_freq_path = f"{swath_path}/frequencyA"
-    dest_freq_path_b = f"{swath_path}/frequencyB"
-    rslant_path_a = f"{dest_freq_path}/interferogram/slantRange"
-    rslant_path_b = f"{dest_freq_path_b}/interferogram/slantRange"
-    rspc_path_a = f"{dest_freq_path}/interferogram/slantRangeSpacing"
-    rspc_path_b = f"{dest_freq_path_b}/interferogram/slantRangeSpacing"
-
-    # Read slant range array from main and side bands
-    with HDF5OptimizedReader(
-            name=runw_freq_a_str, mode='r',
-            libver='latest', swmr=True) as src_main_h5, \
-        HDF5OptimizedReader(
-            name=runw_freq_b_str, mode='r',
-            libver='latest', swmr=True) as src_side_h5:
-
-        # Read slant range block from HDF5
-        main_slant = np.array(src_main_h5[rslant_path_a])
-        side_slant = np.array(src_side_h5[rslant_path_b])
-        spacing_main = np.array(src_main_h5[rspc_path_a])
-        spacing_side = np.array(src_side_h5[rspc_path_b])
+    main_slant = np.array(slc_swath_obj_freqa.slant_range)
+    spacing_main = slc_swath_obj_freqa.range_pixel_spacing
+    side_slant = np.array(slc_swath_obj_freqb.slant_range)
+    spacing_side = slc_swath_obj_freqb.range_pixel_spacing
 
     resampling_scale_factor = float(int(np.round(spacing_side / spacing_main)))
     if resample_type == 'coarse':

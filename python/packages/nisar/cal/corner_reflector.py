@@ -389,7 +389,7 @@ def parse_and_filter_corner_reflector_csv(
     return valid_crs
 
 
-def filter_crs_per_az_heading(crs, az_heading, az_atol=np.deg2rad(20.0)):
+def filter_crs_per_az_heading(crs, az_heading, az_atol=np.deg2rad(30.0)):
     """
     Filter corner reflectors per desired azimuth (AZ) orientation within
     a desired absolute tolerance.
@@ -400,10 +400,11 @@ def filter_crs_per_az_heading(crs, az_heading, az_atol=np.deg2rad(20.0)):
         TriangularTrihedralCornerReflector.
     az_heading : float
         Desired AZ/heading angle in radians w.r.t. geographic North.
-    az_atol : float, default=20.0 degrees
+    az_atol : float, default=pi/6 (30 degrees)
         Absolute tolerance in radians when comparing AZ of CRs with
-        `az_heading`. The default is around 0.5 * HBPW of an ideal
-        triangular trihedral CR (HPBW ~ 40 deg).
+        `az_heading`. The default is slightly larger than the half of the
+        half-power beam width (HPBW) of an ideal triangular trihedral CR
+        (HPBW ~ 40 deg).
 
     Yields
     ------

@@ -350,69 +350,77 @@ def compute_baseline(ref_rngs,
         A component of the baseline perpendicular to the los vector
         from the reference sensor position to the target.
     """
-
+    info_channel = journal.info("baseline.compute_baseline")
     proj = isce3.core.make_projection(epsg_code)
-    meta_rows, meta_cols = ref_rngs.shape
 
     # Initialize output arrays
-    perp_baseline_array = np.zeros([meta_rows, meta_cols])
-    par_baseline_array = np.zeros([meta_rows, meta_cols])
+    par_baseline_array = np.full(
+        ref_rngs.shape, np.nan, dtype=np.float32)
+    perp_baseline_array = np.full(
+        ref_rngs.shape, np.nan, dtype=np.float32)
 
-    for row_ind in range(meta_rows):
-        for col_ind in range(meta_cols):
-            ref_azt = ref_azts[row_ind, col_ind]
-            ref_rng = ref_rngs[row_ind, col_ind]
-            sec_azt = sec_azts[row_ind, col_ind]
-            sec_rng = sec_rngs[row_ind, col_ind]
-            target_proj = np.array([coord_set[0, row_ind, col_ind],
-                                    coord_set[1, row_ind, col_ind],
-                                    coord_set[2, row_ind, col_ind]])
+    for row_ind, col_ind in np.ndindex(ref_rngs.shape):
+        ref_azt = ref_azts[row_ind, col_ind]
+        ref_rng = ref_rngs[row_ind, col_ind]
+        sec_azt = sec_azts[row_ind, col_ind]
+        sec_rng = sec_rngs[row_ind, col_ind]
 
-            target_llh = proj.inverse(target_proj)
+        x = coord_set[0, row_ind, col_ind]
+        y = coord_set[1, row_ind, col_ind]
+        h = coord_set[2, row_ind, col_ind]
 
-            target_xyz = ellipsoid.lon_lat_to_xyz(target_llh)
+        lon, lat, h = proj.inverse(np.array([x, y, h]))
+        target_xyz = ellipsoid.lon_lat_to_xyz(
+            np.array([lon, lat, h]))
 
-            if not np.isnan(ref_azt):
-                ref_xyz, ref_vel = ref_orbit.interpolate(ref_azt)
-                # get the sensor position at the sec_aztime
-                # on the secondary orbit
-                sec_xyz, _ = sec_orbit.interpolate(sec_azt)
+        if not np.isnan(ref_azt):
+            ref_xyz, ref_vel = ref_orbit.interpolate(ref_azt)
+            # get the sensor position at the sec_aztime
+            # on the secondary orbit
+            sec_xyz, _ = sec_orbit.interpolate(sec_azt)
 
-                # compute the baseline
-                baseline = np.linalg.norm(sec_xyz - ref_xyz)
+            los_vec = target_xyz - ref_xyz
+            los_norm = np.linalg.norm(los_vec)
+            if los_norm == 0 or not np.isfinite(los_norm):
+                continue
+            los_unit_vec = los_vec / los_norm
+            baseline_vec = sec_xyz - ref_xyz
 
-                # compute the cosine of the angle between the baseline vector
-                # and the reference LOS vector (reference sensor to target)
-                if baseline == 0:
-                    cos_vbase_los = 1
-                else:
-                    cos_vbase_los = (ref_rng ** 2 + baseline ** 2
-                                     - sec_rng ** 2) / (
-                                    2.0 * ref_rng * baseline)
-
-                # project the baseline to LOS to get the parallel component
-                # of the baseline (i.e., parallel to the LOS direction)
-                # parallel baseline in reference LOS direction is positive
-                parallel_baseline = baseline * cos_vbase_los
-
-                # project the baseline to the normal to
-                # the reference LOS direction
-                perp_baseline_temp = baseline * np.sqrt(1 - cos_vbase_los ** 2)
-
-                # get the direction sign of the perpendicular baseline.
-                # positive perpendicular baseline is defined
-                # at below to LOS vector
-                direction = np.sign(
-                    np.dot(np.cross(target_xyz - ref_xyz,
-                                    sec_xyz - ref_xyz),
-                           ref_vel))
-                perpendicular_baseline = direction * perp_baseline_temp
-
-                perp_baseline_array[row_ind, col_ind] = perpendicular_baseline
-                par_baseline_array[row_ind, col_ind] = parallel_baseline
+            # Along track components
+            vnorm = np.linalg.norm(ref_vel)
+            if vnorm > 0 and np.isfinite(vnorm):
+                vhat = ref_vel / vnorm
+                baseline_along = np.dot(baseline_vec, vhat)
+                baseline_vec_comp = baseline_vec - baseline_along * vhat
             else:
-                perp_baseline_array[row_ind, col_ind] = np.nan
-                par_baseline_array[row_ind, col_ind] = np.nan
+                # Fallback if velocity is degenerate
+                baseline_vec_comp = baseline_vec
+                info_channel.log(
+                    "Reference velocity is zero or invalid; "
+                    "skipping along-track compensation."
+                )
+            # compute the baseline (magnitude of compensated vector)
+            baseline = np.linalg.norm(baseline_vec_comp)
+
+            # Parallel (LOS) component using compensated baseline
+            parallel_baseline = np.dot(baseline_vec_comp,
+                                       los_unit_vec)
+
+            # Perpendicular component magnitude using compensated baseline
+            perp_baseline_temp = np.linalg.norm(
+                    baseline_vec_comp - parallel_baseline * los_unit_vec)
+
+            # Sign using compensated baseline (right-looking positive)
+            direction = np.sign(
+                np.dot(np.cross(ref_vel, los_unit_vec),
+                       baseline_vec_comp)) or 1.0
+            perpendicular_baseline = direction * perp_baseline_temp
+
+            perp_baseline_array[row_ind, col_ind] = perpendicular_baseline
+            par_baseline_array[row_ind, col_ind] = parallel_baseline
+        else:
+            perp_baseline_array[row_ind, col_ind] = np.nan
+            par_baseline_array[row_ind, col_ind] = np.nan
 
     return par_baseline_array, perp_baseline_array
 
