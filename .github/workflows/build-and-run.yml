@@ -42,7 +42,22 @@ jobs:
             env-file: environment.yml
             extra-specs: ""
         build-type: [ Release, Debug ]
-
+        include:
+          - deps:
+              label: Minimum Python supported
+              extra-specs: |
+                python=3.9
+          - deps:
+              label: Documentation
+              extra-specs: >-
+                doxygen
+                mkdocs
+                mkdocs-material
+                pdoc
+                pymdown-extensions
+            # Build with CUDA so the Python CUDA extension is documented,
+            # but don't try to run the tests since we're on a CPU-only builder.
+            extra-cmake-args: -DWITH_CUDA=ON
 
     name: Build And Test - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
     runs-on: ${{ matrix.os.runner }}
@@ -69,6 +84,11 @@ jobs:
           create-args: >-
             ${{ matrix.deps.extra-specs }}
 
+      - name: Install CUDA Toolkit
+        if: matrix.deps.label == 'Documentation'
+        run: |
+          micromamba install -c nvidia cuda
+
       # Fix missing conda command on macOS
       - name: macOS conda command fixup
         if: runner.os == 'macOS'
@@ -92,6 +112,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
             -DCMAKE_INSTALL_PREFIX=$ISCE3_PREFIX \
             -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
+            ${{ matrix.extra-cmake-args }} \
             .
 
       # Build the project
@@ -119,7 +140,28 @@ jobs:
 
       # Run ctest on the project with the intended test exclusions for this run
       - name: Test Project
+        if: matrix.deps.label != 'Documentation'
         run: |
           cd build
           export GDAL_MEM_ENABLE_OPEN=YES
-          ctest --output-on-failure ${{ matrix.os.ctest_exclude }}
+          ctest --output-on-failure ${{ env.ctest-exclude }}
+
+      - name: Build documentation
+        if: matrix.deps.label == 'Documentation'
+        run: |
+          mkdocs build -d build/docs-output
+
+          # XXX Manually create doxygen output dir, why doesn't CREATE_SUBDIRS in the config work?
+          mkdir -p build/docs-output/api/cxx/
+
+          doxygen build/doc/doxygen/Doxyfile
+          export PYTHONPATH="$PYTHONPATH:$ISCE3_PREFIX/packages"
+
+          pdoc -o build/docs-output/api/python --math install/packages/isce3
+
+      - name: Deploy documentation
+        if: matrix.deps.label == 'Documentation' && github.ref == 'refs/heads/develop'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/docs-output
