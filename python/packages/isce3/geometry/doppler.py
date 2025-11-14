@@ -136,8 +136,8 @@ def make_doppler_lut_from_attitude(
     max_time = min([orbit.end_time, attitude.end_time])
     az_time = az_time[(az_time > min_time) & (az_time < max_time)]
 
-    # create Doppler Centroid array filled with NaNs
-    dop = np.full((len(az_time), len(slant_range)), np.nan)
+    # create Doppler Centroid array filled with zeros
+    dop = np.zeros((len(az_time), len(slant_range)))
 
     # Using the default EL bounds [-45, 45] deg can cause trouble when looking
     # near nadir, as this large interval can span both sides of the left-right
