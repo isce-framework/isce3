@@ -41,6 +41,9 @@ conda install -c conda-forge isce3-cuda
 
 If you need to build ISCE3 from source, please refer to our more in-depth [build instructions](https://isce-framework.github.io/isce3/buildinstall/).
 
+## Getting Started
+
+See the documentation at https://isce-framework.github.io/isce3/
 
 ## Contributing
 
