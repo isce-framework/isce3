@@ -1397,7 +1397,7 @@ def set_input_file_metadata(cfg: Struct, slc: SLC, runconfig_path: str = ""):
     anc = cfg.dynamic_ancillary_file_group
     value_or_blank = lambda x: x if x is not None else ""
     slc.set_inputs(
-        l0bGranules=pthlib.PurePath(cfg.input_file_group.input_file_path).name,
+        l0bGranules=pathlib.PurePath(cfg.input_file_group.input_file_path).name,
         orbitFiles=[value_or_blank(anc.orbit)],
         attitudeFiles=[value_or_blank(anc.pointing)],
         auxcalFiles=[value_or_blank(x) for x in (anc.external_calibration,
