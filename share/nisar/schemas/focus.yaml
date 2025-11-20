@@ -284,7 +284,7 @@ notch:
 caltone_options:
   frequency: num(min=0, required=False)
   algorithm: enum('wavelet', 'azimuth_mean', 'auto', 'disabled', required=False)
-  block_size: num(min=2, required=False)
+  wavelet_size: num(min=2, required=False)
 
 spectral_window:
   kind: enum('Kaiser', 'Cosine', required=False)
