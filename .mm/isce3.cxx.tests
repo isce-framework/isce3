@@ -4,7 +4,7 @@
 # the C++ tests
 isce3.cxx.tests.stem := cxx/isce3
 isce3.cxx.tests.prerequisites := isce3.lib
-isce3.cxx.tests.extern := isce3.lib gdal hdf5 mpi eigen fftw pyre gtest
+isce3.cxx.tests.extern := isce3.lib gdal hdf5 eigen fftw pyre gtest
 
 #if there is cuda
 ifdef cuda.dir
