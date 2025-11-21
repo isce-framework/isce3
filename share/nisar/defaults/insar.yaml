@@ -547,6 +547,18 @@ runconfig:
                     # Filter size (median/boxcar) in slant range
                     filter_size_range: 5
                     filter_size_azimuth: 5
+                # Polyfit the dense offsets for the fine resampling
+                polyfitting:
+                    # Flag to enable/disable polyfitting
+                    enabled: false
+                    # The degrees for the polyfitting
+                    degree: 2
+                    # Critical value for the w-test to remove the outliers
+                    critical_value: 0.1
+                    # Number of samples along the range in pixels for polyfitting
+                    samples_along_range: 200
+                    # Number of samples  along the azimuth in pixels for polyfitting
+                    samples_along_azimuth: 200
 
             fine_resample:
                 # Flag to enable/disable fine resampling

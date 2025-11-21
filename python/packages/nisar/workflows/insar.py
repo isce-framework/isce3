@@ -2,14 +2,12 @@
 import time
 
 import journal
-from nisar.workflows import (bandpass_insar, crossmul,
-                             dense_offsets, geo2rdr,geocode_insar,
-                             h5_prep, filter_interferogram,
-                             offsets_product, prepare_insar_hdf5, rdr2geo,
-                             resample_slc_v2, rubbersheet,
-                             split_spectrum, unwrap, ionosphere, baseline,
-                             troposphere, solid_earth_tides)
-
+from nisar.workflows import (bandpass_insar, baseline, crossmul, dense_offsets,
+                             filter_interferogram, geo2rdr, geocode_insar,
+                             h5_prep, ionosphere, offsets_product,
+                             prepare_insar_hdf5, rdr2geo, resample_slc_v2,
+                             rubbersheet, solid_earth_tides, split_spectrum,
+                             troposphere, unwrap)
 from nisar.workflows.geocode_insar import InputProduct
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence

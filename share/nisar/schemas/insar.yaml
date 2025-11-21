@@ -536,6 +536,7 @@ rubbersheet_options:
     median: include('offset_filter_options', required=False)
     boxcar: include('offset_filter_options', required=False)
     gaussian: include('gaussian_filter_options', required=False)
+    polyfitting: include('polyfitting_options', required=False)
 
 fill_smoothed_options:
     # Number of fill smoothed iterations
@@ -560,6 +561,17 @@ gaussian_filter_options:
     filter_size_azimuth: int(min=1, required=False)
     # Number of columns for 1D gaussian kernel
     filter_size_range: int(min=1, required=False)
+
+polyfitting_options:
+    enabled: bool(required=False)
+    # The degrees for the polyfitting
+    degree: num(min=1, required=False)
+    # Critical value for the w-test to remove the outliers
+    critical_value: num(min=0, required=False)
+    # Number of samples along the range in pixels for polyfitting
+    samples_along_range: num(min=0, required=False)
+    # Number of samples  along the azimuth in pixels for polyfitting
+    samples_along_azimuth: num(min=0, required=False)
 
 crossmul_options:
     # Path to HDF5 file or directory with coregistered SLCs
