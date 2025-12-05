@@ -105,8 +105,8 @@ __global__ void cuDerampMethod1_kernel(float2 *images, const int imageNX, int co
      
     for (int i = tid; i < imageSize; i += nthreads)
     { 
-        pixelIdxX = i%imageNY;
-        pixelIdxY = i/imageNY;
+        pixelIdxX = i / imageNY;
+        pixelIdxY = i % imageNY;
         float phase = pixelIdxX*phaseX + pixelIdxY*phaseY;
         float2 phase_factor = make_float2(cosf(phase), sinf(phase));
         image[i] *= phase_factor;
