@@ -52,8 +52,8 @@ static void cuDerampMethod1_kernel(float2 *images, const int imageNX, int const 
         float phaseY = atan2f(phaseDiffY.y, phaseDiffY.x);
 
         for (int i = 0; i < imageSize; i++) {
-            const int pixelIdxX = i%imageNY;
-            const int pixelIdxY = i/imageNY;
+            const int pixelIdxX = i / imageNY;
+            const int pixelIdxY = i % imageNY;
             float phase = pixelIdxX*phaseX + pixelIdxY*phaseY;
             float2 phase_factor = make_float2(cosf(phase), sinf(phase));
             image[i] *= phase_factor;
