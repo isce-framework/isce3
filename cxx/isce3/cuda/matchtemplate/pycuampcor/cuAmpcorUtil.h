@@ -46,8 +46,8 @@ void cuArraysC2R(cuArrays<float2> *image1, cuArrays<float> *image2, cudaStream_t
 void cuArraysAbs(cuArrays<float2> *image1, cuArrays<float> *image2, cudaStream_t stream);
 
 // cuDeramp.cu: deramping phase
-void cuDeramp(int method, cuArrays<float2> *images, cudaStream_t stream);
-void cuDerampMethod1(cuArrays<float2> *images, cudaStream_t stream);
+void cuDeramp(const int method, cuArrays<float2> *images, const int axis, cudaStream_t stream);
+void cuLinearDeramp(cuArrays<float2> *images, const int axis, cudaStream_t stream);
 
 // cuArraysPadding.cu: various utilities for oversampling padding
 void cuArraysPadding(cuArrays<float2> *image1, cuArrays<float2> *image2, cudaStream_t stream);

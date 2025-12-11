@@ -33,7 +33,7 @@ public:
      cuOverSamplerC2C(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut,
              int inNX, int inNY, int outNX, int outNY, int nImages);
      // execute oversampling
-     void execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut, int deramp_method=0);
+     void execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut);
      // destructor
      ~cuOverSamplerC2C();
 };
