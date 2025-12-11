@@ -204,7 +204,7 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
         deramp = cfg['deramping_method']
         if deramp == "magnitude":
             ampcor_obj.derampMethod = 0
-        elif deramp == "linear":
+        elif deramp == "complex":
             ampcor_obj.derampMethod = 1
         else: # skip deramping
             ampcor_obj.derampMethod = 2
