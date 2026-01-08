@@ -247,8 +247,8 @@ def require_lut_axes(group, epoch, t, r, kind):
         t = group[name][:]
     else:
         write_dataset(group, name, np.float64, t,
-            "Zero Doppler time since UTC epoch dimension "
-            "corresponding to " + kind, time_units(epoch))
+            "Vector of zero Doppler azimuth times, measured relative to a "
+            "UTC epoch, corresponding to " + kind, time_units(epoch))
 
     name = "slantRange"
     if name in group:
