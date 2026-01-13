@@ -1115,6 +1115,9 @@ posting_options:
     y_posting: num(min=0, required=False)
 
 worker_options:
+    # Enable/disable the intermediate files removal
+    intermediate_files_removal_enabled: bool(required=False)
+
     # Enable/disable internet connection (e.g. for download DEM)
     internet_access: bool(required=False)
 

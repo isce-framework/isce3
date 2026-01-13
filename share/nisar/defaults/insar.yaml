@@ -89,6 +89,9 @@ runconfig:
 
         # TODO OPTIONAL - To setup type of worker
         worker:
+             # OPTIONAL - To remove the intermediate files. Default False
+            intermediate_files_removal_enabled: False
+
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
             internet_access: False
 

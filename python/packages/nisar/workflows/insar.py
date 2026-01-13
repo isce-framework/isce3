@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import time
+import shutil
+import pathlib
 
 import journal
 from nisar.workflows import (bandpass_insar, baseline, crossmul, dense_offsets,
@@ -13,6 +15,15 @@ from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 from nisar.workflows.yaml_argparse import YamlArgparse
 
+def _remove_intermediate_dir(path: pathlib.Path,
+                             removal_flag: bool,
+                             log_channel) -> None:
+    '''
+    remove intermediate InSAR files in the scratch folder
+    '''
+    if path.exists() and removal_flag:
+        shutil.rmtree(path)
+        log_channel.log(f"removed the {path} folder")
 
 def run(cfg: dict, out_paths: dict, run_steps: dict):
     '''
@@ -20,6 +31,9 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     '''
     info_channel = journal.info("insar.run")
     info_channel.log("starting INSAR")
+
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
+    intermediate_files_removal_flag = cfg['worker']['intermediate_files_removal_enabled']
 
     t_all = time.time()
 
@@ -31,6 +45,12 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
 
     if run_steps['geo2rdr']:
         geo2rdr.run(cfg)
+
+    # Remove the rdr2geo scratch folder
+    rdr2geo_scratch_path = pathlib.Path(f"{scratch_path}/rdr2geo")
+    _remove_intermediate_dir(rdr2geo_scratch_path,
+                             intermediate_files_removal_flag,
+                             info_channel)
 
     if run_steps['prepare_insar_hdf5']:
         prepare_insar_hdf5.run(cfg)
@@ -51,6 +71,13 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
             'RIFG' in out_paths:
         rubbersheet.run(cfg, out_paths['RIFG'])
 
+    # Remove the offsets scratch folders
+    for offset_name in ['offsets_product','dense_offsets']:
+        offsets_scratch_path = pathlib.Path(f"{scratch_path}/{offset_name}")
+        _remove_intermediate_dir(offsets_scratch_path,
+                                 intermediate_files_removal_flag,
+                                 info_channel)
+
     # If enabled, run fine_resampling
     if (
         run_steps['fine_resample']
@@ -58,6 +85,12 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         and 'RIFG' in out_paths
     ):
         resample_slc_v2.run(cfg, 'fine')
+
+        # Remove the coarse resample scratch folder
+        coarse_resample_scratch_path = pathlib.Path(f"{scratch_path}/coarse_resample_slc")
+        _remove_intermediate_dir(coarse_resample_scratch_path,
+                                 intermediate_files_removal_flag,
+                                 info_channel)
 
     # If fine_resampling is enabled, use fine-coregistered SLC
     # to run crossmul
@@ -76,11 +109,26 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['unwrap'] and 'RUNW' in out_paths:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])
 
+    # Remove the 'fine_resample_slc','crossmul', 'coarse_resample_slc', 'unwrap' scratch folders
+    for workflow_name in ['fine_resample_slc','coarse_resample_slc',
+                          'crossmul','unwrap']:
+        workflow_scratch_path = pathlib.Path(f"{scratch_path}/{workflow_name}")
+        _remove_intermediate_dir(workflow_scratch_path,
+                                 intermediate_files_removal_flag,
+                                 info_channel)
+
     if run_steps['ionosphere'] and \
             cfg['processing']['ionosphere_phase_correction']['enabled'] and \
             'RUNW' in out_paths:
         split_spectrum.run(cfg)
         ionosphere.run(cfg, out_paths['RUNW'])
+
+    # Remove the 'rubbersheet_offsets', 'geo2rdr' scratch folders
+    for workflow_name in ['rubbersheet_offsets','geo2rdr']:
+        workflow_scratch_path = pathlib.Path(f"{scratch_path}/{workflow_name}")
+        _remove_intermediate_dir(workflow_scratch_path,
+                                 intermediate_files_removal_flag,
+                                 info_channel)
 
     if run_steps['geocode'] and 'GUNW' in out_paths:
         # Geocode RIFG
@@ -92,15 +140,35 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         # Geocode ROFF
         geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], InputProduct.ROFF)
 
+    # Remove the 'ionosphere' and 'geocode_corrections' scratch folders
+    for workflow_name in ['ionosphere','geocode_corrections']:
+        workflow_scratch_path = pathlib.Path(f"{scratch_path}/{workflow_name}")
+        _remove_intermediate_dir(workflow_scratch_path,
+                                 intermediate_files_removal_flag,
+                                 info_channel)
+
     if 'GUNW' in out_paths and run_steps['troposphere'] and \
             cfg['processing']['troposphere_delay']['enabled']:
         troposphere.run(cfg, out_paths['GUNW'])
+
+        # Remove the  troposhere scratch folder
+        tropo_scratch_path = pathlib.Path(f"{scratch_path}/weather_model_files")
+        _remove_intermediate_dir(tropo_scratch_path,
+                                intermediate_files_removal_flag,
+                                info_channel)
 
     if 'GUNW' in out_paths and run_steps['solid_earth_tides']:
         solid_earth_tides.run(cfg, out_paths['GUNW'])
 
     if run_steps['baseline']:
         baseline.run(cfg, out_paths)
+
+    # Remove the 'bandpass','baseline' scratch folders
+    for workflow_name in ['bandpass','baseline']:
+        workflow_scratch_path = pathlib.Path(f"{scratch_path}/{workflow_name}")
+        _remove_intermediate_dir(workflow_scratch_path,
+                                intermediate_files_removal_flag,
+                                info_channel)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran INSAR in {t_all_elapsed:.3f} seconds")
