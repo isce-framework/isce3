@@ -131,14 +131,14 @@ class L2InSARWriter(L1InSARWriter):
         slant_range_raster = _get_raster_from_hdf5_ds(
             cube_group, 'secondarySlantRange', np.float64, cube_shape,
             zds=zds, yds=yds, xds=xds,
-            long_name='slant-range',
+            long_name='Slant range',
             descr='Slant range of the secondary RSLC in meters',
             units='meters', **create_dataset_kwargs)
         azimuth_time_raster = _get_raster_from_hdf5_ds(
             cube_group, 'secondaryZeroDopplerAzimuthTime', np.float64, cube_shape,
             zds=zds, yds=yds, xds=xds,
-            long_name='zero-Doppler azimuth time',
-            descr='Zero Doppler azimuth time in seconds since UTC epoch of the reference RSLC image',
+            long_name='Zero Doppler azimuth time',
+            descr='Zero Doppler azimuth time in seconds since UTC epoch of the secondary RSLC image',
             units=az_coord_units, **create_dataset_kwargs)
 
         isce3.geometry.make_radar_grid_cubes(radar_grid, geogrid, heights,
@@ -221,7 +221,8 @@ class L2InSARWriter(L1InSARWriter):
         radar_grid['zeroDopplerAzimuthTime'].attrs['units'] = \
             zero_dopp_azimuth_time_units
         radar_grid['zeroDopplerAzimuthTime'].attrs['description'] = \
-            to_bytes("Zero doppler azimuth time of the reference RSLC image")
+            to_bytes("Zero Doppler azimuth time in seconds since UTC epoch " \
+                     "of the reference RSLC image")
 
         # Rename the dataset names
         radar_grid.move('slantRange','referenceSlantRange')

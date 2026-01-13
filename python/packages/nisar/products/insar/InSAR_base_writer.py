@@ -384,7 +384,7 @@ class InSARBaseWriter(h5py.File):
                 np.bytes_(rfi_mitigation),
                 (
                     f'Algorithm used for radio frequency interference (RFI) mitigation in ' \
-                      'the {rslc_name} RSLC, either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
+                      f'the {rslc_name} RSLC, either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
                       'mitigation was applied)'
                 ),
             ),
