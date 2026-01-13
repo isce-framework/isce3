@@ -23,7 +23,7 @@ def build_img(
     Parameters
     ----------
     steps : str
-        An string in Dockerfile syntax containing build instructions.
+        A string in Dockerfile syntax containing build instructions.
     context : str or path-like, optional
         The build context. Should be a URL or path to a directory. Defaults to the
         current working directory.
