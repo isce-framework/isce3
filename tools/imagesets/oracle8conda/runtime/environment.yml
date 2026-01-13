@@ -1,0 +1,31 @@
+channels:
+  - nvidia/label/cuda-11.8.0
+  - conda-forge
+  - nodefaults
+dependencies:
+  - backoff
+  - cuda-cudart
+  - fftw>=3
+  - gdal>=3
+  - h5py>=3
+  - hdf5>=1.10.2
+  - libcufft
+  - libgcc-ng>=9
+  - libgdal-hdf5
+  - libgdal-netcdf
+  - libgomp
+  - libstdcxx-ng>=9
+  - matplotlib
+  - netcdf4
+  - numpy>=1.20
+  - pyre>=1.12.5
+  - pyaps3>=0.3
+  - pysolid>=0.2
+  - python>=3.9
+  - raider-base==0.5.3
+  - ruamel.yaml
+  - scipy!=1.10
+  - shapely>=2
+  - snaphu>=0.4
+  - sysroot_linux-64>=2.17
+  - yamale
