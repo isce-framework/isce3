@@ -1219,10 +1219,10 @@ class InSARBaseWriter(h5py.File):
                 "productLevel",
                 self.product_info.ProductLevel,
                 (
-                    "Product level. L0A: Unprocessed instrument data; L0B:"
-                    " Reformatted, unprocessed instrument data; L1: Processed"
-                    " instrument data in radar coordinates system; and L2:"
-                    " Processed instrument data in geocoded coordinates system"
+                    'Product level. "L0A": Unprocessed instrument data; "L0B":'
+                    ' Reformatted, unprocessed instrument data; "L1": Processed'
+                    ' instrument data in radar coordinates system; and "L2":'
+                    ' Processed instrument data in geocoded coordinates system'
                 ),
             ),
             DatasetParams(
