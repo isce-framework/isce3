@@ -1042,25 +1042,35 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
-        descr='East component of unit vector of LOS from target to sensor',
+        descr='East component of the line-of-sight (LOS) unit vector, defined from ' \
+              'the target to the sensor, expressed in the east-north-up (ENU) coordinate ' \
+              'system with its origin at the target location',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
-        descr='North component of unit vector of LOS from target to sensor',
+        descr='North component of the line-of-sight (LOS) unit vector, defined from ' \
+              'the target to the sensor, expressed in the east-north-up (ENU) coordinate ' \
+              'system with its origin at the target location',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
-        descr='East component of unit vector along ground track',
+        descr='East component of the along-track unit vector at the target ' \
+              'location, expressed in the east-north-up (ENU) coordinate ' \
+              'system and projected onto the horizontal plane ' \
+              '(i.e., excluding the up component)',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
-        descr='North component of unit vector along ground track',
+        descr='North component of the along-track unit vector at the target ' \
+              'location, expressed in the east-north-up (ENU) coordinate ' \
+              'system and projected onto the horizontal plane ' \
+              '(i.e., excluding the up component)',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
