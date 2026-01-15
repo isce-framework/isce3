@@ -19,7 +19,6 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-#include <math.h>
 #include <limits>
 
 namespace isce3::matchtemplate::pycuampcor {
@@ -65,7 +64,11 @@ static void cuLinearDeramp_kernel(float2 *images, const int imageNX, const int i
             const int pixelIdxY = i % imageNY;
             double phase = pixelIdxX*phaseX + pixelIdxY*phaseY;
             double phase_sin, phase_cos;
+#if defined(__APPLE__) || defined(__MACOSX__)
+            __sincos(phase, &phase_sin, &phase_cos);
+#else
             sincos(phase, &phase_sin, &phase_cos);
+#endif
             image[i] = make_float2(
                 image[i].x*phase_cos - image[i].y*phase_sin,
                 image[i].x*phase_sin + image[i].y*phase_cos);
