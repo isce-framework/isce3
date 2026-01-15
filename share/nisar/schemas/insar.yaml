@@ -329,7 +329,7 @@ dense_offsets_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude , complex (linear phase ramp), or complex without deramp
+    # Deramp data prior to FFT: 'magnitude' , 'complex' (linear phase ramp), or 'complex_no_deramp'
     deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
 
     # Deramp data axis prior to FFT: range, azimuth, or both
@@ -412,7 +412,7 @@ offsets_product_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude , complex (linear phase ramp), or complex without deramp
+    # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
     deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
 
     # Deramp data axis prior to FFT: range, azimuth, or both
