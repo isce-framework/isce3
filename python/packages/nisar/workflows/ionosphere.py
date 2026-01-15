@@ -1142,6 +1142,8 @@ def run(cfg: dict, runw_hdf5: str):
         rcom_path_freq_a = f"{dest_pol_path}/connectedComponents"
         rslant_path_a = f"{dest_freq_path}/interferogram/"\
             "slantRange"
+        subswath_mask_freq_a_path = f"{dest_freq_path}/interferogram/mask"
+
         # Set paths for frequency B
         if iono_method in iono_method_sideband:
             pol_b = pol_list_b[pol_ind]
@@ -1154,6 +1156,8 @@ def run(cfg: dict, runw_hdf5: str):
             rcom_path_freq_b = f"{dest_pol_path_b}/connectedComponents"
             rslant_path_b = f"{dest_freq_path_b}/interferogram/"\
                 "slantRange"
+            subswath_mask_freq_b_path = \
+                f"{dest_freq_path_b}/interferogram/mask"
 
         if iono_method in iono_method_subbands:
             # set paths for high and low sub-bands
@@ -1259,6 +1263,12 @@ def run(cfg: dict, runw_hdf5: str):
             side_conn_image = None
             diff_ms_conn_image = None
 
+            # ionosphere method using sub-bands uses subswath mask in freq A
+            # ionosphere method using side-band uses subswath masks in freq A and B
+            subswath_mask_image = None
+            subswath_mask_main_image = None
+            subswath_mask_side_image = None
+
             if iono_method in iono_method_subbands:
                 # Initialize array for block rasters
                 sub_low_image = np.empty([block_rows_data, cols_main],
@@ -1277,6 +1287,11 @@ def run(cfg: dict, runw_hdf5: str):
                     sub_high_conn_image = np.empty(
                         [block_rows_data, cols_main],
                         dtype=float)
+
+                if "subswath_mask" in mask_type:
+                    subswath_mask_image = np.empty(
+                        [block_rows_data, cols_main],
+                        dtype=int)
 
                 if iono_method == 'main_diff_low_high_subband':
                     main_image = np.empty([block_rows_data, cols_main],
@@ -1325,6 +1340,11 @@ def run(cfg: dict, runw_hdf5: str):
                             np.s_[row_start:row_start + block_rows_data, :])
                         src_high_h5[rcom_path_freq_a].read_direct(
                             sub_high_conn_image,
+                            np.s_[row_start:row_start + block_rows_data, :])
+
+                    if "subswath_mask" in mask_type:
+                        src_low_h5[subswath_mask_freq_a_path].read_direct(
+                            subswath_mask_image,
                             np.s_[row_start:row_start + block_rows_data, :])
 
                 if bridge_algorithm_bool:
@@ -1430,6 +1450,14 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_side],
                         dtype=float)
 
+                if "subswath_mask" in mask_type:
+                    subswath_mask_main_image = np.empty(
+                        [block_rows_data, cols_main],
+                        dtype=int)
+                    subswath_mask_side_image = np.empty(
+                        [block_rows_data, cols_side],
+                        dtype=int)
+
                 with HDF5OptimizedReader(
                         name=runw_freq_a_str, mode='r',
                         libver='latest', swmr=True) as src_main_h5, \
@@ -1461,6 +1489,23 @@ def run(cfg: dict, runw_hdf5: str):
                         src_side_h5[rcom_path_freq_b].read_direct(
                             side_conn_image,
                             np.s_[row_start:row_start + block_rows_data, :])
+
+                    if "subswath_mask" in mask_type:
+                        src_main_h5[subswath_mask_freq_a_path].read_direct(
+                            subswath_mask_main_image,
+                            np.s_[row_start:row_start + block_rows_data, :])
+                        # Subswath mask may not be available when frequency B
+                        # was not requested in the runconfig for interferogram
+                        # In this case, we decimate subswath_mask in frequencyA
+                        if subswath_mask_freq_b_path in src_side_h5:
+                            src_side_h5[subswath_mask_freq_b_path].read_direct(
+                                subswath_mask_side_image,
+                                np.s_[row_start:row_start + block_rows_data, :])
+                        else:
+                            subswath_mask_side_image = decimate_freq_a_array(
+                                    main_slant,
+                                    side_slant,
+                                    subswath_mask_main_image)
 
                     if iono_method == 'main_diff_ms_band':
 
@@ -1634,6 +1679,7 @@ def run(cfg: dict, runw_hdf5: str):
                         slant_side=side_slant,
                         threshold=filter_coh_thresh)
                     mask_array = mask_array & mask_image
+
                 if "connected_components" in mask_type:
                     mask_image = iono_phase_obj.get_conn_component_mask_array(
                         main_array=main_conn_image,
@@ -1652,6 +1698,16 @@ def run(cfg: dict, runw_hdf5: str):
                         threshold=median_filter_threshold,
                         median_filter_size=median_filter_size,
                         )
+                    mask_array = mask_array & mask_image
+
+                if "subswath_mask" in mask_type:
+                    mask_array = iono_phase_obj.get_subswath_mask_array(
+                        main_array=subswath_mask_main_image,
+                        side_array=subswath_mask_side_image,
+                        low_band_array=subswath_mask_image,
+                        high_band_array=subswath_mask_image,
+                        slant_main=main_slant,
+                        slant_side=side_slant)
                     mask_array = mask_array & mask_image
 
                 if "water" in mask_type:

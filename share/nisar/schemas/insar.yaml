@@ -737,7 +737,7 @@ dispersive_filter_options:
     #   When multiple validation sources are enabled, take the intersection of
     #   their invalid masks to form a combined mask.
     #   Masked areas are then filled using spatial interpolation.
-    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', required=False)
+    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', 'subswath_mask', required=False)
     # Median filter size for mask generation
     median_filter_size: num(min=1, required=False)
     # Median filter threshold for mask generation
