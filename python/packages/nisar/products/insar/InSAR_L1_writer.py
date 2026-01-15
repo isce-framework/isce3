@@ -402,7 +402,7 @@ class L1InSARWriter(InSARBaseWriter):
                 DatasetParams(
                     "zeroDopplerTime",
                     offset_zero_doppler_time,
-                    "Zero Doppler azimuth time since UTC epoch vector",
+                    "Vector of zero Doppler azimuth times measured relative to a UTC epoch",
                     {'units': zero_dopp_time_units},
                 ),
                 DatasetParams(
@@ -607,7 +607,7 @@ class L1InSARWriter(InSARBaseWriter):
                 DatasetParams(
                     "zeroDopplerTime",
                     igram_zero_doppler_time,
-                    "Zero Doppler azimuth time since UTC epoch vector",
+                    "Vector of zero Doppler azimuth times measured relative to a UTC epoch",
                     {'units': zero_dopp_time_units},
                 ),
                 DatasetParams(
@@ -714,7 +714,7 @@ class L1InSARWriter(InSARBaseWriter):
                                                  " subswath number of that pixel in the secondary RSLC,"
                                                  " and the most significant digit represents"
                                                  " the subswath number of that pixel in the reference RSLC."
-                                                 " A value of '0' in either digit indicates an invalid sample"
+                                                 " A value of 0 in either digit indicates an invalid sample"
                                                  " in the corresponding RSLC"),
                                     fill_value=255)
             igram_group['mask'].attrs['valid_min'] = 0

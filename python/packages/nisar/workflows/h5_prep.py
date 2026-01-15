@@ -827,7 +827,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
     azimuth_time_raster = _get_raster_from_hdf5_ds(
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
-        long_name='Zero-Doppler azimuth time',
+        long_name='Zero Doppler azimuth time',
         descr='Zero Doppler azimuth time in seconds since UTC epoch',
         units=az_coord_units, **create_dataset_kwargs)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
@@ -1152,7 +1152,8 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     coordinates_list.append(rg_dataset)
 
     # Zero-doppler time
-    descr = "Zero Doppler time since UTC epoch values corresponding to the geolocation grid"
+    descr = ("Vector of zero Doppler azimuth times, measured relative " +
+             "to a UTC epoch, corresponding to the geolocation grid")
     az_dataset_name = os.path.join(root_ds, 'zeroDopplerTime')
     if az_dataset_name in hdf5_obj:
         del hdf5_obj[az_dataset_name]
