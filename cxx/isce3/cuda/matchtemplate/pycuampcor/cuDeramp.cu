@@ -120,8 +120,8 @@ __global__ void cuLinearDeramp_kernel(float2 *images, const int imageNX, int con
         pixelIdxY = i % imageNY;
         // use double to improve accuracy
         double phase = pixelIdxX*phaseX + pixelIdxY*phaseY;
-        double phase_cos = cos(phase);
-        double phase_sin = sin(phase);
+        double phase_sin, phase_cos;
+        sincos(phase, &phase_sin, &phase_cos);
         image[i] = make_float2(
             image[i].x*phase_cos - image[i].y*phase_sin,
             image[i].x*phase_sin + image[i].y*phase_cos);
@@ -137,7 +137,9 @@ __global__ void cuLinearDeramp_kernel(float2 *images, const int imageNX, int con
  */
 void cuLinearDeramp(cuArrays<float2> *images, const int axis, cudaStream_t stream)
 {
-
+    if ((axis < 0) or (axis > 2)) {
+        throw std::invalid_argument("deramp axis must be 0, 1, or 2");
+    }
     const dim3 grid(images->count);
     const int imageSize = images->width*images->height;
     const float invSize = 1.0f/imageSize;

@@ -46,6 +46,9 @@ void cuArraysC2R(cuArrays<float2> *image1, cuArrays<float> *image2, cudaStream_t
 void cuArraysAbs(cuArrays<float2> *image1, cuArrays<float> *image2, cudaStream_t stream);
 
 // cuDeramp.cu: deramping phase
+// `cuDeramp` calls a deramp implementation (or does nothing) based on the value of `method`:
+//  `method=1` for cuLinearDeramp, any other value for no-op
+// `cuLinearDeramp` Estimates the phase gradient over the chip and removes it.
 void cuDeramp(const int method, cuArrays<float2> *images, const int axis, cudaStream_t stream);
 void cuLinearDeramp(cuArrays<float2> *images, const int axis, cudaStream_t stream);
 

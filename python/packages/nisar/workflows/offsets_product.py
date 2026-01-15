@@ -272,8 +272,10 @@ def set_ampcor_params(cfg, ampcor_obj):
             ampcor_obj.derampAxis = 0
         elif deramp_axis == "range":
             ampcor_obj.derampAxis = 1
-        else: # both directions
+        elif deramp_axis == "both":
             ampcor_obj.derampAxis = 2
+        else:
+            raise ValueError(f"invalid {deramp_axis=}")
 
     ampcor_obj.corrStatWindowSize = cfg['correlation_statistics_zoom']
     ampcor_obj.corrSurfaceZoomInWindow = cfg['correlation_surface_zoom']
