@@ -63,12 +63,8 @@ static void cuLinearDeramp_kernel(float2 *images, const int imageNX, const int i
             const int pixelIdxX = i / imageNY;
             const int pixelIdxY = i % imageNY;
             double phase = pixelIdxX*phaseX + pixelIdxY*phaseY;
-            double phase_sin, phase_cos;
-#if defined(__APPLE__) || defined(__MACOSX__)
-            __sincos(phase, &phase_sin, &phase_cos);
-#else
-            sincos(phase, &phase_sin, &phase_cos);
-#endif
+            double phase_cos = cos(phase);
+            double phase_sin = sin(phase);
             image[i] = make_float2(
                 image[i].x*phase_cos - image[i].y*phase_sin,
                 image[i].x*phase_sin + image[i].y*phase_cos);
