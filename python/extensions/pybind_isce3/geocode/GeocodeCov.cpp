@@ -22,6 +22,7 @@ using isce3::geometry::rtcAlgorithm;
 using isce3::geometry::rtcAreaBetaMode;
 using isce3::geometry::rtcInputTerrainRadiometry;
 using isce3::geometry::rtcOutputTerrainRadiometry;
+using isce3::geometry::rtcMinValueMode;
 using isce3::io::Raster;
 using isce3::product::RadarGridParameters;
 
@@ -81,6 +82,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("exponent") = 0,
                     py::arg("rtc_min_value_db") =
                             std::numeric_limits<float>::quiet_NaN(),
+                    py::arg("rtc_transition_value_db") =
+                            std::numeric_limits<float>::quiet_NaN(),
+                    py::arg("rtc_min_value_mode") = rtcMinValueMode::DISABLED,
                     py::arg("rtc_upsampling") =
                             std::numeric_limits<double>::quiet_NaN(),
                     py::arg("rtc_algorithm") =
@@ -175,7 +179,21 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         of the input raster (1 for real and 2 for complex rasters).
                     rtc_min_value_db: float, optional
                         Minimum value for the RTC area factor. Radar data with
-                        RTC area factor below this limit will be set to NaN.
+                        RTC area factor below this limit will be considered invalid.
+                    rtc_transition_value_db : float, optional
+                        RTC transition start value in dB used when
+                        `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+                        between `rtc_transition_value_db` and `rtc_min_value_db` will have
+                        a smooth transition applied to the RTC correction.
+                    rtc_min_value_mode: isce3.geometry.RtcMinValueMode, optional
+                        Specifies how the RTC minimum value is handled:
+                        DISABLED - No minimum-value thresholding is applied.
+                        CLIP - RTC values below the minimum are clipped to the minimum value.
+                        INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+                        BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+                        the minimum value.
+                        TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+                        `rtc_transition_value_db` and `rtc_min_value_db`.
                     rtc_geogrid_upsampling: int, optional
                         Geogrid upsampling to compute the radiometric terrain
                         correction RTC.

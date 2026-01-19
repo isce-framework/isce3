@@ -123,6 +123,9 @@ TEST(GeocodeTest, TestGeocodeCov) {
         isce3::geometry::rtcOutputTerrainRadiometry::GAMMA_NAUGHT;
     int exponent = 0;
     float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN();
+    float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN();
+    isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION;
     double rtc_geogrid_upsampling =
             std::numeric_limits<double>::quiet_NaN();
     isce3::geometry::rtcAlgorithm rtc_algorithm =
@@ -245,6 +248,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
                                flatten, geogrid_upsampling, flag_upsample_radar_grid,
                                flag_apply_rtc, input_terrain_radiometry,
                                output_terrain_radiometry, exponent, rtc_min_value_db,
+                               rtc_transition_value_db, rtc_min_value_mode,
                                rtc_geogrid_upsampling, rtc_algorithm,
                                rtc_area_beta_mode, abs_cal_factor,
                                clip_min, clip_max, min_nlooks, radar_grid_nlooks,
@@ -301,7 +305,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
             demRaster, output_mode, flag_az_baseband_doppler, flatten,
             geogrid_upsampling, flag_upsample_radar_grid, flag_apply_rtc,
             input_terrain_radiometry, output_terrain_radiometry, exponent,
-            rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
+            rtc_min_value_db, rtc_transition_value_db, rtc_min_value_mode,
+            rtc_geogrid_upsampling, rtc_algorithm,
             rtc_area_beta_mode, abs_cal_factor, clip_min,
             clip_max, min_nlooks, radar_grid_nlooks,
             &geocoded_off_diag_raster, out_geo_rdr, out_geo_dem,

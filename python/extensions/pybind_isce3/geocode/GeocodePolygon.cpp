@@ -10,7 +10,7 @@ namespace py = pybind11;
 using isce3::geocode::GeocodePolygon;
 using isce3::geometry::rtcInputTerrainRadiometry;
 using isce3::geometry::rtcOutputTerrainRadiometry;
-using isce3::geometry::rtcInputTerrainRadiometry;
+using isce3::geometry::rtcMinValueMode;
 
 template<typename T>
 void addbinding(py::class_<GeocodePolygon<T>> &pyGeocodePolygon)
@@ -25,7 +25,7 @@ void addbinding(py::class_<GeocodePolygon<T>> &pyGeocodePolygon)
                    const isce3::core::LUT2d<double> &,
                    isce3::io::Raster &, 
                    double,
-                   int, 
+                   int,
                    double>(),
             py::arg("x_vect"),
             py::arg("y_vect"),
@@ -70,6 +70,8 @@ void addbinding(py::class_<GeocodePolygon<T>> &pyGeocodePolygon)
             py::arg("exponent") = 0,
             py::arg("geogrid_upsampling") = 1,
             py::arg("rtc_min_value_db") = std::numeric_limits<float>::quiet_NaN(),
+            py::arg("rtc_transition_value_db") = std::numeric_limits<float>::quiet_NaN(),
+            py::arg("rtc_min_value_mode") = rtcMinValueMode::DISABLED,
             py::arg("abs_cal_factor") = 1,
             py::arg("radargrid_nlooks") = 1,
             py::arg("output_off_diag_terms") = nullptr,
@@ -80,7 +82,9 @@ void addbinding(py::class_<GeocodePolygon<T>> &pyGeocodePolygon)
             R"(
     Calculate the mean value of radar-grid samples using a polygon defined
     over geographical coordinates.
-    Arguments:
+
+    Parameters:
+    ----------
         radar_grid          Radar grid
         input_dop           Doppler LUT associated with the radar grid
         input_raster        Input raster
@@ -95,6 +99,15 @@ void addbinding(py::class_<GeocodePolygon<T>> &pyGeocodePolygon)
         output_mode         Output mode
         geogrid_upsampling  Geogrid upsampling (in each direction)
         rtc_min_value_db    Minimum value for the RTC area factor.
+        rtc_min_value_mode
+            Determine whether to clip RTC values
+            below the minimum RTC value specified by `rtc_min_value_db`, instead of
+            considering associated radar samples as invalid.
+            If `true`, RTC values below the minimum threshold are clipped to
+            that threshold and associated radar samples are considered valid.
+            If `false`, radar samples corresponding to RTC values below the
+            minimum threshold are considered invalid, which may result in
+            NaNs in the output if no valid samples are available.
     Radar data with RTC area factor below this limit are ignored.
         abs_cal_factor      Absolute calibration factor.
         radar_grid_nlooks   Radar grid number of looks. This

@@ -254,12 +254,28 @@ runconfig:
                 # "sigma0"
                 input_terrain_radiometry: beta0
 
+                # RTC minimum value mode. Options:
+                #  "disabled" - No minimum value enforcement
+                #  "clip" - Clip values below the minimum RTC area factor
+                #  "invalid" - Set output pixels to invalid where RTC area factor is below
+                #      the minimum threshold
+                #  "bypass_rtc" - Bypass RTC correction where RTC area factor is below
+                #      the minimum threshold (i.e., output pixel = input pixel)
+                #  "transition" - Apply a smooth (linear) transition between threshold value
+                #      defined by `rtc_min_value_db` and the bypass RTC value
+                #      defined by `rtc_transition_value_db`
+                rtc_min_value_mode: transition
+
                 # Minimum RTC area factor (in dB). Specifies the lowest
                 # allowable denominator (in dB) for dividing GCOV samples.
                 # If not set, no minimum is enforced, which may lead
                 # to divisions by very small values and result in infinite
                 # or inaccurate outputs.
-                rtc_min_value_db:
+                rtc_min_value_db: -30
+    
+                # RTC transition value (in dB). Only relevant if
+                # rtc_min_value_mode is 'transition'
+                rtc_transition_value_db: -27
 
                 # RTC DEM upsampling factor
                 dem_upsampling: 2

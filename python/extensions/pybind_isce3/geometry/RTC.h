@@ -8,11 +8,14 @@ using isce3::geometry::rtcAreaMode;
 using isce3::geometry::rtcAreaBetaMode;
 using isce3::geometry::rtcInputTerrainRadiometry;
 using isce3::geometry::rtcOutputTerrainRadiometry;
+using isce3::geometry::rtcMinValueMode;
 
 void addbinding(
         pybind11::enum_<rtcInputTerrainRadiometry>& pyInputTerrainRadiometry);
 void addbinding(
         pybind11::enum_<rtcOutputTerrainRadiometry>& pyOutputTerrainRadiometry);
+void addbinding(
+        pybind11::enum_<rtcMinValueMode>& pyRtcMinValueMode);
 void addbinding(pybind11::enum_<rtcAlgorithm> & pyRtcAlgorithm);
 void addbinding(pybind11::enum_<rtcAreaMode> & pyRtcAreaMode);
 void addbinding(pybind11::enum_<rtcAreaBetaMode> & pyRtcAreaBetaMode);

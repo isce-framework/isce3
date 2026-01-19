@@ -33,6 +33,7 @@ enum geocodeOutputMode {
 };
 
 
+
 template<class T>
 class Geocode {
 public:
@@ -77,7 +78,19 @@ public:
      * The value 0 indicates that the the exponent is based on the data type of
      * the input raster (1 for real and 2 for complex rasters).
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
-     * Radar data with RTC area factor below this limit will be set to NaN.
+     * Radar data with RTC area factor below this limit will be considered invalid.
+     * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+     * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+     * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+     * a smooth transition applied to the RTC correction.
+     * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+     * DISABLED - No minimum-value thresholding is applied.
+     * CLIP - RTC values below the minimum are clipped to the minimum value.
+     * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+     * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+     * the minimum value.
+     * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+     * `rtc_transition_value_db` and `rtc_min_value_db`.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute
      * the radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
@@ -92,7 +105,7 @@ public:
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
      * @param[in]  min_nlooks          Minimum number of looks. Geogrid data
-     * below this limit will be set to NaN
+     * below this limit will be considered invalid
      * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
      * parameters determines the multilooking factor used to compute
      * out_geo_nlooks.
@@ -162,6 +175,9 @@ public:
                             rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
             int exponent = 0,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+            float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+            isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
             double rtc_geogrid_upsampling =
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
@@ -230,7 +246,19 @@ public:
      * @param[in]  input_terrain_radiometry  Input terrain radiometry
      * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
-     * Radar data with RTC area factor below this limit will be set to NaN.
+     * Radar data with RTC area factor below this limit will be considered invalid.
+     * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+     * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+     * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+     * a smooth transition applied to the RTC correction.
+     * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+     * DISABLED - No minimum-value thresholding is applied.
+     * CLIP - RTC values below the minimum are clipped to the minimum value.
+     * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+     * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+     * the minimum value.
+     * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+     * `rtc_transition_value_db` and `rtc_min_value_db`.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute the
      * radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
@@ -302,6 +330,9 @@ public:
                     output_terrain_radiometry = isce3::geometry::
                             rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+            float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+            isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
             double rtc_geogrid_upsampling =
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
@@ -368,7 +399,19 @@ public:
      * @param[in]  input_terrain_radiometry  Input terrain radiometry
      * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
-     * Radar data with RTC area factor below this limit will be set to NaN.
+     * Radar data with RTC area factor below this limit will be considered invalid.
+     * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+     * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+     * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+     * a smooth transition applied to the RTC correction.
+     * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+     * DISABLED - No minimum-value thresholding is applied.
+     * CLIP - RTC values below the minimum are clipped to the minimum value.
+     * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+     * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+     * the minimum value.
+     * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+     * `rtc_transition_value_db` and `rtc_min_value_db`.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute the
      * radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
@@ -383,7 +426,7 @@ public:
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
      * @param[in]  min_nlooks          Minimum number of looks. Geogrid data
-     * below this limit will be set to NaN
+     * below this limit will be considered invalid
      * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
      * parameters determines the multilooking factor used to compute out_nlooks.
      * @param[out] out_off_diag_terms  Output raster containing the
@@ -449,6 +492,9 @@ public:
                     output_terrain_radiometry = isce3::geometry::
                             rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+            float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+            isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
             double rtc_geogrid_upsampling =
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
@@ -647,7 +693,7 @@ private:
             isce3::io::Raster& output_raster,
             isce3::core::Matrix<float>& rtc_area,
             isce3::core::Matrix<float>& rtc_area_sigma,
-            float rtc_min_value, double abs_cal_factor,
+            double abs_cal_factor,
             float clip_min, float clip_max,
             float min_nlooks, float radar_grid_nlooks,
             bool flag_upsample_radar_grid,
@@ -682,8 +728,6 @@ private:
      * @param[in] flatten flag to flatten the geocoded SLC
      * @param[in] phase_screen_raster Phase screen raster
      * @param[in] phase_screen_array  Phase screen array
-     * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
-     * Radar data with RTC area factor below this limit will be set to NaN.
      * @param[in] abs_cal_factor      Absolute calibration factor applied
      * to real-valued output datasets (assumed to be proportional to
      * power/intensity). If the output is complex valued, its considered
@@ -734,7 +778,7 @@ private:
             const bool flag_az_baseband_doppler, const bool flatten,
             isce3::io::Raster* phase_screen_raster,
             isce3::core::Matrix<float>& phase_screen_array,
-            float rtc_min_value, double abs_cal_factor,
+            double abs_cal_factor,
             float clip_min, float clip_max,
             bool flag_run_rtc, const isce3::core::Matrix<float>& rtc_area,
             const isce3::core::Matrix<float>& rtc_area_sigma,

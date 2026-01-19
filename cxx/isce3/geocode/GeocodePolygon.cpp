@@ -3,6 +3,7 @@
 #include "GeocodeHelpers.h"
 
 #include <limits>
+#include <iostream>
 
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/core/Projections.h>
@@ -145,7 +146,9 @@ void GeocodePolygon<T>::getPolygonMean(
         isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry, 
         isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry, 
         int exponent, double geogrid_upsampling,
-        float rtc_min_value_db, double abs_cal_factor, float radar_grid_nlooks,
+        float rtc_min_value_db, float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
+        double abs_cal_factor, float radar_grid_nlooks,
         isce3::io::Raster* output_off_diag_terms,
         isce3::io::Raster* output_radargrid_data, isce3::io::Raster* output_rtc,
         isce3::io::Raster* output_weights, isce3::core::dataInterpMethod interp_method) {
@@ -157,11 +160,16 @@ void GeocodePolygon<T>::getPolygonMean(
         geogrid_upsampling = 2;
     assert(geogrid_upsampling > 0);
 
+    std::string rtc_min_value_mode_str = get_rtc_min_value_mode_str(
+        rtc_min_value_mode);
+
     _info <<"look side: " << radar_grid.lookSide()
          << pyre::journal::newline
          << "radar_grid length: " << radar_grid.length()
          << ", width: " << radar_grid.width() << pyre::journal::newline
-         << "RTC min value [dB]: " << rtc_min_value_db << pyre::journal::endl;
+         << "RTC min value [dB]: " << rtc_min_value_db << pyre::journal::newline
+         << "RTC min value mode: " << rtc_min_value_mode_str
+         << pyre::journal::endl;
 
     _info << "cropping radar grid from index (a0: " << _yoff;
     _info << ", r0: " << _xoff << ") to index (af: " << _yoff + _ysize;
@@ -232,6 +240,7 @@ void GeocodePolygon<T>::getPolygonMean(
                    output_terrain_radiometry, rtc_area_mode,
                    rtc_algorithm, rtc_area_beta_mode,
                    geogrid_upsampling * 2, rtc_min_value_db,
+                   rtc_transition_value_db, rtc_min_value_mode,
                    out_sigma, az_time_correction, slant_range_correction,
                    rtc_memory_mode, interp_method, _threshold,
                    _num_iter, _delta_range);
@@ -264,21 +273,24 @@ void GeocodePolygon<T>::getPolygonMean(
         _info << "output dtype: GDT_Float32" << pyre::journal::endl;
         _getPolygonMean<float>(
                 rtc_area, radar_grid_cropped, input_raster, output_raster,
-                flag_apply_rtc, rtc_min_value, abs_cal_factor, radar_grid_nlooks,
+                flag_apply_rtc, rtc_min_value, rtc_min_value_mode,
+                abs_cal_factor, radar_grid_nlooks,
                 output_off_diag_terms, output_radargrid_data, output_weights);
     } else if (input_raster.dtype() == GDT_CFloat32 && exponent == 2) {
         _info << "input dtype: GDT_CFloat32" << pyre::journal::endl;
         _info << "output dtype: GDT_Float32" << pyre::journal::endl;
         _getPolygonMean<float>(
                 rtc_area, radar_grid_cropped, input_raster, output_raster,
-                flag_apply_rtc, rtc_min_value, abs_cal_factor, radar_grid_nlooks,
+                flag_apply_rtc, rtc_min_value, rtc_min_value_mode,
+                abs_cal_factor, radar_grid_nlooks,
                 output_off_diag_terms, output_radargrid_data, output_weights);
     } else if (input_raster.dtype() == GDT_CFloat32 && exponent == 1) {
         _info << "input dtype: GDT_CFloat32" << pyre::journal::endl;
         _info << "output dtype: GDT_CFloat32" << pyre::journal::endl;
         _getPolygonMean<std::complex<float>>(
                 rtc_area, radar_grid_cropped, input_raster, output_raster,
-                flag_apply_rtc, rtc_min_value, abs_cal_factor, radar_grid_nlooks,
+                flag_apply_rtc, rtc_min_value, rtc_min_value_mode,
+                abs_cal_factor, radar_grid_nlooks,
                 output_off_diag_terms, output_radargrid_data, output_weights);
     } else
         _info << "ERROR not implemented for datatype: " << input_raster.dtype()
@@ -294,7 +306,7 @@ void GeocodePolygon<T>::_getPolygonMean(
         isce3::io::Raster& input_raster,
         isce3::io::Raster& output_raster,
         bool flag_apply_rtc,
-        float rtc_min_value,
+        float rtc_min_value, isce3::geometry::rtcMinValueMode rtc_min_value_mode,
         double abs_cal_factor, float radar_grid_nlooks,
         isce3::io::Raster* output_off_diag_terms,
         isce3::io::Raster* output_radargrid_data,
@@ -397,9 +409,12 @@ void GeocodePolygon<T>::_getPolygonMean(
             */
             w = std::abs(w);
             if (flag_apply_rtc) {
-                const float rtc_value = rtc_area(y, x);
-                if (std::isnan(rtc_value) || rtc_value < rtc_min_value)
+                float rtc_value = rtc_area(y, x);
+                if (std::isnan(rtc_value) ||
+                        (!rtc_min_value_mode && rtc_value < rtc_min_value))
                     continue;
+                else if (rtc_value < rtc_min_value)
+                    rtc_value = rtc_min_value;
                 nlooks += w;
                 w /= rtc_value;
             } else {

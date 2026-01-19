@@ -27,6 +27,7 @@
 using isce3::core::OrbitInterpBorderMode;
 using isce3::core::Vec3;
 using isce3::core::GeocodeMemoryMode;
+using isce3::geometry::rtcMinValueMode;
 
 namespace isce3 { namespace geocode {
 
@@ -131,7 +132,9 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         bool flag_upsample_radar_grid, bool flag_apply_rtc,
         isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry,
         isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,
-        int exponent, float rtc_min_value_db, double rtc_geogrid_upsampling,
+        int exponent, float rtc_min_value_db, float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
+        double rtc_geogrid_upsampling,
         isce3::geometry::rtcAlgorithm rtc_algorithm,
         isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode,
         double abs_cal_factor, float clip_min, float clip_max,
@@ -161,7 +164,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         geocodeInterp<T>(radar_grid, input_raster, output_raster, dem_raster,
                 flag_apply_rtc, flag_az_baseband_doppler, flatten,
                 input_terrain_radiometry, output_terrain_radiometry,
-                rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
+                rtc_min_value_db, rtc_transition_value_db, rtc_min_value_mode,
+                rtc_geogrid_upsampling, rtc_algorithm,
                 rtc_area_beta_mode,
                 abs_cal_factor, clip_min, clip_max, out_geo_rdr, out_geo_dem,
                 out_geo_rtc, out_geo_rtc_gamma0_to_sigma0,
@@ -177,8 +181,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         geocodeInterp<double>(radar_grid, input_raster, output_raster,
                 dem_raster, flag_apply_rtc, flag_az_baseband_doppler, flatten,
                 input_terrain_radiometry, output_terrain_radiometry,
-                rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
-                rtc_area_beta_mode,
+                rtc_min_value_db, rtc_transition_value_db, rtc_min_value_mode,
+                rtc_geogrid_upsampling, rtc_algorithm, rtc_area_beta_mode,
                 abs_cal_factor, clip_min, clip_max, out_geo_rdr, out_geo_dem,
                 out_geo_rtc, out_geo_rtc_gamma0_to_sigma0, phase_screen_raster,
                 az_time_correction,
@@ -191,8 +195,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         geocodeInterp<float>(radar_grid, input_raster, output_raster,
                 dem_raster, flag_apply_rtc, flag_az_baseband_doppler, flatten,
                 input_terrain_radiometry, output_terrain_radiometry,
-                rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
-                rtc_area_beta_mode,
+                rtc_min_value_db, rtc_transition_value_db, rtc_min_value_mode,
+                rtc_geogrid_upsampling, rtc_algorithm, rtc_area_beta_mode,
                 abs_cal_factor, clip_min, clip_max, out_geo_rdr, out_geo_dem,
                 out_geo_rtc,  out_geo_rtc_gamma0_to_sigma0,
                 phase_screen_raster, az_time_correction,
@@ -205,8 +209,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         geocodeAreaProj<T>(radar_grid, input_raster, output_raster, dem_raster,
                 geogrid_upsampling, flag_upsample_radar_grid, flag_apply_rtc,
                 input_terrain_radiometry, output_terrain_radiometry,
-                rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
-                rtc_area_beta_mode,
+                rtc_min_value_db, rtc_transition_value_db, rtc_min_value_mode,
+                rtc_geogrid_upsampling, rtc_algorithm, rtc_area_beta_mode,
                 abs_cal_factor, clip_min, clip_max, min_nlooks,
                 radar_grid_nlooks, out_off_diag_terms, out_geo_rdr, out_geo_dem,
                 out_geo_nlooks, out_geo_rtc,  out_geo_rtc_gamma0_to_sigma0,
@@ -222,8 +226,9 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 dem_raster, geogrid_upsampling, flag_upsample_radar_grid,
                 flag_apply_rtc, input_terrain_radiometry,
                 output_terrain_radiometry, rtc_min_value_db,
-                rtc_geogrid_upsampling, rtc_algorithm, rtc_area_beta_mode,
-                abs_cal_factor, clip_min,
+                rtc_transition_value_db, rtc_min_value_mode,
+                rtc_geogrid_upsampling,
+                rtc_algorithm, rtc_area_beta_mode, abs_cal_factor, clip_min,
                 clip_max, min_nlooks, radar_grid_nlooks, out_off_diag_terms,
                 out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
                 out_geo_rtc_gamma0_to_sigma0, az_time_correction,
@@ -238,8 +243,9 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 dem_raster, geogrid_upsampling, flag_upsample_radar_grid,
                 flag_apply_rtc, input_terrain_radiometry,
                 output_terrain_radiometry, rtc_min_value_db,
-                rtc_geogrid_upsampling, rtc_algorithm, rtc_area_beta_mode,
-                abs_cal_factor, clip_min,
+                rtc_transition_value_db, rtc_min_value_mode,
+                rtc_geogrid_upsampling,
+                rtc_algorithm, rtc_area_beta_mode, abs_cal_factor, clip_min,
                 clip_max, min_nlooks, radar_grid_nlooks, out_off_diag_terms,
                 out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
                 out_geo_rtc_gamma0_to_sigma0, az_time_correction,
@@ -260,7 +266,8 @@ void Geocode<T>::geocodeInterp(
         bool flag_az_baseband_doppler, bool flatten,
         isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry,
         isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,
-        float rtc_min_value_db, double rtc_geogrid_upsampling,
+        float rtc_min_value_db, float rtc_transition_value_db, isce3::geometry::rtcMinValueMode rtc_min_value_mode,
+        double rtc_geogrid_upsampling,
         isce3::geometry::rtcAlgorithm rtc_algorithm,
         isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode,
         double abs_cal_factor,
@@ -413,13 +420,6 @@ void Geocode<T>::geocodeInterp(
         info << "clip max: " << clip_max << pyre::journal::newline;
 
     // RTC
-    double rtc_min_value = 0;
-    if (!std::isnan(rtc_min_value_db) && flag_apply_rtc) {
-        rtc_min_value = std::pow(10, (rtc_min_value_db / 10));
-        info << "RTC min. value: " << rtc_min_value_db
-             << " [dB] = " << rtc_min_value << pyre::journal::newline;
-    }
-
     if (abs_cal_factor != 1)
         info << "absolute calibration factor: " << abs_cal_factor
              << pyre::journal::newline;
@@ -506,6 +506,7 @@ void Geocode<T>::geocodeInterp(
                     input_terrain_radiometry, output_terrain_radiometry,
                     rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
                     rtc_geogrid_upsampling, rtc_min_value_db,
+                    rtc_transition_value_db, rtc_min_value_mode,
                     out_geo_rdr, out_geo_grid, rtc_sigma0_raster,
                     az_time_correction, slant_range_correction,
                     rtc_memory_mode, dem_interp_method, _threshold,
@@ -866,7 +867,7 @@ void Geocode<T>::geocodeInterp(
                     rdrBlockWidth, rdrBlockLength, azimuthFirstLine,
                     rangeFirstPixel, interp.get(), radar_grid,
                     flag_az_baseband_doppler, flatten, phase_screen_raster,
-                    phase_screen_array, rtc_min_value,
+                    phase_screen_array,
                     abs_cal_factor_effective, clip_min, clip_max,
                     flag_apply_rtc, rtc_area_array, rtc_area_sigma0_array, out_geo_rtc_band,
                     out_geo_rtc_array, out_geo_rtc_gamma0_to_sigma0_band,
@@ -953,7 +954,6 @@ inline void Geocode<T>::_interpolate(
         const bool flag_az_baseband_doppler, const bool flatten,
         isce3::io::Raster* phase_screen_raster,
         isce3::core::Matrix<float>& phase_screen_array,
-        float rtc_min_value,
         double abs_cal_factor_effective,
         float clip_min, float clip_max, bool flag_apply_rtc,
         const isce3::core::Matrix<float>& rtc_area,
@@ -1086,10 +1086,9 @@ inline void Geocode<T>::_interpolate(
             float rtc_value =
                     rtc_area(int(rdrY + azimuthFirstLine),
                              int(rdrX + rangeFirstPixel));
- 
-            if (std::isnan(rtc_value) || rtc_value < rtc_min_value) {
+
+            if (std::isnan(rtc_value))
                 continue;
-            }
 
             /*
             RTC normalization values are proportional to backscater
@@ -1875,7 +1874,9 @@ void Geocode<T>::geocodeAreaProj(
         bool flag_upsample_radar_grid, bool flag_apply_rtc,
         isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry,
         isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,
-        float rtc_min_value_db, double rtc_geogrid_upsampling,
+        float rtc_min_value_db, float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
+        double rtc_geogrid_upsampling,
         isce3::geometry::rtcAlgorithm rtc_algorithm,
         isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode,
         double abs_cal_factor,
@@ -1919,7 +1920,8 @@ void Geocode<T>::geocodeAreaProj(
                 output_raster, dem_raster, geogrid_upsampling,
                 flag_upsample_radar_grid, flag_apply_rtc,
                 input_terrain_radiometry, output_terrain_radiometry,
-                rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
+                rtc_min_value_db, rtc_transition_value_db, rtc_min_value_mode,
+                rtc_geogrid_upsampling, rtc_algorithm,
                 rtc_area_beta_mode,
                 abs_cal_factor, clip_min, clip_max, min_nlooks,
                 upsampled_radar_grid_nlooks, out_off_diag_terms, out_geo_rdr,
@@ -2099,6 +2101,7 @@ void Geocode<T>::geocodeAreaProj(
                     input_terrain_radiometry, output_terrain_radiometry,
                     rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
                     rtc_geogrid_upsampling, rtc_min_value_db,
+                    rtc_transition_value_db, rtc_min_value_mode,
                     out_geo_rdr, out_geo_grid, rtc_sigma0_raster,
                     az_time_correction, slant_range_correction,
                     rtc_memory_mode, dem_interp_method, _threshold,
@@ -2197,14 +2200,6 @@ void Geocode<T>::geocodeAreaProj(
 
     const long long progress_block = ((long long) imax) * jmax / 100;
 
-    double rtc_min_value = 0;
-
-    if (!std::isnan(rtc_min_value_db) && flag_apply_rtc) {
-        rtc_min_value = std::pow(10., (rtc_min_value_db / 10.));
-        info << "RTC min. value: " << rtc_min_value_db
-             << " [dB] = " << rtc_min_value << pyre::journal::newline;
-    }
-
     if (abs_cal_factor != 1)
         info << "absolute calibration factor: " << abs_cal_factor
              << pyre::journal::newline;
@@ -2297,8 +2292,7 @@ void Geocode<T>::geocodeAreaProj(
                         rtc_raster, rtc_sigma0_raster,
                         az_time_correction, slant_range_correction,
                         input_raster, offset_y, offset_x,
-                        output_raster, rtc_area, rtc_area_sigma,
-                        rtc_min_value, abs_cal_factor,
+                        output_raster, rtc_area, rtc_area_sigma, abs_cal_factor,
                         clip_min, clip_max, min_nlooks, radar_grid_nlooks,
                         flag_upsample_radar_grid, input_layover_shadow_mask_raster,
                         input_layover_shadow_mask, sub_swaths,
@@ -2325,8 +2319,7 @@ void Geocode<T>::geocodeAreaProj(
                         rtc_raster, rtc_sigma0_raster,
                         az_time_correction, slant_range_correction,
                         input_raster, offset_y, offset_x,
-                        output_raster, rtc_area, rtc_area_sigma,
-                        rtc_min_value, abs_cal_factor,
+                        output_raster, rtc_area, rtc_area_sigma, abs_cal_factor,
                         clip_min, clip_max, min_nlooks, radar_grid_nlooks,
                         flag_upsample_radar_grid, input_layover_shadow_mask_raster,
                         input_layover_shadow_mask, sub_swaths,
@@ -2519,7 +2512,7 @@ void Geocode<T>::_runBlock(
         int raster_offset_y, int raster_offset_x,
         isce3::io::Raster& output_raster, isce3::core::Matrix<float>& rtc_area,
         isce3::core::Matrix<float>& rtc_area_sigma,
-        float rtc_min_value, double abs_cal_factor, float clip_min,
+        double abs_cal_factor, float clip_min,
         float clip_max, float min_nlooks, float radar_grid_nlooks,
         bool flag_upsample_radar_grid,
         isce3::io::Raster* input_layover_shadow_mask_raster,
@@ -3311,8 +3304,10 @@ void Geocode<T>::_runBlock(
                             rtc_value =
                                     rtc_area_block(y - offset_y, x - offset_x);
                         }
-                        if (std::isnan(rtc_value) || rtc_value < rtc_min_value)
+
+                        if (std::isnan(rtc_value)) {
                             continue;
+                        }
 
                         nlooks += w;
                         if (isce3::is_complex<T_out>())

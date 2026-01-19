@@ -38,6 +38,8 @@ void addsubmodule_geometry(py::module & m)
             pyInputTerrainRadiometry(geometry, "RtcInputTerrainRadiometry");
     py::enum_<isce3::geometry::rtcOutputTerrainRadiometry>
             pyOutputTerrainRadiometry(geometry, "RtcOutputTerrainRadiometry");
+    py::enum_<isce3::geometry::rtcMinValueMode>
+            pyRtcMinValueMode(geometry, "RtcMinValueMode");
     py::enum_<isce3::geometry::rtcAlgorithm>
         pyRtcAlgorithm(geometry, "RtcAlgorithm");
     py::enum_<isce3::geometry::rtcAreaMode>
@@ -51,6 +53,7 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyRdr2Geo);
     addbinding(pyInputTerrainRadiometry);
     addbinding(pyOutputTerrainRadiometry);
+    addbinding(pyRtcMinValueMode);
     addbinding(pyRtcAlgorithm);
     addbinding(pyRtcAreaMode);
     addbinding(pyRtcAreaBetaMode);

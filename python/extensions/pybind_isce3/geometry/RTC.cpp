@@ -13,6 +13,7 @@ namespace py = pybind11;
 using isce3::geometry::rtcAlgorithm;
 using isce3::geometry::rtcInputTerrainRadiometry;
 using isce3::geometry::rtcOutputTerrainRadiometry;
+using isce3::geometry::rtcMinValueMode;
 using isce3::geometry::rtcAreaMode;
 using isce3::geometry::rtcAreaBetaMode;
 
@@ -30,6 +31,17 @@ void addbinding(
     pyOutputTerrainRadiometry
             .value("SIGMA_NAUGHT", rtcOutputTerrainRadiometry::SIGMA_NAUGHT)
             .value("GAMMA_NAUGHT", rtcOutputTerrainRadiometry::GAMMA_NAUGHT);
+}
+
+void addbinding(
+        py::enum_<rtcMinValueMode>& pyRtcMinValueMode)
+{
+    pyRtcMinValueMode
+        .value("DISABLED", rtcMinValueMode::DISABLED)
+        .value("CLIP", rtcMinValueMode::CLIP)
+        .value("INVALID", rtcMinValueMode::INVALID)
+        .value("BYPASS_RTC", rtcMinValueMode::BYPASS_RTC)
+        .value("TRANSITION", rtcMinValueMode::TRANSITION);
 }
 
 void addbinding(py::enum_<rtcAlgorithm> & pyAlgorithm)
@@ -87,6 +99,9 @@ void addbinding_apply_rtc(pybind11::module& m)
                     std::numeric_limits<double>::quiet_NaN(),
             py::arg("rtc_min_value_db") =
                     std::numeric_limits<float>::quiet_NaN(),
+            py::arg("rtc_transition_value_db") =
+                    std::numeric_limits<float>::quiet_NaN(),
+            py::arg("rtc_min_value_mode") = rtcMinValueMode::DISABLED,
             py::arg("abs_cal_factor") = 1,
             py::arg("clip_min") = std::numeric_limits<float>::quiet_NaN(),
             py::arg("clip_max") = std::numeric_limits<float>::quiet_NaN(),
@@ -133,6 +148,20 @@ void addbinding_apply_rtc(pybind11::module& m)
               rtc_min_value_db : float, optional
                   Minimum value for the RTC area factor. Radar data with RTC
                   area factor below this limit are ignored.
+              rtc_transition_value_db : float, optional
+                  RTC transition start value in dB used when
+                  `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+                  between `rtc_transition_value_db` and `rtc_min_value_db` will have
+                  a smooth transition applied to the RTC correction.
+              rtc_min_value_mode: isce3.geometry.RtcMinValueMode, optional
+                  Specifies how the RTC minimum value is handled:
+                  DISABLED - No minimum-value thresholding is applied.
+                  CLIP - RTC values below the minimum are clipped to the minimum value.
+                  INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+                  BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+                  the minimum value.
+                  TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+                  `rtc_transition_value_db` and `rtc_min_value_db`.
               abs_cal_factor : double, optional
                   Absolute calibration factor.
               clip_min : float, optional
@@ -167,7 +196,7 @@ void addbinding_compute_rtc(pybind11::module& m)
                     isce3::io::Raster&, rtcInputTerrainRadiometry,
                     rtcOutputTerrainRadiometry, rtcAreaMode,
                     rtcAlgorithm, rtcAreaBetaMode,
-                    double, float, isce3::io::Raster*,
+                    double, float, float, rtcMinValueMode, isce3::io::Raster*,
                     const isce3::core::LUT2d<double>&,
                     const isce3::core::LUT2d<double>&,
                     isce3::core::MemoryModeBlocksY,
@@ -189,6 +218,9 @@ void addbinding_compute_rtc(pybind11::module& m)
                     std::numeric_limits<double>::quiet_NaN(),
             py::arg("rtc_min_value_db") =
                     std::numeric_limits<float>::quiet_NaN(),
+            py::arg("rtc_transition_value_db") =
+                    std::numeric_limits<float>::quiet_NaN(),
+            py::arg("rtc_min_value_mode") = rtcMinValueMode::DISABLED,
             py::arg("out_sigma") = nullptr,
             py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
             py::arg("slant_range_correction") = isce3::core::LUT2d<double>(),
@@ -233,7 +265,21 @@ void addbinding_compute_rtc(pybind11::module& m)
              rtc_min_value_db : float, optional
                  Minimum value for the RTC area factor. Radar
                  data with RTC area factor below this limit are ignored.
+             rtc_transition_value_db : float, optional
+                 RTC transition start value in dB used when
+                 `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+                 between `rtc_transition_value_db` and `rtc_min_value_db` will have
+                 a smooth transition applied to the RTC correction.
+             rtc_min_value_mode: isce3.geometry.RtcMinValueMode, optional
+                 Specifies how the RTC minimum value is handled:
+                 DISABLED - No minimum-value thresholding is applied.
+                 CLIP - RTC values below the minimum are clipped to the minimum value.
+                 INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+                 BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+                 the minimum value.
+                 TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
              out_sigma : isce3.io.Raster, optional
+                 `rtc_transition_value_db` and `rtc_min_value_db`.
                  Output sigma surface area (rtc_area_mode = AREA) or area
                  factor (rtc_area_mode = AREA_FACTOR) raster
              az_time_correction: isce3.core.LUT2d
@@ -271,7 +317,7 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     const int, const int, rtcInputTerrainRadiometry,
                     rtcOutputTerrainRadiometry, rtcAreaMode,
                     rtcAlgorithm, rtcAreaBetaMode,
-                    double, float, isce3::io::Raster*,
+                    double, float, float, rtcMinValueMode, isce3::io::Raster*,
                     isce3::io::Raster*, isce3::io::Raster*,
                     const isce3::core::LUT2d<double>&,
                     const isce3::core::LUT2d<double>&,
@@ -297,6 +343,9 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     std::numeric_limits<double>::quiet_NaN(),
             py::arg("rtc_min_value_db") =
                     std::numeric_limits<float>::quiet_NaN(),
+            py::arg("rtc_transition_value_db") =
+                    std::numeric_limits<float>::quiet_NaN(),
+            py::arg("rtc_min_value_mode") = rtcMinValueMode::DISABLED,
             py::arg("out_geo_rdr") = nullptr,
             py::arg("out_geo_grid") = nullptr, py::arg("out_sigma") = nullptr,
             py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
@@ -355,7 +404,21 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                  Geogrid upsampling (in each direction)
              rtc_min_value_db : float, optional
                  Minimum value for the RTC area factor. Radar
-              data with RTC area factor below this limit are ignored.
+                 data with RTC area factor below this limit are ignored.
+             rtc_transition_value_db : float, optional
+                 RTC transition start value in dB used when
+                 `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+                 between `rtc_transition_value_db` and `rtc_min_value_db` will have
+                 a smooth transition applied to the RTC correction.
+             rtc_min_value_mode: isce3.geometry.RtcMinValueMode, optional
+                 Specifies how the RTC minimum value is handled:
+                 DISABLED - No minimum-value thresholding is applied.
+                 CLIP - RTC values below the minimum are clipped to the minimum value.
+                 INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+                 BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+                 the minimum value.
+                 TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+                 `rtc_transition_value_db` and `rtc_min_value_db`.
              out_geo_rdr : isce3.io.Raster, optional
                  Raster to which the radar-grid positions
                  (range and azimuth) of the geogrid pixels vertices will be saved (output).

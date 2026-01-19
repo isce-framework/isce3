@@ -124,7 +124,7 @@ static int _geo2rdrWrapper(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
 
 template<typename T>
 void _applyRtc(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
-        isce3::io::Raster& output_raster, float rtc_min_value,
+        isce3::io::Raster& output_raster,
         double abs_cal_factor, float clip_min, float clip_max,
         pyre::journal::info_t& info, bool flag_complex_to_real_squared)
 {
@@ -137,9 +137,6 @@ void _applyRtc(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
     int nblocks;
     getBlockProcessingParametersY(length, width, nbands, sizeof(T), &info,
                                   &block_length, &nblocks);
-
-    if (std::isnan(rtc_min_value))
-        rtc_min_value = 0;
 
     if (!isnan(abs_cal_factor)) {
         abs_cal_factor = 1.0;
@@ -187,8 +184,7 @@ void _applyRtc(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
                     for (int jj = 0; jj < width; ++jj) {
                         float rtc_ratio_value = rtc_ratio(i, jj);
 
-                        if (std::isnan(rtc_ratio_value) ||
-                                rtc_ratio_value < rtc_min_value) {
+                        if (std::isnan(rtc_ratio_value)) {
                             /* assign NaN by multiplication to cast it
                             to the radar_data_block data type. See
                             comments above (outside for loops) */
@@ -219,8 +215,7 @@ void _applyRtc(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
                         /* assign NaN by multiplication to cast it
                             to the radar_data_block data type. See
                             comments above (outside for loops) */
-                        if (std::isnan(rtc_ratio_value) ||
-                                rtc_ratio_value < rtc_min_value) {
+                        if (std::isnan(rtc_ratio_value)) {
                             radar_data_block(i, jj) *=
                                     std::numeric_limits<T_real>::quiet_NaN();
                         }
@@ -250,24 +245,92 @@ void _applyRtc(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
 }
 
 void _applyRtcMinValueDb(isce3::core::Matrix<float>& out_array,
-        float rtc_min_value_db, rtcAreaMode rtc_area_mode,
+        float rtc_min_value_db, float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
+        rtcAreaMode rtc_area_mode,
         pyre::journal::info_t& info)
 {
-    if (!std::isnan(rtc_min_value_db) &&
-            rtc_area_mode == rtcAreaMode::AREA_FACTOR) {
-        float rtc_min_value = std::pow(10., (rtc_min_value_db / 10.));
-        info << "applying min. RTC value: " << rtc_min_value_db
-             << " [dB] ~= " << rtc_min_value << pyre::journal::endl;
-        _Pragma("omp parallel for schedule(dynamic) collapse(2)")
-            for (int i = 0; i < out_array.length(); ++i)
-                for (int j = 0; j < out_array.width(); ++j) {
-                    if (out_array(i, j) >= rtc_min_value)
-                        continue;
+    if (std::isnan(rtc_min_value_db) ||
+            rtc_min_value_mode == rtcMinValueMode::DISABLED ||
+            rtc_area_mode != rtcAreaMode::AREA_FACTOR)
+            return;
+
+    float rtc_min_value = std::pow(10., (rtc_min_value_db / 10.));
+    float rtc_transition_value = std::pow(10., (rtc_transition_value_db / 10.));
+
+    info << "applying min. RTC value: " << rtc_min_value_db
+            << " [dB] ~= " << rtc_min_value << pyre::journal::newline;
+
+    if (rtc_min_value_mode == rtcMinValueMode::TRANSITION) {
+        if (std::isnan(rtc_transition_value_db)) {
+            info << "RTC transition value not provided. Using RTC min value + 3 dB."
+                    << pyre::journal::newline;
+            rtc_transition_value_db = rtc_min_value_db + 3.0f;
+        }
+        else {
+            info << "RTC transition value: " << rtc_transition_value_db
+                 << " [dB] ~= " << rtc_transition_value << pyre::journal::newline;
+        }
+        if (rtc_min_value_db >= rtc_transition_value_db) {
+            std::string error_message =
+                    "ERROR rtc_min_value_db must be less than "
+                    "rtc_transition_value_db for TRANSITION mode.";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+        }
+    }
+
+    info << pyre::journal::endl;
+
+    _Pragma("omp parallel for schedule(dynamic) collapse(2)")
+        for (int i = 0; i < out_array.length(); ++i)
+            for (int j = 0; j < out_array.width(); ++j) {
+                // Skip if RTC value is valid, i.e., above min RTC value
+                if ((out_array(i, j) >= rtc_min_value &&
+                        rtc_min_value_mode != rtcMinValueMode::TRANSITION) ||
+                        out_array(i, j) >= rtc_transition_value)
+                    continue;
+                if (rtc_min_value_mode == rtcMinValueMode::TRANSITION) {
+                    /*
+                    float new_rtc_value = rtc_transition_value +
+                        (rtc_transition_value - out_array(i, j)) *
+                        (1 - rtc_transition_value) /
+                        (rtc_transition_value - rtc_min_value);
+                    */
+                    // Smooth transition using logistic function
+
+                    // Steepness parameter for logistic function
+                    const float k = 20.0;
+
+                    // Normalized distance between rtc_min_value and
+                    // rtc_transition_value
+                    const float t = (out_array(i, j) - rtc_min_value) /
+                        (rtc_transition_value - rtc_min_value);
+
+                    // Logistic in [0, 1]
+                    const float sigmoid = 1.0f / (1.0f + std::exp(-k * (t - 0.5f)));
+
+                    // Scale logistic output from:
+                    // - `1.0` at `rtc_min_value`
+                    // - `rtc_transition_value` at `rtc_transition_value`
+                    const float new_rtc_value = (1.0 + (rtc_transition_value - 1.0) * sigmoid);
+
+                    _Pragma("omp atomic write") out_array(i, j) = new_rtc_value;
+                }
+                else if (rtc_min_value_mode == rtcMinValueMode::CLIP) {
+                    _Pragma("omp atomic write") out_array(i, j) =
+                        rtc_min_value;
+                }
+                else if (rtc_min_value_mode == rtcMinValueMode::TRANSITION ||
+                            rtc_min_value_mode == rtcMinValueMode::BYPASS_RTC) {
+                    _Pragma("omp atomic write") out_array(i, j) = 1.0f;
+                }
+                else if (rtc_min_value_mode == rtcMinValueMode::INVALID) {
                     _Pragma("omp atomic write") out_array(i, j) =
                         std::numeric_limits<float>::quiet_NaN();
-                    }
-        info << "... done" << pyre::journal::endl;
-    }
+                }
+            }
+    info << "... done" << pyre::journal::endl;
+
 }
 
 
@@ -301,6 +364,8 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
         rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
+        float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
         double abs_cal_factor, float clip_min, float clip_max,
         isce3::io::Raster* out_sigma,
         const isce3::core::LUT2d<double>& az_time_correction,
@@ -347,8 +412,9 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
         computeRtc(radar_grid, orbit, input_dop, dem_raster, *rtc_raster,
                 input_terrain_radiometry, output_terrain_radiometry,
                 rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
-                geogrid_upsampling, rtc_min_value_db, out_sigma,
-                az_time_correction, slant_range_correction,
+                geogrid_upsampling, rtc_min_value_db,
+                rtc_transition_value_db, rtc_min_value_mode,
+                out_sigma, az_time_correction, slant_range_correction,
                 rtc_memory_mode);
     } else {
         info << "reading pre-computed RTC..." << pyre::journal::endl;
@@ -375,21 +441,21 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
     if (input_raster.dtype() == GDT_Float32 ||
             (input_raster.dtype() == GDT_CFloat32 && flag_complex_to_real))
         _applyRtc<float>(input_raster, *rtc_raster, output_raster,
-                rtc_min_value_db, abs_cal_factor, clip_min, clip_max, info,
+                abs_cal_factor, clip_min, clip_max, info,
                 flag_complex_to_real);
     else if (input_raster.dtype() == GDT_Float64 ||
              (input_raster.dtype() == GDT_CFloat64 && flag_complex_to_real))
         _applyRtc<double>(input_raster, *rtc_raster, output_raster,
-                rtc_min_value_db, abs_cal_factor, clip_min, clip_max, info,
+                abs_cal_factor, clip_min, clip_max, info,
                 flag_complex_to_real);
     else if (input_raster.dtype() == GDT_CFloat32)
         _applyRtc<std::complex<float>>(input_raster, *rtc_raster, output_raster,
-                rtc_min_value_db, abs_cal_factor, clip_min, clip_max, info,
+                abs_cal_factor, clip_min, clip_max, info,
                 flag_complex_to_real);
     else if (input_raster.dtype() == GDT_CFloat64)
         _applyRtc<std::complex<double>>(input_raster, *rtc_raster,
-                output_raster, rtc_min_value_db, abs_cal_factor, clip_min,
-                clip_max, info, flag_complex_to_real);
+                output_raster, abs_cal_factor,
+                clip_min, clip_max, info, flag_complex_to_real);
     else {
         std::string error_message =
                 "ERROR not implemented for input raster datatype";
@@ -442,6 +508,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
         rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
+        float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
         isce3::io::Raster* out_sigma,
         const isce3::core::LUT2d<double>& az_time_correction,
         const isce3::core::LUT2d<double>& slant_range_correction,
@@ -478,8 +546,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
             x0, dx, geogrid_length, geogrid_width, epsg,
             input_terrain_radiometry, output_terrain_radiometry, rtc_area_mode,
             rtc_algorithm, rtc_area_beta_mode,
-            geogrid_upsampling, rtc_min_value_db,
-            nullptr, nullptr, out_sigma, az_time_correction,
+            geogrid_upsampling, rtc_min_value_db, rtc_transition_value_db,
+            rtc_min_value_mode, nullptr, nullptr, out_sigma, az_time_correction,
             slant_range_correction, rtc_memory_mode,
             interp_method, threshold, num_iter, delta_range, min_block_size,
             max_block_size);
@@ -496,6 +564,8 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
         rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
+        float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
         isce3::io::Raster* out_geo_rdr,
         isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_sigma,
         const isce3::core::LUT2d<double>& az_time_correction,
@@ -513,7 +583,8 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
                 input_dop, geogrid, input_terrain_radiometry,
                 output_terrain_radiometry, rtc_area_mode,
                 rtc_area_beta_mode, geogrid_upsampling,
-                rtc_min_value_db, out_geo_rdr, out_geo_grid,
+                rtc_min_value_db, rtc_transition_value_db, rtc_min_value_mode,
+                out_geo_rdr, out_geo_grid,
                 out_sigma, az_time_correction, slant_range_correction,
                 rtc_memory_mode, interp_method, threshold, num_iter,
                 delta_range, min_block_size, max_block_size);
@@ -527,8 +598,8 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         computeRtcBilinearDistribution(dem_raster, output_raster, radar_grid,
                 orbit, input_dop, geogrid, input_terrain_radiometry,
                 output_terrain_radiometry, rtc_area_mode,
-                geogrid_upsampling, rtc_min_value_db, out_sigma,
-                threshold, num_iter, delta_range,
+                geogrid_upsampling, rtc_min_value_db, rtc_transition_value_db, rtc_min_value_mode,
+                out_sigma, threshold, num_iter, delta_range,
                 az_time_correction, slant_range_correction);
     }
 }
@@ -729,6 +800,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
         rtcAreaMode rtc_area_mode,
         double upsample_factor, float rtc_min_value_db,
+        float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
         isce3::io::Raster* out_sigma,
         double threshold, int num_iter, double delta_range,
         const isce3::core::LUT2d<double>& az_time_correction,
@@ -747,7 +820,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
     rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::PIXEL_AREA;
     print_parameters(info, radar_grid, input_terrain_radiometry,
             output_terrain_radiometry, rtc_area_mode, rtc_area_beta_mode,
-            upsample_factor, rtc_min_value_db);
+            upsample_factor, rtc_min_value_db,
+            rtc_transition_value_db, rtc_min_value_mode);
 
     const double yf = geogrid.startY() + geogrid.length() * geogrid.spacingY();
     const double margin_x = std::abs(geogrid.spacingX()) * 20;
@@ -1070,7 +1144,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         }
     }
 
-    _applyRtcMinValueDb(out_array, rtc_min_value_db, rtc_area_mode, info);
+    _applyRtcMinValueDb(out_array, rtc_min_value_db, rtc_transition_value_db,
+                        rtc_min_value_mode, rtc_area_mode, info);
 
     output_raster.setBlock(
             out_array.data(), 0, 0, radar_grid.width(), radar_grid.length());
@@ -1623,6 +1698,8 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
         rtcAreaMode rtc_area_mode, rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
+        float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode,
         isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_grid,
         isce3::io::Raster* out_sigma,
         const isce3::core::LUT2d<double>& az_time_correction,
@@ -1656,7 +1733,8 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
     geogrid.print();
     print_parameters(info, radar_grid, input_terrain_radiometry,
             output_terrain_radiometry, rtc_area_mode, rtc_area_beta_mode,
-            geogrid_upsampling, rtc_min_value_db);
+            geogrid_upsampling, rtc_min_value_db,
+            rtc_transition_value_db, rtc_min_value_mode);
 
     int epsgcode = dem_raster.getEPSG();
     info << "DEM EPSG: " << epsgcode << pyre::journal::endl;
@@ -1759,7 +1837,9 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
         _normalizeRtcArea(out_gamma_array, out_beta_array, info); 
     }
 
-    _applyRtcMinValueDb(out_gamma_array, rtc_min_value_db, rtc_area_mode, info);
+    _applyRtcMinValueDb(out_gamma_array, rtc_min_value_db,
+                        rtc_transition_value_db, rtc_min_value_mode,
+                        rtc_area_mode, info);
 
     info << "saving RTC area normalization factor" << pyre::journal::endl;
     output_raster.setBlock(
@@ -1874,6 +1954,34 @@ std::string get_rtc_area_beta_mode_str(rtcAreaBetaMode rtc_area_beta_mode)
     return rtc_area_beta_mode_str;
 }
 
+std::string get_rtc_min_value_mode_str(
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode)
+{
+    std::string rtc_min_value_mode_str;
+    switch (rtc_min_value_mode) {
+    case isce3::geometry::rtcMinValueMode::DISABLED:
+        rtc_min_value_mode_str = "disabled (no minimum value thresholding applied)";
+        break;
+    case isce3::geometry::rtcMinValueMode::CLIP:
+        rtc_min_value_mode_str = "clip (to RTC minimum value)";
+        break;
+    case isce3::geometry::rtcMinValueMode::INVALID:
+        rtc_min_value_mode_str = "invalid (samples with RTC factor below minimum value are considered invalid)";
+        break;
+    case isce3::geometry::rtcMinValueMode::BYPASS_RTC:
+        rtc_min_value_mode_str = "bypass RTC (no correction applied to samples with RTC factor below minimum value)";
+        break;
+    case isce3::geometry::rtcMinValueMode::TRANSITION:
+        rtc_min_value_mode_str = "transition (same as bypass RTC, but with smooth transition between 'rtc_transition_value_db' and 'rtc_min_value_db')";
+        break;
+    default:
+        std::string error_message = "ERROR invalid RTC min value mode";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+        break;
+    }
+    return rtc_min_value_mode_str;
+}
+
 
 /** Convert enum output_mode to string */
 std::string get_rtc_algorithm_str(rtcAlgorithm rtc_algorithm)
@@ -1900,7 +2008,8 @@ void print_parameters(pyre::journal::info_t& channel,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
         rtcAreaMode rtc_area_mode, rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling,
-        float rtc_min_value_db)
+        float rtc_min_value_db, float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode)
 {
     std::string input_terrain_radiometry_str =
             get_input_terrain_radiometry_str(input_terrain_radiometry);
@@ -1912,6 +2021,9 @@ void print_parameters(pyre::journal::info_t& channel,
 
     std::string rtc_area_beta_mode_str = get_rtc_area_beta_mode_str(
         rtc_area_beta_mode);
+
+    std::string rtc_min_value_mode_str = get_rtc_min_value_mode_str(
+        rtc_min_value_mode);
 
     channel << "input radiometry: " << input_terrain_radiometry_str
             << pyre::journal::newline
@@ -1926,7 +2038,12 @@ void print_parameters(pyre::journal::info_t& channel,
             << pyre::journal::newline
             << "radar-grid length: " << radar_grid.length()
             << ", width: " << radar_grid.width() << pyre::journal::newline
-            << "RTC min value [dB]: " << rtc_min_value_db
-            << pyre::journal::newline << pyre::journal::endl;
+            << "RTC min value mode: " << rtc_min_value_mode_str
+            << pyre::journal::newline;
+    if (rtc_min_value_mode != isce3::geometry::rtcMinValueMode::DISABLED) {
+        channel << "RTC min value [dB]: " << rtc_min_value_db
+                << pyre::journal::newline;
+    }
+    channel << pyre::journal::endl;
 }
 }} // namespace isce3::geometry

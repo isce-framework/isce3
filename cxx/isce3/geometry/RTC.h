@@ -39,6 +39,15 @@ enum rtcAreaMode { AREA = 0, AREA_FACTOR = 1 };
  * RTC_AREA_PROJECTION) */
 enum rtcAlgorithm { RTC_BILINEAR_DISTRIBUTION = 0, RTC_AREA_PROJECTION = 1 };
 
+/** Enumeration type to indicate RTC minimum value mode */
+enum rtcMinValueMode {
+    DISABLED = 0,
+    CLIP = 1,
+    INVALID = 2,
+    BYPASS_RTC = 3,
+    TRANSITION = 4
+};
+
 /**Enumeration type to indicate RTC area beta mode
  * (option only available for rtcAlgorithm.RTC_AREA_PROJECTION)
  */
@@ -79,6 +88,18 @@ enum rtcAreaBetaMode {
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN.
+ * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+ * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+ * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+ * a smooth transition applied to the RTC correction.
+ * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+ * DISABLED - No minimum-value thresholding is applied.
+ * CLIP - RTC values below the minimum are clipped to the minimum value.
+ * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+ * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+ * the minimum value.
+ * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+ * `rtc_transition_value_db` and `rtc_min_value_db`.
  * @param[in]  abs_cal_factor      Absolute calibration factor.
  * @param[in]  clip_min            Clip minimum output values
  * @param[in]  clip_max            Clip maximum output values
@@ -106,6 +127,9 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
         rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+        float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
         double abs_cal_factor = 1,
         float clip_min = std::numeric_limits<float>::quiet_NaN(),
         float clip_max = std::numeric_limits<float>::quiet_NaN(),
@@ -136,7 +160,19 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
- * be set to NaN..
+ * be set to NaN.
+ * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+ * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+ * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+ * a smooth transition applied to the RTC correction.
+ * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+ * DISABLED - No minimum-value thresholding is applied.
+ * CLIP - RTC values below the minimum are clipped to the minimum value.
+ * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+ * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+ * the minimum value.
+ * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+ * `rtc_transition_value_db` and `rtc_min_value_db`.
  * @param[out] out_sigma           Output sigma surface area
  * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
  * @param[in]  az_time_correction     Azimuth additive correction, in
@@ -164,6 +200,9 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
         rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+        float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
         isce3::io::Raster* out_sigma = nullptr,
         const isce3::core::LUT2d<double>& az_time_correction = {},
         const isce3::core::LUT2d<double>& slant_range_correction = {},
@@ -203,6 +242,18 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN
+ * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+ * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+ * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+ * a smooth transition applied to the RTC correction.
+ * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+ * DISABLED - No minimum-value thresholding is applied.
+ * CLIP - RTC values below the minimum are clipped to the minimum value.
+ * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+ * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+ * the minimum value.
+ * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+ * `rtc_transition_value_db` and `rtc_min_value_db`.
  * @param[out] out_geo_rdr    Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels vertices will be saved.
  * @param[out] out_geo_grid        Raster to which the radar-grid positions
@@ -236,6 +287,9 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+        float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
         isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_sigma = nullptr,
@@ -266,6 +320,18 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN
+ * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+ * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+ * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+ * a smooth transition applied to the RTC correction.
+ * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+ * DISABLED - No minimum-value thresholding is applied.
+ * CLIP - RTC values below the minimum are clipped to the minimum value.
+ * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+ * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+ * the minimum value.
+ * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+ * `rtc_transition_value_db` and `rtc_min_value_db`.
  * @param[out] out_sigma           Output sigma surface area
  * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
  * @param[in]  threshold            Azimuth time threshold for convergence (s)
@@ -289,6 +355,9 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+        float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
         isce3::io::Raster* out_sigma = nullptr,
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8,
         const isce3::core::LUT2d<double>& az_time_correction = {},
@@ -314,7 +383,19 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
- * be set to NaN..
+ * be set to NaN.
+ * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+ * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+ * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+ * a smooth transition applied to the RTC correction.
+ * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+ * DISABLED - No minimum-value thresholding is applied.
+ * CLIP - RTC values below the minimum are clipped to the minimum value.
+ * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+ * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+ * the minimum value.
+ * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+ * `rtc_transition_value_db` and `rtc_min_value_db`.
  * @param[out] out_geo_rdr       Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels vertices will be saved.
  * @param[out] out_geo_grid        Raster to which the radar-grid positions
@@ -347,6 +428,9 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
         rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+        float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
         isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_sigma = nullptr,
@@ -375,6 +459,8 @@ std::string get_output_terrain_radiometry_str(
         rtcOutputTerrainRadiometry output_terrain_radiometry);
 std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode);
 std::string get_rtc_area_beta_mode_str(rtcAreaBetaMode rtc_area_beta_mode);
+std::string get_rtc_min_value_mode_str(
+        rtcMinValueMode rtc_min_value_mode);
 std::string get_rtc_algorithm_str(rtcAlgorithm rtc_algorithm);
 
 void print_parameters(pyre::journal::info_t& channel,
@@ -384,5 +470,8 @@ void print_parameters(pyre::journal::info_t& channel,
         rtcAreaMode rtc_area_mode,
         rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling,
-        float rtc_min_value_db);
+        float rtc_min_value_db,
+        float rtc_transition_value_db,
+        isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION);
 }} // namespace isce3::geometry

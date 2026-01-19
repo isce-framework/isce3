@@ -48,6 +48,8 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
     rtc_algorithm = rtc_dict['algorithm_type_enum']
     input_terrain_radiometry = rtc_dict['input_terrain_radiometry_enum']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
+    rtc_transition_value_db = rtc_dict['rtc_transition_value_db']
+    rtc_min_value_mode = rtc_dict['rtc_min_value_mode_enum']
     rtc_upsampling = rtc_dict['dem_upsampling']
 
     rtc_area_beta_mode = \
@@ -221,6 +223,8 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
                 input_terrain_radiometry=input_terrain_radiometry,
                 output_terrain_radiometry=output_terrain_radiometry,
                 rtc_min_value_db=rtc_min_value_db,
+                rtc_transition_value_db=rtc_transition_value_db,
+                rtc_min_value_mode=rtc_min_value_mode,
                 rtc_upsampling=rtc_upsampling,
                 rtc_algorithm=rtc_algorithm,
                 radargrid_nlooks=radar_grid_nlooks,

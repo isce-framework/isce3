@@ -344,12 +344,27 @@ rtc_options:
     # Input terrain radiometry convention
     input_terrain_radiometry: enum('beta0', 'sigma0', required=False)
 
+    # RTC minimum value mode. Options:
+    #  "disabled" - No minimum value enforcement
+    #  "clip" - Clip values below the minimum RTC area factor
+    #  "invalid" - Set output pixels to invalid where RTC area factor is below
+    #      the minimum threshold
+    #  "bypass_rtc" - Bypass RTC correction where RTC area factor is below
+    #      the minimum threshold (i.e., output pixel = input pixel)
+    #  "transition" - Same as "bypass_rtc", but with a smooth transition between the 
+    #      `rtc_transition_value_db` and `rtc_min_value_db` thresholds
+    rtc_min_value_mode:  enum('disabled', 'clip', 'invalid', 'bypass_rtc', 'transition', required=False)
+
     # Minimum RTC area factor (in dB). Specifies the lowest
     # allowable denominator (in dB) for dividing GCOV samples.
     # If not set, no minimum is enforced, which may lead
     # to divisions by very small values and result in infinite
     # or inaccurate outputs.
     rtc_min_value_db: num(required=False)
+
+    # RTC transition value (in dB). Only relevant if
+    # rtc_min_value_mode is 'transition'
+    rtc_transition_value_db: num(required=False)
 
     # RTC DEM upsampling factor
     dem_upsampling: int(min=1, required=False)

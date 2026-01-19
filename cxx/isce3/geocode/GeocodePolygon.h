@@ -63,6 +63,18 @@ public:
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit are ignored.
+     * @param[in] rtc_transition_value_db RTC transition start value in dB used when
+     * `rtc_min_value_mode = TRANSITION`. Samples with an RTC area factor
+     * between `rtc_transition_value_db` and `rtc_min_value_db` will have
+     * a smooth transition applied to the RTC correction.
+     * @param[in]  rtc_min_value_mode Specifies how the RTC minimum value is handled:
+     * DISABLED - No minimum-value thresholding is applied.
+     * CLIP - RTC values below the minimum are clipped to the minimum value.
+     * INVALID - Samples with an RTC factor below the minimum value are marked as invalid.
+     * BYPASS_RTC - RTC correction is bypassed for samples with an RTC factor below
+     * the minimum value.
+     * TRANSITION - Same as BYPASS_RTC, but applies a smooth transition between
+     * `rtc_transition_value_db` and `rtc_min_value_db`.
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
      * parameters determines the multilooking factor used to compute out_nlooks.
@@ -91,6 +103,9 @@ public:
             double geogrid_upsampling =
                     std::numeric_limits<double>::quiet_NaN(),
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+            float rtc_transition_value_db = std::numeric_limits<float>::quiet_NaN(),
+            isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
             double abs_cal_factor = 1, float radar_grid_nlooks = 1,
             isce3::io::Raster* output_off_diag_terms = nullptr,
             isce3::io::Raster* output_radargrid_data = nullptr,
@@ -137,7 +152,8 @@ private:
             isce3::io::Raster& input_raster,
             isce3::io::Raster& output_raster,
             bool flag_apply_rtc = false,
-            float rtc_min_value = 0, 
+            float rtc_min_value = 0, isce3::geometry::rtcMinValueMode rtc_min_value_mode =
+                isce3::geometry::rtcMinValueMode::TRANSITION,
             double abs_cal_factor = 1, float radar_grid_nlooks = 1,
             isce3::io::Raster* output_off_diag_terms = nullptr,
             isce3::io::Raster* output_radargrid_data = nullptr,

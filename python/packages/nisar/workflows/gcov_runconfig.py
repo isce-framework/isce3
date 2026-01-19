@@ -102,6 +102,26 @@ class GCOVRunConfig(RunConfig):
             rtc_dict['output_type_enum'] = \
                 isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
 
+        rtc_min_value_mode = rtc_dict['rtc_min_value_mode']
+        if rtc_min_value_mode == 'disabled':
+            rtc_dict['rtc_min_value_mode_enum'] = \
+                isce3.geometry.RtcMinValueMode.DISABLED
+        elif rtc_min_value_mode == 'clip':
+            rtc_dict['rtc_min_value_mode_enum'] = \
+                isce3.geometry.RtcMinValueMode.CLIP
+        elif rtc_min_value_mode == 'invalid':
+            rtc_dict['rtc_min_value_mode_enum'] = \
+                isce3.geometry.RtcMinValueMode.INVALID
+        elif rtc_min_value_mode == 'bypass_rtc':
+            rtc_dict['rtc_min_value_mode_enum'] = \
+                isce3.geometry.RtcMinValueMode.BYPASS_RTC
+        elif rtc_min_value_mode == 'transition':
+            rtc_dict['rtc_min_value_mode_enum'] = \
+                isce3.geometry.RtcMinValueMode.TRANSITION
+        else:
+            raise ValueError(
+                f"unexpected rtc_min_value_mode: {rtc_min_value_mode}")
+
         geocode_algorithm = self.cfg['processing']['geocode']['algorithm_type']
         geocode_dict['output_mode'] = \
             isce3.geocode.normalize_geocode_output_mode(geocode_algorithm)
