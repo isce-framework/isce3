@@ -218,3 +218,86 @@ void addbinding_DEM_raster2interpolator(py::module& m)
         )")
     ;
 }
+
+
+void addbinding_load_dem_from_proj(py::module& m)
+{
+    m.def("load_dem_from_proj",
+        [](isce3::io::Raster &dem_raster,
+            const double x0,
+            const double xf,
+            const double minY,
+            const double maxY,
+            const isce3::core::dataInterpMethod dem_interp_method,
+            isce3::core::ProjectionBase* proj,
+            const int dem_margin_x_in_pixels,
+            const int dem_margin_y_in_pixels,
+            const int dem_raster_band) {
+
+            DEMInterp dem_interp(0, dem_interp_method);
+
+            isce3::geometry::loadDemFromProj(dem_raster,
+                                             x0,
+                                             xf,
+                                             minY,
+                                             maxY,
+                                             &dem_interp,
+                                             proj,
+                                             dem_margin_x_in_pixels,
+                                             dem_margin_y_in_pixels,
+                                             dem_raster_band);
+
+            return dem_interp;
+        },
+        py::arg("dem_raster"),
+        py::arg("x0"),
+        py::arg("xf"),
+        py::arg("min_y"),
+        py::arg("max_y"),
+        py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD,
+        py::arg("proj") = nullptr,
+        py::arg("dem_margin_x_in_pixels") = 100,
+        py::arg("dem_margin_y_in_pixels") = 200,
+        py::arg("dem_raster_band") = 1,
+        R"(
+    Load DEM raster into a DEMInterpolator object around a given bounding box
+    in the same or different coordinate system as the DEM raster
+
+    Parameters
+    ----------
+    dem_raster: isce3.io.Raster
+        Raster of the DEM
+    x0: double
+        If the DEM is in geographic coordinates and the `x0` coordinate is not
+        from the polar stereo system EPSG 3031 or EPSG 3413, this point represents
+        the minimum X coordinate value. In this case, the maximum
+        longitude span that this function can handle is 180 degrees
+        (when the DEM is in geographic coordinates and `proj` is in polar stereo        
+    xf: double
+        Easting/longitude of eastern edge of bounding box
+        If the DEM is in geographic coordinates and the `xf` coordinate is not
+        from the polar stereo system EPSG 3031 or EPSG 3413, this point represents
+        the maximum X coordinate value. In this case, the maximum
+        longitude span that this function can handle is 180 degrees
+        (when the DEM is in geographic coordinates and `proj` is in polar stereo)
+    min_y: double
+        Minimum Y/northing position
+    max_y: double
+        Maximum Y/northing position
+    dem_interp_method: isce3.core.DataInterpMethod
+        DEM interpolation method
+    proj: 
+        Projection object (nullptr to use same DEM projection)
+    dem_margin_x_in_pixels, int
+        DEM X/easting margin in pixels
+    dem_margin_y_in_pixels, int
+        DEM Y/northing margin in pixels
+    dem_raster_band: int
+        DEM raster band (starting from 1)
+
+    Returns
+    -------
+    dem_interp: isce3.geometry.DEMInterpolator
+        DEM interpolator for given DEM raster and geo grid.
+        )");
+}

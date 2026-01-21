@@ -61,7 +61,7 @@ isce3::geometry::DEMInterpolator DEMRasterToInterpolator(
 * (when the DEM is in geographic coordinates and `proj` is in polar stereo)
 * @param[in]  minY                    Minimum Y/northing position
 * @param[in]  maxY                    Maximum Y/northing position
-* @param[out] dem_interp_block        DEM interpolation object
+* @param[out] dem_interp              DEM interpolation object
 * @param[in]  proj                    Projection object (nullptr to use same
 * DEM projection)
 * @param[in]  dem_margin_x_in_pixels  DEM X/easting margin in pixels

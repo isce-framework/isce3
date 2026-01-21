@@ -31,7 +31,8 @@ from nisar.static.util import get_raster_dataset_metadata_item, \
 from nisar.static.water_mask import binarize_and_reproject_water_mask
 
 import isce3
-from isce3.geometry import make_geo_grid_bounding_polygon
+from isce3.geometry import make_geo_grid_bounding_polygon, load_dem_from_proj
+from isce3.core import normalize_data_interp_method
 
 
 def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
@@ -74,6 +75,19 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     geo_grid = get_output_geo_grid(dem_raster=dem_raster, **geo_grid_params)
     logger.info(f"Output geo grid: {geo_grid}")
 
+    proj = isce3.core.make_projection(geo_grid.epsg)
+
+    # dem = isce3.geometry.DEMInterpolator(dem_raster)
+    # dem.interp_method = dem_interp_method
+    dem_interp = load_dem_from_proj(
+        dem_raster,
+        geo_grid.start_x,
+        geo_grid.end_x,
+        geo_grid.end_y,
+        geo_grid.start_y,
+        normalize_data_interp_method(dem_interp_method),
+        proj)
+
     # Parse the orbit and attitude data from the input XML files. Crop the
     # data to the time interval of interest to avoid possible geo2rdr
     # convergence errors due to ambiguity between orbit periods.
@@ -100,35 +114,24 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     look_side = radar_grid_params["look_side"]
     wavelength = radar_grid_params["wavelength"]
 
+    # read azimuth time interval and range spacing from the input runconfig
     radar_grid_spacing_params = radar_grid_params["spacing"]
     az_spacing = radar_grid_spacing_params["az_spacing"]
     rg_spacing = radar_grid_spacing_params["rg_spacing"]
+    pts_per_side = radar_grid_spacing_params["pts_per_side"]
 
-    logger.info(f'az_spacing from runconfig: {az_spacing}')
-    logger.info(f'rg_spacing from runconfig: {rg_spacing}')
-    az_spacing_inferred, rg_spacing_inferred = \
-        isce3.geometry.infer_radar_grid_spacing_from_geo_grid(
-            geo_grid=geo_grid,
-            dem=dem,
-            orbit=orbit,
-            doppler=img_grid_doppler,
-            look_side=look_side,
-            wavelength=wavelength,
-            **radar_grid_params["spacing"],
-        )
-    logger.info(f'az_spacing from inferred: {az_spacing_inferred}')
-    logger.info(f'rg_spacing from inferred: {rg_spacing_inferred}')
-
+    # if either the azimuth time interval or range spacing is not provided
+    # infer it from the geogrid
     if rg_spacing is None or az_spacing is None:
         az_spacing_inferred, rg_spacing_inferred = \
             isce3.geometry.infer_radar_grid_spacing_from_geo_grid(
                 geo_grid=geo_grid,
-                dem=dem,
+                dem=dem_interp,
                 orbit=orbit,
                 doppler=img_grid_doppler,
                 look_side=look_side,
                 wavelength=wavelength,
-                **radar_grid_params["spacing"],
+                pts_per_side=pts_per_side
             )
         if rg_spacing is None:
             rg_spacing = rg_spacing_inferred
@@ -156,7 +159,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         radar_grid=radar_grid,
         orbit=orbit,
         attitude=attitude,
-        dem=dem,
+        dem=dem_interp,
         **processing_params["doppler"],
     )
 
@@ -327,7 +330,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             identification_group = \
                 instrument_group.create_group("identification")
             bounding_polygon = make_geo_grid_bounding_polygon(geo_grid,
-                                                              dem=dem)
+                                                              dem=dem_interp)
             populate_identification_group(
                 identification_group=identification_group,
                 product_spec=product_spec,
