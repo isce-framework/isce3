@@ -10,6 +10,7 @@ isce3/core/llh.py
 isce3/core/orbit.py
 isce3/core/poly2d.py
 isce3/core/resample_block_generators.py
+isce3/focus/caltone.py
 isce3/focus/valid_regions.py
 isce3/focus/notch.py
 isce3/geocode/geocode_slc.py
@@ -22,7 +23,9 @@ isce3/io/gdal/gdal_raster.py
 isce3/io/background.py
 isce3/matchtemplate/import_ampcor.py
 isce3/matchtemplate/test_ampcor.py
+isce3/math/offsets_polyfit.py
 isce3/product/cf_conventions.py
+isce3/signal/cola_windows.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/rfi_freq_null.py

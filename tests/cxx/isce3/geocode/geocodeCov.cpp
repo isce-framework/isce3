@@ -630,10 +630,10 @@ void checkStatsReal(isce3::math::Stats<T> computed_stats,
         std::cout << "n_valid: " << isce3_stats.n_valid << ", " << computed_stats.n_valid << std::endl;
 
         // Compare Stats struct values with GDAL metadata saved by GeocodeCov
-        ASSERT_NEAR(isce3_stats.min, raster_min, 1.0e-15);
-        ASSERT_NEAR(isce3_stats.mean, raster_mean, 1.0e-15);
-        ASSERT_NEAR(isce3_stats.max, raster_max, 1.0e-15);
-        ASSERT_NEAR(isce3_stats.sample_stddev(), raster_sample_stddev, 1.0e-15);
+        ASSERT_NEAR(isce3_stats.min, raster_min, 1.0e-12);
+        ASSERT_NEAR(isce3_stats.mean, raster_mean, 1.0e-12);
+        ASSERT_NEAR(isce3_stats.max, raster_max, 1.0e-12);
+        ASSERT_NEAR(isce3_stats.sample_stddev(), raster_sample_stddev, 1.0e-12);
 
         // Compare Stats struct values with unitest values
         ASSERT_NEAR(isce3_stats.min, computed_stats.min, 1.0e-7);

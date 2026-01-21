@@ -214,8 +214,16 @@ runconfig:
                 #   - 'FDNF': frequency domain notch filtering algorithm
                 # Defaults to 'ST-EVD'.
                 mitigation_algorithm: ST-EVD
-                # Number of subdivisions in range.  Defaults to 1.
-                num_range_blocks: 1
+                # Number of range samples per range block when data blocking
+                # is applied in range direction for sample covariance matrix
+                # estimation. It is recommended that this parameter is at least 
+                # 5 x cpi_len to avoid discrepancy from true covariance matrix.
+                # In addition, in order to avoid a run-time error for ST-EVD,
+                # this parameter needs to be at least 2 x cpi
+                num_samples_rng_blk: 256
+                # Ignore any values passed in for parameter num_samples_rng_blk.
+                # Instead use all samples in the pulses for detection if this is true.
+                use_entire_pulse: False
 
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.
@@ -415,11 +423,28 @@ runconfig:
             # cal pulses.
             zero_fill_gaps: True
 
-            # If true, subtract the azimuth mean from the raw data, which is
-            # useful when the caltone is nearly constant in azimuth but not
-            # stationary in range.  Calculating the mean and subtracting it is
-            # done in blocks using rangecomp.block_size
-            nullify_azimuth_mean: True
+            caltone:
+                # If "azimuth_mean", subtract the azimuth mean from the raw
+                # data, which is useful when the caltone is nearly constant in
+                # azimuth but not stationary in range.  Calculating the mean
+                # and subtracting it is done in blocks using
+                # rangecomp.block_size
+                # If "wavelet" then subtract an estimate that varies in 2D.
+                # No correction when "disabled".
+                # Option "auto" means "wavelet" if dithered else "azimuth_mean",
+                # which is a sensible default for NISAR LSAR.
+                # auto | wavelet | azimuth_mean | disabled
+                algorithm: auto
+
+                # Calibration tone frequency (RF) in Hz.
+                # NOTE Caltone frequency changed for most modes between mode
+                # table v50 and v51, which went into operations on
+                # 2025-10-17T00:00:00Z.  The v50 frequency is 1216.904297e6 Hz
+                # while the v51 frequency is 1214.882813e6 Hz.
+                frequency: 1214.882813e6
+
+                # Length of constant-overlap add (COLA) window.
+                wavelet_size: 64
 
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True

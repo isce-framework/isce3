@@ -4,6 +4,7 @@ import numpy as np
 
 from .ionosphere_estimation import IonosphereEstimation
 from isce3.signal.interpolate_by_range import decimate_freq_a_array
+from isce3.unwrap.preprocess import interpret_subswath_mask
 
 
 class SplitBandIonosphereEstimation(IonosphereEstimation):
@@ -313,6 +314,69 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                         (low_band_array > threshold)
         mask_array = self.remove_single_pixels(mask_array)
         return mask_array
+
+    def get_subswath_mask_array(
+            self,
+            main_array=None,
+            side_array=None,
+            low_band_array=None,
+            high_band_array=None,
+            slant_main=None,
+            slant_side=None):
+        """Get mask from subswath mask
+        Parameters
+        ----------
+        main_array : numpy.ndarray
+            subswath mask of main-band interferogram
+        side_array : numpy.ndarray
+            subswath mask of side-band interferogram
+        low_band_array : numpy.ndarray
+            subswath mask of high subband interferogram
+        high_band_array : numpy.ndarray
+            subswath mask of low subband interferogram
+        slant_main : numpy.ndarray
+            slant range array of frequency A band
+        slant_side : numpy.ndarray
+            slant range array of frequency B band
+        Returns
+        -------
+        mask_array : numpy.ndarray
+            2D mask array extracted from coherence or
+            connected components
+            1: valid pixels,
+            0: invalid pixels.
+        """
+        # decimate subswath mask
+        # when side array is also used.
+        if side_array is not None:
+            if slant_main is None:
+                slant_main = self.slant_main
+            if slant_side is None:
+                slant_side = self.slant_side
+
+            if low_band_array is not None:
+                low_band_array = decimate_freq_a_array(
+                    slant_main,
+                    slant_side,
+                    low_band_array)
+            if high_band_array is not None:
+                high_band_array = decimate_freq_a_array(
+                    slant_main,
+                    slant_side,
+                    high_band_array)
+
+        high_band_reference, high_band_secondary, _ = \
+            interpret_subswath_mask(high_band_array)
+        low_band_reference, low_band_secondary, _ = \
+            interpret_subswath_mask(low_band_array)
+
+        high_valid_area = high_band_reference & high_band_secondary
+        low_valid_area = low_band_reference & low_band_secondary
+
+        # Combine both conditions using logical AND
+        final_mask = high_valid_area & low_valid_area
+
+        return final_mask
 
     def get_valid_area(
             self,

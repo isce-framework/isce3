@@ -74,6 +74,7 @@ def eigen_decomp_sort(cov_matrix):
 
     return eig_val_sort, eig_vec_sort
 
+
 def compute_evd(
     raw_data: np.ndarray,
 ):
@@ -159,7 +160,7 @@ def compute_evd_tb(
     eig_val_sort_array = np.zeros([num_cpi, cpi_len], dtype="f4")
     eig_vec_sort_array = np.zeros((num_cpi, cpi_len, cpi_len), dtype="complex64")
 
-    for idx_cpi, cpi_slow_time in enumerate( slice_gen(num_pulses, cpi_len, combine_rem=False)):
+    for idx_cpi, cpi_slow_time in enumerate(slice_gen(num_pulses, cpi_len, combine_rem=False)):
         data_cpi = raw_data[cpi_slow_time]
 
         eig_val_sort, eig_vec_sort = compute_evd(data_cpi)

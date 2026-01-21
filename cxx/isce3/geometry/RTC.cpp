@@ -1167,8 +1167,23 @@ void _RunBlock(const int jmax, const int block_size,
         getDemCoords = getDemCoordsDiffEpsg;
     }
 
+    /*
+    A straight line in projected coordinates does not correspond to a straight
+    line in geographic coordinates. As a result, deriving minimum and maximum
+    latitude values directly from the geogrid corner X and Y extents may be
+    inaccurate. To address this, we add a margin when loading the DEM subset.
+
+    For RTC processing, this issue is more pronounced in the Y direction. Since
+    RTC does not use block processing along the X axis, the resulting blocks
+    are very wide. In the middle of such blocks, the true minimum and maximum
+    latitude values can differ significantly from those estimated using only
+    the bounding-box corners.
+    */
+    int dem_margin_x_in_pixels = 100;
+    int dem_margin_y_in_pixels = 200;
     auto error_code = loadDemFromProj(
-            dem_raster, minX, maxX, minY, maxY, &dem_interp_block, proj);
+            dem_raster, minX, maxX, minY, maxY, &dem_interp_block, proj,
+            dem_margin_x_in_pixels, dem_margin_y_in_pixels);
 
     if (error_code != isce3::error::ErrorCode::Success) {
         return;

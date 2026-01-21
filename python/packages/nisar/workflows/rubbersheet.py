@@ -5,10 +5,13 @@ from __future__ import annotations
 
 import pathlib
 import time
+import warnings
 
+import isce3
 import journal
 import numpy as np
 from isce3.io import HDF5OptimizedReader
+from isce3.math import offsets_polyfit
 from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
@@ -22,9 +25,224 @@ from osgeo import gdal
 from scipy import interpolate, ndimage, signal
 
 
-def run(cfg: dict, output_hdf5: str = None):
+def run_rubbersheet_with_polyfit(cfg: dict, output_hdf5: str = None):
     '''
-    Run rubbersheet
+    Run rubbersheet via polyfitting method
+    '''
+    # Pull parameters from cfg dictionary
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
+    rubbersheet_params = cfg['processing']['rubbersheet']
+    geo2rdr_offsets_path = pathlib.Path(rubbersheet_params['geo2rdr_offsets_path'])
+    off_product_enabled = cfg['processing']['offsets_product']['enabled']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+
+    # If not set, set output HDF5 file
+    if output_hdf5 is None:
+        output_hdf5 = cfg['product_path_group']['sas_output_file']
+
+    info_channel = journal.info('rubbersheet.run_rubbersheet_with_polyfit')
+    t_all = time.time()
+
+    ref_slc = SLC(hdf5file=ref_hdf5)
+
+    with HDF5OptimizedReader(name=output_hdf5, mode='r+',
+                             libver='latest', swmr=True) as dst_h5:
+        for freq, _, pol_list in get_cfg_freq_pols(cfg):
+            # Get the slant range and zero doppler time spacing
+            ref_radar_grid = ref_slc.getRadarGrid(freq)
+            ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
+            ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
+
+            prf = ref_radar_grid.prf
+            rsr = isce3.core.speed_of_light/ref_slant_range_spacing * 0.5
+            rbw = ref_slc.getSwathMetadata(freq).processed_range_bandwidth
+            abw = ref_slc.getSwathMetadata(freq).processed_azimuth_bandwidth
+
+            ref_az_times = ref_slc.getZeroDopplerTime()
+            ref_slant_ranges = ref_slc.getSlantRange(freq)
+            minL, maxL, minP, maxP = 0, len(ref_az_times), 0, len(ref_slant_ranges)
+
+            freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
+            pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
+            geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'
+            rubbersheet_dir = scratch_path / 'rubbersheet_offsets' / f'freq{freq}'
+            off_slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
+            off_zero_doppler_time = dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
+
+            off_az_indices = ((off_zero_doppler_time - ref_az_times[0]) *
+                              ref_radar_grid.prf).round().astype(int)
+            off_rg_indices = ((off_slant_range - ref_slant_ranges[0])/
+                              ref_slant_range_spacing).round().astype(int)
+
+            # Produce ground track velocity for the frequency under processing
+            ground_track_velocity_file = \
+                get_ground_track_velocity_product(
+                    ref_rslc=ref_slc,
+                    slant_range=off_slant_range,
+                    zero_doppler_time=off_zero_doppler_time,
+                    dem_file=dem_file,
+                    output_dir=rubbersheet_dir)
+
+            for pol in pol_list:
+
+                pol_group_path = f'{pixel_offsets_path}/{pol}'
+                # Create input and output directories for pol under processing
+                out_dir = rubbersheet_dir / pol
+                out_dir.mkdir(parents=True, exist_ok=True)
+
+                if not off_product_enabled:
+                    # Dense offset is enabled and offset products are disabled
+                    dense_offsets_path = pathlib.Path(rubbersheet_params['dense_offsets_path'])
+                    dense_offsets_dir = dense_offsets_path / 'dense_offsets' / f'freq{freq}' / pol
+                    corr_peak_path = str(f'{dense_offsets_dir}/correlation_peak')
+                    dense_offsets_path =  str(f'{dense_offsets_dir}/dense_offsets')
+                else:
+                    off_prod_dir = scratch_path / 'offsets_product' / f'freq{freq}' / pol
+                    # Get layer keys
+                    layer_keys = [key for key in
+                                  cfg['processing']['offsets_product'].keys() if
+                                  key.startswith('layer')]
+
+                    # Get correlation peak path for the last offset layer since it has larger window size
+                    corr_peak_path = str(f'{off_prod_dir}/{layer_keys[-1]}/correlation_peak')
+                    dense_offsets_path =  str(f'{off_prod_dir}/{layer_keys[-1]}/dense_offsets')
+
+                # Check the number of samples along the azimuth and range
+                number_of_samples_along_azimuth = \
+                    rubbersheet_params['polyfitting']['samples_along_azimuth']
+                number_of_samples_along_range =  \
+                    rubbersheet_params['polyfitting']['samples_along_range']
+
+                # Add the warning if the number of samples are larger
+                if number_of_samples_along_azimuth > len(off_az_indices):
+                    warning_msg = (
+                        f'the number of samples along the azimuth {number_of_samples_along_azimuth} '
+                        f'is larger than the length {len(off_az_indices)} of the offsets product')
+                    warnings.warn(warning_msg)
+                    info_channel.log(warning_msg)
+                    number_of_samples_along_azimuth = len(off_az_indices)
+                if number_of_samples_along_range > len(off_rg_indices):
+                    warning_msg = (
+                        f'the number of samples along the range {number_of_samples_along_range} '
+                        f'is larger than the width {len(off_rg_indices)} of the offsets product')
+                    warnings.warn(warning_msg)
+                    info_channel.log(warning_msg)
+                    number_of_samples_along_range = len(off_rg_indices)
+
+                # Sampling
+                az_sampled_indices = np.linspace(0,
+                                                 len(off_az_indices)-1,
+                                                 number_of_samples_along_azimuth,
+                                                 dtype=int)
+                rg_sampled_indices = np.linspace(0,
+                                                 len(off_rg_indices)-1,
+                                                 number_of_samples_along_range,
+                                                 dtype=int)
+
+                az_polyfit_indices = off_az_indices[az_sampled_indices]
+                rg_polyfit_indices = off_rg_indices[rg_sampled_indices]
+
+                lines, pixels = np.meshgrid(az_sampled_indices,
+                                            rg_sampled_indices,
+                                            indexing="ij")
+
+                corr_peak = _open_raster(corr_peak_path, 1)
+                az_offsets = _open_raster(dense_offsets_path, 1)
+                rg_offsets = _open_raster(dense_offsets_path, 2)
+
+                corr_peak = corr_peak[lines, pixels]
+                az_offsets = az_offsets[lines, pixels]
+                rg_offsets = rg_offsets[lines, pixels]
+
+                data = np.column_stack([
+                    np.arange(corr_peak.size),
+                    np.repeat(az_polyfit_indices, len(rg_polyfit_indices)),
+                    np.tile(rg_polyfit_indices, len(az_polyfit_indices)),
+                    az_offsets.ravel(), rg_offsets.ravel(),
+                    corr_peak.ravel()
+                ])
+
+                # polyfitting the range and azimuth offsets
+                results = offsets_polyfit.polyfit_offsets(
+                    data,
+                    degree=rubbersheet_params['polyfitting']['degree'],
+                    crit_value=rubbersheet_params['polyfitting']['critical_value'],
+                    max_iterations=len(data),
+                    minL=minL, maxL=maxL,
+                    minP=minP, maxP=maxP,
+                    prf=prf, rbw=rbw,
+                    abw=abw, rsr=rsr)
+
+                polyfitting_degree = results["degree"]
+                polyfitting_coefL = results["coefL"]
+                polyfitting_coefP = results["coefP"]
+
+                print(f"Polyfitting Degree: {polyfitting_degree}")
+                print(f"Polyfitting CoefL: {polyfitting_coefL}")
+                print(f"Polyfitting CoefP: {polyfitting_coefP}")
+
+                info_channel.log(f"Polyfitting Degree: {polyfitting_degree}")
+                info_channel.log(f"Polyfitting CoefL: {polyfitting_coefL}")
+                info_channel.log(f"Polyfitting CoefP: {polyfitting_coefP}")
+
+                lines, pixels = np.meshgrid(off_az_indices, off_rg_indices, indexing="ij")
+                culled_az_offsets, culled_rg_offsets =\
+                    offsets_polyfit.predict_offsets(lines, pixels,
+                                                    results["coefL"],
+                                                    results["coefP"],
+                                                    results["degree"],
+                                                    minL, maxL, minP, maxP)
+
+                _write_to_disk(str(f'{out_dir}/culled_az_offsets'), culled_az_offsets)
+                _write_to_disk(str(f'{out_dir}/culled_rg_offsets'), culled_rg_offsets)
+
+                # Get ground velocity and correlation peak
+                ground_track_velocity = _open_raster(ground_track_velocity_file)
+
+                # Get datasets from HDF5 file and update datasets
+                offset_az_prod = dst_h5[f'{pol_group_path}/alongTrackOffset']
+                offset_rg_prod = dst_h5[f'{pol_group_path}/slantRangeOffset']
+                offset_peak_prod = dst_h5[f'{pol_group_path}/correlationSurfacePeak']
+
+                # Assign cross-correlation peak
+                offset_peak_prod[...] = _open_raster(corr_peak_path)
+                # Convert the along track and slant range pixel offsets to meters
+                offset_az_prod[...] = (culled_az_offsets *
+                                       ground_track_velocity *
+                                       ref_zero_doppler_time_spacing)
+
+                offset_rg_prod[...] = culled_rg_offsets * ref_slant_range_spacing
+
+                # Compute statistics for the offsets and correlation peak
+                datasets = [offset_peak_prod, offset_az_prod, offset_rg_prod]
+                for dataset in datasets:
+                    compute_stats_real_hdf5_dataset(dataset)
+
+                # Compute the offsets for fine resampling of secondary RSLC
+                rubber_offs = ['culled_az_offsets', 'culled_rg_offsets']
+                geo_offs = ['azimuth.off', 'range.off']
+                for rubber_off, geo_off in zip(rubber_offs, geo_offs):
+                    # Resample offsets to the size of the reference RSLC
+                    culled_off_path = str(out_dir / rubber_off)
+                    resamp_off_path = culled_off_path.replace('culled', 'resampled')
+                    ds = gdal.Open(culled_off_path, gdal.GA_ReadOnly)
+                    gdal.Translate(resamp_off_path, ds,
+                                width=ref_radar_grid.width,
+                                height=ref_radar_grid.length, format='ENVI')
+                    # Sum resampled offsets to geometry offsets
+                    sum_off_path = str(out_dir / geo_off)
+                    sum_gdal_rasters(str(geo_offset_dir / geo_off),
+                                    resamp_off_path, sum_off_path,
+                                    invalid_value=-1e6)
+
+    t_all_elapsed = time.time() - t_all
+    info_channel.log(
+        f"Successfully ran polyfit rubbersheet in {t_all_elapsed:.3f} seconds")
+
+def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
+    '''
+    Run rubbersheet with the interpolation method
     '''
 
     # Pull parameters from cfg dictionary
@@ -39,30 +257,31 @@ def run(cfg: dict, output_hdf5: str = None):
     if output_hdf5 is None:
         output_hdf5 = cfg['product_path_group']['sas_output_file']
 
-    info_channel = journal.info('rubbersheet.run')
+    info_channel = journal.info('rubbersheet.run_rubbersheet_with_interpolation')
     info_channel.log('Start rubbersheet')
     t_all = time.time()
 
     # Initialize parameters share by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
-    ref_radar_grid = ref_slc.getRadarGrid()
-
-    # Get the slant range and zero doppler time spacing
-    ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
-    ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
 
     # Pull the slant range and zero doppler time of the pixel offsets product
     # at frequencyA
     with HDF5OptimizedReader(name=output_hdf5, mode='r+', libver='latest', swmr=True) as dst_h5:
 
         for freq, _, pol_list in get_cfg_freq_pols(cfg):
+
+            ref_radar_grid = ref_slc.getRadarGrid(freq)
+
+            # Get the slant range and zero doppler time spacing
+            ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
+            ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
+
             freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
             pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
             geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'
             rubbersheet_dir = scratch_path / 'rubbersheet_offsets' / f'freq{freq}'
             slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
             zero_doppler_time = dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
-
 
             # Produce ground track velocity for the frequency under processing
             ground_track_velocity_file = get_ground_track_velocity_product(ref_slc,
@@ -154,18 +373,17 @@ def run(cfg: dict, output_hdf5: str = None):
                     resamp_off_path = culled_off_path.replace('culled', 'resampled')
                     ds = gdal.Open(culled_off_path, gdal.GA_ReadOnly)
                     gdal.Translate(resamp_off_path, ds,
-                                   width=ref_radar_grid.width,
-                                   height=ref_radar_grid.length, format='ENVI')
+                                width=ref_radar_grid.width,
+                                height=ref_radar_grid.length, format='ENVI')
                     # Sum resampled offsets to geometry offsets
                     sum_off_path = str(out_dir / geo_off)
                     sum_gdal_rasters(str(geo_offset_dir / geo_off),
-                                     resamp_off_path, sum_off_path,
-                                     invalid_value=-1e6)
+                                    resamp_off_path, sum_off_path,
+                                    invalid_value=-1e6)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(
-        f"Successfully ran rubbersheet in {t_all_elapsed:.3f} seconds")
-
+        f"Successfully ran interpolation rubbersheet in {t_all_elapsed:.3f} seconds")
 
 def _open_raster(filepath, band=1):
     '''
@@ -506,9 +724,10 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
     return offset_az, offset_rg
 
 
+import journal
 import numpy as np
 from scipy import interpolate
-import journal
+
 
 def _interpolate_offsets(offset, interp_method):
     '''
@@ -604,7 +823,15 @@ def _filter_offsets(offset, rubbersheet_params):
         error_channel.log(err_str)
         raise ValueError(err_str)
 
-
+def run(cfg: dict, output_hdf5: str = None):
+    '''
+    Run rubbersheet
+    '''
+    rubbersheet_params = cfg['processing']['rubbersheet']
+    if rubbersheet_params['polyfitting']['enabled']:
+        run_rubbersheet_with_polyfit(cfg, output_hdf5)
+    else:
+        run_rubbersheet_with_interpolation(cfg, output_hdf5)
 
 if __name__ == "__main__":
     '''

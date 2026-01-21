@@ -677,7 +677,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                 az_looks, rg_looks)
                         if 'B' not in freq_pol:
                             input_hdf5_iono = f'{scratch_path}/ionosphere/{iono_method}/RUNW.h5'
-                           
+
                     if is_iono_method_sideband and freq == 'B':
                         geocode_iono_bool = False
 
@@ -1126,7 +1126,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                         # to avoid additional interpolation.
                         if 'B' not in freq_pol:
                             input_hdf5_iono = f'{scratch_path}/ionosphere/{iono_method}/RUNW.h5'
-                       
+
                         if freq == 'A':
                             radar_grid_iono = slc.getRadarGrid('B')
                             if az_looks > 1 or rg_looks > 1:
