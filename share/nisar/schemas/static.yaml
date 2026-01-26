@@ -99,8 +99,16 @@ radar_grid_spacing_options:
   pts_per_side: int(min=2, required=False)
 
 radar_grid_bounding_box_options:
-  start_time: timestamp()
-  end_time: timestamp()
+  start_time: any(
+      timestamp(),
+      regex(r'^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}:\d{2})?$'),
+      required=False
+    )
+  end_time: any(
+      timestamp(),
+      regex(r'^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}:\d{2})?$'),
+      required=False
+    )
   start_range: num(required=False)
   end_range: num(required=False)
   min_height: num(required=False)
