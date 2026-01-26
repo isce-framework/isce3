@@ -113,30 +113,16 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     radar_grid_params = processing_params["radar_grid"]
     look_side = radar_grid_params["look_side"]
     wavelength = radar_grid_params["wavelength"]
-
-    # read azimuth time interval and range spacing from the input runconfig
-    radar_grid_spacing_params = radar_grid_params["spacing"]
-    az_spacing = radar_grid_spacing_params["az_spacing"]
-    rg_spacing = radar_grid_spacing_params["rg_spacing"]
-    pts_per_side = radar_grid_spacing_params["pts_per_side"]
-
-    # if either the azimuth time interval or range spacing is not provided
-    # infer it from the geogrid
-    if rg_spacing is None or az_spacing is None:
-        az_spacing_inferred, rg_spacing_inferred = \
-            isce3.geometry.infer_radar_grid_spacing_from_geo_grid(
-                geo_grid=geo_grid,
-                dem=dem_interp,
-                orbit=orbit,
-                doppler=img_grid_doppler,
-                look_side=look_side,
-                wavelength=wavelength,
-                pts_per_side=pts_per_side
-            )
-        if rg_spacing is None:
-            rg_spacing = rg_spacing_inferred
-        if az_spacing is None:
-            az_spacing = az_spacing_inferred
+    az_spacing, rg_spacing = \
+        isce3.geometry.infer_radar_grid_spacing_from_geo_grid(
+            geo_grid=geo_grid,
+            dem=dem_interp,
+            orbit=orbit,
+            doppler=img_grid_doppler,
+            look_side=look_side,
+            wavelength=wavelength,
+            **radar_grid_params["spacing"],
+        )
 
     # Compute a radar grid whose footprint on the ground encloses the geocoded
     # grid on which each output layer is defined.
