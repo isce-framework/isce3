@@ -100,7 +100,6 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     # parameters than the legacy `geo2rdr` routine that's used by most of the
     # workflow. Exposing both sets of parameters would introduce a lot of
     # additional bookkeeping for seemingly little benefit.
-    logger.info("Estimate maximum required radar grid spacing")
     radar_grid_params = processing_params["radar_grid"]
     look_side = radar_grid_params["look_side"]
     wavelength = radar_grid_params["wavelength"]
@@ -122,6 +121,40 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     az_margin = bounding_box_params["az_margin"]
     rg_margin = bounding_box_params["rg_margin"]
 
+    # Print user radar grid bounding box parameters, if provided.
+    if (start_time is not None or start_range is not None or
+            end_time is not None or end_range is not None):
+
+        logger.info("Using user-specified radar grid bounding box parameters")
+        if start_time is not None:
+            logger.info(f'    start time: {start_time}')
+            if az_margin != 0.0:
+                start_time -= isce3.core.TimeDelta(az_margin)
+                logger.info(f'    adjusted for az margin {az_margin}:'
+                            f' {start_time}')
+        if end_time is not None:
+            logger.info(f'    end time: {end_time}')
+            if az_margin != 0.0:
+                end_time += isce3.core.TimeDelta(az_margin)
+                logger.info(f'    adjusted for az margin {az_margin}:'
+                            f' {end_time}')
+        if start_range is not None:
+            logger.info(f'    start range: {start_range}')
+            if rg_margin != 0.0:
+                start_range -= rg_margin
+                logger.info(f'    adjusted for rg margin {rg_margin}:'
+                            f' {start_range}')
+        if end_range is not None:
+            logger.info(f'    end range: {end_range}')
+            if rg_margin != 0.0:
+                end_range += rg_margin
+                logger.info(f'    adjusted for rg margin {rg_margin}:'
+                            f' {end_range}')
+    if rg_spacing is not None:
+        logger.info(f'    range spacing: {rg_spacing}')
+    if az_spacing is not None:
+        logger.info(f'    azimuth time interval: {az_spacing}')
+
     if rg_spacing is None or az_spacing is None:
         az_spacing_inferred, rg_spacing_inferred = \
             isce3.geometry.infer_radar_grid_spacing_from_geo_grid(
@@ -135,8 +168,10 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             )
         if rg_spacing is None:
             rg_spacing = rg_spacing_inferred
+            logger.info(f'   inferred range spacing: {rg_spacing}')
         if az_spacing is None:
             az_spacing = az_spacing_inferred
+            logger.info(f'   inferred azimuth time interval: {az_spacing}')
 
     if (start_time is not None and start_range is not None and
             end_time is not None and end_range is not None):
@@ -149,13 +184,6 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         num_az = round((tf - t0) / az_spacing)
         num_rg = round((end_range - start_range) / rg_spacing)
 
-        logger.info("Using user-specified radar grid bounding box parameters")
-        logger.info(f'    start time: {start_time}')
-        logger.info(f'    end time: {end_time}')
-        logger.info(f'    start range: {start_range}')
-        logger.info(f'    end range: {end_range}')
-        logger.info(f'    az spacing: {az_spacing}')
-        logger.info(f'    rg spacing: {rg_spacing}')
         logger.info(f'    number of lines: {num_az}')
         logger.info(f'    number of range samples: {num_rg}')
 
