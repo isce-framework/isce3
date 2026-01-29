@@ -97,7 +97,6 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     # parameters than the legacy `geo2rdr` routine that's used by most of the
     # workflow. Exposing both sets of parameters would introduce a lot of
     # additional bookkeeping for seemingly little benefit.
-    logger.info("Estimate maximum required radar grid spacing")
     radar_grid_params = processing_params["radar_grid"]
     look_side = radar_grid_params["look_side"]
     wavelength = radar_grid_params["wavelength"]
@@ -106,6 +105,12 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     az_spacing = radar_grid_spacing_params["az_spacing"]
     rg_spacing = radar_grid_spacing_params["rg_spacing"]
     pts_per_side = radar_grid_spacing_params["pts_per_side"]
+
+    logger.info("Estimate radar grid spacing")
+    if rg_spacing is not None:
+        logger.info(f'    range spacing: {rg_spacing}')
+    if az_spacing is not None:
+        logger.info(f'    azimuth time interval: {az_spacing}')
 
     if rg_spacing is None or az_spacing is None:
         az_spacing_inferred, rg_spacing_inferred = \
@@ -119,8 +124,10 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
                 pts_per_side=pts_per_side
             )
         if rg_spacing is None:
+            logger.info(f'   inferred range spacing: {rg_spacing}')
             rg_spacing = rg_spacing_inferred
         if az_spacing is None:
+            logger.info(f'   inferred azimuth time interval: {az_spacing}')
             az_spacing = az_spacing_inferred
 
     # Compute a radar grid whose footprint on the ground encloses the geocoded
