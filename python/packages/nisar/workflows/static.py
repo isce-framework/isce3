@@ -111,8 +111,8 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     pts_per_side = radar_grid_spacing_params["pts_per_side"]
 
     bounding_box_params = radar_grid_params["bounding_box"]
-    start_time = bounding_box_params["start_time"]
-    end_time = bounding_box_params["end_time"]
+    start_datetime_str = bounding_box_params["start_time"]
+    end_datetime_str = bounding_box_params["end_time"]
     start_range = bounding_box_params["start_range"]
     end_range = bounding_box_params["end_range"]
     min_height = bounding_box_params["min_height"]
@@ -121,39 +121,49 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     az_margin = bounding_box_params["az_margin"]
     rg_margin = bounding_box_params["rg_margin"]
 
+    start_time = None
+    end_time = None
+
     # Print user radar grid bounding box parameters, if provided.
-    if (start_time is not None or start_range is not None or
-            end_time is not None or end_range is not None):
+    if (start_datetime_str is not None or start_range is not None or
+            end_datetime_str is not None or end_range is not None):
 
         logger.info("Using user-specified radar grid bounding box parameters")
-        if start_time is not None:
-            logger.info(f'    start time: {start_time}')
-            if az_margin != 0.0:
-                start_time -= isce3.core.TimeDelta(az_margin)
-                logger.info(f'    adjusted for az margin {az_margin}:'
-                            f' {start_time}')
-        if end_time is not None:
-            logger.info(f'    end time: {end_time}')
-            if az_margin != 0.0:
-                end_time += isce3.core.TimeDelta(az_margin)
-                logger.info(f'    adjusted for az margin {az_margin}:'
-                            f' {end_time}')
+        if start_datetime_str is not None:
+            logger.info(f'    start time: {start_datetime_str}')
+            start_time = isce3.core.DateTime(start_datetime_str)
+
+        if end_datetime_str is not None:
+            logger.info(f'    end time: {end_datetime_str}')
+            end_time = isce3.core.DateTime(end_datetime_str)
+
         if start_range is not None:
             logger.info(f'    start range: {start_range}')
-            if rg_margin != 0.0:
-                start_range -= rg_margin
-                logger.info(f'    adjusted for rg margin {rg_margin}:'
-                            f' {start_range}')
+
         if end_range is not None:
             logger.info(f'    end range: {end_range}')
-            if rg_margin != 0.0:
-                end_range += rg_margin
-                logger.info(f'    adjusted for rg margin {rg_margin}:'
-                            f' {end_range}')
+
     if rg_spacing is not None:
         logger.info(f'    range spacing: {rg_spacing}')
     if az_spacing is not None:
         logger.info(f'    azimuth time interval: {az_spacing}')
+
+    if start_time is not None and az_margin != 0.0:
+        start_time -= isce3.core.TimeDelta(az_margin)
+        logger.info(f'    start time (adjusted for az. margin) {az_margin}:'
+                    f' {start_time}')
+    if end_time is not None and az_margin != 0.0:
+        end_time += isce3.core.TimeDelta(az_margin)
+        logger.info(f'    end time (adjusted for az. margin) {az_margin}:'
+                    f' {end_time}')
+    if start_range is not None and rg_margin != 0.0:
+        start_range -= rg_margin
+        logger.info(f'    start range (adjusted for rg margin) {rg_margin}:'
+                    f' {start_range}')
+    if end_range is not None and rg_margin != 0.0:
+        end_range += rg_margin
+        logger.info(f'    end range (adjusted for rg margin) {rg_margin}:'
+                    f' {end_range}')
 
     if rg_spacing is None or az_spacing is None:
         az_spacing_inferred, rg_spacing_inferred = \
