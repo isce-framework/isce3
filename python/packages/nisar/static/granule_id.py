@@ -4,24 +4,29 @@ from datetime import datetime
 import isce3
 
 
-def int_to_3_digit_string(i: int) -> str:
+def int_to_n_digit_string(i: int, n: int = 3) -> str:
     """
-    Format an integer as a 3-digit zero-padded string.
+    Format an integer as an n-digit zero-padded string.
 
     Parameters
     ----------
     i : int
-        The input integer. Must be >= 0 and <= 999.
+        The input integer. Must be >= 0 and <= 10^n - 1.
+
+    n : int
+        The number of digits in the output string.
 
     Returns
     -------
     str
-        A 3-character string representation of the input integer, left-padded with
-        zeros.
+        An n-character string representation of the input integer, left-padded
+        with zeros.
     """
-    if (i < 0) or (i > 999):
-        raise ValueError(f"argument must be in the range [0, 999], got {i}")
-    return f"{i:03d}"
+    max_value = 10 ** n - 1
+    if (i < 0) or (i > max_value):
+        raise ValueError(f"argument must be in the range [0, {max_value}],"
+                         f" got {i}")
+    return f"{i:0{n}d}"
 
 
 def orbit_direction_to_char_code(direction: isce3.core.OrbitPassDirection) -> str:
@@ -160,13 +165,14 @@ def form_granule_id(
         I=radar_band,
         L=product_level,
         PROD=product_type,
-        REL=int_to_3_digit_string(relative_orbit_number),
-        P=orbit_direction_to_char_code(orbit_pass_direction),
-        FRM=int_to_3_digit_string(frame_number),
-        Xposting=int_to_3_digit_string(int(round(x_posting))),
-        Yposting=int_to_3_digit_string(int(round(y_posting))),
-        ValidityStartDateTime=datetime_to_yyyymmddthhmmss(validity_start_datetime),
+        REL=int_to_n_digit_string(relative_orbit_number, n=3),
+        P=orbit_direction_to_char_code(orbit_pass_direction, n=3),
+        FRM=int_to_n_digit_string(frame_number, 3),
+        Xposting=int_to_n_digit_string(int(round(x_posting)), n=4),
+        Yposting=int_to_n_digit_string(int(round(y_posting)), n=4),
+        ValidityStartDateTime=datetime_to_yyyymmddthhmmss(
+            validity_start_datetime),
         CRID=composite_release_id,
         LOC=processing_center_to_char_code(processing_center),
-        CTR=int_to_3_digit_string(product_counter),
+        CTR=int_to_n_digit_string(product_counter, n=3),
     )
