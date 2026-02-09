@@ -125,7 +125,7 @@ void transformTile(thrust::complex<float> *resampledSlc,
             // Check if resampling possible at the starting rows of a tile.
             (iRowResamp < chipHalf)
             // Check if resampling possible at the ending rows of a tile.
-            || (iRowResamp + chipHalf > inReadableLength);
+            || (iRowResamp + chipHalf >= inReadableLength);
 
         // Check if resampled column index is in bounds by checking if chip
         // used to resample can be populated.
@@ -133,7 +133,7 @@ void transformTile(thrust::complex<float> *resampledSlc,
             // Check if resampling possible at starting columns of a tile.
             (iColResamp - chipHalf < 0)
             // Check if resampling possible at the ending columns of a tile.
-            || (iColResamp + chipHalf > inWidth);
+            || (iColResamp + chipHalf >= (long long int)inWidth);
 
         // Skip computations if indices out of bound or az/rng not in doppler
         if (rowOutOfBounds || colOutOfBounds || iRowResamp < 0 || iColResamp < 0)

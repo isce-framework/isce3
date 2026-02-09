@@ -53,7 +53,7 @@ void _resampleToCoordsGlobal(
     // done with a multiple of the thrd_per_block pixels, but the output data size will
     // typically be smaller than this multiple. So, some calls to this function on
     // the device will be for non-existent pixels which must be discarded.
-    if (pixel_index > resampled_block_width * resampled_block_length) return;
+    if (pixel_index >= resampled_block_width * resampled_block_length) return;
 
     const auto chip_size = static_cast<size_t>(SINC_ONE);
 
