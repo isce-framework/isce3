@@ -12,15 +12,15 @@ def test_form_granule_id():
         relative_orbit_number=1,
         orbit_pass_direction="ascending",
         frame_number=2,
-        x_posting=10.0,
-        y_posting=5.0,
+        x_posting=10*10.0,
+        y_posting=10*5.0,
         validity_start_datetime=datetime.fromisoformat("1999-12-31T23:59:59"),
         composite_release_id="T01023",
         processing_center="JPL",
         product_counter=1,
     )
     assert (
-        granule_id == "NISAR_L2_STATIC_001_A_0020_0100_0050_19991231T235959_T01023_J_001"
+        granule_id == "NISAR_L2_STATIC_001_A_002_0100_0050_19991231T235959_T01023_J_001"
     )
 
     granule_id = form_granule_id(
@@ -31,8 +31,8 @@ def test_form_granule_id():
         relative_orbit_number=123,
         orbit_pass_direction="descending",
         frame_number=124,
-        x_posting=80.0,
-        y_posting=80.0,
+        x_posting=10*80.0,
+        y_posting=10*80.0,
         validity_start_datetime=datetime.fromisoformat("2000-01-01T00:00:00"),
         composite_release_id="A11111",
         processing_center="somewhere else",
