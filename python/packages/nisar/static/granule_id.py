@@ -1,5 +1,6 @@
 import string
 from datetime import datetime
+from osgeo import osr
 
 import isce3
 
@@ -104,6 +105,7 @@ def form_granule_id(
     frame_number: int,
     x_posting: float,
     y_posting: float,
+    epsg_code: int,
     validity_start_datetime: datetime,
     composite_release_id: str,
     processing_center: str,
@@ -134,6 +136,9 @@ def form_granule_id(
     x_posting, y_posting : float
         X and Y spacing of the raster coordinate grid, in the units of the grid's native
         coordinate system. Must be > 0 and <= 999.
+    epsg_code : int
+        EPSG code of the spatial reference system in which the raster coordinate grid is
+        defined.
     validity_start_datetime : datetime.datetime
         UTC date and time of the start of the granule's validity date range. Must not
         contain a fractional seconds component.
@@ -149,17 +154,39 @@ def form_granule_id(
     Returns
     -------
     str
-        The granule ID.
+        The granule ID. If the spatial reference system specified by
+        epsg_code is projected, the X and Y postings are multiplied
+        by 10 and formatted as four-digit, zero-padded integers.
+        If the spatial reference system is geographic, the X and Y
+        postings are formatted directly (without multiplication) as
+        four-digit, zero-padded integers, with the decimal point
+        removed.
 
     References
     ----------
     .. [1] S. Niemoeller, "NASA SDS Product Specification Level-2 Static Layers", JPL
         D-107727, 2025.
     """
-    template = string.Template(
-        "${MISSION}_${I}${L}_${PROD}_${REL}_${P}_${FRM}_${Xposting}_${Yposting}"
-        "_${ValidityStartDateTime}_${CRID}_${LOC}_${CTR}"
-    )
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(epsg_code)
+
+    # The granule ID for projected coordinate systems encodes the X and Y
+    # postings in decimeters as 4-digit zero-padded integers,
+    # while the granule ID for geographic coordinate systems encodes the
+    # X and Y postings in degrees as 4-digit zero-padded integers with the
+    # decimal point removed.
+    if not srs.IsGeographic():
+        template = string.Template(
+            "${MISSION}_${I}${L}_${PROD}_${REL}_${P}_${FRM}"
+            "_${XpostingDecimeters}_${YpostingDecimeters}"
+            "_${ValidityStartDateTime}_${CRID}_${LOC}_${CTR}"
+        )
+    else:
+        template = string.Template(
+            "${MISSION}_${I}${L}_${PROD}_${REL}_${P}_${FRM}"
+            "_${Xposting}_${Yposting}"
+            "_${ValidityStartDateTime}_${CRID}_${LOC}_${CTR}"
+        )
     return template.substitute(
         MISSION=mission_id,
         I=radar_band,
@@ -168,8 +195,12 @@ def form_granule_id(
         REL=int_to_n_digit_string(relative_orbit_number, n=3),
         P=orbit_direction_to_char_code(orbit_pass_direction),
         FRM=int_to_n_digit_string(frame_number, 3),
-        Xposting=int_to_n_digit_string(int(10*round(x_posting)), n=4),
-        Yposting=int_to_n_digit_string(int(10*round(y_posting)), n=4),
+        XpostingDecimeters=int_to_n_digit_string(int(10*round(x_posting)),
+                                                 n=4),
+        YpostingDecimeters=int_to_n_digit_string(int(10*round(y_posting)),
+                                                 n=4),
+        Xposting=int_to_n_digit_string(int(round(x_posting)), n=4),
+        Yposting=int_to_n_digit_string(int(round(y_posting)), n=4),
         ValidityStartDateTime=datetime_to_yyyymmddthhmmss(
             validity_start_datetime),
         CRID=composite_release_id,
