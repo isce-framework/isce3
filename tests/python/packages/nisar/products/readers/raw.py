@@ -122,3 +122,28 @@ def test_decoder():
 
         decoder = nisar.products.readers.Raw.DataDecoder(h5["complex32/z"])
         npt.assert_equal(decoder[:,:], expected)
+
+
+def test_subswath_changes():
+    fn = Path(iscetest.data) / "focus" / "subswaths_dithered.npz"
+    subswaths = np.load(fn)["subswaths"]
+    is_dithered = True
+    nr = 52746
+    from nisar.products.readers.Raw.Raw import get_subswath_changes
+    changes = get_subswath_changes(subswaths, is_dithered, nr)
+    expected = np.array([
+        19096,
+        38194,
+        57292,
+        76390,
+        95489,
+        114586,
+        133684,
+        152782,
+        171880,
+        190978,
+        210077,
+        229174,
+        248272,
+        267370], dtype=np.int64)
+    npt.assert_equal(changes, expected)
