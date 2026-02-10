@@ -20,7 +20,7 @@ def test_form_granule_id():
         product_counter=1,
     )
     assert (
-        granule_id == "NISAR_L2_STATIC_001_A_0020_010_0050_19991231T235959_T01023_J_001"
+        granule_id == "NISAR_L2_STATIC_001_A_0020_0100_0050_19991231T235959_T01023_J_001"
     )
 
     granule_id = form_granule_id(
