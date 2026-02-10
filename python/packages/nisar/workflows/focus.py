@@ -1538,8 +1538,9 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         raw_chan = find_overlapping_channel(raw, out_chan)
 
         freq = raw_chan.freq_id
-        bboxes = raw.getSubSwathBboxes(freq, epoch=orbit.reference_epoch)
-        raw_bbox_lists.append(bboxes)
+        bbox_lists = raw.getSubSwathBboxes(freq, epoch=orbit.reference_epoch,
+            num_ignore=20)  # make num_ignore configurable?
+        raw_bbox_lists.extend(bbox_lists)
 
         txpol = raw_chan.pol[0]
         chirp_durations.append(raw.getChirpParameters(freq, txpol)[3])
