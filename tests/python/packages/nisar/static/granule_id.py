@@ -20,7 +20,7 @@ def test_form_granule_id():
         product_counter=1,
     )
     assert (
-        granule_id == "NISAR_L2_STATIC_001_A_002_010_005_19991231T235959_T01023_J_001"
+        granule_id == "NISAR_L2_STATIC_001_A_0020_010_0050_19991231T235959_T01023_J_001"
     )
 
     granule_id = form_granule_id(
@@ -39,5 +39,5 @@ def test_form_granule_id():
         product_counter=999,
     )
     assert (
-        granule_id == "NISAR_S2_STATIC_123_D_124_080_080_20000101T000000_A11111_X_999"
+        granule_id == "NISAR_S2_STATIC_123_D_124_0800_0800_20000101T000000_A11111_X_999"
     )
