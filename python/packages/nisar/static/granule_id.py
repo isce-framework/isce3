@@ -166,7 +166,7 @@ def form_granule_id(
         L=product_level,
         PROD=product_type,
         REL=int_to_n_digit_string(relative_orbit_number, n=3),
-        P=orbit_direction_to_char_code(orbit_pass_direction, n=3),
+        P=orbit_direction_to_char_code(orbit_pass_direction),
         FRM=int_to_n_digit_string(frame_number, 3),
         Xposting=int_to_n_digit_string(int(round(x_posting)), n=4),
         Yposting=int_to_n_digit_string(int(round(y_posting)), n=4),
