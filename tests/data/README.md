@@ -589,7 +589,8 @@ Note that a new instrument HDF5 sample file "REE_INSTRUMENT_TABLE_V2P0.h5" of ve
   This NumPy .npz file contains a single array called "subswaths" corresponding
   to the subswath vectors for the NISAR L0B file with granule ID
   `NISAR_L0_PR_RRSD_010_162_A_165S_20260120T100541_20260120T100809_X05007_F_J_000`
-  which was acuired with dithering (variable pulse intervals).
+  which was acuired with dithering (variable pulse intervals).  It also contains
+  range timing parameters "rd", "wd", and "wl".
 
 ## Static Layers
 

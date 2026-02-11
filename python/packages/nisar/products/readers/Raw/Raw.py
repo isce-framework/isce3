@@ -713,7 +713,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         return swaths
 
 
-    def getSubSwathBboxes(self, frequency, tx=None, epoch=None, num_ignore=0):
+    def getSubSwathBboxes(self, frequency, polarization=None, epoch=None, num_ignore=0):
         """
         Return the bounding box for each sub-swath.
 
@@ -721,8 +721,9 @@ class RawBase(Base, family='nisar.productreader.raw'):
         ----------
         frequency : {"A", "B"}
             Sub-band identifier.
-        tx : {"H", "V", "L", "R"} | None
-            Transmit polarization. If None, use first available TX polarization.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
         epoch : isce3.core.DateTime
             Reference epoch for azimuth time tags.
         num_ignore : int, optional
@@ -738,25 +739,70 @@ class RawBase(Base, family='nisar.productreader.raw'):
             Bounding box in radar coordinates for each sub-swath for each
             segment of constant data window position/length.
         """
-        if tx is None:
-            tx = self.polarizations[frequency][0][0]
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        tx = polarization[0]
         times, grid = self.getRadarGrid(frequency, tx, epoch=epoch)
+        nt, nr = grid.shape
         subswaths = self.getSubSwaths(frequency, tx=tx)
         is_dithered = self.isDithered(frequency, tx=tx, num_ignore=num_ignore)
+        rd, wd, wl = self.getRdWdWl(frequency, polarization)
 
-        changes = get_subswath_changes(subswaths, is_dithered, grid.shape[1],
-            num_ignore=num_ignore)
+        # Replace enormous fill values with number of samples.
+        subswaths = np.where(subswaths > nr, nr, subswaths)
+
+        # Replace last num_ignore pulses with previous value.
+        if (not is_dithered) and (num_ignore > 0):
+            # Avoid problems with trivially short observations, though this
+            # shouldn't ever happen.
+            num_ignore = min(num_ignore, nt)
+            subswaths[:, -num_ignore:, :] = subswaths[:, -num_ignore, :]
+
+        # For dithered replace subswaths (gap mask) with a single subswath
+        # that merely tracks min/max valid sample.  Note that gaps may still
+        # interfere with min/max, though.
+        if is_dithered:
+            # Determine non-empty ranges.
+            starts, ends = subswaths[..., 0], subswaths[..., 1]
+            valid = ends > starts
+            # Construct masked arrays to simplify stats.
+            starts = np.ma.array(subswaths[..., 0], mask=~valid)
+            ends = np.ma.array(subswaths[..., 1], mask=~valid)
+
+            # Get masked min and max valid sample for each pulse.
+            min_starts = np.min(starts, axis=0)
+            max_ends = np.max(ends, axis=0)
+
+            # Now replace subswaths with a single subswath with start/end
+            # so we can use same logic as fixed PRF below.
+            subswaths = np.vstack((min_starts, max_ends)).transpose().reshape(
+                (1, -1, 2))
+
+        changes = get_dwp_change_indices(rd, wd, wl)
 
         # Append first and last pulses to generate pairs of constant DWP.
         breaks = np.hstack(([0], changes, [grid.shape[0] - 1]))
         bbox_lists = []
-        for i in range(len(breaks) - 1):
-            i0, i1 = breaks[i], breaks[i + 1]
-            t0, t1 = times[i0], times[i1]  # one past end point
+        for ibreak in range(len(breaks) - 1):
+            ipulse0, ipulse1 = breaks[ibreak], breaks[ibreak + 1]
+            t0, t1 = times[ipulse0], times[ipulse1]  # one past end point
             bboxes = []
-            for j0, j1 in subswaths[:, i0, :]:
+            for iswath, (j0, j1) in enumerate(subswaths[:, ipulse0, :]):
+                # Exclude empty subswaths.
                 if j1 <= j0:
-                    continue  # exclude empty subswaths
+                    continue
+                # If dithered peek ahead in case gap overlaps start or end of
+                # valid swath.  Only need to check one pulse ahead assuming
+                # dither sequence is correctly designed to avoid consecutive
+                # gaps.
+                if is_dithered:
+                    assert iswath == 0  # due to restructuring above
+                    assert ipulse0 < (nt - 1)  # from construction of breaks
+                    j0next = subswaths[iswath, ipulse0 + 1, 0]
+                    j1next = subswaths[iswath, ipulse0 + 1, 1]
+                    if j1next > j0next:
+                        j0 = min(j0, j0next)
+                        j1 = max(j1, j1next)
                 r0 = grid.slant_ranges[j0]
                 r1 = grid.slant_ranges[j1 - 1] + grid.slant_ranges.spacing
                 bboxes.append(RadarBoundingBox(
@@ -764,6 +810,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
                     RadarPoint(t1, r1)))
             if len(bboxes) == 0:
                 log.warning(f"no valid subswath for time interval [{t0}, {t1})")
+                continue
             bbox_lists.append(bboxes)
 
         return bbox_lists
@@ -984,6 +1031,34 @@ def get_subswath_changes(subswaths, is_dithered, nr, num_ignore=0):
 
     return np.array(sorted(set(all_changes) - set(spurious_changes)),
         dtype=np.int64)  # avoid float64 for empty set
+
+
+def get_dwp_change_indices(rd, wd, wl):
+    """
+    Determine the pulses where the data window position changes.
+
+    Parameters
+    ----------
+    rd, wd, wl : np.ndarray
+        Arrays with shape (num_channels, num_pulses) containing the range delay,
+        window delay, and window length DBF parameters.  They must all be
+        provided in the same units.
+
+    Returns
+    -------
+    indices : np.ndarray
+        The pulses i where either the min(RD+WD) or the max(RD+WD+WL) changes.
+        That is the pulse at i will have a different data window position than
+        pulse (i - 1).
+    """
+    if not (rd.shape == wd.shape == wl.shape):
+        raise ValueError("shape mismatch among inputs")
+    if not rd.ndim == 2:
+        raise ValueError("expected 2D input data")
+    start = np.min(rd + wd, axis=1).astype(np.int64)
+    end = np.max(rd + wd + wl, axis=1).astype(np.int64)
+    location = np.vstack((start, end))
+    return np.where(np.any(np.diff(location, axis=1) != 0, axis=0))[0] + 1
 
 
 class Raw(RawBase, family='nisar.productreader.raw'):
