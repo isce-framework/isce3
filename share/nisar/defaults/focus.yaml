@@ -423,6 +423,11 @@ runconfig:
             # cal pulses.
             zero_fill_gaps: True
 
+            # Options to enlarge gaps
+            gap_pad_usec:
+                left: 0.0
+                right: 0.0
+
             caltone:
                 # If "azimuth_mean", subtract the azimuth mean from the raw
                 # data, which is useful when the caltone is nearly constant in

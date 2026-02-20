@@ -1867,6 +1867,16 @@ def focus(runconfig, runconfig_path=""):
                 channel_in.band.center, fs, raw_grid.shape[1],
                 raw.isDithered(channel_in.freq_id))
 
+            usec2samp = lambda x: round(x * 1e-6 * isce3.core.speed_of_light / (2 * raw_grid.slant_ranges.spacing))
+            pad_left = usec2samp(cfg.processing.gap_pad_usec.left)
+            pad_right = usec2samp(cfg.processing.gap_pad_usec.right)
+            log.info(f"Padding gaps ({-pad_left}, {pad_right})")
+            valid = swaths[..., 1] > swaths[..., 0]
+            swaths[valid, 0] += pad_right
+            ends = swaths[valid, 1]
+            swaths[valid, 1] = np.where(ends >= pad_left, ends - pad_left,
+                np.zeros_like(ends))
+
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
                 nblock = min(na, rawdata.shape[0] - pulse, raw_mm.shape[0] - i)
