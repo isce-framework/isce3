@@ -69,12 +69,14 @@ def test_bounds_error():
     lut2d.eval(y, x)  # y=1.0 is out of bounds (valid: 10-20)
 
     # Test scalar out-of-bounds
+    # pyre C++ journal raises ApplicationError when libjournal bindings are loaded,
+    # but falls back to RuntimeError (via std::runtime_error) when they aren't.
     x_oob = 200.0
-    with pytest.raises(journal.ApplicationError):
+    with pytest.raises((RuntimeError, journal.ApplicationError)):
         lut2d.eval(y, x_oob)
 
-    # Test vectorized out-of-bounds (should raise ApplicationError, not crash)
-    with pytest.raises(journal.ApplicationError):
+    # Test vectorized out-of-bounds (should raise, not crash)
+    with pytest.raises((RuntimeError, journal.ApplicationError)):
         lut2d.eval(y, np.array([x_oob, x_oob]))
 
     # Test vectorized, all in-bounds
