@@ -1490,7 +1490,7 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
 
 def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
                            rdr2geo_params=dict(), geo2rdr_params=dict(),
-                           ignore_failure=False):
+                           ignore_failure=False, max_segment_length=5000.0):
     """
     Determine fully-focused regions of the image in a format suitable for
     populating the validSamplesSubSwathX RSLC datasets.
@@ -1524,6 +1524,9 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         Otherwise an exception will be raised on failures.  This can be useful
         for datasets where the orbit data covers all the raw data but without
         enough extra for the reskew to the zero-Doppler image grid.
+    max_segment_length : float, optional
+        Length scale over which subswath boundary can be considered linear,
+        in meters.
 
     Returns
     -------
@@ -1549,7 +1552,8 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     try:
         swaths = isce3.focus.get_focused_sub_swaths(raw_bbox_lists,
             chirp_durations, orbit, doppler, azres, grid, dem=dem,
-            rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params)
+            rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params,
+            max_segment_length=max_segment_length)
     except Exception as e:
         if ignore_failure:
             log.error("Failed to calculate valid subswath masks!  "
@@ -1760,7 +1764,8 @@ def focus(runconfig, runconfig_path=""):
         log.info("computing valid swaths")
         valid_swaths = get_focused_sub_swaths(rawlist, chan, og, orbit,
             dop[frequency], dem, azres, rdr2geo_params=get_rdr2geo_params(cfg),
-            geo2rdr_params=get_geo2rdr_params(cfg), ignore_failure=False)
+            geo2rdr_params=get_geo2rdr_params(cfg), ignore_failure=False,
+            max_segment_length=cfg.processing.mask_polygon_segment_length)
 
         slc.update_swath(og, orbit, band.width, frequency,  azimuth_bandwidth,
             acquired_prf, acquired_bw, acquired_fc, valid_swaths)

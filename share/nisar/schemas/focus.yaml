@@ -253,6 +253,11 @@ runconfig:
       # If true, fill transmit gaps with zeros to remove loop-back cal pulses.
       zero_fill_gaps: bool(required=False)
 
+      # Length in meters to divide the valid data polygon into before
+      # rasterization.  Ideally smaller than any changes in the location
+      # of the swath due to range timing updates.
+      mask_polygon_segment_length: num(required=False)
+
       caltone: include('caltone_options', required=False)
 
       # Processing stage switches, mostly for debug.
