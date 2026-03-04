@@ -22,7 +22,8 @@ cuAmpcorParameter::cuAmpcorParameter()
     algorithm = 0; //0 freq; 1 time
     deviceID = 0;
     nStreams = 1;
-    derampMethod = 1;
+    derampMethod = 1; // average deramp
+    derampAxis = 2; // both directions
 
     windowSizeWidthRaw = 64;
     windowSizeHeightRaw = 64;
