@@ -6,56 +6,36 @@ import shutil
 import time
 from itertools import repeat
 
+import isce3
 import journal
 import numpy as np
-from osgeo import gdal
-
-import isce3
 from isce3.atmosphere.ionosphere_filter import (
-    IonosphereFilter,
-    read_block_array,
-    unwrapping_correction_with_filter,
-    write_array,
-)
+    IonosphereFilter, read_block_array, unwrapping_correction_with_filter,
+    write_array)
 from isce3.atmosphere.main_band_estimation import (
-    MainDiffMsBandIonosphereEstimation,
-    MainSideBandIonosphereEstimation,
-)
+    MainDiffMsBandIonosphereEstimation, MainSideBandIonosphereEstimation)
 from isce3.atmosphere.split_band_estimation import (
     LowHighSubbandIonosphereEstimation,
-    MainDiffLowHighSubbandIonosphereEstimation,
-)
-from isce3.core.block_param_generator import (
-    block_param_generator,
-    get_raster_block,
-    write_raster_block,
-)
+    MainDiffLowHighSubbandIonosphereEstimation)
+from isce3.core.block_param_generator import (block_param_generator,
+                                              get_raster_block,
+                                              write_raster_block)
 from isce3.io import HDF5OptimizedReader
-from isce3.signal.interpolate_by_range import (
-    decimate_freq_a_array,
-    interpolate_freq_b_array,
-)
+from isce3.signal.interpolate_by_range import (decimate_freq_a_array,
+                                               interpolate_freq_b_array)
 from isce3.splitspectrum import splitspectrum
 from isce3.unwrap.bridge_phase import bridge_unwrapped_phase
 from isce3.unwrap.preprocess import project_map_to_radar
-
-from nisar.products.insar.product_paths import (
-    CommonPaths,
-    RIFGGroupsPaths,
-    RUNWGroupsPaths,
-)
+from nisar.products.insar.product_paths import (CommonPaths, RIFGGroupsPaths,
+                                                RUNWGroupsPaths)
 from nisar.products.readers import SLC
-from nisar.workflows import (
-    crossmul,
-    filter_interferogram,
-    h5_prep,
-    prepare_insar_hdf5,
-    resample_slc_v2,
-    unwrap,
-)
+from nisar.products.utils import deepcopy_runconfig_and_keep_isce3_obj
+from nisar.workflows import (crossmul, filter_interferogram, h5_prep,
+                             prepare_insar_hdf5, resample_slc_v2, unwrap)
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
 from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
+from osgeo import gdal
 
 
 def write_disp_block_hdf5(
@@ -116,7 +96,7 @@ def compute_phase_jump(previous_with_pad, current_image, half_pad_length):
 
     Returns
     -------
-    current_image : numpy.ndarray   
+    current_image : numpy.ndarray
         The current image with the phase jump corrected.
     difference_jump : float
         The computed phase jump value, which was applied to correct the
@@ -155,51 +135,27 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         - output_runw
         - offsets_dir
     """
-    # InSAR scratch path
-    scratch_path = pathlib.Path(original_dict['scratch_path'])
-    # ionosphere scratch path
-    iono_dir_path = pathlib.Path(iono_insar_cfg['product_path_group'][
-                'scratch_path'])
     # parameters
     blocksize = iono_insar_cfg['processing']['ionosphere_phase_correction'][
                 'lines_per_block']
-    freq_pols = iono_insar_cfg['processing']['input_subset'][
-                'list_of_frequencies']
-    runw_freq_a_str = original_dict['output_runw']
-    runw_freq_b_str = iono_insar_cfg['product_path_group']['sas_output_file']
+
     offsets_dir = original_dict['offsets_dir']
 
+    ref_slc_path = original_dict['reference_rslc_file']
     if iono_insar_cfg['processing']['fine_resample']['enabled']:
         resample_type = 'fine'
     else:
         resample_type = 'coarse'
     decimated_offset_dir = offsets_dir
 
-    # Instantiate a RUNW object to get path to RUNW datasets
-    runw_obj = RUNWGroupsPaths()
+    # Instantiate a RSLC Swath object to get slant range for frequency A and B
+    slc_swath_obj_freqa = isce3.product.Swath(ref_slc_path, 'A')
+    slc_swath_obj_freqb = isce3.product.Swath(ref_slc_path, 'B')
 
-    # Set up for decimation
-    swath_path = runw_obj.SwathsPath
-    dest_freq_path = f"{swath_path}/frequencyA"
-    dest_freq_path_b = f"{swath_path}/frequencyB"
-    rslant_path_a = f"{dest_freq_path}/interferogram/slantRange"
-    rslant_path_b = f"{dest_freq_path_b}/interferogram/slantRange"
-    rspc_path_a = f"{dest_freq_path}/interferogram/slantRangeSpacing"
-    rspc_path_b = f"{dest_freq_path_b}/interferogram/slantRangeSpacing"
-
-    # Read slant range array from main and side bands
-    with HDF5OptimizedReader(
-            name=runw_freq_a_str, mode='r',
-            libver='latest', swmr=True) as src_main_h5, \
-        HDF5OptimizedReader(
-            name=runw_freq_b_str, mode='r',
-            libver='latest', swmr=True) as src_side_h5:
-
-        # Read slant range block from HDF5
-        main_slant = np.array(src_main_h5[rslant_path_a])
-        side_slant = np.array(src_side_h5[rslant_path_b])
-        spacing_main = np.array(src_main_h5[rspc_path_a])
-        spacing_side = np.array(src_side_h5[rspc_path_b])
+    main_slant = np.array(slc_swath_obj_freqa.slant_range)
+    spacing_main = slc_swath_obj_freqa.range_pixel_spacing
+    side_slant = np.array(slc_swath_obj_freqb.slant_range)
+    spacing_side = slc_swath_obj_freqb.range_pixel_spacing
 
     resampling_scale_factor = float(int(np.round(spacing_side / spacing_main)))
     if resample_type == 'coarse':
@@ -626,7 +582,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                     'list_of_frequencies'])
     orig_product_type = original_cfg['primary_executable']['product_type']
 
-    iono_insar_cfg = original_cfg.copy()
+    iono_insar_cfg = deepcopy_runconfig_and_keep_isce3_obj(original_cfg)
     iono_insar_cfg['primary_executable'][
                 'product_type'] = 'RUNW'
 
@@ -1071,7 +1027,7 @@ def run(cfg: dict, runw_hdf5: str):
     orig_sec_str = cfg['input_file_group']['secondary_rslc_file']
     orig_freq_pols = copy.deepcopy(cfg['processing']['input_subset'][
                     'list_of_frequencies'])
-    iono_insar_cfg = cfg.copy()
+    iono_insar_cfg = deepcopy_runconfig_and_keep_isce3_obj(cfg)
 
     # Run InSAR for sub-band SLCs (split-main-bands) or
     # for main and side bands for iono_freq_pols (main-side-bands)
@@ -1186,6 +1142,8 @@ def run(cfg: dict, runw_hdf5: str):
         rcom_path_freq_a = f"{dest_pol_path}/connectedComponents"
         rslant_path_a = f"{dest_freq_path}/interferogram/"\
             "slantRange"
+        subswath_mask_freq_a_path = f"{dest_freq_path}/interferogram/mask"
+
         # Set paths for frequency B
         if iono_method in iono_method_sideband:
             pol_b = pol_list_b[pol_ind]
@@ -1198,6 +1156,8 @@ def run(cfg: dict, runw_hdf5: str):
             rcom_path_freq_b = f"{dest_pol_path_b}/connectedComponents"
             rslant_path_b = f"{dest_freq_path_b}/interferogram/"\
                 "slantRange"
+            subswath_mask_freq_b_path = \
+                f"{dest_freq_path_b}/interferogram/mask"
 
         if iono_method in iono_method_subbands:
             # set paths for high and low sub-bands
@@ -1303,6 +1263,12 @@ def run(cfg: dict, runw_hdf5: str):
             side_conn_image = None
             diff_ms_conn_image = None
 
+            # ionosphere method using sub-bands uses subswath mask in freq A
+            # ionosphere method using side-band uses subswath masks in freq A and B
+            subswath_mask_image = None
+            subswath_mask_main_image = None
+            subswath_mask_side_image = None
+
             if iono_method in iono_method_subbands:
                 # Initialize array for block rasters
                 sub_low_image = np.empty([block_rows_data, cols_main],
@@ -1321,6 +1287,11 @@ def run(cfg: dict, runw_hdf5: str):
                     sub_high_conn_image = np.empty(
                         [block_rows_data, cols_main],
                         dtype=float)
+
+                if "subswath_mask" in mask_type:
+                    subswath_mask_image = np.empty(
+                        [block_rows_data, cols_main],
+                        dtype=int)
 
                 if iono_method == 'main_diff_low_high_subband':
                     main_image = np.empty([block_rows_data, cols_main],
@@ -1369,6 +1340,11 @@ def run(cfg: dict, runw_hdf5: str):
                             np.s_[row_start:row_start + block_rows_data, :])
                         src_high_h5[rcom_path_freq_a].read_direct(
                             sub_high_conn_image,
+                            np.s_[row_start:row_start + block_rows_data, :])
+
+                    if "subswath_mask" in mask_type:
+                        src_low_h5[subswath_mask_freq_a_path].read_direct(
+                            subswath_mask_image,
                             np.s_[row_start:row_start + block_rows_data, :])
 
                 if bridge_algorithm_bool:
@@ -1474,6 +1450,14 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_side],
                         dtype=float)
 
+                if "subswath_mask" in mask_type:
+                    subswath_mask_main_image = np.empty(
+                        [block_rows_data, cols_main],
+                        dtype=int)
+                    subswath_mask_side_image = np.empty(
+                        [block_rows_data, cols_side],
+                        dtype=int)
+
                 with HDF5OptimizedReader(
                         name=runw_freq_a_str, mode='r',
                         libver='latest', swmr=True) as src_main_h5, \
@@ -1505,6 +1489,23 @@ def run(cfg: dict, runw_hdf5: str):
                         src_side_h5[rcom_path_freq_b].read_direct(
                             side_conn_image,
                             np.s_[row_start:row_start + block_rows_data, :])
+
+                    if "subswath_mask" in mask_type:
+                        src_main_h5[subswath_mask_freq_a_path].read_direct(
+                            subswath_mask_main_image,
+                            np.s_[row_start:row_start + block_rows_data, :])
+                        # Subswath mask may not be available when frequency B
+                        # was not requested in the runconfig for interferogram
+                        # In this case, we decimate subswath_mask in frequencyA
+                        if subswath_mask_freq_b_path in src_side_h5:
+                            src_side_h5[subswath_mask_freq_b_path].read_direct(
+                                subswath_mask_side_image,
+                                np.s_[row_start:row_start + block_rows_data, :])
+                        else:
+                            subswath_mask_side_image = decimate_freq_a_array(
+                                    main_slant,
+                                    side_slant,
+                                    subswath_mask_main_image)
 
                     if iono_method == 'main_diff_ms_band':
 
@@ -1678,6 +1679,7 @@ def run(cfg: dict, runw_hdf5: str):
                         slant_side=side_slant,
                         threshold=filter_coh_thresh)
                     mask_array = mask_array & mask_image
+
                 if "connected_components" in mask_type:
                     mask_image = iono_phase_obj.get_conn_component_mask_array(
                         main_array=main_conn_image,
@@ -1696,6 +1698,16 @@ def run(cfg: dict, runw_hdf5: str):
                         threshold=median_filter_threshold,
                         median_filter_size=median_filter_size,
                         )
+                    mask_array = mask_array & mask_image
+
+                if "subswath_mask" in mask_type:
+                    mask_array = iono_phase_obj.get_subswath_mask_array(
+                        main_array=subswath_mask_main_image,
+                        side_array=subswath_mask_side_image,
+                        low_band_array=subswath_mask_image,
+                        high_band_array=subswath_mask_image,
+                        slant_main=main_slant,
+                        slant_side=side_slant)
                     mask_array = mask_array & mask_image
 
                 if "water" in mask_type:

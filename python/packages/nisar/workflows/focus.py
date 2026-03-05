@@ -41,6 +41,7 @@ import tempfile
 from typing import Union, Optional, Callable, Iterable, overload
 from isce3.io import Raster as RasterIO
 from io import StringIO
+import pathlib
 
 
 # TODO some CSV logger
@@ -1396,7 +1397,7 @@ def set_input_file_metadata(cfg: Struct, slc: SLC, runconfig_path: str = ""):
     anc = cfg.dynamic_ancillary_file_group
     value_or_blank = lambda x: x if x is not None else ""
     slc.set_inputs(
-        l0bGranules=cfg.input_file_group.input_file_path,
+        l0bGranules=[pathlib.PosixPath(f).name for f in cfg.input_file_group.input_file_path],
         orbitFiles=[value_or_blank(anc.orbit)],
         attitudeFiles=[value_or_blank(anc.pointing)],
         auxcalFiles=[value_or_blank(x) for x in (anc.external_calibration,

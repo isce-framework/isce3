@@ -76,7 +76,7 @@ void cuAmpcorChunk::run(int idxDown_, int idxAcross_)
     cuArraysSumCorr(r_corrBatchRawZoomIn, i_corrBatchZoomInValid, r_corrBatchSum, i_corrBatchValidCount, stream);
 
 #ifdef CUAMPCOR_DEBUG
-    r_maxval->outputToFile("r_maxval", stream);
+    r_maxval->outputToFile("r_corrBatchRawMaxVal", stream);
     r_corrBatchRawZoomIn->outputToFile("r_corrBatchRawStatZoomIn", stream);
     i_corrBatchZoomInValid->outputToFile("i_corrBatchZoomInValid", stream);
     r_corrBatchSum->outputToFile("r_corrBatchSum", stream);
@@ -107,9 +107,17 @@ void cuAmpcorChunk::run(int idxDown_, int idxAcross_)
     maxLocShift->outputToFile("i_maxLocShift", stream);
 #endif
 
+    // deramp reference
+    cuDeramp(param->derampMethod, c_referenceBatchRaw, param->derampAxis, stream);
+
+#ifdef CUAMPCOR_DEBUG
+    // dump the deramped reference image(s)
+    c_referenceBatchRaw->outputToFile("c_referenceBatchRawDeramped", stream);
+#endif
+
     // oversample reference
-    // (deramping included in oversampler)
-    referenceBatchOverSampler->execute(c_referenceBatchRaw, c_referenceBatchOverSampled, param->derampMethod);
+    referenceBatchOverSampler->execute(c_referenceBatchRaw, c_referenceBatchOverSampled);
+
     // take amplitudes
     cuArraysAbs(c_referenceBatchOverSampled, r_referenceBatchOverSampled, stream);
 
@@ -127,15 +135,28 @@ void cuAmpcorChunk::run(int idxDown_, int idxAcross_)
     r_referenceBatchOverSampled->outputToFile("r_referenceBatchOverSampledSubMean",stream);
 #endif
 
-    // extract secondary and oversample
+    // extract secondary images around the max location with a smaller search range
     cuArraysCopyExtract(c_secondaryBatchRaw, c_secondaryBatchZoomIn, offsetInit, stream);
-    secondaryBatchOverSampler->execute(c_secondaryBatchZoomIn, c_secondaryBatchOverSampled, param->derampMethod);
+
+#ifdef CUAMPCOR_DEBUG
+    // dump the extracted raw secondary image
+    c_secondaryBatchZoomIn->outputToFile("c_secondaryBatchZoomInRaw", stream);
+#endif
+
+    // deramp secondary
+    cuDeramp(param->derampMethod, c_secondaryBatchZoomIn, param->derampAxis, stream);
+
+#ifdef CUAMPCOR_DEBUG
+    // dump the deramped secondary image(s)
+    c_secondaryBatchZoomIn->outputToFile("c_secondaryBatchZoomInDeramped", stream);
+#endif
+
+    // oversample secondary
+    secondaryBatchOverSampler->execute(c_secondaryBatchZoomIn, c_secondaryBatchOverSampled);
     // take amplitudes
     cuArraysAbs(c_secondaryBatchOverSampled, r_secondaryBatchOverSampled, stream);
 
 #ifdef CUAMPCOR_DEBUG
-    // dump the extracted raw secondary image
-    c_secondaryBatchZoomIn->outputToFile("c_secondaryBatchZoomIn", stream);
     // dump the oversampled secondary image(s)
     c_secondaryBatchOverSampled->outputToFile("c_secondaryBatchOverSampled", stream);
     r_secondaryBatchOverSampled->outputToFile("r_secondaryBatchOverSampled", stream);

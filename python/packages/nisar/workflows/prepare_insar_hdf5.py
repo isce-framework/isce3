@@ -9,6 +9,7 @@ from nisar.products.insar import (GOFFWriter, GUNWWriter, RIFGWriter,
                                   ROFFWriter, RUNWWriter)
 from nisar.workflows.h5_prep import get_products_and_paths
 
+
 def prepare_insar_hdf5(cfg, output_hdf5, dst):
     """
     Prepare InSAR (GOFF, GUNW, RIFG, ROFF,  RUNW) HDF5 products.
@@ -59,13 +60,12 @@ def run(cfg: dict) -> dict:
     info_channel.log("preparing InSAR HDF5 products")
 
     t_all = time.time()
-
     product_dict, h5_paths = get_products_and_paths(cfg)
     for sub_prod_type in product_dict:
         out_path = h5_paths[sub_prod_type]
         prepare_insar_hdf5(cfg, out_path, sub_prod_type)
 
-    t_all_elapsed = time.time() - t_all
-    info_channel.log(f"successfully ran prepare_insar_hdf5 in {t_all_elapsed:.3f} seconds")
+    t_elapsed = time.time() - t_all
+    info_channel.log(f"successfully ran prepare_insar_hdf5 in {t_elapsed:.3f} seconds")
 
     return h5_paths
