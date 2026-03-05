@@ -291,12 +291,13 @@ def get_total_grid_bounds(rawfiles: list[str]):
     return epoch, tmin, tmax, rmin, rmax
 
 
-def get_total_grid(rawfiles: list[str], dt, dr, extra_margin_in_pixels=0):
+def get_total_grid(rawfiles: list[str], dt, dr,
+                   az_margin_in_pixels, rg_margin_in_pixels):
     epoch, tmin, tmax, rmin, rmax = get_total_grid_bounds(rawfiles)
-    nt = int(np.ceil((tmax - tmin) / dt)) + 1 + 2 * extra_margin_in_pixels
-    nr = int(np.ceil((rmax - rmin) / dr)) + 1 + 2 * extra_margin_in_pixels
-    t = isce3.core.Linspace(tmin - extra_margin_in_pixels * dt, dt, nt)
-    r = isce3.core.Linspace(rmin - extra_margin_in_pixels * dr, dr, nr)
+    nt = int(np.ceil((tmax - tmin) / dt)) + 1 + 2 * az_margin_in_pixels
+    nr = int(np.ceil((rmax - rmin) / dr)) + 1 + 2 * rg_margin_in_pixels
+    t = isce3.core.Linspace(tmin - az_margin_in_pixels * dt, dt, nt)
+    r = isce3.core.Linspace(rmin - rg_margin_in_pixels * dr, dr, nr)
     return epoch, t, r
 
 
@@ -327,6 +328,8 @@ def make_doppler_lut(rawfiles: list[str],
         dem: Optional[isce3.geometry.DEMInterpolator] = None,
         azimuth_spacing: float = 1.0,
         range_spacing: float = 1e3,
+        az_margin_in_pixels: int = 11,
+        rg_margin_in_pixels: int = 11,
         interp_method: str = "bilinear",
         epoch: Optional[DateTime] = None):
     """Generate Doppler look up table (LUT).
@@ -351,6 +354,10 @@ def make_doppler_lut(rawfiles: list[str],
         LUT grid spacing in azimuth, in seconds.  Default=1 s.
     range_spacing : optional
         LUT grid spacing in range, in meters.  Default=1000 m.
+    az_margin_in_pixels : int, optional
+        Extra margin added to LUT grid in azimuth, in pixels. Default=11 pixels.
+    rg_margin_in_pixels : int, optional
+        Extra margin added to LUT grid in range, in pixels. Default=11 pixels.
     interp_method : optional
         LUT interpolation method. Default="bilinear".
     epoch : isce3.core.DateTime, optional
@@ -398,12 +405,10 @@ def make_doppler_lut(rawfiles: list[str],
     # Now do the actual calculations.
     wvl = isce3.core.speed_of_light / fc
 
-    # Get grid for Doppler LUT with an extra margin to ensure that, after
-    # geocoding with an interpolation algoritm (e.g., bicubic spline),
-    # the LUT fully covers the geocoded imagery extents.
     epoch_in, t, r = get_total_grid(
         rawfiles, azimuth_spacing, range_spacing,
-        extra_margin_in_pixels=isce3.core.RSLC_LUTS_EXTRA_MARGIN_IN_PIXELS)
+        az_margin_in_pixels=az_margin_in_pixels,
+        rg_margin_in_pixels=rg_margin_in_pixels)
 
     # If timespan is too small, only one time may be provided, causing the LUT
     # construction to fail. Fall back to t ± Δt/2 to preserve az spacing.
@@ -453,11 +458,15 @@ def make_doppler(cfg: Struct, *, epoch: Optional[DateTime] = None,
     az = np.radians(opt.azimuth_boresight_deg)
     rawfiles = cfg.input_file_group.input_file_path
 
-    fc, lut = make_doppler_lut(rawfiles,
-                               az=az, orbit=orbit, attitude=attitude,
-                               dem=dem, azimuth_spacing=opt.spacing.azimuth,
-                               range_spacing=opt.spacing.range,
-                               interp_method=opt.interp_method,  epoch=epoch)
+    fc, lut = make_doppler_lut(
+        rawfiles,
+        az=az, orbit=orbit, attitude=attitude,
+        dem=dem, azimuth_spacing=opt.spacing.azimuth,
+        range_spacing=opt.spacing.range,
+        az_margin_in_pixels=opt.margin_in_pixels.azimuth,
+        rg_margin_in_pixels=opt.margin_in_pixels.range,
+        interp_method=opt.interp_method,
+        epoch=epoch)
 
     log.info(f"Made Doppler LUT for fc={fc} Hz, "
         f"az={opt.azimuth_boresight_deg} deg with mean={lut.data.mean()} Hz")
@@ -1781,15 +1790,13 @@ def focus(runconfig, runconfig_path=""):
         # including an extra margin to ensure that, after geocoding
         # with an interpolation algoritm (e.g., bicubic spline),
         # the LUTs fully cover the geocoded imagery extents.
-        calibration_section_sampling = \
-            isce3.core.RSLC_LUTS_EXTRA_MARGIN_IN_PIXELS
-        multilooked_radar_grid = og.multilook(
-            calibration_section_sampling, calibration_section_sampling)
 
-        luts_extra_margin_in_pixels = \
-            isce3.core.RSLC_LUTS_EXTRA_MARGIN_IN_PIXELS
+        multilooked_radar_grid = og.multilook(
+            cfg.processing.lookup_tables.downsampling_factor.azimuth,
+            cfg.processing.lookup_tables.downsampling_factor.range)
         extended_radar_grid = multilooked_radar_grid.add_margin(
-            luts_extra_margin_in_pixels, luts_extra_margin_in_pixels)
+            cfg.processing.lookup_tables.margin_in_pixels.azimuth,
+            cfg.processing.lookup_tables.margin_in_pixels.range)
 
         for pol in pols:
             slc.add_calibration_section(frequency, pol,

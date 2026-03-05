@@ -163,6 +163,23 @@ runconfig:
       # Geographic-to-radar coordinate transforms
       geo2rdr: include('geo2rdr_options', required=False)
 
+      # Calibration and processing information look-up tables (LUTs)
+      # excluding Doppler.
+      lookup_tables:
+        # Downsampling factors with respect to the RSLC grid
+        downsampling_factor:
+          # Downsampling factor in azimuth direction
+          azimuth: int(min=1, required=False)
+          # Downsampling factor in range direction
+          range: int(min=1, required=False)
+
+        # Extra margin added to LUTs
+        margin_in_pixels:
+          # Extra margin added to lookup table in azimuth, in pixels.
+          azimuth: int(min=0, required=False)
+          # Extra margin added to lookup table in range, in pixels.
+          range: int(min=0, required=False)
+
       doppler:
         # Offset between quaternion frame and antenna boresight in degrees.
         azimuth_boresight_deg: num(required=False)
@@ -176,6 +193,13 @@ runconfig:
           range: num(min=0.0, required=False)
           # Lookup table Azimuth spacing in s
           azimuth: num(min=0.0, required=False)
+
+        # Extra margin added to the Doppler LUT
+        margin_in_pixels:
+          # Extra margin added to lookup table in azimuth, in pixels.
+          azimuth: int(min=0, required=False)
+          # Extra margin added to lookup table in range, in pixels.
+          range: int(min=0, required=False)
 
       # Settings for range compression algorithm.
       rangecomp:
