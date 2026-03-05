@@ -89,6 +89,9 @@ runconfig:
 
         # TODO OPTIONAL - To setup type of worker
         worker:
+             # OPTIONAL - To remove the intermediate files. Default False
+            intermediate_files_removal_enabled: False
+
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
             internet_access: False
 
@@ -303,10 +306,10 @@ runconfig:
                     # When `min_cluster_pixels` is 0, this pre-removal step is
                     # skipped entirely.
                     min_cluster_pixels: 2
-
+                    
+                    bridge_algorithm_enabled: True
                     # Maximum radius used when bridging disconnected
                     # regions.
-                    bridge_algorithm_enabled: True
                     bridge_radius: 500
                     # Size of the structuring element used for erosion
                     # during bridge labeling.
@@ -405,8 +408,10 @@ runconfig:
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
-                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
+                # Deramp data axis prior to FFT: range, azimuth, or both
+                deramping_axis: 'azimuth'
                 # Flag to use constant range/azimuth offsets in dense offsets estimation
                 use_gross_offsets: True
                 # Constant offset along slant range to guide dense offset estimation
@@ -456,8 +461,10 @@ runconfig:
                 start_pixel_azimuth:
                 # Cross-correlation domain
                 cross_correlation_domain: 'frequency'
-                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
+                # Deramp data axis prior to FFT: range, azimuth, or both
+                deramping_axis: 'azimuth'
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
@@ -547,6 +554,18 @@ runconfig:
                     # Filter size (median/boxcar) in slant range
                     filter_size_range: 5
                     filter_size_azimuth: 5
+                # Polyfit the dense offsets for the fine resampling
+                polyfitting:
+                    # Flag to enable/disable polyfitting
+                    enabled: false
+                    # The degrees for the polyfitting
+                    degree: 2
+                    # Critical value for the w-test to remove the outliers
+                    critical_value: 0.1
+                    # Number of samples along the range in pixels for polyfitting
+                    samples_along_range: 200
+                    # Number of samples  along the azimuth in pixels for polyfitting
+                    samples_along_azimuth: 200
 
             fine_resample:
                 # Flag to enable/disable fine resampling
@@ -746,7 +765,22 @@ runconfig:
                     # `ntiles` is (1, 1). It has no effect if `single_tile_reoptimize` was also
                     #  enabled (since regrowing connected components would be redundant in that case).
                     regrow_conncomps: True
-
+                bridge:
+                    enabled: True
+                    # Maximum radius used when bridging disconnected regions.
+                    bridge_radius: 500
+                    # Size of the structuring element used for erosion
+                    # during bridge labeling.
+                    bridge_erosion_size: 2
+                    # Minimum number of pixel of connected components
+                    # to retain during processing.
+                    bridge_minimum_samples: 14
+                    # Ramp type to correct before bridge algoritm
+                    bridge_ramp_type:
+                    # During deramping, uniform sampling is applied
+                    # when number of samples is larger than maximum pixel
+                    bridge_ramp_maximum_pixel: 1e6
+    
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True

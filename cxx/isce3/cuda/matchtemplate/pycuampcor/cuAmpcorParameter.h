@@ -44,6 +44,7 @@ public:
     int deviceID;       ///< Targeted GPU device ID: use -1 to auto select
     int nStreams;       ///< Number of streams to asynchonize data transfers and compute kernels
     int derampMethod;   ///< Method for deramping 0=None, 1=average
+    int derampAxis;     ///< Axis for deramping 0=down (azimuth) 1=across (range), 2=both axes
 
     // chip or window size for raw data
     int windowSizeHeightRaw;        ///< Template window height (original size)

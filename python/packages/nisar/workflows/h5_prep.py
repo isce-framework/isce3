@@ -827,7 +827,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
     azimuth_time_raster = _get_raster_from_hdf5_ds(
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
-        long_name='Zero-Doppler azimuth time',
+        long_name='Zero Doppler azimuth time',
         descr='Zero Doppler azimuth time in seconds since UTC epoch',
         units=az_coord_units, **create_dataset_kwargs)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
@@ -1042,25 +1042,35 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
-        descr='East component of unit vector of LOS from target to sensor',
+        descr='East component of the line-of-sight (LOS) unit vector, defined from ' \
+              'the target to the sensor, expressed in the east-north-up (ENU) coordinate ' \
+              'system with its origin at the target location',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
-        descr='North component of unit vector of LOS from target to sensor',
+        descr='North component of the line-of-sight (LOS) unit vector, defined from ' \
+              'the target to the sensor, expressed in the east-north-up (ENU) coordinate ' \
+              'system with its origin at the target location',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
-        descr='East component of unit vector along ground track',
+        descr='East component of the along-track unit vector at the target ' \
+              'location, expressed in the east-north-up (ENU) coordinate ' \
+              'system and projected onto the horizontal plane ' \
+              '(i.e., excluding the up component)',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
-        descr='North component of unit vector along ground track',
+        descr='North component of the along-track unit vector at the target ' \
+              'location, expressed in the east-north-up (ENU) coordinate ' \
+              'system and projected onto the horizontal plane ' \
+              '(i.e., excluding the up component)',
         units='1', valid_min=-1.0, valid_max=1.0, **create_dataset_kwargs)
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
@@ -1142,7 +1152,8 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     coordinates_list.append(rg_dataset)
 
     # Zero-doppler time
-    descr = "Zero Doppler time since UTC epoch values corresponding to the geolocation grid"
+    descr = ("Vector of zero Doppler azimuth times, measured relative " +
+             "to a UTC epoch, corresponding to the geolocation grid")
     az_dataset_name = os.path.join(root_ds, 'zeroDopplerTime')
     if az_dataset_name in hdf5_obj:
         del hdf5_obj[az_dataset_name]

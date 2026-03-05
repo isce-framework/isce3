@@ -13,11 +13,14 @@ import numpy as np
 import snaphu
 from isce3.core import crop_external_orbit
 from isce3.io import HDF5OptimizedReader
+from isce3.unwrap.bridge_phase import bridge_unwrapped_phase
 from isce3.unwrap.preprocess import preprocess_wrapped_igram as preprocess
 from isce3.unwrap.preprocess import project_map_to_radar
+
 from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.utils import interpret_subswath_mask
 from nisar.workflows import crossmul, prepare_insar_hdf5
 from nisar.workflows.compute_stats import (compute_stats_real_data,
                                            compute_stats_real_hdf5_dataset)
@@ -48,6 +51,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
     unwrap_args = cfg['processing']['phase_unwrap']
     unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
     unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
+
+    bridge_cfg = unwrap_args["bridge"]
 
     # Instantiate RIFG obj to avoid hard-coded paths to RIFG datasets
     rifg_obj = RIFGGroupsPaths()
@@ -167,6 +172,17 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                             mask = mask | inland_water_mask | ocean_water_mask
                         else:
                             mask = inland_water_mask | ocean_water_mask
+
+                    if "subswath_mask" in preproc_cfg["mask"]["mask_type"]:
+                        mask_path = f'{dst_freq_group_path}/interferogram/mask'
+                        mask_layer = dst_h5[mask_path][()]
+                        reference_valid, secondary_valid, _ = \
+                            interpret_subswath_mask(mask_layer)
+                        invalid = ~reference_valid | ~secondary_valid
+                        if mask is not None:
+                            mask = mask | invalid
+                        else:
+                            mask = invalid
 
                     if filling_method == "distance_interpolator":
                         distance = \
@@ -304,6 +320,18 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
                 # Clean up unwrapped phase raster
                 del unw_raster
+
+                if bridge_cfg['enabled']:
+                    unwrapped_phase = dst_h5[unw_path][()]
+                    unwrapped_phase = bridge_unwrapped_phase(
+                        unwrapped_phase,
+                        radius=bridge_cfg['bridge_radius'],
+                        min_num_pixel=bridge_cfg['bridge_minimum_samples'],
+                        erosion_size=bridge_cfg['bridge_erosion_size'],
+                        ramp_type=bridge_cfg['bridge_ramp_type'],
+                        deramp_max_num_sample=bridge_cfg[
+                            'bridge_ramp_maximum_pixel'])
+                    dst_h5[unw_path][:, :] = unwrapped_phase
 
                 # Allocate coherence in RUNW. If no further multilooking, the coherence
                 # is copied from RIFG

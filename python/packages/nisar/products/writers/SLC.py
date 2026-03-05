@@ -247,8 +247,8 @@ def require_lut_axes(group, epoch, t, r, kind):
         t = group[name][:]
     else:
         write_dataset(group, name, np.float64, t,
-            "Zero Doppler time since UTC epoch dimension "
-            "corresponding to " + kind, time_units(epoch))
+            "Vector of zero Doppler azimuth times, measured relative to a "
+            "UTC epoch, corresponding to " + kind, time_units(epoch))
 
     name = "slantRange"
     if name in group:
@@ -391,8 +391,8 @@ class SLC(h5py.File):
         dset_name = "rangeChirpWeighting"
         if dset_name not in group:
             dset = write_dataset(group, dset_name, np.float32, values,
-                "1-D array in frequency domain for range processing. This is "
-                "used for processing L0b to L1. FFT length=256 (assumed)",
+                "1D array in frequency domain for range processing. This is "
+                "used for processing L0B to L1. FFT length=256 (assumed)",
                 units="1")
             dset.attrs["window_name"] = np.bytes_(window_name)
             dset.attrs["window_shape"] = window_shape
@@ -480,14 +480,14 @@ class SLC(h5py.File):
         name = "azimuthChirpWeighting"
         if name not in g:
             write_dataset(g, name, np.float32, azimuth_envelope,
-                "1-D array in frequency domain for azimuth processing. This is "
-                "used for processing L0b to L1. FFT length=256 (assumed)",
+                "1D array in frequency domain for azimuth processing. This is "
+                "used for processing L0B to L1. FFT length=256 (assumed)",
                 units="1")
         # TODO ref height
         if "referenceTerrainHeight" not in g:
             n = dop.data.shape[0]
             write_dataset(g, "referenceTerrainHeight", np.float32, np.zeros(n),
-                "Reference Terrain Height as a function of time", "meters")
+                "Reference terrain height as a function of time", "meters")
 
         t = dop.y_start + dop.y_spacing * np.arange(dop.data.shape[0])
         r = dop.x_start + dop.x_spacing * np.arange(dop.data.shape[1])
@@ -568,7 +568,8 @@ class SLC(h5py.File):
         d = g.parent.require_dataset("zeroDopplerTime", t.shape, t.dtype, data=t)
         d.attrs["units"] = np.bytes_(time_units(epoch))
         d.attrs["description"] = np.bytes_(
-            "Zero Doppler time since UTC epoch dimension")
+            "Vector of zero Doppler azimuth times measured relative "
+            "to a UTC epoch")
 
         d = g.parent.require_dataset("zeroDopplerTimeSpacing", (), float)
         d[()] = t.spacing
@@ -596,14 +597,14 @@ class SLC(h5py.File):
         write_dataset(g, "acquiredCenterFrequency", float, acquired_fc,
             "Center frequency of the acquisition in hertz. In case of mode "
             "combination, this corresponds to the mode with highest center "
-            "frequency.", "hertz")
+            "frequency", "hertz")
         write_dataset(g, "acquiredRangeBandwidth", float,
             acquired_range_bandwidth, "Acquisition range bandwidth in "
             "hertz. In case of mode combination, this corresponds to mode with "
-            "largest bandwidth.", "hertz")
+            "largest bandwidth", "hertz")
         write_dataset(g, "nominalAcquisitionPRF", float, acquired_prf,
             "Nominal PRF of acquisition. In case of mode combination, this "
-            "corresponds to mode with least nominal PRF.", "hertz")
+            "corresponds to mode with least nominal PRF", "hertz")
         write_dataset(g, "processedAzimuthBandwidth", float, azimuth_bandwidth,
             "Processed azimuth bandwidth in hertz", "hertz")
         write_dataset(g, "processedRangeBandwidth", float, range_bandwidth,
@@ -864,10 +865,10 @@ class SLC(h5py.File):
             "the product")
 
         d = set_string(g, "productLevel", "L1")
-        d.attrs["description"] = np.bytes_("Product level. L0A: Unprocessed "
-            "instrument data; L0B: Reformatted, unprocessed instrument data; "
-            "L1: Processed instrument data in radar coordinates system; and "
-            "L2: Processed instrument data in geocoded coordinates system")
+        d.attrs["description"] = np.bytes_('Product level. "L0A": Unprocessed '
+            'instrument data; "L0B": Reformatted, unprocessed instrument data; '
+            '"L1": Processed instrument data in radar coordinates system; and '
+            '"L2": Processed instrument data in geocoded coordinates system')
 
         d = set_string(g, "radarBand", self.band[0])
         d.attrs["description"] = np.bytes_('Acquired frequency band, '
@@ -875,11 +876,14 @@ class SLC(h5py.File):
 
         d = set_string(g, "processingType", processing_type)
         d.attrs["description"] = np.bytes_(
-            "Nominal (or) Urgent (or) Custom (or) Undefined")
+            'Processing pipeline used to generate this granule. '
+            '"Nominal": standard production system; "Urgent": time-sensitive '
+            'processing in response to urgent response events; "Custom": '
+            'user-initiated processing outside the nominal production system')
 
         d = set_string(g, "isDithered", str(is_dithered))
         d.attrs["description"] = np.bytes_('"True" if the pulse timing was '
-            'varied (dithered) during acquisition, "False" otherwise.')
+            'varied (dithered) during acquisition, "False" otherwise')
 
         d = set_string(g, "isFullFrame", str(is_full_frame))
         d.attrs["description"] = np.bytes_('"True" if the product fully covers '
@@ -890,7 +894,7 @@ class SLC(h5py.File):
         d = set_string(g, "isMixedMode", str(is_mixed_mode))
         d.attrs["description"] = np.bytes_('"True" if this product is a '
             'composite of data collected in multiple radar modes, '
-            '"False" otherwise.')
+            '"False" otherwise')
 
         d = set_string(g, "compositeReleaseId", composite_release_id)
         d.attrs["description"] = np.bytes_("Unique version identifier of the "
