@@ -414,6 +414,13 @@ def make_doppler_lut(rawfiles: list[str],
         t = [tmin, tmax]
 
     t = convert_epoch(t, epoch_in, epoch)
+
+    # crop the azimuth time using orbit and attitude extents
+    min_time = max([orbit.start_time, attitude.start_time])
+    max_time = min([orbit.end_time, attitude.end_time])
+
+    t = t[(t > min_time) & (t < max_time)]
+
     lut = isce3.geometry.make_doppler_lut_from_attitude(
         az_time=t,
         slant_range=r,

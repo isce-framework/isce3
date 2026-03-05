@@ -131,11 +131,6 @@ def make_doppler_lut_from_attitude(
     # computed.
     dem.compute_min_max_mean_height()
 
-    # crop az_time using orbit and attitude extents
-    min_time = max([orbit.start_time, attitude.start_time])
-    max_time = min([orbit.end_time, attitude.end_time])
-    az_time = az_time[(az_time > min_time) & (az_time < max_time)]
-
     # create Doppler Centroid array filled with zeros
     dop = np.zeros((len(az_time), len(slant_range)))
 
