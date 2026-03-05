@@ -333,7 +333,7 @@ runconfig:
                 time_end: null
 
             # Calibration and processing information look-up tables (LUTs)
-            # excluding Doppler.
+            # excluding Doppler
             lookup_tables:
 
                 # Downsampling factors with respect to the RSLC grid
