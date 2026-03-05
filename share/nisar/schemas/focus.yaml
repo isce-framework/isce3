@@ -182,11 +182,7 @@ runconfig:
           azimuth: num(min=0.0, required=False)
 
         # Extra margin added to the Doppler LUT
-        margin_in_pixels:
-          # Extra margin added to lookup table in azimuth, in pixels.
-          azimuth: int(min=0, required=False)
-          # Extra margin added to lookup table in range, in pixels.
-          range: int(min=0, required=False)
+        margin_in_pixels: include('margin_in_pixels_options', required=False)
 
       # Settings for range compression algorithm.
       rangecomp:
@@ -335,11 +331,13 @@ lookup_tables_options:
     range: int(min=1, required=False)
 
   # Extra margin added to LUTs
-  margin_in_pixels:
-    # Extra margin added to lookup table in azimuth, in pixels.
-    azimuth: int(min=0, required=False)
-    # Extra margin added to lookup table in range, in pixels.
-    range: int(min=0, required=False)
+  margin_in_pixels: include('margin_in_pixels_options', required=False)
+
+margin_in_pixels_options:
+  # Extra margin added to lookup table in azimuth, in pixels.
+  azimuth: int(min=0, required=False)
+  # Extra margin added to lookup table in range, in pixels.
+  range: int(min=0, required=False)
 
 nesz_options:
   # supported noise estimator algorithms:
