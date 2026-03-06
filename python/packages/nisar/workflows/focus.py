@@ -426,6 +426,14 @@ def make_doppler_lut(rawfiles: list[str],
     max_time = min([orbit.end_time, attitude.end_time])
 
     t = np.asarray(t)
+    if np.any(t <= min_time):
+        log.warning(f"Desired Doppler LUT start time is {min_time - t[0]} "
+            "seconds before ephemeris start. Consider adjusting "
+            "ephemeris_crop_pad or providing more orbit/attitude data.")
+    if np.any(t >= max_time):
+        log.warning(f"Desired Doppler LUT end time is {t[-1] - max_time} "
+            "seconds after ephemeris end. Consider adjusting "
+            "ephemeris_crop_pad or providing more orbit/attitude data.")
     t = t[(t > min_time) & (t < max_time)]
 
     lut = isce3.geometry.make_doppler_lut_from_attitude(
