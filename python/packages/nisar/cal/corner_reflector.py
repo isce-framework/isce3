@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 import isce3
-from isce3.cal import TriangularTrihedralCornerReflector
+from isce3.cal import CRShape, TrihedralCornerReflector
 
 
 class CRValidity(IntFlag):
@@ -25,25 +25,29 @@ class CRValidity(IntFlag):
     References
     ----------
     .. [1] B. Hawkins, "Corner Reflector Software Interface Specification," JPL
-       D-107698 (2023).
+       D-107698 (2025).
     """
 
     INVALID = 0
     """Not valid for any usage (out of service)."""
     IPR = 1
-    """Usable for assessing shape of impulse response (ISLR, PSLR, resolution)."""
+    """Usable for assessing shape of LSAR impulse response (ISLR, PSLR, resolution)."""
     RAD_POL = 2
-    """Usable for radiometric and polarimetric calibration."""
+    """Usable for LSAR radiometric and polarimetric calibration."""
     GEOM = 4
     """Usable for geometric calibration."""
+    SSAR_IPR = 8
+    """Usable for assessing shape of SSAR impulse response (ISLR, PSLR, resolution)."""
+    SSAR_RAD_POL = 16
+    """Usable for SSAR radiometric and polarimetric calibration."""
 
 
 @dataclass(frozen=True)
-class CornerReflector(TriangularTrihedralCornerReflector):
+class CornerReflector(TrihedralCornerReflector):
     """
-    A triangular trihedral corner reflector (CR) used for NISAR calibration.
+    A trihedral corner reflector (CR) used for NISAR calibration.
 
-    Extends `isce3.cal.TriangularTrihedralCornerReflector` with additional information
+    Extends `isce3.cal.TrihedralCornerReflector` with additional information
     required for NISAR Science Calibration and Validation (Cal/Val) activities.
 
     Parameters
@@ -64,6 +68,8 @@ class CornerReflector(TriangularTrihedralCornerReflector):
         the clockwise direction.
     side_length : float
         The length of each leg of the trihedral, in meters.
+    shape : CRShape
+        The shape of the faces (triangular or square).
     survey_date : isce3.core.DateTime
         UTC date and time when the corner reflector survey was conducted.
     validity : CRValidity
@@ -76,7 +82,7 @@ class CornerReflector(TriangularTrihedralCornerReflector):
 
     See Also
     --------
-    isce3.cal.TriangularTrihedralCornerReflector
+    isce3.cal.TrihedralCornerReflector
     parse_corner_reflector_csv
     """
 
@@ -124,6 +130,7 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
     10. Velocity East (m/s)
     11. Velocity North (m/s)
     12. Velocity Up (m/s)
+    13. Shape
 
     Parameters
     ----------
@@ -139,7 +146,8 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
     -----
     This function outputs the full survey history for each corner reflector found in the
     CSV file. It does not filter out any invalid corner reflectors or outdated survey
-    data.
+    data.  If the "Shape" column is not found, all corners will be assumed to be
+    triangular (backwards compatible with original spec).
 
     See Also
     --------
@@ -172,23 +180,33 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
             ("vel_e", np.float64),
             ("vel_n", np.float64),
             ("vel_u", np.float64),
+            ("shape", np.object_)
         ]
     )
 
     # Parse CSV data.
     # Treat the header row ("Corner reflector ID, ...") as a comment so that it will be
     # ignored if present.
-    try:
-        data = np.loadtxt(
+    def loadtxt(dtype):
+        return np.loadtxt(
             csvfile,
             dtype=dtype,
             delimiter=",",
             ndmin=1,
             comments=["#", "Corner reflector ID,", '"Corner reflector ID",'],
         )
+
+    try:
+        data = loadtxt(dtype)
     except ValueError as e:
-        errmsg = f"error parsing NISAR corner reflector CSV file {csvfile}"
-        raise RuntimeError(errmsg) from e
+        # Try again without shape column, since that was added later.
+        dtype = np.dtype([(name, dt) for (name, (dt, _)) in dtype.fields.items()
+            if name != 'shape'])
+        try:
+            data = loadtxt(dtype)
+        except ValueError as e:
+            errmsg = f"error parsing NISAR corner reflector CSV file {csvfile}"
+            raise RuntimeError(errmsg) from e
 
     # Convert lat, lon, az, & el angles to radians.
     for attr in ["lat", "lon", "az", "el"]:
@@ -202,6 +220,10 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
         survey_date = isce3.core.DateTime(d[7].strip())
         validity = CRValidity(int(d[8]))
         velocity = np.asarray([d[9], d[10], d[11]], dtype=np.float64)
+        if "shape" in dtype.fields:
+            shape = d["shape"].strip().lower()
+        else:
+            shape = "triangular"
 
         yield CornerReflector(
             id=corner_id,
@@ -209,6 +231,7 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
             elevation=d[5],
             azimuth=d[4],
             side_length=d[6],
+            shape=CRShape(shape),
             survey_date=survey_date,
             validity=validity,
             velocity=velocity,
@@ -397,7 +420,7 @@ def filter_crs_per_az_heading(crs, az_heading, az_atol=np.deg2rad(30.0)):
     Parameters
     ----------
     crs : iterable of type CornerReflector or
-        TriangularTrihedralCornerReflector.
+        TrihedralCornerReflector.
     az_heading : float
         Desired AZ/heading angle in radians w.r.t. geographic North.
     az_atol : float, default=pi/6 (30 degrees)
@@ -408,7 +431,7 @@ def filter_crs_per_az_heading(crs, az_heading, az_atol=np.deg2rad(30.0)):
 
     Yields
     ------
-    cr : CornerReflector or TriangularTrihedralCornerReflector
+    cr : CornerReflector or TrihedralCornerReflector
         The datatype of cr depends on type of items in `crs`.
 
     """
