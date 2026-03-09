@@ -960,11 +960,6 @@ class SLC(h5py.File):
                                 gamma0_lut: LUT2d):
         assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
 
-        # TODO agree on LUT postings.
-        calibration_section_sampling = 50
-        t = az_time_orig_vect[::calibration_section_sampling]
-        r = slant_range_orig_vect[::calibration_section_sampling]
-
         cal_group = self.root.require_group("metadata/calibrationInformation")
 
         # TODO Populate backscatter conversion layers.  Plan is for beta0=1,
@@ -1001,7 +996,9 @@ class SLC(h5py.File):
         eap_group = cal_group.require_group(
             f"frequency{frequency}/elevationAntennaPattern")
 
-        t, r = require_lut_axes(eap_group, epoch, t, r,
+        t, r = require_lut_axes(
+            eap_group, epoch, az_time_orig_vect,
+            slant_range_orig_vect,
             "calibration elevationAntennaPattern records")
 
         dummy_array = np.ones((t.size, r.size), dtype=np.complex64)
