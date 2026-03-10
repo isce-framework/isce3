@@ -16,7 +16,14 @@ from nisar.mixed_mode import (PolChannel, PolChannelSet, Band,
     find_overlapping_channel)
 from nisar.products.readers.antenna import AntennaParser
 from nisar.products.readers.instrument import InstrumentParser
-from nisar.products.readers.Raw import Raw, open_rrsd
+from nisar.products.readers.Raw import (
+    Raw,
+    open_rrsd,
+    chirpcorrelator_caltype_from_raw,
+    is_raw_quad_pol,
+    first_tx_pol_for_quad,
+    opposite_linear_pol
+)
 from nisar.products.readers.rslc_cal import (RslcCalibration,
     parse_rslc_calibration, get_scale_and_delay, check_cal_validity_dates)
 from nisar.products.writers import SLC
@@ -1952,9 +1959,22 @@ def focus(runconfig, runconfig_path=""):
 
             # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
+                # XXX Due to a bug in respective DRT of some L0B products
+                # (CRID=05007), caltone.frequency is extrated from runconfig
+                # otherwise, it shall be set to None to be determined from DRT!
+                # The latter requires RSLC runconfig update to allow caltone
+                # frequency to be parsed directly from L0B product for more
+                # flexible configuration over wide range of L0B products.
+                # XXX the intrument-related delay offset used in DBF process
+                # shall be eventually obtained from instrument INT CAL HDF5
+                # once the respective product spec is updated (delay_ofs_dbf)!
+                # The default value is suitable for NISAR L-band instrument.
                 antpat = AntennaPattern(raw, dem, antparser,
                                         instparser, orbit, attitude,
-                                        el_lut=el_lut)
+                                        el_lut=el_lut,
+                                        freq_band=frequency,
+                                        caltone_freq=cfg.processing.caltone.frequency,
+                                        delay_ofs_dbf=-2.1474e-6)
 
                 log.info("Precomputing antenna patterns")
                 i = np.arange(rc_grid.shape[0])
@@ -1974,9 +1994,10 @@ def focus(runconfig, runconfig_path=""):
 
             # Compute NESZ if there exist noise-only range lines
             # get noise only range line indexes within processing interval
-            cal_path_mask = raw.getCalType(
-                channel_in.freq_id, pol[0])[pulse_begin:pulse_end]
-            _, _, _, idx_noise = get_calib_range_line_idx(cal_path_mask)
+            _, cal_path_mask = chirpcorrelator_caltype_from_raw(
+                raw, txrx_pol=pol)
+            _, _, _, idx_noise = get_calib_range_line_idx(
+                cal_path_mask[pulse_begin:pulse_end])
 
             # form output slant range vector for all noise products
             if cfg.processing.noise_equivalent_backscatter.fill_nan_ends:
@@ -2005,7 +2026,29 @@ def focus(runconfig, runconfig_path=""):
                 data_noise = np.memmap(
                     fid_noise, mode='w+', shape=(nrgl_noise, rc.output_size),
                     dtype=np.complex64)
-                rc.rangecompress(data_noise, raw_clean[idx_noise])
+                # Check if raw is quad pol and the TX pol is not the
+                # first TX pol. Then extract noise only range line
+                # from the opposite TX pol w/ the same RX pol.
+                # XXX No RFI/caltone clean up of noise-only range lines
+                # for second TX pol products of quad pol!
+                raw_ns = np.copy(raw_clean[idx_noise])
+                if is_raw_quad_pol(raw):
+                    first_tx_pol = first_tx_pol_for_quad(raw)
+                    log.info(f'Quad pol w/ first {first_tx_pol} pol!')
+                    if pol[0] != first_tx_pol:
+                        pol_ns = opposite_linear_pol(pol[0]) + pol[1]
+                        log.warning('Get noise-only range lines from '
+                                    f'{pol_ns} for {pol} of quad pol!')
+                        ds_ns = raw.getRawDataset(channel_in.freq_id, pol_ns)
+                        idx_ns = np.arange(pulse_begin, pulse_end)[idx_noise]
+                        # decode simply noise-only range lines and
+                        # thus no need for memmap
+                        raw_ns = ds_ns[idx_ns]
+                        raw_ns *= bb_phasor[idx_noise, np.newaxis]
+                        raw_ns[np.isnan(raw_ns)] = 0.0
+                        if cfg.processing.zero_fill_gaps:
+                            fill_gaps(raw_ns, swaths[:, idx_noise, :], 0.0)
+                rc.rangecompress(data_noise, raw_ns)
                 # build and apply antenna pattern correction for noise
                 # pulses if EAP is True
                 if cfg.processing.is_enabled.eap:
