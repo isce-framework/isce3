@@ -1658,6 +1658,48 @@ class Task:
         return self.function(*self.args, **self.kwargs)
 
 
+def find_min_cache_size(key_lists):
+    """
+    Determine the minimum LRU cache size needed to avoid cache misses.
+
+    Parameters
+    ----------
+    key_lists: Iterable[Iterable[Hashable]]
+        List of jobs, where each job is a list of task keys, and
+        keys may be shared between jobs.
+
+    Returns
+    -------
+    n : int
+        Minimum cache size required to hold shared keys in memory,
+        assuming jobs are executed in the given order.
+    """
+    # Flatten the key sequence into a single ordered list of key accesses
+    access_sequence = [key for keylist in key_lists for key in keylist]
+
+    # For each key, record the indices where it's accessed
+    access_indices = defaultdict(list)
+    for i, key in enumerate(access_sequence):
+        access_indices[key].append(i)
+
+    min_size = 1
+
+    for key, indices in access_indices.items():
+        # Only care about keys accessed more than once (re-use case)
+        for j in range(1, len(indices)):
+            prev_idx = indices[j - 1]
+            curr_idx = indices[j]
+
+            # Count distinct keys in the window [prev_idx, curr_idx] inclusive.
+            # If this many distinct keys were accessed, the LRU cache must hold
+            # at least this many entries to avoid evicting `key` before reuse.
+            window = access_sequence[prev_idx:curr_idx + 1]
+            distinct_in_window = len(set(window))
+            min_size = max(min_size, distinct_in_window)
+
+    return min_size
+
+
 def azcomp_ffbp(factors: BackprojectionStageParameters,
         azres, kernel, blocks_bounds, igeom, rc_grid,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
@@ -1806,10 +1848,16 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
             if is_overlapping(t0, t1, grid.aztime_start, grid.aztime_end)]
         blocks_grids.append((block, active_grids))
 
-    max_images = max(len(active_grids) for (_, active_grids) in blocks_grids)
+    max_images = max(len(grids) for (_, grids) in blocks_grids)
     log.info(f"Proceeding to final stage with max {max_images} sub-images per block")
+    # Required cache size may be smaller than max_images when not all
+    # sub-images in one block are used in the next block.  However, it can
+    # also be more when we subdivide in range, since a far-range block may
+    # need all the sub-images of a near-range block plus a few more.
+    cache_size = find_min_cache_size([grid for (_, grid) in blocks_grids])
+    log.info(f"Calculated min cache size = {cache_size}")
 
-    @lru_cache(maxsize=max_images)
+    @lru_cache(maxsize=cache_size)
     def get_image_iterpolator(polar_grid):
         # Using pop() to remove from stack requires that cache size is adequate
         # to avoid redundant computations, which we prioritize over generality.
