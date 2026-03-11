@@ -27,10 +27,14 @@ runconfig:
             # REQUIRED - Digital elevation model
             dem_file:
 
-            # PLACEHOLDER - Digital elevation model file description, optional
+            # Digital elevation model file description, optional
             dem_file_description:
 
             water_mask_file:
+
+            # Water mask file description, optional
+            water_mask_file_description:
+
             orbit_files:
                 reference_orbit_file:
                 secondary_orbit_file:
@@ -79,12 +83,15 @@ runconfig:
                 runw_doi:
                 goff_doi:
                 gunw_doi:
-
+            static_layers_data_access:
         debug_level_group:
             debug_switch: false
 
         # TODO OPTIONAL - To setup type of worker
         worker:
+             # OPTIONAL - To remove the intermediate files. Default False
+            intermediate_files_removal_enabled: False
+
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
             internet_access: False
 
@@ -244,8 +251,9 @@ runconfig:
                 # Number of lines per blocks
                 lines_per_block: 1000
                 # ionosphere estimation methods
-                #(split_main_band, main_side_band, main_diff_ms_band)
-                spectral_diversity: split_main_band
+                #(split_main_band, main_side_band, main_diff_ms_band,
+                # main_diff_low_high_subband)
+                spectral_diversity: main_diff_low_high_subband
                 # Polarization to be used for ionosphere estimation.
                 # Split_main_band method does not require frequency B.
                 list_of_frequencies:
@@ -283,11 +291,11 @@ runconfig:
                     # (nearest, smoothed)
                     filling_method: nearest
                     # Kernel size in pixels
-                    kernel_range: 800
-                    kernel_azimuth: 800
+                    kernel_range: 100
+                    kernel_azimuth: 100
                     # Sigma for gaussian filtering in pixel
-                    sigma_range: 100
-                    sigma_azimuth: 100
+                    sigma_range: 33
+                    sigma_azimuth: 33
                     # Number of iteration for low pass filtering
                     filter_iterations: 1
                     # Unwrapping correction bool. If False, only filtering
@@ -297,11 +305,11 @@ runconfig:
                     # whose size is strictly smaller than `min_cluster_pixels`.
                     # When `min_cluster_pixels` is 0, this pre-removal step is
                     # skipped entirely.
-                    min_cluster_pixels: 5
-
+                    min_cluster_pixels: 2
+                    
+                    bridge_algorithm_enabled: True
                     # Maximum radius used when bridging disconnected
                     # regions.
-                    bridge_algorithm_enabled: True
                     bridge_radius: 500
                     # Size of the structuring element used for erosion
                     # during bridge labeling.
@@ -400,8 +408,10 @@ runconfig:
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
-                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
+                # Deramp data axis prior to FFT: range, azimuth, or both
+                deramping_axis: 'azimuth'
                 # Flag to use constant range/azimuth offsets in dense offsets estimation
                 use_gross_offsets: True
                 # Constant offset along slant range to guide dense offset estimation
@@ -451,8 +461,10 @@ runconfig:
                 start_pixel_azimuth:
                 # Cross-correlation domain
                 cross_correlation_domain: 'frequency'
-                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
+                # Deramp data axis prior to FFT: range, azimuth, or both
+                deramping_axis: 'azimuth'
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
@@ -542,6 +554,18 @@ runconfig:
                     # Filter size (median/boxcar) in slant range
                     filter_size_range: 5
                     filter_size_azimuth: 5
+                # Polyfit the dense offsets for the fine resampling
+                polyfitting:
+                    # Flag to enable/disable polyfitting
+                    enabled: false
+                    # The degrees for the polyfitting
+                    degree: 2
+                    # Critical value for the w-test to remove the outliers
+                    critical_value: 0.1
+                    # Number of samples along the range in pixels for polyfitting
+                    samples_along_range: 200
+                    # Number of samples  along the azimuth in pixels for polyfitting
+                    samples_along_azimuth: 200
 
             fine_resample:
                 # Flag to enable/disable fine resampling
@@ -741,7 +765,22 @@ runconfig:
                     # `ntiles` is (1, 1). It has no effect if `single_tile_reoptimize` was also
                     #  enabled (since regrowing connected components would be redundant in that case).
                     regrow_conncomps: True
-
+                bridge:
+                    enabled: True
+                    # Maximum radius used when bridging disconnected regions.
+                    bridge_radius: 500
+                    # Size of the structuring element used for erosion
+                    # during bridge labeling.
+                    bridge_erosion_size: 2
+                    # Minimum number of pixel of connected components
+                    # to retain during processing.
+                    bridge_minimum_samples: 14
+                    # Ramp type to correct before bridge algoritm
+                    bridge_ramp_type:
+                    # During deramping, uniform sampling is applied
+                    # when number of samples is larger than maximum pixel
+                    bridge_ramp_maximum_pixel: 1e6
+    
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
@@ -773,14 +812,29 @@ runconfig:
                     # Default: True
                     qa_reports: true
 
+                software_config:
+
+                    # True to cache selected dataset(s) into intermediate
+                    # memory-mapped flat file(s), which speeds up repeat access.
+                    # False to always read data directly from the input file.
+                    # Generally, enabling caching should reduce runtime.
+                    # Default: True
+                    use_cache: true
+
+                    # True to delete the nested QA scratch directory in
+                    # `scratch_path` and its contents when QA SAS is finished.
+                    # Default: True
+                    delete_qa_scratch_files: true
+
                 validation:
 
-                    # True to raise an exception if one or more metadata cubes contains
-                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
-                    # z-dimension height layers in a 3D cube has all non-finite values.
-                    # False to quiet the exception (although it will still be logged).
+                    # True to raise an exception if one or more metadata LUTs
+                    # contain all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D LUT ("metadata cube") has
+                    # all non-finite values. False to quiet the exception (although
+                    # it will still be logged).
                     # Default: True
-                    metadata_cubes_fail_if_all_nan: true
+                    metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
 
@@ -953,21 +1007,6 @@ runconfig:
                         zero_is_invalid: true
 
                     browse_png:
-
-                        # The image to use as the basis for the browse image PNG. Options:
-                        # "phase" : Wrapped phase.
-                        # "hsi" : An HSI image with phase information encoded as Hue and
-                        # coherence encoded as Intensity.
-                        # Default: phase
-                        browse_image: phase
-
-                        # Only used if `browse_image` is set to "hsi".
-                        # True to perform histogram equalization on the Intensity channel
-                        # (the coherence magnitude layer) in the browse image PNG.
-                        # False to not apply the equalization.
-                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: False
-                        equalize_browse: false
 
                         # The maximum number of pixels allowed for the longest
                         # side of the final 2D browse image.
@@ -987,14 +1026,29 @@ runconfig:
                     # Default: True
                     qa_reports: true
 
+                software_config:
+
+                    # True to cache selected dataset(s) into intermediate
+                    # memory-mapped flat file(s), which speeds up repeat access.
+                    # False to always read data directly from the input file.
+                    # Generally, enabling caching should reduce runtime.
+                    # Default: True
+                    use_cache: true
+
+                    # True to delete the nested QA scratch directory in
+                    # `scratch_path` and its contents when QA SAS is finished.
+                    # Default: True
+                    delete_qa_scratch_files: true
+
                 validation:
 
-                    # True to raise an exception if one or more metadata cubes contains
-                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
-                    # z-dimension height layers in a 3D cube has all non-finite values.
-                    # False to quiet the exception (although it will still be logged).
+                    # True to raise an exception if one or more metadata LUTs
+                    # contain all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D LUT ("metadata cube") has
+                    # all non-finite values. False to quiet the exception (although
+                    # it will still be logged).
                     # Default: True
-                    metadata_cubes_fail_if_all_nan: true
+                    metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
 
@@ -1149,16 +1203,16 @@ runconfig:
                         # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
 
                         # Percent of NaN pixels per total raster area allowed
-                        # Default: 95.0
-                        nan_threshold: 95.0
+                        # Default: -1
+                        nan_threshold: -1
 
                         # Percent of +/- Inf pixels per total raster area allowed
                         # Default: 95.0
                         inf_threshold: 95.0
 
                         # Percent of Fill-valued pixels per total raster area allowed
-                        # Default: 95.0
-                        fill_threshold: 95.0
+                        # Default: -1
+                        fill_threshold: -1
 
                         # Percent of Near-zero pixels per total raster area allowed
                         # Default: -1
@@ -1166,8 +1220,8 @@ runconfig:
 
                         # Percent of total invalid pixels per total raster area allowed
                         # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
-                        # Default: 95.0
-                        total_invalid_threshold: 95.0
+                        # Default: -1
+                        total_invalid_threshold: -1
 
                         # Absolute tolerance for determining if a raster pixel is 'near zero'.
                         # Default: 1e-06
@@ -1309,21 +1363,6 @@ runconfig:
 
                     browse_png:
 
-                        # The image to use as the basis for the browse image PNG. Options:
-                        # "phase" : (Optionally re-wrapped) unwrapped phase.
-                        # "hsi" : An HSI image with phase information encoded as Hue and
-                        # coherence encoded as Intensity.
-                        # Default: phase
-                        browse_image: phase
-
-                        # Only used if `browse_image` is set to "hsi".
-                        # True to perform histogram equalization on the Intensity channel
-                        # (the coherence magnitude layer) in the browse image PNG.
-                        # False to not apply the equalization.
-                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: False
-                        equalize_browse: false
-
                         # The maximum number of pixels allowed for the longest
                         # side of the final 2D browse image.
                         # Default: 2048
@@ -1332,7 +1371,6 @@ runconfig:
                         # The multiple of pi to rewrap the unwrapped phase image
                         # when generating the browse PNG. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-
                         # Default: 7
                         rewrap: 7
 
@@ -1349,14 +1387,29 @@ runconfig:
                     # Default: True
                     qa_reports: true
 
+                software_config:
+
+                    # True to cache selected dataset(s) into intermediate
+                    # memory-mapped flat file(s), which speeds up repeat access.
+                    # False to always read data directly from the input file.
+                    # Generally, enabling caching should reduce runtime.
+                    # Default: True
+                    use_cache: true
+
+                    # True to delete the nested QA scratch directory in
+                    # `scratch_path` and its contents when QA SAS is finished.
+                    # Default: True
+                    delete_qa_scratch_files: true
+
                 validation:
 
-                    # True to raise an exception if one or more metadata cubes contains
-                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
-                    # z-dimension height layers in a 3D cube has all non-finite values.
-                    # False to quiet the exception (although it will still be logged).
+                    # True to raise an exception if one or more metadata LUTs
+                    # contain all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D LUT ("metadata cube") has
+                    # all non-finite values. False to quiet the exception (although
+                    # it will still be logged).
                     # Default: True
-                    metadata_cubes_fail_if_all_nan: true
+                    metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
 
@@ -1553,16 +1606,16 @@ runconfig:
                         # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
 
                         # Percent of NaN pixels per total raster area allowed
-                        # Default: 99.0
-                        nan_threshold: 99.0
+                        # Default: -1
+                        nan_threshold: -1
 
                         # Percent of +/- Inf pixels per total raster area allowed
                         # Default: 99.0
                         inf_threshold: 99.0
 
                         # Percent of Fill-valued pixels per total raster area allowed
-                        # Default: 99.0
-                        fill_threshold: 99.0
+                        # Default: -1
+                        fill_threshold: -1
 
                         # Percent of Near-zero pixels per total raster area allowed
                         # Default: -1
@@ -1570,8 +1623,8 @@ runconfig:
 
                         # Percent of total invalid pixels per total raster area allowed
                         # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
-                        # Default: 99.0
-                        total_invalid_threshold: 99.0
+                        # Default: -1
+                        total_invalid_threshold: -1
 
                         # Absolute tolerance for determining if a raster pixel is 'near zero'.
                         # Default: 1e-06
@@ -1713,21 +1766,6 @@ runconfig:
 
                     browse_png:
 
-                        # The image to use as the basis for the browse image PNG. Options:
-                        # "phase" : (Optionally re-wrapped) unwrapped phase.
-                        # "hsi" : An HSI image with phase information encoded as Hue and
-                        # coherence encoded as Intensity.
-                        # Default: phase
-                        browse_image: phase
-
-                        # Only used if `browse_image` is set to "hsi".
-                        # True to perform histogram equalization on the Intensity channel
-                        # (the coherence magnitude layer) in the browse image PNG.
-                        # False to not apply the equalization.
-                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: False
-                        equalize_browse: false
-
                         # The maximum number of pixels allowed for the longest
                         # side of the final 2D browse image.
                         # Default: 2048
@@ -1736,7 +1774,6 @@ runconfig:
                         # The multiple of pi to rewrap the unwrapped phase image
                         # when generating the browse PNG. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-
                         # Default: 7
                         rewrap: 7
 
@@ -1753,14 +1790,29 @@ runconfig:
                     # Default: True
                     qa_reports: true
 
+                software_config:
+
+                    # True to cache selected dataset(s) into intermediate
+                    # memory-mapped flat file(s), which speeds up repeat access.
+                    # False to always read data directly from the input file.
+                    # Generally, enabling caching should reduce runtime.
+                    # Default: True
+                    use_cache: true
+
+                    # True to delete the nested QA scratch directory in
+                    # `scratch_path` and its contents when QA SAS is finished.
+                    # Default: True
+                    delete_qa_scratch_files: true
+
                 validation:
 
-                    # True to raise an exception if one or more metadata cubes contains
-                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
-                    # z-dimension height layers in a 3D cube has all non-finite values.
-                    # False to quiet the exception (although it will still be logged).
+                    # True to raise an exception if one or more metadata LUTs
+                    # contain all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D LUT ("metadata cube") has
+                    # all non-finite values. False to quiet the exception (although
+                    # it will still be logged).
                     # Default: True
-                    metadata_cubes_fail_if_all_nan: true
+                    metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
 
@@ -2021,14 +2073,29 @@ runconfig:
                     # Default: True
                     qa_reports: true
 
+                software_config:
+
+                    # True to cache selected dataset(s) into intermediate
+                    # memory-mapped flat file(s), which speeds up repeat access.
+                    # False to always read data directly from the input file.
+                    # Generally, enabling caching should reduce runtime.
+                    # Default: True
+                    use_cache: true
+
+                    # True to delete the nested QA scratch directory in
+                    # `scratch_path` and its contents when QA SAS is finished.
+                    # Default: True
+                    delete_qa_scratch_files: true
+
                 validation:
 
-                    # True to raise an exception if one or more metadata cubes contains
-                    # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
-                    # z-dimension height layers in a 3D cube has all non-finite values.
-                    # False to quiet the exception (although it will still be logged).
+                    # True to raise an exception if one or more metadata LUTs
+                    # contain all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                    # z-dimension height layers in a 3D LUT ("metadata cube") has
+                    # all non-finite values. False to quiet the exception (although
+                    # it will still be logged).
                     # Default: True
-                    metadata_cubes_fail_if_all_nan: true
+                    metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
 

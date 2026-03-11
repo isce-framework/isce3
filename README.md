@@ -2,11 +2,8 @@ ISCE - InSAR Scientific Computing Environment
 =============================================
 
 [![Build Status](
-https://nisar-adt-ci.jpl.nasa.gov/buildStatus/icon?job=isce-develop)](
-https://nisar-adt-ci.jpl.nasa.gov/job/isce-develop/)|
-[![Nightly Build Status](
-https://nisar-adt-ci.jpl.nasa.gov/buildStatus/icon?job=isce-develop-nightly-build)](
-https://nisar-adt-ci.jpl.nasa.gov/job/isce-develop-nightly-build/)
+https://github.com/isce-framework/isce3/actions/workflows/build-and-run.yml/badge.svg)](
+https://github.com/isce-framework/isce3/actions/workflows/build-and-run.yml)
 
 The InSAR Scientific Computing Environment (ISCE) is an open source library for
 processing spaceborne and airborne Interferometric Synthetic Aperture Radar
@@ -30,18 +27,23 @@ features and interface are subject to change
 
 ## Installation
 
-- [On Linux](https://isce-framework.github.io/isce3/install_linux.html)
-- [On macOS](https://isce-framework.github.io/isce3/install_osx.html)
+ISCE3 is available as a conda package via conda-forge. It has CPU-only and GPU-enabled versions available. You can install the CPU-only version with the following command:
+
+```bash
+conda install -c conda-forge isce3-cpu
+```
+
+Alternatively, if you have a NVIDIA GPU with CUDA support and the CUDA driver installed, you can use the GPU-enabled package for faster processing:
+
+```bash
+conda install -c conda-forge isce3-cuda
+```
+
+If you need to build ISCE3 from source, please refer to our more in-depth [build instructions](https://isce-framework.github.io/isce3/buildinstall/).
 
 ## Getting Started
 
- - [Tutorials](
-https://isce-framework.github.io/isce3/tutorial_tutorial.html)
- - [Python API Reference](
-https://isce-framework.github.io/isce3/sphinx/html/index.html)
- | [C++ API Reference](
-https://isce-framework.github.io/isce3/annotated.html)
- - [Examples](https://github.com/isce-framework/isce3/tree/develop/share)
+See the documentation at https://isce-framework.github.io/isce3/
 
 ## Contributing
 

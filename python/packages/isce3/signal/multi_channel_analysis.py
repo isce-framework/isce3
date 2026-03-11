@@ -121,6 +121,12 @@ def dbf_onetap_from_dm2(
     -------
     np.ndarray(complex64)
         2-D complex composite echo data with shape (pulses, range bins)
+    np.ndarray(int)
+        1-D array of range bin limits for all beams (channels) in ascending
+        order with size `channels + 1` obtained from transition points from
+        one dominant channel to another.
+        For instance, the respective [start, stop] range bins for channel
+        `i` are indices `[i - 1, i]`.
 
     Raises
     ------
@@ -154,12 +160,12 @@ def dbf_onetap_from_dm2(
             echo[:, slice_rgb] = dset[cc, :, slice_rgb]
         else:  # apply calib
             echo[:, slice_rgb] = cal_coefs[cc] * dset[cc, :, slice_rgb]
-    return echo
+    return echo, rgb_limits
 
 
 def dbf_onetap_from_dm2_seamless(
         dset, chirp, az_time, el_trans, az_trans, sr, orbit, attitude, dem,
-        num_cpu=None, ped_win=1.0, cal_coefs=None):
+        num_cpu=None, ped_win=1.0, cal_coefs=None, inv_antpat_el=None):
     """
     Form a 1-tap DBFed (composite) range lines for an AZ block of
     DM2 3-D echo dataset.
@@ -197,11 +203,20 @@ def dbf_onetap_from_dm2_seamless(
     cal_coefs : array of float or complex, optional
         Calibration coefficients mutiplied to echo from each channel
         while mosaicking. Must be the same size as number of RX channels!
+    inv_antpat_el : array of float or complex, optional
+        1-D array of inverse EL antenna pattern to be multiplied with echo
+        prior to applying pulse extension. The size of array is `sr.size`.
 
     Returns
     -------
     np.ndarray(complex64)
         2-D complex composite echo data with shape (pulses, range bins)
+    np.ndarray(int)
+        1-D array of range bin limits for all beams (channels) in ascending
+        order with size `channels + 1` obtained from transition points from
+        one dominant channel to another.
+        For instance, the respective [start, stop] range bins for channel
+        `i` are indices `[i - 1, i]`.
 
     Raises
     ------
@@ -221,6 +236,11 @@ def dbf_onetap_from_dm2_seamless(
     if cal_coefs is not None and cal_coefs.size != n_chnl:
         raise ValueError(f'Size of Cal Coeffs {cal_coefs.size} does not '
                          f'match number of channels in raw {n_chnl}')
+    if inv_antpat_el is not None and inv_antpat_el.size != n_rgb:
+        raise ValueError(
+            f'Size mismatch between "inv_antpat_el" {inv_antpat_el.size} '
+            f'and "sr" {n_rgb}!'
+        )
     # build range bin limits used in pair for each channel
     rgb_limits = _beams_transition_rangebin_limits(
         el_trans, az_trans, az_time, sr, orbit, attitude, dem)
@@ -260,11 +280,14 @@ def dbf_onetap_from_dm2_seamless(
                 echo[:, slice_out] = data_rgc
             else:  # apply calib
                 echo[:, slice_out] = cal_coefs[cc] * data_rgc
+        # remove antenna pattern if provided
+        if inv_antpat_el is not None:
+            echo *= inv_antpat_el
         # perform full convolution to add pulse extension back w/o group-delay
         # adjustment but keep the total range bins!
         echo[...] = fftconvolve(echo, chirp[np.newaxis, :],
                                 mode='full', axes=1)[:, :sr.size]
-    return echo
+    return echo, rgb_limits
 
 
 def _beams_transition_rangebin_limits(

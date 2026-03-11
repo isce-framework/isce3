@@ -34,6 +34,16 @@ GeoGridParameters::GeoGridParameters(
         std::string errmsg = "Y spacing can not be positive.";
         throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
+    if (width <= 0) {
+        std::string errmsg = "Geogrid width (" + std::to_string(width) +
+                             ") has to be larger than 0.";
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
+    }
+    if (length <= 0) {
+        std::string errmsg = "Geogrid length (" + std::to_string(length) +
+                             ") has to be larger than 0.";
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
+    }
 }
 
 std::string to_string(const GeoGridParameters& geogrid)
@@ -123,7 +133,7 @@ GeoGridParameters bbox2GeoGrid(const RadarGridParameters& radar_grid,
 GeoGridParameters bbox2GeoGridScaled(
         const RadarGridParameters& radar_grid, const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& doppler,
-        const isce3::io::Raster& dem_raster, double spacing_scale, 
+        const isce3::io::Raster& dem_raster, double spacing_scale,
         double min_height, double max_height, const double margin,
         const int pointsPerEdge, const double threshold,
         const double height_threshold)

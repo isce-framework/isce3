@@ -16,7 +16,7 @@ class IonosphereEstimation:
                  slant_main=None,
                  slant_side=None):
 
-        """Initialized IonosphererEstimation Base Class
+        """Initialized IonosphereEstimation Base Class
 
         Parameters
         ----------
@@ -100,10 +100,12 @@ class IonosphereEstimation:
             compute_unwrapp_error_func=None,
             main_runw=None,
             side_runw=None,
+            diff_ms_runw=None,
             slant_main=None,
             slant_side=None,
             low_sub_runw=None,
-            high_sub_runw=None):
+            high_sub_runw=None,
+            diff_low_high_runw=None):
         """Compute unwrapping error coefficients
 
         Parameters
@@ -117,12 +119,17 @@ class IonosphereEstimation:
         main_runw : numpy.ndarray
             2D runw array of main-band interferogram
         side_runw : numpy.ndarray
-            2D runw array of of side-band interferogram
+            2D runw array of side-band interferogram
+        diff_ms_runw : numpy.ndarray
+            2D runw array of difference between
+            main and side-band interferogram
         low_sub_runw : numpy.ndarray
             2D runw array of low sub-band interferogram
         high_sub_runw : numpy.ndarray
             2D runw array of high sub-band interferogram
-
+        diff_log_high_runw : numpy.ndarray
+            2D runw array of difference between high and low sub-band
+            interferogram
         Returns
         -------
         com_unw_coeff : numpy.ndarray
@@ -160,7 +167,9 @@ class IonosphereEstimation:
             nondisp_array=nondisp_array,
             low_sub_runw=low_sub_runw,
             high_sub_runw=high_sub_runw,
+            diff_low_high_runw=diff_low_high_runw,
             main_runw=main_runw,
-            side_runw=side_runw,)
+            side_runw=side_runw,
+            diff_ms_runw=diff_ms_runw)
 
         return com_unw_coeff, diff_unw_coeff

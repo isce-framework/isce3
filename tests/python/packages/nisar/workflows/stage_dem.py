@@ -1,9 +1,13 @@
 import os
 import subprocess
 import argparse
+from glob import glob
+from tempfile import TemporaryDirectory
 
 import numpy.testing as npt
+import pytest
 from nisar.workflows import stage_dem
+from osgeo import gdal
 
 from shapely import wkt
 
@@ -60,9 +64,36 @@ def test_check_overlap():
     npt.assert_allclose(overlap, 100, rtol=1e-3)
 
 
+@pytest.mark.parametrize("version", ["1.0", "1.1", "1.2"])
+def test_dem_description(version: str):
+    with TemporaryDirectory() as tmpdir:
+        product = os.path.join(iscetest.data, "Greenland.h5")
+        outfile = os.path.join(tmpdir, "dem.vrt")
+        opts = argparse.Namespace(
+            product=product,
+            outfile=outfile,
+            bbox=None,
+            filepath="file",
+            margin=1,
+            version=version,
+        )
+        stage_dem.main(opts)
+
+        ds = gdal.Open(outfile, gdal.GA_ReadOnly)
+        vrt_descr = ds.GetMetadataItem("dem_description")
+        assert len(vrt_descr) > 0
+
+        tiff_files = glob(os.path.join(tmpdir, "dem_*.tiff"))
+        assert len(tiff_files) > 0
+
+        for tiff_file in tiff_files:
+            ds = gdal.Open(tiff_file, gdal.GA_ReadOnly)
+            tiff_descr = ds.GetMetadataItem("dem_description")
+            assert tiff_descr == vrt_descr
+
+
 if __name__ == "__main__":
     test_dateline_crossing()
     test_point2epsg()
     test_run_stage_dem()
     test_check_overlap()
-

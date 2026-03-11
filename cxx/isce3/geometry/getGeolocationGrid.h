@@ -13,6 +13,10 @@ namespace isce3 { namespace geometry {
  *
  * The target-to-sensor line-of-sight (LOS) and along-track unit vectors are
  * referenced to ENU coordinates computed wrt targets.
+ * 
+ * The along-track unit vectors X and Y are computed at the target location
+ * in ENU coordinates, without the vertical component
+ 
  *
  * @param[in]  dem_raster                  DEM raster
  * @param[in]  radar_grid                  Radar grid

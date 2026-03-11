@@ -49,12 +49,6 @@ def parse_args():
                         dest='polarization_list', type=str,
                         help="List of polarizations to process",
                         nargs='*')
-    parser.add_argument('--first-line',
-                        dest='first_line', type=int,
-                        help="First azimuth line to unpack")
-    parser.add_argument('--last-line',
-                        dest='last_line', type=int,
-                        help="Last azimuth line to unpack")
     parser.add_argument('-o', '--outh5', dest='outh5', type=str,
                         help="Name of output file. If not provided, will be"
                              " determined from ALOS-2 granule")
@@ -201,7 +195,7 @@ def construct_nisar_hdf5(outh5, ldr):
     '''
 
     # Open file for writing
-    root_group = h5py.File(outh5, 'w')
+    root_group = h5py.File(outh5, 'w', fs_strategy="page", fs_page_size=4194304)
     lsar_group = root_group.create_group('/science/LSAR')
     ident_group = lsar_group.create_group('identification')
 
@@ -448,49 +442,54 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata, filenames,
     BAD_VALUE = -2**15
 
     # Create imagery layer
-    compress = dict(chunks=(4, 512), compression="gzip",
-                    compression_opts=9, shuffle=True)
+    chunks = (512, 512)
+    compress = dict(chunks=chunks, compression="gzip",
+                    compression_opts=1, shuffle=True)
     cpxtype = np.dtype([('r', np.float32), ('i', np.float32)])
     polimg = root_group.create_dataset(os.path.join(
         freq_str, pol), dtype=cpxtype, shape=(length, width), **compress)
 
     # Start populating the imagery
     rec = firstrec
-    if args.first_line is not None:
-        first_line = args.first_line
-    else:
-        first_line = 1
-    if args.last_line is not None:
-        last_line = min([args.last_line, length+1])
-    else:
-        last_line = length+1
+    # TODO implement ImageFile.seek and CLI options for first/last line.
+    first_line = 0
+    line_stop = length
 
     print(f'processing polarization {pol} ({length}L x {width}P):')
-    for linnum in range(first_line, last_line):
 
-        if (linnum % 1000 == 0):
-            print('    line number: {0} out of {1}'.format(linnum, length))
+    # Process in chunks to optimize IO.
+    write_arr = np.empty((chunks[0], 2 * width), dtype=np.float32)
 
-        # Adjust range line
-        rshift = int(np.rint((rec.SlantRangeToFirstSampleInm - r0) / dr))
-        write_arr = np.full((2 * width), BAD_VALUE, dtype=np.float32)
+    for block_start in range(first_line, line_stop, chunks[0]):
+        write_arr[...] = BAD_VALUE
+        block_end = min(block_start + chunks[0], length)
+        block_size = block_end - block_start
+        for linnum in range(block_start, block_end):
+            if (linnum % 1000 == 0):
+                print(f'    line number: {linnum:5d} out of {length}')
 
-        inarr = rec.SARRawSignalData[0, :]
+            # Adjust range line
+            rshift = int(np.rint((rec.SlantRangeToFirstSampleInm - r0) / dr))
 
-        if rshift >= 0:
-            write_arr[2*rshift:] = inarr[:2 * (width - rshift)]
-        else:
-            write_arr[:2*rshift] = inarr[-2 * rshift:]
+            inarr = rec.SARRawSignalData[0, :]
+
+            i = linnum - block_start
+            if rshift >= 0:
+                write_arr[i, 2*rshift:] = inarr[:2 * (width - rshift)]
+            else:
+                write_arr[i, :2*rshift] = inarr[-2 * rshift:]
+
+            # Read next record
+            if (linnum + 1) < length:
+                rec = image.readNextLine()
 
         # Apply absolute radiometric correction
         write_arr *= calibration_factor
 
         # Complex float 16 writes work with write_direct only
-        polimg.write_direct(write_arr.view(cpxtype), dest_sel=np.s_[linnum-1])
-
-        # Read next record
-        if linnum != length:
-            rec = image.readNextLine()
+        selection = slice(block_start, block_end)
+        z = write_arr.view(cpxtype)[:block_size]
+        polimg.write_direct(z, dest_sel=selection)
 
     if flag_first_image:
         sensing_end = sensing_start + datetime.timedelta(seconds=length / prf)

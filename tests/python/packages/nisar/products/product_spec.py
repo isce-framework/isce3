@@ -2,6 +2,7 @@ import textwrap
 import xml.etree.ElementTree as ET
 from collections.abc import Generator
 from contextlib import contextmanager
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import h5py
@@ -26,8 +27,9 @@ def gcov_product_spec() -> ProductSpec:
 @pytest.fixture
 def partial_gcov_product_spec() -> ProductSpec:
     xml = textwrap.dedent(
-        """
+        """\
         <?xml version="1.0"?>
+        <!-- product specification version is 1.2.0 -->
         <algorithm name="L2_GeocodedCovariance"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
           <product template="L2_GCOV_template">
@@ -58,11 +60,33 @@ def partial_gcov_product_spec() -> ProductSpec:
             </science>
           </product>
         </algorithm>
-        """.strip()
+        """
     )
-    element = ET.fromstring(xml)
-    tree = ET.ElementTree(element)
-    return ProductSpec(tree)
+    return ProductSpec.from_string(xml)
+
+
+@contextmanager
+def temporary_xml_file(contents: str) -> Generator[Path, None, None]:
+    """
+    Create a temporary XML file with the specified contents.
+
+    The file is automatically removed from the file system upon exiting the context
+    manager.
+
+    Parameters
+    ----------
+    contents : str
+        A string in XML syntax.
+
+    Yields
+    ------
+    Path
+        The XML file path.
+    """
+    with NamedTemporaryFile(suffix=".xml") as tmp_file:
+        path = Path(tmp_file.name)
+        path.write_text(contents)
+        yield path
 
 
 class TestProductSpec:
@@ -78,6 +102,22 @@ class TestProductSpec:
             ),
             contact="nisar-sds-ops@jpl.nasa.gov",
         )
+
+    @pytest.mark.parametrize("version", ["1.2.0", "1.2", "1.2.x", "1.2.3-rc1"])
+    def test_version(self, version: str):
+        xml_contents = textwrap.dedent(
+            f"""\
+            <?xml version="1.0"?>
+            <!-- product specification version is {version} -->
+            <algorithm name="L1_SingleLookComplex"
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="../../SDS/pix/schema.xsd">
+            </algorithm>
+            """
+        )
+        with temporary_xml_file(xml_contents) as xml_path:
+            product_spec = ProductSpec.from_file(xml_path)
+            assert product_spec.version == version
 
     def test_get_dataset_spec(self, gcov_product_spec: ProductSpec):
         name = "/science/LSAR/identification/absoluteOrbitNumber"
@@ -98,8 +138,9 @@ class TestProductSpec:
 
     def test_duplicate_dataset_specs(self):
         xml = textwrap.dedent(
-            """
+            """\
             <?xml version="1.0"?>
+            <!-- product specification version is 1.2.0 -->
             <algorithm name="L2_GeocodedCovariance"
                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
               <product template="L2_GCOV_template">
@@ -123,11 +164,9 @@ class TestProductSpec:
                 </science>
               </product>
             </algorithm>
-            """.strip()
+            """
         )
-        element = ET.fromstring(xml)
-        tree = ET.ElementTree(element)
-        product_spec = ProductSpec(tree)
+        product_spec = ProductSpec.from_string(xml)
 
         name = "/science/LSAR/identification/absoluteOrbitNumber"
         with pytest.raises(ValueError, match="^multiple xml elements found matching"):
@@ -180,6 +219,24 @@ class TestDatasetSpec:
             sample_stddev="Standard deviation of the numeric data points",
             valid_min="0",
             DIMENSION_LIST="HDF5 internal attribute",
+            isReceiveOnlyChannel1=(
+                '"True" if the image from the first polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
+            isReceiveOnlyChannel2=(
+                '"True" if the image from the second polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
             _FillValue="nan",
             grid_mapping="projection",
             units="1",
@@ -206,7 +263,26 @@ class TestDatasetSpec:
             mean_imag_value=template.format("Arithmetic average", "imaginary"),
             min_imag_value=template.format("Minimum value", "imaginary"),
             max_imag_value=template.format("Maximum value", "imaginary"),
-            sample_stddev_imag=template.format("Standard deviation", "imaginary"),
+            sample_stddev_imag=template.format("Standard deviation",
+                                               "imaginary"),
+            isReceiveOnlyChannel1=(
+                '"True" if the image from the first polarimetric '
+                'channel (HH) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
+            isReceiveOnlyChannel2=(
+                '"True" if the image from the second polarimetric '
+                'channel (VV) contributing to the covariance term '
+                'was acquired in a receive-only configuration '
+                '(transmit disabled), thus recording only thermal '
+                'noise, RFI, leakage, and/or internal calibration '
+                'signals. "False" if acquired in a standard '
+                'configuration where both transmit and receive are '
+                'enabled'),
             _FillValue="(nan+nan*j)",
             grid_mapping="projection",
             units="1",
@@ -227,29 +303,29 @@ class TestDatasetSpec:
             epsg_code="Projection EPSG code",
             false_easting=(
                 "The value added to all abscissa values in the rectangular coordinates"
-                " for a map projection."
+                " for a map projection"
             ),
             false_northing=(
                 "The value added to all ordinate values in the rectangular coordinates"
-                " for a map projection."
+                " for a map projection"
             ),
             grid_mapping_name="Grid mapping variable name",
             inverse_flattening="Inverse flattening of the ellipsoidal figure",
             latitude_of_projection_origin=(
                 "The latitude chosen as the origin of rectangular coordinates for a map"
-                " projection."
+                " projection"
             ),
             longitude_of_projection_origin=(
                 "The longitude, with respect to Greenwich, of the prime meridian"
-                " associated with the geodetic datum."
+                " associated with the geodetic datum"
             ),
             longitude_of_central_meridian=(
                 "The line of longitude at the center of a map projection generally used"
-                " as the basis for constructing the projection."
+                " as the basis for constructing the projection"
             ),
             scale_factor_at_central_meridian=(
                 "A multiplier for reducing a distance obtained from a map by"
-                " computation or scaling to the actual distance along the central meridian."
+                " computation or scaling to the actual distance along the central meridian"
             ),
             semi_major_axis="Semi-major axis",
             spatial_ref="Spatial reference",

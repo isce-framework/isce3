@@ -63,6 +63,11 @@ runconfig:
             product_type: enum('GSLC')
             product_version: str('^\d+\.\d+\.\d+$', required=False)
             product_doi: str(required=False)
+
+            # Data access for the static layers product associated with the output
+            # product (URL or DOI)
+            static_layers_data_access: str(required=False)
+
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', 'OD', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
@@ -203,6 +208,7 @@ logging_options:
 qa_options:
     # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
     workflows: include('workflows_options', required=False)
+    software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('qa_reports_options', required=False)
     point_target_analyzer: include('point_target_analyzer_options', required=False)
@@ -213,25 +219,34 @@ workflows_options:
     qa_reports: bool(required=False)
     point_target_analyzer: bool(required=False)
 
+qa_software_config_options:
+    use_cache: bool(required=False)
+    delete_qa_scratch_files: bool(required=False)
+
 qa_validation_options:
-    metadata_cubes_fail_if_all_nan: bool(required=False)
+    metadata_luts_fail_if_all_nan: bool(required=False)
 
 qa_reports_options:
-    backscatter_img:
-        linear_units: bool(required=False)
-        nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
-        nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
-        longest_side_max: int(min=1, required=False)
-        percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
-        gamma: num(min=0.0, required=False)
-        nan_color_in_pdf: str(required=False)
-        tile_shape: list(int(min=-1), min=2, max=2, required=False)
-    histogram:
-        decimation_ratio: list(int(min=1), min=2, max=2, required=False)
-        backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
-        phase_histogram_y_axis_range: list(any(num(), null()), min=2, max=2, required=False)
-        phs_in_radians: bool(required=False)
-        tile_shape: list(int(min=-1), min=2, max=2, required=False)
+    backscatter_img: include('backscatter_img_options', required=False)
+    histogram: include('histogram_options', required=False)
+
+backscatter_img_options:
+    linear_units: bool(required=False)
+    nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
+    nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
+    longest_side_max: int(min=1, required=False)
+    percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
+    gamma: num(min=0.0, required=False)
+    nan_color_in_pdf: str(required=False)
+    tile_shape: list(int(min=-1), min=2, max=2, required=False)
+    output_individual_pngs: bool(required=False)
+
+histogram_options:
+    decimation_ratio: list(int(min=1), min=2, max=2, required=False)
+    backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+    phase_histogram_y_axis_range: list(any(num(), null()), min=2, max=2, required=False)
+    phs_in_radians: bool(required=False)
+    tile_shape: list(int(min=-1), min=2, max=2, required=False)
 
 point_target_analyzer_options:
     nchip: int(min=1, required=False)
@@ -301,15 +316,6 @@ geocode_options:
         x_abs: num(required=False)
 
 ceos_analysis_ready_data_options:
-
-    # Data access for the source data (URL or DOI)
-    source_data_access: str(required=False)
-
-    # Data access for the output product (URL or DOI)
-    product_data_access: str(required=False)
-
-    # Data access for the static layers product associated with the output product (URL or DOI)
-    static_layers_data_access: str(required=False)
 
     # Estimated geometric accuracy (bias and standard deviation)
     # in meters in the X- and Y-directions over the coordinate

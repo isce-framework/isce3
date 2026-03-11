@@ -5,6 +5,8 @@ from osgeo import osr
 import pysolid
 from scipy.interpolate import RegularGridInterpolator
 
+import journal
+
 import isce3
 from isce3.geometry import get_enu_vec_from_lat_lon
 
@@ -44,6 +46,9 @@ def solid_earth_tides(
     az_set: np.ndarray
         2D array with SET displacement along azimuth
     """
+    info_channel = journal.info("isce3.solid_earth_tides")
+    info_channel.log("Computing Solid Earth Tides")
+
     # Produce geogrid with EPSG 4326 and 0.23 deg / ~5.1km resolution to
     # compute Solid Earth Tide over. Apply 0.23 deg margin geogrid to ensure
     # SET grid covers lat/lon grid to be interpolated to.
@@ -55,6 +60,14 @@ def solid_earth_tides(
                                             -grid_size,
                                             4326,
                                             margin=grid_size)
+
+    info_channel.log(f'SET geogrid width: {geogrid.width}\n'
+                     f'SET geogrid length: {geogrid.length}\n'
+                     f'SET geogrid start x: {geogrid.start_x}\n'
+                     f'SET geogrid start y: {geogrid.start_y}\n'
+                     f'SET geogrid spacing x: {geogrid.spacing_x}\n'
+                     f'SET geogrid spacing y: {geogrid.spacing_y}\n'
+                     f'SET geogrid EPSG code: {geogrid.epsg}')
 
     geogrid_attrs = {
         "LENGTH": geogrid.length,

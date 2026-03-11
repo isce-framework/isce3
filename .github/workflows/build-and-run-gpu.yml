@@ -1,0 +1,127 @@
+name: Build-And-Run Tests on GPU
+
+on:
+  pull_request:
+    # Trigger the workflow whenever a PR receives a special label
+    # in addition to the default triggering events.
+    types: [ labeled, opened, synchronize, reopened ]
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_and_test_gpu:
+    # Trigger on PRs with specific label
+    if: contains(github.event.pull_request.labels.*.name, 'GPU')
+
+    env:
+      ALL_EXCLUDE: stage_dem|pybind\.unwrap\.phass
+      # stage_dem requires AWS permissions to access the S3 bucket containing the DEM data.
+      # pybind.unwrap.phass occasionally segfaults on GHA runners.
+
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - label: Linux
+            runner: ubuntu-gpu-t4
+            ctest_exclude: -E ".*($ALL_EXCLUDE)"
+        deps:
+          - label: Latest
+            env-file: environment.yml
+            extra-specs: ""
+        # It would be ideal to test with both Release and Debug build types, but GPU runners cost per-minute;
+        # to avoid excess runtime costs, we compromise to run with RelWithDebInfo build type, which runs fast
+        # but still produces debugging checks.
+        build-type: [ RelWithDebInfo ]
+
+    name: Build And Test on GPU - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
+    runs-on: ${{ matrix.os.runner }}
+    steps:
+      # Typical github repo checkout step
+      - name: Github Repo Checkout
+        uses: actions/checkout@v3
+
+      # Prints the variables for this run to simplify debugging
+      - name: Print Run Variables
+        run: |
+          echo Runner OS: ${{ matrix.os.runner }}
+          echo Environment: ${{ matrix.deps.env-file }}
+          echo Build Type: ${{ matrix.build-type }}
+          echo ctest exclude command: ${{ matrix.os.ctest_exclude }}
+          echo Depenencies: ${{ matrix.deps.extra-specs }}
+
+      # Set the conda environment up using Mamba and the dependencies for this run
+      - name: Setup Environment
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: ${{ matrix.deps.env-file }}
+          environment-name: isce3
+          create-args: >-
+            ${{ matrix.deps.extra-specs }}
+
+      # Fix missing conda command on macOS
+      - name: macOS conda command fixup
+        if: runner.os == 'macOS'
+        run: |
+          micromamba install conda
+
+      # Preset environment variables in the conda environment for later steps
+      - name: Environment Variables Preset
+        run: |
+          conda env config vars set ISCE3_PREFIX=$GITHUB_WORKSPACE/install
+          conda env config vars set PYTHONPATH=$PYTHONPATH:$GITHUB_WORKSPACE/install/packages
+
+      - name: Install CUDA Toolkit
+        run: |
+          micromamba install -c nvidia cuda
+
+      # Get cmake command configured with relevant build information
+      - name: Configure cmake
+        run: |
+          # Hack: fix for missing cstdint include in pybind11 headers
+          CFLAGS="$CFLAGS -include cstdint" \
+          cmake \
+            -B build \
+            -G Ninja \
+            -DWITH_CUDA=YES \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+            -DCMAKE_INSTALL_PREFIX=$ISCE3_PREFIX \
+            -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
+            .
+
+      # Build the project
+      - name: Build Project
+        run: |
+          cmake --build build --parallel
+
+      # Install the project
+      - name: Install Project
+        run: |
+          cmake --build build --target install --parallel
+
+      # Set the LD_LIBRARY_PATH and DYLD_LIBRARY_PATH variables
+      - name: Set Link Library Environment Variable
+        # Append to DYLD_LIBRARY_PATH on macOS or to LD_LIBRARY_PATH on Linux.
+        # Depending on the Linux flavor, the install dir name could be 'lib64' or 'lib'.
+        run: |
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            conda env config vars set DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$ISCE3_PREFIX/lib
+          elif test -d "$ISCE3_PREFIX/lib64"; then
+            conda env config vars set LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ISCE3_PREFIX/lib64
+          else
+            conda env config vars set LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ISCE3_PREFIX/lib
+          fi
+
+      # Run ctest on the project with the intended test exclusions for this run
+      - name: Test Project
+        run: |
+          cd build
+          export GDAL_MEM_ENABLE_OPEN=YES
+          ctest --output-on-failure ${{ matrix.os.ctest_exclude }}

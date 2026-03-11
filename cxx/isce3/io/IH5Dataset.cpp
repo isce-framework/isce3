@@ -385,27 +385,56 @@ void * IH5Dataset::GetInternalHandle(const char *)
 /*                          GetGeoTransform()                           */
 /************************************************************************/
 
-CPLErr IH5Dataset::GetGeoTransform( double *padfGeoTransform )
+#if GDAL_VERSION_MAJOR >= 4 || (GDAL_VERSION_MAJOR == 3 && GDAL_VERSION_MINOR >= 12)
+// GDAL 3.12+ API using GDALGeoTransform class
+CPLErr IH5Dataset::GetGeoTransform( GDALGeoTransform &gt ) const
 {
-    memcpy( padfGeoTransform, adfGeoTransform, sizeof(double) * 6 );
+    gt = GDALGeoTransform(adfGeoTransform);
     if( bGeoTransformSet )
         return CE_None;
 
     return CE_Failure;
 }
+#else
+// GDAL < 3.12 API using double array
+CPLErr IH5Dataset::GetGeoTransform( double *padfTransform )
+{
+    memcpy(padfTransform, adfGeoTransform, sizeof(double) * 6);
+    if( bGeoTransformSet )
+        return CE_None;
+
+    return CE_Failure;
+}
+#endif
 
 /************************************************************************/
 /*                          SetGeoTransform()                           */
 /************************************************************************/
 
-CPLErr IH5Dataset::SetGeoTransform( double *padfGeoTransform )
-
+#if GDAL_VERSION_MAJOR >= 4 || (GDAL_VERSION_MAJOR == 3 && GDAL_VERSION_MINOR >= 12)
+// GDAL 3.12+ API using GDALGeoTransform class
+CPLErr IH5Dataset::SetGeoTransform( const GDALGeoTransform &gt )
 {
-    memcpy( adfGeoTransform, padfGeoTransform, sizeof(double) * 6 );
+    adfGeoTransform[0] = gt.xorig;
+    adfGeoTransform[1] = gt.xscale;
+    adfGeoTransform[2] = gt.xrot;
+    adfGeoTransform[3] = gt.yorig;
+    adfGeoTransform[4] = gt.yrot;
+    adfGeoTransform[5] = gt.yscale;
     bGeoTransformSet = TRUE;
 
     return CE_None;
 }
+#else
+// GDAL < 3.12 API using double array
+CPLErr IH5Dataset::SetGeoTransform( double *padfTransform )
+{
+    memcpy(adfGeoTransform, padfTransform, sizeof(double) * 6);
+    bGeoTransformSet = TRUE;
+
+    return CE_None;
+}
+#endif
 
 /************************************************************************/
 /*                            GetGCPCount()                             */

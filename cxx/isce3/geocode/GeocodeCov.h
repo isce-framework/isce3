@@ -130,6 +130,8 @@ public:
      * the `output_raster` (e.g., gamma0) to that of the `input_raster` (e.g.,
      * beta0). These values are only computed if `flag_apply_rtc` is `true`
      * and `input_rtc` is not provided.
+     * @param[out] output_rtc_sigma    Output RTC area factor to sigma-0
+     * (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -182,6 +184,7 @@ public:
             const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* output_rtc_sigma = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             std::optional<bool> apply_valid_samples_sub_swath_masking = std::nullopt,
@@ -272,6 +275,8 @@ public:
      * the `output_raster` (e.g., gamma0) to that of the `input_raster` (e.g.,
      * beta0). These values are only computed if `flag_apply_rtc` is `true`
      * and `input_rtc` is not provided.
+     * @param[out] output_rtc_sigma    Output RTC area factor to sigma-0
+     * (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -315,6 +320,7 @@ public:
             const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* output_rtc_sigma = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             std::optional<bool> apply_valid_samples_sub_swath_masking = {},
@@ -412,6 +418,8 @@ public:
      * the `output_raster` (e.g., gamma0) to that of the `input_raster` (e.g.,
      * beta0). These values are only computed if `flag_apply_rtc` is `true`
      * and `input_rtc` is not provided.
+     * @param[out] output_rtc_sigma    Output RTC area factor to sigma-0
+     * (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -462,6 +470,7 @@ public:
             const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* output_rtc_sigma = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             std::optional<bool> apply_valid_samples_sub_swath_masking = std::nullopt,
@@ -629,7 +638,8 @@ private:
             isce3::io::Raster* out_geo_nlooks, isce3::io::Raster* out_geo_rtc,
             isce3::io::Raster* out_geo_rtc_gamma0_to_sigma0,
             isce3::core::ProjectionBase* proj, bool flag_apply_rtc,
-            bool flag_rtc_raster_is_in_memory, isce3::io::Raster* rtc_raster,
+            bool flag_rtc_raster_is_in_memory, bool flag_rtc_sigma0_raster_is_in_memory,
+            isce3::io::Raster* rtc_raster, isce3::io::Raster* rtc_sigma0_raster,
             const isce3::core::LUT2d<double>& az_time_correction,
             const isce3::core::LUT2d<double>& slant_range_correction,
             isce3::io::Raster& input_raster,

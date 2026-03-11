@@ -41,7 +41,7 @@ class SplitSpectrumRunConfig(RunConfig):
             raise ValueError(err_str)
 
         # check runconfigs using split_main_band in ionosphere
-        if iono_method == 'split_main_band':
+        if iono_method in ['split_main_band', 'main_diff_low_high_subband']:
             split_main_band_cfg_check(self.cfg)
         else:
             err_str = f'Split_spectrum is not needed '\

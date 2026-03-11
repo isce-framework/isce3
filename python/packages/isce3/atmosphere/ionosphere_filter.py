@@ -1,7 +1,8 @@
 import os
 
-from multiprocessing import Pool
 import h5py
+import journal
+from multiprocessing import Pool
 import numpy as np
 from osgeo import gdal
 from scipy.interpolate import griddata
@@ -145,15 +146,11 @@ class IonosphereFilter:
                 mask1 = mask0 == 0
 
                 data_block[mask0] = np.nan
-                data_sig_block[mask0] = np.nan
 
                 # remove small areas from images to avoid
                 # the possibility of unwrap errors
                 data_block = remove_small_components(
                     data_block,
-                    min_cluster_pixels=min_cluster_pixels)
-                data_sig_block = remove_small_components(
-                    data_sig_block,
                     min_cluster_pixels=min_cluster_pixels)
 
                 if self.filling_method == "smoothed":
@@ -169,8 +166,8 @@ class IonosphereFilter:
                     filled_data_sig = fill_method(data_sig_block, weight)
 
                 else:
-                    filled_data = fill_method(data_block)
                     filled_data_sig = fill_method(data_sig_block)
+                    filled_data = fill_method(data_block)
 
                 if iter_cnt > 0:
                     # Replace the valid pixels with original unfiltered data
@@ -761,7 +758,10 @@ def fill_with_distance(ifg,
     return interpolated_ifg
 
 
-def convolve_preserve_nan(image, kernel):
+def convolve_preserve_nan(image,
+                          kernel,
+                          mode: str = "constant",
+                          cval: float = 0.0):
     """
     Convolve an image with a kernel while preserving NaN values.
 
@@ -790,15 +790,13 @@ def convolve_preserve_nan(image, kernel):
     image_filled = np.where(valid_mask, image, 0)
 
     # Step 3: Apply convolution to the valid mask
-    valid_mask_convolved = convolve(valid_mask.astype(float),
-                                    kernel,
-                                    mode='constant',
-                                    cval=0.0)
-
+    valid_mask_convolved = convolve(valid_mask.astype(float), kernel,
+                                    mode=mode, cval=cval)
+    # valid_mask_convolved = np.ones_like(image)
     # Step 4: Apply convolution to the filled image
     convolved_image = convolve(image_filled,
                                kernel,
-                               mode='constant',
+                               mode=mode,
                                cval=0.0)
 
     # Step 5: Normalize the convolution result
@@ -943,6 +941,9 @@ def remove_small_components(image, min_cluster_pixels):
         A 2D array of the same shape as the input image, where small clusters
         have been removed and replaced with NaN.
     """
+    warning_channel = journal.warning("ionosphere_filter.remove_small_components")
+    info_channel = journal.info("ionosphere_filter.remove_small_components")
+
     if not isinstance(min_cluster_pixels, int):
         raise TypeError("min_cluster_pixels must be an int")
     if min_cluster_pixels < 0:
@@ -952,17 +953,18 @@ def remove_small_components(image, min_cluster_pixels):
     n_valid = int(valid_mask.sum())
 
     if min_cluster_pixels == 0:
-        print("[remove_small_components] min_cluster_pixels == 0 → "
-              "no components will be removed.")
+        info_channel.log("min_cluster_pixels == 0 → "
+                         "no components will be removed.")
         return image.copy()
 
     if min_cluster_pixels >= n_valid:
-        raise ValueError(
-            f"min_cluster_pixels ({min_cluster_pixels}) must be smaller than "
+        warning_channel.log(
+            f"min_cluster_pixels ({min_cluster_pixels}) are larger than "
             f"the total number of valid pixels ({n_valid})."
         )
+    # 4-connected by default
+    labeled_image, _ = label(valid_mask)
 
-    labeled_image, _ = label(valid_mask)           # 4-connected by default
     object_slices = find_objects(labeled_image)
 
     cleaned_image = image.copy()

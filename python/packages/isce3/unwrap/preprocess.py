@@ -328,17 +328,16 @@ def project_map_to_radar(cfg, input_data_path, freq):
         # open input raster for reading
         input_data_raster = gdal.Open(input_path)
         input_data = input_data_raster.ReadAsArray()
-
+        rows, cols = input_data.shape
         # if multi-looks are 1 or 2,
         # slice_az_end and slice_rg_end are 0. To avoid the positive
-        # number, we take None. 
+        # number, we take None.
+        az_size = rows // az_looks
+        rg_size = cols // rg_looks
         slice_az_start = int(az_looks / 2)
-        slice_az_end = None \
-            if az_looks in [1, 2] else -round(az_looks / 2) + 1
-
+        slice_az_end = az_size * az_looks
         slice_rg_start = int(rg_looks / 2)
-        slice_rg_end = None \
-            if rg_looks in [1, 2] else -round(rg_looks / 2) + 1
+        slice_rg_end = rg_size * rg_looks
 
         # take center pixels of block to decimate
         decimated_arr = \
@@ -377,3 +376,48 @@ def project_map_to_radar(cfg, input_data_path, freq):
 
     # stack to make whole then return
     return output_arrays
+
+
+def interpret_subswath_mask(subswath_mask, nodata=255):
+    """
+    Interprets a subswath mask integer by decoding its digits into boolean 
+    flags indicating reference validity, secondary validity, and water
+    presence.
+
+    Parameters
+    ----------
+    subswath_mask : numpy.array
+        Each digit represents a specific flag:
+        - Units digit (1s place): Secondary subswath mask
+            Non-zero indicates valid; zero indicates invalid.
+        - Tens digit (10s place): Reference subswath mask
+            Non-zero indicates valid; zero indicates invalid.
+        - Hundreds digit (100s place): Water presence flag.
+            Non-zero indicates presence of water; zero indicates absence.
+    nodata : int, default 255
+
+    Returns
+    -------
+    reference_valid : bool
+        True if the reference is valid (tens digit is non-zero),
+        False otherwise.
+    secondary_valid : bool
+        True if the secondary is valid (units digit is non-zero),
+        False otherwise.
+    water : bool
+        True if water is present (hundreds digit is non-zero),
+        False otherwise.
+    """
+    arr = np.asarray(subswath_mask)
+
+    nd = (arr == nodata)
+
+    secondary_valid = subswath_mask % 10 != 0
+    reference_valid = (subswath_mask // 10) % 10 != 0
+    water = (subswath_mask // 100) % 10 != 0
+
+    secondary_valid = np.where(nd, False, secondary_valid)
+    reference_valid = np.where(nd, False, reference_valid)
+    water = np.where(nd, False, water)
+
+    return reference_valid, secondary_valid, water

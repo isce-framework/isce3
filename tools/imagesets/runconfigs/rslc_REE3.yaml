@@ -63,8 +63,17 @@ runconfig:
                 # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
                 # eigenvalue decomposition.
                 mitigation_algorithm: ST-EVD
-                # Number of subdivisions in range.  Defaults to 1.
-                num_range_blocks: 1
+                # Number of range samples per range block when data blocking
+                # is applied in range direction for sample covariance matrix
+                # estimation. It is recommended that this parameter is at least
+                # 5 x cpi_len to avoid discrepancy from true covariance matrix.
+                # In addition, in order to avoid a run-time error for ST-EVD,
+                # this parameter needs to be at least 2 x cpi
+                num_samples_rng_blk: 256
+                # Ignore any values passed in for parameter num_samples_rng_blk.
+                # Instead use all samples in the pulses for detection if this is true.
+                use_entire_pulse: False
+
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.
                     cpi_length: 32

@@ -1,4 +1,5 @@
 import numpy as np
+from nisar.products.utils import to_bytes
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import (get_cfg_freq_pols,
                                      get_pixel_offsets_dataset_shape,
@@ -42,9 +43,9 @@ class ROFFWriter(L1InSARWriter):
         super().add_root_attrs()
 
         # Add additional attributes
-        self.attrs["title"] = np.bytes_("NISAR L1 ROFF Product")
+        self.attrs["title"] = to_bytes("NISAR L1 ROFF Product")
         self.attrs["reference_document"] = \
-            np.bytes_("D-105009 NISAR NASA SDS"
+            to_bytes("D-105009 NISAR NASA SDS"
                        " Product Specification L1 Range Doppler Pixel Offsets")
 
     def add_coregistration_to_algo_group(self):
@@ -210,14 +211,14 @@ class ROFFWriter(L1InSARWriter):
                 "rangeBandwidth",
             )
             pixeloffsets_group['rangeBandwidth'].attrs['description'] = \
-                np.bytes_(f'Processed slant range bandwidth for frequency {freq} pixel offsets layers')
+                to_bytes(f'Processed slant range bandwidth for frequency {freq} pixel offsets layers')
             swath_frequency_group.copy(
                 "processedAzimuthBandwidth",
                 pixeloffsets_group,
                 "azimuthBandwidth",
             )
             pixeloffsets_group['azimuthBandwidth'].attrs['description'] = \
-                np.bytes_(f'Processed azimuth bandwidth for frequency {freq} pixel offsets layers')
+                to_bytes(f'Processed azimuth bandwidth for frequency {freq} pixel offsets layers')
 
             for layer in proc_cfg["offsets_product"]:
                 if layer.startswith("layer"):
@@ -379,11 +380,11 @@ class ROFFWriter(L1InSARWriter):
             for layer in proc_cfg["offsets_product"]
             if layer.startswith("layer")]
 
-        list_of_layers = np.bytes_(layers)
+        list_of_layers = to_bytes(layers)
         freq_group.require_dataset('listOfLayers',
                                     shape=list_of_layers.shape,
                                     dtype=list_of_layers.dtype,
                                     data=list_of_layers)
 
         freq_group['listOfLayers'].attrs['description'] =\
-            np.bytes_('List of pixel offsets layers')
+            to_bytes('List of pixel offsets layers')

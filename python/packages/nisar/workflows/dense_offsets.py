@@ -202,7 +202,21 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
 
     if cfg['deramping_method'] is not None:
         deramp = cfg['deramping_method']
-        ampcor_obj.derampMethod = 0 if deramp == "magnitude" else 1
+        if deramp == "magnitude":
+            ampcor_obj.derampMethod = 0
+        elif deramp == "complex":
+            ampcor_obj.derampMethod = 1
+        else: # skip deramping
+            ampcor_obj.derampMethod = 2
+
+    if cfg['deramping_axis'] is not None:
+        deramp_axis = cfg['deramping_axis']
+        if deramp_axis == "azimuth":
+            ampcor_obj.derampAxis = 0
+        elif deramp_axis == "range":
+            ampcor_obj.derampAxis = 1
+        else: # both directions
+            ampcor_obj.derampAxis = 2
 
     if cfg['correlation_statistics_zoom'] is not None:
         ampcor_obj.corrStatWindowSize = cfg['correlation_statistics_zoom']

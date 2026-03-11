@@ -25,7 +25,7 @@ runconfig:
             # REQUIRED - Digital elevation model
             dem_file: str()
 
-            # PLACEHOLDER - Digital elevation model file description, optional
+            # Digital elevation model file description, optional
             dem_file_description: str(required=False)
 
             # Water distance map used for water mask in unwrapping and
@@ -34,6 +34,10 @@ runconfig:
             # 101-200 (distance from inlandwater boundary)
 
             water_mask_file: str(required=False)
+
+            # Water mask file description, optional
+            water_mask_file_description: str(required=False)
+
             orbit_files: include('external_orbit_options', required=False)
 
             # Troposphere weather model
@@ -72,6 +76,12 @@ runconfig:
             product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'ROFF_RIFG_RUNW_GOFF_GUNW', 'ROFF', 'GOFF', 'ROFF_GOFF')
             product_version: include('product_version_options', required=False)
             product_doi: include('product_doi_options', required=False)
+            # Data access for the static layers product associated with the
+            # output product (URL or DOI). If not provided, the corresponding
+            # metadata field will be set to "(NOT SPECIFIED)".
+            # If this string contains the substring "{granule_id}", that substring
+            # will be replaced with the granule ID.
+            static_layers_data_access: str(required=False)
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', 'OD', required=False)
             product_accuracy: enum('P','M','N','F', required=False)
@@ -182,6 +192,8 @@ phase_unwrap_options:
 
     preprocess_wrapped_phase: include('preprocess_wrapped_phase_options', required=False)
 
+    bridge: include('bridge_options', required=False)
+
 icu_options:
     correlation_threshold_increments: num(min=0, max=1, required=False)
     seed: int(min=0, required=False)
@@ -232,7 +244,7 @@ preprocess_wrapped_phase_options:
     distance_interpolator: include('distance_interp_options', required=False)
 
 unwrap_mask_options:
-    mask_type: enum('median_filter', 'coherence', 'water', required=False)
+    mask_type: enum('median_filter', 'coherence', 'water', 'subswath_mask', required=False)
     mask_path: str(required=False)
     ocean_water_buffer: int(min=0, max=100, required=False)
     inland_water_buffer: int(min=0, max=100, required=False)
@@ -241,6 +253,20 @@ unwrap_mask_options:
 
 distance_interp_options:
     distance: int(required=False)
+
+bridge_options:
+    enabled: bool(required=False)
+    # Maximum radius used when bridging disconnected regions.
+    bridge_radius: num(min=1, required=False)
+    # Size of the structuring element used for erosion during bridge labeling.
+    bridge_erosion_size: num(min=1, required=False)
+    # Minimum number of pixel of connected components to retain during bridge algorithm.
+    bridge_minimum_samples: num(min=0, required=False)
+    # Ramp type to correct before bridge algoritm
+    bridge_ramp_type: enum('None', 'linear', 'quadratic', 'linear_range', 'linear_azimuth', 'quadratic_range', 'quadratic_azimuth', required=False)
+    # During deramping, uniform sampling is applied
+    # when number of samples is larger than maximum pixel
+    bridge_ramp_maximum_pixel: num(min=0, required=False)
 
 coarse_resample_options:
     # Path to coarse/fine offset directory
@@ -319,8 +345,11 @@ dense_offsets_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-    deramping_method: enum('magnitude', 'complex', required=False)
+    # Deramp data prior to FFT: 'magnitude' , 'complex' (linear phase ramp), or 'complex_no_deramp'
+    deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
+
+    # Deramp data axis prior to FFT: range, azimuth, or both
+    deramping_axis: enum('range', 'azimuth', 'both', required=False)
 
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
@@ -399,8 +428,11 @@ offsets_product_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-    deramping_method: enum('magnitude', 'complex', required=False)
+    # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
+    deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
+
+    # Deramp data axis prior to FFT: range, azimuth, or both
+    deramping_axis: enum('range', 'azimuth', 'both', required=False)
 
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
@@ -455,10 +487,10 @@ offset_layer_options:
     window_azimuth: int(min=16, max=512, required=False)
 
     # Number of columns for search chip/template in secondary image
-    half_search_range: int(min=4, max=32, required=False)
+    half_search_range: int(min=4, max=64, required=False)
 
     # Number of lines for search chip/template in secondary image
-    half_search_azimuth: int(min=4, max=32, required=False)
+    half_search_azimuth: int(min=4, max=64, required=False)
 
 rubbersheet_options:
     # Path to dense offsets outputs (offsets, snr, covariance).
@@ -526,6 +558,7 @@ rubbersheet_options:
     median: include('offset_filter_options', required=False)
     boxcar: include('offset_filter_options', required=False)
     gaussian: include('gaussian_filter_options', required=False)
+    polyfitting: include('polyfitting_options', required=False)
 
 fill_smoothed_options:
     # Number of fill smoothed iterations
@@ -550,6 +583,17 @@ gaussian_filter_options:
     filter_size_azimuth: int(min=1, required=False)
     # Number of columns for 1D gaussian kernel
     filter_size_range: int(min=1, required=False)
+
+polyfitting_options:
+    enabled: bool(required=False)
+    # The degrees for the polyfitting
+    degree: num(min=1, required=False)
+    # Critical value for the w-test to remove the outliers
+    critical_value: num(min=0, required=False)
+    # Number of samples along the range in pixels for polyfitting
+    samples_along_range: num(min=0, required=False)
+    # Number of samples  along the azimuth in pixels for polyfitting
+    samples_along_azimuth: num(min=0, required=False)
 
 crossmul_options:
     # Path to HDF5 file or directory with coregistered SLCs
@@ -682,11 +726,15 @@ bandpass_options:
 ionosphere_phase_correction_options:
     # Boolean flag to enable/disable ionosphere phase correction
     enabled: bool(required=False)
-    # 'split_main_band' splits the main range bandwidth into a low and high subband
-    # being 1/3 (fixed for now) of the total main range spectrum.
-    # 'main_side_band' uses the additional NISAR 5 MHz side-band to estimate the
-    # ionosphere phase screen. Main and side-bands are intended to be at the same polarization
-    spectral_diversity: enum('split_main_band', 'main_side_band', 'main_diff_ms_band', required=False)
+    # - 'split_main_band' splits the main range bandwidth into a low and high subband
+    #    being 1/3 (fixed for now) of the total main range spectrum.
+    # - 'main_diff_low_high_subband' uses the main band and difference between low and high
+    #    subbands after splitting main band
+    # - 'main_side_band' uses the additional NISAR side-band to estimate the
+    #    ionosphere phase screen. Main and side-bands are intended to be at the same polarization
+    # - 'main_diff_ms_band' uses the additional NISAR side-band to estimate the ionosphere
+    #    phase screen by utilzing main band and difference between main and side band
+    spectral_diversity: enum('split_main_band', 'main_diff_low_high_subband', 'main_side_band', 'main_diff_ms_band', required=False)
     split_range_spectrum: include('split_range_spectrum_options', required=False)
     list_of_frequencies: include('ionosphere_freq_pol_options', required=False)
     dispersive_filter: include('dispersive_filter_options', required=False)
@@ -711,7 +759,7 @@ dispersive_filter_options:
     #   When multiple validation sources are enabled, take the intersection of
     #   their invalid masks to form a combined mask.
     #   Masked areas are then filled using spatial interpolation.
-    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', required=False)
+    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', 'subswath_mask', required=False)
     # Median filter size for mask generation
     median_filter_size: num(min=1, required=False)
     # Median filter threshold for mask generation
@@ -844,6 +892,7 @@ qa_options:
 
 rifg_options:
     workflows: include('workflows_options', required=False)
+    software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('rifg_qa_reports_options', required=False)
 
@@ -856,6 +905,7 @@ rifg_qa_reports_options:
 
 runw_options:
     workflows: include('workflows_options', required=False)
+    software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('runw_qa_reports_options', required=False)
 
@@ -871,6 +921,7 @@ runw_qa_reports_options:
 
 gunw_options:
     workflows: include('workflows_options', required=False)
+    software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('gunw_qa_reports_options', required=False)
 
@@ -887,11 +938,13 @@ gunw_qa_reports_options:
 
 roff_options:
     workflows: include('workflows_options', required=False)
+    software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('offsets_qa_reports_options', required=False)
 
 goff_options:
     workflows: include('workflows_options', required=False)
+    software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
     qa_reports: include('offsets_qa_reports_options', required=False)
 
@@ -906,8 +959,12 @@ workflows_options:
     validate: bool(required=False)
     qa_reports: bool(required=False)
 
+qa_software_config_options:
+    use_cache: bool(required=False)
+    delete_qa_scratch_files: bool(required=False)
+
 qa_validation_options:
-    metadata_cubes_fail_if_all_nan: bool(required=False)
+    metadata_luts_fail_if_all_nan: bool(required=False)
 
 qa_phase_img_options:
     rewrap: num(min=0.0, required=False)
@@ -930,13 +987,9 @@ qa_cc_options:
     max_num_cc: int(min=0.0, required=False)
 
 qa_browse_png_wrapped_options:
-    browse_image: enum('phase', 'hsi', required=False)
-    equalize_browse: bool(required=False)
     longest_side_max: int(min=1, required=False)
 
 qa_browse_png_unwrapped_options:
-    browse_image: enum('phase', 'hsi', required=False)
-    equalize_browse: bool(required=False)
     longest_side_max: int(min=1, required=False)
     rewrap: num(min=0.0, required=False)
 
@@ -1080,6 +1133,9 @@ posting_options:
     y_posting: num(min=0, required=False)
 
 worker_options:
+    # Enable/disable the intermediate files removal
+    intermediate_files_removal_enabled: bool(required=False)
+
     # Enable/disable internet connection (e.g. for download DEM)
     internet_access: bool(required=False)
 

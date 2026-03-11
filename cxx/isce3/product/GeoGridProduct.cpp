@@ -10,7 +10,7 @@ GeoGridProduct(isce3::io::IH5File & file) {
     std::string base_dir = "/science/";
     isce3::io::IGroup base_group = file.openGroup(base_dir);
 
-    // Locate the identificaton group
+    // Locate the identification group
     auto identification_vector = isce3::product::findGroupPath(base_group, "identification");
     if (identification_vector.size() == 0) {
         std::string error_msg = ("ERROR identification group not found in " +

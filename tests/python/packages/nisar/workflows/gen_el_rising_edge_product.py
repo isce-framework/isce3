@@ -26,6 +26,7 @@ class TestGenElRisingEdgeProductNisar:
         freq_band=None, txrx_pol=None, dem_file=None, no_dbf_norm=False,
         az_block_dur=2.0, out_path='.', ref_height=0.0, plot=False,
         orbit_file=None, attitude_file=None, no_weight=False,
+        time_start=0, time_dur_max=None
     )
 
     def test_correct_args(self):
@@ -51,6 +52,11 @@ class TestGenElRisingEdgeProductNisar:
         self.args.no_weight = False
         gen_el_rising_edge_product(self.args)
 
+    def test_limit_aztime(self):
+        self.args.time_start = 0.1
+        self.args.time_dur_max = 1.2
+        gen_el_rising_edge_product(self.args)
+
 
 def test_gen_el_rising_edge_product_alos():
     # subdirectory for all files
@@ -70,6 +76,7 @@ def test_gen_el_rising_edge_product_alos():
         freq_band='A', txrx_pol=txrx_pol, dem_file=None, no_dbf_norm=False,
         az_block_dur=5.0, out_path='.', ref_height=ref_hgt, plot=True,
         orbit_file=None, attitude_file=None, no_weight=False, beam_num=1,
+        time_start=0, time_dur_max=None
     )
     # run product generator
     gen_el_rising_edge_product(args)

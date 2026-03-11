@@ -1,6 +1,7 @@
 import isce3
 import numpy as np
 from isce3.core import LUT2d
+from nisar.products.utils import get_static_layers_data_access,to_bytes
 from nisar.workflows.h5_prep import (_get_raster_from_hdf5_ds,
                                      add_radar_grid_cubes_to_hdf5,
                                      set_get_geo_info)
@@ -36,6 +37,39 @@ class L2InSARWriter(L1InSARWriter):
 
         self.add_radar_grid_cubes()
         self.add_grids_to_hdf5()
+
+
+    def add_identification_to_hdf5(self):
+        """
+        Add the identification group
+        """
+        L1InSARWriter.add_identification_to_hdf5(self)
+
+        # Add the static layers data access to identification group
+        self.add_static_layers_data_access_to_id_group()
+
+    def add_static_layers_data_access_to_id_group(self):
+        """
+        Add the static layers data access to the identification group
+        """
+
+        primary_executale_cfg = self.cfg['primary_executable']
+        static_layers_data_access = \
+            primary_executale_cfg.get('static_layers_data_access')
+
+        static_layers_data_access_url = \
+            get_static_layers_data_access(static_layers_data_access,
+                                          self.granule_id)
+        static_layers_data_access_url = to_bytes(static_layers_data_access_url)
+
+        # Create the staticLayersDataAccess dataset
+        id_group = self.require_group(self.group_paths.IdentificationPath)
+        ds = id_group.require_dataset('staticLayersDataAccess',
+                                      dtype=static_layers_data_access_url.dtype,
+                                      shape=())
+        ds[...] = static_layers_data_access_url
+        ds.attrs['description'] = to_bytes('Location of the static layers product '
+                                           'associated with this product (URL or DOI)')
 
     def add_secondary_radar_grid_cube(self, sec_cube_group_path,
                                        geogrid, heights, radar_grid, orbit,
@@ -97,14 +131,14 @@ class L2InSARWriter(L1InSARWriter):
         slant_range_raster = _get_raster_from_hdf5_ds(
             cube_group, 'secondarySlantRange', np.float64, cube_shape,
             zds=zds, yds=yds, xds=xds,
-            long_name='slant-range',
+            long_name='Slant range',
             descr='Slant range of the secondary RSLC in meters',
             units='meters', **create_dataset_kwargs)
         azimuth_time_raster = _get_raster_from_hdf5_ds(
             cube_group, 'secondaryZeroDopplerAzimuthTime', np.float64, cube_shape,
             zds=zds, yds=yds, xds=xds,
-            long_name='zero-Doppler azimuth time',
-            descr='Zero Doppler azimuth time in seconds since UTC epoch of the reference RSLC image',
+            long_name='Zero Doppler azimuth time',
+            descr='Zero Doppler azimuth time in seconds since UTC epoch of the secondary RSLC image',
             units=az_coord_units, **create_dataset_kwargs)
 
         isce3.geometry.make_radar_grid_cubes(radar_grid, geogrid, heights,
@@ -174,8 +208,8 @@ class L2InSARWriter(L1InSARWriter):
 
         # Update the radar grids attributes
         radar_grid['slantRange'].attrs['description'] = \
-            np.bytes_("Slant range of the reference RSLC in meters")
-        radar_grid['slantRange'].attrs['units'] = Units.meter
+            to_bytes("Slant range of the reference RSLC in meters")
+        radar_grid['slantRange'].attrs['units'] = to_bytes(Units.meter)
 
         zero_dopp_azimuth_time_units = \
             radar_grid['zeroDopplerAzimuthTime'].attrs['units']
@@ -183,11 +217,12 @@ class L2InSARWriter(L1InSARWriter):
             str(zero_dopp_azimuth_time_units),
             'seconds since ')
         if time_str is not None:
-            zero_dopp_azimuth_time_units = time_str
+            zero_dopp_azimuth_time_units = to_bytes(time_str)
         radar_grid['zeroDopplerAzimuthTime'].attrs['units'] = \
-            np.bytes_(zero_dopp_azimuth_time_units)
+            zero_dopp_azimuth_time_units
         radar_grid['zeroDopplerAzimuthTime'].attrs['description'] = \
-            np.bytes_("Zero doppler azimuth time of the reference RSLC image")
+            to_bytes("Zero Doppler azimuth time in seconds since UTC epoch " \
+                     "of the reference RSLC image")
 
         # Rename the dataset names
         radar_grid.move('slantRange','referenceSlantRange')
@@ -199,36 +234,36 @@ class L2InSARWriter(L1InSARWriter):
         radar_grid['heightAboveEllipsoid'][...] = \
             radar_grid['heightAboveEllipsoid'][()].astype(np.float64)
         radar_grid['heightAboveEllipsoid'].attrs['description'] = \
-            np.bytes_("Height values above WGS84 Ellipsoid"
+            to_bytes("Height values above WGS84 Ellipsoid"
                        " corresponding to the radar grid")
         radar_grid['heightAboveEllipsoid'].attrs['units'] = \
-            Units.meter
+            to_bytes(Units.meter)
 
         radar_grid['xCoordinates'].attrs['description'] = \
-            np.bytes_("X coordinates corresponding to the radar grid")
+            to_bytes("X coordinates corresponding to the radar grid")
         radar_grid['xCoordinates'].attrs['long_name'] = \
-            np.bytes_("X coordinates of projection")
+            to_bytes("X coordinates of projection")
         radar_grid['yCoordinates'].attrs['description'] = \
-            np.bytes_("Y coordinates corresponding to the radar grid")
+            to_bytes("Y coordinates corresponding to the radar grid")
         radar_grid['yCoordinates'].attrs['long_name'] = \
-            np.bytes_("Y coordinates of projection")
+            to_bytes("Y coordinates of projection")
 
         radar_grid['incidenceAngle'].attrs['description'] = \
-            np.bytes_("Incidence angle is defined as the angle"
+            to_bytes("Incidence angle is defined as the angle"
                        " between the LOS vector and the normal to"
                        " the ellipsoid at the target height")
         radar_grid['incidenceAngle'].attrs['long_name'] = \
-            np.bytes_("Incidence angle")
+            to_bytes("Incidence angle")
 
         radar_grid["elevationAngle"].attrs["description"] = \
-            np.bytes_("Elevation angle is defined as the angle between"
+            to_bytes("Elevation angle is defined as the angle between"
                        " the LOS vector and the normal to"
                        " the ellipsoid at the sensor")
         radar_grid["groundTrackVelocity"].attrs["description"] = \
-            np.bytes_("Absolute value of the platform velocity"
+            to_bytes("Absolute value of the platform velocity"
                        " scaled at the target height")
         radar_grid["groundTrackVelocity"].attrs["units"] = \
-            np.bytes_("meters / second")
+            to_bytes(Units.meter_per_second)
 
         # Add the baseline dataset to radargrid
         self.add_baseline_info_to_cubes(radar_grid,
@@ -328,28 +363,28 @@ class L2InSARWriter(L1InSARWriter):
         ds_params = [
             DatasetParams(
                 "azimuthIonosphericCorrectionApplied",
-                np.bytes_(str(iono)),
+                str(iono),
                 "Flag to indicate if the azimuth ionospheric correction is"
                 " applied to improve geolocation"
                 ,
             ),
             DatasetParams(
                 "rangeIonosphericCorrectionApplied",
-                np.bytes_(str(iono)),
+                str(iono),
                 "Flag to indicate if the range ionospheric correction is"
                 " applied to improve geolocation"
                 ,
             ),
             DatasetParams(
                 "wetTroposphericCorrectionApplied",
-                np.bytes_(str(wet_tropo)),
+                str(wet_tropo),
                 "Flag to indicate if the wet tropospheric correction is"
                 " applied to improve geolocation"
                 ,
             ),
             DatasetParams(
                 "hydrostaticTroposphericCorrectionApplied",
-                np.bytes_(str(dry_tropo)),
+                str(dry_tropo),
                 "Flag to indicate if the hydrostatic tropospheric correction is"
                 " applied to improve geolocation"
                 ,
@@ -399,7 +434,7 @@ class L2InSARWriter(L1InSARWriter):
 
             list_of_pols = DatasetParams(
                 "listOfPolarizations",
-                np.bytes_(pol_list),
+                to_bytes(pol_list),
                 "List of processed polarization layers with"
                 f" frequency {freq}"
                 ,
@@ -414,6 +449,6 @@ class L2InSARWriter(L1InSARWriter):
 
             # Add the description and units
             cfreq = grids_freq_group["centerFrequency"]
-            cfreq.attrs['description'] = np.bytes_("Center frequency of"
+            cfreq.attrs['description'] = to_bytes("Center frequency of"
                                                     " the processed image in hertz")
-            cfreq.attrs['units'] = Units.hertz
+            cfreq.attrs['units'] = to_bytes(Units.hertz)

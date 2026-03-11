@@ -229,13 +229,13 @@ void addbinding(py::class_<Topo>& pyRdr2Geo)
             (meters or degrees)
         height_raster: isce3.io.Raster
             Output raster for height above ellipsoid (meters)
-        incidence_raster: isce3.io.Raster
+        incidence_angle_raster: isce3.io.Raster
             Output raster for incidence angle (degrees) computed from vertical
             at target
         heading_angle_raster: isce3.io.Raster
             Output raster for azimuth angle (degrees) computed anti-clockwise
             from EAST (Right hand rule)
-        local_incidence_raster: isce3.io.Raster
+        local_incidence_angle_raster: isce3.io.Raster
             Output raster for local incidence angle (degrees) at target
         local_psi_raster: isce3.io.Raster
             Output raster for local projection angle (degrees) at target

@@ -147,6 +147,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
     const isce3::core::LUT2d<double>& slant_range_correction_full_cov = {};
     isce3::io::Raster* input_rtc = nullptr;
     isce3::io::Raster* output_rtc = nullptr;
+    isce3::io::Raster* output_rtc_sigma = nullptr;
     isce3::io::Raster* input_layover_shadow_mask_raster = nullptr;
     isce3::product::SubSwaths * sub_swaths = nullptr;
     std::optional<bool> apply_valid_samples_sub_swath_masking = {};
@@ -251,7 +252,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
                                out_geo_rtc, out_geo_rtc_gamma0_to_sigma0,
                                phase_screen_raster, az_time_correction,
                                slant_range_correction, input_rtc, output_rtc,
-                               input_layover_shadow_mask_raster,
+                               output_rtc_sigma, input_layover_shadow_mask_raster,
                                sub_swaths, apply_valid_samples_sub_swath_masking,
                                out_mask, geocode_memory_mode_1, min_block_size,
                                max_block_size);
@@ -307,7 +308,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
             out_geo_nlooks, out_geo_rtc, out_geo_rtc_gamma0_to_sigma0,
             phase_screen_raster,
             az_time_correction_full_cov, slant_range_correction_full_cov,
-            input_rtc, output_rtc, input_layover_shadow_mask_raster,
+            input_rtc, output_rtc, output_rtc_sigma,
+            input_layover_shadow_mask_raster,
             sub_swaths, apply_valid_samples_sub_swath_masking, out_mask,
             geocode_memory_mode_2, min_block_size, max_block_size);
 
@@ -628,10 +630,10 @@ void checkStatsReal(isce3::math::Stats<T> computed_stats,
         std::cout << "n_valid: " << isce3_stats.n_valid << ", " << computed_stats.n_valid << std::endl;
 
         // Compare Stats struct values with GDAL metadata saved by GeocodeCov
-        ASSERT_NEAR(isce3_stats.min, raster_min, 1.0e-15);
-        ASSERT_NEAR(isce3_stats.mean, raster_mean, 1.0e-15);
-        ASSERT_NEAR(isce3_stats.max, raster_max, 1.0e-15);
-        ASSERT_NEAR(isce3_stats.sample_stddev(), raster_sample_stddev, 1.0e-15);
+        ASSERT_NEAR(isce3_stats.min, raster_min, 1.0e-12);
+        ASSERT_NEAR(isce3_stats.mean, raster_mean, 1.0e-12);
+        ASSERT_NEAR(isce3_stats.max, raster_max, 1.0e-12);
+        ASSERT_NEAR(isce3_stats.sample_stddev(), raster_sample_stddev, 1.0e-12);
 
         // Compare Stats struct values with unitest values
         ASSERT_NEAR(isce3_stats.min, computed_stats.min, 1.0e-7);

@@ -135,6 +135,15 @@ def cmd_line_parser():
                            'bands. This is an external and separate '
                            'correction from that of caltone.')
                      )
+    prs.add_argument('--time-start', type=float, default=0.0,
+                     help=('Start time (seconds) of L0B relative to time of '
+                           'the first range line to be processed.')
+                     )
+    prs.add_argument('--time-dur-max', type=float,
+                     help=('Max time duration (seconds) w.r.t `time-start`. '
+                           'Default is entire L0B duration starting from '
+                           '`time-start`.')
+                     )
     return prs.parse_args()
 
 
@@ -209,6 +218,29 @@ def gen_el_null_range_product(args):
         raw_obj, args.freq_band, args.txrx_pol)
     logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
 
+    # determine [start, stop] range lines of echo to be processed.
+    freq_band = list(frq_pol.keys())[0]
+    txrx_pol = frq_pol[freq_band][0]
+    _, tm = raw_obj.getPulseTimes(freq_band, txrx_pol[0])
+    tm_rel = tm - tm[0]
+    t_start = args.time_start
+    if t_start < 0 or t_start > tm_rel[-2]:
+        raise ValueError(f'time-start {t_start} is out of valid '
+                         f'range [0, {tm_rel[-2]}] (sec, sec)!')
+    t_end = tm_rel[-1]
+    if args.time_dur_max is not None:
+        if not (args.time_dur_max > 0):
+            raise ValueError(f'"time_dur_max" {args.time_dur_max} '
+                             'must be a positive value!')
+        t_end = min(t_end, t_start + args.time_dur_max)
+    logger.info('Time (start, end) of echo wrt first range line to be '
+                f'processed (sec, sec) -> ({t_start}, {t_end})')
+    idx_start = np.searchsorted(tm_rel, t_start, side='left')
+    idx_stop = np.searchsorted(tm_rel, t_end, side='right')
+    logger.info('Range line (start, stop) 0-based indices of echo to be '
+                f'processed -> ({idx_start}, {idx_stop})')
+    rangeline_limit = (idx_start, idx_stop)
+
     # check whether there are more than one frequency band
     # when "sample_delays2" is provided.
     if args.sample_delays2 is not None and len(frq_pol) == 1:
@@ -252,7 +284,8 @@ def gen_el_null_range_product(args):
                  raw_obj, ant_obj, dem_interp=dem_interp_obj, logger=logger,
                  orbit=orbit, attitude=attitude, freq_band=freq_band,
                  txrx_pol=txrx_pol, sample_delays_wrt_left=sample_delays,
-                 imbalances_right2left=rx_imbalances, **kwargs
+                 imbalances_right2left=rx_imbalances,
+                 rangeline_limit=rangeline_limit, **kwargs
             )
             # check the excluded nulls whose quality factor will be zeroed out
             list_nulls = np.unique(null_num)

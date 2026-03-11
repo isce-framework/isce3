@@ -123,6 +123,9 @@ def test_nisar_csv():
         # Check that the expected fields were populated.
         expected_keys = {
             "id",
+            "latitude_deg",
+            "longitude_deg",
+            "height_above_ellipsoid",
             "frequency",
             "polarization",
             "elevation_angle",
@@ -232,6 +235,9 @@ def test_uavsar_csv():
         # Check that the expected fields were populated.
         expected_keys = {
             "id",
+            "latitude_deg",
+            "longitude_deg",
+            "height_above_ellipsoid",
             "frequency",
             "polarization",
             "elevation_angle",

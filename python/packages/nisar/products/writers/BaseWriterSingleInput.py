@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
 import journal
 
+from nisar.products.utils import to_bytes
 from nisar.products.granule_id import get_polarization_code, format_datetime
 from nisar.products.readers import open_product
 from nisar.h5 import cp_h5_meta_data
@@ -496,7 +497,6 @@ class BaseWriterSingleInput():
 
         # Example:
         # self.output_product_path = '/science/LSAR/GCOV'
-
         self.output_product_path = f'{self.root_path}/{self.product_type}'
 
         self.input_hdf5_obj = h5py.File(self.input_file, mode='r', swmr=True)
@@ -623,7 +623,7 @@ class BaseWriterSingleInput():
 
         self.set_value(
             'identification/productSpecificationVersion',
-            '1.2.1')
+            '1.4.0')
 
         self.copy_from_input(
             'identification/lookDirection',
@@ -664,10 +664,16 @@ class BaseWriterSingleInput():
             processing_type = np.bytes_('Nominal')
         elif processing_type_runconfig == 'UR':
             processing_type = np.bytes_('Urgent')
-        elif processing_type_runconfig == 'OD':
-            processing_type = np.bytes_('Custom')
         else:
-            processing_type = np.bytes_('Undefined')
+            if processing_type_runconfig != 'OD':
+                warning_channel = journal.warning(
+                    'BaseWriterSingleInput.populate_identification_common()')
+                warning_channel.log(
+                    'The processing type in the runconfig is set to'
+                    f' "{processing_type_runconfig}", which is not a valid value'
+                    ' for the output product metadata. Defaulting to "Custom"')
+            processing_type = np.bytes_('Custom')
+
         self.set_value(
             'identification/processingType',
             processing_type,
@@ -741,7 +747,7 @@ class BaseWriterSingleInput():
         if isinstance(data, str):
 
             return self.output_hdf5_obj.create_dataset(
-                path_dataset_in_h5, data=np.bytes_(data))
+                path_dataset_in_h5, data=to_bytes(data))
 
         if isinstance(data, bool):
             return self.output_hdf5_obj.create_dataset(
@@ -903,6 +909,55 @@ class BaseWriterSingleInput():
             data = data[key]
 
         return self.set_value(h5_field, data=data, *args, **kwargs)
+
+    def get_value_from_input_runconfig(self, field_name):
+        """
+        Parse input product runconfig and load value associated with a field
+
+        Parameters
+        ----------
+        field_name: str
+            Field name from the runconfig associated with the input product.
+
+        Returns
+        -------
+        value: str
+            Value associated with input product runconfig field. `None`
+            if the input product does not include the input runconfig
+            or if the field does not exist in the runconfig.
+        """
+
+        input_h5_field_path = (self.input_product_path +
+                               '/metadata/processingInformation/parameters/'
+                               'runConfigurationContents')
+
+        if input_h5_field_path not in self.input_hdf5_obj:
+            return
+
+        input_h5_dataset_obj = self.input_hdf5_obj[input_h5_field_path]
+
+        # check if dataset contains a string. If so, read it using method
+        # `asstr()`
+        # NOTE: It is necessary to check the object's shape to determine
+        # whether it is a single string or a list of strings. If it is a
+        # list of string, then it will be kept as it is.
+        if (h5py.check_string_dtype(input_h5_dataset_obj.dtype) and
+                input_h5_dataset_obj.shape == ()):
+            # use asstr() to read the dataset
+            runconfig_str = str(input_h5_dataset_obj.asstr()[...])
+
+        # otherwise, read it directly without changing the datatype
+        else:
+            runconfig_str = input_h5_dataset_obj[...]
+        for runconfig_line in runconfig_str.split("\n"):
+            if ':' not in runconfig_line:
+                continue
+            runconfig_line_splitted = runconfig_line.split(':')
+            var_name = runconfig_line_splitted[0].strip()
+
+            if field_name == var_name:
+                return runconfig_line_splitted[1].strip()
+        return
 
     def check_and_decorate_product_using_specs_xml(self, specs_xml_file,
                                                    verbose=False):

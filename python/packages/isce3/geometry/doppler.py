@@ -131,6 +131,7 @@ def make_doppler_lut_from_attitude(
     # computed.
     dem.compute_min_max_mean_height()
 
+    # create Doppler Centroid array filled with zeros
     dop = np.zeros((len(az_time), len(slant_range)))
 
     # Using the default EL bounds [-45, 45] deg can cause trouble when looking

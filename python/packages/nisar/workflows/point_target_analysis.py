@@ -21,7 +21,7 @@ import isce3
 from isce3.cal import (
     parse_triangular_trihedral_cr_csv,
     point_target_info as pti,
-    TriangularTrihedralCornerReflector as CornerReflector,
+    TrihedralCornerReflector as CornerReflector,
 )
 
 import nisar
@@ -426,7 +426,7 @@ def slc_pt_performance(
 
 
 CornerReflectorIterable = Union[
-    Iterable[isce3.cal.TriangularTrihedralCornerReflector],
+    Iterable[isce3.cal.TrihedralCornerReflector],
     Iterable[nisar.cal.CornerReflector],
 ]
 
@@ -532,7 +532,7 @@ def analyze_corner_reflectors(
     ----------
     corner_reflectors : iterable
         Iterable of corner reflectors in the scene. The elements may be instances of
-        `isce3.cal.TriangularTrihedralCornerReflector` or `nisar.cal.CornerReflector`.
+        `isce3.cal.TrihedralCornerReflector` or `nisar.cal.CornerReflector`.
         In the latter case, additional information about the survey date, validity, and
         plate motion velocity of each corner reflector is populated in the output.
     rslc : nisar.products.readers.RSLC
@@ -618,6 +618,18 @@ def analyze_corner_reflectors(
 
         'id': str
           The unique identifier of the corner reflector.
+
+        'latitude_deg': float
+          The geodetic latitude, in degrees, of the corner reflector at the time it was
+          surveyed.
+
+        'longitude_deg': float
+          The longitude, in degrees, of the corner reflector at the time it was
+          surveyed.
+
+        'height_above_ellipsoid': float
+          The height of the corner reflector at the time it was surveyed, in meters
+          above the WGS 84 reference ellipsoid.
 
         'frequency': str
           The frequency sub-band of the data.
@@ -769,16 +781,6 @@ def analyze_corner_reflectors(
             )
             continue
 
-        # Make sure we're not overwriting any info in the dict.
-        assert "id" not in cr_info
-        assert "frequency" not in cr_info
-        assert "polarization" not in cr_info
-        assert "elevation_angle" not in cr_info
-        assert "timestamp" not in cr_info
-        assert "survey_date" not in cr_info
-        assert "validity" not in cr_info
-        assert "velocity" not in cr_info
-
         # Get the target's zero-Doppler UTC time and elevation angle.
         az_datetime, el_angle = isce3.cal.get_target_observation_time_and_elevation(
             target_llh=cr.llh,
@@ -789,25 +791,31 @@ def analyze_corner_reflectors(
         )
 
         # Add some additional metadata.
-        cr_info.update(
-            {
-                "id": cr.id,
-                "frequency": freq,
-                "polarization": pol,
-                "elevation_angle": el_angle,
-                "timestamp": az_datetime,
-            }
-        )
+        extra_cr_info = {
+            "id": cr.id,
+            "latitude_deg": np.rad2deg(cr.llh.latitude),
+            "longitude_deg": np.rad2deg(cr.llh.longitude),
+            "height_above_ellipsoid": cr.llh.height,
+            "frequency": freq,
+            "polarization": pol,
+            "elevation_angle": el_angle,
+            "timestamp": az_datetime,
+        }
 
         # Add NISAR-specific corner reflector metadata, if available.
         if isinstance(cr, nisar.cal.CornerReflector):
-            cr_info.update(
+            extra_cr_info.update(
                 {
                     "survey_date": cr.survey_date,
                     "validity": cr.validity,
                     "velocity": cr.velocity,
                 }
             )
+
+        # Update `cr_info` with extra metadata (but make sure we're not overwriting
+        # anything).
+        assert all(key not in cr_info for key in extra_cr_info.keys())
+        cr_info.update(extra_cr_info)
 
         results.append(cr_info)
 
@@ -836,7 +844,7 @@ def get_corner_reflectors_from_csv(
 
     Returns
     ------
-    Iterator of isce3.cal.TriangularTrihedralCornerReflector
+    Iterator of isce3.cal.TrihedralCornerReflector
         An iterator over the set of corner reflectors.
     """
     if format == "nisar":

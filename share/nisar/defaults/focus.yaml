@@ -214,8 +214,16 @@ runconfig:
                 #   - 'FDNF': frequency domain notch filtering algorithm
                 # Defaults to 'ST-EVD'.
                 mitigation_algorithm: ST-EVD
-                # Number of subdivisions in range.  Defaults to 1.
-                num_range_blocks: 1
+                # Number of range samples per range block when data blocking
+                # is applied in range direction for sample covariance matrix
+                # estimation. It is recommended that this parameter is at least 
+                # 5 x cpi_len to avoid discrepancy from true covariance matrix.
+                # In addition, in order to avoid a run-time error for ST-EVD,
+                # this parameter needs to be at least 2 x cpi
+                num_samples_rng_blk: 256
+                # Ignore any values passed in for parameter num_samples_rng_blk.
+                # Instead use all samples in the pulses for detection if this is true.
+                use_entire_pulse: False
 
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.
@@ -324,6 +332,24 @@ runconfig:
                 # epoch.  null for automatic selection
                 time_end: null
 
+            # Calibration and processing information look-up tables (LUTs)
+            # excluding Doppler
+            lookup_tables:
+
+                # Downsampling factors with respect to the RSLC grid
+                downsampling_factor:
+                    # Downsampling factor in azimuth direction
+                    azimuth: 50
+                    # Downsampling factor in range direction
+                    range: 50
+
+                # Extra margin added to LUTs
+                margin_in_pixels:
+                    # Extra margin added to lookup table in azimuth, in pixels.
+                    azimuth: 11
+                    # Extra margin added to lookup table in range, in pixels.
+                    range: 11
+
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
@@ -338,6 +364,13 @@ runconfig:
                     range: 2000.0
                     # Lookup table Azimuth spacing in s
                     azimuth: 1.0
+                
+                # Extra margin added to the Doppler LUT
+                margin_in_pixels:
+                    # Extra margin added to lookup table in azimuth, in pixels.
+                    azimuth: 11
+                    # Extra margin added to lookup table in range, in pixels.
+                    range: 11
 
             # Settings for range compression algorithm.
             rangecomp:
@@ -419,6 +452,29 @@ runconfig:
             # If true, fill transmit gaps with zeros to remove loop-back
             # cal pulses.
             zero_fill_gaps: True
+
+            caltone:
+                # If "azimuth_mean", subtract the azimuth mean from the raw
+                # data, which is useful when the caltone is nearly constant in
+                # azimuth but not stationary in range.  Calculating the mean
+                # and subtracting it is done in blocks using
+                # rangecomp.block_size
+                # If "wavelet" then subtract an estimate that varies in 2D.
+                # No correction when "disabled".
+                # Option "auto" means "wavelet" if dithered else "azimuth_mean",
+                # which is a sensible default for NISAR LSAR.
+                # auto | wavelet | azimuth_mean | disabled
+                algorithm: auto
+
+                # Calibration tone frequency (RF) in Hz.
+                # NOTE Caltone frequency changed for most modes between mode
+                # table v50 and v51, which went into operations on
+                # 2025-10-17T00:00:00Z.  The v50 frequency is 1216.904297e6 Hz
+                # while the v51 frequency is 1214.882813e6 Hz.
+                frequency: 1214.882813e6
+
+                # Length of constant-overlap add (COLA) window.
+                wavelet_size: 64
 
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
@@ -502,14 +558,29 @@ runconfig:
                 # Default: True
                 noise_equivalent_backscatter: true
 
+            software_config:
+
+                # True to cache selected dataset(s) into intermediate
+                # memory-mapped flat file(s), which speeds up repeat access.
+                # False to always read data directly from the input file.
+                # Generally, enabling caching should reduce runtime.
+                # Default: True
+                use_cache: true
+
+                # True to delete the nested QA scratch directory in
+                # `scratch_path` and its contents when QA SAS is finished.
+                # Default: True
+                delete_qa_scratch_files: true
+
             validation:
 
-                # True to raise an exception if one or more metadata cubes contains
-                # all non-finite (e.g. Nan, +/- Inf) values, or if one or more
-                # z-dimension height layers in a 3D cube has all non-finite values.
-                # False to quiet the exception (although it will still be logged).
+                # True to raise an exception if one or more metadata LUTs
+                # contain all non-finite (e.g. Nan, +/- Inf) values, or if one or more
+                # z-dimension height layers in a 3D LUT ("metadata cube") has
+                # all non-finite values. False to quiet the exception (although
+                # it will still be logged).
                 # Default: True
-                metadata_cubes_fail_if_all_nan: true
+                metadata_luts_fail_if_all_nan: true
 
             qa_reports:
 
@@ -578,6 +649,17 @@ runconfig:
                     # -1 to indicate all rows / all columns (respectively).
                     # Default: (1024, 1024)
                     tile_shape: [1024, 1024]
+
+                    # True to output one grayscale PNG+KML pair per raster image layer; these
+                    # will be generated in addition to the standard browse image PNG+KML.
+                    # The filename of each additional file will include a suffix noting
+                    # that image's frequency and polarization.
+                    # False to have the primary browse image be the only PNG+KML generated.
+                    # Note: If True, and if the input granule contains only one image,
+                    # then the additional individual PNG will be a duplicate image to the
+                    # primary browse image PNG, but with more descriptive filename.
+                    # Default: False
+                    output_individual_pngs: false
 
                 histogram:
 

@@ -10,6 +10,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
+import numpy as np
 import shapely
 
 import isce3
@@ -24,7 +25,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 CornerReflectorIterable = Union[
-    Iterable[isce3.cal.TriangularTrihedralCornerReflector],
+    Iterable[isce3.cal.TrihedralCornerReflector],
     Iterable[nisar.cal.CornerReflector],
 ]
 
@@ -67,7 +68,7 @@ def estimate_abscal_factor(
     ----------
     corner_reflectors : iterable
         Iterable of corner reflectors in the scene. The elements may be instances of
-        `isce3.cal.TriangularTrihedralCornerReflector` or `nisar.cal.CornerReflector`.
+        `isce3.cal.TrihedralCornerReflector` or `nisar.cal.CornerReflector`.
         In the latter case, additional information about the survey date and plate
         motion velocity of each corner reflector is populated in the output.
     rslc : nisar.products.readers.SLC
@@ -136,6 +137,18 @@ def estimate_abscal_factor(
         'absolute_calibration_factor': float
           The absolute radiometric calibration error for the corner reflector (the ratio
           of the measured RCS to the predicted RCS), in linear units.
+
+        'latitude_deg': float
+          The geodetic latitude, in degrees, of the corner reflector at the time it was
+          surveyed.
+
+        'longitude_deg': float
+          The longitude, in degrees, of the corner reflector at the time it was
+          surveyed.
+
+        'height_above_ellipsoid': float
+          The height of the corner reflector at the time it was surveyed, in meters
+          above the WGS 84 reference ellipsoid.
 
         'elevation_angle': float
           The elevation angle of the corner reflector, in radians. Elevation is measured
@@ -214,6 +227,9 @@ def estimate_abscal_factor(
     # that the focused data was projected onto (always zero Doppler for NISAR
     # radar-domain products).
     native_doppler = rslc.getDopplerCentroid(freq)
+    # Allow extrapolation of LUT so we can do searches whose endpoints may run
+    # out of bounds.
+    native_doppler.bounds_error = False
     image_grid_doppler = isce3.core.LUT2d()
 
     # Reference ellipsoid is assumed to be WGS 84 for corner reflector data and for
@@ -232,9 +248,9 @@ def estimate_abscal_factor(
     # Estimate the absolute calibration error (the ratio of the measured RCS to the
     # predicted RCS) for a single corner reflector.
     def estimate_abscal_error(
-        cr: isce3.cal.TriangularTrihedralCornerReflector,
+        cr: isce3.cal.TrihedralCornerReflector,
     ) -> float:
-        predicted_rcs = isce3.cal.predict_triangular_trihedral_cr_rcs(
+        predicted_rcs = isce3.cal.predict_trihedral_cr_rcs(
             cr=cr,
             orbit=orbit,
             doppler=native_doppler,
@@ -286,6 +302,9 @@ def estimate_abscal_factor(
         cr_info = {
             "id": cr.id,
             "absolute_calibration_factor": abscal_error,
+            "latitude_deg": np.rad2deg(cr.llh.latitude),
+            "longitude_deg": np.rad2deg(cr.llh.longitude),
+            "height_above_ellipsoid": cr.llh.height,
             "elevation_angle": el_angle,
             "timestamp": az_datetime,
             "frequency": freq,

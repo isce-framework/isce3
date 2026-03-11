@@ -74,11 +74,11 @@ def cmd_line_parser():
                      help='Number of range bins to be averaged in Doppler '
                      'Estimator block. Shall be equal or larger than 1.')
     prs.add_argument('-a', '--az_block_dur', type=float, dest='az_block_dur',
-                     default=4.0,
+                     default=10.0,
                      help='Azimuth block duration in seconds defining time-'
                      'domain correlator length used in Doppler estimator.')
     prs.add_argument('-t', '--time_interval', type=float, dest='time_interval',
-                     default=2.0,
+                     default=5.0,
                      help='Time stamp interval between azimuth blocks in '
                      'seconds. Must not be larger than "az_block_dur".')
     prs.add_argument('-m', '--method', type=str, dest='dop_method',
@@ -97,8 +97,8 @@ def cmd_line_parser():
                      help='Plot Doppler centroids and save them in '
                      '*.png files at the specified output path')
     prs.add_argument('-o', '--out', type=str, dest='out_path', default='.',
-                     help='Output directory to dump Doppler product as well as'
-                     'PNG plots.')
+                     help='Output directory to dump Doppler product as well '
+                     'as PNG plots.')
     prs.add_argument('--orbit', type=str, dest='orbit_file',
                      help='Filename of an external orbit XML file. The orbit '
                      'data will be used in place of those in L0B. Default is '
@@ -115,6 +115,23 @@ def cmd_line_parser():
                      'effect if the input product is not DM2). By '
                      'default, the data from all beams is included in '
                      'the polyfit.')
+    prs.add_argument('--time-start', type=float, default=0.0,
+                     help=('Start time (seconds) of L0B relative to time of '
+                           'the first range line to be processed.')
+                     )
+    prs.add_argument('--time-dur-max', type=float,
+                     help=('Max time duration (seconds) w.r.t `time-start`. '
+                           'Default is entire L0B duration starting from '
+                           '`time-start`.')
+                     )
+    prs.add_argument('--duration-dc-remove-az', type=float, default=0.5,
+                     help=('Time duration (seconds) of AZ blocks for DC '
+                           'removal in AZ in order to mitigate Caltone and '
+                           'internal signal biasing Doppler Est. Must be a '
+                           'positive value not greater than `az_block_dur`! '
+                           'Its value may be modified to make it an integer '
+                           'fraction of `az_block_dur`.')
+                     )
     return prs.parse_args()
 
 
@@ -174,6 +191,27 @@ def gen_doppler_range_product(args):
         op_mode = 'DBF'
     del raw_dset
 
+    # determine [start, stop] range lines of echo to be processed.
+    _, tm = raw_obj.getPulseTimes(freq_band, txrx_pol[0])
+    tm_rel = tm - tm[0]
+    t_start = args.time_start
+    if t_start < 0 or t_start > tm_rel[-2]:
+        raise ValueError(f'time-start {t_start} is out of valid '
+                         f'range [0, {tm_rel[-2]}] (sec, sec)!')
+    t_end = tm_rel[-1]
+    if args.time_dur_max is not None:
+        if not (args.time_dur_max > 0):
+            raise ValueError(f'"time_dur_max" {args.time_dur_max} '
+                             'must be a positive value!')
+        t_end = min(t_end, t_start + args.time_dur_max)
+    logger.info('Time (start, end) of echo wrt first range line to be '
+                f'processed (sec, sec) -> ({t_start}, {t_end})')
+    idx_start = np.searchsorted(tm_rel, t_start, side='left')
+    idx_stop = np.searchsorted(tm_rel, t_end, side='right')
+    logger.info('Range line (start, stop) 0-based indices of echo to be '
+                f'processed -> ({idx_start}, {idx_stop})')
+    rangeline_limit = (idx_start, idx_stop)
+
     # build orbit and attitude object if external files are provided
     if args.orbit_file is None:
         orbit = None
@@ -204,7 +242,9 @@ def gen_doppler_range_product(args):
     # get keyword args for function "doppler_lut_from_raw"
     kwargs = {key: val for key, val in vars(args).items() if
               'file' not in key and key not in [
-                  'ref_height', 'freq_band', 'txrx_pol']}
+                  'ref_height', 'freq_band', 'txrx_pol',
+                  'time_start', 'time_dur_max']
+              }
 
     # loop over all desired frequency bands and their respective desired
     # polarizations
@@ -221,7 +261,8 @@ def gen_doppler_range_product(args):
                 doppler_lut_from_raw(raw_obj, orbit=orbit, attitude=attitude,
                                      ant=ant, dem=dem, logger=logger,
                                      freq_band=freq_band, txrx_pol=txrx_pol,
-                                     **kwargs)
+                                     rangeline_limit=rangeline_limit, **kwargs
+                                     )
 
             # check out antenna object to extract azimuth angle for EL cuts
             # used for Doppler CSV product

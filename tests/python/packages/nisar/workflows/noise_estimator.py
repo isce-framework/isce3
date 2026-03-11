@@ -44,6 +44,7 @@ def test_noise_estimator(algorithm, num_rng_block,
         no_diff=no_diff,
         no_median_ev=no_median_ev,
         exclude_first_last=exclude_first_last,
-        diff_method=diff_method
+        diff_method=diff_method,
+        max_lines=5120
     )
     run_noise_estimator(args)

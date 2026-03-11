@@ -1,4 +1,5 @@
 import numpy as np
+from nisar.products.utils import to_bytes
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .dataset_params import DatasetParams, add_dataset_and_attrs
@@ -53,9 +54,9 @@ class RUNWWriter(L1InSARWriter):
         """
         super().add_root_attrs()
 
-        self.attrs["title"] = np.bytes_("NISAR L1 RUNW Product")
+        self.attrs["title"] = to_bytes("NISAR L1 RUNW Product")
         self.attrs["reference_document"] = \
-            np.bytes_("D-102271 NISAR NASA SDS Product Specification"
+            to_bytes("D-102271 NISAR NASA SDS Product Specification"
                        " L1 Range Doppler UnWrapped Interferogram")
 
     def add_ionosphere_to_procinfo_params_group(self):
@@ -166,7 +167,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "unwrappingErrorCorrection",
-                np.bytes_(unwrap_correction),
+                str(unwrap_correction),
                 "Algorithm correcting unwrapping errors in sub-band"
                 " unwrapped interferograms"
                 ,
@@ -245,7 +246,7 @@ class RUNWWriter(L1InSARWriter):
                 phase_outliers,
                 "Algorithm identifying outliers in the wrapped"
                 " interferogram")]
-        
+
         unwrap_prep_group = self.require_group(
             f"{self.group_paths.AlgorithmsPath}/unwrapping/preprocessing")
         for ds_param in ds_params:
