@@ -1839,7 +1839,8 @@ def azcomp_ffbp(factors: BackprojectionStageParameters,
             log.warning("azcomp block contains some invalid pixels")
         writer.queue_write(z, block)
 
-    assert len(tasks) == 0, "We've got unfinished business..."
+    if len(tasks) != 0:
+        log.warning(f"Queued {len(tasks)} tasks that were never needed.")
 
 def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
     """Helper for configuring caltone removal.
