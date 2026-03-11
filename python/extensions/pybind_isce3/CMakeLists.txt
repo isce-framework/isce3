@@ -24,18 +24,19 @@ endif()
 # ---------------------------------------------------------------------------
 # macOS Debug workaround for pybind11 import failures
 #
-# Conda/micromamba Python interpreters are built in Release mode. When the
-# pybind11 extension is compiled with libc++ debug STL enabled (as can happen
-# in Debug builds on macOS), container ABI differences can cause pybind11
-# signature parsing to fail at module import time:
+# Conda/micromamba Python interpreters are built in Release mode (with NDEBUG
+# defined). Without NDEBUG, libc++ may use different container layouts or
+# hardening modes, causing an ABI mismatch between the extension and the
+# interpreter. This manifests as:
 #
 #   ImportError: Internal error while parsing type signature (2)
 #
-# To avoid this mismatch we explicitly disable libc++ debug mode for the
-# Python extension module when building Debug on macOS.
+# Force NDEBUG for the pybind11 extension so its libc++ ABI matches the
+# Release-built Python interpreter. The rest of isce3 still builds in full
+# Debug mode.
 # ---------------------------------------------------------------------------
 if(APPLE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(${ISCEEXTENSION} PRIVATE -U_LIBCPP_DEBUG)
+    target_compile_definitions(${ISCEEXTENSION} PRIVATE NDEBUG)
 endif()
 
 # install
