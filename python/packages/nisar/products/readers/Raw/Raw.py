@@ -981,6 +981,8 @@ class RawBase(Base, family='nisar.productreader.raw'):
                     j0next = subswaths[iswath, ipulse0 + 1, 0]
                     j1next = subswaths[iswath, ipulse0 + 1, 1]
                     if j1next > j0next:
+                        log.warning(f"Pulse {ipulse0 + 1} immediately after "
+                            "DWP change has no valid data.  Mask may be wrong.")
                         j0 = min(j0, j0next)
                         j1 = max(j1, j1next)
                 r0 = grid.slant_ranges[j0]
