@@ -408,8 +408,10 @@ runconfig:
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
-                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
+                # Deramp data axis prior to FFT: range, azimuth, or both
+                deramping_axis: 'azimuth'
                 # Flag to use constant range/azimuth offsets in dense offsets estimation
                 use_gross_offsets: True
                 # Constant offset along slant range to guide dense offset estimation
@@ -459,8 +461,10 @@ runconfig:
                 start_pixel_azimuth:
                 # Cross-correlation domain
                 cross_correlation_domain: 'frequency'
-                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
+                # Deramp data axis prior to FFT: range, azimuth, or both
+                deramping_axis: 'azimuth'
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2

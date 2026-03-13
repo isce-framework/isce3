@@ -332,6 +332,24 @@ runconfig:
                 # epoch.  null for automatic selection
                 time_end: null
 
+            # Calibration and processing information look-up tables (LUTs)
+            # excluding Doppler
+            lookup_tables:
+
+                # Downsampling factors with respect to the RSLC grid
+                downsampling_factor:
+                    # Downsampling factor in azimuth direction
+                    azimuth: 50
+                    # Downsampling factor in range direction
+                    range: 50
+
+                # Extra margin added to LUTs
+                margin_in_pixels:
+                    # Extra margin added to lookup table in azimuth, in pixels.
+                    azimuth: 11
+                    # Extra margin added to lookup table in range, in pixels.
+                    range: 11
+
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
@@ -346,6 +364,13 @@ runconfig:
                     range: 2000.0
                     # Lookup table Azimuth spacing in s
                     azimuth: 1.0
+                
+                # Extra margin added to the Doppler LUT
+                margin_in_pixels:
+                    # Extra margin added to lookup table in azimuth, in pixels.
+                    azimuth: 11
+                    # Extra margin added to lookup table in range, in pixels.
+                    range: 11
 
             # Settings for range compression algorithm.
             rangecomp:

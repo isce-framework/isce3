@@ -229,7 +229,9 @@ def run_rubbersheet_with_polyfit(cfg: dict, output_hdf5: str = None):
                     ds = gdal.Open(culled_off_path, gdal.GA_ReadOnly)
                     gdal.Translate(resamp_off_path, ds,
                                 width=ref_radar_grid.width,
-                                height=ref_radar_grid.length, format='ENVI')
+                                height=ref_radar_grid.length,
+                                resampleAlg='bilinear',
+                                format='ENVI')
                     # Sum resampled offsets to geometry offsets
                     sum_off_path = str(out_dir / geo_off)
                     sum_gdal_rasters(str(geo_offset_dir / geo_off),
@@ -374,7 +376,9 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
                     ds = gdal.Open(culled_off_path, gdal.GA_ReadOnly)
                     gdal.Translate(resamp_off_path, ds,
                                 width=ref_radar_grid.width,
-                                height=ref_radar_grid.length, format='ENVI')
+                                height=ref_radar_grid.length,
+                                resampleAlg='bilinear',
+                                format='ENVI')
                     # Sum resampled offsets to geometry offsets
                     sum_off_path = str(out_dir / geo_off)
                     sum_gdal_rasters(str(geo_offset_dir / geo_off),
