@@ -260,6 +260,10 @@ runconfig:
       # If true, fill transmit gaps with zeros to remove loop-back cal pulses.
       zero_fill_gaps: bool(required=False)
 
+      #gap_pad_usec:
+      #    left: 0.0
+      #    right: 0.0
+
       caltone: include('caltone_options', required=False)
 
       # Processing stage switches, mostly for debug.
