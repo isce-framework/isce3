@@ -932,7 +932,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
         if (not is_dithered) and (num_ignore > 0):
             # Avoid problems with trivially short observations, though this
             # shouldn't ever happen.
-            num_ignore = min(num_ignore, nt)
+            if num_ignore > nt:
+                log.warning(f"Asked to ignore {num_ignore} pulses but there "
+                    f"are only {nt} total.")
+                num_ignore = nt
             subswaths[:, -num_ignore:, :] = subswaths[:, -num_ignore, :]
 
         # For dithered replace subswaths (gap mask) with a single subswath
