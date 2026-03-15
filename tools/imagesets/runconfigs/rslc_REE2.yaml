@@ -158,6 +158,14 @@ runconfig:
                     # Number of slow-time CPIs grouped together for determining and
                     # applying a common EV slope threshold.
                     num_cpi_per_threshold_block: 20
+                    # minimum fraction of samples required for cross-variance terms
+                    # of sample covariance matrix
+                    off_diag_overlap_ratio: 0.1
+                    # minimum fraction of samples required for covariance terms
+                    # of sample covariance matrix
+                    diag_valid_ratio: 0.05
+                    # The Eigenvalue index of minimum Eigenvalue
+                    noise_ev_idx: 10
                     # Parameters used to adaptively determine RFI eigenvalue
                     # difference thresholds
                     threshold_hyperparameters:

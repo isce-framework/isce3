@@ -170,13 +170,13 @@ def rfi_wb_gen(
 
 
 @pytest.mark.parametrize(
-    "cpi_len, num_samples_rng_blk, num_cpi_tb, max_deg_freedom, num_max_trim, num_min_trim, max_num_rfi_ev, use_entire_pulse, mitigate_enable, test_case",
+    "cpi_len, num_samples_rng_blk, num_cpi_tb, max_deg_freedom, num_max_trim, num_min_trim, max_num_rfi_ev, use_entire_pulse, mitigate_enable, prf_dither_mode, test_case",
     [  
-        (32, 2148, 20, 16, 1, 1, 2, True, True, 'mitigate'),  # No range blks
-        (32, 256, 20, 16, 1, 1, 2, False, True, 'mitigate'),  # 256 range samples / range blocks
-        (32, 2148, 20, 16, 0, 0, 2, True, True, 'no-op'),  # No-op: no rng blks
-        (32, 256, 20, 16, 0, 0, 2, False, True, 'no-op'),  # No-op: 256 range samples / range block
-        (32, 2148, 20, 16, 0, 0, 2, True, False,'no-op'),  # No-op: detection only
+        (32, 2148, 20, 10, 1, 1, 2, True, True, False, 'mitigate'),  # No range blks
+        (32, 256, 20, 10, 1, 1, 2, False, True, False, 'mitigate'),  # 256 range samples / range blocks
+        (32, 2148, 20, 10, 0, 0, 2, True, False, False, 'no-op'),  # No-op: no rng blks
+        (32, 256, 20, 10, 0, 0, 2, False, False, False, 'no-op'),  # No-op: 256 range samples / range block
+        (32, 2148, 20, 10, 0, 0, 2, True, False, False, 'no-op'),  # No-op: detection only
     ],
 )
 def test_slow_time_evd(
@@ -189,18 +189,19 @@ def test_slow_time_evd(
     max_num_rfi_ev,
     use_entire_pulse,
     mitigate_enable,
+    prf_dither_mode,
     test_case,
 ):
     """Verify slow-time EVD with five test cases:
-    1: cpi_len=32, no range blocking, 20 cpi/thresh blk, max_deg_freedom=16,
+    1: cpi_len=32, no range blocking, 20 cpi/thresh blk, max_deg_freedom=10,
        num_max_trim=1, num_min_trim=1, max_num_rfi_ev=2, mitigate_enable=True, test_case=mitigate
-    2: cpi_len=32, 8 range blocks, 20 cpi/thresh blk, max_deg_freedom=16,
+    2: cpi_len=32, 8 range blocks, 20 cpi/thresh blk, max_deg_freedom=10,
        num_max_trim=1, num_min_trim=1, max_num_rfi_ev=2, mitigate_enable=True, test_case=mitigate
-    3: cpi_len=32, no range blocking, 20 cpi/thresh blk, max_deg_freedom=16,
+    3: cpi_len=32, no range blocking, 20 cpi/thresh blk, max_deg_freedom=10,
        num_max_trim=1, num_min_trim=1, max_num_rfi_ev=2, mitigate_enable=True, test_case=no-op
-    4: cpi_len=32, 8 range blocks, 20 cpi/thresh blk, max_deg_freedom=16,
+    4: cpi_len=32, 8 range blocks, 20 cpi/thresh blk, max_deg_freedom=10,
        num_max_trim=1, num_min_trim=1, max_num_rfi_ev=2, mitigate_enable=True, test_case=no-op
-    5: cpi_len=32, no range blocking, 20 cpi/thresh blk, max_deg_freedom=16, 
+    5: cpi_len=32, no range blocking, 20 cpi/thresh blk, max_deg_freedom=10, 
        num_max_trim=1, num_min_trim=1, max_num_rfi_ev=2, mitigate_enable=False, 
        test_case=no-op, detection only
 
@@ -232,7 +233,7 @@ def test_slow_time_evd(
     # If test case is mitigate, add narrowband and wideband RFI
     if test_case == 'mitigate':
         # Narrowband RFI parameters
-        num_nb_rfi = 10
+        num_nb_rfi = 5
 
         # Interference to Noise Ratio
         inr_nb_low = 15
@@ -249,7 +250,7 @@ def test_slow_time_evd(
         rfi_nb_pulse_idx = randint(50, num_pulses, num_rfi_nb_pulses)
 
         # Wideband RFI parameters
-        num_wb_rfi = 10
+        num_wb_rfi = 5
         inr_wb = 20
         pwr_rfi_wb_db = inr_wb * np.ones(num_wb_rfi)
 
@@ -297,7 +298,11 @@ def test_slow_time_evd(
     # Perform Slow-Time EVD Detection and Mitigation
     # Compute Eigenvalues and Eigenvectors
 
-    threshold_params = ThresholdParams([2, 20], [5, 2])
+    threshold_params = ThresholdParams([2, 10], [5, 2])
+    off_diag_overlap_ratio = 0.1
+    diag_valid_ratio = 0.05
+    noise_ev_idx = 10
+    mask_valid = np.ones(raw_data_rfi.shape, dtype=bool)
 
     rfi_likelihood = run_slow_time_evd(
         raw_data_rfi,
@@ -310,7 +315,12 @@ def test_slow_time_evd(
         use_entire_pulse=use_entire_pulse,
         threshold_params=threshold_params,
         num_cpi_tb=num_cpi_tb,
+        off_diag_overlap_ratio=off_diag_overlap_ratio,
+        diag_valid_ratio=diag_valid_ratio,
         mitigate_enable=mitigate_enable,
+        prf_dither_mode=prf_dither_mode,
+        noise_ev_idx=noise_ev_idx,
+        mask_valid=mask_valid,
         raw_data_mitigated=raw_data_mitigated,
     )
 

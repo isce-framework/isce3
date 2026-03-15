@@ -3,7 +3,8 @@ Perform RFI detection and mitigation of input raw data using Slow-Time Eigenvalu
 (ST-EVD).
 """
 import numpy as np
-from isce3.signal.compute_evd_cpi import slice_gen
+from numpy.fft import fft, ifft, fftshift
+from isce3.signal.compute_evd_cpi import slice_gen, compute_evd_tb_gap
 from isce3.signal.rfi_detection_evd import rfi_detect, ThresholdParams
 from isce3.signal.rfi_mitigation_evd import rfi_mitigate_tb
 
@@ -15,11 +16,16 @@ def run_slow_time_evd(
     num_max_trim=0,
     num_min_trim=0,
     max_num_rfi_ev=2,
-    num_samples_rng_blk=256,
+    num_samples_rng_blk=1000,
     use_entire_pulse=False,
     threshold_params: ThresholdParams = ThresholdParams(),
     num_cpi_tb=20,
+    off_diag_overlap_ratio=0.1,
+    diag_valid_ratio=0.05,
     mitigate_enable=False,
+    prf_dither_mode=False,
+    noise_ev_idx=10,
+    mask_valid=None,
     raw_data_mitigated=None,
 ):
 
@@ -67,8 +73,21 @@ def run_slow_time_evd(
         from the mean of MMES.
     num_cpi_tb: int, default=20
         Number of slow-time CPIs in a TB
+    off_diag_overlap_ratio : float, optional
+        Minimum overlap ratio used by gap exclusion covariance estimation
+    diag_valid_ratio : float, optional
+        Minimum fraction of valid samples required to compute a diagonal term in the
+        sample covariance matrix entry R_ii.
     mitigate_enable: bool, default=False
         Enable mitigation
+    prf_dither_mode: bool
+        If True, L0B acquisition is of PRF Dithering mode. Sample Covariance Matrix
+        is computed differently by excluding the invalid data gaps.
+    noise_ev_idx : int
+        Eigenvalue index used by threshold estimation to estimate the slow-time minimum
+        Eigenvalue slope
+    mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
+        Valid-sample mask with same shape as raw_data
     raw_data_mitigated: array-like complex [num_pulses x num_rng_samples] or None, optional
         output array in which the mitigated data values is placed. It
         must be an array-like object supporting `multidimensional array access
@@ -114,6 +133,11 @@ def run_slow_time_evd(
     num_pulses_proc = cpi_len * num_cpi
     num_pulses_tb = cpi_len * num_cpi_tb
 
+    num_tb = num_pulses_proc // num_pulses_tb
+
+    figure_merit_array = np.zeros((num_tb, num_rng_blks), dtype=np.float32)
+    num_rfi_ev_tb_array = np.zeros((num_tb, num_rng_blks), dtype=np.int16)
+
     # Modify raw_data in-place
     if raw_data_mitigated is None:
         raw_data_mitigated = raw_data
@@ -123,6 +147,10 @@ def run_slow_time_evd(
                 "Shape mismatch: output mitigated data array must have the same shape"
                 " as the input data"
             )
+
+    # Create a mask if no mask if provided
+    if mask_valid is None:
+        mask_valid = np.ones(raw_data.shape, dtype=bool)
 
     # Collect total number of CPI range blocks contaminated by RFI
     rfi_cpi_count_sum = 0
@@ -139,23 +167,43 @@ def run_slow_time_evd(
             "Max number of deg. of freedom must be less than number of pulses in a CPI."
         )
 
+    # Verify noise_ev_idx
+    if noise_ev_idx >= cpi_len:
+        raise ValueError(
+            f"noise_ev_idx must be less than {cpi_len - 1}, got {noise_ev_idx}."
+    )
+
+    # Verify Mask shape
+    if mask_valid.shape != raw_data.shape:
+        raise ValueError(f"mask shape {mask_valid.shape} != data shape {raw_data.shape}")
+    
     # Run RFI Detection and Mitigation
     for idx_tb, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
         for idx_rng, tb_fast_time in enumerate(
-            slice_gen(num_rng_samples, num_samples_rng_blk)
+            slice_gen(num_rng_samples, num_samples_rng_blk, combine_rem=True)
         ):
             raw_tb_blk = raw_data[tb_slow_time, tb_fast_time]
+            mask_valid_tb = mask_valid[tb_slow_time, tb_fast_time]
 
-            (rfi_cpi_flag_tb, evec_sort_tb) = rfi_detect(
+            (
+                rfi_cpi_flag_tb, 
+                evec_sort_tb, 
+            ) = rfi_detect(
                 raw_tb_blk,
                 cpi_len,
                 max_deg_freedom,
                 num_max_trim,
                 num_min_trim,
                 max_num_rfi_ev,
+                off_diag_overlap_ratio,
+                diag_valid_ratio,
+                prf_dither_mode,
+                noise_ev_idx,
+                mask_valid_tb,
                 threshold_params,
             )
 
+            # Compute number of CPIs detected with RFI presence
             num_rfi_ev_cpi = np.sum(rfi_cpi_flag_tb, axis=1)
             rfi_cpi_count = np.sum(num_rfi_ev_cpi != 0)
             rfi_cpi_count_sum += rfi_cpi_count
