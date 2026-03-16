@@ -632,7 +632,7 @@ def _run(cfg, raster_scratch_dir):
                 length=int(radar_grid_cubes_geogrid.length),
                 epsg=radar_grid_cubes_geogrid.epsg)
 
-            cube_group_name = '/science/LSAR/GCOV/metadata/radarGrid'
+            cube_group_name = f'{rslc.RootPath}/GCOV/metadata/radarGrid'
             native_doppler = slc.getDopplerCentroid()
             '''
             The native-Doppler LUT bounds error is turned off to
