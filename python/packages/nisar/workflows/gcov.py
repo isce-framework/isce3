@@ -454,6 +454,8 @@ def _run(cfg, raster_scratch_dir):
         'rg_correction': {},
     }
 
+    rslc = SLC(hdf5file=input_hdf5)
+
     for frequency, input_pol_list in freq_pols.items():
 
         # do no processing if no polarizations specified for current frequency
@@ -576,7 +578,7 @@ def _run(cfg, raster_scratch_dir):
             timing_corrections_dict['rg_correction'][frequency] = rg_correction
             optional_geo_kwargs['slant_range_correction'] = rg_correction
 
-        root_ds = f'/science/LSAR/GCOV/grids/frequency{frequency}'
+        root_ds = f'{rslc.RootPath}/GCOV/grids/frequency{frequency}'
 
         optional_geo_kwargs['geogrid_upsampling'] = geogrid_upsampling
         optional_geo_kwargs['abs_cal_factor'] = abs_cal_factor
