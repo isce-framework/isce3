@@ -78,7 +78,7 @@ def get_flattening_phase_at_coords(
     out_rg_first_pixel: int,
 ) -> np.ndarray:
     """
-    Acquire the phase of the given carrier at each given index of a radar scene.
+    Acquire the phase necessary to flatten an SLC at each given index of a radar scene.
 
     Parameters
     ----------
