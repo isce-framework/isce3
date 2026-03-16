@@ -254,7 +254,7 @@ def resample_slc_blocks(
                 # Reporting input block shape for debugging
                 info_channel.log(f"Input block: {in_slices}")
 
-            output_blocks[i] = resample(
+            output_block = resample(
                 input_block,
                 range_index_grid,
                 azimuth_index_grid,
