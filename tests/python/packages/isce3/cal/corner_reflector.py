@@ -15,6 +15,7 @@ from isce3.cal.corner_reflector import (
     cr_to_enu_rotation,
     enu_to_cr_rotation,
     normalize_vector,
+    eval_trihedral_rcs_model,
 )
 import nisar
 
@@ -34,7 +35,7 @@ def angle_between(u: ArrayLike, v: ArrayLike, *, degrees: bool = False) -> float
     return theta
 
 
-class TestParseTriangularTrihedralCornerReflectorCSV:
+class TestParseTrihedralCornerReflectorCSV:
     def test_parse_csv(self):
         # Parse CSV file containing 3 Northeast-looking corner reflectors.
         csv = Path(iscetest.data) / "abscal/REE_CORNER_REFLECTORS_INFO.csv"
@@ -268,12 +269,13 @@ def test_get_crs_in_polygon():
 
     # Make a list of corner reflectors with unique IDs, one at each lon/lat location.
     crs = [
-        isce3.cal.TriangularTrihedralCornerReflector(
+        isce3.cal.TrihedralCornerReflector(
             id=f"CR{i}",
             llh=isce3.core.LLH(np.deg2rad(lon), np.deg2rad(lat), 0.0),
             elevation=0.0,
             azimuth=0.0,
             side_length=1.0,
+            shape="triangular",
         )
         for i, (lon, lat) in enumerate(cr_lonlats)
     ]
@@ -291,3 +293,57 @@ def test_get_crs_in_polygon():
     filtered_crs = isce3.cal.get_crs_in_polygon(crs, lonlat_polygon, buffer=0.1)
     filtered_cr_ids = [cr.id for cr in filtered_crs]
     assert filtered_cr_ids == cr_ids[:-1]
+
+
+# Make sure angle-dependent model gives the same answer as the simple formulae
+# for the peak RCS at the boresight direction.
+
+def get_peak_rcs_triangular(side_length, wavelength):
+    return 4 / 3 * np.pi * (side_length**2 / wavelength)**2
+
+def get_peak_rcs_square(side_length, wavelength):
+    return 12 * np.pi * (side_length**2 / wavelength)**2
+
+def pow2db(x):
+    return 10 * np.log10(x)
+
+@pytest.mark.parametrize("side_length,wavelength,shape", [
+    (1.0, 0.03, "triangular"),
+    (1.0, 0.03, "square"),
+    (1.0, 0.25, "triangular"),
+    (1.0, 0.25, "square"),
+    (3.0, 0.5, "triangular"),
+    (3.0, 0.5, "square"),
+])
+def test_peak_rcs(side_length, wavelength, shape):
+    los = np.array([1, 1, 1]) / np.sqrt(3)
+    rcs = eval_trihedral_rcs_model(los, side_length, wavelength, shape)
+    if shape == "triangular":
+        expected_rcs = get_peak_rcs_triangular(side_length, wavelength)
+    elif shape == "square":
+        expected_rcs = get_peak_rcs_square(side_length, wavelength)
+    else:
+        assert False, "invalid CR shape in unit test"
+    assert np.isclose(pow2db(rcs), pow2db(expected_rcs), rtol=0, atol=0.01)
+
+
+# There's a branch in the RCS vs angle model, so make sure the RCS is continuous
+
+@pytest.mark.parametrize("shape", ["triangular", "square"])
+def test_rcs_continuity(shape):
+    az = np.deg2rad(45)
+    el = np.deg2rad(np.linspace(15, 75, 361))
+    los = np.array([
+        np.cos(az) * np.cos(el),
+        np.sin(az) * np.cos(el),
+        np.sin(el)
+    ]).transpose()
+    a = 1.5
+    λ = 0.23
+    rcs = np.array([eval_trihedral_rcs_model(los[i], a, λ, shape)
+        for i in range(len(el))])
+    rcs_db = pow2db(rcs)
+    eld_step = np.rad2deg(el[1] - el[0])
+    diff_rcs_db = np.diff(rcs_db) / eld_step
+    max_diff = 1.5  # dB / deg
+    npt.assert_array_less(np.abs(diff_rcs_db), max_diff)

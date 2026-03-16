@@ -25,6 +25,7 @@ cuAmpcorParameter::cuAmpcorParameter()
     deviceID = 0;
     nStreams = 1;
     derampMethod = 1;
+    derampAxis = 2; // both directions
 
     windowSizeWidthRaw = 64;
     windowSizeHeightRaw = 64;

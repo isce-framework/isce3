@@ -20,4 +20,5 @@ void add_constants(py::module & core)
     core.attr("GLOBAL_MAX_HEIGHT") = py::float_(isce3::core::GLOBAL_MAX_HEIGHT);
     core.attr("WGS84_ELLIPSOID") = isce3::core::Ellipsoid();
     core.attr("SINC_HALF") = isce3::core::SINC_HALF;
+
 }

@@ -164,6 +164,23 @@ eval(double y, const Eigen::Ref<const Eigen::VectorXd>& x) const
 {
     const auto n = x.size();
     Eigen::Matrix<T, Eigen::Dynamic, 1> out(n);
+
+    // Check bounds before parallel region to avoid exceptions in OpenMP threads
+    if (_boundsError && _haveData) {
+        for (long i = 0; i < n; ++i) {
+            if (!contains(y, x(i))) {
+                pyre::journal::error_t errorChannel("isce.core.LUT2d");
+                errorChannel
+                    << "Out of bounds LUT2d evaluation at " << y << " " << x(i)
+                    << pyre::journal::newline
+                    << " - bounds are " << _ystart << " "
+                    << _ystart + _dy * (_data.length() - 1.0) << " "
+                    << _xstart << " " << _xstart + _dx * (_data.width() - 1.0)
+                    << pyre::journal::endl;
+            }
+        }
+    }
+
     _Pragma("omp parallel for")
     for (long i = 0; i < n; ++i) {
         out(i) = eval(y, x(i));
