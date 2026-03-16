@@ -345,8 +345,11 @@ dense_offsets_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-    deramping_method: enum('magnitude', 'complex', required=False)
+    # Deramp data prior to FFT: 'magnitude' , 'complex' (linear phase ramp), or 'complex_no_deramp'
+    deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
+
+    # Deramp data axis prior to FFT: range, azimuth, or both
+    deramping_axis: enum('range', 'azimuth', 'both', required=False)
 
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
@@ -425,8 +428,11 @@ offsets_product_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-    deramping_method: enum('magnitude', 'complex', required=False)
+    # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
+    deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
+
+    # Deramp data axis prior to FFT: range, azimuth, or both
+    deramping_axis: enum('range', 'azimuth', 'both', required=False)
 
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
@@ -481,10 +487,10 @@ offset_layer_options:
     window_azimuth: int(min=16, max=512, required=False)
 
     # Number of columns for search chip/template in secondary image
-    half_search_range: int(min=4, max=32, required=False)
+    half_search_range: int(min=4, max=64, required=False)
 
     # Number of lines for search chip/template in secondary image
-    half_search_azimuth: int(min=4, max=32, required=False)
+    half_search_azimuth: int(min=4, max=64, required=False)
 
 rubbersheet_options:
     # Path to dense offsets outputs (offsets, snr, covariance).

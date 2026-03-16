@@ -42,8 +42,8 @@ void cuArraysCopyPadded(cuArrays<T_in> *imageIn, cuArrays<T_out> *imageOut);
 void cuArraysAbs(cuArrays<float2> *image1, cuArrays<float> *image2);
 
 // cuDeramp.cu: deramping phase
-void cuDeramp(int method, cuArrays<float2> *images);
-void cuDerampMethod1(cuArrays<float2> *images);
+void cuDeramp(const int method, cuArrays<float2> *images, const int axis);
+void cuLinearDeramp(cuArrays<float2> *images, const int axis);
 
 // cuArraysPadding.cu: various utilities for oversampling padding
 void cuArraysPaddingMany(cuArrays<float2> *image1, cuArrays<float2> *image2);
