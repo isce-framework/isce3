@@ -13,7 +13,7 @@ from isce3.image.modulate import (
 from isce3.core import DateTime, LUT2d
 from isce3.product import RadarGridParameters
 
-from .resample_slc_utils import validate_test_results
+from ..resample_slc_utils import validate_test_results
 
 
 def generate_carrier_ramp_complex(
