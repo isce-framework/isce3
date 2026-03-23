@@ -936,7 +936,9 @@ class RawBase(Base, family='nisar.productreader.raw'):
                 log.warning(f"Asked to ignore {num_ignore} pulses but there "
                     f"are only {nt} total.")
                 num_ignore = nt
-            subswaths[:, -num_ignore:, :] = subswaths[:, -num_ignore, :]
+            # NOTE Need singleton middle dimension for proper broadcasting.
+            i = subswaths.shape[1] - num_ignore
+            subswaths[:, i:, :] = subswaths[:, i:(i + 1), :]
 
         # For dithered replace subswaths (gap mask) with a single subswath
         # that merely tracks min/max valid sample.  Note that gaps may still
