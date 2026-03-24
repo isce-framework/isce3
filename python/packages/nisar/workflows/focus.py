@@ -1986,7 +1986,7 @@ def focus(runconfig, runconfig_path=""):
                 antpat = AntennaPattern(raw, dem, antparser,
                                         instparser, orbit, attitude,
                                         el_lut=el_lut,
-                                        freq_band=frequency,
+                                        freq_band=channel_in.freq_id,
                                         caltone_freq=cfg.processing.caltone.frequency,
                                         delay_ofs_dbf=-2.1474e-6)
 
