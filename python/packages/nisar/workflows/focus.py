@@ -1403,7 +1403,8 @@ def get_identification_data_from_runconfig(cfg: Struct) -> dict:
 def get_identification_data_from_raw(rawlist: list[Raw]) -> dict:
     """
     Populate a dict containing the keys
-        {"planned_datatake_id", "planned_observation_id", "is_urgent"}
+        {"planned_datatake_id", "planned_observation_id", "is_urgent",
+         "has_input_data_exception"}
     by combining the relevant identification metadata keys from all raw data
     files in the provided list.
     """
@@ -1416,7 +1417,9 @@ def get_identification_data_from_raw(rawlist: list[Raw]) -> dict:
         is_urgent = any(raw.identification.isUrgentObservation
             for raw in rawlist),
         is_joint = any(raw.identification.isJointObservation
-            for raw in rawlist)
+            for raw in rawlist),
+        has_input_data_exception = reduce(lambda a, b: a | b,
+            (raw.identification.hasInputDataException for raw in rawlist)),
     )
 
 

@@ -687,6 +687,7 @@ class SLC(h5py.File):
                             frequencies: Optional[str] = None,
                             planned_datatake_id: Optional[str] = None,
                             planned_observation_id: Optional[str] = None,
+                            has_input_data_exception: int = None,
                             is_urgent: Optional[bool] = None,
                             is_joint: Optional[bool] = None,
                             product_spec_version: str = "1.4.0",
@@ -715,6 +716,7 @@ class SLC(h5py.File):
             absoluteOrbitNumber
             boundingPolygon
             instrumentName
+            hasInputDataException
             isJointObservation
             isUrgentObservation
             listOfFrequencies
@@ -843,6 +845,14 @@ class SLC(h5py.File):
             d.attrs["description"] = np.bytes_(
                 'Flag indicating if observation is nominal ("False") '
                 'or urgent ("True")')
+
+        if has_input_data_exception is not None:
+            d = g.require_dataset("hasInputDataException", (), np.uint8)
+            d[()] = np.uint8(has_input_data_exception)
+            d.attrs["description"] = np.bytes_("Indication of input data "
+                "exceptions or anomalies present in this granule. Bitwise OR "
+                "of instrument exception codes for all image pixels (0: no "
+                "anomaly, 2: NISAR LSAR qFSP-H1 sample slip)")
 
         d = set_string(g, "productSpecificationVersion", product_spec_version)
         d.attrs["description"] = np.bytes_("Product specification version "
