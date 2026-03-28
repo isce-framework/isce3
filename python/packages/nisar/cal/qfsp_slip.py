@@ -2,6 +2,7 @@ from enum import Flag, unique
 import numpy as np
 from typing import Sequence
 
+from isce3.core import LUT2d
 from nisar.products.readers.instrument import InstrumentParser
 
 
@@ -80,3 +81,86 @@ def get_qfsp_mask_boundaries(anomaly_code: AnomalyCode | int,
         boundaries[AnomalyCode.SLIP_QFSP_V2] = (overlap_v_8_9,)
 
     return boundaries
+
+
+def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
+                       el_lut, int_cal):
+    """
+    Generate anomaly mask and save to HDF5 dataset
+
+    Parameters
+    ----------
+    anomaly_code : AnomalyCode | int
+        Bitwise OR of anomaly codes of interest.
+    dataset : h5py.Dataset | array_like
+        HDF5 dataset for storing mask.
+    t0_axis : isce3.core.Linspace
+        Zero-Doppler time axis associated with RSLC image.
+    r0_axis : isce3.core.Linspace
+        Zero-Doppler range axis associated with RSLC image.
+    tn_lut, rn_lut : isce3.core.LUT2d
+        Reskew tables providing native Doppler time and range as functions of
+        zero-Doppler (time, range).
+    el_lut : isce3.core.LUT2d
+        Table providing antenna EL angle as a function of native Doppler
+        (time, range).
+    int_cal : InstrumentParser
+        NISAR LSAR INT_CAL file containing the angle-to-coefficient (AC) tables.
+    """
+    nt = len(t0_axis)
+    nr = len(r0_axis)
+    if dataset.shape[0] != nt:
+        raise ValueError("Mask shape[0] is incompatible with time axis length")
+    if dataset.shape[1] != nr:
+        raise ValueError("Mask shape[1] is incompatible with range axis length")
+
+    # Full image mask may be too big to fit in memory.  If it's an HDF5 dataset
+    # then use chunk size as azimuth block size.
+    block_size = dataset.shape[0]
+    if getattr(dataset, "chunks", None) is not None:
+        block_size = dataset.chunks[0]
+
+    # Figure out the EL intervals we have to mask out.
+    boundaries = get_qfsp_mask_boundaries(anomaly_code, int_cal)
+
+    # Before doing anything else, check for no-anomaly since we can return
+    # early in that case.
+    if len(boundaries) == 0:
+        for block_start in range(0, nt, block_size):
+            block = slice(block_start, min(block_start + block_size, nt))
+            dataset[block, :] = AnomalyCode.NO_ANOMALY.value
+        return
+
+    # Not so lucky.  Now let's generate a mask based on the EL LUT data and the
+    # mask intervals.  EL LUT2d is small enough to hold in memory, so mask
+    # should be, too.
+    el_mask = np.zeros(el_lut.data.shape, dataset.dtype)
+    for anomaly_bit, el_intervals in boundaries:
+        code_mask = np.zeros(el_mask.shape, bool)
+        for el_low, el_high in el_intervals:
+            code_mask |= (el_lut.data >= el_low) & (el_lut.data <= el_high)
+        el_mask[code_mask] |= anomaly_bit.value
+
+    # Construct LUT2d with nearest-neighbor so mask values don't change.
+    # Domain of LUT is raw data (native Doppler), so we'll have to reskew it.
+    # NOTE This converts the dtype to float64, but that's okay as long as there
+    # are fewer than 52 bits in the mask (mantissa of float64).
+    mask_lut = LUT2d(el_lut.x_axis, el_lut.y_axis, el_mask, method="nearest",
+                     b_error=False)
+
+    for block_start in range(0, nt, block_size):
+        block_end = min(block_start + block_size, nt)
+        nb = block_end - block_start
+        # Allocate each chunk to avoid HDF5 I/O as much as possible.
+        mask_chunk = np.zeros((nb, nr), dataset.dtype)
+        for i_chunk, i_time in enumerate(range(block_start, block_end)):
+            t0 = t0_axis[i_time]
+            # Compute native Doppler (time, range) from zero-Doppler ones.
+            # Note vectorization along range-axis.
+            tn = tn_lut.eval(t0, r0_axis)
+            rn = rn_lut.eval(t0, r0_axis)
+            # TODO It'd be nice to have a C++ helper for this.
+            mask_chunk[i_chunk, :] = [mask_lut.eval(ti, ri)
+                for (ti, ri) in zip(tn, rn)]
+        # Write to output array / HDF5 dataset.
+        dataset[block_start : block_end, :] = mask_chunk

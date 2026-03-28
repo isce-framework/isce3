@@ -1716,6 +1716,25 @@ def focus(runconfig, runconfig_path=""):
                                        dem, get_rdr2geo_params(cfg))
     beta0_lut, sigma0_lut, gamma0_lut = make_cal_luts(inc_lut)
 
+    # Compute luts for zero-doppler (t,r) -> native-doppler (t,r)
+    reskew_grid = ref_grid.multilook(
+            cfg.processing.lookup_tables.downsampling_factor.azimuth,
+            cfg.processing.lookup_tables.downsampling_factor.range
+        ).add_margin(
+            cfg.processing.lookup_tables.margin_in_pixels.azimuth,
+            cfg.processing.lookup_tables.margin_in_pixels.range
+        )
+    log.info(f"Computing reskew look-up-tables with shape={reskew_grid.shape}")
+    tn_lut, rn_lut = isce3.geometry.make_reskew_lut(
+        reskew_grid.sensing_times, reskew_grid.slant_ranges, orbit, side,
+        zerodop, wvl_ref, dem=dem, doppler_out=dop_ref,
+        rdr2geo_params=get_rdr2geo_params(cfg),
+        geo2rdr_params=get_geo2rdr_params(cfg))
+
+    anomaly_code = reduce(lambda a, b: a | b,
+        (raw.identification.hasInputDataException for raw in rawlist))
+    log.info(f"Data anomaly code = {anomaly_code}")
+
     # Frequency A/B specific setup for output grid, doppler, and blocks.
     ogrid, dop, blocks_bounds, areas = dict(), dict(), dict(), dict()
     for frequency, band in get_bands(common_mode).items():
@@ -1838,6 +1857,19 @@ def focus(runconfig, runconfig_path=""):
                                         orbit.reference_epoch,
                                         extended_radar_grid.slant_ranges,
                                         beta0_lut, sigma0_lut, gamma0_lut)
+
+        # Set anomaly mask. Need to do some geometry.
+        opts = get_dataset_creation_options(cfg, og.shape)
+        del opts["dtype"]
+        mask = slc.create_anomaly_mask(frequency, shape=og.shape, **opts)
+        if instparser is not None:
+            log.info(f"Writing inputDataExceptionMask for frequency{frequency}")
+            nisar.cal.qfsp_slip.write_anomaly_mask(anomaly_code, mask,
+                og.sensing_times, og.slant_ranges, tn_lut, rn_lut, el_lut,
+                instparser)
+        else:
+            log.warning("Internal calibration (INT_CAL) file was not provided "
+                "so unable to populate inputDataExceptionMask")
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
