@@ -120,6 +120,11 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
     if getattr(dataset, "chunks", None) is not None:
         block_size = dataset.chunks[0]
 
+    def write_block(buf, block):
+        dataset[block] = buf
+    if hasattr(dataset, "write_direct"):
+        write_block = lambda buf, block: dataset.write_direct(buf, dest_sel=block)
+
     # Figure out the EL intervals we have to mask out.
     boundaries = get_qfsp_mask_boundaries(anomaly_code, int_cal)
 
@@ -128,7 +133,10 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
     if len(boundaries) == 0:
         for block_start in range(0, nt, block_size):
             block = slice(block_start, min(block_start + block_size, nt))
-            dataset[block, :] = AnomalyCode.NO_ANOMALY.value
+            nb = block.stop  - block.start
+            buf = np.zeros((nb, dataset.shape[1]), dataset.dtype)
+            buf[...] = AnomalyCode.NO_ANOMALY.value
+            write_block(buf, np.s_[block, :])
         return
 
     # Not so lucky.  Now let's generate a mask based on the EL LUT data and the
@@ -163,4 +171,4 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
             mask_chunk[i_chunk, :] = [mask_lut.eval(ti, ri)
                 for (ti, ri) in zip(tn, rn)]
         # Write to output array / HDF5 dataset.
-        dataset[block_start : block_end, :] = mask_chunk
+        write_block(mask_chunk, np.s_[block_start : block_end, :])
