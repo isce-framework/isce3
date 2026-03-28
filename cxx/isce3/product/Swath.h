@@ -118,7 +118,7 @@ class isce3::product::Swath {
         inline isce3::product::SubSwaths& subSwaths() {
             return _subSwaths;
         }
-        
+
         inline const isce3::product::SubSwaths& subSwaths() const {
             return _subSwaths;
         }

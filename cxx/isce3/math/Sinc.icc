@@ -90,4 +90,29 @@ T sinc(T t)
     return std::sin(x) / x;
 }
 
+template<typename T>
+CUDA_HOSTDEV
+inline
+std::complex<T> sinc(std::complex<T> t)
+{
+    static_assert(std::is_floating_point<T>::value);
+
+    using U = typename std::remove_cv<T>::type;
+    static constexpr auto eps1 = detail::root_epsilon<U>();
+    static constexpr auto eps2 = detail::fourth_root_epsilon<U>();
+
+    auto u = T(M_PI) * t;
+    auto x = std::abs(u);
+
+    // approximate by Taylor series expansion near zero
+    if (x < eps2) {
+        std::complex<T> out = static_cast<T>(1);
+        if (x > eps1) {
+            out -= u * u / static_cast<T>(6);
+        }
+        return out;
+    }
+    return std::sin(u) / u;
+}
+
 }}

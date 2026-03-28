@@ -14,7 +14,7 @@
 #include <isce3/signal/Filter.h>
 #include <isce3/signal/Signal.h>
 
-TEST(Filter, constructAzimuthCommonbandFilter)
+TEST(Filter, constructAzimuthCommonBandFilter)
 {
     //This test constructs a common azimuth band filter.
 
@@ -35,9 +35,9 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
-    // Get the Doppler polynomial and use it for both reference and secondary SLCs
-    auto dop1 = isce3::core::avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
-    auto dop2 = dop1;
+    // Get the Doppler polynomial and use it for both refernce and secondary SLCs
+    std::valarray<double> dop1(nfft);
+    std::valarray<double> dop2(nfft);
 
     // get pulase repetition frequency (prf)
     double prf = swath.nominalAcquisitionPRF();
@@ -50,15 +50,13 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     double commonAzimuthBandwidth = 1000.0;
 
     isce3::signal::Filter<float> filter;
-    filter.constructAzimuthCommonbandFilter(dop1,
-                                            dop2,
-                                            commonAzimuthBandwidth,
-                                            prf,
-                                            beta,
-                                            refSlc, refSpectrum,
-                                            ncols, blockRows);
+    filter.constructAzimuthCommonBandCosineFilter(dop1,
+                                                  dop2,
+                                                  commonAzimuthBandwidth,
+                                                  prf,
+                                                  beta,
+                                                  ncols, blockRows);
     filter.writeFilter(ncols, blockRows);
-
 }
 
 TEST(Filter, constructBoxcarRangeBandpassFilter)
@@ -80,10 +78,10 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
 
     // get the range bandwidth
     double BW = swath.processedRangeBandwidth();
-    
+
     //The bands are specified by two vectors:
     //  1) a vector of center frequencies for each sub-band
-    std::valarray<double> subBandCenterFrequencies{-3.0e6, 0.0, 3e6}; 
+    std::valarray<double> subBandCenterFrequencies{-3.0e6, 0.0, 3e6};
     //  2) a vector of bandwidth of each sub-band
     std::valarray<double> subBandBandwidths{2.0e6, 2.0e6, 2.0e6};
 
@@ -101,7 +99,7 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
                                 blockRows,
                                 filterType);
 
-    //filter.writeFilter(ncols, blockRows);
+    filter.writeFilter(ncols, blockRows);
 
     // change the filter type to cosine
     filterType = "cosine";
@@ -114,8 +112,31 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
                                   blockRows,
                                   filterType);
 
-    //filter.writeFilter(ncols, blockRows);
-    
+    filter.writeFilter(ncols, blockRows);
+}
+
+TEST(Filter, constructRangeCommonBandKaiserFilter)
+{
+    //This test constructs a kaiser common band range band-pass FIR filter.
+    int fft_size = 256;
+    std::valarray<std::complex<float>> kaiser;
+
+    double subBandCenterFrequency = 0.0;
+    double subBandBandwidth = 2.0e6;
+    // Assume range sampling frequency equals 1.2 times bandwidth for this test
+    double rangeSamplingFrequency = 1.2 * subBandBandwidth;
+
+    isce3::signal::Filter<float> filter;
+    filter.constructRangeCommonBandKaiserFilter(subBandCenterFrequency,
+                                                subBandBandwidth,
+                                                rangeSamplingFrequency,
+                                                fft_size,
+                                                1.6,
+                                                kaiser);
+
+    ASSERT_LT(std::abs(std::abs(kaiser[0]) - 0.9997906684875488), 1.0e-6);
+    ASSERT_LT(std::abs(std::abs(kaiser[127]) - 0.003600120544433594), 1.0e-6);
+    ASSERT_LT(std::abs(std::abs(kaiser[255]) - 0.99970543384552), 1.0e-6);
 }
 
 int main(int argc, char * argv[]) {

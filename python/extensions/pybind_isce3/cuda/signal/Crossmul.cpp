@@ -30,7 +30,8 @@ void addbinding(py::class_<gpuCrossmul> & pyCrossmul)
                 py::arg("sec_slc"),
                 py::arg("interferogram"),
                 py::arg("coherence"),
-                py::arg("range_offset") = nullptr, R"(
+                py::arg("range_offset") = nullptr,
+                py::arg("azimuth_offset") = nullptr, R"(
     Crossmultiply reference and secondary SLCs to generate interferogram and coherence products.
 
     Parameters
@@ -44,17 +45,18 @@ void addbinding(py::class_<gpuCrossmul> & pyCrossmul)
     coherence: Raster
         Output coherence raster
     interferogram: Raster
-        Optional range offset raster usef for flattening
+        Optional range offset raster usef for flattening and common band filtering
+        Optional azimuth offset raster usef for azimuth common band filtering
                 )")
         .def("set_dopplers", &gpuCrossmul::doppler,
                 py::arg("ref_doppler"),
                 py::arg("sec_doppler"))
         .def_property("ref_doppler",
                 py::overload_cast<>(&gpuCrossmul::refDoppler, py::const_),
-                py::overload_cast<isce3::core::LUT1d<double>>(&gpuCrossmul::refDoppler))
+                py::overload_cast<isce3::core::LUT2d<double>>(&gpuCrossmul::refDoppler))
         .def_property("sec_doppler",
                 py::overload_cast<>(&gpuCrossmul::secDoppler, py::const_),
-                py::overload_cast<isce3::core::LUT1d<double>>(&gpuCrossmul::secDoppler))
+                py::overload_cast<isce3::core::LUT2d<double>>(&gpuCrossmul::secDoppler))
         .def_property("ref_sec_offset_starting_range_shift",
                 py::overload_cast<>(&gpuCrossmul::startingRangeShift, py::const_),
                 py::overload_cast<double>(&gpuCrossmul::startingRangeShift))

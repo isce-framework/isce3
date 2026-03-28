@@ -14,6 +14,7 @@ gdal.UseExceptions()
 
 from isce3.io import HDF5OptimizedReader
 from nisar.products.readers import SLC
+
 from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.compute_stats import compute_stats_real_data
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
@@ -34,6 +35,9 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
     crossmul_params = cfg['processing']['crossmul']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     flatten = crossmul_params['flatten']
+    do_common_range_band_filter = crossmul_params['common_band_range_filter']
+    do_common_azimuth_band_filter = crossmul_params['common_band_azimuth_filter']
+
     lines_per_block = crossmul_params['lines_per_block']
 
     if rg_looks == None:
@@ -41,7 +45,7 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
     if az_looks == None:
         az_looks = crossmul_params['azimuth_looks']
 
-    if flatten:
+    if flatten or do_common_range_band_filter or do_common_azimuth_band_filter:
         flatten_path = crossmul_params['flatten_path']
 
     if output_hdf5 is None:
@@ -63,8 +67,22 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
         isce3.cuda.core.set_device(device)
         crossmul = isce3.cuda.signal.Crossmul()
+
+        if do_common_range_band_filter or do_common_azimuth_band_filter:
+            raise NotImplementedError("Common band filters have not been implemented for GPU")
     else:
         crossmul = isce3.signal.Crossmul()
+        # do common range band filter
+        crossmul.do_common_range_band_filter = \
+            do_common_range_band_filter
+        # do common azimuth band filter
+        crossmul.do_common_azimuth_band_filter = \
+            do_common_azimuth_band_filter
+        # do the flatten
+        crossmul.do_flatten = flatten
+        # sensor type
+        crossmul.sensor_type = \
+            ref_slc.identification.missionId
 
     crossmul.range_looks = rg_looks
     crossmul.az_looks = az_looks
@@ -87,10 +105,9 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
             crossmul_dir = scratch_path / f'crossmul/freq{freq}'
             crossmul_dir.mkdir(parents=True, exist_ok=True)
             # get 2d doppler, discard azimuth dependency, and set crossmul dopplers
-            ref_dopp = isce3.core.avg_lut2d_to_lut1d(
-                ref_slc.getDopplerCentroid(frequency=freq))
-            sec_dopp = isce3.core.avg_lut2d_to_lut1d(
-                sec_slc.getDopplerCentroid(frequency=freq))
+            ref_dopp = ref_slc.getDopplerCentroid(frequency=freq)
+            sec_dopp = sec_slc.getDopplerCentroid(frequency=freq)
+
             crossmul.set_dopplers(ref_dopp, sec_dopp)
 
             freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
@@ -100,11 +117,37 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
             crossmul.range_pixel_spacing = ref_radar_grid.range_pixel_spacing
             crossmul.wavelength = ref_radar_grid.wavelength
 
+            # CPU version
+            # TODO: Add parameters to GPU implementation
+            if not use_gpu:
+
+                sec_rdr_grid = sec_slc.getRadarGrid(freq)
+
+                # range bandwidth
+                crossmul.range_bandwidth = \
+                    ref_slc.getSwathMetadata(freq).processed_range_bandwidth
+                # azimuth band width and PRF
+                crossmul.azimuth_bandwidth = \
+                    ref_slc.getSwathMetadata(freq).processed_azimuth_bandwidth
+                crossmul.prf = ref_radar_grid.prf
+
+                # start range and azimuth time for reference and secondary images
+                crossmul.ref_start_range = ref_radar_grid.starting_range
+                crossmul.sec_start_range = sec_rdr_grid.starting_range
+                crossmul.ref_start_azimuth_time = ref_radar_grid.sensing_start
+                crossmul.sec_start_azimuth_time = sec_rdr_grid.sensing_start
+
             # enable/disable flatten accordingly
-            if flatten:
+            if flatten or do_common_range_band_filter or do_common_azimuth_band_filter:
                 # set frequency dependent range offset raster
-                flatten_raster = isce3.io.Raster(
+                range_offsets_raster = isce3.io.Raster(
                     f'{flatten_path}/geo2rdr/freq{freq}/range.off')
+
+                if do_common_azimuth_band_filter:
+                    azimuth_offsets_raster = isce3.io.Raster(
+                        f'{flatten_path}/geo2rdr/freq{freq}/azimuth.off')
+                else:
+                    azimuth_offsets_raster = None
 
                 # Calculate the starting range shift between reference and secondary in meters
                 sec_radar_grid = sec_slc.getRadarGrid(freq)
@@ -114,7 +157,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
                 crossmul.ref_sec_offset_starting_range_shift\
                     = rng_shift
             else:
-                flatten_raster = None
+                range_offsets_raster = None
+                azimuth_offsets_raster = None
 
             for pol in pol_list:
                 output_dir = crossmul_dir / f'{pol}'
@@ -166,7 +210,25 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
 
                 # Compute multilooked interferogram and coherence raster
                 crossmul.crossmul(ref_slc_raster, sec_slc_raster, ifg_raster,
-                                  coh_raster, flatten_raster)
+                                  coh_raster,
+                                  range_offsets_raster,
+                                  azimuth_offsets_raster)
+
+                # populate the new bandwidth along azimuth and range after the common band filter
+                # if there is no common band filter applied, the bandwith will remain the same with
+                # the orignal SLC bandwidth.
+                # NOTE: Those bandwidths have already been in the dataset.
+                # TODO: GPU
+                if not use_gpu:
+                    processing_info_path = \
+                        RIFGGroupsPaths().ProcessingInformationPath
+                    ifgram_processing_parameter = \
+                        f'{processing_info_path}/parameters/interferogram/frequency{freq}'
+                    # Update the bandwidth
+                    dst_h5[f'{ifgram_processing_parameter}/azimuthBandwidth'][...] = \
+                        crossmul.processed_azimuth_bandwidth
+                    dst_h5[f'{ifgram_processing_parameter}/rangeBandwidth'][...] = \
+                        crossmul.processed_range_bandwidth
 
                 del ifg_raster
 

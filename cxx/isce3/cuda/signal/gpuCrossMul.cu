@@ -119,8 +119,7 @@ __global__ void flatten_g(thrust::complex<T> *ifg,
 
 
 /** Set number of range looks */
-void
-gpuCrossmul::rangeLooks(int rngLks) {
+void gpuCrossmul::rangeLooks(int rngLks) {
     if (rngLks < 1) {
         std::string error_msg = "ERROR CUDA crossmul range multilook < 1";
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
@@ -134,8 +133,7 @@ gpuCrossmul::rangeLooks(int rngLks) {
 }
 
 /** Set number of azimuth looks */
-void
-gpuCrossmul::azimuthLooks(int azLks) {
+void gpuCrossmul::azimuthLooks(int azLks) {
     if (azLks < 1) {
         std::string error_msg = "ERROR CUDA crossmul azimuth multilook < 1";
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
@@ -148,9 +146,8 @@ gpuCrossmul::azimuthLooks(int azLks) {
         _multiLookEnabled = false;
 }
 
-void
-gpuCrossmul::doppler(isce3::core::LUT1d<double> refDoppler,
-                     isce3::core::LUT1d<double> secDoppler)
+void gpuCrossmul::doppler(isce3::core::LUT2d<double> refDoppler,
+                          isce3::core::LUT2d<double> secDoppler)
 {
     _refDoppler = refDoppler;
     _secDoppler = secDoppler;
@@ -214,7 +211,8 @@ gpuCrossmul::crossmul(isce3::io::Raster& refSlcRaster,
                       isce3::io::Raster& secSlcRaster,
                       isce3::io::Raster& ifgRaster,
                       isce3::io::Raster& coherenceRaster,
-                      isce3::io::Raster* rngOffsetRaster) const
+                      isce3::io::Raster* rngOffsetRaster,
+                      isce3::io::Raster* aziOffsetRaster) const
 {
     // set flatten flag based range offset raster ptr value
     bool flatten = rngOffsetRaster ? true : false;

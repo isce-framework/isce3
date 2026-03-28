@@ -162,7 +162,6 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                                               weather_model_output_dir):
                 '''
                 Internal convenience function to convert the ECMWF NetCDF to RAiDER NetCDF
-
                 Parameters
                 ----------
                  weather_model_file: str

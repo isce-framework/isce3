@@ -1,10 +1,15 @@
 #pragma once
 
 #include <isce3/core/Common.h>
+#include <complex>
 
 namespace isce3 { namespace math {
 
 /** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
+template<typename T>
+CUDA_HOSTDEV
+std::complex<T> sinc(std::complex<T> t);
+
 template<typename T>
 CUDA_HOSTDEV
 T sinc(T t);
