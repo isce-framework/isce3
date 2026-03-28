@@ -526,6 +526,18 @@ class SLC(h5py.File):
         dset.attrs["units"] = np.bytes_("1")
         return dset
 
+    def create_anomaly_mask(self, frequency="A", **kw) -> h5py.Dataset:
+        log.info("Initializing storage for anomaly mask for "
+            f"frequency={frequency} with HDF5 options={kw}")
+        kw.setdefault("dtype", np.uint8)
+        dset = self.swath(frequency).create_dataset("inputDataExceptionMask",
+            **kw)
+        dset.attrs["description"] = np.bytes_("Bitwise OR of input data "
+            "exception codes for each image pixel (0: no anomaly, 2: NISAR "
+            "LSAR qFSP-H1 sample slip)")
+        dset.attrs["units"] = np.bytes_("1")
+        return dset
+
     def update_swath(self, grid: RadarGridParameters, orbit: Orbit,
                      range_bandwidth: float, frequency: str,
                      azimuth_bandwidth: float, acquired_prf: float,
