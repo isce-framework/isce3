@@ -3,6 +3,7 @@
 import iscetest
 import journal
 import numpy as np
+import pytest
 
 import isce3.ext.isce3 as isce
 
@@ -47,6 +48,15 @@ def test_LUT2d():
     lut = isce.core.LUT2d(2.0)
     assert lut.ref_value == 2.0
 
+    # Call vectorized vs x
+    lut2d.eval(d_refs[0,0], d_refs[:,1])
+    # Call vectorized vs y and x
+    lut2d.eval(d_refs[:,0], d_refs[:,1])
+
+    # Call vectorized with size mismatch
+    with pytest.raises(ValueError):
+        lut2d.eval(d_refs[:10,0], d_refs[:,1])
+
 
 def test_bounds_error():
     """Test that out-of-bounds evaluation raises exceptions.
@@ -54,8 +64,6 @@ def test_bounds_error():
     Regression test for bug where vectorized .eval crashes Python instead of
     raising a catchable exception when bounds_error=True.
     """
-    import pytest
-
     # Create a simple LUT with known bounds: 10 points in x, 2 points in y
     x = np.linspace(0, 5, 10)
     y = np.linspace(10, 20, 2)
@@ -78,6 +86,8 @@ def test_bounds_error():
     # Test vectorized out-of-bounds (should raise, not crash)
     with pytest.raises((RuntimeError, journal.ApplicationError)):
         lut2d.eval(y, np.array([x_oob, x_oob]))
+    with pytest.raises(IndexError):
+        lut2d.eval([y, y], np.array([x_oob, x_oob]))
 
     # Test vectorized, all in-bounds
     result = lut2d.eval(y, np.array([1.0, 2.0, 3.0]))

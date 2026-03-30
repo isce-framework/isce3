@@ -7,7 +7,10 @@
 #include "LUT2d.h"
 
 #include <complex>
+#include <isce3/except/Error.h>
 #include <pyre/journal.h>
+#include <sstream>
+#include <string>
 
 #include "Interpolator.h"
 
@@ -184,6 +187,40 @@ eval(double y, const Eigen::Ref<const Eigen::VectorXd>& x) const
     _Pragma("omp parallel for")
     for (long i = 0; i < n; ++i) {
         out(i) = eval(y, x(i));
+    }
+    return out;
+}
+
+template<typename T>
+Eigen::Matrix<T, Eigen::Dynamic, 1> isce3::core::LUT2d<T>::
+eval(const Eigen::Ref<const Eigen::VectorXd>& y,
+    const Eigen::Ref<const Eigen::VectorXd>& x) const
+{
+    const auto n = x.size();
+    if (y.size() != n) {
+        throw isce3::except::LengthError(ISCE_SRCINFO(),
+            "Arguments to LUT2d::eval must have same size");
+    }
+    Eigen::Matrix<T, Eigen::Dynamic, 1> out(n);
+
+    // Check bounds before parallel region to avoid exceptions in OpenMP threads
+    if (_boundsError && _haveData) {
+        for (long i = 0; i < n; ++i) {
+            if (!contains(y(i), x(i))) {
+                std::ostringstream msg;
+                msg << "Out of bounds LUT2d evaluation at y=" << y(i) << " x="
+                    << x(i) << "\n" << " - bounds are " << _ystart << " "
+                    << _ystart + _dy * (_data.length() - 1.0) << " "
+                    << _xstart << " " << _xstart + _dx * (_data.width() - 1.0)
+                    << std::endl;
+                throw isce3::except::OutOfRange(ISCE_SRCINFO(), msg.str());
+            }
+        }
+    }
+
+    _Pragma("omp parallel for")
+    for (long i = 0; i < n; ++i) {
+        out(i) = eval(y(i), x(i));
     }
     return out;
 }
