@@ -143,7 +143,7 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
     # mask intervals.  EL LUT2d is small enough to hold in memory, so mask
     # should be, too.
     el_mask = np.zeros(el_lut.data.shape, dataset.dtype)
-    for anomaly_bit, el_intervals in boundaries:
+    for anomaly_bit, el_intervals in boundaries.items():
         code_mask = np.zeros(el_mask.shape, bool)
         for el_low, el_high in el_intervals:
             code_mask |= (el_lut.data >= el_low) & (el_lut.data <= el_high)
