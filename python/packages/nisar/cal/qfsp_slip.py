@@ -167,8 +167,6 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
             # Note vectorization along range-axis.
             tn = tn_lut.eval(t0, r0_axis)
             rn = rn_lut.eval(t0, r0_axis)
-            # TODO It'd be nice to have a C++ helper for this.
-            mask_chunk[i_chunk, :] = [mask_lut.eval(ti, ri)
-                for (ti, ri) in zip(tn, rn)]
+            mask_chunk[i_chunk, :] = mask_lut.eval(tn, rn)
         # Write to output array / HDF5 dataset.
         write_block(mask_chunk, np.s_[block_start : block_end, :])
