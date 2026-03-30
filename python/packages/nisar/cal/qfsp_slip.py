@@ -1,6 +1,6 @@
 from enum import Flag, unique
 import numpy as np
-from typing import Sequence
+from typing import Sequence, Union
 
 from isce3.core import LUT2d
 from nisar.products.readers.instrument import InstrumentParser
@@ -31,7 +31,7 @@ ELAngleInterval = tuple[float, float]
 # There can be multiple intervals associated with each anomaly.
 Boundaries = dict[AnomalyCode, Sequence[ELAngleInterval]]
 
-def get_qfsp_mask_boundaries(anomaly_code: AnomalyCode | int,
+def get_qfsp_mask_boundaries(anomaly_code: Union[AnomalyCode, int],
                              int_cal: InstrumentParser) -> Boundaries:
     """
     Determine EL angle intervals associated with NISAR anomaly codes.
