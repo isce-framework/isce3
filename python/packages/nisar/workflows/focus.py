@@ -79,15 +79,17 @@ def load_config(yaml):
     return Struct(cfg)
 
 
+def struct2dict(s: Struct):
+    d = s.__dict__.copy()
+    for k in d:
+        if isinstance(d[k], Struct):
+            d[k] = struct2dict(d[k])
+        elif isinstance(d[k], list):
+            d[k] = [struct2dict(v) if isinstance(v, Struct) else v for v in d[k]]
+    return d
+
+
 def dump_config(cfg: Struct, stream):
-    def struct2dict(s: Struct):
-        d = s.__dict__.copy()
-        for k in d:
-            if isinstance(d[k], Struct):
-                d[k] = struct2dict(d[k])
-            elif isinstance(d[k], list):
-                d[k] = [struct2dict(v) if isinstance(v, Struct) else v for v in d[k]]
-        return d
     parser = YAML()
     parser.indent = 4
     d = struct2dict(cfg)
@@ -1145,7 +1147,7 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             num_cpi_tb=opt_evd.num_cpi_per_threshold_block,
             mitigate_enable=opt.mitigation_enabled,
             raw_data_mitigated=raw_data_mitigated)
-    else:
+    elif opt.mitigation_algorithm == "FDNF":
         opt_fnf = opt.freq_notch_filter
         rfi_likelihood = isce3.signal.rfi_freq_null.run_freq_notch(
             raw_data,
@@ -1161,7 +1163,14 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             wb_detect=opt_fnf.wb_detect,
             mitigate_enable=opt.mitigation_enabled,
             raw_data_mitigated=raw_data_mitigated)
-
+    elif opt.mitigation_algorithm.lower() == "tone-rank":
+        isr, freq, hits = isce3.signal.rfi_tone_rank.remove_loud_tones(
+            raw_data,
+            detect_only=not opt.mitigation_enabled,
+            zout=raw_data_mitigated,
+            **struct2dict(opt.tone_rank),
+        )
+        rfi_likelihood = np.sum(isr)
 
     log.info(f"RFI likelihood = {rfi_likelihood}")
     return raw_data_mitigated, rfi_likelihood

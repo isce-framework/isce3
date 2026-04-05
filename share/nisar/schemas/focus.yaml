@@ -405,10 +405,11 @@ rfi_options:
   #   - 'ST-EVD': slow-time eigenvalue decomposition algorithm
   #   - 'FDNF': frequency domain notch filtering algorithm
   # Defaults to 'ST-EVD'.
-  mitigation_algorithm: enum('ST-EVD', 'FDNF', required=False)
+  mitigation_algorithm: enum('ST-EVD', 'FDNF', "tone-rank", required=False)
   # Number of subdivisions in range.  Defaults to 1.
   slow_time_evd: include('slow_time_evd_options', required=False)
   freq_notch_filter: include('freq_notch_filter_options', required=False)
+  tone_rank: include('tone_rank_options', required=False)
   # Number of range samples per range block when data blocking
   # is applied in range direction for sample covariance matrix
   # estimation. It is recommended that this parameter is at least
@@ -492,6 +493,11 @@ rfi_threshold_options:
     # final threshold. The values of x outside of the defined range of y are
     # extrapolated.
     y: list(num(min=0), min=2, required=False)
+
+tone_rank_options:
+    block_dims: list(int(min=1), min=2, max=2, required=False)
+    nominal_false_positive_rate: num(min=0.0, max=1.0, required=False)
+    reference_quantile: num(min=0.0, max=1.0, required=False)
 
 qa_options:
   # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
