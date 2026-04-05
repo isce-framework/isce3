@@ -1112,8 +1112,6 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             raise ValueError("Requested RFI mitigation but disabled detection.")
         log.info("Configured to skip RFI processing")
         return raw_data, np.nan
-    if opt.mitigation_algorithm != "ST-EVD" and opt.mitigation_algorithm != "FDNF":
-        raise NotImplementedError("Only ST-EVD and FDNF RFI algorithms are supported")
     msg = f"Running {opt.mitigation_algorithm} radio frequency interference (RFI) detection"
     if opt.mitigation_enabled:
         msg += " and mitigation"
@@ -1171,6 +1169,9 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             **struct2dict(opt.tone_rank),
         )
         rfi_likelihood = np.sum(isr)
+    else:
+        raise NotImplementedError(f"{opt.mitigation_algorithm} RFI algorithm "
+            "is not supported")
 
     log.info(f"RFI likelihood = {rfi_likelihood}")
     return raw_data_mitigated, rfi_likelihood
