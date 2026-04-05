@@ -448,6 +448,20 @@ runconfig:
             # cal pulses.
             zero_fill_gaps: True
 
+            valid_data_mask:
+                # Length in meters to divide the valid data polygon into before
+                # rasterization.  Ideally smaller than any changes in the
+                # location of the swath due to range timing updates.
+                polygon_segment_length: 50.0
+
+                # Number of pulses to ignore when calculating the valid data
+                # region at the end of a fixed-PRF observation.  This is
+                # relevant when a fixed-PRF observation is immediately followed
+                # by a dithered observation, as the dithered pulses in the air
+                # will overlap the last few receive windows of the fixed-PRF
+                # one.
+                num_ignore: 25
+
             caltone:
                 # If "azimuth_mean", subtract the azimuth mean from the raw
                 # data, which is useful when the caltone is nearly constant in

@@ -1528,7 +1528,8 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
 
 def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
                            rdr2geo_params=dict(), geo2rdr_params=dict(),
-                           ignore_failure=False):
+                           ignore_failure=False, polygon_segment_length=50.0,
+                           num_ignore=25):
     """
     Determine fully-focused regions of the image in a format suitable for
     populating the validSamplesSubSwathX RSLC datasets.
@@ -1562,6 +1563,15 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         Otherwise an exception will be raised on failures.  This can be useful
         for datasets where the orbit data covers all the raw data but without
         enough extra for the reskew to the zero-Doppler image grid.
+    polygon_segment_length : float, optional
+        Length scale over which subswath boundary can be considered linear,
+        in meters.
+    num_ignore : int, optional
+        Number of pulses to ignore when calculating the valid data region at the
+        end of a fixed-PRF observation.  This is relevant when a fixed-PRF
+        observation is immediately followed by a dithered observation, as the
+        dithered pulses in the air will overlap the last few receive windows of
+        the fixed-PRF one.
 
     Returns
     -------
@@ -1576,16 +1586,19 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         raw_chan = find_overlapping_channel(raw, out_chan)
 
         freq = raw_chan.freq_id
-        bboxes = raw.getSubSwathBboxes(freq, epoch=orbit.reference_epoch)
-        raw_bbox_lists.append(bboxes)
+        bbox_lists = raw.getSubSwathBboxes(freq, epoch=orbit.reference_epoch,
+            num_ignore=num_ignore)
+        raw_bbox_lists.extend(bbox_lists)
 
         txpol = raw_chan.pol[0]
-        chirp_durations.append(raw.getChirpParameters(freq, txpol)[3])
+        T = raw.getChirpParameters(freq, txpol)[3]
+        chirp_durations.extend(len(bbox_lists) * [T])
 
     try:
         swaths = isce3.focus.get_focused_sub_swaths(raw_bbox_lists,
             chirp_durations, orbit, doppler, azres, grid, dem=dem,
-            rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params)
+            rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params,
+            max_segment_length=polygon_segment_length)
     except Exception as e:
         if ignore_failure:
             log.error("Failed to calculate valid subswath masks!  "
@@ -1796,7 +1809,8 @@ def focus(runconfig, runconfig_path=""):
         log.info("computing valid swaths")
         valid_swaths = get_focused_sub_swaths(rawlist, chan, og, orbit,
             dop[frequency], dem, azres, rdr2geo_params=get_rdr2geo_params(cfg),
-            geo2rdr_params=get_geo2rdr_params(cfg), ignore_failure=False)
+            geo2rdr_params=get_geo2rdr_params(cfg), ignore_failure=False,
+            **vars(cfg.processing.valid_data_mask))
 
         slc.update_swath(og, orbit, band.width, frequency,  azimuth_bandwidth,
             acquired_prf, acquired_bw, acquired_fc, valid_swaths)
@@ -1972,7 +1986,7 @@ def focus(runconfig, runconfig_path=""):
                 antpat = AntennaPattern(raw, dem, antparser,
                                         instparser, orbit, attitude,
                                         el_lut=el_lut,
-                                        freq_band=frequency,
+                                        freq_band=channel_in.freq_id,
                                         caltone_freq=cfg.processing.caltone.frequency,
                                         delay_ofs_dbf=-2.1474e-6)
 
