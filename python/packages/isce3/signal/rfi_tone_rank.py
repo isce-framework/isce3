@@ -32,6 +32,8 @@ def get_spectral_mask(
     # small.
     k = round(reference_quantile * n)
     kth_power = np.partition(power_spectra, k)[k]
+    if kth_power == 0.0:
+        return np.zeros(spectra.shape, dtype=bool), 0.0
     # Estimate the parameter of a lifted exponential distribution.
     λ = exp_from_quantile(reference_quantile, kth_power, bandwidth)
     # Determine threshold.  Since we've estimated a statistical model, we can
