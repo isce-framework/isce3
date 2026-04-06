@@ -1717,6 +1717,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'calibrationInformation' in output_h5_group
         is_processing_information_group = \
             'processingInformation' in output_h5_group
+        is_grids_group = 'grids' in output_h5_group
 
         if (is_calibration_information_group and
                 is_processing_information_group):
@@ -1730,6 +1731,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             metadata_group = 'calibrationInformation'
         elif is_processing_information_group:
             metadata_group = 'processingInformation'
+        elif is_grids_group:
+            metadata_group = 'grids'
         else:
             error_msg = f'Could not determine LUT group for {output_h5_group}'
             error_channel.log(error_msg)
@@ -1816,6 +1819,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         elif metadata_group == 'processingInformation':
             metadata_geogrid = self.cfg['processing'][
                 'processing_information']['geogrid']
+        elif metadata_group == 'grids':
+            metadata_geogrid = \
+                self.cfg['processing']['geocode']['geogrids'][frequency]
         else:
             error_msg = f'Invalid metadata group {metadata_group}'
             error_channel.log(error_msg)
