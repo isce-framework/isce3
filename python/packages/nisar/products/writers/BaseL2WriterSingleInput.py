@@ -1634,7 +1634,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     frequency=None, output_ds_name_list=None,
                     input_ds_name_list=None,
                     skip_if_not_present=False,
-                    compute_stats=False):
+                    compute_stats=False,
+                    data_interpolator=None):
         """
         Geocode a look-up table (LUT) from the input product in
         radar coordinates to the output product in map coordinates
@@ -1665,6 +1666,14 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
+        data_interpolator: str, optional
+            Interpolation algorithm to use for geocoding.
+            The default interpolation algorithm is determined dynamically
+            based on the dimensions of the LUT. If the LUT contains a single
+            row or column, nearest neighbor interpolation will be used.
+            Otherwise, if the LUT contains < 5 rows or columns, bilinear
+            interpolation will be used. Otherwise, biquintic interpolation
+            will be used.
 
         Returns
         -------
@@ -1737,7 +1746,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             input_h5_group_path,
             output_h5_group_path,
             skip_if_not_present,
-            compute_stats)
+            compute_stats,
+            data_interpolator)
 
     def geocode_metadata_group(self,
                                frequency,
