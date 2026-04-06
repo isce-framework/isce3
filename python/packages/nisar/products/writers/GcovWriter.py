@@ -520,7 +520,8 @@ class GcovWriter(BaseL2WriterSingleInput):
                 self.output_hdf5_obj[axis_path].attrs[
                     "pixel_coordinate_convention"] = np.bytes_('center')
 
-            self.geocode_lut(f'{input_swaths_freq_path}',
+            self.geocode_lut(f'{output_grids_freq_path}',
+                             f'{input_swaths_freq_path}',
                              output_ds_name_list='inputDataExceptionMask',
                              skip_if_not_present=True,
                              compute_stats=False,
