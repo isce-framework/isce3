@@ -29,7 +29,8 @@ from isce3.unwrap.preprocess import project_map_to_radar
 from nisar.products.insar.product_paths import (CommonPaths, RIFGGroupsPaths,
                                                 RUNWGroupsPaths)
 from nisar.products.readers import SLC
-from nisar.products.utils import deepcopy_runconfig_and_keep_isce3_obj
+from nisar.products.utils import (deepcopy_runconfig_and_keep_isce3_obj,
+                                  interpret_subswath_mask)
 from nisar.workflows import (crossmul, filter_interferogram, h5_prep,
                              prepare_insar_hdf5, resample_slc_v2, unwrap)
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
@@ -365,16 +366,21 @@ def copy_iono_datasets(iono_insar_cfg,
                     compute_stats_real_hdf5_dataset(dst_h5[dst_iono_path])
 
 
-def compute_differential_phase(phase_first,
-                               phase_second,
-                               output_path,
-                               first_data_path,
-                               second_data_path,
-                               output_data_path,
-                               lines_per_block,
-                               first_slant_path=None,
-                               second_slant_path=None,
-                               ):
+def compute_differential_phase(
+        phase_first,
+        phase_second,
+        output_path,
+        first_data_path,
+        second_data_path,
+        output_data_path,
+        lines_per_block,
+        first_slant_path=None,
+        second_slant_path=None,
+        subswath_mask_enabled=False,
+        first_mask_path=None,
+        second_mask_path=None,
+        invalid_fill_value=0,
+    ):
     """
     Compute a differential phase by multiplying the first complex phase
     dataset with the complex conjugate of the second dataset, then write
@@ -410,6 +416,19 @@ def compute_differential_phase(phase_first,
     second_slant_path : str, optional
         Dataset path in `phase_second` containing slant-range information (used
         for resampling). If `None`, no resampling is performed.
+    subswath_mask_enabled : bool, optional
+        If True, apply invalid-region masking using subswath mask datasets.
+        Default is False.
+    first_mask_path : str or list[str], optional
+        Dataset path(s) to subswath mask raster(s) in `phase_first`.
+        If a string is given, the same mask path is used for all datasets.
+        If a list is given, it must have the same length as `first_data_path`.
+    second_mask_path : str or list[str], optional
+        Dataset path(s) to subswath mask raster(s) in `phase_second`.
+        If a string is given, the same mask path is used for all datasets.
+        If a list is given, it must have the same length as `second_data_path`.
+    invalid_fill_value : scalar, optional
+        Value written to output pixels marked invalid by the mask. Default is 0.
 
     Returns
     -------
@@ -427,10 +446,18 @@ def compute_differential_phase(phase_first,
         # Cast to float to avoid integer exponentiation issues
         return np.exp(1j * arr)
 
+    if subswath_mask_enabled:
+        if first_mask_path is None or second_mask_path is None:
+            raise ValueError(
+                "When `subswath_mask_enabled=True`, both `first_mask_path` and "
+                "`second_mask_path` must be provided."
+            )
     # Check if reading and writing will happen on the same file
     is_same_file_first_output = (phase_first == output_path)
     is_same_file_first_second = (phase_first == phase_second)
 
+    src_sec_h5 = None
+    src_out_h5 = None
     # Open the relevant HDF5 files in appropriate modes
     with HDF5OptimizedReader(name=phase_first,
                              mode='r' if not is_same_file_first_output else 'a',
@@ -463,7 +490,9 @@ def compute_differential_phase(phase_first,
                 phase_first_raster = src_first_h5[first_ifg_path]
                 phase_second_raster = src_sec_h5[second_ifg_path]
                 output_data_raster = src_out_h5[out_ifg_path]
-
+                if subswath_mask_enabled:
+                    first_mask_raster = src_first_h5[first_mask_path]
+                    second_mask_raster = src_sec_h5[second_mask_path]
                 # Generate block parameters for reading/writing
                 block_params_main = block_param_generator(
                     lines_per_block,
@@ -483,31 +512,77 @@ def compute_differential_phase(phase_first,
                         block_params_main, block_params_side):
                     first_data_block = get_raster_block(phase_first_raster,
                                                         block_param_main)
+                    if subswath_mask_enabled:
+                        first_mask_block = get_raster_block(
+                            first_mask_raster,
+                            block_param_main)
                     if resampling_flag:
                         second_data_block = get_raster_block(
                             phase_second_raster,
                             block_param_side)
                         chosen_block_param = block_param_side
+                        if subswath_mask_enabled:
+                            second_mask_block = get_raster_block(
+                                second_mask_raster,
+                                block_param_side)
                     else:
                         second_data_block = get_raster_block(
                             phase_second_raster,
                             block_param_main)
                         chosen_block_param = block_param_main
+                        if subswath_mask_enabled:
+                            second_mask_block = get_raster_block(
+                                second_mask_raster,
+                                block_param_main)
 
                     # Ensure complex (convert real-valued phase in radians to
                     # complex phase)
                     first_data_block = _to_complex_if_needed(first_data_block)
                     second_data_block = _to_complex_if_needed(second_data_block)
 
-                    # Optional resampling of FIRST to SECOND grid
+                    # Resample first dataset (frequency A / low subband) to
+                    # match the grid of the second dataset (frequency B / high subband).
+                    # This ensures pixel-wise alignment before phase differencing.
                     if resampling_flag:
                         first_data_block = decimate_freq_a_array(
                             main_slant,
                             side_slant,
                             first_data_block)
+                        if subswath_mask_enabled:
+                            first_mask_block = decimate_freq_a_array(
+                                main_slant,
+                                side_slant,
+                                first_mask_block)
+
+                    if subswath_mask_enabled:
+                        # Interpretation of input datasets depends on the
+                        # processing context:
+                        # - For main_diff_ms_band:
+                        #     first  → frequency A
+                        #     second → frequency B
+                        # - For main_diff_low_high_subband:
+                        #     first  → low subband
+                        #     second → high subband
+                        # Each mask provides:
+                        #   - reference_valid: valid pixels in reference region
+                        #   - secondary_valid: valid pixels in secondary region
+                        first_reference_valid, first_secondary_valid, _ = \
+                            interpret_subswath_mask(first_mask_block)
+                        second_reference_valid, second_secondary_valid, _ = \
+                            interpret_subswath_mask(second_mask_block)
+                        invalid = (
+                            (~first_reference_valid) |
+                            (~first_secondary_valid) |
+                            (~second_reference_valid) |
+                            (~second_secondary_valid)
+                        )
+                    else:
+                        invalid = None
 
                     # Compute the differential phase
                     diff_phase = first_data_block * np.conj(second_data_block)
+                    if invalid is not None:
+                        diff_phase[invalid] = invalid_fill_value
 
                     # Write result block to output
                     write_raster_block(output_data_raster,
@@ -626,6 +701,9 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
     if unwrap_mask_type == 'water':
         # Either set to a default value or delete the key entirely.
         prep_wrapped_phase_cfg['enabled'] = True
+    if prep_wrapped_phase_cfg['enabled'] is True and \
+       unwrap_mask_type == 'subswath_mask':
+        subswath_mask_enabled = True
 
     if iono_method in ['split_main_band', 'main_diff_low_high_subband']:
         # For split_main_band, two sub-band interferograms need to be
@@ -843,6 +921,8 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
                 first_data_path.append(runw_path_freq)
             first_slant_path = f"{dest_freq_path}/interferogram/slantRange"
+            first_mask_path = f"{dest_freq_path}/interferogram/mask"
+
             second_data_path = []
             for pol_b in pol_list_b:
 
@@ -852,6 +932,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
                 second_data_path.append(rifg_path_freq)
             second_slant_path = f"{dest_freq_path}/interferogram/slantRange"
+            second_mask_path = f"{dest_freq_path}/interferogram/mask"
 
             output_data_path = second_data_path
             compute_differential_phase(phase_first,
@@ -862,7 +943,10 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                        output_data_path,
                                        iono_args['lines_per_block'],
                                        first_slant_path=first_slant_path,
-                                       second_slant_path=second_slant_path)
+                                       second_slant_path=second_slant_path,
+                                       subswath_mask_enabled=subswath_mask_enabled,
+                                       first_mask_path=first_mask_path,
+                                       second_mask_path=second_mask_path)
 
             # Since main_diff_low_high_subband method does not need to
             # unwrap low and high subband interferogram, but need to
