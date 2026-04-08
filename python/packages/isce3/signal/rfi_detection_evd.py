@@ -39,7 +39,6 @@ class ThresholdParams:
         if len(self.x) < 2:
             raise ValueError("At least two points are required")
 
-
 def rfi_detect(
     raw_data,
     cpi_len,
@@ -87,7 +86,8 @@ def rfi_detect(
         is computed differently by excluding the invalid data gaps.
     noise_ev_idx : int
         Eigenvalue index used by threshold estimation to estimate the slow-time minimum
-        Eigenvalue slope
+        Eigenvalue slope. This parameter is also used to validate that the threshold block 
+        has enough usable eigenvalues for minimum Eigenvalue estimation
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples]
         Valid-sample mask with same shape as raw_data
     threshold_params: ThresholdParams dataclass object
@@ -112,36 +112,28 @@ def rfi_detect(
             "Total number of pulses must be greater or equal to number of pulses per single CPI."
         )
 
-    
-    # Constant PRF does not need to skip threshold blocks
-    # Need to validate sample covariance rank for Dithered PRF modes
-    if not prf_dither_mode:
-        eig_val_sort_array, eig_vec_sort_array = compute_evd_tb(raw_data, cpi_len)
-        tb_is_valid = True
-    else:
-        (
-            eig_val_sort_array, 
-            eig_vec_sort_array,
-            tb_is_valid,
-        ) = compute_evd_tb_gap(
-            raw_data,
-            mask_valid,
-            cpi_len,
-            off_diag_overlap_ratio,
-            diag_valid_ratio,
-            noise_ev_idx
-        )
-        # If any CPI within a threshold block is determined to be invalid
-        # Then skip threshold computation for this block by setting rfi_cpi_flag_array
-        # to all zeros
-        if not tb_is_valid:
-            num_cpi = eig_val_sort_array.shape[0]
-            rfi_cpi_flag_array = np.zeros((num_cpi, cpi_len), dtype=np.bool_)
+    # Validate sample covariance rank
+    eig_val_sort_array, eig_vec_sort_array, tb_is_valid = compute_evd_tb(
+        raw_data,
+        cpi_len=cpi_len,
+        prf_dither_mode=prf_dither_mode,
+        mask_valid=mask_valid,
+        off_diag_overlap_ratio=off_diag_overlap_ratio,
+        diag_valid_ratio=diag_valid_ratio,
+        noise_ev_idx=noise_ev_idx,
+    )
 
-            return (
-                rfi_cpi_flag_array,
-                eig_vec_sort_array,
-            )
+    # If any CPI within a threshold block is determined to be invalid
+    # Then skip threshold computation for this block by setting rfi_cpi_flag_array
+    # to all zeros
+    if not tb_is_valid:
+        num_cpi = eig_val_sort_array.shape[0]
+        rfi_cpi_flag_array = np.zeros((num_cpi, cpi_len), dtype=np.bool_)
+
+        return (
+            rfi_cpi_flag_array,
+            eig_vec_sort_array,
+        )
 
     # Estimate a single threshold for all CPIs
     detect_threshold = threshold_estimate_evd(
