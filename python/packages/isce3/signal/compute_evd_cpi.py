@@ -112,104 +112,51 @@ def compute_evd(
 
 def compute_evd_tb(
     raw_data: np.ndarray,
-    cpi_len=32,
-):
-    """Divide input raw data equivalent to a threshold block into data blocks 
-    or Coherent Processing Intervals (CPI) with resepct to axis=0 and perform 
-    Eigenvalue Decomposition for all CPIs.
-
-    Parameters
-    ------------
-    raw_data: array-like complex [num_pulses x num_rng_samples]
-        raw data to be processed
-    cpi_len: int, optional
-        Number of slow-time pulses within a CPI, default=32
-
-    Returns
-    --------
-    eig_val_sort_array: 2D array of float with dimension [num_cpi x cpi_len]
-        Eigenvalues of all CPIs sorted in descending order
-    eig_vec_sort_array: 3D array of complex with dimension [num_cpi x cpi_len x cpi_len]
-        Sorted column vector Eigenvectors of all CPIs based on index of sorted Eigenvalues
-    """
-
-    # compute number of CPIs
-    num_pulses, num_rng_samples = raw_data.shape
-    num_cpi = num_pulses // cpi_len
-
-    # Minimum number of range samples to estimate Sample Correlation Matrix L:
-    # L ~ 2 * cpi_len
-    # Reference: Space Time Adaptive Processing for Radar, Artech House, pp33
-    rng_samples_min = 2 * cpi_len
-
-    # Verify number of range samples in raw data is greater than minimum needed
-    # to estimate Sample Covariance Matrix
-    if num_rng_samples < rng_samples_min:
-        raise ValueError(
-            "Minimum number of samples in a range block to estimate Sample Covariance"
-            f" Matrix is {rng_samples_min}! Current number of samples per range block"
-            f" is {num_rng_samples}!"
-        )
-
-    # Verify Total number of pulses is greater than CPI length
-    if num_pulses < cpi_len:
-        raise ValueError(
-            f"Coherent Processing Interval length exceeds total number of pulses {num_pulses}!"
-        )
-
-    # Output Eigenvalues and Eigenvectors
-    eig_val_sort_array = np.zeros([num_cpi, cpi_len], dtype="f4")
-    eig_vec_sort_array = np.zeros((num_cpi, cpi_len, cpi_len), dtype="complex64")
-
-    # Compute Eigenvalue and Eigenvector pairs for each CPI
-    for idx_cpi, cpi_slow_time in enumerate(slice_gen(num_pulses, cpi_len, combine_rem=False)):
-        data_cpi = raw_data[cpi_slow_time]
-
-        eig_val_sort, eig_vec_sort = compute_evd(data_cpi)
-        eig_val_sort_array[idx_cpi] = eig_val_sort
-        eig_vec_sort_array[idx_cpi] = eig_vec_sort
-
-    return eig_val_sort_array, eig_vec_sort_array
-
-
-def compute_evd_tb_gap(
-    raw_data: np.ndarray,
-    mask_valid: np.ndarray,
-    cpi_len=32,
+    cpi_len: int=16,
+    prf_dither_mode: bool=False,
+    mask_valid: np.ndarray=None,
     off_diag_overlap_ratio: float=0.1,
     diag_valid_ratio: float=0.05,
-    noise_ev_idx: int=10
+    noise_ev_idx: int=10,
 ):
-    """Divide input raw data equivalent to a threshold block into data blocks 
-    or Coherent Processing Intervals (CPI) with resepct to axis=0 and perform 
-    Eigenvalue Decomposition for all CPIs for data with gaps of invalid data samples
+    """Divide input raw data equivalent to a threshold block into Coherent
+    Processing Intervals (CPI) with respect to axis=0 and perform Eigenvalue
+    Decomposition for all CPIs.
+
+    For constant-PRF data, standard EVD is used. For dithered-PRF data, gap-exclusion 
+    EVD is used. CPI validity is always checked.
 
     Parameters
     ------------
     raw_data: array-like complex [num_pulses x num_rng_samples]
-        raw data to be processed
-    mask_valid : np.ndarray bool, [num_pulses x num_rng_samples]
-        Valid-sample mask with same shape as raw_data
+        Raw data to be processed
     cpi_len: int, optional
-        Number of slow-time pulses within a CPI, default=32
+        Number of slow-time pulses within a CPI, default=16
+    prf_dither_mode: bool, optional
+        If True, use gap-aware covariance estimation
+    mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
+        Valid-sample mask with same shape as raw_data. Required if
+        prf_dither_mode=True.
     off_diag_overlap_ratio : float, optional
         Minimum overlap ratio used by gap exclusion covariance estimation
     diag_valid_ratio : float, optional
-        Minimum fraction of valid samples required to compute a diagonal term in the
-        sample covariance matrix entry R_ii.
+        Minimum fraction of valid samples required to compute a diagonal term
+        in the sample covariance matrix entry R_ii.
     noise_ev_idx : int, optional
-        Eigenvalue index used by threshold estimation to estimate the slow-time minimum
-        Eigenvalue slope
+        Eigenvalue index used by threshold estimation to estimate the slow-time
+        minimum Eigenvalue slope.
 
     Returns
     --------
     eig_val_sort_array: 2D array of float with dimension [num_cpi x cpi_len]
         Eigenvalues of all CPIs sorted in descending order
-    eig_vec_sort_array: 3D array of complex with dimension [num_cpi x cpi_len x cpi_len]
-        Sorted column vector Eigenvectors of all CPIs based on index of sorted Eigenvalues
+    eig_vec_sort_array: 3D array of complex with dimension
+        [num_cpi x cpi_len x cpi_len]
+        Sorted column vector Eigenvectors of all CPIs based on index of sorted
+        Eigenvalues
     tb_is_valid : bool
         False if any CPI in the threshold block does not have enough usable
-        eigenvalues for noise_ev_idx
+        eigenvalues for noise_ev_idx.
     """
 
     # compute number of CPIs
@@ -235,6 +182,15 @@ def compute_evd_tb_gap(
         raise ValueError(
             f"Coherent Processing Interval length exceeds total number of pulses {num_pulses}!"
         )
+
+    if noise_ev_idx >= cpi_len:
+        raise ValueError(
+            f"noise_ev_idx ({noise_ev_idx}) must be less than cpi_len ({cpi_len}). "
+            "Since Python uses 0-based indexing, the maximum valid index is cpi_len - 1."
+        )
+
+    if prf_dither_mode and mask_valid is None:
+        raise ValueError("mask_valid must be provided when prf_dither_mode=True")
 
     # Output Eigenvalues and Eigenvectors
     eig_val_sort_array = np.zeros([num_cpi, cpi_len], dtype="f4")
@@ -242,41 +198,36 @@ def compute_evd_tb_gap(
 
     tb_is_valid = True
 
-    for idx_cpi, cpi_slow_time in enumerate(slice_gen(num_pulses, cpi_len, combine_rem=False)):
+    # Compute Eigenvalue and Eigenvector pairs for each CPI
+    for idx_cpi, cpi_slow_time in enumerate(
+        slice_gen(num_pulses, cpi_len, combine_rem=False)
+    ):
         data_cpi = raw_data[cpi_slow_time]
 
-        # Compute CPI-wise gap mask
-        mask_valid_cpi = mask_valid[cpi_slow_time]
-        eig_val_sort, eig_vec_sort = compute_evd_gap(
-            data_cpi, 
-            mask_valid_cpi=mask_valid_cpi, 
-            off_diag_overlap_ratio=off_diag_overlap_ratio,
-            diag_valid_ratio=diag_valid_ratio,
-        )
-
-        # Count number of usable eigenvalues of CPI and compare with chosen noise_ev_idx.
-        # Since Python uses 0-based indexing, a CPI must have at least noise_ev_idx + 1 usable
-        # eigenvalues.
-        # Abnormal small Eigenvalues in general occur only at the tail of the sorted
-        # Eigenvalues.  Zero Eigenvalues are replaced by a small epsilon, 1e-30 to 
-        # ensure log values of such are greater than zero.
-        eig_val_sort_db = 10*np.log10(np.maximum(np.abs(eig_val_sort), 1e-30))
-        usable_rank = int(np.count_nonzero(eig_val_sort_db > 0))
-
-        if usable_rank < noise_ev_idx + 1:
-            tb_is_valid = False
-            warnings.warn(
-                f"Skipping threshold block: This CPI has only "
-                f"{usable_rank} usable Eigenvalues, but noise_ev_idx = {noise_ev_idx} "
-                f"requires at least {noise_ev_idx + 1} valid Eigenvalues."
+        if not prf_dither_mode:
+            eig_val_sort, eig_vec_sort = compute_evd(data_cpi)
+        else:
+            mask_valid_cpi = mask_valid[cpi_slow_time]
+            eig_val_sort, eig_vec_sort = compute_evd_gap(
+                data_cpi,
+                mask_valid_cpi=mask_valid_cpi,
+                off_diag_overlap_ratio=off_diag_overlap_ratio,
+                diag_valid_ratio=diag_valid_ratio,
             )
+
+        # Verify if the eigenvalue of CPI at index defind by  noise_ev_idx is meaningful
+        eig_val_abs = np.maximum(np.abs(eig_val_sort), 1e-30)
+        noise_ev_rel_db = 10 * np.log10(eig_val_abs[noise_ev_idx] / eig_val_abs[0])
+        rel_ev_thresh_db = -30
+
+        if noise_ev_rel_db < rel_ev_thresh_db:
+            tb_is_valid = False
             break
 
         eig_val_sort_array[idx_cpi] = eig_val_sort
         eig_vec_sort_array[idx_cpi] = eig_vec_sort
 
     return eig_val_sort_array, eig_vec_sort_array, tb_is_valid
-
 
 def compute_evd_gap(
     raw_data: np.ndarray,
