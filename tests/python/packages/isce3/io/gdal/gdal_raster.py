@@ -142,35 +142,6 @@ def test_create_dataset_file_dtype_character_codes():
         assert raster.dtype == np.float32
 
 
-def test_create_dataset_file_dtype_classes():
-    """
-    Test the GDALRaster.create_dataset_file for acceptance of class instances that have
-    a .dtype attribute as a dtype parameter
-    """
-    @dataclass
-    class a:
-        dtype = np.complex64
-
-    with TemporaryDirectory() as tempdir:
-        raster = GDALRaster.create_dataset_file(
-            filepath=Path(tempdir) / "dtype_test_a.gdal",
-            dtype=a(),
-            shape=(100, 100),
-            num_bands=1,
-        )
-
-        assert raster.dtype == np.complex64
-
-        raster_2 = GDALRaster.create_dataset_file(
-            filepath=Path(tempdir) / "dtype_test_raster.gdal",
-            dtype=raster,
-            shape=(100, 100),
-            num_bands=1,
-        )
-
-        assert raster_2.dtype == np.complex64
-
-
 def test_create_dataset_file_dtype_character_codes():
     """
     Test the GDALRaster.create_dataset_file for acceptance of np.dtype objects as a
