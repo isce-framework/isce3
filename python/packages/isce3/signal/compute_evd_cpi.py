@@ -383,34 +383,54 @@ def compute_gap_exclusion_cov(
 
     # Minimum Samples required to compute diagonal and off-diagonal terms of
     # Sample Covariance Matrix
-    min_valid_off_diag = int(off_diag_overlap_ratio * num_rng_samples)
-    min_valid_diag = int(diag_valid_ratio * num_rng_samples) 
+    min_valid_off_diag = max(1, int(np.ceil(off_diag_overlap_ratio * num_rng_samples)))
+    min_valid_diag = max(1, int(np.ceil(diag_valid_ratio * num_rng_samples))) 
 
+    # Zero-out invalid samples
+    x_valid =  data * mask_valid_cpi
+
+    # Count valid sample overalp count for each element of the
+    # sample covariance matrix
+    mask_int = mask_valid_cpi.astype(np.int32)
+    overlap_counts = mask_int @ mask_int.T  # shape (pulse x pulse)
+
+    # Sum of conjugate products over overlapping valid samples
+    # without proper normalization
+    cov_sum = x_valid @ x_valid.conj().T
+
+    # Initialize gap-excluded sample covariance matrix
     cov = np.zeros((num_pulses, num_pulses), dtype=np.complex64)
 
-    for i in range(num_pulses):
-        # Compute Diagonal terms
-        valid_pulse = mask_valid_cpi[i]
-        num_valid_samples_pulse = int(valid_pulse.sum())
+    #Count number of valid in diagonal and off-diagonal for normalization
 
-        if num_valid_samples_pulse >= min_valid_diag:
-            pulse_i = data[i, valid_pulse]
-            cov[i, i] = np.vdot(pulse_i, pulse_i) / num_valid_samples_pulse
-        else:
-            cov[i, i] = 0.0
+    # Diagonal terms: Generate Diagonal indices
+    diag_idx = np.diag_indices(num_pulses)
+ 
+    # Extract the number of valid samples of diagonal terms
+    diag_counts = overlap_counts[diag_idx]
 
-        # Compute Off-diagonal terms
-        for j in range(i + 1, num_pulses):
-            valid_overlap = mask_valid_cpi[i] & mask_valid_cpi[j]
-            num_overlap_adjacent = int(valid_overlap.sum())
+    # Extract the uncorrected diagonal values
+    diag_cov_sum = cov_sum[diag_idx]
 
-            if num_overlap_adjacent >= min_valid_off_diag:
-                cov_off_diag = np.vdot(data[j, valid_overlap], data[i, valid_overlap]) / num_overlap_adjacent
-                cov[i, j] = cov_off_diag
-                cov[j, i] = np.conj(cov_off_diag)
+    # Check if there are enough valid samples
+    diag_valid_idx = diag_counts >= min_valid_diag
 
-    # Ensure Hermitian
-    cov = 0.5 * (cov + cov.conj().T)
+    diag_vals = np.zeros(num_pulses, dtype=np.complex64)
+
+    # Normalize the diagonal terms
+    diag_vals[diag_valid_idx] = diag_cov_sum[diag_valid_idx] / diag_counts[diag_valid_idx]
+    cov[diag_idx] = diag_vals
+
+    # Off-diagonal: Verify if there are enough valid samples for off-diagonal terms
+    off_diag_valid = overlap_counts >= min_valid_off_diag
     
-    return cov
+    # Mask out diagonal terms of the off_diagonal_valid matrix
+    np.fill_diagonal(off_diag_valid, False)
 
+    # Normalize the off-diagonal terms
+    cov[off_diag_valid] = cov_sum[off_diag_valid] / overlap_counts[off_diag_valid]
+
+    # Ensure Hermitian numerically
+    cov = (0.5 * (cov + cov.conj().T)).astype(np.complex64)
+
+    return cov
