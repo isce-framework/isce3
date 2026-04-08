@@ -20,10 +20,7 @@ GDALRasterT = TypeVar("GDALRasterT", bound="GDALRaster")
 
 def get_gdal_dtype(type: DTypeLike) -> int:
     """Returns the GDAL data type associated with a given NumPy dtype."""
-    try:
-        np_dtype = np.dtype(type)
-    except Exception:
-        np_dtype = np.dtype(type.dtype)
+    np_dtype = np.dtype(type)
 
     if np_dtype == np.complex128:
         return gdal.GDT_CFloat64
