@@ -78,7 +78,7 @@ class GslcWriter(BaseL2WriterSingleInput):
 
             self.geocode_lut(f'{output_grids_freq_path}',
                              f'{input_swaths_freq_path}',
-                             output_ds_name_list='inputDataExceptionMask',
+                             output_ds_name_list=['inputDataExceptionMask'],
                              skip_if_not_present=True,
                              compute_stats=False,
                              data_interpolator='nearest')
