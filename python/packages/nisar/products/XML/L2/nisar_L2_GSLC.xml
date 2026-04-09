@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 <!-- product specification version is 1.4.0 -->
 <algorithm name="L2_GeocodedSlc"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:noNamespaceSchemaLocation="../../SDS/pix/schema.xsd">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GSLC_template">
     <!-- Start of the science section of product -->
     <science uid="sci_1">
