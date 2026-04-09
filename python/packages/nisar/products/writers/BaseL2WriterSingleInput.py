@@ -1816,12 +1816,16 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         if metadata_group == 'calibrationInformation':
             metadata_geogrid = self.cfg['processing'][
                 'calibration_information']['geogrid']
+            zero_doppler_group_path = input_h5_group_path
         elif metadata_group == 'processingInformation':
             metadata_geogrid = self.cfg['processing'][
                 'processing_information']['geogrid']
+            zero_doppler_group_path = input_h5_group_path
         elif metadata_group == 'grids':
             metadata_geogrid = \
                 self.cfg['processing']['geocode']['geogrids'][frequency]
+            zero_doppler_group_path = '/'.join(
+                input_h5_group_path.split('/')[0:-1])
         else:
             error_msg = f'Invalid metadata group {metadata_group}'
             error_channel.log(error_msg)
@@ -1842,7 +1846,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         # The LUT noise-equivalent backscatter is irregulary sampled in the
         # azimuth direction
         if not flag_luts_are_1d_rg and not flag_noise_equivalent_backscatter:
-            zero_doppler_path = f'{input_h5_group_path}/zeroDopplerTime'
+            zero_doppler_path = f'{zero_doppler_group_path}/zeroDopplerTime'
             try:
                 zero_doppler_h5_dataset = self.input_hdf5_obj[
                     zero_doppler_path]
