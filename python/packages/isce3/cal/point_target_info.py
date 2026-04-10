@@ -610,6 +610,10 @@ def analyze_point_target(
         pixel_spacing=pixel_spacing,
     )
 
+    # XXX: The current method of estimating SCR does not work for geolocated products
+    # which may have skewed sidelobes. Doing this would require resampling these
+    # products to acquire a chip usable by the SCR estimator, or else finding some new
+    # means of estimating and masking the locations of the side lobes on the chip.
     if geo_heading is None:
 
         scr = estimate_scr(
