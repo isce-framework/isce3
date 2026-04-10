@@ -139,7 +139,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
             return self.data().map();
         })
         .def("eval", py::overload_cast<const double, const double>(&LUT2d<T>::eval, py::const_))
-        .def("eval", py::overload_cast<double,const const_vec_t&>(&LUT2d<T>::eval, py::const_))
+        .def("eval", py::overload_cast<double, const_vec_t&>(&LUT2d<T>::eval, py::const_))
         .def("eval", py::overload_cast<const_vec_t&, const_vec_t&>(&LUT2d<T>::eval, py::const_))
         ;
 }

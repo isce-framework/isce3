@@ -120,10 +120,10 @@ def make_reskew_lut(t_axis: Linspace,
         Dictionary specifying convergence parameters for geo2rdr solver.
         Keys among {"tol_height", "time_start", "time_start"}
         See isce3.geometry.geo2rdr_bracket
-    method: str
-        LUT2d interpolation method
-    b_error: bool
-        Enable LUT2d bounds error checking
+    method: str, optional
+        LUT2d interpolation method. Defaults to "bilinear".
+    b_error: bool, optional
+        Enable LUT2d bounds error checking. Defaults to True.
 
     Returns
     -------

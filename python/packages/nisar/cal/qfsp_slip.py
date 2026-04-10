@@ -34,7 +34,7 @@ Boundaries = dict[AnomalyCode, Sequence[ELAngleInterval]]
 def get_qfsp_mask_boundaries(anomaly_code: Union[AnomalyCode, int],
                              int_cal: InstrumentParser) -> Boundaries:
     """
-    Determine EL angle intervals associated with NISAR anomaly codes.
+    Determine EL angle intervals covering qFSP transition regions of 12-channel (three qFSPs) L-band NISAR associated with qFSP sample slip anomaly codes.
 
     Parameters
     ----------
@@ -61,6 +61,8 @@ def get_qfsp_mask_boundaries(anomaly_code: Union[AnomalyCode, int],
             enumerate(peak_indices)])
 
     # (start, end) EL angles between beam x and y peaks
+    if (peak_angles['H'].size != 12 or peak_angles['V'].size != 12):
+        raise ValueError(f'Number of channels for H/V is {peak_angles['H'].size}/{peak_angles['V'].size} instead of 12 expected for L-SAR NISAR!')
     overlap_h_4_5 = peak_angles["H"][3:5]
     overlap_h_8_9 = peak_angles["H"][7:9]
     overlap_v_4_5 = peak_angles["V"][3:5]
@@ -106,9 +108,12 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
         (time, range).
     int_cal : InstrumentParser
         NISAR LSAR INT_CAL file containing the angle-to-coefficient (AC) tables.
+    Notes
+    -------
+    This function generates invalid mask simply for 12-channel L-SAR product with qFSP sample slip anomaly.
     """
-    nt = len(t0_axis)
-    nr = len(r0_axis)
+    nt = t0_axis.size
+    nr = r0_axis.size
     if dataset.shape[0] != nt:
         raise ValueError("Mask shape[0] is incompatible with time axis length")
     if dataset.shape[1] != nr:
@@ -116,7 +121,7 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
 
     # Full image mask may be too big to fit in memory.  If it's an HDF5 dataset
     # then use chunk size as azimuth block size.
-    block_size = dataset.shape[0]
+    block_size = nt
     if getattr(dataset, "chunks", None) is not None:
         block_size = dataset.chunks[0]
 
@@ -135,7 +140,7 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
             block = slice(block_start, min(block_start + block_size, nt))
             nb = block.stop  - block.start
             buf = np.zeros((nb, dataset.shape[1]), dataset.dtype)
-            buf[...] = AnomalyCode.NO_ANOMALY.value
+            buf[...] = AnomalyCode(anomaly_code).value
             write_block(buf, np.s_[block, :])
         return
 
@@ -160,7 +165,7 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
         block_end = min(block_start + block_size, nt)
         nb = block_end - block_start
         # Allocate each chunk to avoid HDF5 I/O as much as possible.
-        mask_chunk = np.zeros((nb, nr), dataset.dtype)
+        mask_chunk = np.full(fill_value=AnomalyCode.NO_ANOMLAY.value, shape=(nb, nr), dtype=dataset.dtype)
         for i_chunk, i_time in enumerate(range(block_start, block_end)):
             t0 = t0_axis[i_time]
             # Compute native Doppler (time, range) from zero-Doppler ones.
