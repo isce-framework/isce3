@@ -846,6 +846,8 @@ def analyze_point_target_chip(
     return_dict = {
         "magnitude": np.abs(chipmax),
         "phase": np.angle(chipmax),
+        "chip magnitude": np.abs(chip).tolist(),
+        "chip phase": np.angle(chip).tolist(),
         "azimuth": {
             "ISLR": azimuth_islr_db,
             "PSLR": azimuth_pslr_db,
@@ -912,6 +914,92 @@ def analyze_point_target_chip(
         ]
         return return_dict, figs
     return return_dict, None
+
+
+def estimate_scr(
+    chip,
+    clutter_half_width: int = 12,
+    peak_magnitude: float | None = None,
+) -> float:
+    """
+    Estimate the signal-to-clutter ratio (SCR), in dB, for a chip of data around a point
+    target.
+
+    Parameters
+    ----------
+    chip : np.ndarray of complex64
+        The data chip.
+    clutter_half_width : int, optional
+        An integer greater than 3 and smaller than half the width or length of `chip`.
+        Defines half the region used for estimating SCR. Defaults to 12.
+    peak_magnitude : float, optional
+        The identified peak magnitude of the data, or None for a rough estimate.
+        Defaults to None.
+
+    Returns
+    -------
+    float
+        The chip SCR, in dB.
+    """
+    if clutter_half_width < 3:
+        raise ValueError("clutter_half_width must be a positive number greater than 2.")
+    if clutter_half_width > chip.shape[0] / 2 or clutter_half_width > chip.shape[1] / 2:
+        raise ValueError(
+            f"clutter_half_width of {clutter_half_width} must be less than half of "
+            f"chip dimensions {chip.shape[0]} and {chip.shape[1]}."
+        )
+
+    # If the peak magnitude was not passed in, estimate it.
+    if peak_magnitude is None:
+        peak_magnitude = np.nanmax(chip)
+
+    # Get the location of the peak magnitude.
+    k = np.nanargmax(np.abs(chip))
+    ichip, jchip = np.unravel_index(k, chip.shape)
+
+    # Make sure that the point target is far enough from the edge of the chip that
+    # an estimation region can be selected.
+    if (
+        ichip < clutter_half_width
+        or jchip < clutter_half_width
+        or ichip > chip.shape[0] - clutter_half_width
+        or jchip > chip.shape[1] - clutter_half_width
+    ):
+        warn(
+            "PTA Warning: Detected peak location too close to edge of chip. SCR could "
+            "not be calculated. SCR value will be returned as NaN."
+        )
+        return np.nan
+
+    # Create an estimated chip that is the column and row of the peak magnitude plus
+    # clutter_half_width pixels in either direction, converted to units of linear power.
+    scr_est_chip = np.abs(
+        chip[
+            ichip - clutter_half_width : ichip + clutter_half_width + 1,
+            jchip - clutter_half_width : jchip + clutter_half_width + 1,
+        ]
+    ) ** 2
+
+    # Set the row and column of peak power, plus one row and column on either side, to
+    # 0. This creates a "+" on the image of zeroed pixels corresponding to the IRF peak
+    # and its side lobes. The remaining nonzero pixels are the clutter region.
+    scr_est_chip[clutter_half_width - 1:clutter_half_width + 2, :] = 0
+    scr_est_chip[:, clutter_half_width - 1:clutter_half_width + 2] = 0
+
+    # Calculate the number of pixels that were not zeroed out, which is four regions
+    # of clutter_half_width -1 pixels squared.
+    sampled_area = (clutter_half_width - 1) ** 2 * 4
+
+    # The clutter power is the total power of the clutter region divided by the total
+    # number of pixels constituting that region.
+    clutter = np.sum(scr_est_chip) / sampled_area
+
+    # Calculate the peak power divided by average clutter power to get signal to clutter
+    # ratio.
+    scr = peak_magnitude ** 2 / clutter
+
+    # Convert to dB and then return.
+    return 10 * np.log10(scr)
 
 
 def sample_geocoded_side_lobe(
