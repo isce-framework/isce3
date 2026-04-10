@@ -591,7 +591,7 @@ def analyze_point_target(
 
     chip, chip_min_i, chip_min_j = generate_chip_on_slc(slc, i, j, chipsize=chipsize)
 
-    return analyze_point_target_chip(
+    results = analyze_point_target_chip(
         chip=chip,
         chip_min_i=chip_min_i,
         chip_min_j=chip_min_j,
@@ -609,6 +609,17 @@ def analyze_point_target(
         geo_heading=geo_heading,
         pixel_spacing=pixel_spacing,
     )
+
+    if geo_heading is None:
+
+        scr = estimate_scr(
+            chip=chip,
+            peak_magnitude=results[0]["magnitude"],
+        )
+
+        results[0]["signal_clutter_ratio"] = scr
+
+    return results
 
 
 def generate_chip_on_slc(
