@@ -621,7 +621,7 @@ def analyze_point_target(
             peak_magnitude=results[0]["magnitude"],
         )
 
-        results[0]["signal_clutter_ratio"] = scr
+        results[0]["signal clutter ratio"] = scr
 
     return results
 
@@ -1134,11 +1134,20 @@ def tofloatvals(x):
 
     Modifies the dictionary in-place and returns None.
     """
+    def list2floats(my_list):
+        """
+        Convert a list of any dimensions into a list of floats. The list must either
+        contain only other lists or only values that can be converted into floats.
+        """
+        if all(isinstance(xi, list) for xi in my_list):
+            return [list2floats(xi) for xi in my_list]
+        return [float(xi) for xi in my_list]
+
     for k in x:
         if type(x[k]) == dict:
             tofloatvals(x[k])
         elif type(x[k]) == list:
-            x[k] = [float(xki) for xki in x[k]]
+            x[k] = list2floats(x[k])
         else:
             x[k] = float(x[k])
 
