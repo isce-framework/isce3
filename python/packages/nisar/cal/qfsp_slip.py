@@ -61,8 +61,13 @@ def get_qfsp_mask_boundaries(anomaly_code: Union[AnomalyCode, int],
             enumerate(peak_indices)])
 
     # (start, end) EL angles between beam x and y peaks
-    if (peak_angles['H'].size != 12 or peak_angles['V'].size != 12):
-        raise ValueError(f'Number of channels for H/V is {peak_angles['H'].size}/{peak_angles['V'].size} instead of 12 expected for L-SAR NISAR!')
+    if not (peak_angles["H"].size == peak_angles["V"].size == 12):
+        nh = peak_angles["H"].size
+        nv = peak_angles["V"].size
+        raise ValueError(
+            f"Expected 12 channels for NISAR L-SAR but got {nh} on H and "
+            f"{nv} on V."
+        )
     overlap_h_4_5 = peak_angles["H"][3:5]
     overlap_h_8_9 = peak_angles["H"][7:9]
     overlap_v_4_5 = peak_angles["V"][3:5]
