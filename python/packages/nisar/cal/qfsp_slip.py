@@ -34,7 +34,8 @@ Boundaries = dict[AnomalyCode, Sequence[ELAngleInterval]]
 def get_qfsp_mask_boundaries(anomaly_code: Union[AnomalyCode, int],
                              int_cal: InstrumentParser) -> Boundaries:
     """
-    Determine EL angle intervals covering qFSP transition regions of 12-channel (three qFSPs) L-band NISAR associated with qFSP sample slip anomaly codes.
+    Determine EL angle intervals covering qFSP transition regions of 12-channel
+    (three qFSPs) L-band NISAR associated with qFSP sample slip anomaly codes.
 
     Parameters
     ----------
@@ -115,7 +116,8 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
         NISAR LSAR INT_CAL file containing the angle-to-coefficient (AC) tables.
     Notes
     -------
-    This function generates invalid mask simply for 12-channel L-SAR product with qFSP sample slip anomaly.
+    This function generates invalid mask simply for 12-channel L-SAR product
+    with qFSP sample slip anomaly.
     """
     nt = t0_axis.size
     nr = r0_axis.size
@@ -170,7 +172,8 @@ def write_anomaly_mask(anomaly_code, dataset, t0_axis, r0_axis, tn_lut, rn_lut,
         block_end = min(block_start + block_size, nt)
         nb = block_end - block_start
         # Allocate each chunk to avoid HDF5 I/O as much as possible.
-        mask_chunk = np.full(fill_value=AnomalyCode.NO_ANOMLAY.value, shape=(nb, nr), dtype=dataset.dtype)
+        mask_chunk = np.full(fill_value=AnomalyCode.NO_ANOMALY.value,
+            shape=(nb, nr), dtype=dataset.dtype)
         for i_chunk, i_time in enumerate(range(block_start, block_end)):
             t0 = t0_axis[i_time]
             # Compute native Doppler (time, range) from zero-Doppler ones.
