@@ -6,7 +6,6 @@ from __future__ import annotations
 import numpy as np
 from numpy import linalg as la
 from collections.abc import Iterator
-import copy
 import warnings
 
 def slice_gen(total_size: int, batch_size: int, combine_rem: bool=True) -> Iterator[slice]:

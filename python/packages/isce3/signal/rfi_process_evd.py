@@ -3,7 +3,6 @@ Perform RFI detection and mitigation of input raw data using Slow-Time Eigenvalu
 (ST-EVD).
 """
 import numpy as np
-from numpy.fft import fft, ifft, fftshift
 from isce3.signal.compute_evd_cpi import slice_gen
 from isce3.signal.rfi_detection_evd import rfi_detect, ThresholdParams
 from isce3.signal.rfi_mitigation_evd import rfi_mitigate_tb
