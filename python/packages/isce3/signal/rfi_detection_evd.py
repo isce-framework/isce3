@@ -118,7 +118,6 @@ def rfi_detect(
             "Total number of pulses must be greater or equal to number of pulses per single CPI."
         )
 
-    
     # Need to validate sample covariance rank
     (
         eig_val_sort_array, 
@@ -164,7 +163,6 @@ def rfi_detect(
     )
 
     return rfi_cpi_flag_array, eig_vec_sort_array, fig_merit_detect_tb
-
 
 def threshold_estimate_evd(
     eig_val_sort_array,
@@ -344,8 +342,7 @@ def rfi_detect_evd_tb(
 
     # Ensure detection threshold is a positive value
     if (not np.isfinite(detect_threshold)) or (detect_threshold <= 0):
-        #raise ValueError("Detection threshold must be a positive value!")
-        # Add a CPI-Level rank check
+        # Add a CPI-Level rank check: detection threshold must be a positive value
         warnings.warn("Warning: Non-positive detection threshold. Skipping TB detection.")
         return np.zeros((num_cpi, cpi_len), dtype=np.bool_)
 

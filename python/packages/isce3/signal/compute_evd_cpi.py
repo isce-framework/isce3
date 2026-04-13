@@ -47,7 +47,6 @@ def slice_gen(total_size: int, batch_size: int, combine_rem: bool=True) -> Itera
             stop_idx = start_idx + batch_size
             yield slice(start_idx, stop_idx)
 
-
 def eigen_decomp_sort(cov_matrix):
     """Perform Eigenvaule Decomposition of Sample Covariance Matrix which is assumed 
     to be Hermitian, and sort Eigenvalues in descending order.  Re-arrange column 
@@ -76,47 +75,13 @@ def eigen_decomp_sort(cov_matrix):
 
     return eig_val_sort, eig_vec_sort
 
-def compute_evd(
-    raw_data: np.ndarray,
-):
-    """Perform Eigenvalue Decomposition along axis 0.
-
-    Parameters
-    ------------
-    raw_data: array-like complex [num_pulses x num_rng_samples]
-        raw data to be processed
-
-    Returns
-    --------
-    eig_val_sort: 1D array of float, same length as the number of rows of input matrix
-        Eigenvalues sorted in descending order
-    eig_vec_sort: 2D array of complex, same shape as input matrix
-        column vector Eigenvectors sorted based on index of sorted Eigenvalues
-    """
-
-    num_rng_samples = raw_data.shape[1]
-
-    # The raw_data is not necessarily zero-mean when it is corrupted by RFI.
-    # If so, estimated sample covariance matrix cov_cpi should be called 
-    # sample correlation  matrix instead.  The reference below demonstrates
-    # this concept and notation.
-
-    # F. Zhou, R. Wu, M. Xing, and Z. Bao, “Eigensubspace-Based Filtering With 
-    # Application in Narrow-Band Interference Suppression for SAR”, IEEE Geoscience 
-    # and Remote Sensing Letters, vol. 4, no. 1, pp. 76,2007.
-
-    cov_cpi = np.matmul(raw_data, np.conj(raw_data).transpose()) / num_rng_samples
-    eig_val_sort, eig_vec_sort = eigen_decomp_sort(cov_cpi)
-
-    return eig_val_sort, eig_vec_sort
-
 def compute_evd_tb(
     raw_data: np.ndarray,
     cpi_len: int=16,
-    prf_dither_mode: bool=False,
+    prf_dither_mode: bool=True,
     mask_valid: np.ndarray=None,
-    off_diag_overlap_ratio: float=0.1,
-    diag_valid_ratio: float=0.05,
+    off_diag_overlap_ratio: float=0.25,
+    diag_valid_ratio: float=0.20,
     min_ev_valid_idx: int=10,
     rx_dynamic_range_db: float=-50.0,
 ):
@@ -133,7 +98,7 @@ def compute_evd_tb(
         Raw data to be processed
     cpi_len: int, optional
         Number of slow-time pulses within a CPI, default=16
-    prf_dither_mode: bool, optional
+    prf_dither_mode: bool, optional, default = True
         If True, use gap-aware covariance estimation
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
         Valid-sample mask with same shape as raw_data. Required if
@@ -179,14 +144,14 @@ def compute_evd_tb(
     if num_rng_samples < rng_samples_min:
         raise ValueError(
             "Minimum number of samples in a range block to estimate Sample Covariance"
-            f" Matrix is {rng_samples_min}! Current number of samples per range block"
-            f" is {num_rng_samples}!"
+            f" Matrix is {rng_samples_min} per Reed-Mallet-Brennan Rule."
+            f"Current number of samples per range block is {num_rng_samples}!"
         )
 
     # Verify Total number of pulses is greater than CPI length
     if num_pulses < cpi_len:
         raise ValueError(
-            f"Coherent Processing Interval length exceeds total number of pulses {num_pulses}!"
+            f"Coherent Processing Interval length of {cpi_len} exceeds total number of pulses {num_pulses}!"
         )
 
     if min_ev_valid_idx >= cpi_len:
@@ -198,6 +163,10 @@ def compute_evd_tb(
     if prf_dither_mode and mask_valid is None:
         raise ValueError("mask_valid must be provided when prf_dither_mode=True")
 
+    # Verify TB Mask shape
+    if mask_valid.shape != raw_data.shape:
+        raise ValueError(f"Valid TB mask shape {mask_valid.shape} != TB data shape {raw_data.shape}")
+    
     # Output Eigenvalues and Eigenvectors
     eig_val_sort_array = np.zeros([num_cpi, cpi_len], dtype="f4")
     eig_vec_sort_array = np.zeros((num_cpi, cpi_len, cpi_len), dtype="complex64")
@@ -209,17 +178,14 @@ def compute_evd_tb(
         slice_gen(num_pulses, cpi_len, combine_rem=False)
     ):
         data_cpi = raw_data[cpi_slow_time]
-
-        if not prf_dither_mode:
-            eig_val_sort, eig_vec_sort = compute_evd(data_cpi)
-        else:
-            mask_valid_cpi = mask_valid[cpi_slow_time]
-            eig_val_sort, eig_vec_sort = compute_evd_gap(
-                data_cpi,
-                mask_valid_cpi=mask_valid_cpi,
-                off_diag_overlap_ratio=off_diag_overlap_ratio,
-                diag_valid_ratio=diag_valid_ratio,
-            )
+        mask_valid_cpi = mask_valid[cpi_slow_time]
+        eig_val_sort, eig_vec_sort = compute_evd(
+            data_cpi,
+            prf_dither_mode=prf_dither_mode,
+            mask_valid_cpi=mask_valid_cpi,
+            off_diag_overlap_ratio=off_diag_overlap_ratio,
+            diag_valid_ratio=diag_valid_ratio,
+        )
 
         # Verify if the eigenvalue of CPI at index defind by  noise_ev_idx is meaningful
         eig_val_sort_abs = np.maximum(np.abs(eig_val_sort), 1e-30)
@@ -234,37 +200,41 @@ def compute_evd_tb(
 
     return eig_val_sort_array, eig_vec_sort_array, tb_is_valid
 
-def compute_evd_gap(
+def compute_evd(
     raw_data: np.ndarray,
     *,
+    prf_dither_mode: bool = True,
     mask_valid_cpi: np.ndarray = None,
-    off_diag_overlap_ratio: float = 0.1,
-    diag_valid_ratio: float = 0.05, 
+    off_diag_overlap_ratio: float = 0.25,
+    diag_valid_ratio: float = 0.20,
 ):
     """Perform Eigenvalue Decomposition along axis 0.
 
     Parameters
-    ------------
-    raw_data: array-like complex [num_pulses x num_rng_samples]
-        raw data to be processed
-    mask_valid_cpi: (num_pulses, num_rng_samples) bool array, optional
+    ----------
+    raw_data : array-like complex [num_pulses x num_rng_samples]
+        Raw data to be processed.
+    prf_dither_mode : bool, default=True
+        If True, use gap-exclusion covariance for dithered-PRF data.
+        If False, use the standard sample covariance matrix.
+    mask_valid_cpi : (num_pulses, num_rng_samples) bool array, optional
         True indicates valid samples. False indicates invalid samples or gaps.
-        If None, an all true boolean mask is created. All samples are assumed to be valid.
-    off_diag_overlap_ratio: float
+        This is used only when prf_dither_mode=True.
+        If None, an all-True mask is created.
+    off_diag_overlap_ratio : float, default=0.1
         Minimum fraction of overlapping valid range samples required to compute
-        an off-diagonal term in the sample covariance matrix entry R_ij.
-    diag_valid_ratio : float, optional
-        Minimum fraction of valid samples required to compute a diagonal term in the
-        sample covariance matrix entry R_ii.
+        an off-diagonal covariance term R_ij when prf_dither_mode=True.
+    diag_valid_ratio : float, default=0.05
+        Minimum fraction of valid range samples required to compute
+        a diagonal covariance term R_ii when prf_dither_mode=True.
 
     Returns
-    --------
-    eig_val_sort: 1D array of float, same length as the number of rows of input matrix
-        Eigenvalues sorted in descending order
-    eig_vec_sort: 2D array of complex, same shape as input matrix
-        column vector Eigenvectors sorted based on index of sorted Eigenvalues
+    -------
+    eig_val_sort : 1D array of float
+        Eigenvalues sorted in descending order.
+    eig_vec_sort : 2D array of complex
+        Column eigenvectors sorted to match eig_val_sort.
     """
-
     # The raw_data is not necessarily zero-mean when it is corrupted by RFI.
     # If so, estimated sample covariance matrix cov_cpi should be called 
     # sample correlation  matrix instead.  The reference below demonstrates
@@ -274,30 +244,37 @@ def compute_evd_gap(
     # Application in Narrow-Band Interference Suppression for SAR”, IEEE Geoscience 
     # and Remote Sensing Letters, vol. 4, no. 1, pp. 76,2007.
 
-    if mask_valid_cpi is None:
-        mask_valid_cpi = np.ones(raw_data.shape, dtype=bool)
+    if prf_dither_mode:
+        if mask_valid_cpi is None:
+            mask_valid_cpi = np.ones(raw_data.shape, dtype=bool)
+        else:
+            mask_valid_cpi = mask_valid_cpi.astype(bool, copy=False)
 
-    if mask_valid_cpi.shape != raw_data.shape:
-        raise ValueError(f"mask shape {mask_valid_cpi.shape} != data shape {raw_data.shape}")
-    
-    cov_cpi = compute_gap_exclusion_cov(
-        raw_data, 
-        mask_valid_cpi=mask_valid_cpi, 
-        off_diag_overlap_ratio=off_diag_overlap_ratio,
-        diag_valid_ratio=diag_valid_ratio,
-    )
+        if mask_valid_cpi.shape != raw_data.shape:
+            raise ValueError(
+                f"CPI mask shape {mask_valid_cpi.shape} != CPI data shape {raw_data.shape}"
+            )
+
+        cov_cpi = compute_gap_exclusion_cov(
+            raw_data,
+            mask_valid_cpi=mask_valid_cpi,
+            off_diag_overlap_ratio=off_diag_overlap_ratio,
+            diag_valid_ratio=diag_valid_ratio,
+        )
+    else:
+        num_rng_samples = raw_data.shape[1]
+        cov_cpi = (raw_data @ raw_data.conj().T) / num_rng_samples
 
     eig_val_sort, eig_vec_sort = eigen_decomp_sort(cov_cpi)
 
     return eig_val_sort, eig_vec_sort
 
-
 def compute_gap_exclusion_cov(
     data: np.ndarray,
     *,
     mask_valid_cpi: np.ndarray = None,
-    off_diag_overlap_ratio: float = 0.2,
-    diag_valid_ratio: float = 0.15,
+    off_diag_overlap_ratio: float = 0.25,
+    diag_valid_ratio: float = 0.20,
 ):
     """
     Compute a gap-excluded slow-time sample covariance matrix.
@@ -341,6 +318,21 @@ def compute_gap_exclusion_cov(
     # Sample Covariance Matrix
     min_valid_off_diag = max(1, int(np.ceil(off_diag_overlap_ratio * num_rng_samples)))
     min_valid_diag = max(1, int(np.ceil(diag_valid_ratio * num_rng_samples))) 
+
+    rng_samples_min = 2 * num_pulses
+
+    if min_valid_off_diag < rng_samples_min:
+        warnings.warn(f"""
+            Minimum number of samples required per pulse to estimate sample covariance matrix
+            is {rng_samples_min}. The number of valid overlapping off-diagonal samples is
+            {min_valid_off_diag}.
+        """)
+
+    if min_valid_diag < rng_samples_min:
+        warnings.warn(f"""
+            Minimum number of samples required per pulse to estimate sample covariance matrix
+            is {rng_samples_min}. The number of valid diagonal samples is {min_valid_off_diag}.
+        """)
 
     # Zero-out invalid samples
     x_valid =  data * mask_valid_cpi

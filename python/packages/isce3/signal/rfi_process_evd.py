@@ -177,7 +177,7 @@ def run_slow_time_evd(
 
     # Verify Mask shape
     if mask_valid.shape != raw_data.shape:
-        raise ValueError(f"mask shape {mask_valid.shape} != data shape {raw_data.shape}")
+        raise ValueError(f"Valid raw data mask shape {mask_valid.shape} != raw data shape {raw_data.shape}")
     
     # Determine a valid Eigenvalue index to estimate minimum-Eigenvalue statistics,
     # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
