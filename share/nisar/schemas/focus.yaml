@@ -448,8 +448,12 @@ slow_time_evd_options:
   # minimum fraction of samples required for co-variance terms
   # of sample covariance matrix
   diag_valid_ratio: num(min=0.0, required=False)
-  # The Eigenvalue index of minimum Eigenvalue
-  noise_ev_idx: int(min=2, required=False)
+  #This ratio will be used to determine the minimum number of valid Eigenvalues
+  ##required for a CPI. min_ev_valid_idx = min_valid_ev_ratio * cpi_len
+  min_valid_ev_ratio: int(min=0.0, required=False)
+  # radar platform receiver dynamic range, e.g. -50 dB. This is applied as a threshold
+  # to determine if the Eigenvalue under test is meaningfully signficant.
+  rx_dynamic_range_db: float(min=-100.0, max=0.0, required=False)
   # Parameters used to adaptively determine RFI eigenvalue difference thresholds
   threshold_hyperparameters: include('rfi_threshold_options', required=False)
 
