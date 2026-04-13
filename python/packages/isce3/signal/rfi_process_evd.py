@@ -25,7 +25,7 @@ def run_slow_time_evd(
     mitigate_enable=False,
     prf_dither_mode=False,
     min_valid_ev_ratio=0.65,
-    rx_dynamic_range_db=-50,
+    rx_dynamic_range_db=-50.0,
     mask_valid=None,
     raw_data_mitigated=None,
 ):

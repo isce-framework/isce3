@@ -118,7 +118,7 @@ def compute_evd_tb(
     off_diag_overlap_ratio: float=0.1,
     diag_valid_ratio: float=0.05,
     min_ev_valid_idx: int=10,
-    rx_dynamic_range_db: int=-50,
+    rx_dynamic_range_db: float=-50.0,
 ):
     """Divide input raw data equivalent to a threshold block into Coherent
     Processing Intervals (CPI) with respect to axis=0 and perform Eigenvalue
