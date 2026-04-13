@@ -117,7 +117,8 @@ def compute_evd_tb(
     mask_valid: np.ndarray=None,
     off_diag_overlap_ratio: float=0.1,
     diag_valid_ratio: float=0.05,
-    noise_ev_idx: int=10,
+    min_ev_valid_idx: int=10,
+    rx_dynamic_range_db: int=-50,
 ):
     """Divide input raw data equivalent to a threshold block into Coherent
     Processing Intervals (CPI) with respect to axis=0 and perform Eigenvalue
@@ -142,9 +143,14 @@ def compute_evd_tb(
     diag_valid_ratio : float, optional
         Minimum fraction of valid samples required to compute a diagonal term
         in the sample covariance matrix entry R_ii.
-    noise_ev_idx : int, optional
-        Eigenvalue index used by threshold estimation to estimate the slow-time
-        minimum Eigenvalue slope.
+    min_ev_valid_idx: int, optional
+        Eigenvalue index used by threshold estimation to estimate the slow-time minimum
+        Eigenvalue slope. This parameter is also used to validate that the threshold block
+        has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
+    rx_dynamic_range_db: int, optional
+        radar platform receiver dynamic range, e.g. -50 dB. This is applied as a threshold
+        to determine if the Eigenvalue under test is meaningfully signficant. If the
+        Eigenvalue under test is less than this threshold, it will be viewed as unusable.
 
     Returns
     --------
@@ -155,8 +161,8 @@ def compute_evd_tb(
         Sorted column vector Eigenvectors of all CPIs based on index of sorted
         Eigenvalues
     tb_is_valid : bool
-        False if any CPI in the threshold block does not have enough usable
-        eigenvalues for noise_ev_idx.
+        False if any CPI in the threshold block lacks sufficient usable Eigenvalues,
+        determined by checking whether the Eigenvalue at min_ev_valid_idx is meaningful.
     """
 
     # compute number of CPIs
@@ -183,9 +189,9 @@ def compute_evd_tb(
             f"Coherent Processing Interval length exceeds total number of pulses {num_pulses}!"
         )
 
-    if noise_ev_idx >= cpi_len:
+    if min_ev_valid_idx >= cpi_len:
         raise ValueError(
-            f"noise_ev_idx ({noise_ev_idx}) must be less than cpi_len ({cpi_len}). "
+            f"min_ev_valid_idx ({min_ev_valid_idx}) must be less than cpi_len ({cpi_len}). "
             "Since Python uses 0-based indexing, the maximum valid index is cpi_len - 1."
         )
 
@@ -216,11 +222,10 @@ def compute_evd_tb(
             )
 
         # Verify if the eigenvalue of CPI at index defind by  noise_ev_idx is meaningful
-        eig_val_abs = np.maximum(np.abs(eig_val_sort), 1e-30)
-        noise_ev_rel_db = 10 * np.log10(eig_val_abs[noise_ev_idx] / eig_val_abs[0])
-        rel_ev_thresh_db = -30
+        eig_val_sort_abs = np.maximum(np.abs(eig_val_sort), 1e-30)
+        noise_ev_norm_db = 10 * np.log10(eig_val_sort_abs[min_ev_valid_idx] / eig_val_sort_abs[0])
 
-        if noise_ev_rel_db < rel_ev_thresh_db:
+        if noise_ev_norm_db < rx_dynamic_range_db:
             tb_is_valid = False
             break
 
@@ -291,8 +296,8 @@ def compute_gap_exclusion_cov(
     data: np.ndarray,
     *,
     mask_valid_cpi: np.ndarray = None,
-    off_diag_overlap_ratio: float = 0.1,
-    diag_valid_ratio: float = 0.05,
+    off_diag_overlap_ratio: float = 0.2,
+    diag_valid_ratio: float = 0.15,
 ):
     """
     Compute a gap-excluded slow-time sample covariance matrix.

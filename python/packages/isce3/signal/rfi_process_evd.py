@@ -4,7 +4,7 @@ Perform RFI detection and mitigation of input raw data using Slow-Time Eigenvalu
 """
 import numpy as np
 from numpy.fft import fft, ifft, fftshift
-from isce3.signal.compute_evd_cpi import slice_gen, compute_evd_tb_gap
+from isce3.signal.compute_evd_cpi import slice_gen
 from isce3.signal.rfi_detection_evd import rfi_detect, ThresholdParams
 from isce3.signal.rfi_mitigation_evd import rfi_mitigate_tb
 
@@ -16,15 +16,16 @@ def run_slow_time_evd(
     num_max_trim=0,
     num_min_trim=0,
     max_num_rfi_ev=2,
-    num_samples_rng_blk=1000,
+    num_samples_rng_blk=250,
     use_entire_pulse=False,
     threshold_params: ThresholdParams = ThresholdParams(),
     num_cpi_tb=20,
-    off_diag_overlap_ratio=0.1,
-    diag_valid_ratio=0.05,
+    off_diag_overlap_ratio=0.2,
+    diag_valid_ratio=0.15,
     mitigate_enable=False,
     prf_dither_mode=False,
-    noise_ev_idx=10,
+    min_valid_ev_ratio=0.65,
+    rx_dynamic_range_db=-50,
     mask_valid=None,
     raw_data_mitigated=None,
 ):
@@ -83,9 +84,13 @@ def run_slow_time_evd(
     prf_dither_mode: bool
         If True, L0B acquisition is of PRF Dithering mode. Sample Covariance Matrix
         is computed differently by excluding the invalid data gaps.
-    noise_ev_idx : int
-        Eigenvalue index used by threshold estimation to estimate the slow-time minimum
-        Eigenvalue slope
+    min_valid_ev_ratio: float
+        This ratio will be used to determine the minimum number of valid Eigenvalues
+        required for a CPI. min_ev_valid_idx = min_valid_ev_ratio * cpi_len
+    rx_dynamic_range_db: int, optional
+        radar platform receiver dynamic range, e.g. -50 dB. This is applied as a threshold
+        to determine if the Eigenvalue under test is meaningfully signficant. If the
+        Eigenvalue under test is less than this threshold, it will be viewed as unusable.
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
         Valid-sample mask with same shape as raw_data
     raw_data_mitigated: array-like complex [num_pulses x num_rng_samples] or None, optional
@@ -135,9 +140,6 @@ def run_slow_time_evd(
 
     num_tb = num_pulses_proc // num_pulses_tb
 
-    figure_merit_array = np.zeros((num_tb, num_rng_blks), dtype=np.float32)
-    num_rfi_ev_tb_array = np.zeros((num_tb, num_rng_blks), dtype=np.int16)
-
     # Modify raw_data in-place
     if raw_data_mitigated is None:
         raw_data_mitigated = raw_data
@@ -147,6 +149,12 @@ def run_slow_time_evd(
                 "Shape mismatch: output mitigated data array must have the same shape"
                 " as the input data"
             )
+
+    # Verify min_valid_ev_ratio
+    if min_valid_ev_ratio >= 1:
+        raise ValueError(
+            f"min_valid_ev_ratio must be less than 1, got {min_valid_ev_ratio}."
+        )
 
     # Create a mask if no mask if provided
     if mask_valid is None:
@@ -167,16 +175,14 @@ def run_slow_time_evd(
             "Max number of deg. of freedom must be less than number of pulses in a CPI."
         )
 
-    # Verify noise_ev_idx
-    if noise_ev_idx >= cpi_len:
-        raise ValueError(
-            f"noise_ev_idx must be less than {cpi_len - 1}, got {noise_ev_idx}."
-    )
-
     # Verify Mask shape
     if mask_valid.shape != raw_data.shape:
         raise ValueError(f"mask shape {mask_valid.shape} != data shape {raw_data.shape}")
     
+    # Determine a valid Eigenvalue index to estimate minimum-Eigenvalue statistics,
+    # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
+    min_ev_valid_idx = int(np.floor(min_valid_ev_ratio * cpi_len))
+
     # Run RFI Detection and Mitigation
     for idx_tb, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
         for idx_rng, tb_fast_time in enumerate(
@@ -188,6 +194,7 @@ def run_slow_time_evd(
             (
                 rfi_cpi_flag_tb, 
                 evec_sort_tb, 
+                fig_merit_detect_tb,
             ) = rfi_detect(
                 raw_tb_blk,
                 cpi_len,
@@ -198,7 +205,8 @@ def run_slow_time_evd(
                 off_diag_overlap_ratio,
                 diag_valid_ratio,
                 prf_dither_mode,
-                noise_ev_idx,
+                min_ev_valid_idx,
+                rx_dynamic_range_db,
                 mask_valid_tb,
                 threshold_params,
             )

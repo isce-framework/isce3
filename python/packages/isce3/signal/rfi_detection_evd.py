@@ -3,7 +3,7 @@ Performs RFI detection of input data using Slow-Time Eigenvalue Slope
 Thresholding algorithm (ST-EST).
 """
 import numpy as np
-from isce3.signal.compute_evd_cpi import compute_evd_tb, compute_evd_tb_gap
+from isce3.signal.compute_evd_cpi import compute_evd_tb
 from dataclasses import dataclass, field
 from typing import List
 import warnings
@@ -39,6 +39,7 @@ class ThresholdParams:
         if len(self.x) < 2:
             raise ValueError("At least two points are required")
 
+
 def rfi_detect(
     raw_data,
     cpi_len,
@@ -49,7 +50,8 @@ def rfi_detect(
     off_diag_overlap_ratio,
     diag_valid_ratio,
     prf_dither_mode,
-    noise_ev_idx,
+    min_ev_valid_idx,
+    rx_dynamic_range_db,
     mask_valid,
     threshold_params,
 ):
@@ -84,10 +86,14 @@ def rfi_detect(
     prf_dither_mode: bool
         If True, L0B acquisition is of PRF Dithering mode. Sample Covariance Matrix
         is computed differently by excluding the invalid data gaps.
-    noise_ev_idx : int
+    min_ev_valid_idx: int
         Eigenvalue index used by threshold estimation to estimate the slow-time minimum
-        Eigenvalue slope. This parameter is also used to validate that the threshold block 
-        has enough usable eigenvalues for minimum Eigenvalue estimation
+        Eigenvalue slope. This parameter is also used to validate that the threshold block
+        has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
+    rx_dynamic_range_db: int, optional
+        radar platform receiver dynamic range, e.g. -50 dB. This is applied as a threshold
+        to determine if the Eigenvalue under test is meaningfully signficant. If the
+        Eigenvalue under test is less than this threshold, it will be viewed as unusable.
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples]
         Valid-sample mask with same shape as raw_data
     threshold_params: ThresholdParams dataclass object
@@ -112,36 +118,43 @@ def rfi_detect(
             "Total number of pulses must be greater or equal to number of pulses per single CPI."
         )
 
-    # Validate sample covariance rank
-    eig_val_sort_array, eig_vec_sort_array, tb_is_valid = compute_evd_tb(
+    
+    # Need to validate sample covariance rank
+    (
+        eig_val_sort_array, 
+        eig_vec_sort_array,
+        tb_is_valid,
+    ) = compute_evd_tb(
         raw_data,
         cpi_len=cpi_len,
         prf_dither_mode=prf_dither_mode,
         mask_valid=mask_valid,
         off_diag_overlap_ratio=off_diag_overlap_ratio,
         diag_valid_ratio=diag_valid_ratio,
-        noise_ev_idx=noise_ev_idx,
+        min_ev_valid_idx=min_ev_valid_idx,
+        rx_dynamic_range_db=rx_dynamic_range_db,
     )
-
     # If any CPI within a threshold block is determined to be invalid
     # Then skip threshold computation for this block by setting rfi_cpi_flag_array
     # to all zeros
     if not tb_is_valid:
         num_cpi = eig_val_sort_array.shape[0]
         rfi_cpi_flag_array = np.zeros((num_cpi, cpi_len), dtype=np.bool_)
+        fig_merit_detect_tb = 0
 
         return (
             rfi_cpi_flag_array,
             eig_vec_sort_array,
+            fig_merit_detect_tb,
         )
 
     # Estimate a single threshold for all CPIs
-    detect_threshold = threshold_estimate_evd(
+    detect_threshold, fig_merit_detect_tb = threshold_estimate_evd(
         eig_val_sort_array,
         num_max_trim,
         num_min_trim,
         max_num_rfi_ev,
-        noise_ev_idx,
+        min_ev_valid_idx,
         threshold_params,
     )
 
@@ -150,7 +163,7 @@ def rfi_detect(
         eig_val_sort_array, detect_threshold, max_deg_freedom
     )
 
-    return rfi_cpi_flag_array, eig_vec_sort_array
+    return rfi_cpi_flag_array, eig_vec_sort_array, fig_merit_detect_tb
 
 
 def threshold_estimate_evd(
@@ -158,7 +171,7 @@ def threshold_estimate_evd(
     num_max_trim=0,
     num_min_trim=0,
     max_num_rfi_ev=2,
-    noise_ev_idx=10,
+    min_ev_valid_idx=10,
     threshold_params: ThresholdParams = ThresholdParams(),
 ):
     """Perform data-centric thresholding algorithm: "Slow-Time Eigenvalue Slope
@@ -194,9 +207,10 @@ def threshold_estimate_evd(
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
-    noise_ev_idx : int, optional
+    min_ev_valid_idx: int
         Eigenvalue index used by threshold estimation to estimate the slow-time minimum
-        Eigenvalue slope
+        Eigenvalue slope. This parameter is also used to validate that the threshold block
+        has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
     threshold_params: ThresholdParams dataclass object, default=ThresholdParams()
         RFI detection threshold interpolation parameters
 
@@ -226,9 +240,9 @@ def threshold_estimate_evd(
     ev_max_std_idx = np.argmax(eval_sort_max_std)
     ev_max_db = eval_sort_max_db[:, ev_max_std_idx]
 
-    # For Dithered PRF mode, noise_ev_idx is selected to avoid zeros in the tail
+    # For Dithered PRF mode, min_ev_valid_idx is selected to avoid zeros in the tail
     # of the Eigenvalue spectrum due to invalid data gaps for each pulse.
-    ev_min_db = 10 * np.log10(np.abs(eig_val_sort_array[:, noise_ev_idx]))
+    ev_min_db = 10 * np.log10(np.abs(eig_val_sort_array[:, min_ev_valid_idx]))
 
     # Remove possible outliers in max and min Eigenvalues without reordering.
     if num_min_trim > 0:
@@ -259,7 +273,7 @@ def threshold_estimate_evd(
 
     detect_threshold = ev_slope_min_mean + num_sigma * ev_slope_min_std
 
-    return detect_threshold
+    return detect_threshold, std_ratio_ev_slope
 
 
 def rfi_detect_evd(

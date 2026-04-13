@@ -177,6 +177,9 @@ def rfi_wb_gen(
         (32, 2148, 20, 10, 0, 0, 2, True, False, False, 'no-op'),  # No-op: no rng blks
         (32, 256, 20, 10, 0, 0, 2, False, False, False, 'no-op'),  # No-op: 256 range samples / range block
         (32, 2148, 20, 10, 0, 0, 2, True, False, False, 'no-op'),  # No-op: detection only
+        (32, 2148, 20, 10, 1, 1, 2, True, True, True, 'mitigate'),  # No range blks, prf_dither_mode = True
+        (32, 256, 20, 10, 1, 1, 2, False, True, True, 'mitigate'),  # 256 range samples / range blocks, prf_dither_mode = True
+        (32, 2148, 20, 10, 0, 0, 2, True, False, True, 'no-op'),  # No-op: detection only, prf_dither_mode = True
     ],
 )
 def test_slow_time_evd(
@@ -301,7 +304,8 @@ def test_slow_time_evd(
     threshold_params = ThresholdParams([2, 10], [5, 2])
     off_diag_overlap_ratio = 0.1
     diag_valid_ratio = 0.05
-    noise_ev_idx = 10
+    min_valid_ev_ratio = 0.8
+    rx_dynamic_range_db = -50
     mask_valid = np.ones(raw_data_rfi.shape, dtype=bool)
 
     rfi_likelihood = run_slow_time_evd(
@@ -319,7 +323,8 @@ def test_slow_time_evd(
         diag_valid_ratio=diag_valid_ratio,
         mitigate_enable=mitigate_enable,
         prf_dither_mode=prf_dither_mode,
-        noise_ev_idx=noise_ev_idx,
+        min_valid_ev_ratio=min_valid_ev_ratio,
+        rx_dynamic_range_db=rx_dynamic_range_db,
         mask_valid=mask_valid,
         raw_data_mitigated=raw_data_mitigated,
     )
