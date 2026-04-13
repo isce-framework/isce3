@@ -102,9 +102,9 @@ def compute_evd_tb(
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
         Valid-sample mask with same shape as raw_data. Required if
         prf_dither_mode=True.
-    off_diag_overlap_ratio : float, optional
+    off_diag_overlap_ratio : float, optional, default = 0.25
         Minimum overlap ratio used by gap exclusion covariance estimation
-    diag_valid_ratio : float, optional
+    diag_valid_ratio : float, optional, default = 0.20
         Minimum fraction of valid samples required to compute a diagonal term
         in the sample covariance matrix entry R_ii.
     min_ev_valid_idx: int, optional
@@ -220,10 +220,10 @@ def compute_evd(
         True indicates valid samples. False indicates invalid samples or gaps.
         This is used only when prf_dither_mode=True.
         If None, an all-True mask is created.
-    off_diag_overlap_ratio : float, default=0.1
+    off_diag_overlap_ratio : float, default=0.25
         Minimum fraction of overlapping valid range samples required to compute
         an off-diagonal covariance term R_ij when prf_dither_mode=True.
-    diag_valid_ratio : float, default=0.05
+    diag_valid_ratio : float, default=0.20
         Minimum fraction of valid range samples required to compute
         a diagonal covariance term R_ii when prf_dither_mode=True.
 
@@ -286,10 +286,10 @@ def compute_gap_exclusion_cov(
     mask_valid_cpi: (num_pulses, num_rng_samples) bool array, optional
         True indicates valid samples. False indicates invalid samples or gaps.
         If None, an all true boolean mask is created. All samples are assumed to be valid.
-    off_diag_overlap_ratio: float
+    off_diag_overlap_ratio: float, default = 0.25
         Minimum fraction of overlapping valid range samples required to compute
         an off-diagonal term in the sample covariance matrix entry R_ij.
-    diag_valid_ratio : float, optional
+    diag_valid_ratio : float, optional, deffault = 0.20
         Minimum fraction of valid samples required to compute a diagonal term in the
         sample covariance matrix entry R_ii.
         
