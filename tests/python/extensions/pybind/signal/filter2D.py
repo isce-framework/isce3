@@ -33,7 +33,7 @@ def test_run_filter2D():
     block = 20
 
     # Create filter kernels
-    kernel1d = np.ones([kernel_length, 1], dtype=np.float64) / kernel_length
+    kernel1d = np.ones(kernel_length, dtype=np.float64) / kernel_length
 
     # Create real data to filter
     data_real = np.zeros([length, width], dtype=np.float64)
