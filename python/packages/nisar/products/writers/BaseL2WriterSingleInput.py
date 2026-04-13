@@ -1634,7 +1634,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     frequency=None, output_ds_name_list=None,
                     input_ds_name_list=None,
                     skip_if_not_present=False,
-                    compute_stats=False):
+                    compute_stats=False,
+                    data_interpolator=None):
         """
         Geocode a look-up table (LUT) from the input product in
         radar coordinates to the output product in map coordinates
@@ -1665,6 +1666,14 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
+        data_interpolator: str, optional
+            Interpolation algorithm to use for geocoding.
+            The default interpolation algorithm is determined dynamically
+            based on the dimensions of the LUT. If the LUT contains a single
+            row or column, nearest neighbor interpolation will be used.
+            Otherwise, if the LUT contains < 5 rows or columns, bilinear
+            interpolation will be used. Otherwise, biquintic interpolation
+            will be used.
 
         Returns
         -------
@@ -1708,6 +1717,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'calibrationInformation' in output_h5_group
         is_processing_information_group = \
             'processingInformation' in output_h5_group
+        is_grids_group = 'grids' in output_h5_group
 
         if (is_calibration_information_group and
                 is_processing_information_group):
@@ -1721,6 +1731,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             metadata_group = 'calibrationInformation'
         elif is_processing_information_group:
             metadata_group = 'processingInformation'
+        elif is_grids_group:
+            metadata_group = 'grids'
         else:
             error_msg = f'Could not determine LUT group for {output_h5_group}'
             error_channel.log(error_msg)
@@ -1737,7 +1749,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             input_h5_group_path,
             output_h5_group_path,
             skip_if_not_present,
-            compute_stats)
+            compute_stats,
+            data_interpolator)
 
     def geocode_metadata_group(self,
                                frequency,
@@ -1803,9 +1816,16 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         if metadata_group == 'calibrationInformation':
             metadata_geogrid = self.cfg['processing'][
                 'calibration_information']['geogrid']
+            zero_doppler_group_path = input_h5_group_path
         elif metadata_group == 'processingInformation':
             metadata_geogrid = self.cfg['processing'][
                 'processing_information']['geogrid']
+            zero_doppler_group_path = input_h5_group_path
+        elif metadata_group == 'grids':
+            metadata_geogrid = \
+                self.cfg['processing']['geocode']['geogrids'][frequency]
+            zero_doppler_group_path = '/'.join(
+                input_h5_group_path.split('/')[0:-1])
         else:
             error_msg = f'Invalid metadata group {metadata_group}'
             error_channel.log(error_msg)
@@ -1826,7 +1846,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         # The LUT noise-equivalent backscatter is irregulary sampled in the
         # azimuth direction
         if not flag_luts_are_1d_rg and not flag_noise_equivalent_backscatter:
-            zero_doppler_path = f'{input_h5_group_path}/zeroDopplerTime'
+            zero_doppler_path = f'{zero_doppler_group_path}/zeroDopplerTime'
             try:
                 zero_doppler_h5_dataset = self.input_hdf5_obj[
                     zero_doppler_path]
@@ -2209,6 +2229,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             geo = isce3.geocode.GeocodeCFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_CFloat64:
             geo = isce3.geocode.GeocodeCFloat64()
+        elif input_raster_obj.datatype() == gdal.GDT_Byte:
+            geo = isce3.geocode.GeocodeFloat32()
         else:
             err_str = 'Unsupported raster type for geocoding'
             error_channel.log(err_str)
