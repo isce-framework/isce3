@@ -986,7 +986,7 @@ def estimate_scr(
         )
         return np.nan
 
-    # Create an estimated chip that is the column and row of the peak magnitude plus
+    # Create an estimation chip that is the column and row of the peak magnitude plus
     # clutter_half_width pixels in either direction, converted to units of linear power.
     scr_est_chip = np.abs(
         chip[
