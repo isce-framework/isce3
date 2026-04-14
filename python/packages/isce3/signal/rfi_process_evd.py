@@ -24,7 +24,7 @@ def run_slow_time_evd(
     mitigate_enable=False,
     prf_dither_mode=False,
     min_valid_ev_ratio=0.65,
-    rx_dynamic_range_db=-50.0,
+    rx_dynamic_range_db=50.0,
     mask_valid=None,
     raw_data_mitigated=None,
 ):
@@ -86,8 +86,8 @@ def run_slow_time_evd(
     min_valid_ev_ratio: float
         This ratio will be used to determine the minimum number of valid Eigenvalues
         required for a CPI. min_ev_valid_idx = min_valid_ev_ratio * cpi_len
-    rx_dynamic_range_db: int, optional
-        radar platform receiver dynamic range, e.g. -50 dB. This is applied as a threshold
+    rx_dynamic_range_db: int, optional, default = 50 dB
+        radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
