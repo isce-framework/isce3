@@ -966,7 +966,7 @@ def estimate_scr(
 
     # If the peak magnitude was not passed in, estimate it.
     if peak_magnitude is None:
-        peak_magnitude = np.nanmax(chip)
+        peak_magnitude = np.nanmax(np.abs(chip))
 
     # Get the location of the peak magnitude.
     k = np.nanargmax(np.abs(chip))
