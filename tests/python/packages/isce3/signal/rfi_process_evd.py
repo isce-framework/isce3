@@ -302,10 +302,10 @@ def test_slow_time_evd(
     # Compute Eigenvalues and Eigenvectors
 
     threshold_params = ThresholdParams([2, 10], [5, 2])
-    off_diag_overlap_ratio = 0.1
-    diag_valid_ratio = 0.05
-    min_valid_ev_ratio = 0.8
-    rx_dynamic_range_db = -50
+    off_diag_overlap_ratio = 0.25
+    diag_valid_ratio = 0.20
+    normalized_min_rank_ratio = 0.8
+    rx_dynamic_range_db = 50
     mask_valid = np.ones(raw_data_rfi.shape, dtype=bool)
 
     rfi_likelihood = run_slow_time_evd(
@@ -323,7 +323,7 @@ def test_slow_time_evd(
         diag_valid_ratio=diag_valid_ratio,
         mitigate_enable=mitigate_enable,
         prf_dither_mode=prf_dither_mode,
-        min_valid_ev_ratio=min_valid_ev_ratio,
+        normalized_min_rank_ratio=normalized_min_rank_ratio,
         rx_dynamic_range_db=rx_dynamic_range_db,
         mask_valid=mask_valid,
         raw_data_mitigated=raw_data_mitigated,
