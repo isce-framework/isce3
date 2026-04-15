@@ -1130,13 +1130,12 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
 
     num_pulses = raw_data.shape[0]
     mask_valid = np.zeros(raw_data.shape, dtype=bool)
-    pulse_idx = np.arange(num_pulses)
 
     # Read Sub-Swath Mask for all pulses of the raw data block
-    for imask, ipulse in enumerate(pulse_idx):
+    for pulse_idx in range(num_pulses):
         for swath in swaths:
-            start, end = swath[ipulse]
-            mask_valid[imask, start:end] = True
+            start, end = swath[pulse_idx]
+            mask_valid[pulse_idx, start:end] = True
 
     raw_data_mitigated = raw_data
     if opt.mitigation_enabled and not cfg.processing.delete_tempfiles:
