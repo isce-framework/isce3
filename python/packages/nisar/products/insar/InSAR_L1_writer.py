@@ -18,7 +18,7 @@ from .InSAR_base_writer import InSARBaseWriter
 from .product_paths import L1GroupsPaths
 from .units import Units
 from .utils import (extract_datetime_from_string, generate_dem_rdr,
-                    generate_insar_subswath_mask,
+                    generate_insar_mask,
                     get_geolocation_grid_cube_obj, save_to_hdf5_ds)
 
 
@@ -493,18 +493,21 @@ class L1InSARWriter(InSARBaseWriter):
             self._create_2d_dataset(offset_group,
                                     'mask',
                                     shape=(off_length, off_width),
-                                    dtype=np.uint8,
-                                    description=("Mask indicating the subswaths of valid samples in the reference RSLC"
-                                                 " and geometrically-coregistered secondary RSLC."
-                                                 " Each pixel value is a two-digit number:"
-                                                 " the least significant digit represents the"
-                                                 " subswath number of that pixel in the secondary RSLC,"
-                                                 " and the most significant digit represents"
-                                                 " the subswath number of that pixel in the reference RSLC."
-                                                 " A value of 0 in either digit indicates an invalid sample"
-                                                 " in the corresponding RSLC"),
+                                    dtype=np.uint32,
+                                    description=("Mask indicating the subswaths of valid samples and data anomalies"
+                                                 " in the reference RSLC and the geometrically coregistered secondary RSLC."
+                                                 " Each pixel value is encoded as a 32-bit unsigned integer."
+                                                 " Bits 0–7 represent subswath encoding,"
+                                                 " where the most significant digit corresponds to the subswath number of the reference RSLC"
+                                                 " and the least significant digit corresponds to the subswath number of the secondary RSLC;"
+                                                 " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
+                                                 " Bits 8–15 represent bitwise anomaly flags for the secondary RSLC,"
+                                                 " and bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
+                                                 " with each bit corresponding to a specific anomaly condition."
+                                                 " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
+                                                 " Bits 24–31 are reserved for future use"),
                                     fill_value=255)
-            offset_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath mask")
+            offset_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")
             offset_group['mask'].attrs['valid_min'] = 0
 
             range_offset_path = \
@@ -529,13 +532,15 @@ class L1InSARWriter(InSARBaseWriter):
                                for az in offset_zero_doppler_time])
 
             offset_group['mask'][...] = \
-                generate_insar_subswath_mask(self.ref_rslc,
-                                             self.sec_rslc,
-                                             range_offset_path,
-                                             azimuth_offset_path,
-                                             freq,
-                                             az_idx,
-                                             rg_idx)
+                generate_insar_mask(self.ref_rslc,
+                                    self.sec_rslc,
+                                    self.ref_h5py_file_obj,
+                                    self.sec_h5py_file_obj,
+                                    range_offset_path,
+                                    azimuth_offset_path,
+                                    freq,
+                                    az_idx,
+                                    rg_idx)
 
         # add the datasets to pixel offsets group
         self._add_datasets_to_pixel_offset_group()
@@ -706,19 +711,22 @@ class L1InSARWriter(InSARBaseWriter):
             self._create_2d_dataset(igram_group,
                                     'mask',
                                     shape=igram_shape,
-                                    dtype=np.uint8,
-                                    description=("Mask indicating the subswaths of valid samples in the reference RSLC"
-                                                 " and geometrically-coregistered secondary RSLC."
-                                                 " Each pixel value is a two-digit number:"
-                                                 " the least significant digit represents the"
-                                                 " subswath number of that pixel in the secondary RSLC,"
-                                                 " and the most significant digit represents"
-                                                 " the subswath number of that pixel in the reference RSLC."
-                                                 " A value of 0 in either digit indicates an invalid sample"
-                                                 " in the corresponding RSLC"),
+                                    dtype=np.uint32,
+                                    description=("Mask indicating the subswaths of valid samples and data anomalies"
+                                                 " in the reference RSLC and the geometrically coregistered secondary RSLC."
+                                                 " Each pixel value is encoded as a 32-bit unsigned integer."
+                                                 " Bits 0–7 represent subswath encoding,"
+                                                 " where the most significant digit corresponds to the subswath number of the reference RSLC"
+                                                 " and the least significant digit corresponds to the subswath number of the secondary RSLC;"
+                                                 " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
+                                                 " Bits 8–15 represent bitwise anomaly flags for the secondary RSLC,"
+                                                 " and bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
+                                                 " with each bit corresponding to a specific anomaly condition."
+                                                 " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
+                                                 " Bits 24–31 are reserved for future use"),
                                     fill_value=255)
             igram_group['mask'].attrs['valid_min'] = 0
-            igram_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath mask")
+            igram_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")
 
             range_offset_path = \
                 os.path.join(self.topo_path,
@@ -742,13 +750,15 @@ class L1InSARWriter(InSARBaseWriter):
                                for az in igram_zero_doppler_time])
 
             igram_group['mask'][...] = \
-                generate_insar_subswath_mask(self.ref_rslc,
-                                             self.sec_rslc,
-                                             range_offset_path,
-                                             azimuth_offset_path,
-                                             freq,
-                                             az_idx,
-                                             rg_idx)
+                generate_insar_mask(self.ref_rslc,
+                                    self.sec_rslc,
+                                    self.ref_h5py_file_obj,
+                                    self.sec_h5py_file_obj,
+                                    range_offset_path,
+                                    azimuth_offset_path,
+                                    freq,
+                                    az_idx,
+                                    rg_idx)
 
             # add the interferogram and pixelOffsets groups to the polarization group
             for pol in pol_list:
