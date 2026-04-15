@@ -1164,7 +1164,7 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
             diag_valid_ratio=opt_evd.diag_valid_ratio,
             mitigate_enable=opt.mitigation_enabled,
             prf_dither_mode=prf_dither_mode,
-            min_valid_ev_ratio=opt_evd.min_valid_ev_ratio,
+            normalized_min_rank_ratio=opt_evd.normalized_min_rank_ratio,
             rx_dynamic_range_db=opt_evd.rx_dynamic_range_db,
             mask_valid=mask_valid,
             raw_data_mitigated=raw_data_mitigated)

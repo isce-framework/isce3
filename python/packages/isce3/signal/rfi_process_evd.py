@@ -23,7 +23,7 @@ def run_slow_time_evd(
     diag_valid_ratio=0.15,
     mitigate_enable=False,
     prf_dither_mode=False,
-    min_valid_ev_ratio=0.65,
+    normalized_min_rank_ratio=0.65,
     rx_dynamic_range_db=50.0,
     mask_valid=None,
     raw_data_mitigated=None,
@@ -83,9 +83,9 @@ def run_slow_time_evd(
     prf_dither_mode: bool
         If True, L0B acquisition is of PRF Dithering mode. Sample Covariance Matrix
         is computed differently by excluding the invalid data gaps.
-    min_valid_ev_ratio: float
+    normalized_min_rank_ratio: float
         This ratio will be used to determine the minimum number of valid Eigenvalues
-        required for a CPI. min_ev_valid_idx = min_valid_ev_ratio * cpi_len
+        required for a CPI. min_ev_valid_idx = int(np.floor(normalized_min_rank_ratio * cpi_len))
     rx_dynamic_range_db: int, optional, default = 50 dB
         radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
@@ -149,10 +149,10 @@ def run_slow_time_evd(
                 " as the input data"
             )
 
-    # Verify min_valid_ev_ratio
-    if min_valid_ev_ratio >= 1:
+    # Verify normalized_min_rank_ratio
+    if normalized_min_rank_ratio >= 1:
         raise ValueError(
-            f"min_valid_ev_ratio must be less than 1, got {min_valid_ev_ratio}."
+            f"normalized_min_rank_ratio must be less than 1, got {normalized_min_rank_ratio}."
         )
 
     # Create a mask if no mask if provided
@@ -180,7 +180,7 @@ def run_slow_time_evd(
     
     # Determine a valid Eigenvalue index to estimate minimum-Eigenvalue statistics,
     # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
-    min_ev_valid_idx = int(np.floor(min_valid_ev_ratio * cpi_len))
+    min_ev_valid_idx = int(np.floor(normalized_min_rank_ratio * cpi_len))
 
     # Run RFI Detection and Mitigation
     for idx_tb, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
