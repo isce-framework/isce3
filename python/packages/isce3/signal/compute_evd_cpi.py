@@ -186,11 +186,11 @@ def compute_evd_tb(
             diag_valid_ratio=diag_valid_ratio,
         )
 
-        # Verify if the eigenvalue of CPI at index defind by  noise_ev_idx is meaningful
+        # Verify if the eigenvalue of CPI at index defind by min_ev_valid_idx is meaningful
         eig_val_sort_abs = np.maximum(np.abs(eig_val_sort), 1e-30)
         noise_ev_norm_db = 10 * np.log10(eig_val_sort_abs[min_ev_valid_idx] / eig_val_sort_abs[0])
 
-        if noise_ev_norm_db < -rx_dynamic_range_db:
+        if -noise_ev_norm_db > rx_dynamic_range_db:
             tb_is_valid = False
             break
 
@@ -251,7 +251,7 @@ def compute_evd(
 
         if mask_valid_cpi.shape != raw_data.shape:
             raise ValueError(
-                f"CPI mask shape {mask_valid_cpi.shape} != CPI data shape {raw_data.shape}"
+                f"Valid CPI mask shape {mask_valid_cpi.shape} != CPI data shape {raw_data.shape}"
             )
 
         cov_cpi = compute_gap_exclusion_cov(
@@ -297,6 +297,11 @@ def compute_gap_exclusion_cov(
     -------
     cov : (num_pulses, num_pulses) complex64
         Gap-excluded sample covariance matrix.
+
+    Notes
+    -------
+    The number of range samples per purlse must be equal or larger than 2 x number of pulses 
+    to be processed in order to have a reliable sample covariance matrix estimate.
     """
 
     num_pulses, num_rng_samples = data.shape
@@ -305,7 +310,7 @@ def compute_gap_exclusion_cov(
         mask_valid_cpi = np.ones(data.shape, dtype=bool)
 
     if mask_valid_cpi.shape != data.shape:
-        raise ValueError(f"mask shape {mask_valid_cpi.shape} != data shape {data.shape}")
+        raise ValueError(f"CPI mask shape {mask_valid_cpi.shape} != CPI data shape {data.shape}")
 
     if not (0.0 <= off_diag_overlap_ratio <= 1.0):
         raise ValueError("off_diag_overlap_ratio must be between 0 and 1.")
@@ -318,6 +323,11 @@ def compute_gap_exclusion_cov(
     min_valid_off_diag = max(1, int(np.ceil(off_diag_overlap_ratio * num_rng_samples)))
     min_valid_diag = max(1, int(np.ceil(diag_valid_ratio * num_rng_samples))) 
 
+    # The number of range samples per purlse must be equal or larger than 2 x number of pulses
+    # to be processed in order to have a reliable sample covariance matrix estimate.
+    # However, sometimes we would like to explore the trade-off betweeen less number of samples
+    # to estimate sample covariance matrix and reduction of RFI artifact. Hence only a warning
+    # is raised.
     rng_samples_min = 2 * num_pulses
 
     if min_valid_off_diag < rng_samples_min:

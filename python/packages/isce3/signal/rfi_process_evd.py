@@ -86,6 +86,7 @@ def run_slow_time_evd(
     normalized_min_rank_ratio: float
         This ratio will be used to determine the minimum number of valid Eigenvalues
         required for a CPI. min_ev_valid_idx = int(np.floor(normalized_min_rank_ratio * cpi_len))
+        Must be a value within (0,1]
     rx_dynamic_range_db: int, optional, default = 50 dB
         radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
@@ -150,9 +151,9 @@ def run_slow_time_evd(
             )
 
     # Verify normalized_min_rank_ratio
-    if normalized_min_rank_ratio >= 1:
+    if not (0.0 < normalized_min_rank_ratio <= 1.0):
         raise ValueError(
-            f"normalized_min_rank_ratio must be less than 1, got {normalized_min_rank_ratio}."
+            f"normalized_min_rank_ratio must be in (0, 1], got {normalized_min_rank_ratio}."
         )
 
     # Create a mask if no mask if provided

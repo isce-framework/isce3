@@ -450,7 +450,7 @@ slow_time_evd_options:
   diag_valid_ratio: num(min=0.0, required=False)
   #This ratio will be used to determine the minimum number of valid Eigenvalues
   ##required for a CPI. min_ev_valid_idx = int(np.floor(normalized_min_rank_ratio * cpi_len))
-  normalized_min_rank_ratio: num(min=0.0, required=False)
+  normalized_min_rank_ratio: num(min=0.0, max=1.0, required=False)
   # radar platform receiver dynamic range, e.g. 50 dB. This is applied as a threshold
   # to determine if the Eigenvalue under test is meaningfully signficant.
   rx_dynamic_range_db: num(min=0.0, max=100.0, required=False)

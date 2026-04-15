@@ -68,9 +68,9 @@ def rfi_detect(
     max_deg_freedom: int
         Max number of independent RFI emitters designed to be detected and mitigated.
         This number should be less than cpi_len to avoid unintended removal of signal data.
-    num_max_trim: int, default = 0
+    num_max_trim: int
         Number of large-value outliers to be trimmed in slow-time minimum Eigenvalues.
-    num_min_trim: int, default = 0
+    num_min_trim: int
         Number of small-value outliers to be trimmed in slow-time minimum Eigenvalues
     max_num_rfi_ev: int
         A detection error (miss) happens when a maximum power RFI emitter contaminates 
@@ -78,9 +78,9 @@ def rfi_detect(
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
-    off_diag_overlap_ratio : float, optional
+    off_diag_overlap_ratio : float
         Minimum overlap ratio used by gap exclusion covariance estimation
-    diag_valid_ratio : float, optional
+    diag_valid_ratio : float
         Minimum fraction of valid samples required to compute a diagonal term in the
         sample covariance matrix entry R_ii.
     prf_dither_mode: bool
@@ -90,7 +90,7 @@ def rfi_detect(
         Eigenvalue index used by threshold estimation to estimate the slow-time minimum
         Eigenvalue slope. This parameter is also used to validate that the threshold block
         has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
-    rx_dynamic_range_db: int, optional, defaul = 50 dB
+    rx_dynamic_range_db: int
         Radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
