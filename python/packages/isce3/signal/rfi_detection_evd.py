@@ -69,35 +69,35 @@ def rfi_detect(
     max_deg_freedom: int
         Max number of independent RFI emitters designed to be detected and mitigated.
         This number should be less than cpi_len to avoid unintended removal of signal data.
-    num_max_trim: int
+    min_ev_valid_idx: int
+        Eigenvalue index used by threshold estimation to estimate the slow-time minimum
+        Eigenvalue slope. This parameter is also used to validate that the threshold block
+        has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
+    num_max_trim: int, default=0
         Number of large-value outliers to be trimmed in slow-time minimum Eigenvalues.
-    num_min_trim: int
+    num_min_trim: int, default=0
         Number of small-value outliers to be trimmed in slow-time minimum Eigenvalues
-    max_num_rfi_ev: int
+    max_num_rfi_ev: int, , default=2
         A detection error (miss) happens when a maximum power RFI emitter contaminates 
         multiple consecutive CPIs, resulting in a flat maximum Eigenvalue slope in slow 
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
-    off_diag_overlap_ratio : float
+    off_diag_overlap_ratio : float, default=0.25
         Minimum overlap ratio used by gap exclusion covariance estimation
-    diag_valid_ratio : float
+    diag_valid_ratio : float, default=0.20
         Minimum fraction of valid samples required to compute a diagonal term in the
         sample covariance matrix entry R_ii.
-    apply_gap_exclusion: bool
+    apply_gap_exclusion: bool, default=False
         If True, CPI sample covariance matrix will be computed differently by excluding the 
         invalid data gaps.
-    min_ev_valid_idx: int
-        Eigenvalue index used by threshold estimation to estimate the slow-time minimum
-        Eigenvalue slope. This parameter is also used to validate that the threshold block
-        has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
-    rx_dynamic_range_db: int
+    rx_dynamic_range_db: int, default=50.0
         Radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
-    mask_valid : np.ndarray bool, [num_pulses x num_rng_samples]
+    mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], default=None
         Valid-sample mask with same shape as raw_data
-    threshold_params: ThresholdParams dataclass object
+    threshold_params: ThresholdParams dataclass object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
         ratio between maximum and minimum Eigenvalue slopes (MMES) of the
         slow-time threshold interval. The y field defines the number of sigma (STD)
