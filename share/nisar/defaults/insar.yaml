@@ -329,7 +329,7 @@ runconfig:
                     # When `min_cluster_pixels` is 0, this pre-removal step is
                     # skipped entirely.
                     min_cluster_pixels: 2
-                    
+
                     bridge_algorithm_enabled: True
                     # Maximum radius used when bridging disconnected
                     # regions.
@@ -825,7 +825,7 @@ runconfig:
                     # During deramping, uniform sampling is applied
                     # when number of samples is larger than maximum pixel
                     bridge_ramp_maximum_pixel: 1e6
-    
+
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
