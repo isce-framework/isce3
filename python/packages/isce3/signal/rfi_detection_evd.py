@@ -49,7 +49,7 @@ def rfi_detect(
     max_num_rfi_ev,
     off_diag_overlap_ratio,
     diag_valid_ratio,
-    prf_dither_mode,
+    apply_gap_exclusion,
     min_ev_valid_idx,
     rx_dynamic_range_db,
     mask_valid,
@@ -83,9 +83,9 @@ def rfi_detect(
     diag_valid_ratio : float
         Minimum fraction of valid samples required to compute a diagonal term in the
         sample covariance matrix entry R_ii.
-    prf_dither_mode: bool
-        If True, L0B acquisition is of PRF Dithering mode. Sample Covariance Matrix
-        is computed differently by excluding the invalid data gaps.
+    apply_gap_exclusion: bool
+        If True, CPI sample covariance matrix will be computed differently by excluding the 
+        invalid data gaps.
     min_ev_valid_idx: int
         Eigenvalue index used by threshold estimation to estimate the slow-time minimum
         Eigenvalue slope. This parameter is also used to validate that the threshold block
@@ -126,7 +126,7 @@ def rfi_detect(
     ) = compute_evd_tb(
         raw_data,
         cpi_len=cpi_len,
-        prf_dither_mode=prf_dither_mode,
+        apply_gap_exclusion=apply_gap_exclusion,
         mask_valid=mask_valid,
         off_diag_overlap_ratio=off_diag_overlap_ratio,
         diag_valid_ratio=diag_valid_ratio,

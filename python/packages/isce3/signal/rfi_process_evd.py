@@ -22,7 +22,6 @@ def run_slow_time_evd(
     off_diag_overlap_ratio=0.25,
     diag_valid_ratio=0.20,
     mitigate_enable=False,
-    prf_dither_mode=False,
     min_rank_frac=0.70,
     rx_dynamic_range_db=50.0,
     mask_valid=None,
@@ -80,9 +79,6 @@ def run_slow_time_evd(
         sample covariance matrix entry R_ii.
     mitigate_enable: bool, default=False
         Enable mitigation
-    prf_dither_mode: bool
-        If True, L0B acquisition is of PRF Dithering mode. Sample Covariance Matrix
-        is computed differently by excluding the invalid data gaps.
     min_rank_frac: float, default = 0.7
         This fraction will be used to determine the minimum number of valid Eigenvalues
         required for a CPI. min_ev_valid_idx = int(np.floor(min_rank_frac * cpi_len))
@@ -93,6 +89,9 @@ def run_slow_time_evd(
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
         Valid-sample mask with same shape as raw_data
+        if mask_valid is None, sample covariance matrix will be estimated by standard
+        matrix multiplication. Otherwise, sample covariance matrix estimation with invalid data
+        gap exclusion will be performed (NISAR dithered PRF mode).
     raw_data_mitigated: array-like complex [num_pulses x num_rng_samples] or None, optional
         output array in which the mitigated data values is placed. It
         must be an array-like object supporting `multidimensional array access
@@ -156,10 +155,6 @@ def run_slow_time_evd(
             f"min_rank_frac must be in (0, 1], got {min_rank_frac}."
         )
 
-    # Create a mask if no mask if provided
-    if mask_valid is None:
-        mask_valid = np.ones(raw_data.shape, dtype=bool)
-
     # Collect total number of CPI range blocks contaminated by RFI
     rfi_cpi_count_sum = 0
 
@@ -175,10 +170,18 @@ def run_slow_time_evd(
             "Max number of deg. of freedom must be less than number of pulses in a CPI."
         )
 
-    # Verify Mask shape
-    if mask_valid.shape != raw_data.shape:
-        raise ValueError(f"Valid raw data mask shape {mask_valid.shape} != raw data shape {raw_data.shape}")
-    
+    # Verify mask_valid: check to see if it is None or populated.
+    # Ifi mask_valid is None, apply_gap_exclusion = False. Otherwise apply_gap_exclusion = True
+    if mask_valid is not None:
+        if mask_valid.shape != raw_data.shape:
+            raise ValueError(f"Valid raw data mask shape {mask_valid.shape} != raw data shape {raw_data.shape}")
+
+        mask_valid = mask_valid.astype(bool, copy=False)
+        apply_gap_exclusion = True
+    else:
+        mask_valid = np.ones(raw_data.shape, dtype=bool)
+        apply_gap_exclusion = False
+     
     # Determine a valid Eigenvalue index to estimate minimum-Eigenvalue statistics,
     # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
     min_ev_valid_idx = max(1, int(np.round(min_rank_frac * cpi_len)) - 1)
@@ -204,7 +207,7 @@ def run_slow_time_evd(
                 max_num_rfi_ev,
                 off_diag_overlap_ratio,
                 diag_valid_ratio,
-                prf_dither_mode,
+                apply_gap_exclusion,
                 min_ev_valid_idx,
                 rx_dynamic_range_db,
                 mask_valid_tb,

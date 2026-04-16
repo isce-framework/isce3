@@ -1078,7 +1078,7 @@ def resample(raw: np.ndarray, t: np.ndarray,
 
 
 def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
-                prf_dither_mode: bool, tmpfile: Callable = lambda name: open(name, "wb")):
+                tmpfile: Callable = lambda name: open(name, "wb")):
     """
     Run radio frequency interference (RFI) detection and mitigation as
     configured by user input.
@@ -1093,9 +1093,6 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
         Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
         sub-swaths, nt is the number of pulses, and the trailing dimension is
         the [start, stop) indices of the sub-swath.
-    prf_dither_mode: bool
-        If True, L0B acquisition is of PRF Dithering mode. Sample Covariance Matrix
-        is computed differently by excluding the invalid data gaps.
     tmpfile : Callable
         Function of a single string argument that returns an open file handle.
 
@@ -1163,8 +1160,7 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
             off_diag_overlap_ratio=opt_evd.off_diag_overlap_ratio,
             diag_valid_ratio=opt_evd.diag_valid_ratio,
             mitigate_enable=opt.mitigation_enabled,
-            prf_dither_mode=prf_dither_mode,
-            normalized_min_rank_ratio=opt_evd.normalized_min_rank_ratio,
+            min_rank_frac=opt_evd.min_rank_frac,
             rx_dynamic_range_db=opt_evd.rx_dynamic_range_db,
             mask_valid=mask_valid,
             raw_data_mitigated=raw_data_mitigated)
@@ -2011,7 +2007,6 @@ def focus(runconfig, runconfig_path=""):
                 cfg, 
                 raw_mm, 
                 swaths,
-                raw.isDithered(channel_in.freq_id),
                 temp
             )
             rfi_results[(frequency, pol)].append(

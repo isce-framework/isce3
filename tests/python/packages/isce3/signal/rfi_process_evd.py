@@ -170,16 +170,13 @@ def rfi_wb_gen(
 
 
 @pytest.mark.parametrize(
-    "cpi_len, num_samples_rng_blk, num_cpi_tb, max_deg_freedom, num_max_trim, num_min_trim, max_num_rfi_ev, use_entire_pulse, mitigate_enable, prf_dither_mode, test_case",
+    "cpi_len, num_samples_rng_blk, num_cpi_tb, max_deg_freedom, num_max_trim, num_min_trim, max_num_rfi_ev, use_entire_pulse, mitigate_enable, test_case",
     [  
-        (32, 2148, 20, 10, 1, 1, 2, True, True, False, 'mitigate'),  # No range blks
-        (32, 256, 20, 10, 1, 1, 2, False, True, False, 'mitigate'),  # 256 range samples / range blocks
-        (32, 2148, 20, 10, 0, 0, 2, True, False, False, 'no-op'),  # No-op: no rng blks
-        (32, 256, 20, 10, 0, 0, 2, False, False, False, 'no-op'),  # No-op: 256 range samples / range block
-        (32, 2148, 20, 10, 0, 0, 2, True, False, False, 'no-op'),  # No-op: detection only
-        (32, 2148, 20, 10, 1, 1, 2, True, True, True, 'mitigate'),  # No range blks, prf_dither_mode = True
-        (32, 256, 20, 10, 1, 1, 2, False, True, True, 'mitigate'),  # 256 range samples / range blocks, prf_dither_mode = True
-        (32, 2148, 20, 10, 0, 0, 2, True, False, True, 'no-op'),  # No-op: detection only, prf_dither_mode = True
+        (32, 2148, 20, 10, 1, 1, 2, True, False, 'mitigate'),  # No range blks
+        (32, 256, 20, 10, 1, 1, 2, False, False, 'mitigate'),  # 256 range samples / range blocks
+        (32, 2148, 20, 10, 0, 0, 2, True, False, 'no-op'),  # No-op: no rng blks
+        (32, 256, 20, 10, 0, 0, 2, False, False, 'no-op'),  # No-op: 256 range samples / range block
+        (32, 2148, 20, 10, 0, 0, 2, True, False, 'no-op'),  # No-op: detection only
     ],
 )
 def test_slow_time_evd(
@@ -192,7 +189,6 @@ def test_slow_time_evd(
     max_num_rfi_ev,
     use_entire_pulse,
     mitigate_enable,
-    prf_dither_mode,
     test_case,
 ):
     """Verify slow-time EVD with five test cases:
@@ -304,7 +300,7 @@ def test_slow_time_evd(
     threshold_params = ThresholdParams([2, 10], [5, 2])
     off_diag_overlap_ratio = 0.25
     diag_valid_ratio = 0.20
-    normalized_min_rank_ratio = 0.8
+    min_rank_frac = 0.8
     rx_dynamic_range_db = 50
     mask_valid = np.ones(raw_data_rfi.shape, dtype=bool)
 
@@ -322,8 +318,7 @@ def test_slow_time_evd(
         off_diag_overlap_ratio=off_diag_overlap_ratio,
         diag_valid_ratio=diag_valid_ratio,
         mitigate_enable=mitigate_enable,
-        prf_dither_mode=prf_dither_mode,
-        normalized_min_rank_ratio=normalized_min_rank_ratio,
+        min_rank_frac=min_rank_frac,
         rx_dynamic_range_db=rx_dynamic_range_db,
         mask_valid=mask_valid,
         raw_data_mitigated=raw_data_mitigated,

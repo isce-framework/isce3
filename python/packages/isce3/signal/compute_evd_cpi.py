@@ -77,7 +77,7 @@ def eigen_decomp_sort(cov_matrix):
 def compute_evd_tb(
     raw_data: np.ndarray,
     cpi_len: int=16,
-    prf_dither_mode: bool=True,
+    apply_gap_exclusion: bool=False,
     mask_valid: np.ndarray=None,
     off_diag_overlap_ratio: float=0.25,
     diag_valid_ratio: float=0.20,
@@ -97,11 +97,13 @@ def compute_evd_tb(
         Raw data to be processed
     cpi_len: int, optional
         Number of slow-time pulses within a CPI, default=16
-    prf_dither_mode: bool, optional, default = True
-        If True, use gap-aware covariance estimation
+    apply_gap_exclusion: bool, optional, default = True
+        If True, CPI sample covariance matrix will be computed differently by excluding the
+        invalid data gaps.
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
-        Valid-sample mask with same shape as raw_data. Required if
-        prf_dither_mode=True.
+        Valid-sample mask with same shape as raw_data.
+        if apply_gap_exclusion is False, then mask_valid will be ignored, and standard
+        sample covariance matrix will be performed.
     off_diag_overlap_ratio : float, optional, default = 0.25
         Minimum overlap ratio used by gap exclusion covariance estimation
     diag_valid_ratio : float, optional, default = 0.20
@@ -159,8 +161,9 @@ def compute_evd_tb(
             "Since Python uses 0-based indexing, the maximum valid index is cpi_len - 1."
         )
 
-    if prf_dither_mode and mask_valid is None:
-        raise ValueError("mask_valid must be provided when prf_dither_mode=True")
+    # Verify that mask_valid is provided if apply_gap_exclusion is True
+    if apply_gap_exclusion and mask_valid is None:
+        raise ValueError("mask_valid must be provided if apply_gap_exclusion is True")
 
     # Verify TB Mask shape
     if mask_valid.shape != raw_data.shape:
@@ -180,7 +183,7 @@ def compute_evd_tb(
         mask_valid_cpi = mask_valid[cpi_slow_time]
         eig_val_sort, eig_vec_sort = compute_evd(
             data_cpi,
-            prf_dither_mode=prf_dither_mode,
+            apply_gap_exclusion=apply_gap_exclusion,
             mask_valid_cpi=mask_valid_cpi,
             off_diag_overlap_ratio=off_diag_overlap_ratio,
             diag_valid_ratio=diag_valid_ratio,
@@ -202,7 +205,7 @@ def compute_evd_tb(
 def compute_evd(
     raw_data: np.ndarray,
     *,
-    prf_dither_mode: bool = True,
+    apply_gap_exclusion: bool = False,
     mask_valid_cpi: np.ndarray = None,
     off_diag_overlap_ratio: float = 0.25,
     diag_valid_ratio: float = 0.20,
@@ -213,19 +216,19 @@ def compute_evd(
     ----------
     raw_data : array-like complex [num_pulses x num_rng_samples]
         Raw data to be processed.
-    prf_dither_mode : bool, default=True
-        If True, use gap-exclusion covariance for dithered-PRF data.
-        If False, use the standard sample covariance matrix.
+    apply_gap_exclusion : bool, default=False
+        If True, CPI sample covariance matrix will be computed differently by excluding the
+        invalid data gaps.
     mask_valid_cpi : (num_pulses, num_rng_samples) bool array, optional
         True indicates valid samples. False indicates invalid samples or gaps.
-        This is used only when prf_dither_mode=True.
+        This is used only when apply_gap_exclusion=True.
         If None, an all-True mask is created.
     off_diag_overlap_ratio : float, default=0.25
         Minimum fraction of overlapping valid range samples required to compute
-        an off-diagonal covariance term R_ij when prf_dither_mode=True.
+        an off-diagonal covariance term R_ij if apply_gap_exclusion is True.
     diag_valid_ratio : float, default=0.20
         Minimum fraction of valid range samples required to compute
-        a diagonal covariance term R_ii when prf_dither_mode=True.
+        a diagonal covariance term R_ii when apply_gap_exclusion is True.
 
     Returns
     -------
@@ -243,11 +246,11 @@ def compute_evd(
     # Application in Narrow-Band Interference Suppression for SAR”, IEEE Geoscience 
     # and Remote Sensing Letters, vol. 4, no. 1, pp. 76,2007.
 
-    if prf_dither_mode:
+    if apply_gap_exclusion:
         if mask_valid_cpi is None:
-            mask_valid_cpi = np.ones(raw_data.shape, dtype=bool)
-        else:
-            mask_valid_cpi = mask_valid_cpi.astype(bool, copy=False)
+            raise ValueError("mask_valid_cpi must be provided when apply_gap_exclusion is True.")
+
+        mask_valid_cpi = mask_valid_cpi.astype(bool, copy=False)
 
         if mask_valid_cpi.shape != raw_data.shape:
             raise ValueError(
@@ -267,6 +270,7 @@ def compute_evd(
     eig_val_sort, eig_vec_sort = eigen_decomp_sort(cov_cpi)
 
     return eig_val_sort, eig_vec_sort
+
 
 def compute_gap_exclusion_cov(
     data: np.ndarray,
