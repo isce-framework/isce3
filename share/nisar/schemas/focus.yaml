@@ -449,7 +449,7 @@ slow_time_evd_options:
   # of sample covariance matrix
   diag_valid_ratio: num(min=0.0, required=False)
   #This ratio will be used to determine the minimum number of valid Eigenvalues
-  ##required for a CPI. min_ev_valid_idx = int(np.floor(min_rank_frac * cpi_len)) - 1
+  ##required for a CPI. min_ev_valid_idx = int(np.round(min_rank_frac * cpi_len)) - 1
   min_rank_frac: num(min=0.0, max=1.0, required=False)
   # radar platform receiver dynamic range, e.g. 50 dB. This is applied as a threshold
   # to determine if the Eigenvalue under test is meaningfully signficant.
