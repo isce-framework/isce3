@@ -76,6 +76,7 @@ def eigen_decomp_sort(cov_matrix):
 
 def compute_evd_tb(
     raw_data: np.ndarray,
+    *,
     cpi_len: int=16,
     apply_gap_exclusion: bool=False,
     mask_valid: np.ndarray=None,

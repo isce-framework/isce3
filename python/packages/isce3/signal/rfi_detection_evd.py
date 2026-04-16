@@ -44,16 +44,17 @@ def rfi_detect(
     raw_data,
     cpi_len,
     max_deg_freedom,
-    num_max_trim,
-    num_min_trim,
-    max_num_rfi_ev,
-    off_diag_overlap_ratio,
-    diag_valid_ratio,
-    apply_gap_exclusion,
     min_ev_valid_idx,
-    rx_dynamic_range_db,
-    mask_valid,
-    threshold_params,
+    *,
+    num_max_trim=0,
+    num_min_trim=0,
+    max_num_rfi_ev=2,
+    off_diag_overlap_ratio=0.25,
+    diag_valid_ratio=0.20,
+    apply_gap_exclusion=False,
+    rx_dynamic_range_db=50.0,
+    mask_valid=None,
+    threshold_params: ThresholdParams = ThresholdParams(),
 ):
 
     """This wrapper performs Eigenvalue Decomposition of input raw data as well as 
@@ -139,16 +140,14 @@ def rfi_detect(
     if not tb_is_valid:
         num_cpi = eig_val_sort_array.shape[0]
         rfi_cpi_flag_array = np.zeros((num_cpi, cpi_len), dtype=np.bool_)
-        fig_merit_detect_tb = 0
 
         return (
             rfi_cpi_flag_array,
             eig_vec_sort_array,
-            fig_merit_detect_tb,
         )
 
     # Estimate a single threshold for all CPIs
-    detect_threshold, fig_merit_detect_tb = threshold_estimate_evd(
+    detect_threshold = threshold_estimate_evd(
         eig_val_sort_array,
         num_max_trim,
         num_min_trim,
@@ -162,7 +161,7 @@ def rfi_detect(
         eig_val_sort_array, detect_threshold, max_deg_freedom
     )
 
-    return rfi_cpi_flag_array, eig_vec_sort_array, fig_merit_detect_tb
+    return rfi_cpi_flag_array, eig_vec_sort_array
 
 def threshold_estimate_evd(
     eig_val_sort_array,
@@ -271,7 +270,7 @@ def threshold_estimate_evd(
 
     detect_threshold = ev_slope_min_mean + num_sigma * ev_slope_min_std
 
-    return detect_threshold, std_ratio_ev_slope
+    return detect_threshold
 
 
 def rfi_detect_evd(

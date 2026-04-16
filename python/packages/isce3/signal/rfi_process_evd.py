@@ -197,21 +197,20 @@ def run_slow_time_evd(
             (
                 rfi_cpi_flag_tb, 
                 evec_sort_tb, 
-                fig_merit_detect_tb,
             ) = rfi_detect(
                 raw_tb_blk,
                 cpi_len,
                 max_deg_freedom,
-                num_max_trim,
-                num_min_trim,
-                max_num_rfi_ev,
-                off_diag_overlap_ratio,
-                diag_valid_ratio,
-                apply_gap_exclusion,
                 min_ev_valid_idx,
-                rx_dynamic_range_db,
-                mask_valid_tb,
-                threshold_params,
+                num_max_trim=num_max_trim,
+                num_min_trim=num_min_trim,
+                max_num_rfi_ev=max_num_rfi_ev,
+                off_diag_overlap_ratio=off_diag_overlap_ratio,
+                diag_valid_ratio=diag_valid_ratio,
+                apply_gap_exclusion=apply_gap_exclusion,
+                rx_dynamic_range_db=rx_dynamic_range_db,
+                mask_valid=mask_valid_tb,
+                threshold_params=threshold_params,
             )
 
             # Compute number of CPIs detected with RFI presence
