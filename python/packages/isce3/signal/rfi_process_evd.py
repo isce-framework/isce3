@@ -19,11 +19,11 @@ def run_slow_time_evd(
     use_entire_pulse=False,
     threshold_params: ThresholdParams = ThresholdParams(),
     num_cpi_tb=20,
-    off_diag_overlap_ratio=0.2,
-    diag_valid_ratio=0.15,
+    off_diag_overlap_ratio=0.25,
+    diag_valid_ratio=0.20,
     mitigate_enable=False,
     prf_dither_mode=False,
-    normalized_min_rank_ratio=0.65,
+    min_rank_frac=0.70,
     rx_dynamic_range_db=50.0,
     mask_valid=None,
     raw_data_mitigated=None,
@@ -73,9 +73,9 @@ def run_slow_time_evd(
         from the mean of MMES.
     num_cpi_tb: int, default=20
         Number of slow-time CPIs in a TB
-    off_diag_overlap_ratio : float, optional
+    off_diag_overlap_ratio : float, optional, default = 0.25
         Minimum overlap ratio used by gap exclusion covariance estimation
-    diag_valid_ratio : float, optional
+    diag_valid_ratio : float, optional, default = 0.20
         Minimum fraction of valid samples required to compute a diagonal term in the
         sample covariance matrix entry R_ii.
     mitigate_enable: bool, default=False
@@ -83,9 +83,9 @@ def run_slow_time_evd(
     prf_dither_mode: bool
         If True, L0B acquisition is of PRF Dithering mode. Sample Covariance Matrix
         is computed differently by excluding the invalid data gaps.
-    normalized_min_rank_ratio: float
-        This ratio will be used to determine the minimum number of valid Eigenvalues
-        required for a CPI. min_ev_valid_idx = int(np.floor(normalized_min_rank_ratio * cpi_len))
+    min_rank_frac: float, default = 0.7
+        This fraction will be used to determine the minimum number of valid Eigenvalues
+        required for a CPI. min_ev_valid_idx = int(np.floor(min_rank_frac * cpi_len))
         Must be a value within (0,1]
     rx_dynamic_range_db: int, optional, default = 50 dB
         radar platform receiver dynamic range. This is applied as a threshold
@@ -150,10 +150,10 @@ def run_slow_time_evd(
                 " as the input data"
             )
 
-    # Verify normalized_min_rank_ratio
-    if not (0.0 < normalized_min_rank_ratio <= 1.0):
+    # Verify min_rank_frac
+    if not (0.0 < min_rank_frac <= 1.0):
         raise ValueError(
-            f"normalized_min_rank_ratio must be in (0, 1], got {normalized_min_rank_ratio}."
+            f"min_rank_frac must be in (0, 1], got {min_rank_frac}."
         )
 
     # Create a mask if no mask if provided
@@ -181,7 +181,7 @@ def run_slow_time_evd(
     
     # Determine a valid Eigenvalue index to estimate minimum-Eigenvalue statistics,
     # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
-    min_ev_valid_idx = int(np.floor(normalized_min_rank_ratio * cpi_len))
+    min_ev_valid_idx = max(1, int(np.round(min_rank_frac * cpi_len)) - 1)
 
     # Run RFI Detection and Mitigation
     for idx_tb, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
