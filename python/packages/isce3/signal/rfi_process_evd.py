@@ -193,7 +193,7 @@ def run_slow_time_evd(
             slice_gen(num_rng_samples, num_samples_rng_blk, combine_rem=True)
         ):
             raw_tb_blk = raw_data[tb_slow_time, tb_fast_time]
-            mask_valid_tb = None if swaths is None else swaths_tb[:, tb_fast_time]
+            mask_valid_tb = None if swaths is None else mask_valid[:, tb_fast_time]
 
             (
                 rfi_cpi_flag_tb, 
