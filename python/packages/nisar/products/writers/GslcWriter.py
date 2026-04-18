@@ -40,7 +40,8 @@ class GslcWriter(BaseL2WriterSingleInput):
 
     def populate_ceos_analysis_ready_data_parameters(self):
         self.set_value(
-            '{PRODUCT}/metadata/ceosAnalysisReadyData/ceosAnalysisReadyDataProductType',
+            '{PRODUCT}/metadata/ceosAnalysisReadyData/'
+            'ceosAnalysisReadyDataProductType',
             'Geocoded Single-Look Complex (GSLC)')
 
     def populate_data_parameters(self):
@@ -49,7 +50,7 @@ class GslcWriter(BaseL2WriterSingleInput):
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
             output_grids_freq_path = ('{PRODUCT}/grids/'
-                                       f'frequency{frequency}')
+                                      f'frequency{frequency}')
             self.copy_from_input(
                 f'{output_grids_freq_path}/numberOfSubSwaths',
                 f'{input_swaths_freq_path}/numberOfSubSwaths',
@@ -74,6 +75,13 @@ class GslcWriter(BaseL2WriterSingleInput):
             self.copy_from_input(
                 f'{output_grids_freq_path}/zeroDopplerTimeSpacing',
                 '{PRODUCT}/swaths/zeroDopplerTimeSpacing')
+
+            self.geocode_lut(f'{output_grids_freq_path}',
+                             f'{input_swaths_freq_path}',
+                             output_ds_name_list=['inputDataExceptionMask'],
+                             skip_if_not_present=True,
+                             compute_stats=False,
+                             data_interpolator='nearest')
 
     def populate_calibration_information_gslc_specific(self):
         # geocode radiometric terrain correction (RTC) LUTs

@@ -69,3 +69,29 @@ def run(cfg: dict) -> dict:
     info_channel.log(f"successfully ran prepare_insar_hdf5 in {t_elapsed:.3f} seconds")
 
     return h5_paths
+
+if __name__ == "__main__":
+    '''
+    run prepare insar hdf5 from command line
+    '''
+    from nisar.workflows.yaml_argparse import YamlArgparse
+    from nisar.workflows.runconfig import RunConfig
+
+    class PrepareInSARHDF5RunConfig(RunConfig):
+        '''
+        Prepare InSAR HDF5 RunConfig
+        '''
+        def __init__(self, args):
+            # InSAR submodules share a common "InSAR" schema
+            super().__init__(args, 'insar')
+            if self.args.run_config_path is not None:
+                self.load_geocode_yaml_to_dict()
+                self.geocode_common_arg_load()
+
+    # load command line args
+    parser = YamlArgparse()
+    args = parser.parse()
+    # get a runconfig dict from command line args
+    runconfig = PrepareInSARHDF5RunConfig(args)
+    # run the prepare InSAR HDF5 runconfig
+    run(runconfig.cfg)

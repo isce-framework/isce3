@@ -306,7 +306,7 @@ runconfig:
                     # When `min_cluster_pixels` is 0, this pre-removal step is
                     # skipped entirely.
                     min_cluster_pixels: 2
-                    
+
                     bridge_algorithm_enabled: True
                     # Maximum radius used when bridging disconnected
                     # regions.
@@ -545,6 +545,19 @@ runconfig:
                 # Interpolation method. Interpolation is used to fill residual outlier
                 # holes if present
                 interpolation_method: linear
+
+                # Flag to enable the use of subswath mask for the outlier detection
+                subswath_mask_apply_enabled: True
+
+                # IDW interpolation method parameters
+                idw_interpolation:
+                    # Power parameter controlling the distance weighting
+                    power: 2
+                    # Number of nearest neighbors used for interpolation
+                    number: 100
+                    # Maximum search radius in pixels
+                    radius: 200
+
                 # It is good practice to filter the offsets prior to interferogram
                 # formation to reduce noise. We expose: no_filter: do not filter the offsets/
                 # degrade offsets resolution. median_filter, boxcar_filter (moving average),
@@ -780,7 +793,7 @@ runconfig:
                     # During deramping, uniform sampling is applied
                     # when number of samples is larger than maximum pixel
                     bridge_ramp_maximum_pixel: 1e6
-    
+
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
