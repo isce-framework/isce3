@@ -1077,7 +1077,8 @@ def resample(raw: np.ndarray, t: np.ndarray,
     return regridded
 
 
-def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
+def process_rfi(cfg: Struct, raw_data: np.ndarray,
+                swaths: Optional[np.ndarray] = None,
                 tmpfile: Callable = lambda name: open(name, "wb")):
     """
     Run radio frequency interference (RFI) detection and mitigation as
@@ -1089,10 +1090,12 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
         RSLC runconfig data
     raw_data : np.ndarray[np.complex64]
         Raw data layer.  May be modified in-place if mitigation is enabled.
-    swaths : np.ndarray [int]
+    swaths : np.ndarray [int], optional
         Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
         sub-swaths, nt is the number of pulses, and the trailing dimension is
-        the [start, stop) indices of the sub-swath.
+        the [start, stop) indices of the sub-swath.  It's recommended to supply
+        this for modes with dithered PRI, where it will be used to normalize
+        the sample covariance matrix.
     tmpfile : Callable
         Function of a single string argument that returns an open file handle.
 
@@ -1125,14 +1128,6 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
     # mitigated data.  This means you'd need to run the workflow twice to find
     # a bug specific to in-place vs out-of-place processing.
 
-    num_pulses = raw_data.shape[0]
-    mask_valid = np.zeros(raw_data.shape, dtype=bool)
-
-    # Read Sub-Swath Mask for all pulses of the raw data block
-    for pulse_idx in range(num_pulses):
-        for swath in swaths:
-            start, end = swath[pulse_idx]
-            mask_valid[pulse_idx, start:end] = True
 
     raw_data_mitigated = raw_data
     if opt.mitigation_enabled and not cfg.processing.delete_tempfiles:
@@ -1162,7 +1157,7 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray, swaths: np.ndarray,
             mitigate_enable=opt.mitigation_enabled,
             min_rank_frac=opt_evd.min_rank_frac,
             rx_dynamic_range_db=opt_evd.rx_dynamic_range_db,
-            mask_valid=mask_valid,
+            swaths=swaths,
             raw_data_mitigated=raw_data_mitigated)
     else:
         opt_fnf = opt.freq_notch_filter
@@ -2003,17 +1998,18 @@ def focus(runconfig, runconfig_path=""):
                         z[k] = wavelets.remove_tone(z[k])
                 raw_mm[block_out] = z
 
+            uniform_pri = not raw.isDithered(channel_in.freq_id)
+
             raw_clean, rfi_likelihood = process_rfi(
                 cfg, 
                 raw_mm, 
-                swaths,
+                None if uniform_pri else swaths,
                 temp
             )
             rfi_results[(frequency, pol)].append(
                 (rfi_likelihood, raw_clean.shape[0]))
             del raw_mm, rawfd
 
-            uniform_pri = not raw.isDithered(channel_in.freq_id)
             if uniform_pri:
                 log.info("Uniform PRF, using raw data directly.")
                 regridded, regridfd = raw_clean, None

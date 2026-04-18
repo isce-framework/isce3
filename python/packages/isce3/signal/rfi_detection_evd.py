@@ -51,7 +51,6 @@ def rfi_detect(
     max_num_rfi_ev=2,
     off_diag_overlap_ratio=0.25,
     diag_valid_ratio=0.20,
-    apply_gap_exclusion=False,
     rx_dynamic_range_db=50.0,
     mask_valid=None,
     threshold_params: ThresholdParams = ThresholdParams(),
@@ -88,15 +87,14 @@ def rfi_detect(
     diag_valid_ratio : float, default=0.20
         Minimum fraction of valid samples required to compute a diagonal term in the
         sample covariance matrix entry R_ii.
-    apply_gap_exclusion: bool, default=False
-        If True, CPI sample covariance matrix will be computed differently by excluding the 
-        invalid data gaps.
     rx_dynamic_range_db: int, default=50.0
         Radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], default=None
-        Valid-sample mask with same shape as raw_data
+        Valid-sample mask with same shape as raw_data If provided, CPI sample
+        covariance matrix will be computed differently by excluding the invalid
+        data gaps.
     threshold_params: ThresholdParams dataclass object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
         ratio between maximum and minimum Eigenvalue slopes (MMES) of the
@@ -127,7 +125,6 @@ def rfi_detect(
     ) = compute_evd_tb(
         raw_data,
         cpi_len=cpi_len,
-        apply_gap_exclusion=apply_gap_exclusion,
         mask_valid=mask_valid,
         off_diag_overlap_ratio=off_diag_overlap_ratio,
         diag_valid_ratio=diag_valid_ratio,

@@ -302,7 +302,6 @@ def test_slow_time_evd(
     diag_valid_ratio = 0.20
     min_rank_frac = 0.8
     rx_dynamic_range_db = 50
-    mask_valid = np.ones(raw_data_rfi.shape, dtype=bool)
 
     rfi_likelihood = run_slow_time_evd(
         raw_data_rfi,
@@ -320,7 +319,6 @@ def test_slow_time_evd(
         mitigate_enable=mitigate_enable,
         min_rank_frac=min_rank_frac,
         rx_dynamic_range_db=rx_dynamic_range_db,
-        mask_valid=mask_valid,
         raw_data_mitigated=raw_data_mitigated,
     )
 

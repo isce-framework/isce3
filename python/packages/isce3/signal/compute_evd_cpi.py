@@ -78,7 +78,6 @@ def compute_evd_tb(
     raw_data: np.ndarray,
     *,
     cpi_len: int=16,
-    apply_gap_exclusion: bool=False,
     mask_valid: np.ndarray=None,
     off_diag_overlap_ratio: float=0.25,
     diag_valid_ratio: float=0.20,
@@ -98,13 +97,10 @@ def compute_evd_tb(
         Raw data to be processed
     cpi_len: int, optional
         Number of slow-time pulses within a CPI, default=16
-    apply_gap_exclusion: bool, optional, default = True
-        If True, CPI sample covariance matrix will be computed differently by excluding the
-        invalid data gaps.
     mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
-        Valid-sample mask with same shape as raw_data.
-        if apply_gap_exclusion is False, then mask_valid will be ignored, and standard
-        sample covariance matrix will be performed.
+        Valid-sample mask with same shape as raw_data.  If provided, CPI sample
+        covariance matrix will be computed differently by excluding the invalid
+        data gaps.
     off_diag_overlap_ratio : float, optional, default = 0.25
         Minimum overlap ratio used by gap exclusion covariance estimation
     diag_valid_ratio : float, optional, default = 0.20
@@ -162,12 +158,8 @@ def compute_evd_tb(
             "Since Python uses 0-based indexing, the maximum valid index is cpi_len - 1."
         )
 
-    # Verify that mask_valid is provided if apply_gap_exclusion is True
-    if apply_gap_exclusion and mask_valid is None:
-        raise ValueError("mask_valid must be provided if apply_gap_exclusion is True")
-
     # Verify TB Mask shape
-    if mask_valid.shape != raw_data.shape:
+    if (mask_valid is not None) and (mask_valid.shape != raw_data.shape):
         raise ValueError(f"Valid TB mask shape {mask_valid.shape} != TB data shape {raw_data.shape}")
     
     # Output Eigenvalues and Eigenvectors
@@ -181,10 +173,9 @@ def compute_evd_tb(
         slice_gen(num_pulses, cpi_len, combine_rem=False)
     ):
         data_cpi = raw_data[cpi_slow_time]
-        mask_valid_cpi = mask_valid[cpi_slow_time]
+        mask_valid_cpi = None if mask_valid is None else mask_valid[cpi_slow_time]
         eig_val_sort, eig_vec_sort = compute_evd(
             data_cpi,
-            apply_gap_exclusion=apply_gap_exclusion,
             mask_valid_cpi=mask_valid_cpi,
             off_diag_overlap_ratio=off_diag_overlap_ratio,
             diag_valid_ratio=diag_valid_ratio,
@@ -206,7 +197,6 @@ def compute_evd_tb(
 def compute_evd(
     raw_data: np.ndarray,
     *,
-    apply_gap_exclusion: bool = False,
     mask_valid_cpi: np.ndarray = None,
     off_diag_overlap_ratio: float = 0.25,
     diag_valid_ratio: float = 0.20,
@@ -217,19 +207,16 @@ def compute_evd(
     ----------
     raw_data : array-like complex [num_pulses x num_rng_samples]
         Raw data to be processed.
-    apply_gap_exclusion : bool, default=False
-        If True, CPI sample covariance matrix will be computed differently by excluding the
-        invalid data gaps.
     mask_valid_cpi : (num_pulses, num_rng_samples) bool array, optional
         True indicates valid samples. False indicates invalid samples or gaps.
-        This is used only when apply_gap_exclusion=True.
-        If None, an all-True mask is created.
+        If provided, CPI sample covariance matrix will be computed differently
+        by excluding the invalid data gaps.
     off_diag_overlap_ratio : float, default=0.25
         Minimum fraction of overlapping valid range samples required to compute
-        an off-diagonal covariance term R_ij if apply_gap_exclusion is True.
+        an off-diagonal covariance term R_ij if mask is provided.
     diag_valid_ratio : float, default=0.20
         Minimum fraction of valid range samples required to compute
-        a diagonal covariance term R_ii when apply_gap_exclusion is True.
+        a diagonal covariance term R_ii when mask is provided.
 
     Returns
     -------
@@ -247,10 +234,7 @@ def compute_evd(
     # Application in Narrow-Band Interference Suppression for SAR”, IEEE Geoscience 
     # and Remote Sensing Letters, vol. 4, no. 1, pp. 76,2007.
 
-    if apply_gap_exclusion:
-        if mask_valid_cpi is None:
-            raise ValueError("mask_valid_cpi must be provided when apply_gap_exclusion is True.")
-
+    if mask_valid_cpi is not None:
         mask_valid_cpi = mask_valid_cpi.astype(bool, copy=False)
 
         if mask_valid_cpi.shape != raw_data.shape:

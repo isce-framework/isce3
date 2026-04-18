@@ -24,7 +24,7 @@ def run_slow_time_evd(
     mitigate_enable=False,
     min_rank_frac=0.70,
     rx_dynamic_range_db=50.0,
-    mask_valid=None,
+    swaths=None,
     raw_data_mitigated=None,
 ):
 
@@ -87,11 +87,12 @@ def run_slow_time_evd(
         radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
-    mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], optional
-        Valid-sample mask with same shape as raw_data
-        if mask_valid is None, sample covariance matrix will be estimated by standard
-        matrix multiplication. Otherwise, sample covariance matrix estimation with invalid data
-        gap exclusion will be performed (NISAR dithered PRF mode).
+    swaths : np.ndarray [int], optional
+        Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
+        sub-swaths, nt is the number of pulses, and the trailing dimension is
+        the [start, stop) indices of the sub-swath.  It's recommended to supply
+        this for modes with dithered PRI, where it will be used to normalize
+        the sample covariance matrix.
     raw_data_mitigated: array-like complex [num_pulses x num_rng_samples] or None, optional
         output array in which the mitigated data values is placed. It
         must be an array-like object supporting `multidimensional array access
@@ -171,28 +172,28 @@ def run_slow_time_evd(
         )
 
     # Verify mask_valid: check to see if it is None or populated.
-    # Ifi mask_valid is None, apply_gap_exclusion = False. Otherwise apply_gap_exclusion = True
-    if mask_valid is not None:
-        if mask_valid.shape != raw_data.shape:
-            raise ValueError(f"Valid raw data mask shape {mask_valid.shape} != raw data shape {raw_data.shape}")
+    if (swaths is not None) and (swaths.shape[1] != raw_data.shape[0]):
+        raise ValueError("Require same number of rows in swaths and raw_data")
 
-        mask_valid = mask_valid.astype(bool, copy=False)
-        apply_gap_exclusion = True
-    else:
-        mask_valid = np.ones(raw_data.shape, dtype=bool)
-        apply_gap_exclusion = False
-     
     # Determine a valid Eigenvalue index to estimate minimum-Eigenvalue statistics,
     # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
     min_ev_valid_idx = max(1, int(np.round(min_rank_frac * cpi_len)) - 1)
 
     # Run RFI Detection and Mitigation
     for idx_tb, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
+        # Get valid data mask for all rows in current block.
+        if swaths is not None:
+            swaths_tb = swaths[:, tb_slow_time, :]
+            mask_valid = np.zeros((swaths_tb.shape[1], raw_data.shape[1]), bool)
+            for i in range(mask_valid.shape[0]):
+                for start, end in swaths_tb[:, i, :]:
+                    mask_valid[i, start:end] = True
+
         for idx_rng, tb_fast_time in enumerate(
             slice_gen(num_rng_samples, num_samples_rng_blk, combine_rem=True)
         ):
             raw_tb_blk = raw_data[tb_slow_time, tb_fast_time]
-            mask_valid_tb = mask_valid[tb_slow_time, tb_fast_time]
+            mask_valid_tb = None if swaths is None else swaths_tb[:, tb_fast_time]
 
             (
                 rfi_cpi_flag_tb, 
@@ -207,7 +208,6 @@ def run_slow_time_evd(
                 max_num_rfi_ev=max_num_rfi_ev,
                 off_diag_overlap_ratio=off_diag_overlap_ratio,
                 diag_valid_ratio=diag_valid_ratio,
-                apply_gap_exclusion=apply_gap_exclusion,
                 rx_dynamic_range_db=rx_dynamic_range_db,
                 mask_valid=mask_valid_tb,
                 threshold_params=threshold_params,
