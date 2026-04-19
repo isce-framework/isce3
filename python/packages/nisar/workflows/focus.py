@@ -1079,7 +1079,9 @@ def resample(raw: np.ndarray, t: np.ndarray,
     return regridded
 
 
-def process_rfi(cfg: Struct, raw_data: np.ndarray,
+def process_rfi(cfg: Struct, raw_data: np.ndarray, t: np.ndarray,
+                r: isce3.core.Linspace,
+                swaths: np.ndarray, doppler: LUT2d,
                 tmpfile: Callable = lambda name: open(name, "wb")):
     """
     Run radio frequency interference (RFI) detection and mitigation as
@@ -1091,6 +1093,16 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
         RSLC runconfig data
     raw_data : np.ndarray[np.complex64]
         Raw data layer.  May be modified in-place if mitigation is enabled.
+    t : np.ndarray [float64]
+        Pulse times (seconds since orbit/grid epoch).
+    r : isce3.core.Linspace
+        Range to each sample (meters).
+    swaths : np.ndarray [int]
+        Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
+        sub-swaths, nt is the number of pulses, and the trailing dimension is
+        the [start, stop) indices of the sub-swath.
+    doppler : isce3.core.LUT2d [double]
+        Raw data Doppler look up table.  Must be valid over entire grid.
     tmpfile : Callable
         Function of a single string argument that returns an open file handle.
 
@@ -1164,6 +1176,7 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
     elif opt.mitigation_algorithm.lower() == "tone-rank":
         isr, freq, hits = isce3.signal.rfi_tone_rank.remove_loud_tones(
             raw_data,
+            t, r, swaths, doppler,
             detect_only=not opt.mitigation_enabled,
             zout=raw_data_mitigated,
             **struct2dict(opt.tone_rank),
@@ -1959,7 +1972,8 @@ def focus(runconfig, runconfig_path=""):
                         z[k] = wavelets.remove_tone(z[k])
                 raw_mm[block_out] = z
 
-            raw_clean, rfi_likelihood = process_rfi(cfg, raw_mm, temp)
+            raw_clean, rfi_likelihood = process_rfi(cfg, raw_mm, raw_times,
+                raw_grid.slant_ranges, swaths, dop[frequency], temp)
             rfi_results[(frequency, pol)].append(
                 (rfi_likelihood, raw_clean.shape[0]))
             del raw_mm, rawfd
