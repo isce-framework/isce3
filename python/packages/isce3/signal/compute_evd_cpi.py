@@ -110,7 +110,7 @@ def compute_evd_tb(
         Eigenvalue index used by threshold estimation to estimate the slow-time minimum
         Eigenvalue slope. This parameter is also used to validate that the threshold block
         has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
-    rx_dynamic_range_db: int, optional, default = 50 dB
+    rx_dynamic_range_db: float, optional, default = 50 dB
         Radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.

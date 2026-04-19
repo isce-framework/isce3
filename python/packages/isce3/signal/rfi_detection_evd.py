@@ -87,7 +87,7 @@ def rfi_detect(
     diag_valid_ratio : float, default=0.20
         Minimum fraction of valid samples required to compute a diagonal term in the
         sample covariance matrix entry R_ii.
-    rx_dynamic_range_db: int, default=50.0
+    rx_dynamic_range_db: float, default=50.0
         Radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.

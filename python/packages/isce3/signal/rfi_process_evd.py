@@ -83,7 +83,7 @@ def run_slow_time_evd(
         This fraction will be used to determine the minimum number of valid Eigenvalues
         required for a CPI. min_ev_valid_idx = int(np.floor(min_rank_frac * cpi_len))
         Must be a value within (0,1]
-    rx_dynamic_range_db: int, optional, default = 50 dB
+    rx_dynamic_range_db: float, optional, default = 50 dB
         radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
