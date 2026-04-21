@@ -76,7 +76,7 @@ def rfi_detect(
         Number of large-value outliers to be trimmed in slow-time minimum Eigenvalues.
     num_min_trim: int, default=0
         Number of small-value outliers to be trimmed in slow-time minimum Eigenvalues
-    max_num_rfi_ev: int, , default=2
+    max_num_rfi_ev: int, default=2
         A detection error (miss) happens when a maximum power RFI emitter contaminates 
         multiple consecutive CPIs, resulting in a flat maximum Eigenvalue slope in slow 
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
@@ -91,10 +91,10 @@ def rfi_detect(
         Radar platform receiver dynamic range. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
-    mask_valid : np.ndarray bool, [num_pulses x num_rng_samples], default=None
-        Valid-sample mask with same shape as raw_data If provided, CPI sample
-        covariance matrix will be computed differently by excluding the invalid
-        data gaps.
+    mask_valid : np.ndarray bool or None, default=None
+        Valid-sample mask with same shape as raw_data If provided, it has the shape of
+        [num_pulses x num_rng_samples]. CPI sample covariance matrix will be normalized
+        differently by excluding the invalid data gaps.
     threshold_params: ThresholdParams dataclass object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
         ratio between maximum and minimum Eigenvalue slopes (MMES) of the

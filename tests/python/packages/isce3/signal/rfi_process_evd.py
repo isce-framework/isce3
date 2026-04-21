@@ -172,8 +172,8 @@ def rfi_wb_gen(
 @pytest.mark.parametrize(
     "cpi_len, num_samples_rng_blk, num_cpi_tb, max_deg_freedom, num_max_trim, num_min_trim, max_num_rfi_ev, use_entire_pulse, mitigate_enable, test_case",
     [  
-        (32, 2148, 20, 10, 1, 1, 2, True, False, 'mitigate'),  # No range blks
-        (32, 256, 20, 10, 1, 1, 2, False, False, 'mitigate'),  # 256 range samples / range blocks
+        (32, 2148, 20, 10, 1, 1, 2, True, True, 'mitigate'),  # No range blks
+        (32, 256, 20, 10, 1, 1, 2, False, True, 'mitigate'),  # 256 range samples / range blocks
         (32, 2148, 20, 10, 0, 0, 2, True, False, 'no-op'),  # No-op: no rng blks
         (32, 256, 20, 10, 0, 0, 2, False, False, 'no-op'),  # No-op: 256 range samples / range block
         (32, 2148, 20, 10, 0, 0, 2, True, False, 'no-op'),  # No-op: detection only
@@ -302,6 +302,7 @@ def test_slow_time_evd(
     diag_valid_ratio = 0.20
     min_rank_frac = 0.8
     rx_dynamic_range_db = 50
+    swaths=None
 
     rfi_likelihood = run_slow_time_evd(
         raw_data_rfi,
@@ -319,6 +320,7 @@ def test_slow_time_evd(
         mitigate_enable=mitigate_enable,
         min_rank_frac=min_rank_frac,
         rx_dynamic_range_db=rx_dynamic_range_db,
+        swaths=swaths,
         raw_data_mitigated=raw_data_mitigated,
     )
 

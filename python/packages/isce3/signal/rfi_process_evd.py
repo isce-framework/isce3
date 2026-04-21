@@ -6,6 +6,7 @@ import numpy as np
 from isce3.signal.compute_evd_cpi import slice_gen
 from isce3.signal.rfi_detection_evd import rfi_detect, ThresholdParams
 from isce3.signal.rfi_mitigation_evd import rfi_mitigate_tb
+import warnings
 
 def run_slow_time_evd(
     raw_data: np.ndarray,
@@ -84,7 +85,7 @@ def run_slow_time_evd(
         required for a CPI. min_ev_valid_idx = int(np.floor(min_rank_frac * cpi_len))
         Must be a value within (0,1]
     rx_dynamic_range_db: float, optional, default = 50 dB
-        radar platform receiver dynamic range. This is applied as a threshold
+        radar platform receiver dynamic range in dB. This is applied as a threshold
         to determine if the Eigenvalue under test is meaningfully signficant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
     swaths : np.ndarray [int], optional
@@ -138,8 +139,6 @@ def run_slow_time_evd(
     num_pulses_proc = cpi_len * num_cpi
     num_pulses_tb = cpi_len * num_cpi_tb
 
-    num_tb = num_pulses_proc // num_pulses_tb
-
     # Modify raw_data in-place
     if raw_data_mitigated is None:
         raw_data_mitigated = raw_data
@@ -179,17 +178,25 @@ def run_slow_time_evd(
     # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
     min_ev_valid_idx = max(1, int(np.round(min_rank_frac * cpi_len)) - 1)
 
+    # Maximum number of degrees of freedom must be less than max_deg_freedom
+    if max_deg_freedom >= min_ev_valid_idx:
+        warnings.warn(
+            f"max_deg_freedom ({max_deg_freedom}) >= min_ev_valid_idx ({min_ev_valid_idx})."
+            "This is not recommended since it may lead to insufficient noise subspace.",
+            RuntimeWarning
+        )
+
     # Run RFI Detection and Mitigation
-    for idx_tb, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
+    for _, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
         # Get valid data mask for all rows in current block.
         if swaths is not None:
             swaths_tb = swaths[:, tb_slow_time, :]
-            mask_valid = np.zeros((swaths_tb.shape[1], raw_data.shape[1]), bool)
+            mask_valid = np.zeros((swaths_tb.shape[1], raw_data.shape[1]), dtype=bool)
             for i in range(mask_valid.shape[0]):
                 for start, end in swaths_tb[:, i, :]:
                     mask_valid[i, start:end] = True
 
-        for idx_rng, tb_fast_time in enumerate(
+        for _, tb_fast_time in enumerate(
             slice_gen(num_rng_samples, num_samples_rng_blk, combine_rem=True)
         ):
             raw_tb_blk = raw_data[tb_slow_time, tb_fast_time]

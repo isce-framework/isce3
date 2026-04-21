@@ -301,10 +301,10 @@ def compute_gap_exclusion_cov(
     if mask_valid_cpi.shape != data.shape:
         raise ValueError(f"CPI mask shape {mask_valid_cpi.shape} != CPI data shape {data.shape}")
 
-    if not (0.0 <= off_diag_overlap_ratio <= 1.0):
+    if not (0.0 < off_diag_overlap_ratio <= 1.0):
         raise ValueError("off_diag_overlap_ratio must be between 0 and 1.")
 
-    if not (0.0 <= diag_valid_ratio <= 1.0):
+    if not (0.0 < diag_valid_ratio <= 1.0):
         raise ValueError("diag_valid_ratio must be between 0 and 1.")
 
     # Minimum Samples required to compute diagonal and off-diagonal terms of
