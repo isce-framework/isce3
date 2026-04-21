@@ -2044,10 +2044,6 @@ def focus(runconfig, runconfig_path=""):
                                         freq_band=channel_in.freq_id,
                                         caltone_freq=cfg.processing.caltone.frequency,
                                         delay_ofs_dbf=-2.1474e-6)
-                                        el_lut=el_lut)
-                                        freq_band=frequency,
-                                        caltone_freq=cfg.processing.caltone.frequency,
-                                        delay_ofs_dbf=-2.1474e-6)
 
                 log.info("Precomputing antenna patterns")
                 i = np.arange(rc_grid.shape[0])
