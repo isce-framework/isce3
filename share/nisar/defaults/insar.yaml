@@ -545,6 +545,28 @@ runconfig:
                 # Interpolation method. Interpolation is used to fill residual outlier
                 # holes if present
                 interpolation_method: linear
+
+                # Additional azimuth offset filtering applied after outlier detection
+                # to suppress offset jumps caused by ionospheric disturbances,
+                # decorrelation, or processing artifacts
+                azimuth_offset_filter:
+                    # Spatial filter type: 'none' (disabled), 'median', or 'mean'
+                    offsets_filter: none
+                    # Kernel size in pixels for spatial filtering
+                    kernel_size: 31
+
+                # Flag to enable the use of subswath mask for the outlier detection
+                subswath_mask_apply_enabled: True
+
+                # IDW interpolation method parameters
+                idw_interpolation:
+                    # Power parameter controlling the distance weighting
+                    power: 2
+                    # Number of nearest neighbors used for interpolation
+                    number: 100
+                    # Maximum search radius in pixels
+                    radius: 200
+
                 # It is good practice to filter the offsets prior to interferogram
                 # formation to reduce noise. We expose: no_filter: do not filter the offsets/
                 # degrade offsets resolution. median_filter, boxcar_filter (moving average),

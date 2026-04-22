@@ -548,7 +548,17 @@ rubbersheet_options:
 
     # Interpolation method. Interpolation is used to fill residual
     # outlier holes (if present)
-    interpolation_method: enum('no_interpolation', 'nearest', 'linear', 'cubic', required=False)
+    interpolation_method: enum('no_interpolation', 'nearest', 'linear', 'cubic', 'idw', required=False)
+
+    # Aggressive azimuth offset filter applied right after outlier detection to suppress
+    # offset jumps caused by defocus from ionospheric disturbances.
+    azimuth_offset_filter: include('azimuth_offset_filter_options', required=False)
+
+    # Inverse distance weighting (IDW) interpolation method
+    idw_interpolation: include('idw_interpolation_options', required=False)
+
+    # Flag to enable the use of the subswath mask for the outlier detection
+    subswath_mask_apply_enabled: bool(required=False)
 
     # It is good practice to filter the offsets prior to interferogram
     # formation to reduce noise. We expose: no_filter: do not filter the offsets/
@@ -594,6 +604,26 @@ polyfitting_options:
     samples_along_range: num(min=0, required=False)
     # Number of samples  along the azimuth in pixels for polyfitting
     samples_along_azimuth: num(min=0, required=False)
+
+# Additional azimuth offset filtering applied after outlier detection
+# to suppress offset jumps caused by ionospheric disturbances,
+# decorrelation, or processing artifacts
+azimuth_offset_filter_options:
+    # Spatial filter type: 'none' (disabled), 'median', or 'mean'
+    offsets_filter: enum('none', 'median', 'mean', required=False)
+    # Kernel size in pixels for the spatial filter
+    kernel_size: int(min=3, required=False)
+
+idw_interpolation_options:
+    # Power parameter controlling the distance weighting;
+    # If the power is 0, then it is equally weighted
+    power: int(min=0, required=False)
+    # Number of nearest neighbors used for interpolation
+    number: int(min=1, required=False)
+    # Maximum search radius in pixels;
+    # If unspecified, all valid pixels are used,
+    # which can significantly increase runtime and is not recommended
+    radius: num(min=1, required=False)
 
 crossmul_options:
     # Path to HDF5 file or directory with coregistered SLCs
