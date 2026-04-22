@@ -61,6 +61,9 @@ def fill_missing(z, fd, t, mask_replace, mask_valid, noise):
     deramp = np.exp(-1j * 2 * np.pi * fd * t).astype(z.dtype)
     zout = deramp[:, None] * z
 
+    # Exclude RFI samples from being used as interpolation sources.
+    mask_valid_clean = mask_valid & ~mask_replace
+
     for i in range(m):
         # Previous and next pulse, with reflection boundary condition.
         iprev, inext = i - 1, i + 1
@@ -81,19 +84,19 @@ def fill_missing(z, fd, t, mask_replace, mask_valid, noise):
 
         # Four cases for replacement:
         # 1. prev and next both valid -> lerp between them
-        j = np.where(mask_valid[iprev, :] & mask_valid[inext, :]
+        j = np.where(mask_valid_clean[iprev, :] & mask_valid_clean[inext, :]
             & cols_need_replacement)[0]
-        zout[i, j] = w_prev * z[iprev, j] + w_next * z[inext, j]
+        zout[i, j] = w_prev * zout[iprev, j] + w_next * zout[inext, j]
         cols_need_replacement[j] = False
 
         # 2. only prev valid. use it
-        j = np.where(mask_valid[iprev, :] & cols_need_replacement)[0]
-        zout[i, j] = z[iprev, j]
+        j = np.where(mask_valid_clean[iprev, :] & cols_need_replacement)[0]
+        zout[i, j] = zout[iprev, j]
         cols_need_replacement[j] = False
 
         # 3. only next valid. use it
-        j = np.where(mask_valid[inext, :] & cols_need_replacement)[0]
-        zout[i, j] = z[inext, j]
+        j = np.where(mask_valid_clean[inext, :] & cols_need_replacement)[0]
+        zout[i, j] = zout[inext, j]
         cols_need_replacement[j] = False
 
         # 4. prev and next both invalid -> fill noise
