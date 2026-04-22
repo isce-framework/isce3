@@ -442,6 +442,18 @@ slow_time_evd_options:
   # Number of slow-time CPIs grouped together for determining and applying a
   # common EV slope threshold.
   num_cpi_per_threshold_block: int(min=2, required=False)
+  # minimum fraction of samples required for cross-variance terms
+  # of sample covariance matrix
+  off_diag_overlap_ratio: num(min=0.0, required=False)
+  # minimum fraction of samples required for co-variance terms
+  # of sample covariance matrix
+  diag_valid_ratio: num(min=0.0, required=False)
+  #This ratio will be used to determine the minimum number of valid Eigenvalues
+  ##required for a CPI. min_ev_valid_idx = int(np.round(min_rank_frac * cpi_len)) - 1
+  min_rank_frac: num(exclusiveMinimum=0.0, max=1.0, required=False)
+  # radar platform receiver dynamic range, e.g. 50 dB. This is applied as a threshold
+  # to determine if the Eigenvalue under test is meaningfully signficant.
+  rx_dynamic_range_db: num(min=0.0, max=100.0, required=False)
   # Parameters used to adaptively determine RFI eigenvalue difference thresholds
   threshold_hyperparameters: include('rfi_threshold_options', required=False)
 

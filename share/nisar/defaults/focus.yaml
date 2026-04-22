@@ -227,12 +227,12 @@ runconfig:
 
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.
-                    cpi_length: 32
+                    cpi_length: 16
                     # Maximum allowable number of emitters can be detected and
                     # suppressed per CPI. ST-EVD would ignore emitters exceeding
                     # this limit. This number should be less than cpi_length.
                     # Defaults to 16.
-                    max_emitters: 16
+                    max_emitters: 4
                     # Number of large value outliers to be trimmed in slow-time
                     # minimum Eigenvalues.
                     num_max_trim: 0
@@ -249,7 +249,19 @@ runconfig:
                     max_num_rfi_ev: 2
                     # Number of slow-time CPIs grouped together for determining and
                     # applying a common EV slope threshold.
-                    num_cpi_per_threshold_block: 20
+                    num_cpi_per_threshold_block: 15
+                    # minimum fraction of samples required for cross-variance terms
+                    # of sample covariance matrix
+                    off_diag_overlap_ratio: 0.25
+                    # minimum fraction of samples required for covariance terms
+                    # of sample covariance matrix
+                    diag_valid_ratio: 0.20
+                    # This ratio will be used to determine the minimum number of valid Eigenvalues
+                    # required for a CPI. min_ev_valid_idx = int(np.round(min_rank_frac * cpi_len)) - 1
+                    min_rank_frac: 0.70
+                    # radar platform receiver dynamic range, e.g. 50 dB. This is applied as a threshold
+                    # to determine if the Eigenvalue under test is meaningfully signficant.
+                    rx_dynamic_range_db: 50.0
                     # Parameters used to adaptively determine RFI eigenvalue
                     # difference thresholds
                     threshold_hyperparameters:
