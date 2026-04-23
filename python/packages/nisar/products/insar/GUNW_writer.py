@@ -161,7 +161,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         else:
             unwrap_igram_range_looks = wrap_igram_range_looks
             unwrap_igram_azimuth_looks = wrap_igram_azimuth_looks
-            
+
         # the unwrappedInterfergram group under the processingInformation/parameters
         # group is copied from the RUNW product, but the name in RUNW product is
         # 'interferogram', while in GUNW its name is 'unwrappedInterferogram'. Here
@@ -291,15 +291,21 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     "mask",
                     (ds_geogrid.length,
                      ds_geogrid.width),
-                    np.uint8,
-                    ("Combination of water mask and a mask of subswaths of valid samples"
-                     " in the reference RSLC and geometrically-coregistered secondary RSLC."
-                     " Each pixel value is a three-digit number:"
-                     " the most significant digit represents the water flag of that pixel in the reference RSLC,"
-                     " where 1 is water and 0 is non-water;"
-                     " the second digit represents the subswath number of that pixel in the reference RSLC;"
-                     " the least significant digit represents the subswath number of that pixel in the secondary RSLC."
-                     " A value of 0 in either subswath digit indicates an invalid sample in the corresponding RSLC"),
+                    np.uint32,
+                    ("Combination of a water mask, a mask of subswaths of valid samples, and data anomalies"
+                     " in the reference RSLC and the geometrically coregistered secondary RSLC."
+                     " Each pixel value is encoded as a 32-bit unsigned integer."
+                     " Bits 0–7 represent subswath encoding, where the most significant digit represents"
+                     " the water flag of that pixel in the reference RSLC, where 1 is water"
+                     " and 0 is non-water; the second most significant digit corresponds to"
+                     " the subswath number of the reference RSLC, and the least significant digit"
+                     " corresponds to the subswath number of the secondary RSLC;"
+                     " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
+                     " Bits 8–15 represent bitwise anomaly flags for the secondary RSLC, and"
+                     " bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
+                     " with each bit corresponding to a specific anomaly condition."
+                     " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
+                     " Bits 24–31 are reserved for future use"),
                     grid_mapping=grids_val,
                     xds=xds,
                     yds=yds,

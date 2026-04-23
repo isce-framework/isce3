@@ -266,9 +266,17 @@ def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
         projection_dataset = h5_obj[f'{rdr_grid_path}/projection']
         epsg = projection_dataset.attrs['epsg_code']
 
-         # Wavelength in meters
-        wavelength = isce3.core.speed_of_light / \
-                h5_obj[f'{gunw_obj.GridsPath}/frequencyA/centerFrequency'][()]
+        # Wavelength in meters; fall back to frequencyB if frequencyA is not found
+        for freq in ('A', 'B'):
+            if (key := f'{gunw_obj.GridsPath}/frequency{freq}/centerFrequency') in h5_obj:
+                wavelength = isce3.core.speed_of_light / h5_obj[key][()]
+                break
+        else:
+            err_msg = (
+                f"Neither 'frequencyA' nor 'frequencyB' centerFrequency found "
+                f"in '{gunw_obj.GridsPath}' for solid earth tides computation")
+            err_channel.log(err_msg)
+            raise KeyError(err_msg)
 
         return (inc_angle_cube,
                 los_unit_vector_x_cube,

@@ -14,7 +14,7 @@ gdal.UseExceptions()
 
 from isce3.io import HDF5OptimizedReader
 from nisar.products.readers import SLC
-from nisar.workflows import prepare_insar_hdf5
+from nisar.workflows import h5_prep
 from nisar.workflows.compute_stats import compute_stats_real_data
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.helpers import (copy_raster,
@@ -220,6 +220,6 @@ if __name__ == "__main__":
     # get a runconfig dict from command line args
     crossmul_runconfig = CrossmulRunConfig(args, resample_type)
     # prepare RIFG HDF5
-    out_paths = prepare_insar_hdf5.run(crossmul_runconfig.cfg)
+    _, out_paths = h5_prep.get_products_and_paths(crossmul_runconfig.cfg)
     # run crossmul
-    run(crossmul_runconfig.cfg, out_paths['RIFG'], resample_type)
+    run(crossmul_runconfig.cfg, out_paths['RIFG'], resample_type, dump_on_disk=True)

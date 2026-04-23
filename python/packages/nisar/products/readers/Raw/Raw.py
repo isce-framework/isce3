@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .DataDecoder import DataDecoder
 import h5py
 import isce3
@@ -9,13 +10,16 @@ import pyre
 import journal
 import re
 from warnings import warn
-from scipy.interpolate import interp1d
-from nisar.antenna import CalPath
+from typing import Tuple
+from enum import IntEnum, unique
+from nisar.antenna import CalPath, get_calib_range_line_idx
+from isce3.core import speed_of_light
 
 # TODO some CSV logger
 log = logging.getLogger("Raw")
 
 PRODUCT = "RRSD"
+
 
 def find_case_insensitive(group: h5py.Group, name: str) -> str:
     for key in group:
@@ -176,12 +180,12 @@ class RawBase(Base, family='nisar.productreader.raw'):
         -------
         float
             Bandwidth in Hz.
-        
+
         """
         tx_path = self._pulseMetaPath(frequency=frequency, tx=tx)
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             return f[tx_path]["rangeBandwidth"][()]
-        
+
     @property
     def TelemetryPath(self):
         return f"{self.ProductPath}/lowRateTelemetry"
@@ -270,7 +274,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         Returns
         -------
         float
-            PRF in Hz.        
+            PRF in Hz.
 
         """
         _, az_time = self.getPulseTimes(frequency, tx)
@@ -374,7 +378,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         which starts at 1 at the beginning of a datatake and increases sequentially.
         Except for the first observation within a datatake, the first index will be
         some value other than 1.
-        
+
         If a rangeline was missed due to corrupted data, for example, that would be
         reflected as a skipped value in the index sequence.
 
@@ -397,6 +401,179 @@ class RawBase(Base, family='nisar.productreader.raw'):
         path = self._pulseMetaPath(frequency=frequency, tx=tx)
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             return f[path]["rangeLineIndex"][()]
+
+
+    def _parse_chirpcorrelator_from_hrt_qfsp(
+            self,
+            txrx_pol: str) -> np.ndarray:
+        """
+        Parse three-tap chirp correlator array with shape (lines, 12, 3)
+        as well as cal type with shape (lines,) from high-rate-telemetry
+        (HRT) quadrature first-stage processor (QFSP).
+
+        Parameters
+        ----------
+        txrx_pol : str
+            TxRx polarization such as HH, VH, etc
+
+        Returns
+        -------
+        np.ndarray(complex)
+            3-D complex array of chirp correlator with shape (Lines, channels, 3)
+
+        Raises
+        ------
+        KeyError
+            Missing respective dataset in L0B
+
+        See Also
+        --------
+        getChirpCorrelator
+
+        Notes
+        -----
+        This function simply parse 3-tap chirp correlator from low-level
+        HRT field of L0B as it is, e.g. w/o proper separation of co-pol
+        and cross-pol for Quad pol.
+        The main reason for `None` as a return value is to support old and
+        simulated NISAR L-band L0B products and ISCE3 test data where the
+        respective field is missing.
+
+        """
+        # get HRT path
+        hrt_path = self.TelemetryPath.replace('low', 'high')
+        qfsp_path = f'{hrt_path}/tx{txrx_pol[0]}/rx{txrx_pol[1]}/QFSP'
+        with h5py.File(self.filename, mode='r', swmr=True) as f5:
+            # loop over three qfsp
+            for i_qfsp in range(3):
+                p_qfsp = f'{qfsp_path}{i_qfsp}'
+                # loop over 4 channels per qfsp:
+                for nn in range(4):
+                    i_chn = nn + i_qfsp * 4
+                    n_rx = i_chn + 1
+                    # loop over 3 taps per channel
+                    for i_tap in range(3):
+                        n_tap = i_tap + 1
+                        # form the path to the dataset per I and Q
+                        # use RX pol!
+                        p_ds_i = (f'{p_qfsp}/CHIRP_CORRELATOR_I{n_tap}_'
+                                  f'{txrx_pol[1]}{n_rx:02d}')
+                        p_ds_q = (f'{p_qfsp}/CHIRP_CORRELATOR_Q{n_tap}_'
+                                  f'{txrx_pol[1]}{n_rx:02d}')
+                        try:
+                            ds_i = f5[p_ds_i]
+                        except KeyError as err:
+                            warn(
+                                f'Missing dataset {p_ds_i} in {self.filename}.'
+                                f' Detailed error -> {err}'
+                            )
+                            raise
+                        else:
+                            # initialize the 3-D array, lines by 12 by 3
+                            if i_qfsp == nn == i_tap == 0:
+                                # initialize the 3-D array for chirp correlator
+                                num_lines = ds_i.size
+                                chp_cor = np.ones((num_lines, 12, 3), dtype='c8')
+                            chp_cor[:, i_chn, i_tap].real = ds_i[()]
+                            chp_cor[:, i_chn, i_tap].imag = f5[p_ds_q][()]
+            return chp_cor
+
+
+    def _parse_caltype_from_hrt_qfsp(
+            self,
+            txrx_pol: str) -> np.ndarray:
+        """
+        Parse cal-path types with shape (lines,) from high-rate telemetry
+        (HRT) quadrature first-stage processor (QFSP).
+
+        Parameters
+        ----------
+        txrx_pol : str
+            TxRx polarization such as HH, VH, etc
+
+        Returns
+        -------
+        np.ndarray(uint8) or None
+            1-D array of cal type w/ values HPA=0, LNA=1, BYPASS=2, and
+            INVALID=255.
+
+        Raises
+        ------
+        KeyError
+            Missing respective dataset in L0B
+
+        See Also
+        --------
+        getCalType
+
+        Notes
+        -----
+        This function simply parse cal path types from low-level
+        HRT field of L0B as it is, e.g. w/o proper separation of co-pol
+        and cross-pol for Quad pol.
+
+        """
+        # get HRT path
+        hrt_path = self.TelemetryPath.replace('low', 'high')
+        qfsp_path = f'{hrt_path}/tx{txrx_pol[0]}/rx{txrx_pol[1]}/QFSP'
+        with h5py.File(self.filename, mode='r', swmr=True) as f5:
+            # XXX get caltype from the very first qFSP assuming
+            # it is qFSP independent!
+            i_qfsp = 0
+            p_qfsp = f'{qfsp_path}{i_qfsp}'
+            p_type = f'{p_qfsp}/CP_CAL_TYPE_{txrx_pol[1]}{i_qfsp}'
+            # XXX Following Try/exception block is added to
+            # support old sim L0B products lacking HRT!
+            try:
+                ds_cal_type = f5[p_type]
+            except KeyError as err:
+                warn(f'Missing dataset "{p_type}" in '
+                    f'"{self.filename}". Detailed error -> {err}')
+                raise
+            else:
+                return ds_cal_type[()].astype(CalPath)
+
+
+    def _parse_rangeline_index_from_hrt(
+            self,
+            txrx_pol: str = None) -> np.ndarray:
+        """
+        Get range line index over all range lines from
+        HRT.
+
+        Parameters
+        ----------
+        txrx_pol : str
+            TxRx polarization such as HH, VH, etc
+
+        Returns
+        -------
+        np.ndarray(uint) or None
+            If not available in L0b, None will be returned.
+
+        Raises
+        ------
+        KeyError
+            Missing respective dataset in L0B
+
+        """
+        hrt_path = self.TelemetryPath.replace('low', 'high')
+        freq_band = sorted(self.frequencies)[0]
+        pols = self.polarizations[freq_band]
+        if txrx_pol is None:
+            txrx_pol = pols[0]
+        elif txrx_pol not in pols:
+            raise ValueError(f'Available pols {pols} but got {txrx_pol}!')
+        rgl_idx_path = (f'{hrt_path}/tx{txrx_pol[0]}/rx{txrx_pol[1]}/'
+                        'RangeLine/RH_RANGELINE_INDEX')
+        with h5py.File(self.filename, mode='r', swmr=True) as f5:
+            try:
+                ds_rgl_idx = f5[rgl_idx_path]
+            except KeyError as err:
+                warn(f'Can not parse range line index from HRT. Error -> {err}')
+                raise
+            else:
+                return ds_rgl_idx[()]
 
 
     def getCalType(self, frequency: str = 'A', tx: str = None):
@@ -494,7 +671,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         np.ndarray(complex)
             2-D complex float of caltone (CW) coefficients,
             size = [rangelines x channels].
-            
+
         """
         if polarization is None:
             polarization = self.polarizations[frequency][0]
@@ -713,7 +890,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         return swaths
 
 
-    def getSubSwathBboxes(self, frequency, tx=None, epoch=None):
+    def getSubSwathBboxes(self, frequency, polarization=None, epoch=None, num_ignore=0):
         """
         Return the bounding box for each sub-swath.
 
@@ -721,63 +898,107 @@ class RawBase(Base, family='nisar.productreader.raw'):
         ----------
         frequency : {"A", "B"}
             Sub-band identifier.
-        tx : {"H", "V", "L", "R"} | None
-            Transmit polarization. If None, use first available TX polarization.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
         epoch : isce3.core.DateTime
             Reference epoch for azimuth time tags.
+        num_ignore : int, optional
+            Number of pulses to ignore at the end of an observation.  This
+            option is useful when a fixed-PRF observation is followed by a
+            dithered-PRF one, in which case the gaps in the last few receive
+            windows will have irregular spacing due to the dithered pulses in
+            the air.
 
         Returns
         -------
-        bboxes : list[RadarBoundingBox]
-            Bounding box in radar coordinates for each sub-swath.
+        bboxes : list[list[RadarBoundingBox]]
+            Bounding box in radar coordinates for each sub-swath for each
+            segment of constant data window position/length.
         """
-        if tx is None:
-            tx = self.polarizations[frequency][0][0]
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        tx = polarization[0]
         times, grid = self.getRadarGrid(frequency, tx, epoch=epoch)
+        nt, nr = grid.shape
+        subswaths = self.getSubSwaths(frequency, tx=tx)
+        is_dithered = self.isDithered(frequency, tx=tx, num_ignore=num_ignore)
+        rd, wd, wl = self.getRdWdWl(frequency, polarization)
 
-        # If dithered we can reconstruct the entire swath.
-        if self.isDithered(frequency):
-            bbox = RadarBoundingBox(
-                RadarPoint(times[0], grid.slant_ranges[0]),
-                RadarPoint(times[-1], grid.slant_ranges[-1]))
-            return [bbox]
+        # Replace enormous fill values with number of samples.
+        subswaths = np.where(subswaths > nr, nr, subswaths)
 
-        # Otherwise the TX gaps split the swath into sub-swaths.
-        bboxes = []
-        for swath in self.getSubSwaths(frequency, tx=tx):
-            # For fixed PRF the gap locations should be constant (one unique
-            # pair of [start, stop) indices).
-            if len(np.unique(swath, axis=0)) > 1:
-                log.warning("Variable raw subswaths detected!  Only "
-                    "the swath bounds at the azimuth midpoint will be used.")
+        # Replace last num_ignore pulses with previous value.
+        if (not is_dithered) and (num_ignore > 0):
+            # Avoid problems with trivially short observations, though this
+            # shouldn't ever happen.
+            if num_ignore > nt:
+                log.warning(f"Asked to ignore {num_ignore} pulses but there "
+                    f"are only {nt} total.")
+                num_ignore = nt
+            # NOTE Need singleton middle dimension for proper broadcasting.
+            i = subswaths.shape[1] - num_ignore
+            subswaths[:, i:, :] = subswaths[:, i:(i + 1), :]
 
-            # XXX Careful because radar can transition from constant PRF to
-            # XXX dithered PRF, so the pulses in the air at the end will cause
-            # XXX variations in the gap locations at the end.
-            imid = swath.shape[0] // 2
-            istart, iend = swath[imid, :]
+        # For dithered replace subswaths (gap mask) with a single subswath
+        # that merely tracks min/max valid sample.  Note that gaps may still
+        # interfere with min/max, though.
+        if is_dithered:
+            # Determine non-empty ranges.
+            starts, ends = subswaths[..., 0], subswaths[..., 1]
+            valid = ends > starts
+            # Construct masked arrays to simplify stats.
+            starts = np.ma.array(subswaths[..., 0], mask=~valid)
+            ends = np.ma.array(subswaths[..., 1], mask=~valid)
 
-            r = np.array(grid.slant_ranges)
-            n = len(r)
+            # Get masked min and max valid sample for each pulse.
+            min_starts = np.min(starts, axis=0)
+            max_ends = np.max(ends, axis=0)
 
-            # This transition can also force the introduction of a mostly
-            # empty subswath that's only needed at the end (e.g., only two
-            # gaps except dithering introduces a third).
-            # XXX Empty subswaths should be detectable by istart==iend, but
-            # XXX currently L0B can be populated with weird stuff like
-            # XXX [istart, fillValue) or [fillValue, n) where istart < n and
-            # XXX fillValue > n.  So handle that until L0B writer is fixed.
-            istart = min(istart, n)
-            iend = min(iend, n)
-            if istart >= iend:
-                log.warning(f"Excluding subswath with bounds {swath[imid, :]}.")
+            # Now replace subswaths with a single subswath with start/end
+            # so we can use same logic as fixed PRF below.
+            subswaths = np.vstack((min_starts, max_ends)).transpose().reshape(
+                (1, -1, 2))
+
+        changes = get_dwp_change_indices(rd, wd, wl)
+
+        # Append first and last pulses to generate pairs of constant DWP.
+        breaks = np.hstack(([0], changes, [grid.shape[0] - 1]))
+        bbox_lists = []
+        for ibreak in range(len(breaks) - 1):
+            ipulse0, ipulse1 = breaks[ibreak], breaks[ibreak + 1]
+            t0, t1 = times[ipulse0], times[ipulse1]  # one past end point
+            bboxes = []
+            for iswath, (j0, j1) in enumerate(subswaths[:, ipulse0, :]):
+                # Exclude empty subswaths.
+                if j1 <= j0:
+                    continue
+                # If dithered peek ahead in case gap overlaps start or end of
+                # valid swath.  Only need to check one pulse ahead assuming
+                # dither sequence is correctly designed to avoid consecutive
+                # gaps.
+                if is_dithered:
+                    assert iswath == 0  # due to restructuring above
+                    assert ipulse0 < (nt - 1)  # from construction of breaks
+                    j0next = subswaths[iswath, ipulse0 + 1, 0]
+                    j1next = subswaths[iswath, ipulse0 + 1, 1]
+                    if j1next > j0next:
+                        j0 = min(j0, j0next)
+                        j1 = max(j1, j1next)
+                    else:
+                        log.warning(f"Pulse {ipulse0 + 1} immediately after "
+                            "DWP change has no valid data.  Mask may be wrong.")
+                r0 = grid.slant_ranges[j0]
+                r1 = grid.slant_ranges[j1 - 1] + grid.slant_ranges.spacing
+                bboxes.append(RadarBoundingBox(
+                    RadarPoint(t0, r0),
+                    RadarPoint(t1, r1)))
+            if len(bboxes) == 0:
+                log.warning(f"no valid subswath for time interval [{t0}, {t1})")
                 continue
+            bbox_lists.append(bboxes)
 
-            bbox = RadarBoundingBox(
-                RadarPoint(times[0], r[istart]),
-                RadarPoint(times[-1], r[iend - 1]))
-            bboxes.append(bbox)
-        return bboxes
+        return bbox_lists
 
 
     def getProductLevel(self):
@@ -900,10 +1121,37 @@ class LegacyRaw(RawBase, family='nisar.productreader.raw'):
         return isce3.core.Attitude(old.time, qs, old.reference_epoch)
 
 
-
 class Raw(RawBase, family='nisar.productreader.raw'):
     # TODO methods for new telemetry fields.
     pass
+
+
+def get_dwp_change_indices(rd, wd, wl):
+    """
+    Determine the pulses where the data window position changes.
+
+    Parameters
+    ----------
+    rd, wd, wl : np.ndarray
+        Arrays with shape (num_channels, num_pulses) containing the range delay,
+        window delay, and window length DBF parameters.  They must all be
+        provided in the same units.
+
+    Returns
+    -------
+    indices : np.ndarray
+        The pulses i where either the min(RD+WD) or the max(RD+WD+WL) changes.
+        That is the pulse at i will have a different data window position than
+        pulse (i - 1).
+    """
+    if not (rd.shape == wd.shape == wl.shape):
+        raise ValueError("shape mismatch among inputs")
+    if not rd.ndim == 2:
+        raise ValueError("expected 2D input data")
+    start = np.min(rd + wd, axis=1).astype(np.int64)
+    end = np.max(rd + wd + wl, axis=1).astype(np.int64)
+    location = np.vstack((start, end))
+    return np.where(np.any(np.diff(location, axis=1) != 0, axis=0))[0] + 1
 
 
 def open_rrsd(filename) -> RawBase:
@@ -918,3 +1166,348 @@ def open_rrsd(filename) -> RawBase:
         if "/science/LSAR/RRSD/telemetry" in f:
             return LegacyRaw(hdf5file=filename)
         return Raw(hdf5file=filename)
+
+
+@unique
+class PolarizationTypeId(IntEnum):
+    """Enumeration for polarization types of L-band NISAR
+    """
+    single_h = 0
+    """Single Pol HH"""
+    single_v = 1
+    """Single Pol VV"""
+    dual_h = 2
+    """Dua Pol HH/HV"""
+    dual_v = 3
+    """Dual Pol VV/VH"""
+    quad = 4
+    """Linear Quad Pol HH/HV/VH/VV"""
+    compact = 5
+    """Left Compact Pol LH/LV"""
+    none = 6
+    """Unknown"""
+    quasi_quad = 7
+    """Quasi Linear Quad Pol HH/HV(A) + VV/VH(B)"""
+    quasi_dual = 8
+    """Quasi Dual Pol HH(A) + VV(B)"""
+
+
+# helper functions that uses Raw as input
+
+def polarization_type_from_raw(raw: Raw) -> PolarizationTypeId:
+    """
+    Get polarization ID and type from L0B DRT.
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+        L0B raw parser object
+
+    Returns
+    --------
+    nisar.products.readers.Raw.PolarizationTypeId
+        An enumeration for various polarimetric modes of L-band NISAR.
+
+    Raises
+    ------
+    KeyError
+        Missing respective polarization type dataset in L0B
+
+    """
+    pol_path = f'{raw.TelemetryPath}/DRT/MISC/CP_IFSW_POLARIZATION'
+    with h5py.File(raw.filename, mode='r', swmr=True) as f5:
+        try:
+            ds_pol = f5[pol_path]
+        except KeyError as err:
+            warn(f'Missing dataset "{pol_path}" in "{raw.filename}". '
+                 'Detailed err -> {err}.')
+            raise
+        else:
+            i_pol = ds_pol[()]
+            id_pol = np.nanmedian(i_pol)
+            return PolarizationTypeId(id_pol)
+
+
+def is_raw_quad_pol(raw: Raw) -> bool:
+    """
+    Determine whether NISAR raw L0B product is
+    linear Quad or not.
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+        L0B raw parser object
+
+    Returns
+    --------
+    bool
+        True if the L0B product is quad pol otherwise False.
+
+    Notes
+    -----
+    If the polarization type is missing in the raw (KeyError),
+    It will issue a warning and check the polarizations under
+    the main frequency band.
+    This behaviour is needed for now to avoid failure in some ISCE3 test
+    cases due to simulated or old L0B products that do not contain
+    polarization type/id field! However, this is subject to change
+    in the future.
+
+    """
+    try:
+        pol_type = polarization_type_from_raw(raw)
+    except KeyError as err:
+        # XXX If the polarization type is missing in the raw (KeyError),
+        # It will issue a warning and check the polarizations under
+        # the main frequency band.
+        # This behaviour is needed for now to avoid failure in some ISCE3 test
+        # cases due to simulated or old L0B products that do not contain
+        # polarization type/id field! However, this is subject to change
+        # in the future once some ISCE3 test files are updated!
+        warn(f'Polarization type is missing in L0B due to error "{err}". '
+             'Check for polarizations under the main frequency band. '
+             'Outcome might be wrong!')
+        freq = np.sort(raw.frequencies)[0]
+        pols = raw.polarizations[freq]
+        tx_pol = pols[0][0]
+        return (len(pols) == 4 and tx_pol in ('H', 'V'))
+    else:
+        return pol_type == PolarizationTypeId.quad
+
+
+def first_tx_pol_for_quad(raw: Raw) -> str:
+    """
+    Determine first TX polarization, H or V, from only linear Quad pol product
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+        L0B raw parser object
+
+    Returns
+    --------
+    str
+        TX polarization that transmitted first in the linear quad pol mode.
+
+    Raises
+    ------
+    ValueError
+        If L0B product is not linear quad pol.
+    KeyError
+        If the polarization type dataset or range line index
+        is missing in L0B.
+
+    Notes
+    -----
+    For NISAR L-band linear quad pol, V is transmitted on
+    odd range line index while H is on even one.
+    Preferably by checking the first range line index from HRT,
+    the first TX polarization can be reliably determined.
+    If such information does not exist in L0B product,
+    the first individual range line index per TX polarization
+    is compared for the smallest index to represent first
+    TX pol.
+
+    """
+    if not is_raw_quad_pol(raw):
+        raise ValueError('Not a quad pol!')
+    try:
+        idx_rgl = raw._parse_rangeline_index_from_hrt()
+    except KeyError:
+        # if not in HRT parse single-pol version from swath path
+        idx_rgl_h = raw.getRangeLineIndex('A', 'H')[0]
+        idx_rgl_v = raw.getRangeLineIndex('A', 'V')[0]
+        if idx_rgl_v < idx_rgl_h:
+            return 'V'
+        return 'H'
+    else:  # odd range line is V pol first and even is H pol first!
+        return {0: 'H', 1: 'V'}.get(idx_rgl[0] % 2)
+
+
+def opposite_linear_pol(pol: str) -> str:
+    """Get the oppsoite linear pol
+    Parameters
+    ----------
+    pol : str
+        Linear pol, H or V
+
+    Returns
+    -------
+    str
+        H if `pol=V` and V if `pol=H`
+
+    Raises
+    ------
+    ValueError
+        If input pol is circular `L` or `R`.
+
+    """
+    if pol == 'H':
+        return 'V'
+    elif pol == 'V':
+        return 'H'
+    else:
+        raise ValueError(
+            f'Expected linear pol "H" or "V" but got "{pol}"!')
+
+
+def chirpcorrelator_caltype_from_raw(
+        raw: Raw,
+        txrx_pol: str
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Parse three-tap chirp correlator array with shape (lines, 12, 3)
+    as well as cal type with shape (lines,) from Raw L0B for a certain
+    TxRX pol
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+    txrx_pol : str
+        TxRx polarization such as HH, VH, etc
+
+    Returns
+    -------
+    np.ndarray(complex)
+        3-D complex array of chirp correlator with shape (Lines, channels, 3)
+    np.ndarray(uint8)
+        1-D array of cal type w/ values HPA=0, LNA=1, BYPASS=2, and INVALID=255
+
+    """
+    try:
+        chp_cor = raw._parse_chirpcorrelator_from_hrt_qfsp(txrx_pol=txrx_pol)
+        cal_type = raw._parse_caltype_from_hrt_qfsp(txrx_pol=txrx_pol)
+    except KeyError:
+        # XXX if the respective field does not exist then use co-pol under
+        # swath in L0B for the sake of backward compatibility
+        freq_band = [f for f in raw.frequencies if
+                     txrx_pol in raw.polarizations[f]][0]
+        chp_cor = raw.getChirpCorrelator(freq_band, txrx_pol[0])
+        cal_type = raw.getCalType(freq_band, txrx_pol[0])
+        return chp_cor, cal_type
+    # Quad pol case
+    if is_raw_quad_pol(raw):
+        tx_pol_first = first_tx_pol_for_quad(raw)
+        if txrx_pol[0] == tx_pol_first:
+            chp_cor = chp_cor[::2]
+            cal_type = cal_type[::2]
+        else:  # the second TX pol
+            # get data from the opposite TX pol
+            x_pol = opposite_linear_pol(txrx_pol[0]) + txrx_pol[1]
+            chp_cor_x, cal_type_x = chirpcorrelator_caltype_from_raw(
+                raw, txrx_pol=x_pol)
+            # if co-pol get HPA value from same TX but
+            # fill in LNA/BYP from opposite TX
+            if txrx_pol[0] == txrx_pol[1]:
+                chp_cor = chp_cor[1::2]
+                cal_type = cal_type[1::2]
+                _, idx_byp, idx_lna, _ = get_calib_range_line_idx(cal_type_x)
+                chp_cor[idx_byp] = chp_cor_x[idx_byp]
+                chp_cor[idx_lna] = chp_cor_x[idx_lna]
+                cal_type[idx_byp] = CalPath.BYPASS
+                cal_type[idx_lna] = CalPath.LNA
+            else:  # x-pol product
+                chp_cor = chp_cor_x
+                cal_type = cal_type_x
+    # set x-pol HPA to INVALID given they are the mix of
+    # LNA from co-pol and HPA from x-pol!
+    if txrx_pol in ('HV', 'VH'):
+        idx_hpa, _, _, _ = get_calib_range_line_idx(cal_type)
+        if idx_hpa.size > 0:
+            log.info(f'Set HPA cal type for x-pol {txrx_pol} to INVALID!')
+            cal_type[idx_hpa] = CalPath.INVALID
+    return chp_cor, cal_type
+
+
+def caltone_frequency_from_raw(
+        raw: Raw,
+        txrx_pol: str
+) -> float:
+    """get caltone frequency in Hz from low rate telemetry in L0B
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+    txrx_pol : str
+        TxRx polarization such as HH, VH, etc
+
+    Returns
+    -------
+    float
+        Caltone frequency in Hz.
+
+    Notes
+    -----
+    If the resepctive DRT field is not found in L0B, caltone frequency
+    will be set to 1214.883 MHz.
+
+    """
+    # default caltone if dataset is not available (Hz)
+    default = 1214.883e6
+    # frequency of local oscillator (Hz)
+    lo = 1200e6
+    # ADC clock (Hz)
+    clock = 240e6
+    c_p = (f'{raw.TelemetryPath}/DRT/MISC/CP_IFSW_CALTONE_PHASE_STEP_'
+           f'{txrx_pol[1]}')
+    with h5py.File(raw.filename, mode='r', swmr=True) as f5:
+        try:
+            ds_caltone_phase = f5[c_p]
+        except KeyError:
+            warn(f'Missing path "{c_p}" in L0B! Caltone frequency will '
+                 f'be set to {default} (Hz)')
+            return default
+        else:
+            i_cal = np.median(ds_caltone_phase[()]).astype(int)
+            if i_cal < 2**16:
+                warn('CALTONE_PHASE_STEP seems too small, '
+                     'caltone frequency may be invalid')
+            caltone_freq = (i_cal / 2**32) * clock + lo
+            return caltone_freq
+
+
+def range_delay_sequential_tx_from_raw(
+        raw: Raw,
+        freq_band: str,
+        txrx_pol: str
+) -> float:
+    """
+    Get range delay (seconds) of the second pulse wrt the pulsewidth
+    of the first TX pulse in sequential split-spectrum transmit
+    for L0B for specific frequency band and polarization if exists.
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw
+    freq_band: str
+        Frequency band such A or B.
+    txrx_pol : str
+        TxRx polarization such as HH, VH, etc
+
+    Returns
+    -------
+    float
+        Delay in seconds
+
+    Notes
+    -----
+    It is assumed that slant ranges of A and B properly represent
+    the start of a first valid samples and all instrument relative
+    delays between A and B products due to onboard digital filetrs
+    are already corrected for.
+    Alternatively, one can use pulsewidth of band = A as range delay
+    for band B. But due to different bandwidths and onboard digital
+    filters, the respective group delays are diffrent and needs to
+    be taken into account on top of pulsewidth.
+
+    """
+    # check if band is B and it is split spectrum
+    if freq_band == 'B' and len(raw.frequencies) == 2:
+        pols = raw.polarizations
+        # check if this is sequential transmit
+        if txrx_pol in pols['A']:
+            sr_b = raw.getRanges('B', txrx_pol[0])
+            sr_a = raw.getRanges('A', txrx_pol[0])
+            delay = 2 * (sr_b.first - sr_a.first) / speed_of_light
+            return delay
+    return 0.0

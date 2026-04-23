@@ -227,12 +227,12 @@ runconfig:
 
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.
-                    cpi_length: 32
+                    cpi_length: 16
                     # Maximum allowable number of emitters can be detected and
                     # suppressed per CPI. ST-EVD would ignore emitters exceeding
                     # this limit. This number should be less than cpi_length.
                     # Defaults to 16.
-                    max_emitters: 16
+                    max_emitters: 4
                     # Number of large value outliers to be trimmed in slow-time
                     # minimum Eigenvalues.
                     num_max_trim: 0
@@ -249,7 +249,19 @@ runconfig:
                     max_num_rfi_ev: 2
                     # Number of slow-time CPIs grouped together for determining and
                     # applying a common EV slope threshold.
-                    num_cpi_per_threshold_block: 20
+                    num_cpi_per_threshold_block: 15
+                    # minimum fraction of samples required for cross-variance terms
+                    # of sample covariance matrix
+                    off_diag_overlap_ratio: 0.25
+                    # minimum fraction of samples required for covariance terms
+                    # of sample covariance matrix
+                    diag_valid_ratio: 0.20
+                    # This ratio will be used to determine the minimum number of valid Eigenvalues
+                    # required for a CPI. min_ev_valid_idx = int(np.round(min_rank_frac * cpi_len)) - 1
+                    min_rank_frac: 0.70
+                    # radar platform receiver dynamic range, e.g. 50 dB. This is applied as a threshold
+                    # to determine if the Eigenvalue under test is meaningfully signficant.
+                    rx_dynamic_range_db: 50.0
                     # Parameters used to adaptively determine RFI eigenvalue
                     # difference thresholds
                     threshold_hyperparameters:
@@ -332,6 +344,24 @@ runconfig:
                 # epoch.  null for automatic selection
                 time_end: null
 
+            # Calibration and processing information look-up tables (LUTs)
+            # excluding Doppler
+            lookup_tables:
+
+                # Downsampling factors with respect to the RSLC grid
+                downsampling_factor:
+                    # Downsampling factor in azimuth direction
+                    azimuth: 50
+                    # Downsampling factor in range direction
+                    range: 50
+
+                # Extra margin added to LUTs
+                margin_in_pixels:
+                    # Extra margin added to lookup table in azimuth, in pixels.
+                    azimuth: 11
+                    # Extra margin added to lookup table in range, in pixels.
+                    range: 11
+
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
@@ -346,6 +376,13 @@ runconfig:
                     range: 2000.0
                     # Lookup table Azimuth spacing in s
                     azimuth: 1.0
+                
+                # Extra margin added to the Doppler LUT
+                margin_in_pixels:
+                    # Extra margin added to lookup table in azimuth, in pixels.
+                    azimuth: 11
+                    # Extra margin added to lookup table in range, in pixels.
+                    range: 11
 
             # Settings for range compression algorithm.
             rangecomp:
@@ -422,6 +459,20 @@ runconfig:
             # If true, fill transmit gaps with zeros to remove loop-back
             # cal pulses.
             zero_fill_gaps: True
+
+            valid_data_mask:
+                # Length in meters to divide the valid data polygon into before
+                # rasterization.  Ideally smaller than any changes in the
+                # location of the swath due to range timing updates.
+                polygon_segment_length: 50.0
+
+                # Number of pulses to ignore when calculating the valid data
+                # region at the end of a fixed-PRF observation.  This is
+                # relevant when a fixed-PRF observation is immediately followed
+                # by a dithered observation, as the dithered pulses in the air
+                # will overlap the last few receive windows of the fixed-PRF
+                # one.
+                num_ignore: 25
 
             caltone:
                 # If "azimuth_mean", subtract the azimuth mean from the raw
