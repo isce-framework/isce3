@@ -73,12 +73,6 @@ void _clip_min_max(std::complex<T>& radar_value, float clip_min, float clip_max)
     */
     using T_real = typename isce3::real<T>::type;
 
-    // no data (complex)
-    if (std::abs(radar_value) == 0) {
-        radar_value *= std::numeric_limits<T_real>::quiet_NaN();
-        return;
-    }
-
     // clip min (complex)
     if (!std::isnan(clip_min) && std::abs(radar_value) < clip_min)
         // update magnitude without changing the phase
@@ -375,20 +369,20 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
     if (input_raster.dtype() == GDT_Float32 ||
             (input_raster.dtype() == GDT_CFloat32 && flag_complex_to_real))
         _applyRtc<float>(input_raster, *rtc_raster, output_raster,
-                rtc_min_value_db, abs_cal_factor, clip_min, clip_max, info,
+                rtc_min_value, abs_cal_factor, clip_min, clip_max, info,
                 flag_complex_to_real);
     else if (input_raster.dtype() == GDT_Float64 ||
              (input_raster.dtype() == GDT_CFloat64 && flag_complex_to_real))
         _applyRtc<double>(input_raster, *rtc_raster, output_raster,
-                rtc_min_value_db, abs_cal_factor, clip_min, clip_max, info,
+                rtc_min_value, abs_cal_factor, clip_min, clip_max, info,
                 flag_complex_to_real);
     else if (input_raster.dtype() == GDT_CFloat32)
         _applyRtc<std::complex<float>>(input_raster, *rtc_raster, output_raster,
-                rtc_min_value_db, abs_cal_factor, clip_min, clip_max, info,
+                rtc_min_value, abs_cal_factor, clip_min, clip_max, info,
                 flag_complex_to_real);
     else if (input_raster.dtype() == GDT_CFloat64)
         _applyRtc<std::complex<double>>(input_raster, *rtc_raster,
-                output_raster, rtc_min_value_db, abs_cal_factor, clip_min,
+                output_raster, rtc_min_value, abs_cal_factor, clip_min,
                 clip_max, info, flag_complex_to_real);
     else {
         std::string error_message =

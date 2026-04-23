@@ -387,14 +387,14 @@ class FaradayRotAngleSlc(ABC):
 
         # get range bins per block and the number of blocks of sr
         n_rgb_blk = round(sr_blk_size / self._rdr_grid.range_pixel_spacing)
-        n_blks_sr = int(np.ceil(np.diff(rgb_limit) / n_rgb_blk))
+        n_blks_sr = int(np.ceil(np.diff(rgb_limit).item() / n_rgb_blk))
 
         self.logger.info(f'Full block size in slant range -> {n_rgb_blk}')
         self.logger.info(f'Total number of range blocks -> {n_blks_sr}')
 
         # get azimuth bins per block and the number of blocks of azt
         n_azb_blk = round(azt_blk_size * self._rdr_grid.prf)
-        n_blks_azt = int(np.ceil(np.diff(azb_limit) / n_azb_blk))
+        n_blks_azt = int(np.ceil(np.diff(azb_limit).item() / n_azb_blk))
 
         self.logger.info(f'Full block size in AZ time -> {n_azb_blk}')
         self.logger.info(f'Total number of AZ blocks -> {n_blks_azt}')

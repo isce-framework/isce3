@@ -315,11 +315,13 @@ class TxBMF(ElevationBeamformer):
         # check the pulse_time to be within time tag of TxTRM
         if (pulse_time[0] < self._tm_first_trm or
                 pulse_time[-1] > self._tm_last_trm):
-            raise ValueError("Requested time interval "
+            raise ValueError(
+                "Requested time interval "
                 f"[{pulse_time[0]}, {pulse_time[-1]}] (s) is not fully "
                 "contained within expected TxTrmInfo time interval "
                 f"[{self.trm_info.time[0]}, {self.trm_info.time[-1]}] (s) "
-                f"relative to {str(self.orbit.reference_epoch)}")
+                f"relative to {str(self.orbit.reference_epoch)}"
+            )
 
         # get total number of TX channels
         _, num_chanl = self.trm_info.correlator_tap2.shape
@@ -380,9 +382,11 @@ class TxBMF(ElevationBeamformer):
                 # Old method: compute monotonically increasing elevation angles
                 # at each successive slant range bin
 
-                # Compute the respective slant range for beamformed antenna pattern
+                # Compute the respective slant range for beamformed
+                # antenna pattern.
                 # Simply calculate slant range for every few pulses where
-                # S/C pos/vel and DEM barely changes. This speeds up the process!
+                # S/C pos/vel and DEM barely changes. This speeds up
+                # the process!
                 if (pp % self.num_pulse_skip == 0):
                     sr_ant = self._elaz2slantrange(tm)
 
@@ -580,11 +584,13 @@ class RxDBF(ElevationBeamformer):
         # check the pulse_time to be within time tag of RxTRM
         if (pulse_time[0] < self._tm_first_trm or
                 pulse_time[-1] > self._tm_last_trm):
-            raise ValueError("Requested time interval "
+            raise ValueError(
+                "Requested time interval "
                 f"[{pulse_time[0]}, {pulse_time[-1]}] (s) is not fully "
                 "contained within expected RxTrmInfo time interval "
                 f"[{self.trm_info.time[0]}, {self.trm_info.time[-1]}] (s) "
-                f"relative to {str(self.orbit.reference_epoch)}")
+                f"relative to {str(self.orbit.reference_epoch)}"
+            )
 
         # EL-cut pattern with shape active beams by EL angles
         ant_pat_el = self.el_ant_info.copol_pattern[self.active_channel_idx]
@@ -609,16 +615,27 @@ class RxDBF(ElevationBeamformer):
         # if provided
         if channel_adj_factors is not None:
             # check the size of correction factor container
-            if len(channel_adj_factors) != num_chanl:
-                raise ValueError('Size of RX "channel adjustment factor" '
-                                 f'must be {num_chanl}')
-            # check if the correction factor is zero for all active channels
-            cor_fact = np.asarray(channel_adj_factors)[self.active_channel_idx]
-            if np.isclose(abs(cor_fact).max(), 0):
-                raise ValueError('"channel_adj_factors" are zeros for all '
-                                 'active RX channels!')
-            rx_wgt *= cor_fact[:, None]
-
+            if len(channel_adj_factors) == num_chanl:
+                # check if the correction factor is zero for all
+                # active channels
+                cor_fact = np.asarray(channel_adj_factors)[
+                    self.active_channel_idx]
+                if np.isclose(abs(cor_fact).max(), 0):
+                    raise ValueError('"channel_adj_factors" are zeros for all '
+                                     'active RX channels!')
+                rx_wgt *= cor_fact[:, None]
+            elif len(channel_adj_factors) == 1:  # fixed scalar
+                if np.isclose(channel_adj_factors[0], 0):
+                    raise ValueError(
+                        '"channel_adj_factors" is a zero-value scalar for all'
+                        'active RX channels!'
+                    )
+                rx_wgt *= channel_adj_factors[0]
+            else:  # neither 1 (scalar) nor `num_chanl`
+                raise ValueError(
+                    'Size of RX "channel adjustment factor" must be either '
+                    f'{num_chanl} or 1 but got {len(channel_adj_factors)}!'
+                )
         # initialize the RX DBF pattern
         rx_pat = np.zeros((len(pulse_time), slant_range.size), dtype='complex')
         num_active_chanl = len(self.active_channel_idx)
@@ -779,7 +796,7 @@ def compute_transmit_pattern_weights(tx_trm_info, norm=False):
         warnings.warn(
             'HPA Cal contains some zero values. These will be replaced with'
             ' the nearest non-zero values.', category=BadHPACalWarning
-            )
+        )
         # replace zero values with nearest non-zero ones
         for n in range(active_tx_idx.size):
             mask_zr = np.isclose(hcal_abs[:, n], 0)
@@ -789,7 +806,7 @@ def compute_transmit_pattern_weights(tx_trm_info, norm=False):
                 f_nearest = interp1d(
                     i_hpa_nz, tx_weights[i_hpa_nz, n], kind='nearest',
                     fill_value='extrapolate', assume_sorted=True
-                    )
+                )
                 tx_weights[i_hpa_z, n] = f_nearest(i_hpa_z)
 
     # If BCAL exists compute ratio HCAL/(BCAL/BCAL[0])
@@ -975,8 +992,8 @@ def get_pulse_index(pulse_times, t, nearest=False, eps=5e-10):
     eps : float
         Tolerance for snapping time tags, e.g., when
             `abs(pulse_times[i] - t) <= eps`
-        then return `i`.  This accommodates floating point precision issues like
-        `n * pri != n / prf`.
+        then return `i`.  This accommodates floating point precision
+        issues like `n * pri != n / prf`.
 
     Returns
     -------

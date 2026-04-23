@@ -25,7 +25,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 CornerReflectorIterable = Union[
-    Iterable[isce3.cal.TriangularTrihedralCornerReflector],
+    Iterable[isce3.cal.TrihedralCornerReflector],
     Iterable[nisar.cal.CornerReflector],
 ]
 
@@ -68,7 +68,7 @@ def estimate_abscal_factor(
     ----------
     corner_reflectors : iterable
         Iterable of corner reflectors in the scene. The elements may be instances of
-        `isce3.cal.TriangularTrihedralCornerReflector` or `nisar.cal.CornerReflector`.
+        `isce3.cal.TrihedralCornerReflector` or `nisar.cal.CornerReflector`.
         In the latter case, additional information about the survey date and plate
         motion velocity of each corner reflector is populated in the output.
     rslc : nisar.products.readers.SLC
@@ -248,9 +248,9 @@ def estimate_abscal_factor(
     # Estimate the absolute calibration error (the ratio of the measured RCS to the
     # predicted RCS) for a single corner reflector.
     def estimate_abscal_error(
-        cr: isce3.cal.TriangularTrihedralCornerReflector,
+        cr: isce3.cal.TrihedralCornerReflector,
     ) -> float:
-        predicted_rcs = isce3.cal.predict_triangular_trihedral_cr_rcs(
+        predicted_rcs = isce3.cal.predict_trihedral_cr_rcs(
             cr=cr,
             orbit=orbit,
             doppler=native_doppler,
