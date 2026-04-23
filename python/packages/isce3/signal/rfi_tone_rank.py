@@ -48,7 +48,39 @@ def get_spectral_mask(
     return mask, isr, λ
 
 
-def fill_missing(z, fd, t, mask_replace, mask_valid, noise):
+def fill_missing(z, fd, t, mask_replace, mask_valid, noise, interpolate=True,
+                 fill_value="noise"):
+    """
+    Fill missing/RFI-contaminated samples in spectral domain data.
+
+    Parameters
+    ----------
+    z : np.ndarray
+        Complex spectral data to fill, shape (m, n)
+    fd : float
+        Doppler centroid frequency in Hz
+    t : np.ndarray
+        Pulse times in seconds since epoch, length m
+    mask_replace : np.ndarray
+        Boolean mask marking samples to replace, shape (m, n)
+    mask_valid : np.ndarray
+        Boolean mask marking valid subswath samples, shape (m, n)
+    noise : np.ndarray
+        Random noise samples in 1D array for fallback replacement.  Values may
+        be used multiple times if length is less numpy.prod((m, n)).
+    interpolate : bool, optional
+        If True, attempt linear/nearest-neighbor interpolation. If False,
+        replace directly with fill_value. Default is True.
+    fill_value : str, optional
+        Fallback strategy when interpolation fails or is disabled.
+        "noise": use provided noise vector (default)
+        "zero": use zero
+
+    Returns
+    -------
+    zout : np.ndarray
+        Filled data, same shape as z
+    """
     m, n = z.shape
     if len(t) != m:
         raise ValueError(f"expected len(t)=={m} got {len(t)}")
@@ -65,44 +97,51 @@ def fill_missing(z, fd, t, mask_replace, mask_valid, noise):
     mask_valid_clean = mask_valid & ~mask_replace
 
     for i in range(m):
-        # Previous and next pulse, with reflection boundary condition.
-        iprev, inext = i - 1, i + 1
-        if i == 0:
-            iprev = i + 1
-        if i == m - 1:
-            inext = i - 1
-
-        # Non-uniform time sampling, so let's weight closer samples more.
-        # NOTE abs() since we might've reflected.
-        dt_prev = abs(t[i] - t[iprev])
-        dt_next = abs(t[inext] - t[i])
-        w_prev = dt_next / (dt_prev + dt_next)
-        w_next = dt_prev / (dt_prev + dt_next)
-
         # copy for modification
         cols_need_replacement = mask_replace[i, :].copy()
 
-        # Four cases for replacement:
-        # 1. prev and next both valid -> lerp between them
-        j = np.where(mask_valid_clean[iprev, :] & mask_valid_clean[inext, :]
-            & cols_need_replacement)[0]
-        zout[i, j] = w_prev * zout[iprev, j] + w_next * zout[inext, j]
-        cols_need_replacement[j] = False
+        if interpolate:
+            # Previous and next pulse, with reflection boundary condition.
+            iprev, inext = i - 1, i + 1
+            if i == 0:
+                iprev = i + 1
+            if i == m - 1:
+                inext = i - 1
 
-        # 2. only prev valid. use it
-        j = np.where(mask_valid_clean[iprev, :] & cols_need_replacement)[0]
-        zout[i, j] = zout[iprev, j]
-        cols_need_replacement[j] = False
+            # Non-uniform time sampling, so let's weight closer samples more.
+            # NOTE abs() since we might've reflected.
+            dt_prev = abs(t[i] - t[iprev])
+            dt_next = abs(t[inext] - t[i])
+            w_prev = dt_next / (dt_prev + dt_next)
+            w_next = dt_prev / (dt_prev + dt_next)
 
-        # 3. only next valid. use it
-        j = np.where(mask_valid_clean[inext, :] & cols_need_replacement)[0]
-        zout[i, j] = zout[inext, j]
-        cols_need_replacement[j] = False
+            # Four cases for replacement:
+            # 1. prev and next both valid -> lerp between them
+            j = np.where(mask_valid_clean[iprev, :] & mask_valid_clean[inext, :]
+                & cols_need_replacement)[0]
+            zout[i, j] = w_prev * zout[iprev, j] + w_next * zout[inext, j]
+            cols_need_replacement[j] = False
 
-        # 4. prev and next both invalid -> fill noise
+            # 2. only prev valid. use it
+            j = np.where(mask_valid_clean[iprev, :] & cols_need_replacement)[0]
+            zout[i, j] = zout[iprev, j]
+            cols_need_replacement[j] = False
+
+            # 3. only next valid. use it
+            j = np.where(mask_valid_clean[inext, :] & cols_need_replacement)[0]
+            zout[i, j] = zout[inext, j]
+            cols_need_replacement[j] = False
+
+        # 4. Fallback for remaining samples (or all if not interpolating)
         j = np.where(cols_need_replacement)[0]
-        noise_idx = ((i * n) + j) % len(noise)
-        zout[i, j] = noise[noise_idx]
+        if len(j) > 0:
+            if fill_value == "zero":
+                zout[i, j] = 0.0
+            elif fill_value == "noise":
+                noise_idx = ((i * n) + j) % len(noise)
+                zout[i, j] = noise[noise_idx]
+            else:
+                raise ValueError(f"Invalid fill_value: {fill_value}")
 
     # Put Doppler back on.
     zout *= deramp[:, None].conj()
@@ -125,6 +164,8 @@ def remove_loud_tones(
     bandwidth=5 / 6,
     detect_only=False,
     zout=None,
+    interpolate=True,
+    fill_value="noise",
 ):
     """
     t : np.ndarray [float64]
@@ -137,6 +178,13 @@ def remove_loud_tones(
         the [start, stop) indices of the sub-swath.
     doppler : isce3.core.LUT2d [double]
         Raw data Doppler look up table.  Must be valid over entire grid.
+    interpolate : bool, optional
+        If True, attempt linear/nearest-neighbor interpolation for RFI samples.
+        If False, replace directly with fill_value. Default is True.
+    fill_value : str, optional
+        Fallback value when interpolation fails or is disabled.
+        "noise": use random Gaussian noise (default)
+        "zero": use zero
     """
     # Check inputs
     if not (z.ndim == len(block_dims) == 2):
@@ -222,7 +270,7 @@ def remove_loud_tones(
                 mask_valid_blk = np.zeros((nb, block_dims[1]), bool)
                 mask_valid_blk[:, :nw] = mask_valid[:nb, cols]
                 spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, block_times,
-                    mask_replace, mask_valid_blk, noise)
+                    mask_replace, mask_valid_blk, noise, interpolate, fill_value)
             hits[iblock, j, :] = fftshift(np.sum(mask_replace, axis=0))
         # skip inverse FFTs and assignment if not required.
         if not detect_only:

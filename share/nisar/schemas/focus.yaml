@@ -510,6 +510,14 @@ tone_rank_options:
     block_dims: list(int(min=1), min=2, max=2, required=False)
     nominal_false_positive_rate: num(min=0.0, max=1.0, required=False)
     reference_quantile: num(min=0.0, max=1.0, required=False)
+    # Whether to attempt linear/nearest-neighbor interpolation for RFI samples.
+    # If False, RFI samples are replaced directly with fill_value.
+    interpolate: bool(required=False)
+    # How to generate fallback values for RFI samples when
+    # interpolation fails or is disabled.
+    # "noise": use random Gaussian noise matched to estimated signal level
+    # "zero": fill with zeros
+    fill_value: enum('noise', 'zero', required=False)
 
 qa_options:
   # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)

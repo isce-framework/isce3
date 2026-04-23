@@ -321,6 +321,16 @@ runconfig:
                     block_dims: [512, 1024]
                     nominal_false_positive_rate: 0.0005
                     reference_quantile: 0.5
+                    # Whether to attempt linear/nearest-neighbor interpolation
+                    # for RFI samples.  If False, RFI samples are replaced
+                    # directly with fill_value.
+                    interpolate: True
+                    # How to generate fallback values for RFI samples when
+                    # interpolation fails or is disabled.
+                    # "noise": use random Gaussian noise matched to estimated
+                    # signal level
+                    # "zero": fill with zeros
+                    fill_value: noise
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:
