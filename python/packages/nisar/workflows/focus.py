@@ -1188,7 +1188,7 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
     elif opt.mitigation_algorithm.lower() == "tone-rank":
         if t is None or r is None or swaths is None or doppler is None:
             raise ValueError("tone-rank algorithm requires t, r, swaths, and doppler parameters")
-        isr, freq, hits = isce3.signal.rfi_tone_rank.remove_loud_tones(
+        means, isr, freq, hits = isce3.signal.rfi_tone_rank.remove_loud_tones(
             raw_data,
             t, r, swaths, doppler,
             detect_only=not opt.mitigation_enabled,

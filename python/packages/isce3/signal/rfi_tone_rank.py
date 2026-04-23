@@ -1,3 +1,4 @@
+import h5py
 import logging
 import numpy as np
 from scipy.fft import fft, ifft, fftfreq, fftshift
@@ -245,23 +246,74 @@ def remove_loud_tones(
     fill_value="noise",
 ):
     """
-    t : np.ndarray [float64]
-        Pulse times (seconds since orbit/grid epoch).
+    Detect and optionally mitigate narrowband RFI using spectral rank method.
+
+    Processes raw data in overlapping blocks using a Short-Time Fourier Transform
+    (STFT) approach. RFI is detected in the spectral domain using a lifted
+    exponential statistical model. Detected RFI samples are replaced using
+    temporal interpolation or fill values.
+
+    Parameters
+    ----------
+    z : np.ndarray[complex64]
+        Raw data, shape (num_pulses, num_range_bins).
+    t : np.ndarray[float64]
+        Pulse times in seconds since orbit/grid epoch, length num_pulses.
     r : isce3.core.Linspace
-        Range to each sample (meters).
-    swaths : np.ndarray [int]
-        Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
-        sub-swaths, nt is the number of pulses, and the trailing dimension is
-        the [start, stop) indices of the sub-swath.
-    doppler : isce3.core.LUT2d [double]
-        Raw data Doppler look up table.  Must be valid over entire grid.
+        Slant range to each sample in meters.
+    swaths : np.ndarray[int]
+        Valid subswath samples, shape (num_subswaths, num_pulses, 2).
+        Last dimension contains [start, stop) indices of each subswath.
+    doppler : isce3.core.LUT2d
+        Raw data Doppler centroid look-up table in Hz. Must be valid over
+        entire grid.
+    block_dims : tuple[int, int], optional
+        Processing block size (azimuth, range). Default is (512, 1024).
+    reference_quantile : float, optional
+        Quantile used to estimate the rate parameter of the lifted exponential
+        distribution, in [1-bandwidth, 1). Default is 0.5 (median).
+    nominal_false_positive_rate : float, optional
+        Target false positive rate for RFI detection, in (0, 1].
+    bandwidth : float, optional
+        Ratio of chirp bandwidth to sample rate, in (0, 1].
+    detect_only : bool, optional
+        If True, only detect RFI without mitigation. If False, replace
+        detected RFI samples.
+    zout : np.ndarray[complex64], optional
+        Output buffer for mitigated data. Must have same shape as z.
+        If None, z is modified in-place.
     interpolate : bool, optional
         If True, attempt linear/nearest-neighbor interpolation for RFI samples.
-        If False, replace directly with fill_value. Default is True.
+        If False, replace directly with fill_value.
     fill_value : str, optional
         Fallback value when interpolation fails or is disabled.
         "noise": use random Gaussian noise (default)
         "zero": use zero
+
+    Returns
+    -------
+    means : np.ndarray[float]
+        Estimated mean signal power per block from lifted exponential model,
+        shape (num_az_blocks, num_range_blocks). Equal to 1/λ where λ is the
+        rate parameter.
+    isr : np.ndarray[float]
+        Interference-to-signal ratio per block,
+        shape (num_az_blocks, num_range_blocks).
+    f : np.ndarray[float]
+        Normalized frequency axis for hits array, length block_dims[1].
+        Units are cycles per sample.
+    hits : np.ndarray[uint32]
+        Count of detected RFI samples at each frequency bin,
+        shape (num_az_blocks, num_range_blocks, block_dims[1]).
+
+    Notes
+    -----
+    The algorithm processes data in overlapping blocks using COLA (Constant
+    Overlap-Add) windowing in range. Each block is transformed to the spectral
+    domain where RFI tones appear as anomalously loud samples. Detection uses
+    the lifted exponential model (see get_spectral_mask). When mitigation is
+    enabled, detected samples are replaced using temporal interpolation from
+    adjacent clean pulses, with fallback to random noise or zeros.
     """
     # Check inputs
     if not (z.ndim == len(block_dims) == 2):
@@ -298,6 +350,7 @@ def remove_loud_tones(
     f = fftshift(fftfreq(block_dims[1]))
     meta_shape = (num_az_blocks, num_range_blocks)
     isr = np.zeros(meta_shape)
+    means = np.zeros(meta_shape)
     hits = np.zeros(meta_shape + (block_dims[1],), dtype=np.uint32)
 
     block_ranges = np.zeros(num_range_blocks)
@@ -349,6 +402,7 @@ def remove_loud_tones(
                 spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, block_times,
                     mask_replace, mask_valid_blk, noise, interpolate, fill_value)
             hits[iblock, j, :] = fftshift(np.sum(mask_replace, axis=0))
+            means[iblock, j] = 1 / λ
         # skip inverse FFTs and assignment if not required.
         if not detect_only:
             # range inverse STFT
@@ -359,4 +413,4 @@ def remove_loud_tones(
                 nw = len(window)
                 zout[rows, cols] += z_block[:nb, j, :nw]
 
-    return isr, f, hits
+    return means, isr, f, hits
