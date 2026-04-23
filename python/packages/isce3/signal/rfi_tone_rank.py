@@ -308,9 +308,10 @@ def remove_loud_tones(
     isr : np.ndarray[float]
         Interference-to-signal ratio per block,
         shape (num_az_blocks, num_range_blocks).
-    hits : np.ndarray[uint32]
-        Count of detected RFI samples at each frequency bin,
+    hits : np.ndarray[float]
+        Fraction of pulses with detected RFI at each frequency bin,
         shape (num_az_blocks, num_range_blocks, block_dims[1]).
+        Values range from 0 (no RFI detected) to 1 (RFI detected in all pulses).
 
     Notes
     -----
@@ -409,7 +410,7 @@ def remove_loud_tones(
                 mask_valid_blk[:, :nw] = mask_valid[:nb, cols]
                 spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, pulse_times,
                     mask_replace, mask_valid_blk, noise, interpolate, fill_value)
-            hits[iblock, j, :] = fftshift(np.sum(mask_replace, axis=0))
+            hits[iblock, j, :] = fftshift(np.mean(mask_replace, axis=0))
             means[iblock, j] = 1 / λ
         # skip inverse FFTs and assignment if not required.
         if not detect_only:
