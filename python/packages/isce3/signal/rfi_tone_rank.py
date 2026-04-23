@@ -60,6 +60,47 @@ def get_spectral_mask(
     nominal_false_positive_rate=0.0005,
     bandwidth=5 / 6,
 ):
+    """
+    Detect RFI in spectral domain data using lifted exponential model.
+
+    Uses a statistical model to identify spectral samples that are anomalously
+    loud compared to the expected distribution of the signal. The method assumes
+    that the power spectrum follows a lifted exponential distribution and uses
+    a quantile of the data to estimate the distribution parameters.
+
+    Parameters
+    ----------
+    spectra : np.ndarray
+        Complex spectral data, arbitrary shape.
+    reference_quantile : float, optional
+        Quantile (in [1-bandwidth, 1)) used to estimate the rate parameter
+        of the lifted exponential distribution. Default is 0.5 (median).
+    nominal_false_positive_rate : float, optional
+        Target false positive rate for RFI detection, in (0, 1).
+        Lower values result in more conservative detection (fewer false alarms
+        but potentially missed RFI).
+    bandwidth : float, optional
+        Fraction of samples in (0, 1] assumed to follow the exponential
+        distribution (as opposed to being noise, filter roll-off, etc).
+
+    Returns
+    -------
+    mask : np.ndarray[bool]
+        Boolean mask marking detected RFI samples, same shape as spectra.
+        True indicates RFI detection (sample exceeds threshold).
+    isr : float
+        Interference-to-signal ratio: ratio of total power in detected RFI
+        samples to total power in clean samples.
+    λ : float
+        Estimated rate parameter of the lifted exponential distribution.
+
+    Notes
+    -----
+    The detection threshold is determined by inverting the cumulative
+    distribution function of the lifted exponential model at the desired
+    false positive rate. See exp_from_quantile for details on the
+    statistical model.
+    """
     n = np.prod(spectra.shape)
     power_spectra = abs2(spectra)
     power_spectra.shape = (n,)
