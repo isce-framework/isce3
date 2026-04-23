@@ -7,6 +7,42 @@ log = logging.getLogger("isce3.signal.rfi")
 
 
 def exp_from_quantile(p, vp, bw=1.0):
+    """
+    Determine the rate parameter of the lifted exponential distribution from a
+    quantile and its corresponding value.
+
+    Parameters
+    ----------
+    p : float | np.ndarray
+        Percentile in [1-bw, 1).  For example, 0.5 for the median.
+    vp : float | np.ndarray
+        Value corresponding to the given percentile.  For example, the median
+        value.
+    bw : float, optional
+        The portion of the distribution governed by an exponential distribution.
+        See notes below.  Values in interval (0, 1].
+
+    Returns
+    -------
+    λ : float | np.ndarray
+        The rate parameter of the lifted expononential distribution.
+
+    Notes
+    -----
+    The definition of the "lifted" exponential distribution is as follows:
+        cdf(x) = (1 - bw) * u(x - x0) + bw * (1 - exp(-λ * x))
+    where u(x) is the unit step function, x0 is some small value (e.g., the
+    noise floor), and other parameters are as described above.
+
+    The idea here is that spectral power in the chirp band should follow an
+    exponential distribution, while the values outside the chirp band will be
+    smaller and follow some other distribution whose shape we don't care about
+    and just model with a step function.
+
+    The formula is the same to solve for a value given the rate parameter.
+    That is, you can also use this function to solve
+        vp = exp_from_quantile(p, λ, bw)
+    """
     p = np.asarray(p)
     if not np.all(p >= (1.0 - bw)):
         raise ValueError("invalid quantile for lifted exponential")
