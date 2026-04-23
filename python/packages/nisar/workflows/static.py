@@ -33,7 +33,7 @@ from nisar.static.water_mask import binarize_and_reproject_water_mask
 
 import isce3
 from isce3.geometry import make_geo_grid_bounding_polygon, load_dem_from_proj
-from isce3.core import normalize_look_side
+from isce3.core import normalize_look_side, normalize_data_interp_method
 import numpy as np
 
 
