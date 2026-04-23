@@ -1,7 +1,7 @@
 # Use pinned oraclelinux:8 image
 ARG repository=cae-artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/iems/sds/infrastructure/base/jplsds-oraclelinux
-ARG tag=8.10.250401
-ARG digest=sha256:e37c210f26cfe7660808e536937fcf6ac359b3ec5713211e46519d7a35973a57
+ARG tag=8.10.260301
+ARG digest=sha256:50cb5083eebf9a03c1f8328949df748e8b2b906750a488b16b111ca638a1b543
 FROM ${repository}:${tag}@${digest}
 
 # install latest miniforge

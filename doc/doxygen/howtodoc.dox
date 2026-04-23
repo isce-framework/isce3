@@ -1,4 +1,4 @@
-/*! \page howtodoc How to document code in ISCE as a developer?
+/*! \page howtodoc How to document code in ISCE3 as a developer?
 
 \tableofcontents
 
@@ -115,7 +115,7 @@ Doxygen interprets CUDA code in the same manner as C/C++. Use the same style gui
 
 \section docpy Python Documentation
 
-Developers are expected to document their functions using <a href="http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html">Google Style docstrings</a>. ISCE uses sphinx with the autodoc, autosummary and napoleon extensions. We will base our examples on the code from pyEllipsoid.pyx file in the extensions folder of the source tree. 
+Developers are expected to document their functions using <a href="http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html">Google Style docstrings</a>. ISCE3 uses sphinx with the autodoc, autosummary and napoleon extensions. We will base our examples on the code from pyEllipsoid.pyx file in the extensions folder of the source tree.
 
 
 \subsection docpyfunc Functions

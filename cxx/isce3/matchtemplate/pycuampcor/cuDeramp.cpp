@@ -23,40 +23,51 @@
 
 namespace isce3::matchtemplate::pycuampcor {
 
-// kernel for cuDerampMethod1
-static void cuDerampMethod1_kernel(float2 *images, const int imageNX, int const imageNY,
-    const int imageSize, const int nImages, const float normCoef)
+// kernel for linear deramping
+static void cuLinearDeramp_kernel(float2 *images, const int imageNX, const int imageNY,
+    const int imageSize, const int nImages, const float normCoef, const int axis)
 {
     for (int k = 0; k < nImages; k++) {
 
         float2* image = images + k * imageSize;
 
-        double2 phaseDiffY = make_double2(0.0, 0.0);
-        for (int j = 0; j < imageNX; j++) {
-            for (int i = 0; i < imageNY - 1; i++) {
-                const int pixelIdx = j * imageNY + i;
-                float2 cprod = complexMulConj(image[pixelIdx], image[pixelIdx+1]);
-                phaseDiffY += cprod;
+        double phaseY = 0.0;
+        if(axis != 0)
+        {
+            double2 phaseDiffY = make_double2(0.0, 0.0);
+            for (int j = 0; j < imageNX; j++) {
+                for (int i = 0; i < imageNY - 1; i++) {
+                    const int pixelIdx = j * imageNY + i;
+                    float2 cprod = complexMulConj(image[pixelIdx], image[pixelIdx+1]);
+                    phaseDiffY += cprod;
+                }
             }
+            phaseY = atan2(phaseDiffY.y, phaseDiffY.x);
         }
 
-        double2 phaseDiffX = make_double2(0.0, 0.0);
-        for (int j = 0; j < imageNX - 1; j++) {
-            for (int i = 0; i < imageNY; i++) {
-                const int pixelIdx = j * imageNY + i;
-                float2 cprod = complexMulConj(image[pixelIdx], image[pixelIdx+imageNY]);
-                phaseDiffX += cprod;
+        double phaseX = 0.0;
+        if(axis != 1)
+        {
+            double2 phaseDiffX = make_double2(0.0, 0.0);
+            for (int j = 0; j < imageNX - 1; j++) {
+                for (int i = 0; i < imageNY; i++) {
+                    const int pixelIdx = j * imageNY + i;
+                    float2 cprod = complexMulConj(image[pixelIdx], image[pixelIdx+imageNY]);
+                    phaseDiffX += cprod;
+                }
             }
+            phaseX = atan2(phaseDiffX.y, phaseDiffX.x);
         }
-        float phaseX = atan2f(phaseDiffX.y, phaseDiffX.x);
-        float phaseY = atan2f(phaseDiffY.y, phaseDiffY.x);
 
         for (int i = 0; i < imageSize; i++) {
-            const int pixelIdxX = i%imageNY;
-            const int pixelIdxY = i/imageNY;
-            float phase = pixelIdxX*phaseX + pixelIdxY*phaseY;
-            float2 phase_factor = make_float2(cosf(phase), sinf(phase));
-            image[i] *= phase_factor;
+            const int pixelIdxX = i / imageNY;
+            const int pixelIdxY = i % imageNY;
+            double phase = pixelIdxX*phaseX + pixelIdxY*phaseY;
+            double phase_cos = cos(phase);
+            double phase_sin = sin(phase);
+            image[i] = make_float2(
+                image[i].x*phase_cos - image[i].y*phase_sin,
+                image[i].x*phase_sin + image[i].y*phase_cos);
         }
     }
 }
@@ -67,20 +78,20 @@ static void cuDerampMethod1_kernel(float2 *images, const int imageNX, int const 
  *   and the average phase shift is obtained as atan(\sum imag / \sum real).
  * @param[inout] images input/output complex signals
  */
-void cuDerampMethod1(cuArrays<float2> *images)
+void cuLinearDeramp(cuArrays<float2> *images, const int axis)
 {
     const int imageSize = images->width*images->height;
     const float invSize = 1.0f/imageSize;
 
-    cuDerampMethod1_kernel(images->devData, images->height, images->width,
-        imageSize, images->count, invSize);
+    cuLinearDeramp_kernel(images->devData, images->height, images->width,
+        imageSize, images->count, invSize, axis);
 }
 
-void cuDeramp(int method, cuArrays<float2> *images)
+void cuDeramp(const int method, cuArrays<float2> *images, const int axis)
 {
     switch(method) {
     case 1:
-        cuDerampMethod1(images);
+        cuLinearDeramp(images, axis);
         break;
     default:
         break;

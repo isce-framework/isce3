@@ -45,6 +45,7 @@ class TestGenDopplerRangeProduct:
         plot=True, out_path='.', orbit_file=None,
         attitude_file=None, exclude_beams=None,
         time_start=0, time_dur_max=None,
+        duration_dc_remove_az=0.5,
         antenna_file=os.path.join(iscetest.data, ant_alos1))
 
     # set input arguments for DBF NISAR case
@@ -55,6 +56,7 @@ class TestGenDopplerRangeProduct:
         subband=False, polyfit=True, polyfit_deg=3, plot=False,
         out_path='.', exclude_beams=None,
         time_start=0.0, time_dur_max=None,
+        duration_dc_remove_az=0.5,
         orbit_file=os.path.join(iscetest.data, sub_dir, orb_nisar),
         attitude_file=os.path.join(iscetest.data, sub_dir, att_nisar),
         antenna_file=os.path.join(iscetest.data, sub_dir, ant_nisar))
@@ -67,6 +69,7 @@ class TestGenDopplerRangeProduct:
         subband=False, polyfit=True, polyfit_deg=3, exclude_beams=[3],
         plot=False, out_path='.', orbit_file=None, attitude_file=None,
         time_start=0.0, time_dur_max=None,
+        duration_dc_remove_az=0.5,
         antenna_file=os.path.join(iscetest.data, subdir_dm2, ant_dm2),
         dem_file=os.path.join(iscetest.data, subdir_dm2, dem_dm2))
 
@@ -90,6 +93,11 @@ class TestGenDopplerRangeProduct:
         self.args_nisar.time_start = 0.1
         self.args_nisar.time_interval = 0.2
         self.args_nisar.time_dur_max = 1.3
+        gen_doppler_range_product(self.args_nisar)
+
+    def test_no_az_dc_removal(self):
+        # use NISAR DBF set for this test
+        self.args_nisar.duration_dc_remove_az = None
         gen_doppler_range_product(self.args_nisar)
 
     def test_dm2_dem_ant(self):

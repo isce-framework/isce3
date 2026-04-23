@@ -62,12 +62,13 @@ def run_freq_notch(
     raw_data: np.ndarray,
     num_pulses_az,
     *,
-    num_rng_blks: int = 1,
+    num_samples_rng_blk: int = 1000,
     az_winsize: int = 256,
     rng_winsize: int = 100,
     trim_frac: float = 0.01,
     pvalue_threshold: float = 0.005,
     cdf_threshold: float = 0.1,
+    use_entire_pulse: bool = False,
     nb_detect: bool = True,
     wb_detect: bool = True,
     mitigate_enable=False,
@@ -85,10 +86,14 @@ def run_freq_notch(
         Number of azimuth pulses within the raw data to be processed at once
         It is desirable to divide the raw data into processing blocks
         consisted of dimensions [num_pulses_az x num_samples_rng_blk]
-    num_rng_blks: int, default=1
-        Number of blocks in the range dimension, default=1
-        When num_rng_blks=1, all the range samples of the pulses within a 
-        processing block are used to estimate detection mask.
+    num_samples_rng_blk: int, default=256
+        Number of range samples per range block when data blockin is applied 
+        in range direction. This parameter needs to be greater than or equal
+        to rng_winsize.
+    use_entire_pulse: bool
+        Ignore any value passed for num_samples_rng_blk and instead Use all samples 
+        in the slow-time pulses for detection if this is True
+        default = False
     az_winsize: int, default=256
         The size (in number of pulses) of moving average Azimuth window 
         in which the averaged range spectrum is computed for narrowband detector.
@@ -149,7 +154,25 @@ def run_freq_notch(
             )
 
     num_pulses, num_rng_samples = raw_data.shape
-    num_samples_rng_blk = num_rng_samples // num_rng_blks
+
+    # Override num_rng_samples parameter if use_entire_pulse is True
+    if use_entire_pulse:
+        num_samples_rng_blk = num_rng_samples
+
+    num_rng_blks = num_rng_samples // num_samples_rng_blk
+
+    # Verify data blocking dimensions
+    if num_samples_rng_blk < rng_winsize:
+        raise ValueError(
+            f'Number of range samples per block {num_samples_rng_blk} is less than'
+            f'range window size {rng_winsize}'
+        )
+
+    if num_pulses_az < az_winsize:
+        raise ValueError(
+            f'Number of pulses per block {num_pulses_az} is less than'
+            f'azimuth window size {az_winsize}'
+        )
 
     # Count the total number of detected RFI frequency bins
     rfi_pulse_count_sum = 0

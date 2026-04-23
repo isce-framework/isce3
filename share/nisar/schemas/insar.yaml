@@ -192,6 +192,8 @@ phase_unwrap_options:
 
     preprocess_wrapped_phase: include('preprocess_wrapped_phase_options', required=False)
 
+    bridge: include('bridge_options', required=False)
+
 icu_options:
     correlation_threshold_increments: num(min=0, max=1, required=False)
     seed: int(min=0, required=False)
@@ -242,7 +244,7 @@ preprocess_wrapped_phase_options:
     distance_interpolator: include('distance_interp_options', required=False)
 
 unwrap_mask_options:
-    mask_type: enum('median_filter', 'coherence', 'water', required=False)
+    mask_type: enum('median_filter', 'coherence', 'water', 'subswath_mask', required=False)
     mask_path: str(required=False)
     ocean_water_buffer: int(min=0, max=100, required=False)
     inland_water_buffer: int(min=0, max=100, required=False)
@@ -251,6 +253,20 @@ unwrap_mask_options:
 
 distance_interp_options:
     distance: int(required=False)
+
+bridge_options:
+    enabled: bool(required=False)
+    # Maximum radius used when bridging disconnected regions.
+    bridge_radius: num(min=1, required=False)
+    # Size of the structuring element used for erosion during bridge labeling.
+    bridge_erosion_size: num(min=1, required=False)
+    # Minimum number of pixel of connected components to retain during bridge algorithm.
+    bridge_minimum_samples: num(min=0, required=False)
+    # Ramp type to correct before bridge algoritm
+    bridge_ramp_type: enum('None', 'linear', 'quadratic', 'linear_range', 'linear_azimuth', 'quadratic_range', 'quadratic_azimuth', required=False)
+    # During deramping, uniform sampling is applied
+    # when number of samples is larger than maximum pixel
+    bridge_ramp_maximum_pixel: num(min=0, required=False)
 
 coarse_resample_options:
     # Path to coarse/fine offset directory
@@ -329,8 +345,11 @@ dense_offsets_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-    deramping_method: enum('magnitude', 'complex', required=False)
+    # Deramp data prior to FFT: 'magnitude' , 'complex' (linear phase ramp), or 'complex_no_deramp'
+    deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
+
+    # Deramp data axis prior to FFT: range, azimuth, or both
+    deramping_axis: enum('range', 'azimuth', 'both', required=False)
 
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
@@ -409,8 +428,11 @@ offsets_product_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-    deramping_method: enum('magnitude', 'complex', required=False)
+    # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
+    deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
+
+    # Deramp data axis prior to FFT: range, azimuth, or both
+    deramping_axis: enum('range', 'azimuth', 'both', required=False)
 
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
@@ -465,10 +487,10 @@ offset_layer_options:
     window_azimuth: int(min=16, max=512, required=False)
 
     # Number of columns for search chip/template in secondary image
-    half_search_range: int(min=4, max=32, required=False)
+    half_search_range: int(min=4, max=64, required=False)
 
     # Number of lines for search chip/template in secondary image
-    half_search_azimuth: int(min=4, max=32, required=False)
+    half_search_azimuth: int(min=4, max=64, required=False)
 
 rubbersheet_options:
     # Path to dense offsets outputs (offsets, snr, covariance).
@@ -526,7 +548,17 @@ rubbersheet_options:
 
     # Interpolation method. Interpolation is used to fill residual
     # outlier holes (if present)
-    interpolation_method: enum('no_interpolation', 'nearest', 'linear', 'cubic', required=False)
+    interpolation_method: enum('no_interpolation', 'nearest', 'linear', 'cubic', 'idw', required=False)
+
+    # Aggressive azimuth offset filter applied right after outlier detection to suppress
+    # offset jumps caused by defocus from ionospheric disturbances.
+    azimuth_offset_filter: include('azimuth_offset_filter_options', required=False)
+
+    # Inverse distance weighting (IDW) interpolation method
+    idw_interpolation: include('idw_interpolation_options', required=False)
+
+    # Flag to enable the use of the subswath mask for the outlier detection
+    subswath_mask_apply_enabled: bool(required=False)
 
     # It is good practice to filter the offsets prior to interferogram
     # formation to reduce noise. We expose: no_filter: do not filter the offsets/
@@ -536,6 +568,7 @@ rubbersheet_options:
     median: include('offset_filter_options', required=False)
     boxcar: include('offset_filter_options', required=False)
     gaussian: include('gaussian_filter_options', required=False)
+    polyfitting: include('polyfitting_options', required=False)
 
 fill_smoothed_options:
     # Number of fill smoothed iterations
@@ -560,6 +593,37 @@ gaussian_filter_options:
     filter_size_azimuth: int(min=1, required=False)
     # Number of columns for 1D gaussian kernel
     filter_size_range: int(min=1, required=False)
+
+polyfitting_options:
+    enabled: bool(required=False)
+    # The degrees for the polyfitting
+    degree: num(min=1, required=False)
+    # Critical value for the w-test to remove the outliers
+    critical_value: num(min=0, required=False)
+    # Number of samples along the range in pixels for polyfitting
+    samples_along_range: num(min=0, required=False)
+    # Number of samples  along the azimuth in pixels for polyfitting
+    samples_along_azimuth: num(min=0, required=False)
+
+# Additional azimuth offset filtering applied after outlier detection
+# to suppress offset jumps caused by ionospheric disturbances,
+# decorrelation, or processing artifacts
+azimuth_offset_filter_options:
+    # Spatial filter type: 'none' (disabled), 'median', or 'mean'
+    offsets_filter: enum('none', 'median', 'mean', required=False)
+    # Kernel size in pixels for the spatial filter
+    kernel_size: int(min=3, required=False)
+
+idw_interpolation_options:
+    # Power parameter controlling the distance weighting;
+    # If the power is 0, then it is equally weighted
+    power: int(min=0, required=False)
+    # Number of nearest neighbors used for interpolation
+    number: int(min=1, required=False)
+    # Maximum search radius in pixels;
+    # If unspecified, all valid pixels are used,
+    # which can significantly increase runtime and is not recommended
+    radius: num(min=1, required=False)
 
 crossmul_options:
     # Path to HDF5 file or directory with coregistered SLCs
@@ -725,7 +789,7 @@ dispersive_filter_options:
     #   When multiple validation sources are enabled, take the intersection of
     #   their invalid masks to form a combined mask.
     #   Masked areas are then filled using spatial interpolation.
-    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', required=False)
+    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', 'subswath_mask', required=False)
     # Median filter size for mask generation
     median_filter_size: num(min=1, required=False)
     # Median filter threshold for mask generation
@@ -738,6 +802,24 @@ dispersive_filter_options:
     # distance : distance‑based interpolator that assigns weights to samples
     #            inversely proportional to their spatial distance.
     filling_method: enum('nearest', 'smoothed', 'distance', 'None', required=False)
+    # Method used to build the smooth guide image for outlier detection
+    # and gap filling. {'median_gaussian', 'gaussian', 'none'}, optional
+    filling_guide_filter_method: enum('median_gaussian', 'gaussian', 'none', required=False)
+    # Window size of the NaN-aware median filter used when
+    # `guide_filter_method='median_gaussian'`
+    filling_guide_median_size: num(min=1, required=False)
+    # Threshold multiplier for robust outlier detection. Pixels are marked
+    # as outliers when
+    #       abs(residual - median(residual)) >
+    #           outlier_threshold * robust_scale
+    # where `robust_scale = max(1.4826 * MAD, outlier_min_scale)`.
+    filling_outlier_threshold: num(min=1, required=False)
+    # Lower bound for the robust scale used in outlier detection.
+    # This prevents the threshold from becoming too small in very
+    # clean regions,
+    filling_outlier_min_scale: num(min=0, required=False)
+    filling_outlier_mad_scale_factor: num(min=0, required=False)
+
     # 1D gaussian kernel size [pixels] in range/ azimuth
     kernel_range: num(min=1, required=False)
     kernel_azimuth: num(min=1, required=False)
@@ -1099,6 +1181,9 @@ posting_options:
     y_posting: num(min=0, required=False)
 
 worker_options:
+    # Enable/disable the intermediate files removal
+    intermediate_files_removal_enabled: bool(required=False)
+
     # Enable/disable internet connection (e.g. for download DEM)
     internet_access: bool(required=False)
 

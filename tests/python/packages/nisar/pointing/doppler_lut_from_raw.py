@@ -229,7 +229,8 @@ class TestDopplerLutFromRaw:
         # estimate Doppler LUT
         dop_lut, _, _, _, _, _, dop_flt_coef = doppler_lut_from_raw(
             self.raw_obj, az_block_dur=self.az_block_dur,
-            time_interval=self.time_interval, subband=True)
+            time_interval=self.time_interval, subband=True,
+            duration_dc_remove_az=None)
         # validate Doppler LUT axes, shape, statistics
         self._validate_doppler_lut(dop_lut, num_rgb_avg=8,
                                    err_msg=' in joint time-frequency approach')
@@ -243,7 +244,8 @@ class TestDopplerLutFromRaw:
         # estimate Doppler LUTf
         dop_lut, _, _, _, _, _, _ = doppler_lut_from_raw(
             self.raw_obj, az_block_dur=self.az_block_dur,
-            time_interval=self.time_interval, polyfit=True)
+            time_interval=self.time_interval, polyfit=True,
+            duration_dc_remove_az=0.7)
         # validate Doppler LUT axes, shape, statistics
         self._validate_doppler_lut(
             dop_lut, num_rgb_avg=8,
