@@ -236,6 +236,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             orbit_pass_direction=orbit_pass_direction,
             x_posting=abs(geo_grid.spacing_x),
             y_posting=abs(geo_grid.spacing_y),
+            epsg_code=geo_grid_params["epsg"],
             validity_start_datetime=validity_start_datetime,
             composite_release_id=primary_executable_params["composite_release_id"],
             processing_center=primary_executable_params["processing_center"],
