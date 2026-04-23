@@ -32,7 +32,7 @@ from nisar.static.util import get_raster_dataset_metadata_item, \
 from nisar.static.water_mask import binarize_and_reproject_water_mask
 
 import isce3
-from isce3.geometry import make_geo_grid_bounding_polygon
+from isce3.geometry import make_geo_grid_bounding_polygon, load_dem_from_proj
 from isce3.core import normalize_look_side
 import numpy as np
 
@@ -71,13 +71,25 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
 
     # Construct a DEM interpolator.
     dem_interp_method = processing_params["dem"]["interp_method"]
-    dem = isce3.geometry.DEMInterpolator(dem_raster)
-    dem.interp_method = dem_interp_method
 
     # Construct the output geocoded coordinate grid.
     geo_grid_params = processing_params["geo_grid"]
     geo_grid = get_output_geo_grid(dem_raster=dem_raster, **geo_grid_params)
     logger.info(f"Output geo grid: {geo_grid}")
+
+    proj = isce3.core.make_projection(geo_grid.epsg)
+
+    # dem = isce3.geometry.DEMInterpolator(dem_raster)
+    # dem.interp_method = dem_interp_method
+    dem_interp = load_dem_from_proj(
+        dem_raster,
+        geo_grid.start_x,
+        geo_grid.end_x,
+        geo_grid.end_y,
+        geo_grid.start_y,
+        normalize_data_interp_method(dem_interp_method),
+        proj,
+    )
 
     # Parse the orbit and attitude data from the input XML files. Crop the
     # data to the time interval of interest to avoid possible geo2rdr
@@ -169,7 +181,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         az_spacing_inferred, rg_spacing_inferred = \
             isce3.geometry.infer_radar_grid_spacing_from_geo_grid(
                 geo_grid=geo_grid,
-                dem=dem,
+                dem=dem_interp,
                 orbit=orbit,
                 doppler=img_grid_doppler,
                 look_side=look_side,
@@ -243,7 +255,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         radar_grid=radar_grid,
         orbit=orbit,
         attitude=attitude,
-        dem=dem,
+        dem=dem_interp,
         **processing_params["doppler"],
     )
 
@@ -415,7 +427,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             identification_group = \
                 instrument_group.create_group("identification")
             bounding_polygon = make_geo_grid_bounding_polygon(geo_grid,
-                                                              dem=dem)
+                                                              dem=dem_interp)
             populate_identification_group(
                 identification_group=identification_group,
                 product_spec=product_spec,
