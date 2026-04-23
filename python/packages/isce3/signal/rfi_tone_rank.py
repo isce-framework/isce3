@@ -292,6 +292,15 @@ def remove_loud_tones(
 
     Returns
     -------
+    block_times : np.ndarray[float]
+        Azimuth time at center of each azimuth block in seconds since epoch,
+        length num_az_blocks.
+    block_ranges : np.ndarray[float]
+        Slant range at center of each range block in meters,
+        length num_range_blocks.
+    f : np.ndarray[float]
+        Normalized frequency axis for hits array, length block_dims[1].
+        Units are cycles per sample.
     means : np.ndarray[float]
         Estimated mean signal power per block from lifted exponential model,
         shape (num_az_blocks, num_range_blocks). Equal to 1/λ where λ is the
@@ -299,9 +308,6 @@ def remove_loud_tones(
     isr : np.ndarray[float]
         Interference-to-signal ratio per block,
         shape (num_az_blocks, num_range_blocks).
-    f : np.ndarray[float]
-        Normalized frequency axis for hits array, length block_dims[1].
-        Units are cycles per sample.
     hits : np.ndarray[uint32]
         Count of detected RFI samples at each frequency bin,
         shape (num_az_blocks, num_range_blocks, block_dims[1]).
@@ -353,8 +359,10 @@ def remove_loud_tones(
     means = np.zeros(meta_shape)
     hits = np.zeros(meta_shape + (block_dims[1],), dtype=np.uint32)
 
+    block_times = np.zeros(num_az_blocks)
     block_ranges = np.zeros(num_range_blocks)
     for j, (cols, _) in enumerate(slices_windows):
+        # TODO could weight by window
         block_ranges[j] = r[(cols.start + cols.stop) // 2]
 
     for iblock, block_start in enumerate(range(0, z.shape[0], block_dims[0])):
@@ -364,8 +372,8 @@ def remove_loud_tones(
         block_end = block_start + nb
         rows = slice(block_start, block_end)
         # calculate azimuth time of block
-        block_time_mid = t[block_start + nb // 2]
-        block_times = t[rows]
+        block_times[iblock] = t[block_start + nb // 2]
+        pulse_times = t[rows]
         # populate valid data mask
         mask_valid[...] = False
         for i, i_pulse in enumerate(range(block_start, block_end)):
@@ -394,12 +402,12 @@ def remove_loud_tones(
                 num_noise = min(np.sum(mask_replace),
                     z_block.shape[1] * 991 // 97)
                 noise = circular_gaussian_noise(num_noise, σ)
-                fd = doppler.eval(block_time_mid, block_ranges[j])
+                fd = doppler.eval(block_times[iblock], block_ranges[j])
                 cols, window = slices_windows[j]
                 nw = len(window)
                 mask_valid_blk = np.zeros((nb, block_dims[1]), bool)
                 mask_valid_blk[:, :nw] = mask_valid[:nb, cols]
-                spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, block_times,
+                spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, pulse_times,
                     mask_replace, mask_valid_blk, noise, interpolate, fill_value)
             hits[iblock, j, :] = fftshift(np.sum(mask_replace, axis=0))
             means[iblock, j] = 1 / λ
@@ -413,4 +421,4 @@ def remove_loud_tones(
                 nw = len(window)
                 zout[rows, cols] += z_block[:nb, j, :nw]
 
-    return means, isr, f, hits
+    return block_times, block_ranges, f, means, isr, hits
