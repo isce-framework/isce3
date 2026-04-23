@@ -94,6 +94,8 @@ radar_grid_options:
   bounding_box: include('radar_grid_bounding_box_options', required=False)
 
 radar_grid_spacing_options:
+  az_spacing: num(min=0.0, required=False)
+  rg_spacing: num(min=0.0, required=False)
   pts_per_side: int(min=2, required=False)
 
 radar_grid_bounding_box_options:
