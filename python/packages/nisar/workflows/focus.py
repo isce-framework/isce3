@@ -1195,7 +1195,7 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             zout=raw_data_mitigated,
             **struct2dict(opt.tone_rank),
         )
-        rfi_likelihood = np.sum(isr)
+        rfi_likelihood = np.max(isr)
     else:
         raise NotImplementedError(f"{opt.mitigation_algorithm} RFI algorithm "
             "is not supported")
