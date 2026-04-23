@@ -7,7 +7,6 @@ import os
 from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
-from xmlrpc.client import DateTime
 
 import h5py
 import nisar
@@ -34,7 +33,6 @@ from nisar.static.water_mask import binarize_and_reproject_water_mask
 import isce3
 from isce3.geometry import make_geo_grid_bounding_polygon, load_dem_from_proj
 from isce3.core import normalize_look_side, normalize_data_interp_method
-import numpy as np
 
 
 def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
