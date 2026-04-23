@@ -6,6 +6,7 @@ import numpy as np
 from isce3.signal.compute_evd_cpi import slice_gen
 from isce3.signal.rfi_detection_evd import rfi_detect, ThresholdParams
 from isce3.signal.rfi_mitigation_evd import rfi_mitigate_tb
+import warnings
 
 def run_slow_time_evd(
     raw_data: np.ndarray,
@@ -15,11 +16,16 @@ def run_slow_time_evd(
     num_max_trim=0,
     num_min_trim=0,
     max_num_rfi_ev=2,
-    num_samples_rng_blk=256,
+    num_samples_rng_blk=250,
     use_entire_pulse=False,
     threshold_params: ThresholdParams = ThresholdParams(),
     num_cpi_tb=20,
+    off_diag_overlap_ratio=0.25,
+    diag_valid_ratio=0.20,
     mitigate_enable=False,
+    min_rank_frac=0.70,
+    rx_dynamic_range_db=50.0,
+    swaths=None,
     raw_data_mitigated=None,
 ):
 
@@ -67,8 +73,27 @@ def run_slow_time_evd(
         from the mean of MMES.
     num_cpi_tb: int, default=20
         Number of slow-time CPIs in a TB
+    off_diag_overlap_ratio : float, optional, default = 0.25
+        Minimum overlap ratio used by gap exclusion covariance estimation
+    diag_valid_ratio : float, optional, default = 0.20
+        Minimum fraction of valid samples required to compute a diagonal term in the
+        sample covariance matrix entry R_ii.
     mitigate_enable: bool, default=False
         Enable mitigation
+    min_rank_frac: float, default = 0.7
+        This fraction will be used to determine the minimum number of valid Eigenvalues
+        required for a CPI. min_ev_valid_idx = int(np.floor(min_rank_frac * cpi_len))
+        Must be a value within (0,1]
+    rx_dynamic_range_db: float, optional, default = 50 dB
+        radar platform receiver dynamic range in dB. This is applied as a threshold
+        to determine if the Eigenvalue under test is meaningfully signficant. If the
+        Eigenvalue under test is less than this threshold, it will be viewed as unusable.
+    swaths : np.ndarray [int], optional
+        Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
+        sub-swaths, nt is the number of pulses, and the trailing dimension is
+        the [start, stop) indices of the sub-swath.  It's recommended to supply
+        this for modes with dithered PRI, where it will be used to normalize
+        the sample covariance matrix.
     raw_data_mitigated: array-like complex [num_pulses x num_rng_samples] or None, optional
         output array in which the mitigated data values is placed. It
         must be an array-like object supporting `multidimensional array access
@@ -124,6 +149,12 @@ def run_slow_time_evd(
                 " as the input data"
             )
 
+    # Verify min_rank_frac
+    if not (0.0 < min_rank_frac <= 1.0):
+        raise ValueError(
+            f"min_rank_frac must be in (0, 1], got {min_rank_frac}."
+        )
+
     # Collect total number of CPI range blocks contaminated by RFI
     rfi_cpi_count_sum = 0
 
@@ -139,23 +170,57 @@ def run_slow_time_evd(
             "Max number of deg. of freedom must be less than number of pulses in a CPI."
         )
 
+    # Verify mask_valid: check to see if it is None or populated.
+    if (swaths is not None) and (swaths.shape[1] != raw_data.shape[0]):
+        raise ValueError("Require same number of rows in swaths and raw_data")
+
+    # Determine a valid Eigenvalue index to estimate minimum-Eigenvalue statistics,
+    # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
+    min_ev_valid_idx = max(1, int(np.round(min_rank_frac * cpi_len)) - 1)
+
+    # Maximum number of degrees of freedom must be less than max_deg_freedom
+    if max_deg_freedom >= min_ev_valid_idx:
+        warnings.warn(
+            f"max_deg_freedom ({max_deg_freedom}) >= min_ev_valid_idx ({min_ev_valid_idx})."
+            "This is not recommended since it may lead to insufficient noise subspace.",
+            RuntimeWarning
+        )
+
     # Run RFI Detection and Mitigation
-    for idx_tb, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
-        for idx_rng, tb_fast_time in enumerate(
-            slice_gen(num_rng_samples, num_samples_rng_blk)
+    for _, tb_slow_time in enumerate(slice_gen(num_pulses_proc, num_pulses_tb)):
+        # Get valid data mask for all rows in current block.
+        if swaths is not None:
+            swaths_tb = swaths[:, tb_slow_time, :]
+            mask_valid = np.zeros((swaths_tb.shape[1], raw_data.shape[1]), dtype=bool)
+            for i in range(mask_valid.shape[0]):
+                for start, end in swaths_tb[:, i, :]:
+                    mask_valid[i, start:end] = True
+
+        for _, tb_fast_time in enumerate(
+            slice_gen(num_rng_samples, num_samples_rng_blk, combine_rem=True)
         ):
             raw_tb_blk = raw_data[tb_slow_time, tb_fast_time]
+            mask_valid_tb = None if swaths is None else mask_valid[:, tb_fast_time]
 
-            (rfi_cpi_flag_tb, evec_sort_tb) = rfi_detect(
+            (
+                rfi_cpi_flag_tb, 
+                evec_sort_tb, 
+            ) = rfi_detect(
                 raw_tb_blk,
                 cpi_len,
                 max_deg_freedom,
-                num_max_trim,
-                num_min_trim,
-                max_num_rfi_ev,
-                threshold_params,
+                min_ev_valid_idx,
+                num_max_trim=num_max_trim,
+                num_min_trim=num_min_trim,
+                max_num_rfi_ev=max_num_rfi_ev,
+                off_diag_overlap_ratio=off_diag_overlap_ratio,
+                diag_valid_ratio=diag_valid_ratio,
+                rx_dynamic_range_db=rx_dynamic_range_db,
+                mask_valid=mask_valid_tb,
+                threshold_params=threshold_params,
             )
 
+            # Compute number of CPIs detected with RFI presence
             num_rfi_ev_cpi = np.sum(rfi_cpi_flag_tb, axis=1)
             rfi_cpi_count = np.sum(num_rfi_ev_cpi != 0)
             rfi_cpi_count_sum += rfi_cpi_count

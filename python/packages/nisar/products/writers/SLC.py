@@ -526,6 +526,18 @@ class SLC(h5py.File):
         dset.attrs["units"] = np.bytes_("1")
         return dset
 
+    def create_anomaly_mask(self, frequency="A", **kw) -> h5py.Dataset:
+        log.info("Initializing storage for anomaly mask for "
+            f"frequency={frequency} with HDF5 options={kw}")
+        kw.setdefault("dtype", np.uint8)
+        dset = self.swath(frequency).create_dataset("inputDataExceptionMask",
+            **kw)
+        dset.attrs["description"] = np.bytes_("Bitwise OR of input data "
+            "exception codes for each image pixel (0: no anomaly, 2: NISAR "
+            "LSAR qFSP-H1 sample slip)")
+        dset.attrs["units"] = np.bytes_("1")
+        return dset
+
     def update_swath(self, grid: RadarGridParameters, orbit: Orbit,
                      range_bandwidth: float, frequency: str,
                      azimuth_bandwidth: float, acquired_prf: float,
@@ -687,6 +699,7 @@ class SLC(h5py.File):
                             frequencies: Optional[str] = None,
                             planned_datatake_id: Optional[str] = None,
                             planned_observation_id: Optional[str] = None,
+                            has_input_data_exception: int = None,
                             is_urgent: Optional[bool] = None,
                             is_joint: Optional[bool] = None,
                             product_spec_version: str = "1.4.0",
@@ -715,6 +728,7 @@ class SLC(h5py.File):
             absoluteOrbitNumber
             boundingPolygon
             instrumentName
+            hasInputDataException
             isJointObservation
             isUrgentObservation
             listOfFrequencies
@@ -843,6 +857,14 @@ class SLC(h5py.File):
             d.attrs["description"] = np.bytes_(
                 'Flag indicating if observation is nominal ("False") '
                 'or urgent ("True")')
+
+        if has_input_data_exception is not None:
+            d = g.require_dataset("hasInputDataException", (), np.uint8)
+            d[()] = np.uint8(has_input_data_exception)
+            d.attrs["description"] = np.bytes_("Indication of input data "
+                "exceptions or anomalies present in this granule. Bitwise OR "
+                "of instrument exception codes for all image pixels (0: no "
+                "anomaly, 2: NISAR LSAR qFSP-H1 sample slip)")
 
         d = set_string(g, "productSpecificationVersion", product_spec_version)
         d.attrs["description"] = np.bytes_("Product specification version "

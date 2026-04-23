@@ -316,6 +316,21 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
                     offset_az_culled, offset_rg_culled = identify_outliers(
                         str(dense_offsets_dir),
                         rubbersheet_params, valid_mask)
+
+                    # Apply aggressive azimuth offset filter to suppress the offsets jupmps
+                    # This additional filtering step improves azimuth offset quality by
+                    # applying a mean or median filter in both azimuth and range directions
+                    azimuth_filter_params = rubbersheet_params['azimuth_offset_filter']
+                    azimuth_filter_type = azimuth_filter_params.get('offsets_filter')
+                    if azimuth_filter_type is not None and azimuth_filter_type != 'none':
+                        azimuth_filter_kernel_size = azimuth_filter_params['kernel_size']
+                        offset_az_culled = apply_filter(
+                            offset_az_culled,
+                            azimuth_filter_kernel_size,
+                            filter_type=azimuth_filter_type,
+                            axis='both'
+                        )
+
                     # Fill outliers holes
                     offset_az = fill_outliers_holes(offset_az_culled,
                                                     rubbersheet_params)
@@ -358,7 +373,8 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
                         else:
                             offsets[k] = _interpolate_offsets(offset,
                                                               rubbersheet_params['interpolation_method'])
-                    # If required, filter offsets
+
+                    # # If required, filter offsets
                     offsets[k] = _filter_offsets(offsets[k], rubbersheet_params)
                     # Save offsets on disk for resampling
                     off_type = 'culled_az_offsets' if k == 0 else 'culled_rg_offsets'
@@ -493,6 +509,7 @@ def identify_outliers(offsets_dir, rubbersheet_params, mask = None):
         if mask is not None:
             offset_az[~mask] = np.nan
             offset_rg[~mask] = np.nan
+
         mask_data = compute_mad_mask(offset_az, window_az, window_rg, threshold) | \
                     compute_mad_mask(offset_rg, window_az, window_rg, threshold)
     elif metric == 'covariance':
@@ -739,6 +756,21 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys, mask = Non
         if nan_count_az > 0:
             offset_az_culled, _ = identify_outliers(str(off_product_dir / layer_key),
                                                     rubbersheet_params, mask)
+
+            # Apply aggressive azimuth offset filter to suppress the offsets jupmps
+            # This additional filtering step improves azimuth offset quality by
+            # applying a mean or median filter in both azimuth and range directions
+            azimuth_filter_params = rubbersheet_params['azimuth_offset_filter']
+            azimuth_filter_type = azimuth_filter_params.get('offsets_filter')
+            if azimuth_filter_type is not None and azimuth_filter_type != 'none':
+                azimuth_filter_kernel_size = azimuth_filter_params['kernel_size']
+                offset_az_culled = apply_filter(
+                    offset_az_culled,
+                    azimuth_filter_kernel_size,
+                    filter_type=azimuth_filter_type,
+                    axis='both'
+                )
+
             offset_az = _fill_nan_with_mean(offset_az, offset_az_culled, filter_size)
 
         if nan_count_rg > 0:
@@ -892,6 +924,89 @@ def _interpolate_offsets(offset, interp_method):
         raise ValueError(f"Unsupported interpolation method: '{interp_method}'")
 
     return offset_interp
+
+
+def apply_filter(array, window_size, filter_type='mean', axis='both'):
+    '''
+    Apply mean or median filter along specified axis or both directions.
+    Ignores NaN and Inf values when computing statistics.
+
+    Uses scipy.ndimage.generic_filter for memory-efficient processing
+    that handles NaN values properly without creating large intermediate arrays.
+
+    Parameters
+    ----------
+    array: np.ndarray
+        2D array to filter (shape: azimuth x range)
+    window_size: int or tuple
+        Size of the filtering window.
+        - If int: window size for the specified axis (or both if axis='both')
+        - If tuple: (window_size_azimuth, window_size_range) when axis='both'
+    filter_type: str
+        Type of filter to apply: 'mean' or 'median' (default: 'mean')
+    axis: str
+        Direction to filter: 'azimuth', 'range', or 'both' (default: 'both')
+
+    Returns
+    -------
+    filtered: np.ndarray
+        Filtered array with the same shape as input
+
+    Raises
+    ------
+    ValueError
+        If window_size is invalid, filter_type is not supported, or axis is invalid
+    '''
+    if axis not in ['azimuth', 'range', 'both']:
+        raise ValueError(f"axis must be 'azimuth', 'range', or 'both', got '{axis}'")
+
+    if filter_type not in ['mean', 'median']:
+        raise ValueError(f"filter_type must be 'mean' or 'median', got '{filter_type}'")
+
+    # Parse window sizes
+    if axis == 'both':
+        if isinstance(window_size, tuple):
+            window_size_az, window_size_rg = window_size
+        else:
+            window_size_az = window_size_rg = window_size
+    elif axis == 'azimuth':
+        window_size_az = window_size
+        window_size_rg = 1
+    else:  # range
+        window_size_az = 1
+        window_size_rg = window_size
+
+    # Validate window sizes
+    if window_size_az < 1:
+        raise ValueError(f"window_size_azimuth must be >= 1, got {window_size_az}")
+    if window_size_rg < 1:
+        raise ValueError(f"window_size_range must be >= 1, got {window_size_rg}")
+
+    # Handle trivial case
+    if window_size_az == 1 and window_size_rg == 1:
+        return array.copy()
+
+    # If no valid data, return copy
+    if not np.any(np.isfinite(array)):
+        return array.copy()
+
+    # Replace Inf with NaN for consistent handling
+    array_clean = array.copy()
+    array_clean[~np.isfinite(array_clean)] = np.nan
+
+    # Use numpy's built-in NaN-aware functions
+    filter_func = np.nanmean if filter_type == 'mean' else np.nanmedian
+
+    # Apply generic_filter with appropriate size
+    filtered = ndimage.generic_filter(
+        array_clean,
+        filter_func,
+        size=(window_size_az, window_size_rg),
+        mode='constant',
+        cval=np.nan
+    )
+
+    return filtered
 
 
 def _filter_offsets(offset, rubbersheet_params):

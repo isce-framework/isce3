@@ -6,7 +6,7 @@ import numpy as np
 from isce3.signal.compute_evd_cpi import compute_evd_tb
 from dataclasses import dataclass, field
 from typing import List
-
+import warnings
 
 @dataclass
 class ThresholdParams:
@@ -44,10 +44,16 @@ def rfi_detect(
     raw_data,
     cpi_len,
     max_deg_freedom,
-    num_max_trim,
-    num_min_trim,
-    max_num_rfi_ev,
-    threshold_params,
+    min_ev_valid_idx,
+    *,
+    num_max_trim=0,
+    num_min_trim=0,
+    max_num_rfi_ev=2,
+    off_diag_overlap_ratio=0.25,
+    diag_valid_ratio=0.20,
+    rx_dynamic_range_db=50.0,
+    mask_valid=None,
+    threshold_params: ThresholdParams = ThresholdParams(),
 ):
 
     """This wrapper performs Eigenvalue Decomposition of input raw data as well as 
@@ -62,17 +68,34 @@ def rfi_detect(
     max_deg_freedom: int
         Max number of independent RFI emitters designed to be detected and mitigated.
         This number should be less than cpi_len to avoid unintended removal of signal data.
-    num_max_trim: int, default = 0
+    min_ev_valid_idx: int
+        Eigenvalue index used by threshold estimation to estimate the slow-time minimum
+        Eigenvalue slope. This parameter is also used to validate that the threshold block
+        has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
+    num_max_trim: int, default=0
         Number of large-value outliers to be trimmed in slow-time minimum Eigenvalues.
-    num_min_trim: int, default = 0
+    num_min_trim: int, default=0
         Number of small-value outliers to be trimmed in slow-time minimum Eigenvalues
-    max_num_rfi_ev: int
+    max_num_rfi_ev: int, default=2
         A detection error (miss) happens when a maximum power RFI emitter contaminates 
         multiple consecutive CPIs, resulting in a flat maximum Eigenvalue slope in slow 
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
-    threshold_params: ThresholdParams dataclass object
+    off_diag_overlap_ratio : float, default=0.25
+        Minimum overlap ratio used by gap exclusion covariance estimation
+    diag_valid_ratio : float, default=0.20
+        Minimum fraction of valid samples required to compute a diagonal term in the
+        sample covariance matrix entry R_ii.
+    rx_dynamic_range_db: float, default=50.0
+        Radar platform receiver dynamic range. This is applied as a threshold
+        to determine if the Eigenvalue under test is meaningfully signficant. If the
+        Eigenvalue under test is less than this threshold, it will be viewed as unusable.
+    mask_valid : np.ndarray bool or None, default=None
+        Valid-sample mask with same shape as raw_data If provided, it has the shape of
+        [num_pulses x num_rng_samples]. CPI sample covariance matrix will be normalized
+        differently by excluding the invalid data gaps.
+    threshold_params: ThresholdParams dataclass object, default=ThresholdParams()
         RFI detection threshold interpolation parameters. The x field defines STD
         ratio between maximum and minimum Eigenvalue slopes (MMES) of the
         slow-time threshold interval. The y field defines the number of sigma (STD)
@@ -86,7 +109,6 @@ def rfi_detect(
     eig_vec_sort: 3D array of complex, [num_cpi x cpi_len x cpi_len]
         Sorted column vector Eigenvectors of all CPIs based on indices of sorted Eigenvalues
     """
-
     num_pulses = raw_data.shape[0]
 
     # Verify total number of pulses is greater than number of pulses per CPI
@@ -95,8 +117,31 @@ def rfi_detect(
             "Total number of pulses must be greater or equal to number of pulses per single CPI."
         )
 
-    # Compute EVD of input data
-    eig_val_sort_array, eig_vec_sort_array = compute_evd_tb(raw_data, cpi_len)
+    # Need to validate sample covariance rank
+    (
+        eig_val_sort_array, 
+        eig_vec_sort_array,
+        tb_is_valid,
+    ) = compute_evd_tb(
+        raw_data,
+        cpi_len=cpi_len,
+        mask_valid=mask_valid,
+        off_diag_overlap_ratio=off_diag_overlap_ratio,
+        diag_valid_ratio=diag_valid_ratio,
+        min_ev_valid_idx=min_ev_valid_idx,
+        rx_dynamic_range_db=rx_dynamic_range_db,
+    )
+    # If any CPI within a threshold block is determined to be invalid
+    # Then skip threshold computation for this block by setting rfi_cpi_flag_array
+    # to all zeros
+    if not tb_is_valid:
+        num_cpi = eig_val_sort_array.shape[0]
+        rfi_cpi_flag_array = np.zeros((num_cpi, cpi_len), dtype=np.bool_)
+
+        return (
+            rfi_cpi_flag_array,
+            eig_vec_sort_array,
+        )
 
     # Estimate a single threshold for all CPIs
     detect_threshold = threshold_estimate_evd(
@@ -104,6 +149,7 @@ def rfi_detect(
         num_max_trim,
         num_min_trim,
         max_num_rfi_ev,
+        min_ev_valid_idx,
         threshold_params,
     )
 
@@ -114,12 +160,12 @@ def rfi_detect(
 
     return rfi_cpi_flag_array, eig_vec_sort_array
 
-
 def threshold_estimate_evd(
     eig_val_sort_array,
     num_max_trim=0,
     num_min_trim=0,
     max_num_rfi_ev=2,
+    min_ev_valid_idx=10,
     threshold_params: ThresholdParams = ThresholdParams(),
 ):
     """Perform data-centric thresholding algorithm: "Slow-Time Eigenvalue Slope
@@ -155,6 +201,10 @@ def threshold_estimate_evd(
         time. Hence the standard (STD) deviation of multiple dominant EVs across slow time 
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
+    min_ev_valid_idx: int
+        Eigenvalue index used by threshold estimation to estimate the slow-time minimum
+        Eigenvalue slope. This parameter is also used to validate that the threshold block
+        has enough usable eigenvalues for robust sample covaraince estimation of a CPI.
     threshold_params: ThresholdParams dataclass object, default=ThresholdParams()
         RFI detection threshold interpolation parameters
 
@@ -184,7 +234,9 @@ def threshold_estimate_evd(
     ev_max_std_idx = np.argmax(eval_sort_max_std)
     ev_max_db = eval_sort_max_db[:, ev_max_std_idx]
 
-    ev_min_db = 10 * np.log10(np.abs(eig_val_sort_array[:, -1]))
+    # For Dithered PRF mode, min_ev_valid_idx is selected to avoid zeros in the tail
+    # of the Eigenvalue spectrum due to invalid data gaps for each pulse.
+    ev_min_db = 10 * np.log10(np.abs(eig_val_sort_array[:, min_ev_valid_idx]))
 
     # Remove possible outliers in max and min Eigenvalues without reordering.
     if num_min_trim > 0:
@@ -221,7 +273,7 @@ def threshold_estimate_evd(
 def rfi_detect_evd(
     eig_val_db_slope,
     detect_threshold,
-    max_deg_freedom=12,
+    max_deg_freedom=8,
 ):
     """Perform RFI detection of Eigenvalues within a CPI based on input detection 
     threshold in dB/Eigenvalue index. The threshold is set to be a negative value.  
@@ -257,7 +309,7 @@ def rfi_detect_evd(
 def rfi_detect_evd_tb(
     eig_val_sort_array,
     detect_threshold,
-    max_deg_freedom=12,
+    max_deg_freedom=8,
 ):
     """Wrapper function which performs RFI detection of data within a Threshold Block (TB) 
     one CPI at a time base don input detection threshold in dB/Eigenvalue index. 
@@ -285,8 +337,10 @@ def rfi_detect_evd_tb(
     num_cpi, cpi_len = eig_val_sort_array.shape
 
     # Ensure detection threshold is a positive value
-    if detect_threshold <= 0:
-        raise ValueError("Detection threshold must be a positive value!")
+    if (not np.isfinite(detect_threshold)) or (detect_threshold <= 0):
+        # Add a CPI-Level rank check: detection threshold must be a positive value
+        warnings.warn("Warning: Non-positive detection threshold. Skipping TB detection.")
+        return np.zeros((num_cpi, cpi_len), dtype=np.bool_)
 
     # Maximum number of degrees of freedom must be less than cpi_len
     if max_deg_freedom >= cpi_len:
@@ -302,6 +356,7 @@ def rfi_detect_evd_tb(
     eig_val_db_slope_array = np.diff(eig_val_sort_db_array, axis=1)
 
     for idx_cpi in range(num_cpi):
+        eig_val_db = eig_val_sort_db_array[idx_cpi]
         eig_val_db_slope = eig_val_db_slope_array[idx_cpi]
 
         # Determine starting index of signal EV
