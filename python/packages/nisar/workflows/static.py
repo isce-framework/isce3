@@ -122,6 +122,12 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
 
     pts_per_side = radar_grid_spacing_params["pts_per_side"]
 
+    if az_spacing is not None and not (az_spacing > 0.0):
+        raise ValueError(f"Runconfig {az_spacing=}, must be > 0")
+
+    if rg_spacing is not None and not (rg_spacing > 0.0):
+        raise ValueError(f"Runconfig {rg_spacing=}, must be > 0")
+
     bounding_box_params = radar_grid_params["bounding_box"]
     start_datetime_str = bounding_box_params["start_time"]
     end_datetime_str = bounding_box_params["end_time"]
