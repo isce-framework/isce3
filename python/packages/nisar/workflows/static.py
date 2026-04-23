@@ -86,7 +86,8 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         geo_grid.end_y,
         geo_grid.start_y,
         normalize_data_interp_method(dem_interp_method),
-        proj)
+        proj,
+    )
 
     # Parse the orbit and attitude data from the input XML files. Crop the
     # data to the time interval of interest to avoid possible geo2rdr
