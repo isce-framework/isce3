@@ -106,6 +106,12 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     rg_spacing = radar_grid_spacing_params["rg_spacing"]
     pts_per_side = radar_grid_spacing_params["pts_per_side"]
 
+    if az_spacing is not None and not (az_spacing > 0.0):
+        raise ValueError(f"Runconfig {az_spacing=}, must be > 0")
+
+    if rg_spacing is not None and not (rg_spacing > 0.0):
+        raise ValueError(f"Runconfig {rg_spacing=}, must be > 0")
+
     logger.info("Estimate radar grid spacing")
     if rg_spacing is not None:
         logger.info(f'    range spacing: {rg_spacing}')
