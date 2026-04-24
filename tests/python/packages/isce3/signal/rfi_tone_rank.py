@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 
+from isce3.core import LUT2d
 from isce3.signal.rfi_tone_rank import remove_loud_tones, abs2
 
 
@@ -22,10 +23,20 @@ def test_tone_rank():
     isr_desired = 10.0
     z = signal + interference * isr_desired / isr
 
+    # Fake Doppler and axes. Data are already baseband.
+    t = np.linspace(0, 1, m)
+    r = np.linspace(1, 2, n)
+    doppler = LUT2d(0.0)
+
+    # Don't bother with dithering stuff--say all samples are valid.
+    swaths = np.empty((1, m, 2), int)
+    swaths[...] = (0, n)
+
     block_dims = (256, 512)
     fpr = 0.0005
-    block_isr, freq, block_hits = remove_loud_tones(
-        z, block_dims, nominal_false_positive_rate=fpr, bandwidth=1
+    _, _, freq, _, _, block_hits = remove_loud_tones(
+        z, t, r, swaths, doppler, block_dims,
+        nominal_false_positive_rate=fpr, bandwidth=1
     )
 
     # Check basic bookkeeping.
