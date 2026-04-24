@@ -358,7 +358,7 @@ def remove_loud_tones(
     meta_shape = (num_az_blocks, num_range_blocks)
     isr = np.zeros(meta_shape)
     means = np.zeros(meta_shape)
-    hits = np.zeros(meta_shape + (block_dims[1],), dtype=np.uint32)
+    hits = np.zeros(meta_shape + (block_dims[1],), dtype=np.float32)
 
     block_times = np.zeros(num_az_blocks)
     block_ranges = np.zeros(num_range_blocks)
