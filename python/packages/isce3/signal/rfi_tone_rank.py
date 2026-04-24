@@ -411,7 +411,7 @@ def remove_loud_tones(
                 spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, pulse_times,
                     mask_replace, mask_valid_blk, noise, interpolate, fill_value)
             hits[iblock, j, :] = fftshift(np.mean(mask_replace, axis=0))
-            means[iblock, j] = 1 / λ
+            means[iblock, j] = 1 / λ if λ > 0.0 else 0.0
         # skip inverse FFTs and assignment if not required.
         if not detect_only:
             # range inverse STFT
