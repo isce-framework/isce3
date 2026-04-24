@@ -423,3 +423,38 @@ def remove_loud_tones(
                 zout[rows, cols] += z_block[:nb, j, :nw]
 
     return block_times, block_ranges, f, means, isr, hits
+
+
+def write_tone_rank_results(group: h5py.Group, t, r, freq, means, isr, hits):
+    m, n = means.shape
+    if isr.shape != (m, n):
+        raise ValueError(f"Expected isr.shape={(m,n)} but got {isr.shape}")
+    nf = len(freq)
+    if hits.shape != (m, n, nf):
+        raise ValueError(f"Expected hits.shape={(m,n,nf)} but got {hits.shape}")
+
+    ds_time = group.create_dataset("nativeDopplerTime", data=t.astype("f8"))
+    ds_range = group.create_dataset("slantRange", data=r.astype("f8"))
+    ds_freq = group.create_dataset("frequency", data=freq.astype("f8"))
+
+    ds_mean = group.create_dataset("signalMean", data=means.astype("f4"))
+    ds_hits = group.create_dataset("hitCount", data=hits.astype("f4"))
+    ds_isr = group.create_dataset("interferenceSignalRatio",
+        data=isr.astype("f4"))
+
+    ds_time.attrs["description"] = np.bytes_("Raw data slow-time midpoint of "
+        "each analysis block")
+    ds_time.attrs["units"] = np.bytes_("s")
+    ds_range.attrs["description"] = np.bytes_("Raw data slant range midpoint "
+        "of each analysis block")
+    ds_range.attrs["units"] = np.bytes_("m")
+    ds_freq.attrs["description"] = np.bytes_("Frequency axis for hitCount")
+    ds_freq.attrs["units"] = np.bytes_("Hz")
+
+    ds_mean.attrs["description"] = np.bytes_("Estimated mean signal power per "
+        "block from lifted exponential model.  Expressed in linear power units,"
+        " e.g., DN^2")
+    ds_hits.attrs["description"] = np.bytes_("Interference-to-signal ratio.  "
+        "Expressed in linear power units, e.g., DN^2 / DN^2")
+    ds_isr.attrs["description"] = np.bytes_("Count of detected RFI samples at "
+        "each frequency bin")
