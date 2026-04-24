@@ -426,6 +426,44 @@ def remove_loud_tones(
 
 
 def write_tone_rank_results(group: h5py.Group, t, r, freq, means, isr, hits):
+    """
+    Write tone-rank RFI detection results to HDF5 group.
+
+    Creates datasets for time/range/frequency axes and detection results
+    (signal mean, interference-to-signal ratio, and hit counts) with
+    appropriate metadata attributes.
+
+    Parameters
+    ----------
+    group : h5py.Group
+        HDF5 group to write datasets into.
+    t : np.ndarray[float]
+        Azimuth times at center of each azimuth block in seconds since epoch,
+        length num_az_blocks. Written as "nativeDopplerTime" dataset.
+    r : np.ndarray[float]
+        Slant ranges at center of each range block in meters,
+        length num_range_blocks. Written as "slantRange" dataset.
+    freq : np.ndarray[float]
+        Frequency axis in Hz, length num_freq_bins.
+        Written as "frequency" dataset.
+    means : np.ndarray[float]
+        Estimated mean signal power per block from lifted exponential model,
+        shape (num_az_blocks, num_range_blocks). Written as "signalMean" dataset.
+    isr : np.ndarray[float]
+        Interference-to-signal ratio per block,
+        shape (num_az_blocks, num_range_blocks).
+        Written as "interferenceSignalRatio" dataset.
+    hits : np.ndarray[float]
+        Fraction of pulses with detected RFI at each frequency bin,
+        shape (num_az_blocks, num_range_blocks, num_freq_bins).
+        Written as "hitCount" dataset.
+
+    Notes
+    -----
+    All datasets are created with appropriate units and description attributes.
+    Time/range/frequency axes are stored as float64, while data arrays (means,
+    isr, hits) are stored as float32.
+    """
     m, n = means.shape
     if isr.shape != (m, n):
         raise ValueError(f"Expected isr.shape={(m,n)} but got {isr.shape}")
@@ -454,7 +492,8 @@ def write_tone_rank_results(group: h5py.Group, t, r, freq, means, isr, hits):
     ds_mean.attrs["description"] = np.bytes_("Estimated mean signal power per "
         "block from lifted exponential model.  Expressed in linear power units,"
         " e.g., DN^2")
-    ds_hits.attrs["description"] = np.bytes_("Interference-to-signal ratio.  "
+    ds_hits.attrs["description"] = np.bytes_("Fraction of pulses with detected "
+        "RFI at each frequency bin.  Values range from 0 (no RFI) to 1 (RFI in "
+        "all pulses)")
+    ds_isr.attrs["description"] = np.bytes_("Interference-to-signal ratio.  "
         "Expressed in linear power units, e.g., DN^2 / DN^2")
-    ds_isr.attrs["description"] = np.bytes_("Count of detected RFI samples at "
-        "each frequency bin")
