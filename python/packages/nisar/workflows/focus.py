@@ -1546,7 +1546,7 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
 def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
                            rdr2geo_params=dict(), geo2rdr_params=dict(),
                            ignore_failure=False, polygon_segment_length=50.0,
-                           num_ignore=25):
+                           num_ignore=25, max_observation_gap=800e-6):
     """
     Determine fully-focused regions of the image in a format suitable for
     populating the validSamplesSubSwathX RSLC datasets.
@@ -1589,6 +1589,11 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         observation is immediately followed by a dithered observation, as the
         dithered pulses in the air will overlap the last few receive windows of
         the fixed-PRF one.
+    max_observation_gap : float, optional
+        Max allowed time (in seconds) between the last pulse of one observation
+        and the first pulse of the following observation for the two to be
+        considered seamless.  Larger raw data gaps may result in a synthetic
+        aperture being marked invalid in the RSLC.
 
     Returns
     -------
@@ -1610,6 +1615,22 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         txpol = raw_chan.pol[0]
         T = raw.getChirpParameters(freq, txpol)[3]
         chirp_durations.extend(len(bbox_lists) * [T])
+
+    # Force azimuth continuity since Raw.getSubSwathBboxes only guesses about
+    # last PRI.
+    for i in range(len(raw_bbox_lists) - 1):
+        # Each subswath should have the same start/end time, just different
+        # ranges.
+        t_cur = raw_bbox_lists[i][0].last.time
+        t_next = raw_bbox_lists[i + 1][0].first.time
+        # abs() since difference could be negative if Raw.getSubSwathBboxes
+        # guess for the final PRI is larger than the actual final PRI.
+        dt = abs(t_next - t_cur)
+        if dt <= max_observation_gap:
+            log.info(f"Merging observations separated by {dt * 1e6:.3f} us "
+                f"at {orbit.reference_epoch + TimeDelta(t_cur)}")
+            for bbox in raw_bbox_lists[i]:
+                bbox.last.time = t_next
 
     try:
         swaths = isce3.focus.get_focused_sub_swaths(raw_bbox_lists,
