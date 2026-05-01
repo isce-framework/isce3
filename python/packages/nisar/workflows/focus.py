@@ -1546,7 +1546,7 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
 def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
                            rdr2geo_params=dict(), geo2rdr_params=dict(),
                            ignore_failure=False, polygon_segment_length=50.0,
-                           num_ignore=25, max_observation_gap=800e-6):
+                           num_ignore=25, max_observation_gap=0.002):
     """
     Determine fully-focused regions of the image in a format suitable for
     populating the validSamplesSubSwathX RSLC datasets.
@@ -1626,11 +1626,14 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         # abs() since difference could be negative if Raw.getSubSwathBboxes
         # guess for the final PRI is larger than the actual final PRI.
         dt = abs(t_next - t_cur)
-        if dt <= max_observation_gap:
-            log.info(f"Merging observations separated by {dt * 1e6:.3f} us "
+        if 0 < dt <= max_observation_gap:
+            log.info(f"Merging observations separated by {dt * 1e6:.2f} us "
                 f"at {orbit.reference_epoch + TimeDelta(t_cur)}")
             for bbox in raw_bbox_lists[i]:
                 bbox.last.time = t_next
+        elif dt > 0:
+            log.info(f"Gap between observations {dt:7f} s exceeds threshold "
+                f"for seamless observations ({max_observation_gap} s).")
 
     try:
         swaths = isce3.focus.get_focused_sub_swaths(raw_bbox_lists,
