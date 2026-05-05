@@ -1619,8 +1619,9 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         T = raw.getChirpParameters(freq, txpol)[3]
         chirp_durations.extend(len(bbox_lists) * [T])
 
-    # Force azimuth continuity since Raw.getSubSwathBboxes only guesses about
-    # last PRI.
+    # Force azimuth continuity since Raw.getSubSwathBboxes doesn't know final
+    # PRI so there's a 1-pulse gap between observations.  Note that there
+    # should be no gap between 10-second DWP updates.
     for i in range(len(raw_bbox_lists) - 1):
         # Each subswath should have the same start/end time, just different
         # ranges.
@@ -1630,7 +1631,7 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         if dt <= max_observation_gap:
             log.info(f"Merging observations separated by {dt * 1e6:.2f} us "
                 f"at {orbit.reference_epoch + TimeDelta(t_cur)}")
-            if dt <= 0.0:
+            if dt < 0.0:
                 # The time difference should always be positive since there's at
                 # least one PRI between the end of one observation and the start
                 # of the next one.  However, as of 2026-05-04, L0B time stamps
