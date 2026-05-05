@@ -925,17 +925,6 @@ class RawBase(Base, family='nisar.productreader.raw'):
         is_dithered = self.isDithered(frequency, tx=tx, num_ignore=num_ignore)
         rd, wd, wl = self.getRdWdWl(frequency, polarization)
 
-        # In order to have a shared edge between seamless observation we want
-        # the bbox to end one past the last pulse.  However, for dithered it's
-        # difficult to know exactly what the final PRI is, so just use the
-        # penultimate one.  The code that calculates the valid swath mask
-        # will still have to join edges within some tolerance, but this should
-        # help.
-        if len(times) < 2:
-            raise ValueError("Need at least two pulses for bbox")
-        final_pri = times[-2] - times[-1]
-        times = np.hstack((times, [times[-1] + final_pri]))
-
         # Replace enormous fill values with number of samples.
         subswaths = np.where(subswaths > nr, nr, subswaths)
 
@@ -973,9 +962,8 @@ class RawBase(Base, family='nisar.productreader.raw'):
 
         changes = get_dwp_change_indices(rd, wd, wl)
 
-        # Append first pulse and one-past last pulse to generate pairs of
-        # constant DWP.
-        breaks = np.hstack(([0], changes, [grid.shape[0]]))
+        # Append first and last pulses to generate pairs of constant DWP.
+        breaks = np.hstack(([0], changes, [grid.shape[0] - 1]))
         bbox_lists = []
         for ibreak in range(len(breaks) - 1):
             ipulse0, ipulse1 = breaks[ibreak], breaks[ibreak + 1]
