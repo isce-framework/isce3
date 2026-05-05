@@ -454,6 +454,8 @@ def _run(cfg, raster_scratch_dir):
         'rg_correction': {},
     }
 
+    rslc = SLC(hdf5file=input_hdf5)
+
     for frequency, input_pol_list in freq_pols.items():
 
         # do no processing if no polarizations specified for current frequency
@@ -576,7 +578,7 @@ def _run(cfg, raster_scratch_dir):
             timing_corrections_dict['rg_correction'][frequency] = rg_correction
             optional_geo_kwargs['slant_range_correction'] = rg_correction
 
-        root_ds = f'/science/LSAR/GCOV/grids/frequency{frequency}'
+        root_ds = f'{rslc.RootPath}/GCOV/grids/frequency{frequency}'
 
         optional_geo_kwargs['geogrid_upsampling'] = geogrid_upsampling
         optional_geo_kwargs['abs_cal_factor'] = abs_cal_factor
@@ -630,7 +632,7 @@ def _run(cfg, raster_scratch_dir):
                 length=int(radar_grid_cubes_geogrid.length),
                 epsg=radar_grid_cubes_geogrid.epsg)
 
-            cube_group_name = '/science/LSAR/GCOV/metadata/radarGrid'
+            cube_group_name = f'{rslc.RootPath}/GCOV/metadata/radarGrid'
             native_doppler = slc.getDopplerCentroid()
             '''
             The native-Doppler LUT bounds error is turned off to
