@@ -1602,6 +1602,9 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         where nswath is the number of valid sub-swaths and npulse is the length
         of the focused image grid.
     """
+    # Need raw files sorted in time so we can reason about gaps between them.
+    rawlist = sorted(rawlist, key=lambda raw: raw.identification.zdStartTime)
+
     raw_bbox_lists = []
     chirp_durations = []
     for raw in rawlist:
@@ -1623,16 +1626,26 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         # ranges.
         t_cur = raw_bbox_lists[i][0].last.time
         t_next = raw_bbox_lists[i + 1][0].first.time
-        # abs() since difference could be negative if Raw.getSubSwathBboxes
-        # guess for the final PRI is larger than the actual final PRI.
-        dt = abs(t_next - t_cur)
-        if 0 < dt <= max_observation_gap:
+        dt = t_next - t_cur
+        if dt <= max_observation_gap:
             log.info(f"Merging observations separated by {dt * 1e6:.2f} us "
                 f"at {orbit.reference_epoch + TimeDelta(t_cur)}")
+            if dt <= 0.0:
+                # The time difference should always be positive since there's at
+                # least one PRI between the end of one observation and the start
+                # of the next one.  However, as of 2026-05-04, L0B time stamps
+                # are derived from LRCLK counts using a model that's updated
+                # every downlink pass.  If the observations were downlinked on
+                # separate passes, it's conceivable that time could go backwards
+                # (though this would violate requirements).  If that happens it
+                # seems safe to assume that's a seamless transition, so just log
+                # it and proceed.
+                log.warning("Time decremented between observations.  "
+                    "Assuming seamless transition.")
             for bbox in raw_bbox_lists[i]:
                 bbox.last.time = t_next
-        elif dt > 0:
-            log.info(f"Gap between observations {dt:7f} s exceeds threshold "
+        else:
+            log.warning(f"Gap between observations {dt:7f} s exceeds threshold "
                 f"for seamless observations ({max_observation_gap} s).")
 
     try:
