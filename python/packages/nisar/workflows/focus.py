@@ -1629,9 +1629,10 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         t_next = raw_bbox_lists[i + 1][0].first.time
         dt = t_next - t_cur
         if dt <= max_observation_gap:
-            log.info(f"Merging observations separated by {dt * 1e6:.2f} us "
-                f"at {orbit.reference_epoch + TimeDelta(t_cur)}")
-            if dt < 0.0:
+            if dt > 0.0:
+                log.info(f"Merging observations separated by {dt * 1e6:.2f} us "
+                    f"at {orbit.reference_epoch + TimeDelta(t_cur)}")
+            elif dt < 0.0:
                 # The time difference should always be positive since there's at
                 # least one PRI between the end of one observation and the start
                 # of the next one.  However, as of 2026-05-04, L0B time stamps
