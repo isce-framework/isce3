@@ -303,11 +303,6 @@ def get_bounding_radar_grid(
         Azimuth time spacing of the output grid, in seconds. Must be > 0.
     rg_spacing : float
         Slant range spacing of the output grid, in meters. Must be > 0.
-    sensing_start : float
-        The sensing start time of the input `geo_grid`, in seconds since the epoch of
-        `orbit`.
-    starting_range : float
-        The starting slant range of the input `geo_grid`, in meters.
     orbit : isce3.core.Orbit
         The trajectory of the radar antenna phase center over a time interval that
         includes the observation times of each point in `geo_grid` at each height
