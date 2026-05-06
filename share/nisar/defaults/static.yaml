@@ -250,8 +250,8 @@ runconfig:
           start_time:
 
           # [OPTIONAL] Azimuth ending UTC date and time of the end of the radar
-          # observation, as a string in ISO 8601
-          # format with up to nanosecond precision. Must be >= `start_time`.
+          # observation, as a string in ISO 8601. format with up to nanosecond precision.
+          # Must be >= `start_time`.
           # If not provided, it will be inferred from the specified geographic grid.
           # If provided, must be a valid azimuth time within the observation time
           # interval.
