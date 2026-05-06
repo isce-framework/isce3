@@ -193,11 +193,11 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
                 pts_per_side=pts_per_side
             )
         if rg_spacing is None:
-            rg_spacing = rg_spacing_inferred
             logger.info(f'   inferred range spacing: {rg_spacing}')
+            rg_spacing = rg_spacing_inferred
         if az_spacing is None:
-            az_spacing = az_spacing_inferred
             logger.info(f'   inferred azimuth time interval: {az_spacing}')
+            az_spacing = az_spacing_inferred
 
     if (start_time is not None and start_range is not None and
             end_time is not None and end_range is not None):
