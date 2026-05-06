@@ -154,7 +154,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             end_time = isce3.core.DateTime(end_datetime_str)
 
         if start_range is not None:
-            logger.info(f'    start range: {start_range}')
+            logger.info(f'    start range [m]: {start_range}')
 
         if end_range is not None:
             logger.info(f'    end range: {end_range}')
