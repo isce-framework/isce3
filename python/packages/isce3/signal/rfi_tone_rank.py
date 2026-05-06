@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from scipy.fft import fft, ifft, fftfreq, fftshift
 from . import cola_windows
+from isce3.noise.noise_power_est_func import cpi_slice_gen
 
 log = logging.getLogger("isce3.signal.rfi")
 
@@ -350,7 +351,8 @@ def remove_loud_tones(
 
     slices_windows = list(cola_windows(z.shape[1], block_dims[1]))
     num_range_blocks = len(slices_windows)
-    num_az_blocks = 1 + (z.shape[0] - 1) // block_dims[0]
+    az_blocks = list(cpi_slice_gen(z.shape[0], block_dims[0]))
+    num_az_blocks = len(az_blocks)
     zbshape = (block_dims[0], num_range_blocks, block_dims[1])
     z_block = np.zeros(zbshape, z.dtype)
 
@@ -366,27 +368,20 @@ def remove_loud_tones(
         # TODO could weight by window
         block_ranges[j] = r[(cols.start + cols.stop) // 2]
 
-    for iblock, block_start in enumerate(range(0, z.shape[0], block_dims[0])):
+    for iblock, rows in enumerate(az_blocks):
         block_results = []
-        # last block is smaller
-        nb = min(block_dims[0], z.shape[0] - block_start)
-        block_end = block_start + nb
-        rows = slice(block_start, block_end)
         # calculate azimuth time of block
-        block_times[iblock] = t[block_start + nb // 2]
+        block_times[iblock] = t[rows].mean()
         pulse_times = t[rows]
         # populate valid data mask
         mask_valid[...] = False
-        for i, i_pulse in enumerate(range(block_start, block_end)):
+        for i, i_pulse in enumerate(range(rows.start, rows.stop)):
             for start, end in swaths[:, i_pulse, :]:
                 mask_valid[i, start:end] = True
         # apply window to each range block
         for j, (cols, window) in enumerate(slices_windows):
             nw = len(window)
-            z_block[:nb, j, :nw] = window[None, :] * z[rows, cols]
-        # crop for last azimuth block
-        if nb < block_dims[0]:
-            z_block = z_block[:nb, ...]
+            z_block[:, j, :nw] = window[None, :] * z[rows, cols]
         # Range STFT.  Use consistent FFT size even for edges where window
         # may be shorter so that frequency metadata are consistent.
         spectra = fft(z_block, n=block_dims[1], axis=2)
@@ -406,8 +401,8 @@ def remove_loud_tones(
                 fd = doppler.eval(block_times[iblock], block_ranges[j])
                 cols, window = slices_windows[j]
                 nw = len(window)
-                mask_valid_blk = np.zeros((nb, block_dims[1]), bool)
-                mask_valid_blk[:, :nw] = mask_valid[:nb, cols]
+                mask_valid_blk = np.zeros(block_dims, bool)
+                mask_valid_blk[:, :nw] = mask_valid[:, cols]
                 spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, pulse_times,
                     mask_replace, mask_valid_blk, noise, interpolate, fill_value)
             hits[iblock, j, :] = fftshift(np.mean(mask_replace, axis=0))
@@ -420,7 +415,7 @@ def remove_loud_tones(
             zout[rows, ...] = 0
             for j, (cols, window) in enumerate(slices_windows):
                 nw = len(window)
-                zout[rows, cols] += z_block[:nb, j, :nw]
+                zout[rows, cols] += z_block[:, j, :nw]
 
     return block_times, block_ranges, f, means, isr, hits
 
