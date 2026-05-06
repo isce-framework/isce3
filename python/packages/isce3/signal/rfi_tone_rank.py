@@ -127,7 +127,7 @@ def get_spectral_mask(
     return mask, isr, λ
 
 
-def fill_missing(z, fd, t, mask_replace, mask_valid, noise, interpolate=True,
+def fill_missing(z, fd, t, mask_replace, valid_rows, noise, interpolate=True,
                  fill_value="noise"):
     """
     Fill missing/RFI-contaminated samples in spectral domain data.
@@ -142,8 +142,8 @@ def fill_missing(z, fd, t, mask_replace, mask_valid, noise, interpolate=True,
         Pulse times in seconds since epoch, length m
     mask_replace : np.ndarray
         Boolean mask marking samples to replace, shape (m, n)
-    mask_valid : np.ndarray
-        Boolean mask marking valid subswath samples, shape (m, n)
+    valid_rows : np.ndarray
+        Boolean mask marking valid rows, shape (m,)
     noise : np.ndarray
         Random noise samples in 1D array for fallback replacement.  Values may
         be used multiple times if length is less numpy.prod((m, n)).
@@ -165,8 +165,8 @@ def fill_missing(z, fd, t, mask_replace, mask_valid, noise, interpolate=True,
         raise ValueError(f"expected len(t)=={m} got {len(t)}")
     if mask_replace.shape != (m, n):
         raise ValueError(f"{mask_replace.shape=} does not match {z.shape=}")
-    if mask_valid.shape != (m, n):
-        raise ValueError(f"{mask_valid.shape=} does not match {z.shape=}")
+    if valid_rows.shape != (m,):
+        raise ValueError(f"{valid_rows.shape=} does not match {z.shape[0]=}")
     if interpolate and m < 2:
         log.warning(f"Disabling interpolation for block of {m} rows "
             "because there are no neighbors to use for interpolation.")
@@ -177,7 +177,7 @@ def fill_missing(z, fd, t, mask_replace, mask_valid, noise, interpolate=True,
     zout = deramp[:, None] * z
 
     # Exclude RFI samples from being used as interpolation sources.
-    mask_valid_clean = mask_valid & ~mask_replace
+    mask_valid_clean = valid_rows[:, None] & ~mask_replace
 
     for i in range(m):
         # copy for modification
@@ -249,6 +249,7 @@ def remove_loud_tones(
     zout=None,
     interpolate=True,
     fill_value="noise",
+    max_gap_fraction=0.5,
 ):
     """
     Detect and optionally mitigate narrowband RFI using spectral rank method.
@@ -295,6 +296,10 @@ def remove_loud_tones(
         Fallback value when interpolation fails or is disabled.
         "noise": use random Gaussian noise (default)
         "zero": use zero
+    max_gap_fraction : float, optional
+        Max portion of a row that can be masked by a TX gap before its
+        spectrum is considered invalid (0.0: any gap invalidates row,
+        1.0: ignore gap mask).
 
     Returns
     -------
@@ -406,10 +411,10 @@ def remove_loud_tones(
                 fd = doppler.eval(block_times[iblock], block_ranges[j])
                 cols, window = slices_windows[j]
                 nw = len(window)
-                mask_valid_blk = np.zeros(block_dims, bool)
-                mask_valid_blk[:, :nw] = mask_valid[:, cols]
+                valid_rows = ((~mask_valid[:, cols]).mean(axis=1)
+                    <= max_gap_fraction)
                 spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, pulse_times,
-                    mask_replace, mask_valid_blk, noise, interpolate, fill_value)
+                    mask_replace, valid_rows, noise, interpolate, fill_value)
             hits[iblock, j, :] = fftshift(np.mean(mask_replace, axis=0))
             means[iblock, j] = 1 / λ if λ > 0.0 else 0.0
         # skip inverse FFTs and assignment if not required.
