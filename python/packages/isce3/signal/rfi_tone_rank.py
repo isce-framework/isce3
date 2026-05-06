@@ -137,7 +137,9 @@ def fill_missing(z, fd, t, mask_replace, valid_rows, noise, interpolate=True,
     z : np.ndarray
         Complex spectral data to fill, shape (m, n)
     fd : float
-        Doppler centroid frequency in Hz
+        Doppler centroid frequency in Hz.  It is not scaled for each frequency
+        bin in `z`.  If wideband processing is needed, just baseband `z` before
+        calling this function and set `fd=0`.
     t : np.ndarray
         Pulse times in seconds since epoch, length m
     mask_replace : np.ndarray
