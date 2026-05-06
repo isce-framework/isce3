@@ -167,6 +167,10 @@ def fill_missing(z, fd, t, mask_replace, mask_valid, noise, interpolate=True,
         raise ValueError(f"{mask_replace.shape=} does not match {z.shape=}")
     if mask_valid.shape != (m, n):
         raise ValueError(f"{mask_valid.shape=} does not match {z.shape=}")
+    if interpolate and m < 2:
+        log.warning(f"Disabling interpolation for block of {m} rows "
+            "because there are no neighbors to use for interpolation.")
+        interpolate = False
 
     # Deramp Doppler.
     deramp = np.exp(-1j * 2 * np.pi * fd * t).astype(z.dtype)
