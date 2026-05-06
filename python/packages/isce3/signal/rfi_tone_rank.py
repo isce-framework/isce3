@@ -27,7 +27,7 @@ def exp_from_quantile(p, vp, bw=1.0):
     Returns
     -------
     λ : float | np.ndarray
-        The rate parameter of the lifted expononential distribution.
+        The rate parameter of the lifted exponential distribution.
 
     Notes
     -----
