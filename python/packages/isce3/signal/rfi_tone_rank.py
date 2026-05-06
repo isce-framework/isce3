@@ -282,7 +282,8 @@ def remove_loud_tones(
         detected RFI samples.
     zout : np.ndarray[complex64], optional
         Output buffer for mitigated data. Must have same shape as z.
-        If None, z is modified in-place.
+        If None, z is modified in-place.  In that case some rows will be cleaned
+        twice if block_dims[0] doesn't divide evenly into z.shape[0].
     interpolate : bool, optional
         If True, attempt linear/nearest-neighbor interpolation for RFI samples.
         If False, replace directly with fill_value.
