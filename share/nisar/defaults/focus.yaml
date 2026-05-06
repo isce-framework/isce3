@@ -331,6 +331,10 @@ runconfig:
                     # signal level
                     # "zero": fill with zeros
                     fill_value: noise
+                    # Max portion of a row that can be masked by a TX gap before
+                    # its spectrum is considered invalid (0.0: any gap invalidates
+                    # row, 1.0: ignore gap mask).
+                    max_gap_fraction: 0.5
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:

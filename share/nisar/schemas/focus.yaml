@@ -518,6 +518,10 @@ tone_rank_options:
     # "noise": use random Gaussian noise matched to estimated signal level
     # "zero": fill with zeros
     fill_value: enum('noise', 'zero', required=False)
+    # Max portion of a row that can be masked by a TX gap before
+    # its spectrum is considered invalid (0.0: any gap invalidates row,
+    # 1.0: ignore gap mask).
+    max_gap_fraction: num(min=0.0, max=1.0, required=False)
 
 qa_options:
   # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
