@@ -157,7 +157,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             logger.info(f'    start range [m]: {start_range}')
 
         if end_range is not None:
-            logger.info(f'    end range: {end_range}')
+            logger.info(f'    end range [m]: {end_range}')
 
     if rg_spacing is not None:
         logger.info(f'    range spacing: {rg_spacing}')
