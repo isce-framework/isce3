@@ -1,15 +1,17 @@
 import numpy as np
 import numpy.testing as npt
+import pytest
 
 from isce3.core import LUT2d
 from isce3.signal.rfi_tone_rank import remove_loud_tones, abs2
 
 
-def test_tone_rank():
+@pytest.mark.parametrize("m", [513, 521])
+def test_tone_rank(m):
     # repeatable tests, https://www.youtube.com/watch?v=a6iW-8xPw3k
     np.random.seed(12345)
 
-    m, n = 521, 5557  # primes
+    n = 5557  # prime
     normal = lambda: np.random.normal(size=m * n)
     signal = normal() + 1j * normal()
     signal.shape = (m, n)
