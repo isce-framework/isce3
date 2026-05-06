@@ -45,8 +45,9 @@ def test_tone_rank():
 
     # Make sure we mostly suppressed the correct tone.
     i, j = 0, 10
-    many_hits = block_hits[i, j, :] > 10
+    many_hits = block_hits[i, j, :] > (10 / m)
     suppressed_freqs = freq[many_hits]
+    assert len(suppressed_freqs) > 0
     npt.assert_allclose(suppressed_freqs, f, atol=0.01)
 
     # If the above passes, then the remaining hits are all false positives.
