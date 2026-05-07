@@ -16,13 +16,15 @@ def exp_from_quantile(p, vp, bw=1.0):
     Parameters
     ----------
     p : float | np.ndarray
-        Percentile in [1-bw, 1).  For example, 0.5 for the median.
+        Quantile in [1-bw, 1).  For example, 0.5 for the median.
     vp : float | np.ndarray
-        Value corresponding to the given percentile.  For example, the median
+        Value corresponding to the given quantile.  For example, the median
         value.
     bw : float, optional
         The portion of the distribution governed by an exponential distribution.
-        See notes below.  Values in interval (0, 1].
+        In the context of the tone-rank algorithm, it's the chirp bandwidth
+        normalized by the sample rate.  Values in interval (0, 1].
+        See notes below.
 
     Returns
     -------
