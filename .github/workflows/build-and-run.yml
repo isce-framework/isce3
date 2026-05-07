@@ -79,7 +79,8 @@ jobs:
       - name: Setup Environment
         uses: mamba-org/setup-micromamba@v2
         with:
-          environment-file: ${{ matrix.deps.env-file }}
+          micromamba-version: '1.5.10-0'
+          environment-file: ${{ env.env-file }}
           environment-name: isce3
           create-args: >-
             ${{ matrix.deps.extra-specs }}
