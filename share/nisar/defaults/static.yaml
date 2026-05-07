@@ -225,6 +225,16 @@ runconfig:
         # Defaults to 0.24.
         wavelength: 0.24
         spacing:
+          # [OPTIONAL] Azimuth time interval, in seconds. Equivalent to the Pulse
+          # Repetition Interval (PRI).
+          # If not provided, it will be inferred from the specified geographic
+          # grid. If provided, must be a positive value.
+          az_spacing:
+          # [OPTIONAL] Slant-range spacing, in meters, of the radar grid.
+          # Must be a positive value.
+          # If not provided, it will be inferred from the specified geographic
+          # grid. If provided, must be a positive value.
+          rg_spacing:
           # [OPTIONAL] Side length of the NxN grid of samples used to estimate the
           # required radar grid pixel spacing necessary to avoid undersampling the
           # output geocoded grid.
