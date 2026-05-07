@@ -21,8 +21,7 @@ from nisar.products.readers.Raw import (
     open_rrsd,
     chirpcorrelator_caltype_from_raw,
     is_raw_quad_pol,
-    first_tx_pol_for_quad,
-    opposite_linear_pol
+    first_tx_pol_for_quad
 )
 from nisar.products.readers.rslc_cal import (RslcCalibration,
     parse_rslc_calibration, get_scale_and_delay, check_cal_validity_dates)
@@ -2125,7 +2124,7 @@ def focus(runconfig, runconfig_path=""):
                     'interval. Skip noise estimation and set noise equivalent '
                     'backscatter to zero.')
                 pow_noise = np.zeros_like(sr_noise, dtype='f4')
-            else: # there is at least one noise-only range line
+            else:  # there is at least one noise-only range line
                 nrgl_noise = idx_noise.size
                 log.info(f'Number of noise-only range lines is {nrgl_noise}')
                 # create a dedicated memory map for noise data and processing.
@@ -2134,17 +2133,17 @@ def focus(runconfig, runconfig_path=""):
                 data_noise = np.memmap(
                     fid_noise, mode='w+', shape=(nrgl_noise, rc.output_size),
                     dtype=np.complex64)
-                # Check if raw is quad pol and the TX pol is not the
-                # first TX pol. Then extract noise only range line
-                # from the opposite TX pol w/ the same RX pol.
+                # Check if raw is quad pol and the TX pol is "H".
+                # Then extract noise-only (sniffer) range lines
+                # from the opposite TX pol, "V", w/ the same RX pol.
                 # XXX No RFI/caltone clean up of noise-only range lines
                 # for second TX pol products of quad pol!
                 raw_ns = np.copy(raw_clean[idx_noise])
                 if is_raw_quad_pol(raw):
                     first_tx_pol = first_tx_pol_for_quad(raw)
                     log.info(f'Quad pol w/ first {first_tx_pol} pol!')
-                    if pol[0] != first_tx_pol:
-                        pol_ns = opposite_linear_pol(pol[0]) + pol[1]
+                    if pol[0] == 'H':
+                        pol_ns = 'V' + pol[1]
                         log.warning('Get noise-only range lines from '
                                     f'{pol_ns} for {pol} of quad pol!')
                         ds_ns = raw.getRawDataset(channel_in.freq_id, pol_ns)
