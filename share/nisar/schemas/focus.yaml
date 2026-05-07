@@ -404,6 +404,8 @@ rfi_options:
   # RFI detection algorithm. Supported values include:
   #   - 'ST-EVD': slow-time eigenvalue decomposition algorithm
   #   - 'FDNF': frequency domain notch filtering algorithm
+  #   - 'tone-rank': detects RFI in the spectral domain using
+  #     a lifted exponential statistical model.
   # Defaults to 'ST-EVD'.
   mitigation_algorithm: enum('ST-EVD', 'FDNF', "tone-rank", required=False)
   # Number of subdivisions in range.  Defaults to 1.
@@ -507,8 +509,14 @@ rfi_threshold_options:
     y: list(num(min=0), min=2, required=False)
 
 tone_rank_options:
+    # Processing block size [azimuth, range] in samples.
     block_dims: list(int(min=1), min=2, max=2, required=False)
+    # Target false positive rate for RFI detection, in (0, 1).
+    # Lower values result in more conservative detection (fewer false
+    # alarms but potentially missed RFI).
     nominal_false_positive_rate: num(min=0.0, max=1.0, required=False)
+    # Quantile in [1-bandwidth, 1) used to estimate the rate parameter
+    # of the lifted exponential distribution. Default is 0.5 (median).
     reference_quantile: num(min=0.0, max=1.0, required=False)
     # Whether to attempt linear/nearest-neighbor interpolation for RFI samples.
     # If False, RFI samples are replaced directly with fill_value.
