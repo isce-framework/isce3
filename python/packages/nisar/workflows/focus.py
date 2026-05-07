@@ -1645,7 +1645,7 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
                 log.warning("Time decremented between observations.  "
                     "Assuming seamless transition.")
             for bbox in raw_bbox_lists[i]:
-                bbox.last.time = t_next
+                bbox.last.time = max(t_next, t_cur)
         else:
             log.warning(f"Gap between observations {dt:7f} s exceeds threshold "
                 f"for seamless observations ({max_observation_gap} s).")
