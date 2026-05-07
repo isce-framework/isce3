@@ -474,6 +474,13 @@ runconfig:
                 # one.
                 num_ignore: 25
 
+                # Max allowed time (in seconds) between the last pulse of one
+                # observation and the first pulse of the following observation
+                # for the two to be considered seamless.  Larger raw data gaps
+                # may result in a synthetic aperture being marked invalid in the
+                # RSLC.
+                max_observation_gap: 0.002
+
             caltone:
                 # If "azimuth_mean", subtract the azimuth mean from the raw
                 # data, which is useful when the caltone is nearly constant in
