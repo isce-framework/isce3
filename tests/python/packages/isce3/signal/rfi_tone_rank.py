@@ -23,7 +23,7 @@ def test_tone_rank(m):
 
     isr = np.sum(abs2(interference)) / np.sum(abs2(signal))
     isr_desired = 10.0
-    z = signal + interference * isr_desired / isr
+    z = signal + interference * np.sqrt(isr_desired / isr)
 
     # Fake Doppler and axes. Data are already baseband.
     t = np.linspace(0, 1, m)
