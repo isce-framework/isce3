@@ -3,7 +3,8 @@ import numpy.testing as npt
 import pytest
 
 from isce3.core import LUT2d
-from isce3.signal.rfi_tone_rank import remove_loud_tones, abs2
+from isce3.signal.rfi_tone_rank import (remove_loud_tones, abs2,
+    exp_from_quantile)
 
 
 @pytest.mark.parametrize("m", [513, 521])
@@ -56,3 +57,29 @@ def test_tone_rank(m):
     # Make sure there aren't a lot more than expected.
     num_false_positives = np.sum(block_hits[i, j, ~many_hits])
     assert num_false_positives / np.prod(block_dims) <= fpr
+
+
+def rng_lifted_exp(n, λ, bw, rng=None):
+    if rng is None:
+        rng = np.random.default_rng()
+    # First figure out which component of the mixture each sample draws from.
+    component = rng.random(n) <= bw
+    # Generate n samples from each (a little wasteful).
+    zero = np.zeros(n)
+    exp = rng.exponential(1 / λ, n)
+    # Mix samples in correct proportion.
+    return np.where(component, exp, zero)
+
+def pow2db(x):
+    return 10 * np.log10(x)
+
+@pytest.mark.parametrize("λ", [0.01, 100.0])
+def test_exp_from_quantile(λ):
+    rng = np.random.default_rng(12345)  # seed for repeatability
+    n = 100_000
+    bw = 1 / 1.2
+    data = rng_lifted_exp(n, λ, bw, rng)
+
+    median = np.median(data)
+    λ_est = exp_from_quantile(0.5, median, bw)
+    npt.assert_allclose(pow2db(λ), pow2db(λ_est), atol=1)
