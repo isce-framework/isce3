@@ -380,8 +380,8 @@ def remove_loud_tones(
 
     f = fftshift(fftfreq(block_dims[1]))
     meta_shape = (num_az_blocks, num_range_blocks)
-    isr = np.zeros(meta_shape)
-    means = np.zeros(meta_shape)
+    isr = np.zeros(meta_shape, dtype=np.float32)
+    means = np.zeros(meta_shape, dtype=np.float32)
     hits = np.zeros(meta_shape + (block_dims[1],), dtype=np.float32)
 
     block_times = np.zeros(num_az_blocks)
