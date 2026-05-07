@@ -390,6 +390,13 @@ def remove_loud_tones(
         # TODO could weight by window
         block_ranges[j] = r[(cols.start + cols.stop) // 2]
 
+    # Generate a pool of noise with σ=1 once, and we'll scale it for each
+    # block as needed.  We'll generate a random offset for each block to
+    # increase entropy without having to regenerate noise for each block.
+    max_offset = num_az_blocks * num_range_blocks
+    num_noise = max_offset + np.prod(block_dims)
+    std_noise = circular_gaussian_noise(num_noise)
+
     for iblock, rows in enumerate(az_blocks):
         block_results = []
         # calculate azimuth time of block
@@ -417,9 +424,7 @@ def remove_loud_tones(
             )
             if not detect_only:
                 σ = np.sqrt(0.5 / λ) if λ > 0.0 else 0.0
-                num_noise = min(np.sum(mask_replace),
-                    z_block.shape[1] * 991 // 97)
-                noise = circular_gaussian_noise(num_noise, σ)
+                noise = σ * std_noise[np.random.randint(0, max_offset):]
                 fd = doppler.eval(block_times[iblock], block_ranges[j])
                 cols, window = slices_windows[j]
                 nw = len(window)
