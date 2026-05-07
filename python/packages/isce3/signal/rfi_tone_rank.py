@@ -122,7 +122,15 @@ def get_spectral_mask(
     too_loud = exp_from_quantile(q, λ, bandwidth)
     # Use threshold to generate mask.
     mask = power_spectra >= too_loud
-    isr = np.sum(power_spectra[mask]) / np.sum(power_spectra[~mask])
+    # Compute interference-to-signal ratio now that we've labeled the data.
+    # Since masked values are presumably the sum of signal and interference,
+    # we'll include an arithmetic correction using the stats model.
+    mean_power = 1 / λ
+    masked_sig_power = np.sum(mask) * mean_power
+    rfi_power = np.sum(power_spectra[mask]) - masked_sig_power
+    sig_power = np.sum(power_spectra[~mask]) + masked_sig_power
+    isr = rfi_power / sig_power
+    # Unflatten data.
     mask.shape = spectra.shape
     return mask, isr, λ
 
