@@ -427,7 +427,6 @@ def remove_loud_tones(
                 noise = σ * std_noise[np.random.randint(0, max_offset):]
                 fd = doppler.eval(block_times[iblock], block_ranges[j])
                 cols, window = slices_windows[j]
-                nw = len(window)
                 valid_rows = ((~mask_valid[:, cols]).mean(axis=1)
                     <= max_gap_fraction)
                 spectra[:, j, :] = fill_missing(spectra[:,j,:], fd, pulse_times,
