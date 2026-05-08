@@ -12,9 +12,10 @@ import journal
 import numpy as np
 from isce3.io import HDF5OptimizedReader
 from isce3.math import offsets_polyfit
+from isce3.unwrap.preprocess import interpret_subswath_mask
 from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.products.readers import SLC
-from nisar.workflows import prepare_insar_hdf5
+from nisar.workflows import h5_prep
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
 from nisar.workflows.helpers import (get_cfg_freq_pols,
                                      get_ground_track_velocity_product,
@@ -23,6 +24,7 @@ from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
 from scipy import interpolate, ndimage, signal
+from scipy.spatial import cKDTree
 
 
 def run_rubbersheet_with_polyfit(cfg: dict, output_hdf5: str = None):
@@ -291,6 +293,14 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
                                                                            zero_doppler_time,
                                                                            dem_file,
                                                                            rubbersheet_dir)
+            valid_mask = None
+            # Apply the subswath mask to the outlier detection
+            if rubbersheet_params['subswath_mask_apply_enabled']:
+                pixel_offsets_mask_path = f'{pixel_offsets_path}/mask'
+                subswath_mask = dst_h5[pixel_offsets_mask_path][()]
+                ref_valid, sec_valid, _ = interpret_subswath_mask(subswath_mask)
+                valid_mask = ref_valid & sec_valid
+
             for pol in pol_list:
                 # Create input and output directories for pol under processing
                 pol_group_path = f'{pixel_offsets_path}/{pol}'
@@ -305,7 +315,22 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
                     # Identify outliers
                     offset_az_culled, offset_rg_culled = identify_outliers(
                         str(dense_offsets_dir),
-                        rubbersheet_params)
+                        rubbersheet_params, valid_mask)
+
+                    # Apply aggressive azimuth offset filter to suppress the offsets jupmps
+                    # This additional filtering step improves azimuth offset quality by
+                    # applying a mean or median filter in both azimuth and range directions
+                    azimuth_filter_params = rubbersheet_params['azimuth_offset_filter']
+                    azimuth_filter_type = azimuth_filter_params.get('offsets_filter')
+                    if azimuth_filter_type is not None and azimuth_filter_type != 'none':
+                        azimuth_filter_kernel_size = azimuth_filter_params['kernel_size']
+                        offset_az_culled = apply_filter(
+                            offset_az_culled,
+                            azimuth_filter_kernel_size,
+                            filter_type=azimuth_filter_type,
+                            axis='both'
+                        )
+
                     # Fill outliers holes
                     offset_az = fill_outliers_holes(offset_az_culled,
                                                     rubbersheet_params)
@@ -325,7 +350,9 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
                                   key.startswith('layer')]
                     # Apply offset blending
                     offset_az, offset_rg = _offset_blending(off_product_dir,
-                                                            rubbersheet_params, layer_keys)
+                                                            rubbersheet_params,
+                                                            layer_keys,
+                                                            valid_mask)
 
                     # Get correlation peak path for the first offset layer
                     corr_peak_path = str(f'{off_prod_dir}/{layer_keys[0]}/correlation_peak')
@@ -336,9 +363,18 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
                     # If there are residual NaNs, use interpolation to fill residual holes
                     nan_count = np.count_nonzero(np.isnan(offset))
                     if nan_count > 0:
-                        offsets[k] = _interpolate_offsets(offset,
-                                                          rubbersheet_params['interpolation_method'])
-                    # If required, filter offsets
+                        if rubbersheet_params['interpolation_method'] == 'idw':
+                            # Get the IDW parameters
+                            power, number, radius = ( rubbersheet_params['idw_interpolation'].get(i)
+                                                     for i in ('power', 'number', 'radius'))
+                            offsets[k] = _interpolate_offsets_by_idw(offset, power, number, radius)
+                            # Additional linear interpolation is required to fill the extra outliers beyond the radius
+                            offsets[k] =  _interpolate_offsets(offsets[k],'linear')
+                        else:
+                            offsets[k] = _interpolate_offsets(offset,
+                                                              rubbersheet_params['interpolation_method'])
+
+                    # # If required, filter offsets
                     offsets[k] = _filter_offsets(offsets[k], rubbersheet_params)
                     # Save offsets on disk for resampling
                     off_type = 'culled_az_offsets' if k == 0 else 'culled_rg_offsets'
@@ -434,7 +470,7 @@ def _write_to_disk(outpath, array, format='ENVI',
     ds.GetRasterBand(1).WriteArray(array)
     ds.FlushCache()
 
-def identify_outliers(offsets_dir, rubbersheet_params):
+def identify_outliers(offsets_dir, rubbersheet_params, mask = None):
     '''
     Identify outliers in the offset fields.
     Outliers are identified by a thresholding
@@ -448,6 +484,8 @@ def identify_outliers(offsets_dir, rubbersheet_params):
         where pixel offsets are located
     rubbersheet_params: cfg
         Dictionary containing rubbersheet parameters
+    mask: np.ndarray
+        A mask indicating the interested region (default: None)
 
     Returns
     -------
@@ -468,6 +506,10 @@ def identify_outliers(offsets_dir, rubbersheet_params):
     elif metric == 'median_filter':
         offset_az = _open_raster(f'{offsets_dir}/dense_offsets', 1)
         offset_rg = _open_raster(f'{offsets_dir}/dense_offsets', 2)
+        if mask is not None:
+            offset_az[~mask] = np.nan
+            offset_rg[~mask] = np.nan
+
         mask_data = compute_mad_mask(offset_az, window_az, window_rg, threshold) | \
                     compute_mad_mask(offset_rg, window_az, window_rg, threshold)
     elif metric == 'covariance':
@@ -671,7 +713,7 @@ def _fill_nan_with_mean(arr_in, arr_out, neighborhood_size):
     return filled_arr
 
 
-def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
+def _offset_blending(off_product_dir, rubbersheet_params, layer_keys, mask = None):
     '''
     Blends offsets layers at different resolution. Implements a
     pyramidal filling algorithm using the offset layer at higher
@@ -689,6 +731,8 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
         Dictionary containing the user-defined rubbersheet options
     layer_keys: list
         List of layers within the offset product
+    mask: np.ndarray
+        A mask indicting the interested region, default: None
 
     Returns
     -------
@@ -700,7 +744,7 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
 
     # Filter outliers from layer one
     offset_az, offset_rg = identify_outliers(str(off_product_dir / layer_keys[0]),
-                                             rubbersheet_params)
+                                             rubbersheet_params, mask)
 
     # Replace the NaN locations in layer1 with the mean of pixels in layers
     # at lower resolution computed in a neighborhood centered at the NaN location
@@ -711,12 +755,27 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
 
         if nan_count_az > 0:
             offset_az_culled, _ = identify_outliers(str(off_product_dir / layer_key),
-                                                    rubbersheet_params)
+                                                    rubbersheet_params, mask)
+
+            # Apply aggressive azimuth offset filter to suppress the offsets jupmps
+            # This additional filtering step improves azimuth offset quality by
+            # applying a mean or median filter in both azimuth and range directions
+            azimuth_filter_params = rubbersheet_params['azimuth_offset_filter']
+            azimuth_filter_type = azimuth_filter_params.get('offsets_filter')
+            if azimuth_filter_type is not None and azimuth_filter_type != 'none':
+                azimuth_filter_kernel_size = azimuth_filter_params['kernel_size']
+                offset_az_culled = apply_filter(
+                    offset_az_culled,
+                    azimuth_filter_kernel_size,
+                    filter_type=azimuth_filter_type,
+                    axis='both'
+                )
+
             offset_az = _fill_nan_with_mean(offset_az, offset_az_culled, filter_size)
 
         if nan_count_rg > 0:
             _, offset_rg_culled = identify_outliers(str(off_product_dir / layer_key),
-                                                    rubbersheet_params)
+                                                    rubbersheet_params, mask)
             offset_rg = _fill_nan_with_mean(offset_rg, offset_rg_culled, filter_size)
 
     # Fill remaining holes by iteratively filling the output offset layer
@@ -727,11 +786,84 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
 
     return offset_az, offset_rg
 
+def _interpolate_offsets_by_idw(
+    Z: np.ndarray,
+    power: float = 2.0,
+    number: int | None = 100,
+    radius: float | None = 200.0):
+    '''
+    Performs Inverse Distance Weighting (IDW) interpolation on a 2D grid containing NaN values.
+    Missing pixels are filled using IDW interpolation based on nearby
+    valid samples. The interpolation can optionally
+    limit the number of nearest neighbors and the maximum search
+    radius to improve efficiency and control smoothing.
 
-import journal
-import numpy as np
-from scipy import interpolate
+    Parameters
+    ---------
+    Z: np.ndarray
+        2D array of shape (H, W) containing NaN values to be filled
+    power: float
+        Power parameter p controlling the distance weighting
+    number: int or None
+        Number of nearest neighbors used for interpolation.
+        If None, all valid points are used (default: 100)
+    radius: float or None
+        Maximum search radius in pixels. If None, no radius
+        limitation is applied (default: 200)
+    eps: float
+        Small value added to distance to avoid division by zero
 
+    Returns
+    -------
+    filled: np.ndarray
+        2D array with the same shape as Z where NaN values
+        have been filled using IDW interpolation
+    '''
+
+    valid = np.isfinite(Z)
+    yy, xx = np.nonzero(valid)
+    if yy.size == 0:
+        raise ValueError("No valid points found to interpolate from.")
+
+    points = np.column_stack([xx, yy]).astype(float)
+    values = Z[yy, xx].astype(float)
+
+    qmask = ~valid
+    yq, xq = np.nonzero(qmask)
+    if yq.size == 0:
+        return Z.copy()
+
+    qpoints = np.column_stack([xq, yq]).astype(float)
+
+    tree = cKDTree(points)
+    k = points.shape[0] if number is None else min(number, points.shape[0])
+
+    dists, idxs = tree.query(
+        qpoints, k=k, workers=-1,
+        **({'distance_upper_bound': radius} if radius is not None else {}))
+
+    # Ensure 2D — tree.query returns 1D when k=1
+    dists = np.reshape(dists, (qpoints.shape[0], -1))
+    idxs  = np.reshape(idxs,  (qpoints.shape[0], -1))
+
+    use_mask = np.isfinite(dists) & (idxs < points.shape[0])
+
+    # Clip out-of-bounds sentinel indices before indexing into values
+    safe_idxs = np.clip(idxs, 0, points.shape[0] - 1)
+
+    w = np.where(use_mask, 1.0 / dists**power, 0.0)
+    v = np.where(use_mask, values[safe_idxs], 0.0)
+
+    ws = w.sum(axis=1)
+    ok = ws > 0
+
+    filled_vals = np.full(qpoints.shape[0], np.nan, dtype=float)
+    filled_vals[ok] = (w[ok] * v[ok]).sum(axis=1) / ws[ok]
+
+    out = Z.copy()
+    out[yq, xq] = filled_vals
+
+    return out
 
 def _interpolate_offsets(offset, interp_method):
     '''
@@ -794,6 +926,89 @@ def _interpolate_offsets(offset, interp_method):
     return offset_interp
 
 
+def apply_filter(array, window_size, filter_type='mean', axis='both'):
+    '''
+    Apply mean or median filter along specified axis or both directions.
+    Ignores NaN and Inf values when computing statistics.
+
+    Uses scipy.ndimage.generic_filter for memory-efficient processing
+    that handles NaN values properly without creating large intermediate arrays.
+
+    Parameters
+    ----------
+    array: np.ndarray
+        2D array to filter (shape: azimuth x range)
+    window_size: int or tuple
+        Size of the filtering window.
+        - If int: window size for the specified axis (or both if axis='both')
+        - If tuple: (window_size_azimuth, window_size_range) when axis='both'
+    filter_type: str
+        Type of filter to apply: 'mean' or 'median' (default: 'mean')
+    axis: str
+        Direction to filter: 'azimuth', 'range', or 'both' (default: 'both')
+
+    Returns
+    -------
+    filtered: np.ndarray
+        Filtered array with the same shape as input
+
+    Raises
+    ------
+    ValueError
+        If window_size is invalid, filter_type is not supported, or axis is invalid
+    '''
+    if axis not in ['azimuth', 'range', 'both']:
+        raise ValueError(f"axis must be 'azimuth', 'range', or 'both', got '{axis}'")
+
+    if filter_type not in ['mean', 'median']:
+        raise ValueError(f"filter_type must be 'mean' or 'median', got '{filter_type}'")
+
+    # Parse window sizes
+    if axis == 'both':
+        if isinstance(window_size, tuple):
+            window_size_az, window_size_rg = window_size
+        else:
+            window_size_az = window_size_rg = window_size
+    elif axis == 'azimuth':
+        window_size_az = window_size
+        window_size_rg = 1
+    else:  # range
+        window_size_az = 1
+        window_size_rg = window_size
+
+    # Validate window sizes
+    if window_size_az < 1:
+        raise ValueError(f"window_size_azimuth must be >= 1, got {window_size_az}")
+    if window_size_rg < 1:
+        raise ValueError(f"window_size_range must be >= 1, got {window_size_rg}")
+
+    # Handle trivial case
+    if window_size_az == 1 and window_size_rg == 1:
+        return array.copy()
+
+    # If no valid data, return copy
+    if not np.any(np.isfinite(array)):
+        return array.copy()
+
+    # Replace Inf with NaN for consistent handling
+    array_clean = array.copy()
+    array_clean[~np.isfinite(array_clean)] = np.nan
+
+    # Use numpy's built-in NaN-aware functions
+    filter_func = np.nanmean if filter_type == 'mean' else np.nanmedian
+
+    # Apply generic_filter with appropriate size
+    filtered = ndimage.generic_filter(
+        array_clean,
+        filter_func,
+        size=(window_size_az, window_size_rg),
+        mode='constant',
+        cval=np.nan
+    )
+
+    return filtered
+
+
 def _filter_offsets(offset, rubbersheet_params):
     '''
     Apply low-pass filter on 'offset'
@@ -851,5 +1066,5 @@ if __name__ == "__main__":
 
     # Prepare RIFG. Culled offsets will be
     # allocated in RIFG product
-    out_paths = prepare_insar_hdf5.run(rubbersheet_runconfig.cfg)
+    _, out_paths = h5_prep.get_products_and_paths(rubbersheet_runconfig.cfg)
     run(rubbersheet_runconfig.cfg, out_paths['RIFG'])

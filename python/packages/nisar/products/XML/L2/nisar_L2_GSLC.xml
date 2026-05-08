@@ -223,11 +223,18 @@
                             lang="en">"True" if any portion of this product was acquired in a joint observation mode (e.g., L-band and S-band simultaneously), "False" otherwise</annotation>
         </string>
         <string length="0"
-                name="/science/LSAR/GSLC/identification/staticLayersDataAccess"
+                name="/science/LSAR/identification/staticLayersDataAccess"
                 shape="scalar">
           <annotation app="conformance"
                       lang="en">Location of the static layers product associated with this product (URL or DOI)</annotation>
         </string>
+        <integer name="/science/LSAR/identification/hasInputDataException"
+                 shape="scalar"
+                 signed="false"
+                 width="8">
+          <annotation app="conformance"
+                      lang="en">Indication of input data exceptions or anomalies present in this granule. Bitwise OR of instrument exception codes for all image pixels (0: no anomaly, 2: NISAR LSAR qFSP-H1 sample slip)</annotation>
+        </integer>
         <!-- End of product identification -->
 
         <!-- Main layers for frequencyA -->
@@ -350,6 +357,16 @@
                       long_name="Valid samples subswath mask"
                       valid_min="0"
                       _FillValue="255">Mask indicating the subswath number representing valid GSLC samples. Each GSLC pixel is assumed valid if all the pixels in the interpolation window are fully focused in the input RSLC. A value of 0 indicates that at least one RSLC pixel in the interpolation window is partially focused or invalid. Pixels outside of the radar acquisition extent are filled with the value 255</annotation>
+        </integer>
+        <integer name="/science/LSAR/GSLC/grids/frequencyA/inputDataExceptionMask"
+              shape="realDataFrequencyAShape"
+              signed="false"
+              width="8">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      grid_mapping="projection"
+                      valid_min="0">Bitwise OR of input data exception codes for each image pixel (0: no anomaly, 2: NISAR LSAR qFSP-H1 sample slip)</annotation>
         </integer>
         <real name="/science/LSAR/GSLC/grids/frequencyA/HH"
               shape="complexDataFrequencyAShape"
@@ -609,6 +626,16 @@
                       long_name="Valid samples subswath mask"
                       valid_min="0"
                       _FillValue="255">Mask indicating the subswath number representing valid GSLC samples. Each GSLC pixel is assumed valid if all the pixels in the interpolation window are fully focused in the input RSLC. A value of 0 indicates that at least one RSLC pixel in the interpolation window is partially focused or invalid. Pixels outside of the radar acquisition extent are filled with the value 255</annotation>
+        </integer>
+        <integer name="/science/LSAR/GSLC/grids/frequencyB/inputDataExceptionMask"
+              shape="realDataFrequencyBShape"
+              signed="false"
+              width="8">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      grid_mapping="projection"
+                      valid_min="0">Bitwise OR of input data exception codes for each image pixel (0: no anomaly, 2: NISAR LSAR qFSP-H1 sample slip)</annotation>
         </integer>
         <real name="/science/LSAR/GSLC/grids/frequencyB/HH"
               shape="complexDataFrequencyBShape"
@@ -1587,10 +1614,14 @@
               <annotation app="conformance"
                           lang="en"
                           DIMENSION_LIST="HDF5 internal attribute"
-                          mean_value="Arithmetic average of the numeric data points"
-                          min_value="Minimum value of the numeric data points"
-                          max_value="Maximum value of the numeric data points"
-                          sample_stddev="Standard deviation of the numeric data points"
+                          mean_real_value="Arithmetic average of the real part of the numeric data points"
+                          min_real_value="Minimum value of the real part of the numeric data points"
+                          max_real_value="Maximum value of the real part of the numeric data points"
+                          sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                          mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                          min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                          max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                          sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                           _FillValue="(nan+nan*j)"
                           grid_mapping="projection"
                           units="1">Crosstalk in H-transmit channel expressed as ratio txV / txH</annotation>
@@ -1602,10 +1633,14 @@
               <annotation app="conformance"
                           lang="en"
                           DIMENSION_LIST="HDF5 internal attribute"
-                          mean_value="Arithmetic average of the numeric data points"
-                          min_value="Minimum value of the numeric data points"
-                          max_value="Maximum value of the numeric data points"
-                          sample_stddev="Standard deviation of the numeric data points"
+                          mean_real_value="Arithmetic average of the real part of the numeric data points"
+                          min_real_value="Minimum value of the real part of the numeric data points"
+                          max_real_value="Maximum value of the real part of the numeric data points"
+                          sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                          mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                          min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                          max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                          sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                           _FillValue="(nan+nan*j)"
                           grid_mapping="projection"
                           units="1">Crosstalk in V-transmit channel expressed as ratio txH / txV</annotation>
@@ -1617,10 +1652,14 @@
               <annotation app="conformance"
                           lang="en"
                           DIMENSION_LIST="HDF5 internal attribute"
-                          mean_value="Arithmetic average of the numeric data points"
-                          min_value="Minimum value of the numeric data points"
-                          max_value="Maximum value of the numeric data points"
-                          sample_stddev="Standard deviation of the numeric data points"
+                          mean_real_value="Arithmetic average of the real part of the numeric data points"
+                          min_real_value="Minimum value of the real part of the numeric data points"
+                          max_real_value="Maximum value of the real part of the numeric data points"
+                          sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                          mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                          min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                          max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                          sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                           _FillValue="(nan+nan*j)"
                           grid_mapping="projection"
                           units="1">Crosstalk in H-receive channel expressed as ratio rxV / rxH</annotation>
@@ -1632,10 +1671,14 @@
               <annotation app="conformance"
                           lang="en"
                           DIMENSION_LIST="HDF5 internal attribute"
-                          mean_value="Arithmetic average of the numeric data points"
-                          min_value="Minimum value of the numeric data points"
-                          max_value="Maximum value of the numeric data points"
-                          sample_stddev="Standard deviation of the numeric data points"
+                          mean_real_value="Arithmetic average of the real part of the numeric data points"
+                          min_real_value="Minimum value of the real part of the numeric data points"
+                          max_real_value="Maximum value of the real part of the numeric data points"
+                          sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                          mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                          min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                          max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                          sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                           _FillValue="(nan+nan*j)"
                           grid_mapping="projection"
                           units="1">Crosstalk in V-receive channel expressed as ratio rxH / rxV</annotation>
@@ -2184,6 +2227,7 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          DIMENSION_LIST="HDF5 internal attribute"
                           _FillValue="nan"
                           grid_mapping="projection"
                           units="meters">Reference terrain height as a function of map coordinates</annotation>
@@ -2213,6 +2257,9 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
                           long_name="Y coordinates of projection"
                           standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
@@ -2222,6 +2269,9 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
                           long_name="X coordinates of projection"
                           standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>

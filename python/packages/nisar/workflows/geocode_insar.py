@@ -214,7 +214,8 @@ def _project_water_to_geogrid(input_water_path, geogrid):
 
 
 def add_water_to_mask(cfg, freq, geogrid, dst_h5,
-                      input_product_type, fill_vaue = 255):
+                      input_product_type,
+                      fill_vaue = 255):
     """
     Add water mask to mask layer in GUNW and GOFF product.
 
@@ -262,8 +263,9 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5,
             # Masked water mask to exclude the fill value
             masked_water_mask = water_mask[mask]
             # Add the water mask to the mask layer
-            mask_layer[mask] += (100 * water_mask)[mask].astype(np.uint8)
-            dst_h5[mask_h5_path][...] = mask_layer
+            subswath_mask = mask_layer & 0xFF # get the subswath mask
+            subswath_mask[mask] += (100 * water_mask)[mask].astype(np.uint8)
+            dst_h5[mask_h5_path][...] = mask_layer | subswath_mask
 
             # Update the percentage of the water
             # where the region with fill value is excluded

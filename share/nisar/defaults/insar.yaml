@@ -290,6 +290,29 @@ runconfig:
                     # Filling method for invalid regions
                     # (nearest, smoothed)
                     filling_method: nearest
+                    # Method used to build the smooth guide image for outlier detection
+                    # and gap filling. {'median_gaussian', 'gaussian', 'none'}, optional
+                    filling_guide_filter_method: median_gaussian
+                    # Window size of the NaN-aware median filter used when
+                    # `guide_filter_method='median_gaussian'`
+                    filling_guide_median_size: 3
+                    # Threshold multiplier for robust outlier detection. Pixels are marked
+                    # as outliers when
+                    #       abs(residual - median(residual)) >
+                    #           outlier_threshold * robust_scale
+                    # where `robust_scale = max(1.4826 * MAD, outlier_min_scale)`.
+                    filling_outlier_threshold: 3.5
+                    # Lower bound for the robust scale used in outlier detection.
+                    # This prevents the threshold from becoming too small in very
+                    # clean regions,
+                    filling_outlier_min_scale: 0.0
+                    # Scale factor that converts MAD (median absolute deviation)
+                    # into a sigma-like robust spread estimate for outlier detection.
+                    # For a standard normal variable Z ~ N(0, 1),
+                    # median(|Z|) = Phi^{-1}(0.75) ≈ 0.67449,
+                    # so std ≈ MAD / 0.67449 ≈ 1.4826 * MAD.
+                    filling_outlier_mad_scale_factor: 1.4826
+
                     # Kernel size in pixels
                     kernel_range: 100
                     kernel_azimuth: 100
@@ -306,7 +329,7 @@ runconfig:
                     # When `min_cluster_pixels` is 0, this pre-removal step is
                     # skipped entirely.
                     min_cluster_pixels: 2
-                    
+
                     bridge_algorithm_enabled: True
                     # Maximum radius used when bridging disconnected
                     # regions.
@@ -545,6 +568,28 @@ runconfig:
                 # Interpolation method. Interpolation is used to fill residual outlier
                 # holes if present
                 interpolation_method: linear
+
+                # Additional azimuth offset filtering applied after outlier detection
+                # to suppress offset jumps caused by ionospheric disturbances,
+                # decorrelation, or processing artifacts
+                azimuth_offset_filter:
+                    # Spatial filter type: 'none' (disabled), 'median', or 'mean'
+                    offsets_filter: none
+                    # Kernel size in pixels for spatial filtering
+                    kernel_size: 31
+
+                # Flag to enable the use of subswath mask for the outlier detection
+                subswath_mask_apply_enabled: True
+
+                # IDW interpolation method parameters
+                idw_interpolation:
+                    # Power parameter controlling the distance weighting
+                    power: 2
+                    # Number of nearest neighbors used for interpolation
+                    number: 100
+                    # Maximum search radius in pixels
+                    radius: 200
+
                 # It is good practice to filter the offsets prior to interferogram
                 # formation to reduce noise. We expose: no_filter: do not filter the offsets/
                 # degrade offsets resolution. median_filter, boxcar_filter (moving average),
@@ -780,7 +825,7 @@ runconfig:
                     # During deramping, uniform sampling is applied
                     # when number of samples is larger than maximum pixel
                     bridge_ramp_maximum_pixel: 1e6
-    
+
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True

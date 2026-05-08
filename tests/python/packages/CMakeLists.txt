@@ -30,6 +30,7 @@ isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/rfi_freq_null.py
 isce3/signal/rfi_process_evd.py
+isce3/signal/rfi_tone_rank.py
 isce3/solid_earth_tides/solid_earth_tides.py
 nisar/antenna/beamformer.py
 nisar/antenna/pattern.py
@@ -37,6 +38,7 @@ nisar/cal/corner_reflector_slc_func.py
 nisar/cal/corner_reflector.py
 nisar/cal/faraday_rotation_angle_slc.py
 nisar/cal/pol_channel_imbalance_slc.py
+nisar/cal/qfsp_slip.py
 nisar/mixed_mode/logic.py
 nisar/mixed_mode/processing.py
 nisar/noise/noise_estimation_from_raw.py

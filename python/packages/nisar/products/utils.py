@@ -80,16 +80,17 @@ def get_static_layers_data_access(
     return static_layers_data_access
 
 
-def interpret_subswath_mask(subswath_mask, nodata=255):
+def interpret_subswath_mask(mask, nodata=255):
     """
-    Interprets a subswath mask integer by decoding its digits into boolean 
+    Interprets a subswath mask integer by decoding its digits into boolean
     flags indicating reference validity, secondary validity, and water
     presence.
 
     Parameters
     ----------
-    subswath_mask : numpy.array
-        Each digit represents a specific flag:
+    mask : numpy.array
+        A mask inlcuding both the input exception and subswath mask, where
+        each digit in the subswath mask represents a specific flag:
         - Units digit (1s place): Secondary subswath mask
             Non-zero indicates valid; zero indicates invalid.
         - Tens digit (10s place): Reference subswath mask
@@ -110,9 +111,9 @@ def interpret_subswath_mask(subswath_mask, nodata=255):
         True if water is present (hundreds digit is non-zero),
         False otherwise.
     """
-    arr = np.asarray(subswath_mask)
 
-    nd = (arr == nodata)
+    nd = (mask == nodata)
+    subswath_mask = np.asarray(mask & 0xFF)
 
     secondary_valid = subswath_mask % 10 != 0
     reference_valid = (subswath_mask // 10) % 10 != 0

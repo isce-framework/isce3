@@ -212,6 +212,8 @@ runconfig:
                 # RFI detection algorithm. Supported values include:
                 #   - 'ST-EVD': slow-time eigenvalue decomposition algorithm
                 #   - 'FDNF': frequency domain notch filtering algorithm
+                #   - 'tone-rank': detects RFI in the spectral domain using
+                #     a lifted exponential statistical model.
                 # Defaults to 'ST-EVD'.
                 mitigation_algorithm: ST-EVD
                 # Number of range samples per range block when data blocking
@@ -227,12 +229,12 @@ runconfig:
 
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.
-                    cpi_length: 32
+                    cpi_length: 16
                     # Maximum allowable number of emitters can be detected and
                     # suppressed per CPI. ST-EVD would ignore emitters exceeding
                     # this limit. This number should be less than cpi_length.
                     # Defaults to 16.
-                    max_emitters: 16
+                    max_emitters: 4
                     # Number of large value outliers to be trimmed in slow-time
                     # minimum Eigenvalues.
                     num_max_trim: 0
@@ -249,7 +251,19 @@ runconfig:
                     max_num_rfi_ev: 2
                     # Number of slow-time CPIs grouped together for determining and
                     # applying a common EV slope threshold.
-                    num_cpi_per_threshold_block: 20
+                    num_cpi_per_threshold_block: 15
+                    # minimum fraction of samples required for cross-variance terms
+                    # of sample covariance matrix
+                    off_diag_overlap_ratio: 0.25
+                    # minimum fraction of samples required for covariance terms
+                    # of sample covariance matrix
+                    diag_valid_ratio: 0.20
+                    # This ratio will be used to determine the minimum number of valid Eigenvalues
+                    # required for a CPI. min_ev_valid_idx = int(np.round(min_rank_frac * cpi_len)) - 1
+                    min_rank_frac: 0.70
+                    # radar platform receiver dynamic range, e.g. 50 dB. This is applied as a threshold
+                    # to determine if the Eigenvalue under test is meaningfully signficant.
+                    rx_dynamic_range_db: 50.0
                     # Parameters used to adaptively determine RFI eigenvalue
                     # difference thresholds
                     threshold_hyperparameters:
@@ -304,6 +318,31 @@ runconfig:
                     # This should be enabled unless for the purpose of debugging.
                     # Defaults to True
                     wb_detect: True
+
+                tone_rank:
+                    # Processing block size [azimuth, range] in samples.
+                    block_dims: [512, 1024]
+                    # Target false positive rate for RFI detection, in (0, 1).
+                    # Lower values result in more conservative detection (fewer false
+                    # alarms but potentially missed RFI).
+                    nominal_false_positive_rate: 0.0005
+                    # Quantile in [1-bandwidth, 1) used to estimate the rate parameter
+                    # of the lifted exponential distribution. Default is 0.5 (median).
+                    reference_quantile: 0.5
+                    # Whether to attempt linear/nearest-neighbor interpolation
+                    # for RFI samples.  If False, RFI samples are replaced
+                    # directly with fill_value.
+                    interpolate: True
+                    # How to generate fallback values for RFI samples when
+                    # interpolation fails or is disabled.
+                    # "noise": use random Gaussian noise matched to estimated
+                    # signal level
+                    # "zero": fill with zeros
+                    fill_value: zero
+                    # Max portion of a row that can be masked by a TX gap before
+                    # its spectrum is considered invalid (0.0: any gap invalidates
+                    # row, 1.0: ignore gap mask).
+                    max_gap_fraction: 0.5
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:
@@ -466,6 +505,13 @@ runconfig:
                 # will overlap the last few receive windows of the fixed-PRF
                 # one.
                 num_ignore: 25
+
+                # Max allowed time (in seconds) between the last pulse of one
+                # observation and the first pulse of the following observation
+                # for the two to be considered seamless.  Larger raw data gaps
+                # may result in a synthetic aperture being marked invalid in the
+                # RSLC.
+                max_observation_gap: 0.002
 
             caltone:
                 # If "azimuth_mean", subtract the azimuth mean from the raw
