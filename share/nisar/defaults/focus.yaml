@@ -212,6 +212,8 @@ runconfig:
                 # RFI detection algorithm. Supported values include:
                 #   - 'ST-EVD': slow-time eigenvalue decomposition algorithm
                 #   - 'FDNF': frequency domain notch filtering algorithm
+                #   - 'tone-rank': detects RFI in the spectral domain using
+                #     a lifted exponential statistical model.
                 # Defaults to 'ST-EVD'.
                 mitigation_algorithm: ST-EVD
                 # Number of range samples per range block when data blocking
@@ -316,6 +318,31 @@ runconfig:
                     # This should be enabled unless for the purpose of debugging.
                     # Defaults to True
                     wb_detect: True
+
+                tone_rank:
+                    # Processing block size [azimuth, range] in samples.
+                    block_dims: [512, 1024]
+                    # Target false positive rate for RFI detection, in (0, 1).
+                    # Lower values result in more conservative detection (fewer false
+                    # alarms but potentially missed RFI).
+                    nominal_false_positive_rate: 0.0005
+                    # Quantile in [1-bandwidth, 1) used to estimate the rate parameter
+                    # of the lifted exponential distribution. Default is 0.5 (median).
+                    reference_quantile: 0.5
+                    # Whether to attempt linear/nearest-neighbor interpolation
+                    # for RFI samples.  If False, RFI samples are replaced
+                    # directly with fill_value.
+                    interpolate: True
+                    # How to generate fallback values for RFI samples when
+                    # interpolation fails or is disabled.
+                    # "noise": use random Gaussian noise matched to estimated
+                    # signal level
+                    # "zero": fill with zeros
+                    fill_value: zero
+                    # Max portion of a row that can be masked by a TX gap before
+                    # its spectrum is considered invalid (0.0: any gap invalidates
+                    # row, 1.0: ignore gap mask).
+                    max_gap_fraction: 0.5
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:

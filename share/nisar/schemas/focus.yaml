@@ -411,11 +411,14 @@ rfi_options:
   # RFI detection algorithm. Supported values include:
   #   - 'ST-EVD': slow-time eigenvalue decomposition algorithm
   #   - 'FDNF': frequency domain notch filtering algorithm
+  #   - 'tone-rank': detects RFI in the spectral domain using
+  #     a lifted exponential statistical model.
   # Defaults to 'ST-EVD'.
-  mitigation_algorithm: enum('ST-EVD', 'FDNF', required=False)
+  mitigation_algorithm: enum('ST-EVD', 'FDNF', "tone-rank", required=False)
   # Number of subdivisions in range.  Defaults to 1.
   slow_time_evd: include('slow_time_evd_options', required=False)
   freq_notch_filter: include('freq_notch_filter_options', required=False)
+  tone_rank: include('tone_rank_options', required=False)
   # Number of range samples per range block when data blocking
   # is applied in range direction for sample covariance matrix
   # estimation. It is recommended that this parameter is at least
@@ -511,6 +514,29 @@ rfi_threshold_options:
     # final threshold. The values of x outside of the defined range of y are
     # extrapolated.
     y: list(num(min=0), min=2, required=False)
+
+tone_rank_options:
+    # Processing block size [azimuth, range] in samples.
+    block_dims: list(int(min=1), min=2, max=2, required=False)
+    # Target false positive rate for RFI detection, in (0, 1).
+    # Lower values result in more conservative detection (fewer false
+    # alarms but potentially missed RFI).
+    nominal_false_positive_rate: num(min=0.0, max=1.0, required=False)
+    # Quantile in [1-bandwidth, 1) used to estimate the rate parameter
+    # of the lifted exponential distribution. Default is 0.5 (median).
+    reference_quantile: num(min=0.0, max=1.0, required=False)
+    # Whether to attempt linear/nearest-neighbor interpolation for RFI samples.
+    # If False, RFI samples are replaced directly with fill_value.
+    interpolate: bool(required=False)
+    # How to generate fallback values for RFI samples when
+    # interpolation fails or is disabled.
+    # "noise": use random Gaussian noise matched to estimated signal level
+    # "zero": fill with zeros
+    fill_value: enum('noise', 'zero', required=False)
+    # Max portion of a row that can be masked by a TX gap before
+    # its spectrum is considered invalid (0.0: any gap invalidates row,
+    # 1.0: ignore gap mask).
+    max_gap_fraction: num(min=0.0, max=1.0, required=False)
 
 qa_options:
   # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)

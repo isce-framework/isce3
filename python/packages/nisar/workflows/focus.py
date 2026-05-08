@@ -78,15 +78,17 @@ def load_config(yaml):
     return Struct(cfg)
 
 
+def struct2dict(s: Struct):
+    d = s.__dict__.copy()
+    for k in d:
+        if isinstance(d[k], Struct):
+            d[k] = struct2dict(d[k])
+        elif isinstance(d[k], list):
+            d[k] = [struct2dict(v) if isinstance(v, Struct) else v for v in d[k]]
+    return d
+
+
 def dump_config(cfg: Struct, stream):
-    def struct2dict(s: Struct):
-        d = s.__dict__.copy()
-        for k in d:
-            if isinstance(d[k], Struct):
-                d[k] = struct2dict(d[k])
-            elif isinstance(d[k], list):
-                d[k] = [struct2dict(v) if isinstance(v, Struct) else v for v in d[k]]
-        return d
     parser = YAML()
     parser.indent = 4
     d = struct2dict(cfg)
@@ -1077,8 +1079,14 @@ def resample(raw: np.ndarray, t: np.ndarray,
 
 
 def process_rfi(cfg: Struct, raw_data: np.ndarray,
+                t: Optional[np.ndarray] = None,
+                r: Optional[isce3.core.Linspace] = None,
                 swaths: Optional[np.ndarray] = None,
-                tmpfile: Callable = lambda name: open(name, "wb")):
+                doppler: Optional[LUT2d] = None,
+                tmpfile: Callable = lambda name: open(name, "wb"),
+                h5group: h5py.Group = None,
+                fc: float = 0.0,
+                fs: float = 1.0):
     """
     Run radio frequency interference (RFI) detection and mitigation as
     configured by user input.
@@ -1089,14 +1097,27 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
         RSLC runconfig data
     raw_data : np.ndarray[np.complex64]
         Raw data layer.  May be modified in-place if mitigation is enabled.
+    t : np.ndarray [float64], optional
+        Pulse times (seconds since orbit/grid epoch). Required for tone-rank.
+    r : isce3.core.Linspace, optional
+        Range to each sample (meters). Required for tone-rank.
     swaths : np.ndarray [int], optional
         Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
         sub-swaths, nt is the number of pulses, and the trailing dimension is
         the [start, stop) indices of the sub-swath.  It's recommended to supply
         this for modes with dithered PRI, where it will be used to normalize
-        the sample covariance matrix.
+        the sample covariance matrix. Required for tone-rank.
+    doppler : isce3.core.LUT2d [double], optional
+        Raw data Doppler look up table.  Must be valid over entire grid.
+        Required for tone-rank.
     tmpfile : Callable
         Function of a single string argument that returns an open file handle.
+    h5group : h5py.Group, optional
+        Group to write RFI information to (tone-rank only).
+    fc : float, optional
+        Center frequency, Hz (tone-rank only)
+    fs : float, optional
+        Sample rate, Hz (tone-rank only)
 
     Returns
     -------
@@ -1116,8 +1137,6 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             raise ValueError("Requested RFI mitigation but disabled detection.")
         log.info("Configured to skip RFI processing")
         return raw_data, np.nan
-    if opt.mitigation_algorithm != "ST-EVD" and opt.mitigation_algorithm != "FDNF":
-        raise NotImplementedError("Only ST-EVD and FDNF RFI algorithms are supported")
     msg = f"Running {opt.mitigation_algorithm} radio frequency interference (RFI) detection"
     if opt.mitigation_enabled:
         msg += " and mitigation"
@@ -1158,7 +1177,7 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             rx_dynamic_range_db=opt_evd.rx_dynamic_range_db,
             swaths=swaths,
             raw_data_mitigated=raw_data_mitigated)
-    else:
+    elif opt.mitigation_algorithm == "FDNF":
         opt_fnf = opt.freq_notch_filter
         rfi_likelihood = isce3.signal.rfi_freq_null.run_freq_notch(
             raw_data,
@@ -1174,7 +1193,24 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             wb_detect=opt_fnf.wb_detect,
             mitigate_enable=opt.mitigation_enabled,
             raw_data_mitigated=raw_data_mitigated)
-
+    elif opt.mitigation_algorithm.lower() == "tone-rank":
+        if t is None or r is None or swaths is None or doppler is None:
+            raise ValueError("tone-rank algorithm requires t, r, swaths, and doppler parameters")
+        block_times, block_ranges, freq, means, isr, hits = isce3.signal.rfi_tone_rank.remove_loud_tones(
+            raw_data,
+            t, r, swaths, doppler,
+            detect_only=not opt.mitigation_enabled,
+            zout=raw_data_mitigated,
+            **struct2dict(opt.tone_rank),
+        )
+        rfi_likelihood = np.max(isr)
+        if h5group is not None:
+            f = fc + fs * freq
+            isce3.signal.rfi_tone_rank.write_tone_rank_results(h5group,
+                block_times, block_ranges, f, means, isr, hits)
+    else:
+        raise NotImplementedError(f"{opt.mitigation_algorithm} RFI algorithm "
+            "is not supported")
 
     log.info(f"RFI likelihood = {rfi_likelihood}")
     return raw_data_mitigated, rfi_likelihood
@@ -1953,6 +1989,8 @@ def focus(runconfig, runconfig_path=""):
 
 
     rfi_results = defaultdict(list)
+    rfi_opt = cfg.processing.radio_frequency_interference
+    using_tone_rank = rfi_opt.mitigation_algorithm.lower() == "tone-rank"
 
     # main processing loop
     for channel_out in common_mode:
@@ -1963,6 +2001,9 @@ def focus(runconfig, runconfig_path=""):
         deramp_ac = get_range_deramp(ogrid[frequency])
         writer = BackgroundWriter(scale * deramp_ac, acdata,
             cfg.output.data_type, mantissa_nbits=cfg.output.mantissa_nbits)
+
+        rfi_results_h5 = slc.root.require_group("metadata/RFI/"
+            f"frequency{frequency}/{pol}") if using_tone_rank else None
 
         # store noise powers and its azimuth times in containers
         # over all Raw files for a common band and pol.
@@ -2039,10 +2080,20 @@ def focus(runconfig, runconfig_path=""):
             uniform_pri = not raw.isDithered(channel_in.freq_id)
 
             raw_clean, rfi_likelihood = process_rfi(
-                cfg, 
-                raw_mm, 
-                None if uniform_pri else swaths,
-                temp
+                cfg,
+                raw_mm,
+                raw_times,
+                raw_grid.slant_ranges,
+                # Tone-rank always needs swaths, while ST-EVD/FDNF only need it
+                # for dithered modes
+                swaths if (using_tone_rank or not uniform_pri) else None,
+                dop[frequency],
+                temp,
+                # Only write rich HDF5 for tone-rank
+                (rfi_results_h5.require_group(f"raw{raw_times[0]:05.0f}")
+                    if using_tone_rank else None),
+                raw.getCenterFrequency(frequency),
+                fs,
             )
             rfi_results[(frequency, pol)].append(
                 (rfi_likelihood, raw_clean.shape[0]))
