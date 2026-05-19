@@ -1172,7 +1172,7 @@ detail::interpPolar(thrust::complex<float>* geo_image, const Vec3* geo_points,
     std::optional<const double*> extra_range_delays)
 {
     // thread index (1d grid of 1d blocks)
-    const auto i = static_cast<long>(blockIdx.x * blockDim.x + threadIdx.x);
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
     // bounds check
     if (i >= n) {
