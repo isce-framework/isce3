@@ -424,6 +424,10 @@ void mergePolarImages(
         const auto i_row1 = std::min(i_row0 + az_block_size, m);
         const auto block_npix = static_cast<size_t>(n) * (i_row1 - i_row0);
 
+        // Zero out block_image since interpPolar accumulates
+        checkCudaErrors(cudaMemset(block_image.data().get(), 0,
+                                   block_npix * sizeof(thrust::complex<float>)));
+
         const auto output_grid_subset = output_grid.offsetAndResize(i_row0, 0,
             i_row1 - i_row0, output_grid.width());
 
