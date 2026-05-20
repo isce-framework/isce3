@@ -537,8 +537,10 @@ def compute_differential_phase(
 
                     # Ensure complex (convert real-valued phase in radians to
                     # complex phase)
-                    first_data_block = _to_complex_if_needed(first_data_block)
-                    second_data_block = _to_complex_if_needed(second_data_block)
+                    use_complex = np.iscomplexobj(first_data_block) or np.iscomplexobj(second_data_block)
+                    if use_complex:
+                        first_data_block = _to_complex_if_needed(first_data_block)
+                        second_data_block = _to_complex_if_needed(second_data_block)
 
                     # Resample first dataset (frequency A / low subband) to
                     # match the grid of the second dataset (frequency B / high subband).
@@ -580,7 +582,10 @@ def compute_differential_phase(
                         invalid = None
 
                     # Compute the differential phase
-                    diff_phase = first_data_block * np.conj(second_data_block)
+                    if use_complex:
+                        diff_phase = first_data_block * np.conj(second_data_block)
+                    else:
+                        diff_phase = first_data_block - second_data_block
                     if invalid is not None:
                         diff_phase[invalid] = invalid_fill_value
 
@@ -883,13 +888,16 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                             'ionosphere',
                                             'main_diff_ms_band',
                                             'RIFG.h5')
+                unwrap_needed = True
+                diff_phase_output = pathlib.Path(diff_dir, 'RIFG.h5')
             else:
                 out_paths = original_out_paths
                 new_scratch = orig_scratch_path
-                phase_second = out_paths['RIFG']
+                phase_second = out_paths['RUNW']
                 additional_runw = out_paths['RUNW']
 
-            diff_phase_output = pathlib.Path(diff_dir, 'RIFG.h5')
+                unwrap_needed = False
+                diff_phase_output = pathlib.Path(diff_dir, 'RUNW.h5')
             iono_insar_cfg['product_path_group'][
                 'scratch_path'] = diff_dir
             iono_insar_cfg['product_path_group'][
@@ -925,12 +933,18 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
             second_data_path = []
             for pol_b in pol_list_b:
+                if rerun_insar_pairs > 0:
+                    dest_freq_path = f"{swath_path}/frequencyB"
+                    dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
+                    rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
 
-                dest_freq_path = f"{swath_path}/frequencyB"
-                dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
-                rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
+                    second_data_path.append(rifg_path_freq)
+                else:
+                    dest_freq_path = f"{runw_swath_path}/frequencyB"
+                    dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
+                    runw_path_b_freq = f"{dest_pol_path}/unwrappedPhase"
 
-                second_data_path.append(rifg_path_freq)
+                    second_data_path.append(runw_path_b_freq)
             second_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             second_mask_path = f"{dest_freq_path}/interferogram/mask"
 
@@ -951,8 +965,8 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             # Since main_diff_low_high_subband method does not need to
             # unwrap low and high subband interferogram, but need to
             # unwrap the difference between low and high subband interferogram
-            unwrap.run(iono_insar_cfg, out_paths['RIFG'], out_paths['RUNW'])
-
+            if unwrap_needed:
+                unwrap.run(iono_insar_cfg, out_paths['RIFG'], out_paths['RUNW'])
     # restore original paths
     original_cfg['input_file_group']['reference_rslc_file'] = \
         partial_orig_cfg_dict['reference_rslc_file']
@@ -1022,7 +1036,8 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths,
     # decimate offsets for frequency B and create ionosphere layers
     if 'B' in iono_freq_pol:
         decimate_freq_a_offset(iono_insar_cfg, original_dict)
-
+    print(iono_insar_cfg['processing']['input_subset'][
+                        'list_of_frequencies'])
     if iono_insar_cfg['processing']['fine_resample']['enabled']:
         resample_slc_v2.run(iono_insar_cfg, 'fine')
     else:
@@ -1216,6 +1231,20 @@ def run(cfg: dict, runw_hdf5: str):
         mad_scale_factor=filling_outlier_mad_scale_factor,
         outputdir=os.path.join(iono_path, iono_method))
 
+    # compute the full water masks
+    water_mask_b_blk = None
+    water_mask_a_blk = None
+    if "water" in mask_type and filter_bool:
+        water_mask_path = cfg[
+            "dynamic_ancillary_file_group"]["water_mask_file"]
+
+        water_distance_a = project_map_to_radar(cfg, water_mask_path, 'A')
+        water_mask_a = (water_distance_a == 0)
+
+        if iono_method in iono_method_sideband:
+            water_distance_b = project_map_to_radar(cfg, water_mask_path, 'B')
+            water_mask_b = (water_distance_b == 0)
+
     # pull parameters for polarizations
     pol_list_a = list(iono_freq_pols['A'])
     if iono_method in iono_method_sideband:
@@ -1389,6 +1418,10 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_main],
                         dtype=int)
 
+                if "water" in mask_type:
+                    water_mask_a_blk = None if water_mask_a is None else \
+                        water_mask_a[row_start:row_start + block_rows_data, :]
+
                 if iono_method == 'main_diff_low_high_subband':
                     main_image = np.empty([block_rows_data, cols_main],
                                           dtype=float)
@@ -1554,6 +1587,15 @@ def run(cfg: dict, runw_hdf5: str):
                     subswath_mask_side_image = np.empty(
                         [block_rows_data, cols_side],
                         dtype=int)
+
+                if "water" in mask_type:
+                    water_mask_a_blk = None if water_mask_a is None \
+                        else water_mask_a[row_start:row_start +
+                                          block_rows_data, :]
+
+                    water_mask_b_blk = None if water_mask_b is None \
+                        else water_mask_b[row_start:row_start +
+                                          block_rows_data, :]
 
                 with HDF5OptimizedReader(
                         name=runw_freq_a_str, mode='r',
@@ -1836,15 +1878,10 @@ def run(cfg: dict, runw_hdf5: str):
                     # boundary of the water bodies. The values 0-100 represent
                     # the distance from the coastline and values from 101-200
                     # represent the distance from inland water boundaries.
-                    water_mask_path = \
-                            cfg["dynamic_ancillary_file_group"][
-                                "water_mask_file"]
-                    water_distance = project_map_to_radar(
-                        cfg,
-                        water_mask_path,
-                        'A')
-                    mask_image = water_distance[
-                        row_start:row_start + block_rows_data, :] == 0
+                    if iono_method in iono_method_sideband:
+                        mask_image = water_mask_b_blk
+                    else:
+                        mask_image = water_mask_a_blk
                     mask_array = mask_array & mask_image
 
                 valid_area = iono_phase_obj.get_valid_area(

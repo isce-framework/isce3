@@ -46,12 +46,6 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['geo2rdr']:
         geo2rdr.run(cfg)
 
-    # Remove the rdr2geo scratch folder
-    rdr2geo_scratch_path = pathlib.Path(f"{scratch_path}/rdr2geo")
-    _remove_intermediate_dir(rdr2geo_scratch_path,
-                             intermediate_files_removal_flag,
-                             info_channel)
-
     if run_steps['prepare_insar_hdf5']:
         prepare_insar_hdf5.run(cfg)
 
@@ -140,8 +134,8 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         # Geocode ROFF
         geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], InputProduct.ROFF)
 
-    # Remove the 'ionosphere' and 'geocode_corrections' scratch folders
-    for workflow_name in ['ionosphere','geocode_corrections']:
+    # Remove the 'ionosphere', 'rdr2geo' and 'geocode_corrections' scratch folders
+    for workflow_name in ['ionosphere', 'geocode_corrections', 'rdr2geo']:
         workflow_scratch_path = pathlib.Path(f"{scratch_path}/{workflow_name}")
         _remove_intermediate_dir(workflow_scratch_path,
                                  intermediate_files_removal_flag,
