@@ -1347,6 +1347,10 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None,
     log.info("Normalizing chirp to unit white noise gain.")
     chirp *= 1.0 / np.linalg.norm(chirp)
 
+    if channel_in.band != channel_out.band:
+        log.info("Re-scaling by mixed-mode filter bandwidth ratio")
+        chirp *= np.sqrt(channel_out.band.width / channel_in.band.width)
+
     # Careful to use effective TBP after mixed-mode filtering.
     time_bw_product = channel_out.band.width**2 / abs(K)
 
