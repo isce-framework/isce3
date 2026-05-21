@@ -1,8 +1,9 @@
 import pathlib
 import journal
 import numpy as np
-from osgeo import gdal, osr
 
+from pyproj import Transformer
+from osgeo import gdal, osr
 from scipy.ndimage import median_filter, map_coordinates
 
 
@@ -392,6 +393,47 @@ def _read_gdal_with_bbox(input_raster, bbox, bbox_epsg=4326):
     return arr, [block_x0, block_y0, block_dx, block_dy]
 
 
+def _get_epsg_from_gdal_dataset(dataset):
+    """
+    Detect EPSG code from a GDAL dataset.
+
+    Parameters
+    ----------
+    dataset : gdal.Dataset
+        Input GDAL dataset
+
+    Returns
+    -------
+    int or None
+        EPSG code if successfully detected, None otherwise
+    """
+    proj = dataset.GetProjection()
+
+    if not proj:
+        return None
+
+    srs = osr.SpatialReference()
+    try:
+        srs.ImportFromWkt(proj)
+    except Exception:
+        return None
+
+    try:
+        srs.AutoIdentifyEPSG()
+    except Exception:
+        pass
+
+    epsg_code = srs.GetAuthorityCode(None)
+    if epsg_code is not None:
+        try:
+            return int(epsg_code)
+        except (ValueError, TypeError):
+            print(f"Warning: Failed to detect EPSG code. Dataset: {dataset.GetDescription()}, projection: {proj}")
+            return None
+
+    return None
+
+
 def _find_rdr2geo_paths(scratch_path, freq):
     """
     Find x.rdr and y.rdr files for the given frequency inside scratch_path.
@@ -479,9 +521,22 @@ def project_map_to_radar(cfg, input_data_path, freq):
     _, output_dtype = _get_gdal_raster_shape_type(input_data_path)
     geo_data_raster = gdal.Open(input_data_path)
 
+    # Determine the EPSG code from the input watermask projection
+    # The coordinate values in x.rdr and y.rdr should match this projection
+    bbox_epsg = _get_epsg_from_gdal_dataset(geo_data_raster)
+
+    if bbox_epsg is None:
+        error_channel = journal.error('unwrap.preprocess.project_map_to_radar')
+        err_str = (f"Could not determine EPSG code from input raster: "
+                   f"{input_data_path}. Please ensure the raster has valid "
+                   f"projection information.")
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+
     # for both x and y rasters, decimate and get extents
     decimated_blocks = {}
     decimated_extents = {}
+
     for xy, input_path in topo_paths.items():
         # open input raster for reading
         input_data_raster = gdal.Open(input_path)
@@ -503,18 +558,31 @@ def project_map_to_radar(cfg, input_data_path, freq):
                        slice_rg_start:slice_rg_end:rg_looks]
 
         # save decimated extents and array for current axis
-        decimated_extents[xy] = [np.nanmin(decimated_arr),
-                                 np.nanmax(decimated_arr)]
+
         decimated_blocks[xy] = decimated_arr
         del input_data
+
+    # Reproject coordinates in `decimated_blocks` when `geo_data_raster` is not in 4326
+    # NOTE: transforming (5000, 5000) points took about 2.5 seconds on M1 pro, so
+    # this should not be a bottleneck.
+    if bbox_epsg != 4326:
+        transformer_4326_to_watermask = Transformer.from_crs(4326, bbox_epsg, always_xy=True)
+        decimated_blocks['x'], decimated_blocks['y'] = transformer_4326_to_watermask.transform(
+                decimated_blocks['x'], decimated_blocks['y'])
+
+    # update decimated extents after reprojection
+    for xy in ['x', 'y']:
+        decimated_extents[xy] = [np.nanmin(decimated_blocks[xy]),
+                                 np.nanmax(decimated_blocks[xy])]
 
     # get bounding for decimated extents
     bbox = [decimated_extents['x'][0], decimated_extents['y'][0],
             decimated_extents['x'][1], decimated_extents['y'][1]]
 
     # read map bounded by decimated extents of xy block
+    # Pass the detected EPSG code so bbox coordinates are interpreted correctly
     input_arr_block, [block_x0, block_y0, block_dx, block_dy] = \
-        _read_gdal_with_bbox(geo_data_raster, bbox)
+        _read_gdal_with_bbox(geo_data_raster, bbox, bbox_epsg=bbox_epsg)
 
     # prepare output array
     output_arrays = np.zeros(decimated_blocks['y'].shape,
@@ -578,4 +646,3 @@ def interpret_subswath_mask(subswath_mask, nodata=255):
     water = np.where(nd, False, water)
 
     return reference_valid, secondary_valid, water
-    
