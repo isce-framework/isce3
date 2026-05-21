@@ -6,16 +6,53 @@ import json
 import os
 import traceback
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Callable
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
 import numpy as np
 import shapely
+from scipy.integrate import quad
+from scipy.optimize import root_scalar
 
 import isce3
+from isce3.core import abs2
 import nisar
 
+
+def make_irf(weights, normalize=True):
+    w = np.fft.fftshift(weights) / len(weights)
+    if normalize:
+        w *= 1.0 / np.sum(w)
+    f = np.fft.fftfreq(len(w))
+    return lambda t: np.exp(1j * 2 * np.pi * f * t).dot(w)
+
+def get_irf_width_area(irf: Callable[[float], float], t_max=np.inf):
+    # Find half-power width using bracketing root-finding algorithm.
+    hw = root_scalar(lambda t: abs2(irf(t)) - 0.5, x0=0.0, x1=1.0).root
+    # full width = 2 * half width
+    width = float(2 * hw)
+
+    # Find area with numerical integration (quadrature).
+    # Integrate from [0, inf) and double the result.
+    area = 2 * quad(lambda t: abs2(irf(t)), 0, t_max,
+        limit=10_000, epsabs=1e-6)[0]
+    return width, area
+
+def get_window_correction(weights):
+    # Note that DTFT is periodic, so limit integration to one period.
+    t_max = len(weights) / 2
+    width_win, area_win = get_irf_width_area(make_irf(weights), t_max=t_max)
+    width_box, area_box = get_irf_width_area(make_irf(weights > 0.0), t_max=t_max)
+    return area_win / width_win / (area_box / width_box)
+
+def get_abscal_correction(rslc):
+    with h5py.File(fn, mode="r") as h5:
+        weights_az = h5["/science/LSAR/RSLC/metadata/processingInformation/parameters/azimuthChirpWeighting"][:].astype("f8")
+        weights_rg = h5["/science/LSAR/RSLC/metadata/processingInformation/parameters/rangeChirpWeighting"][:].astype("f8")
+    corr_az = get_window_correction(weights_az)
+    corr_rg = get_window_correction(weights_rg)
+    return corr_rg * corr_az
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -245,6 +282,8 @@ def estimate_abscal_factor(
     # Get platform attitude data.
     attitude = rslc.getAttitude()
 
+    window_correction = get_abscal_correction(rslc)
+
     # Estimate the absolute calibration error (the ratio of the measured RCS to the
     # predicted RCS) for a single corner reflector.
     def estimate_abscal_error(
@@ -272,6 +311,8 @@ def estimate_abscal_factor(
             power_method=power_method,
             pthresh=pthresh,
         )
+
+        measured_rcs *= window_correction
 
         return measured_rcs / predicted_rcs
 
