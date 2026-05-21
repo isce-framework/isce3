@@ -32,7 +32,7 @@ from nisar.static.water_mask import binarize_and_reproject_water_mask
 
 import isce3
 from isce3.geometry import make_geo_grid_bounding_polygon, load_dem_from_proj
-from isce3.core import normalize_data_interp_method
+from isce3.core import normalize_look_side, normalize_data_interp_method
 
 
 def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
@@ -117,6 +117,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     radar_grid_spacing_params = radar_grid_params["spacing"]
     az_spacing = radar_grid_spacing_params["az_spacing"]
     rg_spacing = radar_grid_spacing_params["rg_spacing"]
+
     pts_per_side = radar_grid_spacing_params["pts_per_side"]
 
     if az_spacing is not None and not (az_spacing > 0.0):
@@ -125,11 +126,60 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     if rg_spacing is not None and not (rg_spacing > 0.0):
         raise ValueError(f"Runconfig {rg_spacing=}, must be > 0")
 
-    logger.info("Estimate radar grid spacing")
+    bounding_box_params = radar_grid_params["bounding_box"]
+    start_datetime_str = bounding_box_params["start_time"]
+    end_datetime_str = bounding_box_params["end_time"]
+    start_range = bounding_box_params["start_range"]
+    end_range = bounding_box_params["end_range"]
+    min_height = bounding_box_params["min_height"]
+    max_height = bounding_box_params["max_height"]
+    pts_per_edge = bounding_box_params["pts_per_edge"]
+    az_margin = bounding_box_params["az_margin"]
+    rg_margin = bounding_box_params["rg_margin"]
+
+    start_time = None
+    end_time = None
+
+    # Print user radar grid bounding box parameters, if provided.
+    if (start_datetime_str is not None or start_range is not None or
+            end_datetime_str is not None or end_range is not None):
+
+        logger.info("Using user-specified radar grid bounding box parameters")
+        if start_datetime_str is not None:
+            logger.info(f'    start time: {start_datetime_str}')
+            start_time = isce3.core.DateTime(start_datetime_str)
+
+        if end_datetime_str is not None:
+            logger.info(f'    end time: {end_datetime_str}')
+            end_time = isce3.core.DateTime(end_datetime_str)
+
+        if start_range is not None:
+            logger.info(f'    start range [m]: {start_range}')
+
+        if end_range is not None:
+            logger.info(f'    end range [m]: {end_range}')
+
     if rg_spacing is not None:
         logger.info(f'    range spacing: {rg_spacing}')
     if az_spacing is not None:
         logger.info(f'    azimuth time interval: {az_spacing}')
+
+    if start_time is not None and az_margin != 0.0:
+        start_time -= isce3.core.TimeDelta(az_margin)
+        logger.info(f'    start time (adjusted for az. margin) {az_margin}:'
+                    f' {start_time}')
+    if end_time is not None and az_margin != 0.0:
+        end_time += isce3.core.TimeDelta(az_margin)
+        logger.info(f'    end time (adjusted for az. margin) {az_margin}:'
+                    f' {end_time}')
+    if start_range is not None and rg_margin != 0.0:
+        start_range -= rg_margin
+        logger.info(f'    start range (adjusted for rg margin) {rg_margin}:'
+                    f' {start_range}')
+    if end_range is not None and rg_margin != 0.0:
+        end_range += rg_margin
+        logger.info(f'    end range (adjusted for rg margin) {rg_margin}:'
+                    f' {end_range}')
 
     if rg_spacing is None or az_spacing is None:
         az_spacing_inferred, rg_spacing_inferred = \
@@ -149,19 +199,58 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             logger.info(f'   inferred azimuth time interval: {az_spacing}')
             az_spacing = az_spacing_inferred
 
-    # Compute a radar grid whose footprint on the ground encloses the geocoded
-    # grid on which each output layer is defined.
-    logger.info("Compute a radar grid spanning the region of interest")
-    radar_grid = isce3.geometry.get_bounding_radar_grid(
-        geo_grid=geo_grid,
-        az_spacing=az_spacing,
-        rg_spacing=rg_spacing,
-        orbit=orbit,
-        look_side=look_side,
-        wavelength=wavelength,
-        doppler=img_grid_doppler,
-        **radar_grid_params["bounding_box"],
-    )
+    if (start_time is not None and start_range is not None and
+            end_time is not None and end_range is not None):
+
+        epoch = orbit.reference_epoch
+
+        t0 = (isce3.core.DateTime(start_time) - epoch).total_seconds()
+        tf = (isce3.core.DateTime(end_time) - epoch).total_seconds()
+
+        num_az = round((tf - t0) / az_spacing)
+        num_rg = round((end_range - start_range) / rg_spacing)
+
+        logger.info(f'    number of lines: {num_az}')
+        logger.info(f'    number of range samples: {num_rg}')
+
+        radar_grid = isce3.product.RadarGridParameters(
+            sensing_start=t0,
+            wavelength=wavelength,
+            prf=1.0 / az_spacing,
+            starting_range=start_range,
+            range_pixel_spacing=rg_spacing,
+            lookside=normalize_look_side(look_side),
+            length=num_az,
+            width=num_rg,
+            ref_epoch=epoch,
+        )
+
+    elif (start_time is not None or start_range is not None or
+            end_time is not None or end_range is not None):
+        raise ValueError(
+            "If specifying radar grid bounding box parameters, must provide"
+            " all of 'start_time', 'start_range', 'end_time', and"
+            " 'end_range'"
+        )
+    else:
+
+        # Compute a radar grid whose footprint on the ground encloses the geocoded
+        # grid on which each output layer is defined.
+        logger.info("Compute a radar grid spanning the region of interest")
+        radar_grid = isce3.geometry.get_bounding_radar_grid(
+            geo_grid=geo_grid,
+            az_spacing=az_spacing,
+            rg_spacing=rg_spacing,
+            orbit=orbit,
+            look_side=look_side,
+            wavelength=wavelength,
+            doppler=img_grid_doppler,
+            min_height=min_height,
+            max_height=max_height,
+            pts_per_edge=pts_per_edge,
+            az_margin=az_margin,
+            rg_margin=rg_margin
+        )
     logger.info(f"Using radar grid: {radar_grid}")
 
     # Get the native Doppler LUT.
