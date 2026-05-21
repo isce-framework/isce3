@@ -19,3 +19,4 @@ from .block_param_generator import BlockParam
 from .projections import is_utm
 from .serialization import load_orbit_from_h5_group
 from . import types
+from .decibel import pow2db, amp2db, abs2
