@@ -132,14 +132,13 @@ DEMInterpolator DEMRasterToInterpolator(
     return demInterp;
 }
 
-
 isce3::error::ErrorCode loadDemFromProj(
     isce3::io::Raster& dem_raster, const double x0, const double xf,
     const double minY, const double maxY,
     DEMInterpolator* dem_interp,
     isce3::core::ProjectionBase* proj, const int dem_margin_x_in_pixels,
-    const int dem_margin_y_in_pixels, const int dem_raster_band) {
-
+    const int dem_margin_y_in_pixels, const int dem_raster_band,
+    const int n_edge_samples){
     double min_x, max_x, min_y, max_y;
 
     if (proj == nullptr || proj->code() == dem_raster.getEPSG()) {
@@ -152,110 +151,62 @@ isce3::error::ErrorCode loadDemFromProj(
     } else {
         std::unique_ptr<isce3::core::ProjectionBase> dem_proj(
                 isce3::core::createProj(dem_raster.getEPSG()));
-        auto p_west_1_llh = proj->inverse({x0, minY, 0});
-        auto p_west_2_llh = proj->inverse({x0, maxY, 0});
-        auto p_east_1_llh = proj->inverse({xf, minY, 0});
-        auto p_east_2_llh = proj->inverse({xf, maxY, 0});
 
-        auto p_west_1_xy = dem_proj->forward(p_west_1_llh);
-        auto p_west_2_xy = dem_proj->forward(p_west_2_llh);
-        auto p_east_1_xy = dem_proj->forward(p_east_1_llh);
-        auto p_east_2_xy = dem_proj->forward(p_east_2_llh);
+        const int N = std::max(n_edge_samples, 2);
 
-        min_y = std::min(std::min(p_west_1_xy[1], p_west_2_xy[1]),
-                         std::min(p_east_1_xy[1], p_east_2_xy[1]));
-        max_y = std::max(std::max(p_west_1_xy[1], p_west_2_xy[1]),
-                         std::max(p_east_1_xy[1], p_east_2_xy[1]));
+        // Densely sample all four edges of the input bounding box
+        // to capture curvature introduced by reprojection
+        // (e.g. UTM -> geographic).
+        std::vector<double> all_x, all_y;
+        all_x.reserve(4 * N);
+        all_y.reserve(4 * N);
 
-        /* We address two cases in this if statement below:
-           1. If the DEM projection is NOT geographic:
-              No antimeridian crossing, compute `min_x` and `max_x`
-              directly
-           2. The user projection is in polar stereographic AND 
-              the DEM projection is geographic:
-              In this case we need to check for antimeridian crossing.
-        */
-        if (dem_raster.getEPSG() != 4326 or proj->code() == 3031 or
-                proj->code() == 3413) {
+        for (int i = 0; i < N; ++i) {
+            double t = static_cast<double>(i) / (N - 1);
+            double xMid = x0 + t * (xf - x0);
+            double yMid = minY + t * (maxY - minY);
 
-            // Compute X min/max directly
-            min_x = std::min(std::min(p_west_1_xy[0], p_west_2_xy[0]),
-                             std::min(p_east_1_xy[0], p_east_2_xy[0]));
-            max_x = std::max(std::max(p_west_1_xy[0], p_west_2_xy[0]),
-                             std::max(p_east_1_xy[0], p_east_2_xy[0]));
+            // West edge (x = x0, y varies)
+            auto west_llh = proj->inverse({x0, yMid, 0});
+            auto west_xy  = dem_proj->forward(west_llh);
+            all_x.push_back(west_xy[0]);
+            all_y.push_back(west_xy[1]);
 
-            if (dem_raster.getEPSG() == 4326 and
-                    max_x - min_x > 180 and
-                    (proj->code() == 3031 or proj->code() == 3413)) {
+            // East edge (x = xf, y varies)
+            auto east_llh = proj->inverse({xf, yMid, 0});
+            auto east_xy  = dem_proj->forward(east_llh);
+            all_x.push_back(east_xy[0]);
+            all_y.push_back(east_xy[1]);
 
-                /*
-                If (DEM is in geographic (EPSG: 4326) and
-                the difference between max and min longitudes is greater
-                than 180 and the map grid is in polar stereo (i.e., proj
-                epsg == 3031 or 3413), we cannot assume that `x0` is at
-                the western side of `xf`.
-                In that case, we also compute the (min/max using longitudes in
-                the [0, 360] range */
- 
-                /* The conversion of longitude values from the [-180, 180]
-                domain to the [0, 360] domain is done by adding 360 to
-                negative longitude values. */
-                const double p1_0_360 = \
-                    p_west_1_xy[0] < 0 ? p_west_1_xy[0] + 360 : p_west_1_xy[0];
-                const double p2_0_360 = \
-                    p_west_2_xy[0] < 0 ? p_west_2_xy[0] + 360 : p_west_2_xy[0];
-                const double p3_0_360 = \
-                    p_east_1_xy[0] < 0 ? p_east_1_xy[0] + 360 : p_east_1_xy[0];
-                const double p4_0_360 = \
-                    p_east_2_xy[0] < 0 ? p_east_2_xy[0] + 360 : p_east_2_xy[0];
+            // South edge (y = minY, x varies)
+            auto south_llh = proj->inverse({xMid, minY, 0});
+            auto south_xy  = dem_proj->forward(south_llh);
+            all_x.push_back(south_xy[0]);
+            all_y.push_back(south_xy[1]);
 
-                // Compute min/max longitudes in the [0, 360] domain
-                min_x = std::min(std::min(p1_0_360, p2_0_360),
-                                 std::min(p3_0_360, p4_0_360));
-                max_x = std::max(std::max(p1_0_360, p2_0_360),
-                                 std::max(p3_0_360, p4_0_360));
-                }
+            // North edge (y = maxY, x varies)
+            auto north_llh = proj->inverse({xMid, maxY, 0});
+            auto north_xy  = dem_proj->forward(north_llh);
+            all_x.push_back(north_xy[0]);
+            all_y.push_back(north_xy[1]);
+        }
 
-       } else {
-            /*
-            X-coordinates may be wrapped due to the antimeridian
-            crossing. In this case, we compute western and eastern boundaries
-            separately.
-            We just need to make sure that there's no antimeridian crossing
-            in between the western and eastern edges
-            */
+        min_y = *std::min_element(all_y.begin(), all_y.end());
+        max_y = *std::max_element(all_y.begin(), all_y.end());
 
-            // Western edge
-            if (std::abs(p_west_1_xy[0] - p_west_2_xy[0]) < 180) {
+        min_x = *std::min_element(all_x.begin(), all_x.end());
+        max_x = *std::max_element(all_x.begin(), all_x.end());
 
-                // Normal case
-                min_x = std::min(p_west_1_xy[0], p_west_2_xy[0]);
-            }
-            else {
-                
-                // Antimeridian crossing
-                const double p1_0_360 = \
-                    p_west_1_xy[0] < 0 ? p_west_1_xy[0] + 360 : p_west_1_xy[0];
-                const double p2_0_360 = \
-                    p_west_2_xy[0] < 0 ? p_west_2_xy[0] + 360 : p_west_2_xy[0];
-                min_x = std::min(p1_0_360, p2_0_360);
-            }
-
-            // Eastern edge
-            if (std::abs(p_east_1_xy[0] - p_east_2_xy[0]) < 180) {
-                
-                // Normal case
-                max_x = std::max(p_east_1_xy[0], p_east_2_xy[0]);
-            }
-
-            else {
-
-                // Antimeridian crossing
-                const double p3_0_360 = \
-                    p_east_1_xy[0] < 0 ? p_east_1_xy[0] + 360 : p_east_1_xy[0];
-                const double p4_0_360 = \
-                    p_east_2_xy[0] < 0 ? p_east_2_xy[0] + 360 : p_east_2_xy[0];
-                max_x = std::max(p3_0_360, p4_0_360);
+        // If the DEM is in geographic coordinates and the X range
+        // exceeds 180 degrees, an antimeridian crossing is likely.
+        // Retry in [0, 360] domain.
+        if (dem_raster.getEPSG() == 4326 && max_x - min_x > 180.0) {
+            min_x = std::numeric_limits<double>::max();
+            max_x = std::numeric_limits<double>::lowest();
+            for (double lon : all_x) {
+                double lon_360 = lon < 0 ? lon + 360.0 : lon;
+                min_x = std::min(min_x, lon_360);
+                max_x = std::max(max_x, lon_360);
             }
         }
     }
@@ -263,7 +214,6 @@ isce3::error::ErrorCode loadDemFromProj(
     float margin_y = dem_margin_y_in_pixels * std::abs(dem_raster.dy());
     min_y -= margin_y;
     max_y += margin_y;
-
 
     float margin_x = dem_margin_x_in_pixels * dem_raster.dx();
     min_x -= margin_x;
