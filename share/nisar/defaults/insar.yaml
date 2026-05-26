@@ -287,6 +287,20 @@ runconfig:
                     median_filter_threshold: 0.6
                     # Coherence thresholds 0<= thresholds <=1
                     filter_coherence_threshold: 0.5
+                    # Gradient estimation window
+                    gradient_mask_window: 25
+                    # Gradient estimation method
+                    gradient_mask_method: 'mean'
+                    # Gradient estimation threshold
+                    # split_main_band: first -> low subband, second -> high subband
+                    # main_diff_low_high_subband: first-> main band, second -> diff
+                    # main_side_band: first -> main band, second -> side band
+                    # main_diff_ms_band: first -> main_band, second-> diff
+                    gradient_mask_threshold_first: 1
+                    gradient_mask_threshold_second: 1
+                    # Gredient method percentile
+                    gradient_mask_percentile: 90
+
                     # Filling method for invalid regions
                     # (nearest, smoothed)
                     filling_method: nearest

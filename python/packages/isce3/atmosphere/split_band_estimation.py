@@ -3,6 +3,8 @@ import journal
 import numpy as np
 
 from .ionosphere_estimation import IonosphereEstimation
+from isce3.atmosphere.ionosphere_filter import (
+    detect_high_phase_gradient_local)
 from isce3.signal.interpolate_by_range import decimate_freq_a_array
 from isce3.unwrap.preprocess import interpret_subswath_mask
 
@@ -455,6 +457,133 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                          ~np.isnan(low_band_array)
         mask_array = self.remove_single_pixels(mask_array)
 
+        return mask_array
+
+    def get_gradient_mask(
+            self,
+            main_array=None,
+            side_array=None,
+            diff_ms_array=None,
+            low_band_array=None,
+            high_band_array=None,
+            diff_low_high_band_array=None,
+            mask=None,
+            slant_main=None,
+            slant_side=None,
+            window=None,
+            threshold_first=None,
+            threshold_second=None,
+            method='mean',
+            percentile=None):
+        """
+        Generate a boolean mask identifying pixels with consistently high phase
+        gradient based on one or two input interferometric arrays.
+        This function detects high phase gradient regions using
+        `detect_high_phase_gradient_local` and combines two gradient masks
+        (first and second) using a logical AND operation. The resulting mask
+        highlights pixels that simultaneously exceed gradient thresholds in
+        both inputs. Optionally, frequency A/B alignment (decimation) is applied
+        when side-band data is involved.
+        The function supports two modes:
+        1. Using `main_array` and `diff_low_high_band_array`
+        2. Using `low_band_array` and `high_band_array`
+        Small isolated pixels are removed from the final mask.
+        Parameters
+        ----------
+        main_array : numpy.ndarray, optional
+            Interferometric phase (or coherence) array for the main band.
+            Used when `diff_low_high_band_array` is provided.
+        side_array : numpy.ndarray, optional
+            Interferometric array for the side band. If provided, low/high band
+            arrays are decimated to match the geometry of the main band.
+        diff_ms_array : numpy.ndarray, optional
+            Difference array between main and side bands (currently unused).
+        low_band_array : numpy.ndarray, optional
+            Interferometric array for the low-frequency sub-band.
+        high_band_array : numpy.ndarray, optional
+            Interferometric array for the high-frequency sub-band.
+        diff_low_high_band_array : numpy.ndarray, optional
+            Difference array between high and low sub-band interferograms.
+            If provided, this is used instead of separate low/high arrays.
+        slant_main : numpy.ndarray, optional
+            Slant range coordinates for the main (frequency A) band.
+        slant_side : numpy.ndarray, optional
+            Slant range coordinates for the side (frequency B) band.
+        window : int, optional
+            Window size used for local gradient estimation.
+        threshold_first : float
+            Threshold for the first gradient mask (e.g., main or low band).
+        threshold_second : float
+            Threshold for the second gradient mask (e.g., diff or high band).
+        method : str, optional
+            Method used for gradient aggregation within the local window.
+            Options depend on `detect_high_phase_gradient_local`
+            (e.g., 'mean', 'max', 'percentile).
+        percentile : float, optional
+            Percentile value used when method requires percentile-based 
+            thresholding.
+        Returns
+        -------
+        mask_array : numpy.ndarray (bool)
+            2D boolean mask where:
+            - True (1): pixels with high phase gradient in both inputs
+            - False (0): pixels not meeting the criteria
+            The mask is post-processed to remove isolated single pixels.
+        """
+        # decimate coherence or connected components
+        # when side array is also used.
+        if side_array is not None:
+            if slant_main is None:
+                slant_main = self.slant_main
+            if slant_side is None:
+                slant_side = self.slant_side
+
+            if low_band_array is not None:
+                low_band_array = decimate_freq_a_array(
+                    slant_main,
+                    slant_side,
+                    low_band_array)
+            if high_band_array is not None:
+                high_band_array = decimate_freq_a_array(
+                    slant_main,
+                    slant_side,
+                    high_band_array)
+
+        if diff_low_high_band_array is not None:
+            _, _, grad_mask_first = detect_high_phase_gradient_local(
+                main_array,
+                threshold_first,
+                window_size=window,
+                mask=mask,
+                method=method,
+                percentile=percentile)
+
+            _, _, grad_mask_second = detect_high_phase_gradient_local(
+                diff_low_high_band_array,
+                threshold_second,
+                window_size=window,
+                mask=mask,
+                method=method,
+                percentile=percentile)
+
+        elif low_band_array is not None and high_band_array is not None:
+            _, _, grad_mask_first = detect_high_phase_gradient_local(
+                low_band_array,
+                threshold_first,
+                window_size=window,
+                mask=mask,
+                method=method,
+                percentile=percentile)
+
+            _, _, grad_mask_second = detect_high_phase_gradient_local(
+                high_band_array,
+                threshold_second,
+                window_size=window,
+                mask=mask,
+                method=method,
+                percentile=percentile)
+        mask_array = grad_mask_first & grad_mask_second
+        mask_array = self.remove_single_pixels(mask_array)
         return mask_array
 
     def estimate_iono_std(

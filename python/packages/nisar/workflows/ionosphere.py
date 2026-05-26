@@ -10,7 +10,10 @@ import isce3
 import journal
 import numpy as np
 from isce3.atmosphere.ionosphere_filter import (
-    IonosphereFilter, read_block_array, unwrapping_correction_with_filter,
+    IonosphereFilter,
+    build_mask,
+    read_block_array,
+    unwrapping_correction_with_filter,
     write_array)
 from isce3.atmosphere.main_band_estimation import (
     MainDiffMsBandIonosphereEstimation, MainSideBandIonosphereEstimation)
@@ -364,6 +367,85 @@ def copy_iono_datasets(iono_insar_cfg,
                 # Add statistics to ionosphere datasets in RUNW
                 for dst_iono_path in dst_iono_paths:
                     compute_stats_real_hdf5_dataset(dst_h5[dst_iono_path])
+
+
+def apply_bridge_with_mask(
+    phase_image,
+    *,
+    shared_params,
+    coherence_image=None,
+    conncomp_image=None,
+    subswath_mask_image=None,
+    water_mask_image=None,
+    gradient_threshold=None,
+    zero_to_nan=False,
+):
+    """
+    Apply pre-bridge masking and bridge algorithm using shared parameters.
+
+    Parameters
+    ----------
+    phase_image : numpy.ndarray
+        Input phase image.
+    shared_params : dict
+        Dictionary containing common mask and bridge parameters.
+    coherence_image : numpy.ndarray, optional
+        Coherence image used for masking.
+    conncomp_image : numpy.ndarray, optional
+        Connected component image used for masking.
+    subswath_mask_image : numpy.ndarray, optional
+        Subswath mask image used for masking.
+    water_mask_image : numpy.ndarray, optional
+        Water mask image used for masking.
+    gradient_threshold : float, optional
+        Per-image gradient threshold. If None, use the value from shared_params.
+    zero_to_nan : bool, optional
+        Convert zeros in bridged result to NaN.
+
+    Returns
+    -------
+    bridged_image : numpy.ndarray
+        Bridged output image.
+    mask : numpy.ndarray
+        Boolean mask used before bridging.
+    """
+    if phase_image is None:
+        return None, None
+
+    local_gradient_threshold = (
+        mask_params['gradient_threshold']
+        if gradient_threshold is None
+        else gradient_threshold
+    )
+    mask_params = shared_params['mask']
+    masked_image, mask = build_mask(
+        phase_image,
+        coherence_image=coherence_image,
+        conncomp_image=conncomp_image,
+        subswath_mask_image=subswath_mask_image,
+        water_mask_image=water_mask_image,
+        coh_threshold=mask_params['coh_threshold'],
+        gradient_threshold=local_gradient_threshold,
+        gradient_window_size=mask_params['gradient_window_size'],
+        gradient_method=mask_params['gradient_method'],
+        gradient_mask_percentile=mask_params['gradient_mask_percentile'],
+        mask_type=mask_params['mask_type'],
+        fill_value=mask_params.get('fill_value', 0.0),
+    )
+    bridge_params = shared_params['bridge']
+    bridged_image = bridge_unwrapped_phase(
+        masked_image,
+        radius=bridge_params['radius'],
+        min_num_pixel=bridge_params['min_num_pixel'],
+        erosion_size=bridge_params['erosion_size'],
+        ramp_type=bridge_params['ramp_type'],
+        deramp_max_num_sample=bridge_params['deramp_max_num_sample'],
+    )
+
+    if zero_to_nan:
+        bridged_image[bridged_image == 0] = np.nan
+
+    return bridged_image, mask
 
 
 def compute_differential_phase(
@@ -1072,7 +1154,6 @@ def run(cfg: dict, runw_hdf5: str):
     # pull parameters for dispersive filter
     filter_bool = filter_cfg['enabled']
     mask_type = filter_cfg['filter_mask_type']
-    filter_coh_thresh = filter_cfg['filter_coherence_threshold']
     kernel_range_size = filter_cfg['kernel_range']
     kernel_azimuth_size = filter_cfg['kernel_azimuth']
     kernel_sigma_range = filter_cfg['sigma_range']
@@ -1090,6 +1171,15 @@ def run(cfg: dict, runw_hdf5: str):
     min_cluster_pixels = filter_cfg['min_cluster_pixels']
     unwrap_correction_bool = filter_cfg['unwrap_correction']
 
+    # Mask parameter
+    mask_type = filter_cfg['filter_mask_type']
+    filter_coh_thresh = filter_cfg['filter_coherence_threshold']
+    gradient_mask_method = filter_cfg['gradient_mask_method']
+    gradient_mask_window = filter_cfg['gradient_mask_window']
+    gradient_mask_threshold_first = filter_cfg['gradient_mask_threshold_first']
+    gradient_mask_threshold_second = filter_cfg['gradient_mask_threshold_second']
+    gradient_mask_percentile = filter_cfg['gradient_mask_percentile']
+
     # bridge algorithm options
     bridge_algorithm_bool = filter_cfg['bridge_algorithm_enabled']
     bridge_minimum_samples = filter_cfg['bridge_minimum_samples']
@@ -1097,6 +1187,24 @@ def run(cfg: dict, runw_hdf5: str):
     bridge_erosion_size = filter_cfg['bridge_erosion_size']
     bridge_deramp_type = filter_cfg['bridge_ramp_type']
     bridge_ramp_maximum_pixel = filter_cfg['bridge_ramp_maximum_pixel']
+
+    shared_bridge_mask_params = {
+        'mask': {
+            'coh_threshold': filter_coh_thresh,
+            'gradient_window_size': gradient_mask_window,
+            'gradient_method': gradient_mask_method,
+            'gradient_mask_percentile': gradient_mask_percentile,
+            'mask_type': mask_type,
+            'fill_value': 0.0,
+        },
+        'bridge': {
+            'radius': bridge_radius,
+            'min_num_pixel': bridge_minimum_samples,
+            'erosion_size': bridge_erosion_size,
+            'ramp_type': bridge_deramp_type,
+            'deramp_max_num_sample': bridge_ramp_maximum_pixel,
+        }
+    }
 
     rg_looks = cfg['processing']['crossmul']['range_looks']
     az_looks = cfg['processing']['crossmul']['azimuth_looks']
@@ -1121,7 +1229,7 @@ def run(cfg: dict, runw_hdf5: str):
 
     # Run InSAR for sub-band SLCs (split-main-bands) or
     # for main and side bands for iono_freq_pols (main-side-bands)
-    insar_ionosphere_pair(iono_insar_cfg, runw_hdf5)
+    # insar_ionosphere_pair(iono_insar_cfg, runw_hdf5)
 
     t_all = time.time()
     # Define methods to use subband or sideband
@@ -1215,6 +1323,19 @@ def run(cfg: dict, runw_hdf5: str):
         outlier_min_scale=filling_outlier_min_scale,
         mad_scale_factor=filling_outlier_mad_scale_factor,
         outputdir=os.path.join(iono_path, iono_method))
+
+    water_mask_b_blk = None
+    water_mask_a_blk = None
+    if "water" in mask_type and filter_bool:
+        water_mask_path = cfg[
+            "dynamic_ancillary_file_group"]["water_mask_file"]
+
+        water_distance_a = project_map_to_radar(cfg, water_mask_path, 'A')
+        water_mask_a = (water_distance_a == 0)
+
+        if iono_method in iono_method_sideband:
+            water_distance_b = project_map_to_radar(cfg, water_mask_path, 'B')
+            water_mask_b = (water_distance_b == 0)
 
     # pull parameters for polarizations
     pol_list_a = list(iono_freq_pols['A'])
@@ -1389,6 +1510,10 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_main],
                         dtype=int)
 
+                if "water" in mask_type:
+                    water_mask_a_blk = None if water_mask_a is None else \
+                        water_mask_a[row_start:row_start + block_rows_data, :]
+
                 if iono_method == 'main_diff_low_high_subband':
                     main_image = np.empty([block_rows_data, cols_main],
                                           dtype=float)
@@ -1443,40 +1568,6 @@ def run(cfg: dict, runw_hdf5: str):
                             subswath_mask_image,
                             np.s_[row_start:row_start + block_rows_data, :])
 
-                if bridge_algorithm_bool:
-                    sub_high_image = bridge_unwrapped_phase(
-                        sub_high_image,
-                        radius=bridge_radius,
-                        min_num_pixel=bridge_minimum_samples,
-                        erosion_size=bridge_erosion_size,
-                        ramp_type=bridge_deramp_type,
-                        deramp_max_num_sample=bridge_ramp_maximum_pixel)
-                    sub_low_image = bridge_unwrapped_phase(
-                        sub_low_image,
-                        radius=bridge_radius,
-                        min_num_pixel=bridge_minimum_samples,
-                        erosion_size=bridge_erosion_size,
-                        ramp_type=bridge_deramp_type,
-                        deramp_max_num_sample=bridge_ramp_maximum_pixel)
-
-                if unwrap_correction_bool:
-                    sub_high_image = unwrapping_correction_with_filter(
-                        sub_high_image,
-                        kernel_width=kernel_range_size,
-                        kernel_length=kernel_azimuth_size,
-                        sig_kernel_x=kernel_sigma_range,
-                        sig_kernel_y=kernel_sigma_azimuth,
-                        iterations=filter_iterations,
-                        filter_method='convolution')
-                    sub_low_image = unwrapping_correction_with_filter(
-                        sub_low_image,
-                        kernel_width=kernel_range_size,
-                        kernel_length=kernel_azimuth_size,
-                        sig_kernel_x=kernel_sigma_range,
-                        sig_kernel_y=kernel_sigma_azimuth,
-                        iterations=filter_iterations,
-                        filter_method='convolution')
-
                 if iono_method == 'main_diff_low_high_subband':
                     with HDF5OptimizedReader(
                             name=runw_path_insar, mode='r',
@@ -1518,6 +1609,54 @@ def run(cfg: dict, runw_hdf5: str):
                                     row_start:row_start + block_rows_data,
                                     :])
 
+                if "water" in mask_type:
+                    water_mask_a_blk = \
+                        water_mask_a[row_start:row_start + block_rows_data, :]
+
+                if bridge_algorithm_bool:
+                    if iono_method == "split_main_band":
+                        sub_low_image, _ = apply_bridge_with_mask(
+                            sub_low_image,
+                            shared_params=shared_bridge_mask_params,
+                            coherence_image=sub_low_coh_image,
+                            conncomp_image=sub_low_conn_image,
+                            subswath_mask_image=subswath_mask_image,
+                            water_mask_image=water_mask_a_blk,
+                            gradient_threshold=gradient_mask_threshold_first,
+                        )
+
+                        sub_high_image, _ = apply_bridge_with_mask(
+                            sub_high_image,
+                            shared_params=shared_bridge_mask_params,
+                            coherence_image=sub_high_coh_image,
+                            conncomp_image=sub_high_conn_image,
+                            subswath_mask_image=subswath_mask_image,
+                            water_mask_image=water_mask_a_blk,
+                            gradient_threshold=gradient_mask_threshold_second,
+                        )
+                    elif iono_method == "main_diff_low_high_subband":
+                        main_image, _ = apply_bridge_with_mask(
+                            main_image,
+                            shared_params=shared_bridge_mask_params,
+                            coherence_image=main_coh_image,
+                            conncomp_image=main_conn_image,
+                            subswath_mask_image=subswath_mask_image,
+                            water_mask_image=water_mask_a_blk,
+                            gradient_threshold=gradient_mask_threshold_first,
+                            zero_to_nan=True,
+                        )
+
+                        diff_subband_image, _ = apply_bridge_with_mask(
+                            diff_subband_image,
+                            shared_params=shared_bridge_mask_params,
+                            coherence_image=diff_coh_image,
+                            conncomp_image=diff_subband_conn_image,
+                            subswath_mask_image=subswath_mask_image,
+                            water_mask_image=water_mask_a_blk,
+                            gradient_threshold=gradient_mask_threshold_second,
+                            zero_to_nan=True,
+                        )
+
             if iono_method in iono_method_sideband:
 
                 main_image = np.empty([block_rows_data, cols_main],
@@ -1554,6 +1693,15 @@ def run(cfg: dict, runw_hdf5: str):
                     subswath_mask_side_image = np.empty(
                         [block_rows_data, cols_side],
                         dtype=int)
+
+                if "water" in mask_type:
+                    water_mask_a_blk = None if water_mask_a is None \
+                        else water_mask_a[row_start:row_start +
+                                          block_rows_data, :]
+
+                    water_mask_b_blk = None if water_mask_b is None \
+                        else water_mask_b[row_start:row_start +
+                                          block_rows_data, :]
 
                 with HDF5OptimizedReader(
                         name=runw_freq_a_str, mode='r',
@@ -1626,32 +1774,43 @@ def run(cfg: dict, runw_hdf5: str):
                                     diff_ms_conn_image,
                                     np.s_[row_start:row_start + block_rows_data, :])
 
+                if "water" in mask_type:
+                    water_mask_a_blk = \
+                        water_mask_a[row_start:row_start + block_rows_data, :]
+                    water_mask_b_blk = \
+                        water_mask_b[row_start:row_start + block_rows_data, :]
+
                 if bridge_algorithm_bool:
-                    main_image = bridge_unwrapped_phase(
+                    main_image, _ = apply_bridge_with_mask(
                         main_image,
-                        radius=bridge_radius,
-                        min_num_pixel=bridge_minimum_samples,
-                        erosion_size=bridge_erosion_size,
-                        ramp_type=bridge_deramp_type,
-                        deramp_max_num_sample=bridge_ramp_maximum_pixel)
+                        shared_params=shared_bridge_mask_params,
+                        coherence_image=main_coh_image,
+                        conncomp_image=main_conn_image,
+                        subswath_mask_image=subswath_mask_main_image,
+                        water_mask_image=water_mask_a_blk,
+                        gradient_threshold=gradient_mask_threshold_first,
+                    )
 
                     if iono_method == 'main_side_band':
-                        side_image = bridge_unwrapped_phase(
+                        side_image, _ = apply_bridge_with_mask(
                             side_image,
-                            radius=bridge_radius,
-                            min_num_pixel=bridge_minimum_samples,
-                            erosion_size=bridge_erosion_size,
-                            ramp_type=bridge_deramp_type,
-                            deramp_max_num_sample=bridge_ramp_maximum_pixel)
+                            shared_params=shared_bridge_mask_params,
+                            coherence_image=side_coh_image,
+                            conncomp_image=side_conn_image,
+                            subswath_mask_image=subswath_mask_side_image,
+                            water_mask_image=water_mask_b_blk,
+                            gradient_threshold=gradient_mask_threshold_second,
+                        )
                     elif iono_method == 'main_diff_ms_band':
-                        diff_ms_image = bridge_unwrapped_phase(
+                        diff_ms_image, _ = apply_bridge_with_mask(
                             diff_ms_image,
-                            radius=bridge_radius,
-                            min_num_pixel=bridge_minimum_samples,
-                            erosion_size=bridge_erosion_size,
-                            ramp_type=bridge_deramp_type,
-                            deramp_max_num_sample=bridge_ramp_maximum_pixel)
-
+                            shared_params=shared_bridge_mask_params,
+                            coherence_image=diff_ms_coh_image,
+                            conncomp_image=diff_ms_conn_image,
+                            subswath_mask_image=subswath_mask_side_image,
+                            water_mask_image=water_mask_b_blk,
+                            gradient_threshold=gradient_mask_threshold_second,
+                        )
                 if unwrap_correction_bool:
                     main_image = unwrapping_correction_with_filter(
                         main_image,
@@ -1829,6 +1988,24 @@ def run(cfg: dict, runw_hdf5: str):
                         slant_main=main_slant,
                         slant_side=side_slant)
                     mask_array &= mask_subswath
+
+                if "gradient" in mask_type:
+                    mask_gradient = iono_phase_obj.get_gradient_mask(
+                        main_array=main_image,
+                        side_array=side_image,
+                        diff_ms_array=diff_ms_image,
+                        low_band_array=sub_low_image,
+                        high_band_array=sub_high_image,
+                        diff_low_high_band_array=diff_subband_image,
+                        slant_main=main_slant,
+                        slant_side=side_slant,
+                        mask=mask_array,
+                        window=gradient_mask_window,
+                        threshold_first=gradient_mask_threshold_first,
+                        threshold_second=gradient_mask_threshold_second,
+                        method=gradient_mask_method,
+                        percentile=gradient_mask_percentile)
+                    mask_array = np.logical_and(mask_array, mask_gradient)
 
                 if "water" in mask_type:
                     # Extract preprocessing dictionary and open arrays

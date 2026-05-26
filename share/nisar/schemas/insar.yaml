@@ -789,13 +789,22 @@ dispersive_filter_options:
     #   When multiple validation sources are enabled, take the intersection of
     #   their invalid masks to form a combined mask.
     #   Masked areas are then filled using spatial interpolation.
-    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', 'subswath_mask', required=False)
-    # Median filter size for mask generation
+    filter_mask_type: list(enum('water', 'median_filter', 'coherence', 'connected_components', 'subswath_mask', 'gradient'), required=False)    # Median filter size for mask generation
     median_filter_size: num(min=1, required=False)
     # Median filter threshold for mask generation
     median_filter_threshold: num(min=0, max=1, required=False)
     # coherence threshold for mask generation
     filter_coherence_threshold: num(min=0, max=1, required=False)
+    # Gradient estimation window
+    gradient_mask_window: num(min=1, required=False)
+    # Gradient estimation method
+    gradient_mask_method: enum('mean', 'percentile', 'max', required=False)
+    # Gradient estimation threshold
+    gradient_mask_threshold_first: num(min=0, required=False)
+    gradient_mask_threshold_second: num(min=0, required=False)
+    # Gredient method percentile
+    gradient_mask_percentile: num(min=0, required=False)
+
     # Filling method for invalid regions
     # nearest : apply nearest interpolation for whole invalid regions
     # smoothed : apply lienar interpolation and nearest extrapolations
