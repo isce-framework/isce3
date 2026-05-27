@@ -257,13 +257,15 @@ def _read_gdal_with_bbox(input_raster, bbox, bbox_epsg=4326):
     # north-up only, same practical assumption as most GeoTIFF use cases here
     if gt[2] != 0 or gt[4] != 0:
         raise NotImplementedError(
-            "_read_gdal_with_bbox currently supports only north-up rasters."
+            "_read_gdal_with_bbox currently does not support affine transformation."
         )
 
     raster_srs = osr.SpatialReference()
     raster_srs.ImportFromWkt(proj)
 
     try:
+        # Attempt to identify and SET EPSG code for raster SRS, especially
+        # in case that the EPSG code is missing in authority info
         raster_srs.AutoIdentifyEPSG()
     except Exception:
         pass
@@ -275,7 +277,6 @@ def _read_gdal_with_bbox(input_raster, bbox, bbox_epsg=4326):
 
     xmin, ymin, xmax, ymax = map(float, bbox)
 
-    # target SRS = bbox_epsg
     dst_srs = osr.SpatialReference()
     dst_srs.ImportFromEPSG(int(bbox_epsg))
     try:
@@ -298,6 +299,11 @@ def _read_gdal_with_bbox(input_raster, bbox, bbox_epsg=4326):
         ys = [p[1] for p in corners]
         xmin_src, xmax_src = min(xs), max(xs)
         ymin_src, ymax_src = min(ys), max(ys)
+
+        # handle antimeridian crossing case for bbox in lat/lon
+        if bbox_epsg == 4326 and (xmax_src - xmin_src) > 180:
+            xmin_src, xmax_src = (xmax_src, xmin_src + 360.0)
+
     else:
         xmin_src, xmax_src = xmin, xmax
         ymin_src, ymax_src = ymin, ymax
@@ -341,17 +347,8 @@ def _read_gdal_with_bbox(input_raster, bbox, bbox_epsg=4326):
         p10 = tx_to_bbox.TransformPoint(x0 + dx, y0)[:2]
         p01 = tx_to_bbox.TransformPoint(x0, y0 + dy)[:2]
 
-        est_dx = abs(p10[0] - p00[0])
-        est_dy = abs(p01[1] - p00[1])
-
-        # fallback in case estimate becomes zero or numerically unstable
-        if not np.isfinite(est_dx) or est_dx <= 0:
-            est_dx = max((xmax - xmin) / 1000.0, 1e-6)
-        if not np.isfinite(est_dy) or est_dy <= 0:
-            est_dy = max((ymax - ymin) / 1000.0, 1e-6)
-
-        out_xres = est_dx
-        out_yres = est_dy
+        out_xres = abs(p10[0] - p00[0])
+        out_yres = abs(p01[1] - p00[1])
 
     # Warp directly to the requested bbox / requested CRS
     warped_ds = gdal.Warp(
@@ -407,6 +404,7 @@ def _get_epsg_from_gdal_dataset(dataset):
     int or None
         EPSG code if successfully detected, None otherwise
     """
+    warning_channel = journal.warning('unwrap._get_epsg_from_gdal_dataset')
     proj = dataset.GetProjection()
 
     if not proj:
@@ -428,7 +426,7 @@ def _get_epsg_from_gdal_dataset(dataset):
         try:
             return int(epsg_code)
         except (ValueError, TypeError):
-            print(f"Warning: Failed to detect EPSG code. Dataset: {dataset.GetDescription()}, projection: {proj}")
+            warning_channel.log(f"Failed to detect EPSG code. Dataset: {dataset.GetDescription()}, projection: {proj}")
             return None
 
     return None

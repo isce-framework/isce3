@@ -537,10 +537,8 @@ def compute_differential_phase(
 
                     # Ensure complex (convert real-valued phase in radians to
                     # complex phase)
-                    use_complex = np.iscomplexobj(first_data_block) or np.iscomplexobj(second_data_block)
-                    if use_complex:
-                        first_data_block = _to_complex_if_needed(first_data_block)
-                        second_data_block = _to_complex_if_needed(second_data_block)
+                    first_data_block = _to_complex_if_needed(first_data_block)
+                    second_data_block = _to_complex_if_needed(second_data_block)
 
                     # Resample first dataset (frequency A / low subband) to
                     # match the grid of the second dataset (frequency B / high subband).
@@ -582,10 +580,8 @@ def compute_differential_phase(
                         invalid = None
 
                     # Compute the differential phase
-                    if use_complex:
-                        diff_phase = first_data_block * np.conj(second_data_block)
-                    else:
-                        diff_phase = first_data_block - second_data_block
+                    diff_phase = first_data_block * np.conj(second_data_block)
+
                     if invalid is not None:
                         diff_phase[invalid] = invalid_fill_value
 
@@ -1036,8 +1032,7 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths,
     # decimate offsets for frequency B and create ionosphere layers
     if 'B' in iono_freq_pol:
         decimate_freq_a_offset(iono_insar_cfg, original_dict)
-    print(iono_insar_cfg['processing']['input_subset'][
-                        'list_of_frequencies'])
+
     if iono_insar_cfg['processing']['fine_resample']['enabled']:
         resample_slc_v2.run(iono_insar_cfg, 'fine')
     else:
