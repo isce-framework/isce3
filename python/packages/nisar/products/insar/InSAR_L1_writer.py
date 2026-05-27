@@ -723,7 +723,9 @@ class L1InSARWriter(InSARBaseWriter):
                                                  " and bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
                                                  " with each bit corresponding to a specific anomaly condition."
                                                  " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
-                                                 " Bits 24–31 are reserved for future use"),
+                                                 " Bit 24 indicates a bit mask for ionospheric phase mask used during filtering of ionospheric phase."
+                                                 " This ionospheric phase mask indicates pixels which were masked out and filled with interpolated data."
+                                                 " Bits 25–31 are reserved for future use"),
                                     fill_value=255)
             igram_group['mask'].attrs['valid_min'] = 0
             igram_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")
