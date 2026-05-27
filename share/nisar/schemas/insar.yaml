@@ -945,11 +945,11 @@ rifg_options:
     qa_reports: include('rifg_qa_reports_options', required=False)
 
 rifg_qa_reports_options:
+    browse: include('rifg_browse_options')
     wrapped_igram: include('qa_threshold_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     correlation_surface_peak: include('qa_threshold_options', required=False)
-    browse_png: include('qa_browse_png_wrapped_options', required=False)
 
 runw_options:
     workflows: include('workflows_options', required=False)
@@ -958,6 +958,7 @@ runw_options:
     qa_reports: include('runw_qa_reports_options', required=False)
 
 runw_qa_reports_options:
+    browse: include('runw_browse_options')
     phase_img: include('qa_phase_img_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
     connected_components: include('qa_cc_options', required=False)
@@ -965,7 +966,6 @@ runw_qa_reports_options:
     ionosphere_phase_screen_uncertainty: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     correlation_surface_peak: include('qa_threshold_options', required=False)
-    browse_png: include('qa_browse_png_unwrapped_options', required=False)
 
 gunw_options:
     workflows: include('workflows_options', required=False)
@@ -974,6 +974,7 @@ gunw_options:
     qa_reports: include('gunw_qa_reports_options', required=False)
 
 gunw_qa_reports_options:
+    browse: include('gunw_browse_options')
     phase_img: include('qa_phase_img_options', required=False)
     wrapped_igram: include('qa_threshold_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
@@ -982,21 +983,29 @@ gunw_qa_reports_options:
     ionosphere_phase_screen_uncertainty: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     correlation_surface_peak: include('qa_threshold_options', required=False)
-    browse_png: include('qa_browse_png_unwrapped_options', required=False)
 
 roff_options:
     workflows: include('workflows_options', required=False)
     software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
-    qa_reports: include('offsets_qa_reports_options', required=False)
+    qa_reports: include('roff_qa_reports_options', required=False)
 
 goff_options:
     workflows: include('workflows_options', required=False)
     software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
-    qa_reports: include('offsets_qa_reports_options', required=False)
+    qa_reports: include('goff_qa_reports_options', required=False)
 
-offsets_qa_reports_options:
+roff_qa_reports_options:
+    browse: include('roff_browse_options')
+    az_and_range_offsets: include('qa_threshold_options', required=False)
+    quiver_plots: include('qa_quiver_plots_options', required=False)
+    az_and_rg_variance: include('az_rg_var_options', required=False)
+    cross_offset_variance: include('cross_offset_var_options', required=False)
+    correlation_surface_peak: include('qa_threshold_options', required=False)
+
+goff_qa_reports_options:
+    browse: include('goff_browse_options')
     az_and_range_offsets: include('qa_threshold_options', required=False)
     quiver_plots: include('qa_quiver_plots_options', required=False)
     az_and_rg_variance: include('az_rg_var_options', required=False)
@@ -1034,20 +1043,41 @@ qa_cc_options:
     zero_is_invalid: bool(required=False)
     max_num_cc: int(min=0.0, required=False)
 
-qa_browse_png_wrapped_options:
+rifg_browse_options:
     longest_side_max: int(min=1, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
-qa_browse_png_unwrapped_options:
+runw_browse_options:
     longest_side_max: int(min=1, required=False)
     rewrap: num(min=0.0, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
+
+gunw_browse_options:
+    longest_side_max: int(min=1, required=False)
+    rewrap: num(min=0.0, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode', required=False)
+
+roff_browse_options:
+    longest_side_max: int(min=1, required=False)
+    browse_decimation_freqa: list(int(min=1), min=2, max=2, required=False)
+    browse_decimation_freqb: list(int(min=1), min=2, max=2, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
+
+goff_browse_options:
+    longest_side_max: int(min=1, required=False)
+    browse_decimation_freqa: list(int(min=1), min=2, max=2, required=False)
+    browse_decimation_freqb: list(int(min=1), min=2, max=2, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode', required=False)
 
 qa_quiver_plots_options:
     colorbar_min_max: list(num, min=2, max=2, required=False)
-    browse_decimation_freqa: list(int(min=1), min=2, max=2, required=False)
-    browse_decimation_freqb: list(int(min=1), min=2, max=2, required=False)
     arrow_density: num(min=1.0, required=False)
     arrow_scaling: num(min=0.0, required=False)
-    longest_side_max: int(min=1, required=False)
 
 az_rg_var_options:
     colorbar_min_max: list(num, min=2, max=2, required=False)

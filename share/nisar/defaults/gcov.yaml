@@ -669,16 +669,36 @@ runconfig:
                     # Default: (1024, 1024)
                     tile_shape: [1024, 1024]
 
-                    # True to output one grayscale PNG+KML pair per raster image layer; these
-                    # will be generated in addition to the standard browse image PNG+KML.
+                    # True to output one grayscale PNG+KML pair per raster image layer
+                    # using the native coordinate system; these will be generated
+                    # in addition to the standard native browse image PNG+KML.
                     # The filename of each additional file will include a suffix noting
                     # that image's frequency and polarization.
-                    # False to have the primary browse image be the only PNG+KML generated.
+                    # False to have the standard native browse image be the only PNG+KML generated.
                     # Note: If True, and if the input granule contains only one image,
                     # then the additional individual PNG will be a duplicate image to the
-                    # primary browse image PNG, but with more descriptive filename.
+                    # native browse image PNG, but with more descriptive filename.
                     # Default: False
                     output_individual_pngs: false
+
+                browse_latlon:
+
+                    # True to generate a version of the native browse PNG+KML that is
+                    # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                    # geolocation in GIS software.
+                    # False to only generate native browse outputs.
+                    # The EPSG 4326 PNG+KML version will be in addition to the native
+                    # browse PNG+KML outputs (where the PNG reflects the input product's
+                    # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                    # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                    # Default: False
+                    output_browse_latlon: false
+
+                    # Resampling algorithm for GDAL reprojection. Options: 'near',
+                    # 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode'.
+                    # Ignored if `output_browse_latlon` is False.
+                    # Default: average
+                    resample: average
 
                 histogram:
 
