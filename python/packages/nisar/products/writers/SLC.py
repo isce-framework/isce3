@@ -702,7 +702,7 @@ class SLC(h5py.File):
                             has_input_data_exception: int = None,
                             is_urgent: Optional[bool] = None,
                             is_joint: Optional[bool] = None,
-                            product_spec_version: str = "1.4.0",
+                            product_spec_version: str = "1.5.0",
                             processing_center: str = "JPL",
                             granule_id: str = "None",
                             product_version: str = "0.1.0",
