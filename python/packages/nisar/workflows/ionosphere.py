@@ -928,18 +928,12 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
             second_data_path = []
             for pol_b in pol_list_b:
-                if rerun_insar_pairs > 0:
-                    dest_freq_path = f"{swath_path}/frequencyB"
-                    dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
-                    rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
-
-                    second_data_path.append(rifg_path_freq)
-                else:
-                    dest_freq_path = f"{runw_swath_path}/frequencyB"
-                    dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
-                    runw_path_b_freq = f"{dest_pol_path}/unwrappedPhase"
+                dest_freq_path = f"{swath_path}/frequencyB"
+                dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
+                rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
 
                 second_data_path.append(rifg_path_freq)
+
             second_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             second_mask_path = f"{dest_freq_path}/interferogram/mask"
 
