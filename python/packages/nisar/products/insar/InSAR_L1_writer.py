@@ -545,7 +545,7 @@ class L1InSARWriter(InSARBaseWriter):
         # add the datasets to pixel offsets group
         self._add_datasets_to_pixel_offset_group()
 
-    def add_interferogram_to_swaths_group(self):
+    def add_interferogram_to_swaths_group(self, is_unwrapped=False):
         """
         Add the interferogram group to the swaths group
         """
@@ -707,25 +707,36 @@ class L1InSARWriter(InSARBaseWriter):
                             'max_value', 'sample_stddev']:
                     igram_group['digitalElevationModel'].attrs[attr] = 0.0
 
+            mask_description_common = (
+                "Mask indicating the subswaths of valid samples and data anomalies"
+                " in the reference RSLC and the geometrically coregistered secondary RSLC."
+                " Each pixel value is encoded as a 32-bit unsigned integer."
+                " Bits 0–7 represent subswath encoding,"
+                " where the most significant digit corresponds to the subswath number of the reference RSLC"
+                " and the least significant digit corresponds to the subswath number of the secondary RSLC;"
+                " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
+                " Bits 8–15 represent bitwise anomaly flags for the secondary RSLC,"
+                " and bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
+                " with each bit corresponding to a specific anomaly condition."
+                " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
+            )
+            mask_description_no_iono =  " Bits 24–31 are reserved for future use"
+            mask_description_iono = (
+                " Bit 24 indicates a bit mask for ionospheric phase mask used during filtering of ionospheric phase."
+                " This ionospheric phase mask indicates pixels which were masked out and filled with interpolated data."
+                " Bits 25–31 are reserved for future use")
+
+            mask_description = (
+                mask_description_common + mask_description_iono
+                if is_unwrapped else mask_description_common + mask_description_no_iono
+            )
+
             # add the subswath mask layer to the interferogram group
             self._create_2d_dataset(igram_group,
                                     'mask',
                                     shape=igram_shape,
                                     dtype=np.uint32,
-                                    description=("Mask indicating the subswaths of valid samples and data anomalies"
-                                                 " in the reference RSLC and the geometrically coregistered secondary RSLC."
-                                                 " Each pixel value is encoded as a 32-bit unsigned integer."
-                                                 " Bits 0–7 represent subswath encoding,"
-                                                 " where the most significant digit corresponds to the subswath number of the reference RSLC"
-                                                 " and the least significant digit corresponds to the subswath number of the secondary RSLC;"
-                                                 " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
-                                                 " Bits 8–15 represent bitwise anomaly flags for the secondary RSLC,"
-                                                 " and bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
-                                                 " with each bit corresponding to a specific anomaly condition."
-                                                 " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
-                                                 " Bit 24 indicates a bit mask for ionospheric phase mask used during filtering of ionospheric phase."
-                                                 " This ionospheric phase mask indicates pixels which were masked out and filled with interpolated data."
-                                                 " Bits 25–31 are reserved for future use"),
+                                    description=mask_description,
                                     fill_value=255)
             igram_group['mask'].attrs['valid_min'] = 0
             igram_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")

@@ -312,7 +312,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 )
                 mask_description_suffix = (
                     mask_description_no_iono
-                    if ds_group_name == pixeloffsets_group_name
+                    if ds_group_name in [wrapped_group_name, pixeloffsets_group_name]
                     else mask_description_iono
                 )
 
