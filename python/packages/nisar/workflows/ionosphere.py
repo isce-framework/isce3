@@ -884,16 +884,15 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                             'ionosphere',
                                             'main_diff_ms_band',
                                             'RIFG.h5')
-                unwrap_needed = True
-                diff_phase_output = pathlib.Path(diff_dir, 'RIFG.h5')
+
             else:
                 out_paths = original_out_paths
                 new_scratch = orig_scratch_path
-                phase_second = out_paths['RUNW']
+                phase_second = out_paths['RIFG']
                 additional_runw = out_paths['RUNW']
 
-                unwrap_needed = False
-                diff_phase_output = pathlib.Path(diff_dir, 'RUNW.h5')
+            diff_phase_output = pathlib.Path(diff_dir, 'RIFG.h5')
+
             iono_insar_cfg['product_path_group'][
                 'scratch_path'] = diff_dir
             iono_insar_cfg['product_path_group'][
@@ -940,7 +939,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                     dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
                     runw_path_b_freq = f"{dest_pol_path}/unwrappedPhase"
 
-                    second_data_path.append(runw_path_b_freq)
+                second_data_path.append(rifg_path_freq)
             second_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             second_mask_path = f"{dest_freq_path}/interferogram/mask"
 
@@ -961,8 +960,8 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             # Since main_diff_low_high_subband method does not need to
             # unwrap low and high subband interferogram, but need to
             # unwrap the difference between low and high subband interferogram
-            if unwrap_needed:
-                unwrap.run(iono_insar_cfg, out_paths['RIFG'], out_paths['RUNW'])
+            unwrap.run(iono_insar_cfg, out_paths['RIFG'], out_paths['RUNW'])
+
     # restore original paths
     original_cfg['input_file_group']['reference_rslc_file'] = \
         partial_orig_cfg_dict['reference_rslc_file']
