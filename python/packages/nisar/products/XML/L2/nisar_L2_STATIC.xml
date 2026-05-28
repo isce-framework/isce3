@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.4.0 -->
+<!-- product specification version is 1.5.0 -->
 <algorithm name="L2_StaticLayers"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_STATIC_template">
