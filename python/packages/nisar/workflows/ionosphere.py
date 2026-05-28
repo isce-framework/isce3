@@ -642,6 +642,7 @@ def compute_differential_phase(
 
                     # Compute the differential phase
                     diff_phase = first_data_block * np.conj(second_data_block)
+
                     if invalid is not None:
                         diff_phase[invalid] = invalid_fill_value
 
@@ -944,6 +945,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                             'ionosphere',
                                             'main_diff_ms_band',
                                             'RIFG.h5')
+
             else:
                 out_paths = original_out_paths
                 new_scratch = orig_scratch_path
@@ -951,6 +953,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 additional_runw = out_paths['RUNW']
 
             diff_phase_output = pathlib.Path(diff_dir, 'RIFG.h5')
+
             iono_insar_cfg['product_path_group'][
                 'scratch_path'] = diff_dir
             iono_insar_cfg['product_path_group'][
@@ -986,12 +989,12 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
             second_data_path = []
             for pol_b in pol_list_b:
-
                 dest_freq_path = f"{swath_path}/frequencyB"
                 dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
                 rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
 
                 second_data_path.append(rifg_path_freq)
+
             second_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             second_mask_path = f"{dest_freq_path}/interferogram/mask"
 
@@ -1277,6 +1280,20 @@ def run(cfg: dict, runw_hdf5: str):
         mad_scale_factor=filling_outlier_mad_scale_factor,
         outputdir=os.path.join(iono_path, iono_method))
 
+    # compute the full water masks
+    water_mask_b_blk = None
+    water_mask_a_blk = None
+    if "water" in mask_type and filter_bool:
+        water_mask_path = cfg[
+            "dynamic_ancillary_file_group"]["water_mask_file"]
+
+        water_distance_a = project_map_to_radar(cfg, water_mask_path, 'A')
+        water_mask_a = (water_distance_a == 0)
+
+        if iono_method in iono_method_sideband:
+            water_distance_b = project_map_to_radar(cfg, water_mask_path, 'B')
+            water_mask_b = (water_distance_b == 0)
+
     # pull parameters for polarizations
     pol_list_a = list(iono_freq_pols['A'])
     if iono_method in iono_method_sideband:
@@ -1450,6 +1467,10 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_main],
                         dtype=int)
 
+                if "water" in mask_type:
+                    water_mask_a_blk = None if water_mask_a is None else \
+                        water_mask_a[row_start:row_start + block_rows_data, :]
+
                 if iono_method == 'main_diff_low_high_subband':
                     main_image = np.empty([block_rows_data, cols_main],
                                           dtype=float)
@@ -1615,6 +1636,15 @@ def run(cfg: dict, runw_hdf5: str):
                     subswath_mask_side_image = np.empty(
                         [block_rows_data, cols_side],
                         dtype=int)
+
+                if "water" in mask_type:
+                    water_mask_a_blk = None if water_mask_a is None \
+                        else water_mask_a[row_start:row_start +
+                                          block_rows_data, :]
+
+                    water_mask_b_blk = None if water_mask_b is None \
+                        else water_mask_b[row_start:row_start +
+                                          block_rows_data, :]
 
                 with HDF5OptimizedReader(
                         name=runw_freq_a_str, mode='r',
@@ -1897,15 +1927,10 @@ def run(cfg: dict, runw_hdf5: str):
                     # boundary of the water bodies. The values 0-100 represent
                     # the distance from the coastline and values from 101-200
                     # represent the distance from inland water boundaries.
-                    water_mask_path = \
-                            cfg["dynamic_ancillary_file_group"][
-                                "water_mask_file"]
-                    water_distance = project_map_to_radar(
-                        cfg,
-                        water_mask_path,
-                        'A')
-                    mask_image = water_distance[
-                        row_start:row_start + block_rows_data, :] == 0
+                    if iono_method in iono_method_sideband:
+                        mask_image = water_mask_b_blk
+                    else:
+                        mask_image = water_mask_a_blk
                     mask_array = mask_array & mask_image
 
                 valid_area = iono_phase_obj.get_valid_area(
