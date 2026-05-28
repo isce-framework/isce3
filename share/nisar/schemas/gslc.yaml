@@ -228,6 +228,7 @@ qa_validation_options:
 
 qa_reports_options:
     backscatter_img: include('backscatter_img_options', required=False)
+    browse_latlon: include('browse_latlon_options', required=False)
     histogram: include('histogram_options', required=False)
 
 backscatter_img_options:
@@ -240,6 +241,10 @@ backscatter_img_options:
     nan_color_in_pdf: str(required=False)
     tile_shape: list(int(min=-1), min=2, max=2, required=False)
     output_individual_pngs: bool(required=False)
+
+browse_latlon_options:
+    output_browse_latlon: bool(required=False)
+    resample: enum('near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode', required=False)
 
 histogram_options:
     decimation_ratio: list(int(min=1), min=2, max=2, required=False)
