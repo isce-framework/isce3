@@ -3,7 +3,8 @@ import journal
 import numpy as np
 
 from .ionosphere_estimation import IonosphereEstimation
-from isce3.signal.interpolate_by_range import decimate_freq_a_array
+from isce3.signal.interpolate_by_range import (decimate_freq_a_array,
+                                               interpolate_freq_b_array)
 from isce3.unwrap.preprocess import interpret_subswath_mask
 
 
@@ -16,7 +17,8 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                  low_center_freq=None,
                  high_center_freq=None,
                  slant_main=None,
-                 slant_side=None):
+                 slant_side=None,
+                 iono_radar_grid='oversample'):
         """Initialized IonosphereEstimation Class
 
         Parameters
@@ -30,8 +32,15 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
         high_center_freq : float
             center frequency of upper sub-band of the main band [Hz]
         """
-        super().__init__(main_center_freq, side_center_freq, low_center_freq,
-                         high_center_freq)
+        super().__init__(
+            main_center_freq=main_center_freq,
+            side_center_freq=side_center_freq,
+            low_center_freq=low_center_freq,
+            high_center_freq=high_center_freq,
+            slant_main=slant_main,
+            slant_side=slant_side,
+            iono_radar_grid=iono_radar_grid,
+        )
 
         error_channel = journal.error('ionosphere.SplitBandEstimation')
 
@@ -295,16 +304,28 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             if slant_side is None:
                 slant_side = self.slant_side
 
-            if low_band_array is not None:
-                low_band_array = decimate_freq_a_array(
-                    slant_main,
-                    slant_side,
-                    low_band_array)
-            if high_band_array is not None:
-                high_band_array = decimate_freq_a_array(
-                    slant_main,
-                    slant_side,
-                    high_band_array)
+            if self.iono_radar_grid == "downsample" and side_array is not None:
+                if low_band_array is not None:
+                    low_band_array = decimate_freq_a_array(
+                        slant_main,
+                        slant_side,
+                        low_band_array)
+
+                if high_band_array is not None:
+                    high_band_array = decimate_freq_a_array(
+                        slant_main,
+                        slant_side,
+                        high_band_array)
+
+                if main_array is not None:
+                    main_array = decimate_freq_a_array(
+                        slant_main,
+                        slant_side,
+                        main_array)
+
+                if diff_low_high_band_array is not None:
+                    diff_low_high_band_array = decimate_freq_a_array(
+                        slant_main, slant_side, diff_low_high_band_array)
 
         if main_array is not None and diff_low_high_band_array is not None:
             mask_array = (main_array > threshold) & \
@@ -354,16 +375,14 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             if slant_side is None:
                 slant_side = self.slant_side
 
-            if low_band_array is not None:
-                low_band_array = decimate_freq_a_array(
-                    slant_main,
-                    slant_side,
-                    low_band_array)
-            if high_band_array is not None:
-                high_band_array = decimate_freq_a_array(
-                    slant_main,
-                    slant_side,
-                    high_band_array)
+            if self.iono_radar_grid == "downsample" and side_array is not None:
+                if low_band_array is not None:
+                    low_band_array = decimate_freq_a_array(
+                        slant_main, slant_side, low_band_array)
+
+                if high_band_array is not None:
+                    high_band_array = decimate_freq_a_array(
+                        slant_main, slant_side, high_band_array)
 
         high_band_reference, high_band_secondary, _ = \
             interpret_subswath_mask(high_band_array)
@@ -433,16 +452,23 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             if slant_side is None:
                 slant_side = self.slant_side
 
-            if low_band_array is not None:
-                low_band_array = decimate_freq_a_array(
-                    slant_main,
-                    slant_side,
-                    low_band_array)
-            if high_band_array is not None:
-                high_band_array = decimate_freq_a_array(
-                    slant_main,
-                    slant_side,
-                    high_band_array)
+            if self.iono_radar_grid == "downsample" and side_array is not None:
+                if main_array is not None:
+                    main_array = decimate_freq_a_array(
+                        slant_main, slant_side, main_array)
+
+                if low_band_array is not None:
+                    low_band_array = decimate_freq_a_array(
+                        slant_main, slant_side, low_band_array)
+
+                if high_band_array is not None:
+                    high_band_array = decimate_freq_a_array(
+                        slant_main, slant_side, high_band_array)
+
+                if diff_low_high_band_array is not None:
+                    diff_low_high_band_array = decimate_freq_a_array(
+                        slant_main, slant_side, diff_low_high_band_array)
+
         if main_array is not None and diff_low_high_band_array is not None:
             mask_array = (diff_low_high_band_array != invalid_value) & \
                          (main_array != invalid_value) & \
@@ -626,6 +652,8 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                 main_runw=main_runw,
                 side_runw=side_runw,
                 diff_ms_runw=diff_ms_runw,
+                slant_main=slant_main,
+                slant_side=slant_side,
                 low_sub_runw=low_sub_runw,
                 high_sub_runw=high_sub_runw,
                 diff_low_high_runw=diff_low_high_runw)
@@ -637,11 +665,14 @@ class LowHighSubbandIonosphereEstimation(SplitBandIonosphereEstimation):
     '''Ionosphere estimation from Low and High subbands
     '''
     def __init__(self,
-                 main_center_freq=None,
-                 side_center_freq=None,
-                 low_center_freq=None,
-                 high_center_freq=None,
-                 method=None):
+                main_center_freq=None,
+                side_center_freq=None,
+                low_center_freq=None,
+                high_center_freq=None,
+                slant_main=None,
+                slant_side=None,
+                iono_radar_grid='oversample',
+                method=None):
         """Initialized IonosphereEstimation Class
 
         Parameters
@@ -658,8 +689,15 @@ class LowHighSubbandIonosphereEstimation(SplitBandIonosphereEstimation):
             'main_diff_ms_band'}
             ionosphere estimation method
         """
-        super().__init__(main_center_freq, side_center_freq, low_center_freq,
-                         high_center_freq, method)
+        super().__init__(
+            main_center_freq=main_center_freq,
+            side_center_freq=side_center_freq,
+            low_center_freq=low_center_freq,
+            high_center_freq=high_center_freq,
+            slant_main=slant_main,
+            slant_side=slant_side,
+            iono_radar_grid=iono_radar_grid,
+        )
 
         self.estimate_iono = estimate_iono_low_high
         self.estimate_sigma = estimate_sigma_split_main_band
@@ -671,11 +709,14 @@ class MainDiffLowHighSubbandIonosphereEstimation(SplitBandIonosphereEstimation):
        low and high subbands
     '''
     def __init__(self,
-                 main_center_freq=None,
-                 side_center_freq=None,
-                 low_center_freq=None,
-                 high_center_freq=None,
-                 method=None):
+                main_center_freq=None,
+                side_center_freq=None,
+                low_center_freq=None,
+                high_center_freq=None,
+                slant_main=None,
+                slant_side=None,
+                iono_radar_grid='oversample',
+                method=None):
         """Initialized IonosphereEstimation Class
 
         Parameters
@@ -692,8 +733,15 @@ class MainDiffLowHighSubbandIonosphereEstimation(SplitBandIonosphereEstimation):
             'main_diff_ms_band'}
             ionosphere estimation method
         """
-        super().__init__(main_center_freq, side_center_freq, low_center_freq,
-                         high_center_freq, method)
+        super().__init__(
+            main_center_freq=main_center_freq,
+            side_center_freq=side_center_freq,
+            low_center_freq=low_center_freq,
+            high_center_freq=high_center_freq,
+            slant_main=slant_main,
+            slant_side=slant_side,
+            iono_radar_grid=iono_radar_grid,
+        )
 
         self.estimate_iono = estimate_iono_main_diff_low_high
         self.estimate_sigma = estimate_sigma_main_diff_low_high

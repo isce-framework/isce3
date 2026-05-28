@@ -767,6 +767,12 @@ ionosphere_phase_correction_options:
     spectral_diversity: enum('split_main_band', 'main_diff_low_high_subband', 'main_side_band', 'main_diff_ms_band', required=False)
     split_range_spectrum: include('split_range_spectrum_options', required=False)
     list_of_frequencies: include('ionosphere_freq_pol_options', required=False)
+    # When both the main band (frequency A) and side band (frequency B)
+    # are available, and the side band is used for ionosphere estimation,
+    # `iono_radar_grid` specifies which radar grid is used.
+    # `main`: the side band is upsampled to the main-band grid.
+    # `side`: the main band is downsampled to the side-band grid.
+    iono_radar_grid: enum('main', 'side', required=False)
     dispersive_filter: include('dispersive_filter_options', required=False)
     # Number of lines per block for block processing)
     lines_per_block: int(min=1, required=False)

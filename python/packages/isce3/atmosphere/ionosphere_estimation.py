@@ -1,7 +1,8 @@
 import journal
 import numpy as np
 from scipy.ndimage import median_filter, binary_opening
-from isce3.signal.interpolate_by_range import decimate_freq_a_array
+from isce3.signal.interpolate_by_range import (decimate_freq_a_array,
+                                               interpolate_freq_b_array)
 
 class IonosphereEstimation:
     '''
@@ -14,7 +15,8 @@ class IonosphereEstimation:
                  low_center_freq=None,
                  high_center_freq=None,
                  slant_main=None,
-                 slant_side=None):
+                 slant_side=None,
+                 iono_radar_grid='side'):
 
         """Initialized IonosphereEstimation Base Class
 
@@ -31,6 +33,9 @@ class IonosphereEstimation:
         method : {'split_main_band', 'main_side_band',
             'main_diff_ms_band'}
             ionosphere estimation method
+        iono_radar_grid : {"side", "main"}
+            If "side", main-grid arrays are decimated to the side grid.
+            If "main", side-grid arrays are interpolated to the main grid.
         """
 
         error_channel = journal.error('ionosphere.IonosphereEstimation')
@@ -42,12 +47,20 @@ class IonosphereEstimation:
             error_channel.log(err_str)
             raise ValueError(err_str)
 
+        valid_modes = {"side", "main"}
+        if iono_radar_grid not in valid_modes:
+            raise ValueError(
+                f"iono_radar_grid must be one of {valid_modes}, "
+                f"but got {iono_radar_grid!r}."
+            )
+
         self.f0 = main_center_freq
         self.f1 = side_center_freq
         self.freq_low = low_center_freq
         self.freq_high = high_center_freq
         self.slant_main = slant_main
         self.slant_side = slant_side
+        self.iono_radar_grid = iono_radar_grid
 
     def get_mask_median_filter(self,
             disp,
@@ -139,23 +152,55 @@ class IonosphereEstimation:
         """
         # decimate coherences array of frequency A to
         # frequency B grid
-        if side_runw is not None:
-            main_runw = decimate_freq_a_array(
-                slant_main,
-                slant_side,
-                main_runw)
 
-            if low_sub_runw is not None:
-                low_sub_runw = decimate_freq_a_array(
+        need_resampling = (
+            side_runw is not None
+            or diff_ms_runw is not None
+        )
+
+        if need_resampling:
+            if slant_main is None or slant_side is None:
+                raise ValueError(
+                    "slant_main and slant_side are required when resampling "
+                    "between main and side grids."
+                )
+
+        if self.iono_radar_grid == "side":
+
+            if side_runw is not None:
+                main_runw = decimate_freq_a_array(
                     slant_main,
                     slant_side,
-                    low_sub_runw)
+                    main_runw)
 
-            if high_sub_runw is not None:
-                high_sub_runw = decimate_freq_a_array(
+                if low_sub_runw is not None:
+                    low_sub_runw = decimate_freq_a_array(
+                        slant_main,
+                        slant_side,
+                        low_sub_runw)
+
+                if high_sub_runw is not None:
+                    high_sub_runw = decimate_freq_a_array(
+                        slant_main,
+                        slant_side,
+                        high_sub_runw)
+
+        elif self.iono_radar_grid == "main":
+            # side_runw and diff_ms_runw are originally on side grid.
+            # Convert them to main grid.
+            if side_runw is not None:
+                side_runw = interpolate_freq_b_array(
                     slant_main,
                     slant_side,
-                    high_sub_runw)
+                    side_runw,
+                )
+
+            if diff_ms_runw is not None:
+                diff_ms_runw = interpolate_freq_b_array(
+                    slant_main,
+                    slant_side,
+                    diff_ms_runw,
+                )
 
         com_unw_coeff, diff_unw_coeff = \
             compute_unwrapp_error_func(

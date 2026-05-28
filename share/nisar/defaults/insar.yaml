@@ -254,6 +254,12 @@ runconfig:
                 #(split_main_band, main_side_band, main_diff_ms_band,
                 # main_diff_low_high_subband)
                 spectral_diversity: main_diff_low_high_subband
+                # When both the main band (frequency A) and side band (frequency B)
+                # are available, and the side band is used for ionosphere estimation,
+                # `iono_radar_grid` specifies which radar grid is used.
+                # `main`: the side band is upsampled to the main-band grid.
+                # `side`: the main band is downsampled to the side-band grid.
+                iono_radar_grid: main
                 # Polarization to be used for ionosphere estimation.
                 # Split_main_band method does not require frequency B.
                 list_of_frequencies:

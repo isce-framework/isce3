@@ -576,6 +576,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
+    iono_radar_grid = iono_args['iono_radar_grid']
     iono_method = iono_args['spectral_diversity']
     is_iono_method_sideband = iono_method in ['main_side_band',
                                               'main_diff_ms_band']
@@ -658,13 +659,14 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 if iono_enabled:
+                    is_iono_main_grid = iono_radar_grid == 'main'
                     # polarizations for ionosphere can be independent to insar pol
                     pol_list_iono = freq_pols_iono[freq]
                     desired = ['ionosphere_phase_screen',
                                'ionosphere_phase_screen_uncertainty']
                     geocode_iono_bool = True
                     input_hdf5_iono = input_hdf5
-                    if is_iono_method_sideband and freq == 'A':
+                    if is_iono_method_sideband and freq == 'A' and not is_iono_main_grid:
                         # ionosphere_phase_screen from main_side_band or
                         # main_diff_ms_band are computed on radargrid of frequencyB.
                         # The ionosphere_phase_screen is geocoded on geogrid of
@@ -683,7 +685,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                     if is_iono_method_sideband and freq == 'B':
                         geocode_iono_bool = False
 
-                    if not is_iono_method_sideband:
+                    if (not is_iono_method_sideband) or (
+                       is_iono_method_sideband and is_iono_main_grid):
                         radar_grid_iono = radar_grid
                         iono_sideband_bool = False
                         if pol_list_iono is None:
@@ -1003,6 +1006,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
+    iono_radar_grid = iono_args['iono_radar_grid']
     iono_method = iono_args['spectral_diversity']
     freq_pols_iono = iono_args["list_of_frequencies"]
     freq_pol = cfg['processing']['input_subset']['list_of_frequencies']
@@ -1107,6 +1111,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 if iono_enabled:
+                    is_iono_main_grid = iono_radar_grid == 'main'
                     desired_geo_dataset_names = ['ionosphere_phase_screen',
                                'ionosphere_phase_screen_uncertainty']
 
@@ -1126,21 +1131,28 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                         # frequencyA. Instead of geocoding ionosphere in the RUNW standard
                         # product (frequencyA), geocode the frequencyB in ionosphere/RUNW.h5
                         # to avoid additional interpolation.
-                        if 'B' not in freq_pol:
+                        if 'B' not in freq_pol and not is_iono_main_grid:
                             input_hdf5_iono = f'{scratch_path}/ionosphere/{iono_method}/RUNW.h5'
 
                         if freq == 'A':
-                            radar_grid_iono = slc.getRadarGrid('B')
-                            if az_looks > 1 or rg_looks > 1:
-                                radar_grid_iono = radar_grid_iono.multilook(
-                                    az_looks, rg_looks)
-                            iono_sideband_bool = True
-                            iono_freq = 'B'
-                            rdr_geometry_iono = \
-                                isce3.container.RadarGeometry(
-                                    radar_grid_iono,
-                                    slc.getOrbit(),
-                                    grid_zero_doppler)
+                            if is_iono_main_grid:
+                                iono_sideband_bool = False
+                                iono_freq = freq
+                                rdr_geometry_iono = rdr_geometry
+                                if pol_list_iono is None:
+                                    geocode_iono_bool = False
+                            else:
+                                radar_grid_iono = slc.getRadarGrid('B')
+                                if az_looks > 1 or rg_looks > 1:
+                                    radar_grid_iono = radar_grid_iono.multilook(
+                                        az_looks, rg_looks)
+                                iono_sideband_bool = True
+                                iono_freq = 'B'
+                                rdr_geometry_iono = \
+                                    isce3.container.RadarGeometry(
+                                        radar_grid_iono,
+                                        slc.getOrbit(),
+                                        grid_zero_doppler)
                         else:
                             # The methods using sideband (e.g., main_side_band,
                             # and main_ms_diff_band) produce only one
