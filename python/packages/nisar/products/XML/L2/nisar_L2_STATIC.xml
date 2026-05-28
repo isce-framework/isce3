@@ -393,7 +393,6 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          DIMENSION_LIST="HDF5 internal attribute"
                           _FillValue="nan"
                           grid_mapping="projection"
                           units="hertz">2D lookup table of Doppler centroid</annotation>
@@ -405,7 +404,6 @@
                           lang="en"
                           REFERENCE_LIST="HDF5 internal attribute"
                           CLASS="HDF5 internal attribute"
-                          NAME="HDF5 internal attribute"
                           units="meters">Slant range values corresponding to the native Doppler grid</annotation>
         </real>
         <real name="/science/LSAR/STATIC/metadata/nativeDoppler/zeroDopplerTime"
@@ -415,7 +413,6 @@
                           lang="en"
                           REFERENCE_LIST="HDF5 internal attribute"
                           CLASS="HDF5 internal attribute"
-                          NAME="HDF5 internal attribute"
                           units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch values corresponding to the native Doppler grid</annotation>
         </real>
 
@@ -426,8 +423,8 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
                           CLASS="HDF5 internal attribute"
-                          NAME="HDF5 internal attribute"
                           units="meters">Slant range values corresponding to the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry</annotation>
         </real>
         <real name="/science/LSAR/STATIC/metadata/radarGridParameters/slantRangeSpacing"
@@ -442,8 +439,8 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
                           CLASS="HDF5 internal attribute"
-                          NAME="HDF5 internal attribute"
                           units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler time since UTC epoch values corresponding to the slant range/azimuth grid used to form the layers in this granule related to radar collection geometry</annotation>
         </real>
         <real name="/science/LSAR/STATIC/metadata/radarGridParameters/zeroDopplerTimeSpacing"
