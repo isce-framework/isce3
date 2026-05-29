@@ -399,7 +399,7 @@ class AntennaPattern:
             channel_adj_fact_rx = (
                 self.rx_imb[self.freq_band, txrx_pol].lna_caltone_ratio)
             if self.channel_adj_fact_rx[rxp] is not None:
-                channel_adj_fact_rx *= np.asarray(
+                channel_adj_fact_rx = channel_adj_fact_rx * np.asarray(
                     self.channel_adj_fact_rx[rxp])
 
             # Split up provided timespan into groups with the same range timing
