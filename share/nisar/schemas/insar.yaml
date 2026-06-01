@@ -945,7 +945,7 @@ rifg_options:
     qa_reports: include('rifg_qa_reports_options', required=False)
 
 rifg_qa_reports_options:
-    browse: include('rifg_browse_options')
+    browse: include('rifg_browse_options', required=False)
     wrapped_igram: include('qa_threshold_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
@@ -958,7 +958,7 @@ runw_options:
     qa_reports: include('runw_qa_reports_options', required=False)
 
 runw_qa_reports_options:
-    browse: include('runw_browse_options')
+    browse: include('runw_browse_options', required=False)
     phase_img: include('qa_phase_img_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
     connected_components: include('qa_cc_options', required=False)
@@ -974,7 +974,7 @@ gunw_options:
     qa_reports: include('gunw_qa_reports_options', required=False)
 
 gunw_qa_reports_options:
-    browse: include('gunw_browse_options')
+    browse: include('gunw_browse_options', required=False)
     phase_img: include('qa_phase_img_options', required=False)
     wrapped_igram: include('qa_threshold_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
@@ -997,7 +997,7 @@ goff_options:
     qa_reports: include('goff_qa_reports_options', required=False)
 
 roff_qa_reports_options:
-    browse: include('roff_browse_options')
+    browse: include('roff_browse_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     quiver_plots: include('qa_quiver_plots_options', required=False)
     az_and_rg_variance: include('az_rg_var_options', required=False)
@@ -1005,7 +1005,7 @@ roff_qa_reports_options:
     correlation_surface_peak: include('qa_threshold_options', required=False)
 
 goff_qa_reports_options:
-    browse: include('goff_browse_options')
+    browse: include('goff_browse_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     quiver_plots: include('qa_quiver_plots_options', required=False)
     az_and_rg_variance: include('az_rg_var_options', required=False)
