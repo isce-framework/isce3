@@ -242,6 +242,31 @@ runconfig:
           # Defaults to 5.
           pts_per_side: 5
         bounding_box:
+          # [OPTIONAL] Azimuth start UTC date and time of the start of the radar
+          # observation, as a string in ISO 8601 format with up to nanosecond precision.
+          # If not provided, it will be inferred from the specified geographic grid.
+          # If provided, must be a valid azimuth time within the observation time
+          # interval.
+          start_time:
+
+          # [OPTIONAL] Azimuth ending UTC date and time of the end of the radar
+          # observation, as a string in ISO 8601. format with up to nanosecond precision.
+          # Must be >= `start_time`.
+          # If not provided, it will be inferred from the specified geographic grid.
+          # If provided, must be a valid azimuth time within the observation time
+          # interval.
+          end_time:
+
+          # [OPTIONAL] Starting range, in meters, of the first column of the radar grid.
+          # If not provided, it will be inferred from the specified geographic grid.
+          # If provided, must be a positive value.
+          start_range:
+
+          # [OPTIONAL] Ending range, in meters, of the last column of the radar grid.
+          # If not provided, it will be inferred from the specified geographic grid.
+          # If provided, must be a positive value.
+          end_range:
+
           # [OPTIONAL] Lower bound on the height of targets within the region of interest,
           # in meters above the reference ellipsoid of the output product.
           # Used to estimate the bounds of a radar grid that spans the region of interest.

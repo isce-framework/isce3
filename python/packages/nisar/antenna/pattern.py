@@ -456,20 +456,20 @@ class AntennaPattern:
             if tx_pol == "L":
                 tx_bmf_pat[tx_pol] = (
                     self.tx_bmf['H'].form_pattern(
-                        t, slant_range, nearest=nearest,
+                        tseq, slant_range, nearest=nearest,
                         channel_adj_factors=self.channel_adj_fact_tx['H']) +
                     1j * self.tx_bmf['V'].form_pattern(
-                        t, slant_range, nearest=nearest,
+                        tseq, slant_range, nearest=nearest,
                         channel_adj_factors=self.channel_adj_fact_tx['V'])
                 ).astype(np.complex64)
 
             elif tx_pol == "R":
                 tx_bmf_pat[tx_pol] = (
                     self.tx_bmf['H'].form_pattern(
-                        t, slant_range, nearest=nearest,
+                        tseq, slant_range, nearest=nearest,
                         channel_adj_factors=self.channel_adj_fact_tx['H']) -
                     1j * self.tx_bmf['V'].form_pattern(
-                        t, slant_range, nearest=nearest,
+                        tseq, slant_range, nearest=nearest,
                         channel_adj_factors=self.channel_adj_fact_tx['V'])
                 ).astype(np.complex64)
 
