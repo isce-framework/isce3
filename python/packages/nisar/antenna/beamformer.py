@@ -815,6 +815,11 @@ def compute_transmit_pattern_weights(tx_trm_info, norm=False):
         if np.isclose(abs(tx_weights[bcal_lines_idx]).min(), 0):
             raise RuntimeError('Zero-value BCAL data is encountered!')
 
+        # handle case where first line isn't BCAL
+        bcal_rel = (tx_weights[bcal_lines_idx[0]] /
+                    tx_weights[bcal_lines_idx[0], 0])
+        tx_weights[:bcal_lines_idx[0]] /= bcal_rel
+
         for line_start, line_stop in zip(bcal_lines_idx[:-1],
                                          bcal_lines_idx[1:]):
             # normalize BCAL wrt to the first TX channel to get relative
@@ -827,12 +832,6 @@ def compute_transmit_pattern_weights(tx_trm_info, norm=False):
         bcal_rel = (tx_weights[bcal_lines_idx[-1]] /
                     tx_weights[bcal_lines_idx[-1], 0])
         tx_weights[bcal_lines_idx[-1]:] /= bcal_rel
-
-        # handle case where first line isn't BCAL
-        bcal_rel = (tx_weights[bcal_lines_idx[0]] /
-                    tx_weights[bcal_lines_idx[0], 0])
-        tx_weights[:bcal_lines_idx[0]] /= bcal_rel
-
 
     # Now fill in noise-only range lines with nearest neighbor values
     # from HCAL ones
