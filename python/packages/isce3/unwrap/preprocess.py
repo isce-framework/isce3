@@ -1,8 +1,9 @@
 import pathlib
 import journal
 import numpy as np
-from osgeo import gdal
 
+from pyproj import Transformer
+from osgeo import gdal, osr
 from scipy.ndimage import median_filter, map_coordinates
 
 
@@ -222,66 +223,266 @@ def _get_gdal_raster_shape_type(raster_path):
     return data_shape, np_data_type
 
 
-def _read_gdal_with_bbox(gdal_raster, bbox):
-    '''
-    Extract image from the gdal-supported file with bbox
+def _read_gdal_with_bbox(input_raster, bbox, bbox_epsg=4326):
+    """
+    Read only the raster subset intersecting the input bbox, and return it
+    reprojected to bbox_epsg.
 
     Parameters
     ----------
-    gdal_raster: osgeo.gdal.Dataset
-        gdal dataset to extract the subset image
-    bbox: list
-        list of [xmin, ymin, xmax, ymax]
+    input_raster : gdal.Dataset
+        Input GDAL raster
+    bbox : list[float]
+        [xmin, ymin, xmax, ymax]
+    bbox_epsg : int
+        EPSG of bbox coordinates
 
     Returns
     -------
-    subset_data: numpy.ndarray
-        Median absolute deviation of `arr`
-    [sub_x0, sub_y0, dx, dy]: list
-        sub_x0: x coordinate of upper left
-        sub_y0: y coordinate of upper left
-        dx: x spacing
-        dy: y spacing
-    '''
-    xmin, ymin, xmax, ymax = bbox
+    arr : numpy.ndarray
+        Raster subset reprojected to bbox_epsg
+    raster_info : list[float]
+        [block_x0, block_y0, block_dx, block_dy] in bbox_epsg coordinates
+    """
+    gt = input_raster.GetGeoTransform()
+    proj = input_raster.GetProjection()
+    band = input_raster.GetRasterBand(1)
 
-    geotransform = gdal_raster.GetGeoTransform()
-    x0 = geotransform[0]
-    y0 = geotransform[3]
-    dx = geotransform[1]
-    dy = geotransform[5]
+    if band is None:
+        raise RuntimeError("Failed to access raster band.")
 
-    idx_start = int(np.floor((xmin - x0) / dx))
-    idx_end = int(np.ceil((xmax - x0) / dx))
+    if gt is None:
+        raise RuntimeError("Raster geotransform is missing.")
 
-    if dy > 0:
-        idy_start = int(np.floor((ymin - y0) / dy))
-        idy_end = int(np.ceil((ymax - y0) / dy))
-        sub_y0 = idy_start*dy + y0
+    # north-up only, same practical assumption as most GeoTIFF use cases here
+    if gt[2] != 0 or gt[4] != 0:
+        raise NotImplementedError(
+            "_read_gdal_with_bbox currently does not support affine transformation."
+        )
+
+    raster_srs = osr.SpatialReference()
+    raster_srs.ImportFromWkt(proj)
+
+    try:
+        # Attempt to identify and SET EPSG code for raster SRS, especially
+        # in case that the EPSG code is missing in authority info
+        raster_srs.AutoIdentifyEPSG()
+    except Exception:
+        pass
+
+    raster_epsg = raster_srs.GetAuthorityCode(None)
+    if raster_epsg is None:
+        raise RuntimeError("Could not determine raster EPSG from projection.")
+    raster_epsg = int(raster_epsg)
+
+    xmin, ymin, xmax, ymax = map(float, bbox)
+
+    dst_srs = osr.SpatialReference()
+    dst_srs.ImportFromEPSG(int(bbox_epsg))
+    try:
+        dst_srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+        raster_srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+    except Exception:
+        pass
+
+    # First, transform bbox corners to raster CRS only to check overlap
+    if bbox_epsg != raster_epsg:
+        tx_to_raster = osr.CoordinateTransformation(dst_srs, raster_srs)
+
+        corners = [
+            tx_to_raster.TransformPoint(xmin, ymin)[:2],
+            tx_to_raster.TransformPoint(xmin, ymax)[:2],
+            tx_to_raster.TransformPoint(xmax, ymin)[:2],
+            tx_to_raster.TransformPoint(xmax, ymax)[:2],
+        ]
+        xs = [p[0] for p in corners]
+        ys = [p[1] for p in corners]
+        xmin_src, xmax_src = min(xs), max(xs)
+        ymin_src, ymax_src = min(ys), max(ys)
+
+        # handle antimeridian crossing case for bbox in lat/lon
+        if bbox_epsg == 4326 and (xmax_src - xmin_src) > 180:
+            xmin_src, xmax_src = (xmax_src, xmin_src + 360.0)
+
     else:
-        idy_start = int(np.floor((ymax - y0) / dy))
-        idy_end = int(np.ceil((ymin - y0) / dy))
+        xmin_src, xmax_src = xmin, xmax
+        ymin_src, ymax_src = ymin, ymax
 
-    idx_start = max(0, idx_start)
-    idy_start = max(0, idy_start)
+    x0 = gt[0]
+    dx = gt[1]
+    y0 = gt[3]
+    dy = gt[5]
 
-    x_width = idx_end - idx_start
-    y_length = idy_end - idy_start
+    raster_width = input_raster.RasterXSize
+    raster_height = input_raster.RasterYSize
 
-    if x_width > gdal_raster.RasterXSize:
-        x_width = gdal_raster.RasterXSize
-    if y_length > gdal_raster.RasterYSize:
-        y_length = gdal_raster.RasterYSize
+    raster_xmin = min(x0, x0 + raster_width * dx)
+    raster_xmax = max(x0, x0 + raster_width * dx)
+    raster_ymin = min(y0, y0 + raster_height * dy)
+    raster_ymax = max(y0, y0 + raster_height * dy)
 
-    sub_x0 = idx_start*dx + x0
-    sub_y0 = idy_start*dy + y0
-    raster_band = gdal_raster.GetRasterBand(1)
-    subset_data = raster_band.ReadAsArray(idx_start,
-                                          idy_start,
-                                          x_width,
-                                          y_length)
+    xmin_i = max(xmin_src, raster_xmin)
+    xmax_i = min(xmax_src, raster_xmax)
+    ymin_i = max(ymin_src, raster_ymin)
+    ymax_i = min(ymax_src, raster_ymax)
 
-    return subset_data, [sub_x0, sub_y0, dx, dy]
+    if xmin_i >= xmax_i or ymin_i >= ymax_i:
+        raise ValueError("Input bbox does not overlap raster.")
+
+    src_nodata = band.GetNoDataValue()
+    if src_nodata is None:
+        src_nodata = 0
+
+    # Use source pixel size magnitude to define output resolution in target CRS.
+    # This keeps behavior simple and avoids very strange defaults from Warp.
+    # For your case (bbox_epsg=4326), output grid becomes lon/lat.
+    if bbox_epsg == raster_epsg:
+        out_xres = abs(dx)
+        out_yres = abs(dy)
+    else:
+        tx_to_bbox = osr.CoordinateTransformation(raster_srs, dst_srs)
+
+        # transform two neighboring source points to estimate target resolution
+        p00 = tx_to_bbox.TransformPoint(x0, y0)[:2]
+        p10 = tx_to_bbox.TransformPoint(x0 + dx, y0)[:2]
+        p01 = tx_to_bbox.TransformPoint(x0, y0 + dy)[:2]
+
+        out_xres = abs(p10[0] - p00[0])
+        out_yres = abs(p01[1] - p00[1])
+
+    # Warp directly to the requested bbox / requested CRS
+    warped_ds = gdal.Warp(
+        "",
+        input_raster,
+        format="MEM",
+        dstSRS=dst_srs.ExportToWkt(),
+        outputBounds=(xmin, ymin, xmax, ymax),
+        outputBoundsSRS=dst_srs.ExportToWkt(),
+        xRes=out_xres,
+        yRes=out_yres,
+        resampleAlg=gdal.GRA_NearestNeighbour,
+        srcNodata=src_nodata,
+        dstNodata=src_nodata,
+        targetAlignedPixels=False,
+        multithread=False,
+    )
+
+    if warped_ds is None:
+        raise RuntimeError("gdal.Warp failed to create warped subset.")
+
+    warped_band = warped_ds.GetRasterBand(1)
+    if warped_band is None:
+        raise RuntimeError("Failed to access warped raster band.")
+
+    arr = warped_band.ReadAsArray()
+    if arr is None:
+        raise RuntimeError("Failed to read warped raster window.")
+
+    warped_gt = warped_ds.GetGeoTransform()
+    if warped_gt is None:
+        raise RuntimeError("Warped raster geotransform is missing.")
+
+    block_x0 = warped_gt[0]
+    block_y0 = warped_gt[3]
+    block_dx = warped_gt[1]
+    block_dy = warped_gt[5]
+
+    return arr, [block_x0, block_y0, block_dx, block_dy]
+
+
+def _get_epsg_from_gdal_dataset(dataset):
+    """
+    Detect EPSG code from a GDAL dataset.
+
+    Parameters
+    ----------
+    dataset : gdal.Dataset
+        Input GDAL dataset
+
+    Returns
+    -------
+    int or None
+        EPSG code if successfully detected, None otherwise
+    """
+    warning_channel = journal.warning('unwrap._get_epsg_from_gdal_dataset')
+    proj = dataset.GetProjection()
+
+    if not proj:
+        return None
+
+    srs = osr.SpatialReference()
+    try:
+        srs.ImportFromWkt(proj)
+    except Exception:
+        return None
+
+    try:
+        srs.AutoIdentifyEPSG()
+    except Exception:
+        pass
+
+    epsg_code = srs.GetAuthorityCode(None)
+    if epsg_code is not None:
+        try:
+            return int(epsg_code)
+        except (ValueError, TypeError):
+            warning_channel.log(f"Failed to detect EPSG code. Dataset: {dataset.GetDescription()}, projection: {proj}")
+            return None
+
+    return None
+
+
+def _find_rdr2geo_paths(scratch_path, freq):
+    """
+    Find x.rdr and y.rdr files for the given frequency inside scratch_path.
+
+    The function searches recursively because the files may exist in several
+    possible directories such as:
+
+        scratch/rdr2geo/freqA/
+        scratch/ionosphere/main_diff_ms_band/rdr2geo/freqB/
+        scratch/ionosphere/main_side_band/rdr2geo/freqB/
+
+    Parameters
+    ----------
+    scratch_path : pathlib.Path
+    freq : str
+
+    Returns
+    -------
+    dict
+        {"x": path_to_x_rdr, "y": path_to_y_rdr}
+
+    Raises
+    ------
+    FileNotFoundError
+        If the rdr2geo files cannot be located.
+    """
+
+    scratch_path = pathlib.Path(scratch_path)
+
+    candidates = list(
+        scratch_path.glob(f"**/rdr2geo/freq{freq}/x.rdr")
+    )
+
+    if not candidates:
+        raise FileNotFoundError(
+            f"Could not find any x.rdr under {scratch_path} "
+            f"for frequency {freq}."
+        )
+
+    # choose the shallowest path (closest to scratch root)
+    candidates.sort(key=lambda p: len(p.parts))
+    x_path = candidates[0]
+
+    y_path = x_path.parent / "y.rdr"
+
+    if not y_path.exists():
+        raise FileNotFoundError(
+            f"Found {x_path} but corresponding y.rdr does not exist."
+        )
+
+    return {"x": str(x_path), "y": str(y_path)}
 
 
 def project_map_to_radar(cfg, input_data_path, freq):
@@ -303,7 +504,6 @@ def project_map_to_radar(cfg, input_data_path, freq):
         projected data into radar grid  absolute
     '''
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    rdr2geo_path = f'{scratch_path}/rdr2geo'
 
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
@@ -314,16 +514,27 @@ def project_map_to_radar(cfg, input_data_path, freq):
     if unw_rg_looks != 1:
         rg_looks = unw_rg_looks
 
-    # prepare input paths
-    topo_paths = {xy: f'{rdr2geo_path}/freq{freq}/{xy}.rdr' for xy in 'xy'}
+    topo_paths = _find_rdr2geo_paths(scratch_path, freq)
 
-    # get input shape and type - input type also output type
     _, output_dtype = _get_gdal_raster_shape_type(input_data_path)
     geo_data_raster = gdal.Open(input_data_path)
+
+    # Determine the EPSG code from the input watermask projection
+    # The coordinate values in x.rdr and y.rdr should match this projection
+    bbox_epsg = _get_epsg_from_gdal_dataset(geo_data_raster)
+
+    if bbox_epsg is None:
+        error_channel = journal.error('unwrap.preprocess.project_map_to_radar')
+        err_str = (f"Could not determine EPSG code from input raster: "
+                   f"{input_data_path}. Please ensure the raster has valid "
+                   f"projection information.")
+        error_channel.log(err_str)
+        raise ValueError(err_str)
 
     # for both x and y rasters, decimate and get extents
     decimated_blocks = {}
     decimated_extents = {}
+
     for xy, input_path in topo_paths.items():
         # open input raster for reading
         input_data_raster = gdal.Open(input_path)
@@ -345,18 +556,31 @@ def project_map_to_radar(cfg, input_data_path, freq):
                        slice_rg_start:slice_rg_end:rg_looks]
 
         # save decimated extents and array for current axis
-        decimated_extents[xy] = [np.nanmin(decimated_arr),
-                                 np.nanmax(decimated_arr)]
+
         decimated_blocks[xy] = decimated_arr
         del input_data
+
+    # Reproject coordinates in `decimated_blocks` when `geo_data_raster` is not in 4326
+    # NOTE: transforming (5000, 5000) points took about 2.5 seconds on M1 pro, so
+    # this should not be a bottleneck.
+    if bbox_epsg != 4326:
+        transformer_4326_to_watermask = Transformer.from_crs(4326, bbox_epsg, always_xy=True)
+        decimated_blocks['x'], decimated_blocks['y'] = transformer_4326_to_watermask.transform(
+                decimated_blocks['x'], decimated_blocks['y'])
+
+    # update decimated extents after reprojection
+    for xy in ['x', 'y']:
+        decimated_extents[xy] = [np.nanmin(decimated_blocks[xy]),
+                                 np.nanmax(decimated_blocks[xy])]
 
     # get bounding for decimated extents
     bbox = [decimated_extents['x'][0], decimated_extents['y'][0],
             decimated_extents['x'][1], decimated_extents['y'][1]]
 
     # read map bounded by decimated extents of xy block
+    # Pass the detected EPSG code so bbox coordinates are interpreted correctly
     input_arr_block, [block_x0, block_y0, block_dx, block_dy] = \
-        _read_gdal_with_bbox(geo_data_raster, bbox)
+        _read_gdal_with_bbox(geo_data_raster, bbox, bbox_epsg=bbox_epsg)
 
     # prepare output array
     output_arrays = np.zeros(decimated_blocks['y'].shape,
@@ -374,13 +598,12 @@ def project_map_to_radar(cfg, input_data_path, freq):
                     cval=np.nan,
                     prefilter=False)
 
-    # stack to make whole then return
     return output_arrays
 
 
 def interpret_subswath_mask(subswath_mask, nodata=255):
     """
-    Interprets a subswath mask integer by decoding its digits into boolean 
+    Interprets a subswath mask integer by decoding its digits into boolean
     flags indicating reference validity, secondary validity, and water
     presence.
 

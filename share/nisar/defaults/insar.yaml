@@ -843,9 +843,12 @@ runconfig:
             chunk_size: [512, 512]
             # Enable/disable shuffle filter
             shuffle: True
+
         qa:
             rifg:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -882,6 +885,33 @@ runconfig:
                     metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
+
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling method for ISCE3 geocoding. Options: 'sinc',
+                        # 'bilinear', 'bicubic', 'nearest', 'biquintic'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # When output browse image data contains phase discontinuities
+                        # (e.g. RIFG's wrapped interferogram), strongly recommend 'nearest';
+                        # other methods can create artifacts when interpolating across the jump.
+                        # Default: nearest
+                        resample: nearest
 
                     wrapped_igram:
 
@@ -1050,16 +1080,11 @@ runconfig:
                         # fill value is zero, then zeros will still be included in the total.
                         # Default: True
                         zero_is_invalid: true
-
-                    browse_png:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image.
-                        # Default: 2048
-                        longest_side_max: 2048
 
             runw:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -1097,11 +1122,43 @@ runconfig:
 
                 qa_reports:
 
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # The multiple of pi to rewrap the unwrapped phase image
+                        # when generating the browse PNG. If None, no rewrapping will occur.
+                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+                        # Default: 7
+                        rewrap: 7
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling method for ISCE3 geocoding. Options: 'sinc',
+                        # 'bilinear', 'bicubic', 'nearest', 'biquintic'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # When output browse image data contains phase discontinuities
+                        # (e.g. RIFG's wrapped interferogram), strongly recommend 'nearest';
+                        # other methods can create artifacts when interpolating across the jump.
+                        # Default: bilinear
+                        resample: bilinear
+
                     phase_img:
 
                         # The multiple of pi to rewrap the unwrapped phase image in the report
-                        # PDF. Will be used for both the unwrapped phase image plot(s) and
-                        # the HSI image plot(s). If None, no rewrapping will occur.
+                        # PDF. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
                         # Default: 7
                         rewrap: 7
@@ -1406,21 +1463,10 @@ runconfig:
                         # Default: True
                         zero_is_invalid: true
 
-                    browse_png:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image.
-                        # Default: 2048
-                        longest_side_max: 2048
-
-                        # The multiple of pi to rewrap the unwrapped phase image
-                        # when generating the browse PNG. If None, no rewrapping will occur.
-                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-                        # Default: 7
-                        rewrap: 7
-
             gunw:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -1458,11 +1504,40 @@ runconfig:
 
                 qa_reports:
 
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # The multiple of pi to rewrap the unwrapped phase image
+                        # when generating the browse PNG. If None, no rewrapping will occur.
+                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+                        # Default: 7
+                        rewrap: 7
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling algorithm for GDAL reprojection. Options: 'near',
+                        # 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # Default: average
+                        resample: average
+
                     phase_img:
 
                         # The multiple of pi to rewrap the unwrapped phase image in the report
-                        # PDF. Will be used for both the unwrapped phase image plot(s) and
-                        # the HSI image plot(s). If None, no rewrapping will occur.
+                        # PDF. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
                         # Default: 7
                         rewrap: 7
@@ -1809,21 +1884,10 @@ runconfig:
                         # Default: True
                         zero_is_invalid: true
 
-                    browse_png:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image.
-                        # Default: 2048
-                        longest_side_max: 2048
-
-                        # The multiple of pi to rewrap the unwrapped phase image
-                        # when generating the browse PNG. If None, no rewrapping will occur.
-                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-                        # Default: 7
-                        rewrap: 7
-
             roff:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -1860,6 +1924,53 @@ runconfig:
                     metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
+
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image PNG.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # Stride along each axis of the Frequency A
+                        # image arrays for decimating the raster for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides based on `longeset_side_max`
+                        # and decimating the raster such that the pixels are roughly square.
+                        # Default: None
+                        browse_decimation_freqa:
+
+                        # Stride along each axis of the Frequency B
+                        # image arrays for decimating the raster for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides based on `longeset_side_max`
+                        # and decimating the raster such that the pixels are roughly square.
+                        # Default: None
+                        browse_decimation_freqb:
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling method for ISCE3 geocoding. Options: 'sinc',
+                        # 'bilinear', 'bicubic', 'nearest', 'biquintic'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # When output browse image data contains phase discontinuities
+                        # (e.g. RIFG's wrapped interferogram), strongly recommend 'nearest';
+                        # other methods can create artifacts when interpolating across the jump.
+                        # Default: bilinear
+                        resample: bilinear
 
                     az_and_range_offsets:
 
@@ -1913,26 +2024,6 @@ runconfig:
                         # Default: None
                         colorbar_min_max:
 
-                        # Stride along each axis of the Frequency A
-                        # image arrays for decimating the quiver plot image for the browse PNG.
-                        # This takes precedence over `longest_side_max`.
-                        # Format: [<num_rows>, <num_cols>]
-                        # Example: [6,7]
-                        # If None, QA-SAS will compute the decimation strides
-                        # based on `longest_side_max` and creating square pixels.
-                        # Default: None
-                        browse_decimation_freqa:
-
-                        # Stride along each axis of the Frequency B
-                        # image arrays for decimating the quiver plot image for the browse PNG.
-                        # This takes precedence over `longest_side_max`.
-                        # Format: [<num_rows>, <num_cols>]
-                        # Example: [6,7]
-                        # If None, QA-SAS will compute the decimation strides
-                        # based on `longest_side_max` and creating square pixels.
-                        # Default: None
-                        browse_decimation_freqb:
-
                         # Number of arrows (vectors) to plot per the
                         # longest edge of the raster.
                         # Default: 20
@@ -1946,12 +2037,6 @@ runconfig:
                         # See: The `scaling` parameter for `matplotlib.axes.Axes.quiver()`.
                         # Default: None
                         arrow_scaling:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image. If `decimation_freqX` is not
-                        # None, then `longest_side_max` will be ignored.
-                        # Default: 2048
-                        longest_side_max: 2048
 
                     az_and_rg_variance:
 
@@ -2106,7 +2191,9 @@ runconfig:
                         zero_is_invalid: true
 
             goff:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -2143,6 +2230,50 @@ runconfig:
                     metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
+
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image PNG.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # Stride along each axis of the Frequency A
+                        # image arrays for decimating the raster for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides based on `longeset_side_max`
+                        # and decimating the raster such that the pixels are roughly square.
+                        # Default: None
+                        browse_decimation_freqa:
+
+                        # Stride along each axis of the Frequency B
+                        # image arrays for decimating the raster for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides based on `longeset_side_max`
+                        # and decimating the raster such that the pixels are roughly square.
+                        # Default: None
+                        browse_decimation_freqb:
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling algorithm for GDAL reprojection. Options: 'near',
+                        # 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # Default: average
+                        resample: average
 
                     az_and_range_offsets:
 
@@ -2196,26 +2327,6 @@ runconfig:
                         # Default: None
                         colorbar_min_max:
 
-                        # Stride along each axis of the Frequency A
-                        # image arrays for decimating the quiver plot image for the browse PNG.
-                        # This takes precedence over `longest_side_max`.
-                        # Format: [<num_rows>, <num_cols>]
-                        # Example: [6,7]
-                        # If None, QA-SAS will compute the decimation strides
-                        # based on `longest_side_max` and creating square pixels.
-                        # Default: None
-                        browse_decimation_freqa:
-
-                        # Stride along each axis of the Frequency B
-                        # image arrays for decimating the quiver plot image for the browse PNG.
-                        # This takes precedence over `longest_side_max`.
-                        # Format: [<num_rows>, <num_cols>]
-                        # Example: [6,7]
-                        # If None, QA-SAS will compute the decimation strides
-                        # based on `longest_side_max` and creating square pixels.
-                        # Default: None
-                        browse_decimation_freqb:
-
                         # Number of arrows (vectors) to plot per the
                         # longest edge of the raster.
                         # Default: 20
@@ -2229,12 +2340,6 @@ runconfig:
                         # See: The `scaling` parameter for `matplotlib.axes.Axes.quiver()`.
                         # Default: None
                         arrow_scaling:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image. If `decimation_freqX` is not
-                        # None, then `longest_side_max` will be ignored.
-                        # Default: 2048
-                        longest_side_max: 2048
 
                     az_and_rg_variance:
 

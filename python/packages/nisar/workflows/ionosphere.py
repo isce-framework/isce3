@@ -237,6 +237,67 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
                             file_type='ENVI')
 
 
+def add_binary_mask_to_bit24(existing_mask,
+                             new_binary_mask,
+                             existing_range_array=None,
+                             new_range_array=None):
+    """
+    Encode a boolean mask into bit 24 of an existing 32-bit integer mask.
+    If shapes differ, resample new_binary_mask to existing_mask grid.
+    """
+    existing_mask = np.asarray(existing_mask, dtype=np.uint32)
+    new_binary_mask = np.asarray(new_binary_mask, dtype=bool)
+
+    if existing_mask.shape != new_binary_mask.shape:
+        if existing_range_array is None or new_range_array is None:
+            raise ValueError(
+                "existing_range_array and new_range_array are required "
+                "when shapes differ."
+            )
+        new_binary_mask = interpolate_freq_b_array(
+            existing_range_array,
+            new_range_array,
+            new_binary_mask
+        ).astype(bool)
+
+    if existing_mask.shape != new_binary_mask.shape:
+        raise ValueError(
+            f"Shape mismatch after interpolation: "
+            f"existing_mask={existing_mask.shape}, "
+            f"new_binary_mask={new_binary_mask.shape}"
+        )
+
+    cleared_mask = existing_mask & np.uint32(0xFEFFFFFF)
+    shifted_new_bits = new_binary_mask.astype(np.uint32) << 24
+
+    return cleared_mask | shifted_new_bits
+
+
+def update_hdf5_mask_bit24_block(
+        h5_file,
+        mask_dataset_path,
+        new_binary_mask,
+        row_start,
+        existing_range_array=None,
+        new_range_array=None):
+
+    dst_mask = h5_file[mask_dataset_path]
+
+    block_rows = new_binary_mask.shape[0]
+
+    existing_mask = dst_mask[
+        row_start:row_start + block_rows, :
+    ]
+
+    updated_mask = add_binary_mask_to_bit24(
+        existing_mask=existing_mask,
+        new_binary_mask=new_binary_mask,
+        existing_range_array=existing_range_array,
+        new_range_array=new_range_array)
+
+    dst_mask[row_start:row_start + block_rows, :] = updated_mask
+
+
 def copy_iono_datasets(iono_insar_cfg,
                        input_runw,
                        output_runw,
@@ -581,6 +642,7 @@ def compute_differential_phase(
 
                     # Compute the differential phase
                     diff_phase = first_data_block * np.conj(second_data_block)
+
                     if invalid is not None:
                         diff_phase[invalid] = invalid_fill_value
 
@@ -883,6 +945,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                             'ionosphere',
                                             'main_diff_ms_band',
                                             'RIFG.h5')
+
             else:
                 out_paths = original_out_paths
                 new_scratch = orig_scratch_path
@@ -890,6 +953,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 additional_runw = out_paths['RUNW']
 
             diff_phase_output = pathlib.Path(diff_dir, 'RIFG.h5')
+
             iono_insar_cfg['product_path_group'][
                 'scratch_path'] = diff_dir
             iono_insar_cfg['product_path_group'][
@@ -925,12 +989,12 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
             second_data_path = []
             for pol_b in pol_list_b:
-
                 dest_freq_path = f"{swath_path}/frequencyB"
                 dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
                 rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
 
                 second_data_path.append(rifg_path_freq)
+
             second_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             second_mask_path = f"{dest_freq_path}/interferogram/mask"
 
@@ -1216,6 +1280,20 @@ def run(cfg: dict, runw_hdf5: str):
         mad_scale_factor=filling_outlier_mad_scale_factor,
         outputdir=os.path.join(iono_path, iono_method))
 
+    # compute the full water masks
+    water_mask_b_blk = None
+    water_mask_a_blk = None
+    if "water" in mask_type and filter_bool:
+        water_mask_path = cfg[
+            "dynamic_ancillary_file_group"]["water_mask_file"]
+
+        water_distance_a = project_map_to_radar(cfg, water_mask_path, 'A')
+        water_mask_a = (water_distance_a == 0)
+
+        if iono_method in iono_method_sideband:
+            water_distance_b = project_map_to_radar(cfg, water_mask_path, 'B')
+            water_mask_b = (water_distance_b == 0)
+
     # pull parameters for polarizations
     pol_list_a = list(iono_freq_pols['A'])
     if iono_method in iono_method_sideband:
@@ -1389,6 +1467,10 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_main],
                         dtype=int)
 
+                if "water" in mask_type:
+                    water_mask_a_blk = None if water_mask_a is None else \
+                        water_mask_a[row_start:row_start + block_rows_data, :]
+
                 if iono_method == 'main_diff_low_high_subband':
                     main_image = np.empty([block_rows_data, cols_main],
                                           dtype=float)
@@ -1554,6 +1636,15 @@ def run(cfg: dict, runw_hdf5: str):
                     subswath_mask_side_image = np.empty(
                         [block_rows_data, cols_side],
                         dtype=int)
+
+                if "water" in mask_type:
+                    water_mask_a_blk = None if water_mask_a is None \
+                        else water_mask_a[row_start:row_start +
+                                          block_rows_data, :]
+
+                    water_mask_b_blk = None if water_mask_b is None \
+                        else water_mask_b[row_start:row_start +
+                                          block_rows_data, :]
 
                 with HDF5OptimizedReader(
                         name=runw_freq_a_str, mode='r',
@@ -1836,15 +1927,10 @@ def run(cfg: dict, runw_hdf5: str):
                     # boundary of the water bodies. The values 0-100 represent
                     # the distance from the coastline and values from 101-200
                     # represent the distance from inland water boundaries.
-                    water_mask_path = \
-                            cfg["dynamic_ancillary_file_group"][
-                                "water_mask_file"]
-                    water_distance = project_map_to_radar(
-                        cfg,
-                        water_mask_path,
-                        'A')
-                    mask_image = water_distance[
-                        row_start:row_start + block_rows_data, :] == 0
+                    if iono_method in iono_method_sideband:
+                        mask_image = water_mask_b_blk
+                    else:
+                        mask_image = water_mask_a_blk
                     mask_array = mask_array & mask_image
 
                 valid_area = iono_phase_obj.get_valid_area(
@@ -1868,6 +1954,7 @@ def run(cfg: dict, runw_hdf5: str):
                     slant_main=main_slant,
                     slant_side=side_slant,
                     invalid_value=0)
+                final_iono_mask = mask_array & valid_area & valid_area_coh
 
                 mask_path = os.path.join(
                     iono_path, iono_method, pol_comb_str, 'mask_array')
@@ -1875,10 +1962,28 @@ def run(cfg: dict, runw_hdf5: str):
                 # ENVI format files
                 write_array(
                     mask_path,
-                    mask_array & valid_area & valid_area_coh,
+                    final_iono_mask,
                     data_type=gdal.GDT_Float32,
                     block_row=row_start,
                     data_shape=[rows_output, cols_output])
+
+                if iono_method in iono_method_sideband:
+                    existing_range = main_slant
+                    new_range = side_slant
+
+                else:
+                    existing_range = None
+                    new_range = None
+
+                with HDF5OptimizedReader(name=runw_path_insar, mode='a',
+                                         libver='latest') as dst_h5:
+                    update_hdf5_mask_bit24_block(
+                        dst_h5,
+                        subswath_mask_freq_a_path,
+                        final_iono_mask,
+                        row_start=row_start,
+                        existing_range_array=existing_range,
+                        new_range_array=new_range)
 
         if filter_bool:
             # if unwrapping correction technique is not requested,
