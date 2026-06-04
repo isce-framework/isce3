@@ -828,6 +828,12 @@ def compute_transmit_pattern_weights(tx_trm_info, norm=False):
                     tx_weights[bcal_lines_idx[-1], 0])
         tx_weights[bcal_lines_idx[-1]:] /= bcal_rel
 
+        # handle case where first line isn't BCAL
+        bcal_rel = (tx_weights[bcal_lines_idx[0]] /
+                    tx_weights[bcal_lines_idx[0], 0])
+        tx_weights[:bcal_lines_idx[0]] /= bcal_rel
+
+
     # Now fill in noise-only range lines with nearest neighbor values
     # from HCAL ones
     func_nearest = interp1d(hcal_lines_idx, tx_weights[hcal_lines_idx],
