@@ -230,6 +230,9 @@ isce3::error::ErrorCode loadDemFromProj(
     min_x -= margin_x;
     max_x += margin_x;
 
+    min_y = std::clamp(min_y, -90.0, 90.0);
+    max_y = std::clamp(max_y, -90.0, 90.0);
+
     isce3::error::ErrorCode error_code;
     _Pragma("omp critical")
     {
