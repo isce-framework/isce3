@@ -228,6 +228,8 @@ isce3::error::ErrorCode loadDemFromProj(
     min_x -= margin_x;
     max_x += margin_x;
 
+    // If DEM coordinates are in geographic, ensure latitude values
+    // fall between [-90.0, 90.0] after applying `margin_y`
     if (dem_raster.getEPSG() == 4326) {
         min_y = std::clamp(min_y, -90.0, 90.0);
         max_y = std::clamp(max_y, -90.0, 90.0);
