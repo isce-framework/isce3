@@ -209,7 +209,7 @@ isce3::error::ErrorCode loadDemFromProj(
         // If the DEM is in geographic coordinates and the X range
         // exceeds 180 degrees, an antimeridian crossing is likely.
         // Retry in [0, 360] domain.
-        if (dem_raster.getEPSG() == 4326 && max_x - min_x > 180.0) {
+        if (dem_raster.getEPSG() == 4326 && (max_x - min_x) > 180.0) {
             min_x = std::numeric_limits<double>::max();
             max_x = std::numeric_limits<double>::lowest();
             for (double lon : all_x) {
