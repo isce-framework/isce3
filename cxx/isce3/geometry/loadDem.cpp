@@ -178,28 +178,28 @@ isce3::error::ErrorCode loadDemFromProj(
             double y_mid = min_y + t * (max_y - min_y);
 
             // Left edge (x = min_x, y varies)
-            auto west_llh = proj->inverse({min_x, y_mid, 0});
-            auto west_xy  = dem_proj->forward(west_llh);
-            all_x.push_back(west_xy[0]);
-            all_y.push_back(west_xy[1]);
+            auto left_llh = proj->inverse({min_x, y_mid, 0});
+            auto left_xy  = dem_proj->forward(left_llh);
+            all_x.push_back(left_xy[0]);
+            all_y.push_back(left_xy[1]);
 
             // Right edge (x = max_x, y varies)
-            auto east_llh = proj->inverse({max_x, y_mid, 0});
-            auto east_xy  = dem_proj->forward(east_llh);
-            all_x.push_back(east_xy[0]);
-            all_y.push_back(east_xy[1]);
+            auto right_llh = proj->inverse({max_x, y_mid, 0});
+            auto right_xy  = dem_proj->forward(right_llh);
+            all_x.push_back(right_xy[0]);
+            all_y.push_back(right_xy[1]);
 
             // Bottom edge (y = min_y, x varies)
-            auto south_llh = proj->inverse({x_mid, min_y, 0});
-            auto south_xy  = dem_proj->forward(south_llh);
-            all_x.push_back(south_xy[0]);
-            all_y.push_back(south_xy[1]);
+            auto bottom_llh = proj->inverse({x_mid, min_y, 0});
+            auto bottom_xy  = dem_proj->forward(bottom_llh);
+            all_x.push_back(bottom_xy[0]);
+            all_y.push_back(bottom_xy[1]);
 
             // Top edge (y = max_y, x varies)
-            auto north_llh = proj->inverse({x_mid, max_y, 0});
-            auto north_xy  = dem_proj->forward(north_llh);
-            all_x.push_back(north_xy[0]);
-            all_y.push_back(north_xy[1]);
+            auto top_llh = proj->inverse({x_mid, max_y, 0});
+            auto top_xy  = dem_proj->forward(top_llh);
+            all_x.push_back(top_xy[0]);
+            all_y.push_back(top_xy[1]);
         }
 
         min_y = *std::min_element(all_y.begin(), all_y.end());
