@@ -168,9 +168,7 @@ isce3::error::ErrorCode loadDemFromProj(
         // Densely sample all four edges of the input bounding box
         // to capture curvature introduced by reprojection
         // (e.g. UTM -> geographic).
-        std::vector<double> all_x, all_y;
-        all_x.reserve(4 * N);
-        all_y.reserve(4 * N);
+        std::vector<double> all_x(4 * N), all_y(4 * N);
 
         for (int i = 0; i < N; ++i) {
             double t = static_cast<double>(i) / (N - 1);
