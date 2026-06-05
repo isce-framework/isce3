@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import traceback
 import warnings
@@ -18,6 +19,8 @@ from scipy.optimize import root_scalar
 import isce3
 from isce3.core import abs2
 import nisar
+
+log = logging.getLogger("nisar.workflows.estimate_abscal_factor")
 
 
 def make_irf(weights, normalize=True):
@@ -47,9 +50,8 @@ def get_window_correction(weights):
     return area_win / width_win / (area_box / width_box)
 
 def get_abscal_correction(rslc):
-    with h5py.File(fn, mode="r") as h5:
-        weights_az = h5["/science/LSAR/RSLC/metadata/processingInformation/parameters/azimuthChirpWeighting"][:].astype("f8")
-        weights_rg = h5["/science/LSAR/RSLC/metadata/processingInformation/parameters/rangeChirpWeighting"][:].astype("f8")
+    weights_az = rslc.azimuthChirpWeighting
+    weights_rg, _, _ = rslc.rangeChirpWeighting
     corr_az = get_window_correction(weights_az)
     corr_rg = get_window_correction(weights_rg)
     return corr_rg * corr_az
@@ -152,6 +154,11 @@ def estimate_abscal_factor(
           assumes that the target response can be approximated by a 2-D rectangular
           function. The total power is estimated by multiplying the peak power by the
           3dB response widths in along-track and cross-track directions.
+
+        'adjusted_box':
+          Similar to 'box' but adjusted to account for the effects of
+          apodization windows in range and azimuth.  This should give results
+          more comparable with methods that integrate sidelobes (e.g., ESA).
 
         'integrated':
           Measures power using the integrated power method. The total power is measured
@@ -282,7 +289,12 @@ def estimate_abscal_factor(
     # Get platform attitude data.
     attitude = rslc.getAttitude()
 
-    window_correction = get_abscal_correction(rslc)
+    window_correction = 1.0
+    meas_power_method = power_method
+    if power_method == "adjusted_box":
+        meas_power_method = "box"
+        window_correction = get_abscal_correction(rslc)
+        log.info(f"Will adjust 'box' RCS estimates by {window_correction = }")
 
     # Estimate the absolute calibration error (the ratio of the measured RCS to the
     # predicted RCS) for a single corner reflector.
@@ -308,13 +320,11 @@ def estimate_abscal_factor(
             upsample_factor=upsample_factor,
             peak_find_domain=peak_find_domain,
             nfit=nfit,
-            power_method=power_method,
+            power_method=meas_power_method,
             pthresh=pthresh,
         )
 
-        measured_rcs *= window_correction
-
-        return measured_rcs / predicted_rcs
+        return measured_rcs / predicted_rcs * window_correction
 
     # Estimate the absolute radiometric calibration error of each corner reflector, and
     # format the results into an object that can be easily JSON-ified.
@@ -498,7 +508,7 @@ def parse_cmdline_args() -> dict[str, Any]:
     parser.add_argument(
         "--power-method",
         type=str,
-        choices=["box", "integrated"],
+        choices=["box", "adjusted_box", "integrated"],
         default="box",
         help=(
             "The method for estimating the target signal power (rectangular box method"
