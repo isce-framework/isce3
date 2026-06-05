@@ -47,14 +47,14 @@ isce3::geometry::DEMInterpolator DEMRasterToInterpolator(
 * in the same or different coordinate system as the DEM raster
 *
 * @param[in]  dem_raster              DEM raster
-* @param[in]  x0                      Minimum X/easting position of the input
-# bounding box in the coordinate system of `proj`
-* @param[in]  xf                      Maximum X/easting position of the input
-# bounding box in the coordinate system of `proj`
-* @param[in]  minY                    Minimum Y/northing position of the input
-# bounding box in the coordinate system of `proj`
-* @param[in]  maxY                    Maximum Y/northing position of the input
-# bounding box in the coordinate system of `proj`
+* @param[in]  x0                      Starting X/easting position of the input
+* bounding box in the coordinate system of `proj`
+* @param[in]  xf                      Ending X/easting position of the input
+* bounding box in the coordinate system of `proj`
+* @param[in]  y0                      Starting Y/northing position of the input
+* bounding box in the coordinate system of `proj`
+* @param[in]  yf                      Ending Y/northing position of the input
+* bounding box in the coordinate system of `proj`
 * @param[out] dem_interp              DEM interpolation object
 * @param[in]  proj                    Projection object (nullptr to use same
 * DEM projection)
@@ -67,8 +67,8 @@ isce3::geometry::DEMInterpolator DEMRasterToInterpolator(
 */
 isce3::error::ErrorCode loadDemFromProj(
     isce3::io::Raster& dem_raster,
-    const double minX, const double maxX, const double minY,
-    const double maxY, isce3::geometry::DEMInterpolator* dem_interp,
+    const double x0, const double xf, const double y0,
+    const double yf, isce3::geometry::DEMInterpolator* dem_interp,
     isce3::core::ProjectionBase* proj = nullptr,
     const int dem_margin_x_in_pixels = 100,
     const int dem_margin_y_in_pixels = 100,

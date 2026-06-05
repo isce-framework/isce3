@@ -134,21 +134,32 @@ DEMInterpolator DEMRasterToInterpolator(
 
 isce3::error::ErrorCode loadDemFromProj(
     isce3::io::Raster& dem_raster, const double x0, const double xf,
-    const double minY, const double maxY,
+    const double y0, const double yf,
     DEMInterpolator* dem_interp,
     isce3::core::ProjectionBase* proj, const int dem_margin_x_in_pixels,
     const int dem_margin_y_in_pixels, const int dem_raster_band,
     const int n_edge_samples){
     double min_x, max_x, min_y, max_y;
 
-    if (proj == nullptr || proj->code() == dem_raster.getEPSG()) {
+    min_y = std::min(y0, yf);
+    max_y = std::max(y0, yf);
 
-        min_x = x0;
-        max_x = xf;
-        min_y = std::min(minY, maxY);
-        max_y = std::max(minY, maxY);
+    min_x = std::min(x0, xf);
+    max_x = std::max(x0, xf);
 
-    } else {
+    // Test for antimeridian crossing (EPSG 4326) and unwrap X (longitude)
+    // coordinates if `max_x - min_x` is greater than 180 degrees
+    if ((((proj == nullptr) && (dem_raster.getEPSG() == 4326)) ||
+         ((proj != nullptr) && (proj->code() == 4326))) &&
+        (max_x - min_x > 180)) {
+            const double x0_unwrapped = x0 < 0 ? x0 + 360.0 : x0;
+            const double xf_unwrapped = xf < 0 ? xf + 360.0 : xf;
+            min_x = std::min(x0_unwrapped, xf_unwrapped);
+            max_x = std::max(x0_unwrapped, xf_unwrapped);
+    }
+
+    if (proj != nullptr && proj->code() != dem_raster.getEPSG()) {
+
         std::unique_ptr<isce3::core::ProjectionBase> dem_proj(
                 isce3::core::createProj(dem_raster.getEPSG()));
 
@@ -163,29 +174,29 @@ isce3::error::ErrorCode loadDemFromProj(
 
         for (int i = 0; i < N; ++i) {
             double t = static_cast<double>(i) / (N - 1);
-            double xMid = x0 + t * (xf - x0);
-            double yMid = minY + t * (maxY - minY);
+            double x_mid = min_x + t * (max_x - min_x);
+            double y_mid = min_y + t * (max_y - min_y);
 
-            // West edge (x = x0, y varies)
-            auto west_llh = proj->inverse({x0, yMid, 0});
+            // Left edge (x = min_x, y varies)
+            auto west_llh = proj->inverse({min_x, y_mid, 0});
             auto west_xy  = dem_proj->forward(west_llh);
             all_x.push_back(west_xy[0]);
             all_y.push_back(west_xy[1]);
 
-            // East edge (x = xf, y varies)
-            auto east_llh = proj->inverse({xf, yMid, 0});
+            // Right edge (x = max_x, y varies)
+            auto east_llh = proj->inverse({max_x, y_mid, 0});
             auto east_xy  = dem_proj->forward(east_llh);
             all_x.push_back(east_xy[0]);
             all_y.push_back(east_xy[1]);
 
-            // South edge (y = minY, x varies)
-            auto south_llh = proj->inverse({xMid, minY, 0});
+            // Bottom edge (y = min_y, x varies)
+            auto south_llh = proj->inverse({x_mid, min_y, 0});
             auto south_xy  = dem_proj->forward(south_llh);
             all_x.push_back(south_xy[0]);
             all_y.push_back(south_xy[1]);
 
-            // North edge (y = maxY, x varies)
-            auto north_llh = proj->inverse({xMid, maxY, 0});
+            // Top edge (y = max_y, x varies)
+            auto north_llh = proj->inverse({x_mid, max_y, 0});
             auto north_xy  = dem_proj->forward(north_llh);
             all_x.push_back(north_xy[0]);
             all_y.push_back(north_xy[1]);
@@ -215,7 +226,7 @@ isce3::error::ErrorCode loadDemFromProj(
     min_y -= margin_y;
     max_y += margin_y;
 
-    float margin_x = dem_margin_x_in_pixels * dem_raster.dx();
+    float margin_x = dem_margin_x_in_pixels * std::abs(dem_raster.dx());
     min_x -= margin_x;
     max_x += margin_x;
 
