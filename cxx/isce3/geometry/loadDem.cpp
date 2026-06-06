@@ -222,11 +222,11 @@ isce3::error::ErrorCode loadDemFromProj(
         }
     }
 
-    float margin_y = dem_margin_y_in_pixels * std::abs(dem_raster.dy());
+    double margin_y = dem_margin_y_in_pixels * std::abs(dem_raster.dy());
     min_y -= margin_y;
     max_y += margin_y;
 
-    float margin_x = dem_margin_x_in_pixels * std::abs(dem_raster.dx());
+    double margin_x = dem_margin_x_in_pixels * std::abs(dem_raster.dx());
     min_x -= margin_x;
     max_x += margin_x;
 
