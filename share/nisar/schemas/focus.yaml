@@ -449,22 +449,64 @@ slow_time_evd_options:
   # compared. The one with the maximum STD is used for RFI Eigenvalue first
   # difference computation.
   max_num_rfi_ev: int(min=1, required=False)
+  # Number of buffer CPIs added on each side of a detected RFI CPI to account
+  # for uncertainty in RFI onset and offset.
+  num_rfi_buffer: int(min=0, required=False)
   # Number of slow-time CPIs grouped together for determining and applying a
   # common EV slope threshold.
   num_cpi_per_threshold_block: int(min=2, required=False)
-  # minimum fraction of samples required for cross-variance terms
-  # of sample covariance matrix
-  off_diag_overlap_ratio: num(min=0.0, required=False)
-  # minimum fraction of samples required for co-variance terms
-  # of sample covariance matrix
-  diag_valid_ratio: num(min=0.0, required=False)
-  #This ratio will be used to determine the minimum number of valid Eigenvalues
-  ##required for a CPI. min_ev_valid_idx = int(np.round(min_rank_frac * cpi_len)) - 1
+  # Minimum fraction of samples required for cross-variance terms
+  # of sample covariance matrix.
+  off_diag_overlap_ratio: num(min=0.0, max=1.0, required=False)
+  # Minimum fraction of samples required for diagonal covariance terms
+  # of sample covariance matrix.
+  diag_valid_ratio: num(min=0.0, max=1.0, required=False)
+  # This ratio will be used to determine the minimum number of valid Eigenvalues
+  # required for a CPI. min_ev_valid_idx = int(np.round(min_rank_frac * cpi_len)) - 1
   min_rank_frac: num(exclusiveMinimum=0.0, max=1.0, required=False)
-  # radar platform receiver dynamic range, e.g. 50 dB. This is applied as a threshold
-  # to determine if the Eigenvalue under test is meaningfully signficant.
+  # Radar platform receiver dynamic range in dB. Applied as a threshold to
+  # determine if the Eigenvalue under test is meaningfully significant.
   rx_dynamic_range_db: num(min=0.0, max=100.0, required=False)
+  # RFI detection threshold method: 'max_ev' (Maximum Eigenvalue Estimation,
+  # default) or 'ev_slope' (Eigenvalue slope / ST-EST).
+  threshold_method: enum('max_ev', 'ev_slope', required=False)
+  # Figure of merit threshold for RFI detection. The figure of merit is the
+  # STD ratio of the maximum vs. minimum Eigenvalue slopes across the threshold
+  # block. Values above this threshold trigger RFI detection.
+  rfi_fig_merit_thresh: num(min=0.0, required=False)
+  # Enable bright target (e.g. strong point scatterer) rejection check.
+  # Threshold blocks where BOTH the condition number check AND the power spread
+  # check pass are skipped (not flagged as RFI).
+  bright_target_check: bool(required=False)
+  # Threshold (dB) on the standard deviation of the condition number (ratio of
+  # max to min diagonal power) across CPIs within a threshold block. A low value
+  # indicates a spatially stationary scene (possible bright target).
+  bt_condition_num_thresh_db: num(min=0.0, required=False)
+  # Threshold (dB) on the power spread within a threshold block, defined as the
+  # difference between the upper and reference percentiles of the diagonal
+  # covariance power. A low value indicates a low-dynamic-range scene (possible
+  # bright target).
+  bt_pwr_spread_thresh_db: num(min=0.0, required=False)
+  # Percentile (in [0, 100]) used as the reference (baseline) power level when
+  # computing the power spread for bright target rejection.
+  pwr_ref_percentile: num(min=0.0, max=100.0, required=False)
+  # Upper percentile (in [0, 100]) used when computing the power spread for
+  # bright target rejection. Must be greater than pwr_ref_percentile.
+  pwr_upper_percentile: num(min=0.0, max=100.0, required=False)
+  # Upper bound of the adaptive detection margin in dB. Applied when the
+  # Principal Component Ratio (PCR) is below pcr_range[0].
+  sig_ev_margin_upper_db: num(min=0.0, required=False)
+  # Lower bound of the adaptive detection margin in dB. Applied when the
+  # Principal Component Ratio (PCR) is above pcr_range[1].
+  sig_ev_margin_lower_db: num(min=0.0, required=False)
+  # PCR range [lower, upper] for adaptive margin interpolation.
+  # PCR = ev[0] / sum(ev[1:]) where ev are the sorted eigenvalues.
+  # The detection margin interpolates between sig_ev_margin_upper_db and
+  # sig_ev_margin_lower_db over this range. Must be a list of 2 non-negative
+  # values with lower < upper.
+  pcr_range: list(num(min=0.0), min=2, max=2, required=False)
   # Parameters used to adaptively determine RFI eigenvalue difference thresholds
+  # (used when threshold_method = 'max_ev').
   threshold_hyperparameters: include('rfi_threshold_options', required=False)
 
 freq_notch_filter_options:
