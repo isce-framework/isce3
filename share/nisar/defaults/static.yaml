@@ -203,6 +203,14 @@ runconfig:
         # Must be > 0.
         # Defaults to 2000.
         rg_spacing: 2000.0
+        # [OPTIONAL] Additional azimuth time margin, in seconds, to add to the start
+        # and end of the Doppler LUT.
+        # Must be >= 0. If empty, defaults to 20% of the radar grid time interval.
+        az_margin:
+        # [OPTIONAL] Additional slant range margin, in meters, to add to the near and
+        # far edges of the Doppler LUT.
+        # Must be >= 0. If empty, defaults to 20% of the radar grid slant-range width.
+        rg_margin:
         # [OPTIONAL] Interpolation method used for sampling the Doppler LUT.
         # Must be one of:
         #   - 'nearest': nearest neighbor interpolation
