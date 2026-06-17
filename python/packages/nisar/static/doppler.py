@@ -47,11 +47,11 @@ def make_native_doppler_lut(
     az_margin : float | None
         Additional azimuth time margin, in seconds, to add to the start
         and end of the Doppler LUT.
-        Must be > 0 or None. If None, defaults to 20% of the radar grid time interval.
+        Must be >= 0 or None. If None, defaults to 20% of the radar grid time interval.
     rg_margin : float | None
         Additional slant range margin, in meters, to add to the near and
         far edges of the Doppler LUT.
-        Must be > 0 or None. If None, defaults to 20% of the radar grid slant-range width.
+        Must be >= 0 or None. If None, defaults to 20% of the radar grid slant-range width.
     interp_method : isce3.core.DataInterpMethod or str, optional
         Interpolation method used by the output LUT. Defaults to bilinear interpolation.
     bounds_error : bool, optional
