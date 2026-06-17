@@ -44,6 +44,12 @@ def make_native_doppler_lut(
         Digital elevation model specifying the height of topography, in meters above
         some reference ellipsoid, covering a region that spans the footprint of
         `radar_grid` on the ground.
+    az_spacing : float
+        The azimuth time spacing, in seconds, of the output LUT coordinate grid.
+        Must be > 0.
+    rg_spacing : float
+        The slant range spacing, in meters, of the output LUT coordinate grid.
+        Must be > 0.
     az_margin : float | None
         Additional azimuth time margin, in seconds, to add to the start
         and end of the Doppler LUT.
