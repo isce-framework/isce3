@@ -233,14 +233,14 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
             "Combination of a water mask, a mask of subswaths of valid samples, and data anomalies"
             " in the reference RSLC and the geometrically coregistered secondary RSLC."
             " Each pixel value is encoded as a 32-bit unsigned integer."
-            " Bits 0–7 represent subswath encoding, where the most significant digit represents"
+            " Bits 0-7 represent subswath encoding, where the most significant digit represents"
             " the water flag of that pixel in the reference RSLC, where 1 is water"
             " and 0 is non-water; the second most significant digit corresponds to"
             " the subswath number of the reference RSLC, and the least significant digit"
             " corresponds to the subswath number of the secondary RSLC;"
             " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
-            " Bits 8–15 represent bitwise anomaly flags for the secondary RSLC, and"
-            " bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
+            " Bits 8-15 represent bitwise anomaly flags for the secondary RSLC, and"
+            " bits 16-23 represent bitwise anomaly flags for the reference RSLC,"
             " with each bit corresponding to a specific anomaly condition."
             " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
         )
@@ -248,11 +248,11 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         mask_description_iono = (
             " Bit 24 indicates a bit mask for ionospheric phase mask used during filtering of ionospheric phase."
             " This ionospheric phase mask indicates pixels which were masked out and filled with interpolated data."
-            " Bits 25–31 are reserved for future use"
+            " Bits 25-31 are reserved for future use"
         )
 
         mask_description_no_iono = (
-            " Bits 24–31 are reserved for future use"
+            " Bits 24-31 are reserved for future use"
         )
         # Only add the common fields such as list of polarizations, pixel offsets, and center frequency
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):

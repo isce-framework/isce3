@@ -140,7 +140,7 @@ def run_freq_notch(
     __________
     ..[1]  F. Meyer, J. Nicoll, and A. Doulgeris, “Correction and Characterization 
     of Radio Frequency Interference Signatures in L-Band Synthetic Aperture Radar 
-    Data”, IEEE Trans. Geosci. Remote Sens., vol. 51, no. 10, pp. 4961–4972, Oct. 2013.
+    Data”, IEEE Trans. Geosci. Remote Sens., vol. 51, no. 10, pp. 4961-4972, Oct. 2013.
     """
 
     # Modify raw_data in-place
