@@ -28,8 +28,7 @@ formLinearChirp(double chirprate,
 
     // check for possible overflow before double -> int conversion
     double d_size = samplerate * duration + 1;
-    double d_maxsize = std::numeric_limits<int>::max();
-    if (d_size > d_maxsize) {
+    if (d_size > std::numeric_limits<int>::max() || d_size < std::numeric_limits<int>::min()) {
         throw isce3::except::OverflowError(ISCE_SRCINFO(), "chirp size exceeds max int value");
     }
 
