@@ -24,6 +24,21 @@ log = logging.getLogger("nisar.workflows.estimate_abscal_factor")
 
 
 def make_irf(weights, normalize=True):
+    """
+    Create an impulse response function (IRF) from frequency domain weights.
+
+    Parameters
+    ----------
+    weights : array_like
+        Frequency domain weights (e.g., window or filter coefficients).
+    normalize : bool, optional
+        If True, normalize the weights to sum to 1. Defaults to True.
+
+    Returns
+    -------
+    callable
+        A function that evaluates the impulse response at a given time offset t.
+    """
     w = np.fft.fftshift(weights) / len(weights)
     if normalize:
         w *= 1.0 / np.sum(w)
@@ -31,6 +46,25 @@ def make_irf(weights, normalize=True):
     return lambda t: np.exp(1j * 2 * np.pi * f * t).dot(w)
 
 def get_irf_width_area(irf: Callable[[float], float], t_max=np.inf):
+    """
+    Compute the full width at half maximum (FWHM) and integrated area of an
+    impulse response.
+
+    Parameters
+    ----------
+    irf : callable
+        Impulse response function that takes a time offset and returns a
+        complex value.
+    t_max : float, optional
+        Maximum integration limit for computing the area. Defaults to infinity.
+
+    Returns
+    -------
+    width : float
+        Full width at half maximum (FWHM) of the impulse response power.
+    area : float
+        Integrated area under the impulse response power curve.
+    """
     # Find half-power width using bracketing root-finding algorithm.
     hw = root_scalar(lambda t: abs2(irf(t)) - 0.5, x0=0.0, x1=1.0).root
     # full width = 2 * half width
@@ -43,6 +77,24 @@ def get_irf_width_area(irf: Callable[[float], float], t_max=np.inf):
     return width, area
 
 def get_window_correction(weights):
+    """
+    Compute the radiometric correction factor for a windowing function.
+
+    The correction factor accounts for the power loss due to apodization
+    (windowing) relative to a rectangular window. It is computed as the ratio of
+    the IRF mainlobe area density (area/width) for the windowed response to that
+    of a rectangular window.
+
+    Parameters
+    ----------
+    weights : array_like
+        Frequency domain weights representing the window function.
+
+    Returns
+    -------
+    float
+        Window correction factor (dimensionless, typically < 1).
+    """
     # Note that DTFT is periodic, so limit integration to one period.
     t_max = len(weights) / 2
     width_win, area_win = get_irf_width_area(make_irf(weights), t_max=t_max)
@@ -50,6 +102,23 @@ def get_window_correction(weights):
     return area_win / width_win / (area_box / width_box)
 
 def get_abscal_correction(rslc):
+    """
+    Compute the combined window correction factor for absolute calibration.
+
+    Calculates the 2-D radiometric correction by multiplying the range and
+    azimuth window correction factors derived from the chirp weighting functions
+    in the RSLC product.
+
+    Parameters
+    ----------
+    rslc : nisar.products.readers.SLC
+        The input RSLC product containing chirp weighting information.
+
+    Returns
+    -------
+    float
+        Combined window correction factor for range and azimuth (dimensionless).
+    """
     weights_az = rslc.azimuthChirpWeighting
     weights_rg, _, _ = rslc.rangeChirpWeighting
     corr_az = get_window_correction(weights_az)
