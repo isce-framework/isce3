@@ -607,7 +607,7 @@ absolute_radiometric_calibration_options:
   upsample_factor: int(min=1, required=False)
   peak_find_domain: enum('time', 'freq', required=False)
   nfit: int(min=3, required=False)
-  power_method: enum('box', 'integrated', required=False)
+  power_method: enum('box', 'adjusted_box', 'integrated', required=False)
   power_threshold: num(required=False)
 
 point_target_analyzer_options:
