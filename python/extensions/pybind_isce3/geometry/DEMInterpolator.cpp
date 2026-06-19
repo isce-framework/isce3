@@ -226,39 +226,42 @@ void addbinding_load_dem_from_proj(py::module& m)
         [](isce3::io::Raster &dem_raster,
             const double x0,
             const double xf,
-            const double minY,
-            const double maxY,
+            const double y0,
+            const double yf,
             const isce3::core::dataInterpMethod dem_interp_method,
             isce3::core::ProjectionBase* proj,
             const int dem_margin_x_in_pixels,
             const int dem_margin_y_in_pixels,
-            const int dem_raster_band) {
+            const int dem_raster_band,
+            const int n_edge_samples) {
 
             DEMInterp dem_interp(0, dem_interp_method);
 
             isce3::geometry::loadDemFromProj(dem_raster,
                                              x0,
                                              xf,
-                                             minY,
-                                             maxY,
+                                             y0,
+                                             yf,
                                              &dem_interp,
                                              proj,
                                              dem_margin_x_in_pixels,
                                              dem_margin_y_in_pixels,
-                                             dem_raster_band);
+                                             dem_raster_band,
+                                             n_edge_samples);
 
             return dem_interp;
         },
         py::arg("dem_raster"),
         py::arg("x0"),
         py::arg("xf"),
-        py::arg("min_y"),
-        py::arg("max_y"),
+        py::arg("y0"),
+        py::arg("yf"),
         py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD,
         py::arg("proj") = nullptr,
         py::arg("dem_margin_x_in_pixels") = 100,
         py::arg("dem_margin_y_in_pixels") = 200,
         py::arg("dem_raster_band") = 1,
+        py::arg("n_edge_samples") = 1,
         R"(
     Load DEM raster into a DEMInterpolator object around a given bounding box
     in the same or different coordinate system as the DEM raster
@@ -268,22 +271,17 @@ void addbinding_load_dem_from_proj(py::module& m)
     dem_raster: isce3.io.Raster
         Raster of the DEM
     x0: double
-        If the DEM is in geographic coordinates and the `x0` coordinate is not
-        from the polar stereo system EPSG 3031 or EPSG 3413, this point represents
-        the minimum X coordinate value. In this case, the maximum
-        longitude span that this function can handle is 180 degrees
-        (when the DEM is in geographic coordinates and `proj` is in polar stereo        
+        Minimum X/easting position of the input bounding box in the coordinate
+        system of `proj`
     xf: double
-        Easting/longitude of eastern edge of bounding box
-        If the DEM is in geographic coordinates and the `xf` coordinate is not
-        from the polar stereo system EPSG 3031 or EPSG 3413, this point represents
-        the maximum X coordinate value. In this case, the maximum
-        longitude span that this function can handle is 180 degrees
-        (when the DEM is in geographic coordinates and `proj` is in polar stereo)
+        Maximum X/easting position of the input bounding box in the coordinate
+        system of `proj`
     min_y: double
-        Minimum Y/northing position
+        Minimum Y/northing position of the input bounding box in the coordinate
+        system of `proj`
     max_y: double
-        Maximum Y/northing position
+        Maximum Y/northing position of the input bounding box in the coordinate
+        system of `proj`
     dem_interp_method: isce3.core.DataInterpMethod
         DEM interpolation method
     proj: 
@@ -294,6 +292,10 @@ void addbinding_load_dem_from_proj(py::module& m)
         DEM Y/northing margin in pixels
     dem_raster_band: int
         DEM raster band (starting from 1)
+    n_edge_samples: int
+        Number of points sampled along each edge of the bounding box when
+        reprojecting. Must be >= 2 to include corners.  Values below 2
+        are clamped to 2. Default: 11.
 
     Returns
     -------
