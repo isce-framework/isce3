@@ -549,6 +549,10 @@ def fill_gaps(data, swaths, value=np.complex64(0)):
         pulse_swaths = np.asarray(
             [swath for swath in pulse_swaths if swath[1] > swath[0]]
         )
+        # If there's no valid data then the whole rangeline is a "gap".
+        if len(pulse_swaths == 0):
+            yield slice(None)
+            return
         num_swaths = pulse_swaths.shape[0]
         # Gap leading up to first swath.
         yield slice(None, pulse_swaths[0, 0])
