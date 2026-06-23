@@ -550,7 +550,7 @@ def fill_gaps(data, swaths, value=np.complex64(0)):
             [swath for swath in pulse_swaths if swath[1] > swath[0]]
         )
         # If there's no valid data then the whole rangeline is a "gap".
-        if len(pulse_swaths == 0):
+        if len(pulse_swaths) == 0:
             yield slice(None)
             return
         num_swaths = pulse_swaths.shape[0]
