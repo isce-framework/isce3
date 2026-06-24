@@ -597,7 +597,7 @@ def false_runs(arr: np.ndarray) -> list[slice]:
     padded = np.concatenate(([True], arr, [True]))
 
     # Find where transitions occur
-    diff = np.diff(padded.view(np.uint8))
+    diff = np.diff(padded.view(np.int8))
 
     # A False run starts where True→False (diff == -1), ends where False→True (diff == 1)
     starts = np.where(diff == -1)[0]  # index in original array
