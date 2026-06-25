@@ -22,9 +22,8 @@ namespace isce3::matchtemplate::pycuampcor {
  */
 class cuNormalizeProcessor {
 public:
-    // default constructor and destructor
-    cuNormalizeProcessor() {}
-    ~cuNormalizeProcessor() {}
+    cuNormalizeProcessor() = default;
+    virtual ~cuNormalizeProcessor() = default;
     // execute interface
     virtual void execute(cuArrays<float> * correlation, cuArrays<float> *reference, cuArrays<float> *secondary) = 0;
 };

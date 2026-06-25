@@ -1174,7 +1174,7 @@ void _RunBlock(const int jmax, const int block_size,
     the bounding-box corners.
     */
     int dem_margin_x_in_pixels = 100;
-    int dem_margin_y_in_pixels = 200;
+    int dem_margin_y_in_pixels = 100;
     auto error_code = loadDemFromProj(
             dem_raster, minX, maxX, minY, maxY, &dem_interp_block, proj,
             dem_margin_x_in_pixels, dem_margin_y_in_pixels);

@@ -47,35 +47,33 @@ isce3::geometry::DEMInterpolator DEMRasterToInterpolator(
 * in the same or different coordinate system as the DEM raster
 *
 * @param[in]  dem_raster              DEM raster
-* @param[in]  x0                      Easting/longitude of western edge of bounding box,
-* If the DEM is in geographic coordinates and the `x0` coordinate is not
-* from the polar stereo system EPSG 3031 or EPSG 3413, this point represents
-* the minimum X coordinate value. In this case, the maximum
-* longitude span that this function can handle is 180 degrees
-* (when the DEM is in geographic coordinates and `proj` is in polar stereo)
-* @param[in]  xf                      Easting/longitude of eastern edge of bounding box
-* If the DEM is in geographic coordinates and the `xf` coordinate is not
-* from the polar stereo system EPSG 3031 or EPSG 3413, this point represents
-* the maximum X coordinate value. In this case, the maximum
-* longitude span that this function can handle is 180 degrees
-* (when the DEM is in geographic coordinates and `proj` is in polar stereo)
-* @param[in]  minY                    Minimum Y/northing position
-* @param[in]  maxY                    Maximum Y/northing position
+* @param[in]  x0                      Starting X/easting position of the input
+* bounding box in the coordinate system of `proj`
+* @param[in]  xf                      Ending X/easting position of the input
+* bounding box in the coordinate system of `proj`
+* @param[in]  y0                      Starting Y/northing position of the input
+* bounding box in the coordinate system of `proj`
+* @param[in]  yf                      Ending Y/northing position of the input
+* bounding box in the coordinate system of `proj`
 * @param[out] dem_interp              DEM interpolation object
 * @param[in]  proj                    Projection object (nullptr to use same
 * DEM projection)
 * @param[in]  dem_margin_x_in_pixels  DEM X/easting margin in pixels
 * @param[in]  dem_margin_y_in_pixels  DEM Y/northing margin in pixels
 * @param[in]  dem_raster_band         DEM raster band (starting from 1)
+* @param[in]  n_edge_samples          Number of points sampled along each edge
+* of the bounding box when reprojecting. Must be >= 2 to include corners; 
+* values below 2 are clamped to 2. Default: 11.
 */
 isce3::error::ErrorCode loadDemFromProj(
     isce3::io::Raster& dem_raster,
-    const double minX, const double maxX, const double minY,
-    const double maxY, isce3::geometry::DEMInterpolator* dem_interp,
+    const double x0, const double xf, const double y0,
+    const double yf, isce3::geometry::DEMInterpolator* dem_interp,
     isce3::core::ProjectionBase* proj = nullptr,
     const int dem_margin_x_in_pixels = 100,
     const int dem_margin_y_in_pixels = 100,
-    const int dem_raster_band = 1);
+    const int dem_raster_band = 1,
+    const int n_edge_samples = 11);
 
 /*
  Interpolate DEM at position (x, y) considering that input_proj and

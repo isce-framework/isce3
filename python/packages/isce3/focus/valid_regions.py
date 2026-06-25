@@ -549,6 +549,10 @@ def fill_gaps(data, swaths, value=np.complex64(0)):
         pulse_swaths = np.asarray(
             [swath for swath in pulse_swaths if swath[1] > swath[0]]
         )
+        # If there's no valid data then the whole rangeline is a "gap".
+        if len(pulse_swaths) == 0:
+            yield slice(None)
+            return
         num_swaths = pulse_swaths.shape[0]
         # Gap leading up to first swath.
         yield slice(None, pulse_swaths[0, 0])
@@ -570,3 +574,56 @@ def fill_gaps(data, swaths, value=np.complex64(0)):
     for ipulse in range(num_pulses):
         for gap in get_gap_slices(swaths[:, ipulse, :]):
             data[..., ipulse, gap] = value
+
+
+def false_runs(arr: np.ndarray) -> list[slice]:
+    """
+    Return a list of slices selecting continuous runs of False values.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        A 1D boolean NumPy array.
+
+    Returns
+    -------
+    list[slice]
+        A list of slice objects, each selecting a contiguous run of False values.
+    """
+    if arr.ndim != 1:
+        raise ValueError("Array must be 1D")
+
+    # Pad with True on both ends so edges are detected as transitions
+    padded = np.concatenate(([True], arr, [True]))
+
+    # Find where transitions occur
+    diff = np.diff(padded.view(np.int8))
+
+    # A False run starts where True→False (diff == -1), ends where False→True (diff == 1)
+    starts = np.where(diff == -1)[0]  # index in original array
+    ends   = np.where(diff ==  1)[0]  # exclusive end in original array
+
+    return [slice(s, e) for s, e in zip(starts, ends)]
+
+
+def find_bad_rangline_slices(swaths):
+    """
+    Get slices corresponding to completely invalid rangelines.
+
+    Parameters
+    ----------
+    swaths : numpy.ndarray[int]
+        Array of [start, stop) valid data regions, shape = (nswath, npulse, 2)
+        where nswath is the number of valid sub-swaths and npulse is the length
+        of the raw image grid.
+
+    Returns
+    -------
+    num_invalid : int
+        Number of completely invalid ranglines.
+    slices : list[slice]
+        Azimuth index slices where all samples in the rangelines are invalid.
+    """
+    has_some_valid_data = np.any(swaths[..., 0] < swaths[..., 1], axis=0)
+    num_invalid = swaths.shape[1] - np.sum(has_some_valid_data)
+    return num_invalid, false_runs(has_some_valid_data)
