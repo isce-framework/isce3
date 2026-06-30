@@ -33,7 +33,8 @@ import nisar
 import numpy as np
 import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
-from isce3.focus import make_los_luts, fill_gaps, make_cal_luts, Notch
+from isce3.focus import (make_los_luts, fill_gaps, make_cal_luts, Notch,
+    find_bad_rangline_slices)
 from isce3.focus.serialization import BackprojectionStageParameters
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
@@ -2041,6 +2042,16 @@ def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
 
     return algorithm, wavelets
 
+
+def log_bad_pulses(swaths, max_slices=10):
+    n_bad_pulses, bad_slices = find_bad_rangline_slices(swaths)
+    log.info(f"Number of pulses with no valid samples = {n_bad_pulses}")
+    if n_bad_pulses > 0:
+        log.warning(f"Bad pulses appear in {len(bad_slices)} unique blocks")
+        for s in bad_slices[:max_slices]:
+            log.warning(f"Bad ranglines in pulse {s}")
+
+
 def focus(runconfig, runconfig_path=""):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -2337,6 +2348,7 @@ def focus(runconfig, runconfig_path=""):
             swaths = raw.getSubSwaths(channel_in.freq_id, tx=pol[0])
             swaths = swaths[:, pulse_begin:pulse_end, :]
             log.info(f"Number of sub-swaths = {swaths.shape[0]}")
+            log_bad_pulses(swaths)
 
             rawfd = temp(f"_{frequency}{pol}_raw.c8")
             log.info(f"Decoding raw data to memory map {rawfd.name}.")
