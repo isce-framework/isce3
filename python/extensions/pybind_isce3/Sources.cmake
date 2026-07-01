@@ -118,6 +118,6 @@ if(WITH_CUDA)
          cuda/matchtemplate/pycuampcor.cpp
          cuda/signal/signal.cpp
          cuda/signal/Crossmul.cpp
-         cuda/signal/NFFT2d.cpp
+         cuda/signal/NFFT2d.cu
          )
 endif()
