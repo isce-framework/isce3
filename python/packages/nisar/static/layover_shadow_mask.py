@@ -195,19 +195,49 @@ def geocode_layover_shadow_mask(
     if geo2rdr_params is None:
         geo2rdr_params = {}
 
-    geocoded_layover_shadow_mask = make_scratch_gtiff(
-        shape=(geo_grid.length, geo_grid.width),
-        dtype=np.uint8,
+    # XXX: There's currently no way to create a "Geocode" object that operates directly
+    # on uint8 data with Fill value 255. Instead, the way this is done in the
+    # InSAR geocoding workflow is to create a `GeocodeFloat32` object, resulting
+    # in conversion of the input mask values to float32 during geocoding (and
+    # then conversion back to uint8 when they're written to the output raster).
+    # For STATIC, this shouldn't cause any loss of fidelity since the mask values
+    # are small and we're using nearest neighbor interpolation.
+
+    # However, when geocoding uint8 data with `GeocodeFloat32`, the C++ `GeocodeCov`
+    # implementation initializes the output buffer with `nan_t_out`. Then,
+    # 0 * NaN evaluates to NaN for float dtypes (correct), but for integer
+    # dtypes it evaluates to 0 (since uint8 cannot represent NaN). This leads to
+    # areas outside the radar grid extent retaining this 0 fill value instead
+    # of the correct 255.
+
+    # Workaround:
+    # 1. Convert the uint8 mask to float32, replacing 255 with NaN
+    # 2. Geocode the float32 raster (NaN values are preserved)
+    # 3. Convert back to uint8, replacing NaN with 255
+
+    layover_shadow_mask_float32 = make_scratch_gtiff(
+        shape=(radar_grid.length, radar_grid.width),
+        dtype=np.float32,
         dir_=scratch_dir,
-        prefix="geocoded-layover-shadow-mask_",
+        prefix="layover-shadow-mask-float32_",
     )
 
-    # XXX: There's currently no way to create a "Geocode" object that operates directly
-    # on uint8 data. Instead, the way this is done in the InSAR geocoding workflow is to
-    # create a `GeocodeFloat32` object, resulting in conversion of the input mask values
-    # to float32 during geocoding (and then conversion back to uint8 when they're
-    # written to the output raster). This shouldn't cause any loss of fidelity since the
-    # mask values are small and we're using nearest neighbor interpolation.
+    # Convert uint8 mask to float32, replacing fill value 255 with NaN
+    radar_data_uint8 = np.empty((radar_grid.length, radar_grid.width), dtype=np.uint8)
+    layover_shadow_mask.read_all(radar_data_uint8)
+    radar_data_float32 = radar_data_uint8.astype(np.float32)
+    radar_data_float32[radar_data_uint8 == 255] = np.nan
+    layover_shadow_mask_float32.write_all(radar_data_float32)
+
+    # Create output float32 raster for geocoded result
+    geocoded_layover_shadow_mask_float32 = make_scratch_gtiff(
+        shape=(geo_grid.length, geo_grid.width),
+        dtype=np.float32,
+        dir_=scratch_dir,
+        prefix="geocoded-layover-shadow-mask-float32_",
+    )
+
+    # Geocode the float32 mask
     geocode = isce3.geocode.GeocodeFloat32()
     geocode.orbit = orbit
     geocode.ellipsoid = get_reference_ellipsoid(dem_raster)
@@ -230,8 +260,8 @@ def geocode_layover_shadow_mask(
 
     geocode.geocode(
         radar_grid=radar_grid,
-        input_raster=layover_shadow_mask,
-        output_raster=geocoded_layover_shadow_mask,
+        input_raster=layover_shadow_mask_float32,
+        output_raster=geocoded_layover_shadow_mask_float32,
         dem_raster=dem_raster,
         output_mode=GeocodeOutputMode.INTERP,
         memory_mode=normalize_geocode_memory_mode(memory_mode),
@@ -239,6 +269,18 @@ def geocode_layover_shadow_mask(
         max_block_size=max_block_size,
         dem_interp_method=normalize_data_interp_method(dem_interp_method),
     )
+
+    # Convert geocoded float32 result back to uint8, replacing NaN with 255
+    geocoded_layover_shadow_mask = make_scratch_gtiff(
+        shape=(geo_grid.length, geo_grid.width),
+        dtype=np.uint8,
+        dir_=scratch_dir,
+        prefix="geocoded-layover-shadow-mask_",
+    )
+    geo_data_float32 = np.empty((geo_grid.length, geo_grid.width), dtype=np.float32)
+    geocoded_layover_shadow_mask_float32.read_all(geo_data_float32)
+    geo_data_uint8 = np.where(np.isnan(geo_data_float32), 255, geo_data_float32).astype(np.uint8)
+    geocoded_layover_shadow_mask.write_all(geo_data_uint8)
 
     return geocoded_layover_shadow_mask
 
