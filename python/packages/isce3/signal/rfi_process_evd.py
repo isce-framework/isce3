@@ -1,27 +1,26 @@
 """
 Perform RFI detection and mitigation of input raw data using Slow-Time Eigenvalue Decomposition
-(ST-EVD).
-
-DUAL-CHECK VERSION: Uses condition number check AND power spread check
+(ST-EVD) using the original ev_slope method only.
 """
 import numpy as np
-from isce3.signal.compute_evd_cpi import slice_gen
+from isce3.signal.compute_evd_cpi import slice_gen, count_excluded_pulses_per_cpi
 from isce3.signal.rfi_detection_evd import rfi_detect, ThresholdParams
 from isce3.signal.rfi_mitigation_evd import rfi_mitigate_tb
 import warnings
+import os
 
 def run_slow_time_evd(
     raw_data: np.ndarray,
     cpi_len,
     max_deg_freedom,
     *,
-    num_rfi_buffer=3,
+    num_rfi_buffer=2,
     num_max_trim=0,
     num_min_trim=0,
     max_num_rfi_ev=2,
     num_samples_rng_blk=250,
     use_entire_pulse=False,
-    threshold_params: ThresholdParams = ThresholdParams(),
+    threshold_params: ThresholdParams = None,
     num_cpi_per_threshold_block=12,
     off_diag_overlap_ratio=0.20,
     diag_valid_ratio=0.15,
@@ -29,16 +28,12 @@ def run_slow_time_evd(
     min_rank_frac=0.70,
     rx_dynamic_range_db=50.0,
     swaths=None,
-    threshold_method='max_ev',
-    rfi_fig_merit_thresh=1.0,
-    bright_target_check=True,
-    bt_condition_num_thresh_db=2.0,
-    bt_pwr_spread_thresh_db=6.0,
-    pwr_ref_percentile=50,
-    pwr_upper_percentile=99.5,
-    sig_ev_margin_upper_db=3.0,
-    sig_ev_margin_lower_db=0.0,
-    pcr_range=[0.1, 0.4],
+    threshold_method='ev_slope',
+    rfi_check=True,
+    max_ev_spread_thresh_db=2.0,
+    eff_rank_std_thresh=1.0,
+    sig_ev_margin_db=1.0,
+    rfi_candidate_tolerance_db=3.0,
     raw_data_mitigated=None,
 ):
 
@@ -46,9 +41,7 @@ def run_slow_time_evd(
     1. Partition data into smaller blocks defined as Threshold Block (TB)
        Each TB is consisted of M Coherent Processing Intervals (CPI) and N range samples
        Each CPI is consisted of K slow-time pulses.
-    2. Derive slow-time RFI detection threshold for each TB.
-       Note: Bright target check (dual condition number + power spread check) is performed
-       inside rfi_detect() before threshold computation for all methods.
+    2. Derive slow-time RFI detection threshold for each TB using ev_slope method.
     3. Mitigate RFI of all CPIs above the detection threshold if mitigation is enabled.
 
     Parameters
@@ -60,10 +53,6 @@ def run_slow_time_evd(
     max_deg_freedom: int
         Max number of independent RFI emitters designed to be detected and mitigated.
         This number should be less than cpi_len to avoid unintended removal of signal data.
-    num_rfi_buffer: int, default=3
-        Number of buffer eigenvalue indices to skip after last possible RFI EV before
-        starting clean segment interpolation for 'max_ev' method. The clean segment
-        starts at index (max_deg_freedom + num_rfi_buffer - 1).
     num_max_trim: int, default=0
         Number of large value outliers to be trimmed in slow-time minimum Eigenvalues.
     num_min_trim: int, default=0
@@ -75,19 +64,20 @@ def run_slow_time_evd(
         defined by this parameter are compared. The one with the maximum STD is used for RFI
         Eigenvalue first difference computation.
     num_samples_rng_blk: int, default=250
-        Number of range samples per range block when data blockin is applied in range direction
+        Number of range samples per range block when data blocking is applied in range direction
         for sample covariance matrix estimation. It is recommended that this parameter is at
-        least 5 x cpi_len to avoid discrepancy from true sample covaraince matrix. In addition,
+        least 5 x cpi_len to avoid discrepancy from true sample covariance matrix. In addition,
         in order to avoid a run-time error for ST-EVD, this parameter needs to be
         at least 2 x cpi_len.
     use_entire_pulse: bool, default=False
         Ignore any value passed for num_samples_rng_blk and instead use all samples
         in the slow-time pulses for detection if this is True.
-    threshold_params: ThresholdParams object, default=ThresholdParams()
-        RFI detection threshold interpolation parameters. The x field defines STD
-        ratio between maximum and minimum Eigenvalue slopes (MMES) of the
-        slow-time threshold interval. The y field defines the number of sigma (STD)
-        from the mean of MMES.
+    threshold_params: ThresholdParams object or None, default=None
+        RFI detection threshold interpolation parameters. If None, default
+        ThresholdParams() (x=[2.0, 20.0], y=[5.0, 2.0]) is used.
+        The x field defines the STD ratio between maximum and
+        minimum Eigenvalue slopes (MMES) of the slow-time threshold interval, and
+        the y field defines the number of sigma (STD) from the mean of MMES.
     num_cpi_per_threshold_block: int, default=12
         Number of slow-time CPIs in a TB
     off_diag_overlap_ratio : float, optional, default=0.20
@@ -103,7 +93,7 @@ def run_slow_time_evd(
         Must be a value within (0,1]
     rx_dynamic_range_db: float, optional, default = 50 dB
         radar platform receiver dynamic range in dB. This is applied as a threshold
-        to determine if the Eigenvalue under test is meaningfully signficant. If the
+        to determine if the Eigenvalue under test is meaningfully significant. If the
         Eigenvalue under test is less than this threshold, it will be viewed as unusable.
     swaths : np.ndarray [int], optional
         Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
@@ -111,59 +101,35 @@ def run_slow_time_evd(
         the [start, stop) indices of the sub-swath.  It's recommended to supply
         this for modes with dithered PRI, where it will be used to normalize
         the sample covariance matrix.
-    threshold_method : str, default='max_ev'
-        RFI detection method: 'ev_slope' (Eigenvalue Slope Thresholding) or
-        'max_ev' (EV maximum estimation).
-        DUAL-CHECK VERSION: Uses condition number check AND power spread check.
-    rfi_fig_merit_thresh : float, default=1.0
-        Figure of merit threshold for 'max_ev' method. Default of 1.0 ensures
-        aggressive RFI detection - checks as many TBs as possible.
-        Only used when threshold_method='max_ev'.
-    bright_target_check : bool, default=True
-        Enable dual bright target rejection check using BOTH condition number variability
-        AND power stationarity. When True, TB is skipped only if BOTH checks pass:
-        - Condition number std <= bt_condition_num_thresh_db (stable eigenvalue structure)
-        - Upper tail spread <= bt_pwr_spread_thresh_db (low power spread)
-        When False, bright target checks are disabled (all TBs are processed).
-    bt_condition_num_thresh_db : float, default=2.0
-        Condition number std threshold in dB. TBs with std(cond#) <= this value
-        pass the condition# check (stable eigenvalue structure).
-        Only used when bright_target_check=True.
-    bt_pwr_spread_thresh_db : float, default=6.0
-        Power spread threshold in dB. TBs with upper tail spread <= this value
-        pass the power check (low power spread across slow time).
-        Upper tail spread = pwr_upper_percentile - pwr_ref_percentile of diagonal power.
-        Only used when bright_target_check=True.
-    pwr_ref_percentile : float, default=50
-        Reference (baseline) percentile for power spread computation.
-        Represents the median power level of the diagonal covariance entries.
-        Only used when bright_target_check=True.
-    pwr_upper_percentile : float, default=99.5
-        Upper percentile for power spread computation.
-        Recommended values: 98.0 (top 2%) or 99.5 (top 0.5%).
-        Only used when bright_target_check=True.
-    sig_ev_margin_upper_db : float, default=3.0
-        Conservative safety margin in dB applied when PCR is low (weak RFI).
-        Upper bound of the adaptive margin range. Only used when threshold_method='max_ev'.
-    sig_ev_margin_lower_db : float, default=0.0
-        Aggressive safety margin in dB applied when PCR is high (strong RFI).
-        Lower bound of the adaptive margin range. Only used when threshold_method='max_ev'.
-    pcr_range : list of 2 floats, default=[0.1, 0.4]
-        (lower, upper) bounds of the PCR interpolation range.
-        CPIs with PCR <= lower use sig_ev_margin_upper_db (conservative).
-        CPIs with PCR >= upper use sig_ev_margin_lower_db (aggressive).
-        Only used when threshold_method='max_ev'.
-
-    DUAL-CHECK LOGIC (when bright_target_check=True):
-    --------------------------------------------------
-    TB is skipped only if BOTH checks pass (AND logic):
-        IF (cond# std <= bt_condition_num_thresh_db) AND (upper tail spread <= bt_pwr_spread_thresh_db):
-            SKIP TB (Clean or Bright Target)
-        ELSE:
-            PROCEED with RFI detection on TB
-
-    When bright_target_check=False:
-        All TBs proceed to RFI detection (no bright target filtering)
+    threshold_method : str, default='ev_slope'
+        Detection method: 'ev_slope' or 'max_ev'.
+        'ev_slope' uses Eigenvalue Slope Thresholding (TB-wise scalar threshold).
+        'max_ev' uses per-CPI adaptive thresholds with fixed margin.
+    num_rfi_buffer : int, default=2
+        Number of buffer eigenvalue indices to skip after last possible RFI EV before
+        starting clean segment interpolation. Used by both 'max_ev' threshold method
+        and RFI candidate selection. The clean segment starts at index
+        (max_deg_freedom + num_rfi_buffer - 1).
+    sig_ev_margin_db : float, default=1.0
+        Aggressive safety margin in dB added to the extrapolated estimate for RFI candidates
+        in 'max_ev' method. Only used when threshold_method='max_ev'.
+    rfi_candidate_tolerance_db : float, default=3.0
+        Tolerance in dB for RFI candidate selection. CPIs where
+        (actual_EV0 - predicted_clean_EV0) > this value are flagged as RFI candidates
+        and receive thresholds. Used by both threshold methods.
+    rfi_check : bool, default=True
+        Controls RFI-presence characterization. If False, no check is performed
+        and all TBs proceed to RFI detection. Otherwise, a TB is screened for
+        RFI-like Eigenvalue traits and skipped if RFI is determined to not be
+        present, based on dominant Eigenvalue spread and effective rank variability.
+    max_ev_spread_thresh_db : float, default=2.0
+        Threshold in dB for the spread (std across CPIs) of the dominant Eigenvalues
+        in a TB. If the maximum spread among dominant EVs exceeds this value, RFI
+        is determined to be present. Only used when rfi_check=True.
+    eff_rank_std_thresh : float, default=1.0
+        Threshold for the standard deviation of per-CPI effective rank across a TB.
+        If exceeded, indicates RFI presence.
+        Only used when rfi_check=True.
     raw_data_mitigated: array-like complex [num_pulses x num_rng_samples] or None, optional
         output array in which the mitigated data values is placed. It
         must be an array-like object supporting `multidimensional array access
@@ -189,6 +155,10 @@ def run_slow_time_evd(
     Slow Time Eigenvalue Decomposition", IGARSS 2023.'
     """
 
+    # Set default threshold_params if not provided
+    if threshold_params is None:
+        threshold_params = ThresholdParams()
+
     num_pulses, num_rng_samples = raw_data.shape
 
     # Override num_rng_samples_blk if use_entire_pulse is True
@@ -208,7 +178,7 @@ def run_slow_time_evd(
     num_pulses_tb = cpi_len * num_cpi_per_threshold_block
     num_tb = num_pulses_proc // num_pulses_tb
 
-    # Figue out how many range slices are there
+    # Figure out how many range slices are there
     rng_slices = list(
         slice_gen(num_rng_samples, num_samples_rng_blk, combine_rem=True)
     )
@@ -226,7 +196,14 @@ def run_slow_time_evd(
         dtype=bool,
     )
 
-    figure_merit_array = np.zeros((num_tb, num_rng_blks), dtype=np.float32)
+    # TB Skipped Map (tracks which TBs were skipped by RFI-presence check)
+    tb_skipped_map = np.zeros((num_tb, num_rng_blks), dtype=np.bool_)
+
+    # RFI Present Map (RFI-presence characterization result)
+    rfi_present_map = np.zeros((num_tb, num_rng_blks), dtype=np.bool_)
+
+    # Excluded pulse count map (per CPI)
+    excluded_pulse_count_map = np.zeros((num_cpi, num_rng_blks), dtype=np.int16)
 
     # Modify raw_data in-place
     if raw_data_mitigated is None:
@@ -267,7 +244,7 @@ def run_slow_time_evd(
     # ensuring robustness against zero Eigenvalues caused by insufficient valid samples in a CPI.
     min_ev_valid_idx = max(1, int(np.round(min_rank_frac * cpi_len)) - 1)
 
-    # Maximum number of degrees of freedom must be less than max_deg_freedom
+    # Maximum number of degrees of freedom must be less than min_ev_valid_idx
     if max_deg_freedom >= min_ev_valid_idx:
         warnings.warn(
             f"max_deg_freedom ({max_deg_freedom}) >= min_ev_valid_idx ({min_ev_valid_idx})."
@@ -292,41 +269,46 @@ def run_slow_time_evd(
             (
                 rfi_cpi_flag_tb,
                 evec_sort_tb,
-                _,  # diag_power_array (unused, power check now in rfi_detect)
-                _,  # diag_valid_array (unused, power check now in rfi_detect)
-                figure_merit_tb,
+                diag_valid_array_tb,
+                signal_tb_skipped_tb,
+                rfi_present_tb,
+                num_rfi_candidate_cpi_tb,
             ) = rfi_detect(
                 raw_tb_blk,
                 cpi_len,
                 max_deg_freedom,
                 min_ev_valid_idx,
-                num_rfi_buffer=num_rfi_buffer,
                 num_max_trim=num_max_trim,
                 num_min_trim=num_min_trim,
                 max_num_rfi_ev=max_num_rfi_ev,
+                num_rfi_buffer=num_rfi_buffer,
                 off_diag_overlap_ratio=off_diag_overlap_ratio,
                 diag_valid_ratio=diag_valid_ratio,
                 rx_dynamic_range_db=rx_dynamic_range_db,
                 mask_valid=mask_valid_tb,
                 threshold_method=threshold_method,
                 threshold_params=threshold_params,
-                rfi_fig_merit_thresh=rfi_fig_merit_thresh,
-                bright_target_check=bright_target_check,
-                bt_condition_num_thresh_db=bt_condition_num_thresh_db,
-                bt_pwr_spread_thresh_db=bt_pwr_spread_thresh_db,
-                pwr_ref_percentile=pwr_ref_percentile,
-                pwr_upper_percentile=pwr_upper_percentile,
-                sig_ev_margin_upper_db=sig_ev_margin_upper_db,
-                sig_ev_margin_lower_db=sig_ev_margin_lower_db,
-                pcr_range=pcr_range,
+                rfi_check=rfi_check,
+                max_ev_spread_thresh_db=max_ev_spread_thresh_db,
+                eff_rank_std_thresh=eff_rank_std_thresh,
+                sig_ev_margin_db=sig_ev_margin_db,
+                rfi_candidate_tolerance_db=rfi_candidate_tolerance_db,
             )
 
             # Global CPI indices for this threshold block
             cpi_start = idx_tb * num_cpi_per_threshold_block
             cpi_end = cpi_start + rfi_cpi_flag_tb.shape[0]
 
-            # Power stationarity check is now handled inside rfi_detect()
-            # Detection returns no RFI (all zeros) for bright target TBs automatically
+            # Count excluded pulses per CPI only for valid/processed TBs
+            if not signal_tb_skipped_tb:  # Only count if TB was actually processed
+                excluded_pulse_count_tb = count_excluded_pulses_per_cpi(diag_valid_array_tb)
+            else:
+                # Invalid or skipped TB: set excluded pulse count to zero to avoid confusion
+                excluded_pulse_count_tb = np.zeros(diag_valid_array_tb.shape[0], dtype=np.int16)
+
+            excluded_pulse_count_map[cpi_start:cpi_end, idx_rng] = excluded_pulse_count_tb
+
+            # Check if any RFI was detected
             has_rfi = np.any(rfi_cpi_flag_tb)
 
             # Compute number of CPIs detected with RFI presence
@@ -334,9 +316,13 @@ def run_slow_time_evd(
             rfi_cpi_count = np.sum(num_rfi_ev_cpi != 0)
             rfi_cpi_count_sum += rfi_cpi_count
 
-            figure_merit_array[idx_tb, idx_rng] = figure_merit_tb
+            # Populate detection maps
             rfi_ev_count_map[cpi_start:cpi_end, idx_rng] = num_rfi_ev_cpi
             rfi_cpi_detection_map[cpi_start:cpi_end, idx_rng] = num_rfi_ev_cpi > 0
+
+            # Populate diagnostic maps (TB-level)
+            tb_skipped_map[idx_tb, idx_rng] = signal_tb_skipped_tb
+            rfi_present_map[idx_tb, idx_rng] = rfi_present_tb
 
             # Run Mitigation:
             if mitigate_enable and has_rfi:

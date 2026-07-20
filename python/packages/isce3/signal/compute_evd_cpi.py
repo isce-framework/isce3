@@ -397,3 +397,29 @@ def compute_gap_exclusion_cov(
     cov = (0.5 * (cov + cov.conj().T)).astype(np.complex64)
 
     return cov, diag_valid_idx
+
+
+def count_excluded_pulses_per_cpi(diag_valid_array):
+    """Count the number of excluded (invalid) pulses per CPI.
+
+    A pulse is excluded when its diagonal covariance entry (R_ii) does not
+    have sufficient valid samples, as determined by the diag_valid_ratio
+    threshold in compute_gap_exclusion_cov.
+
+    Parameters
+    ----------
+    diag_valid_array : 2D array of bool, shape (num_cpi, cpi_len)
+        Boolean array where True indicates a valid pulse (diagonal covariance
+        entry had sufficient valid samples), False indicates an excluded pulse.
+        This is returned by compute_evd_tb.
+
+    Returns
+    -------
+    excluded_pulse_count : 1D array of int, shape (num_cpi,)
+        Number of excluded pulses for each CPI.
+    """
+    # Count invalid (excluded) pulses per CPI
+    # diag_valid_array is True for valid pulses, so we invert it to count excluded
+    excluded_pulse_count = np.sum(~diag_valid_array, axis=1).astype(np.int16)
+
+    return excluded_pulse_count
