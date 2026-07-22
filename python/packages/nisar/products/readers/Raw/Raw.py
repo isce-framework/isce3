@@ -962,8 +962,14 @@ class RawBase(Base, family='nisar.productreader.raw'):
 
         changes = get_dwp_change_indices(rd, wd, wl)
 
+        # Skip any blocks of bad data at the beginning (e.g., first 12 pulses
+        # of SSAR).  Note that argmax returns the first occurence of the max
+        # value, in this case the first index where any subswath is not empty.
+        i0 = np.argmax(np.any(subswaths[..., 1] > subswaths[..., 0], axis=0))
+
         # Append first and last pulses to generate pairs of constant DWP.
-        breaks = np.hstack(([0], changes, [grid.shape[0] - 1]))
+        # Sort this in case i0 is after first change.
+        breaks = np.sort(np.hstack(([i0], changes, [grid.shape[0] - 1])))
         bbox_lists = []
         for ibreak in range(len(breaks) - 1):
             ipulse0, ipulse1 = breaks[ibreak], breaks[ibreak + 1]
