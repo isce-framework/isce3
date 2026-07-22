@@ -518,7 +518,8 @@ def analyze_point_target(
     window_parameter: float = 0.0,
     shift_domain: str = "time",
     geo_heading: float | None = None,
-    pixel_spacing: tuple[float, float] = (1.0, 1.0)
+    pixel_spacing: tuple[float, float] = (1.0, 1.0),
+    nchip_clutter: int = 25,
 ) -> tuple[dict, list["matplotlib.figure.Figure"] | None]:
     """
     Measure point-target attributes.
@@ -615,9 +616,13 @@ def analyze_point_target(
     # products to acquire a chip usable by the SCR estimator, or else finding some new
     # means of estimating and masking the locations of the side lobes on the chip.
     if geo_heading is None:
-
+        max_i = i + results[0]["azimuth"]["offset"]
+        max_j = j + results[0]["range"]["offset"]
+        
+        clutter_chip = generate_chip_on_slc(slc, max_i, max_j, chipsize=nchip_clutter)
+        
         scr = estimate_scr(
-            chip=chip,
+            chip=clutter_chip,
             peak_magnitude=results[0]["magnitude"],
         )
 
@@ -932,8 +937,7 @@ def analyze_point_target_chip(
 
 
 def estimate_scr(
-    chip,
-    clutter_half_width: int = 12,
+    chip: np.ndarray,
     peak_magnitude: float | None = None,
 ) -> float:
     """
@@ -942,11 +946,8 @@ def estimate_scr(
 
     Parameters
     ----------
-    chip : np.ndarray of complex64
-        The data chip.
-    clutter_half_width : int, optional
-        An integer greater than 3 and smaller than half the width or length of `chip`.
-        Defines half the region used for estimating SCR. Defaults to 12.
+    chip : 2D np.ndarray of complex64
+        The data chip. Must be square with an odd number of pixels in each dimension.
     peak_magnitude : float, optional
         The identified peak magnitude of the data, or None for a rough estimate.
         Defaults to None.
@@ -956,13 +957,22 @@ def estimate_scr(
     float
         The chip SCR, in dB.
     """
-    if clutter_half_width < 3:
-        raise ValueError("clutter_half_width must be a positive number greater than 2.")
-    if clutter_half_width > chip.shape[0] / 2 or clutter_half_width > chip.shape[1] / 2:
+    length, width = chip.shape
+    if length != width:
         raise ValueError(
-            f"clutter_half_width of {clutter_half_width} must be less than half of "
-            f"chip dimensions {chip.shape[0]} and {chip.shape[1]}."
+            f"estimate_scr: Chip must be square. Shape was given as {length} x {width}."
         )
+    if length % 2 == 0:
+        raise ValueError(
+            f"estimate_scr: Chip must have an odd number of pixels"
+        )
+    if length < 5:
+        raise ValueError(
+            "estimate_scr: Chip side length must be at least 5. "
+            f"Length given was {length}."
+        )
+    
+    clutter_half_width = width // 2
 
     # If the peak magnitude was not passed in, estimate it.
     if peak_magnitude is None:
@@ -971,20 +981,6 @@ def estimate_scr(
     # Get the location of the peak magnitude.
     k = np.nanargmax(np.abs(chip))
     ichip, jchip = np.unravel_index(k, chip.shape)
-
-    # Make sure that the point target is far enough from the edge of the chip that
-    # an estimation region can be selected.
-    if (
-        ichip < clutter_half_width
-        or jchip < clutter_half_width
-        or ichip > chip.shape[0] - clutter_half_width
-        or jchip > chip.shape[1] - clutter_half_width
-    ):
-        warn(
-            "PTA Warning: Detected peak location too close to edge of chip. SCR could "
-            "not be calculated. SCR value will be returned as NaN."
-        )
-        return np.nan
 
     # Create an estimation chip that is the column and row of the peak magnitude plus
     # clutter_half_width pixels in either direction, converted to units of linear power.
