@@ -108,6 +108,10 @@ void addbinding(py::class_<Linspace<T>>& pyLinspace)
 
                     return std::make_tuple(self.size());
                 })
+        .def_property_readonly("bounds", [](const Linspace<T>& self) {
+
+                    return self.bounds();
+                })
 
         // methods
         .def("resize", [](Linspace<T>& self, int size) {
