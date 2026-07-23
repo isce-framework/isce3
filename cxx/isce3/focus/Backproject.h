@@ -438,12 +438,45 @@ findPolarGridBoundingBoxInRadarGrid(
     const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
     const int nextra = 0);
 
+/**
+ * @brief Compute 3D geo coordinates for a radar grid.
+ *
+ * Computes the 3D XYZ position for every pixel in a radar geometry
+ * grid using rdr2geo_bracket. Returns the points in a vector along with an
+ * error code indicating success or failure.
+ *
+ * @param[in] geom        Radar geometry grid, orbit, & doppler
+ * @param[in] dem         Digital elevation model (DEM)
+ * @param[in] r2g_params  rdr2geo_bracket configuration parameters
+ *
+ * @returns A tuple containing:
+ *          - vector of 3D XYZ positions (ECEF, m), one per pixel
+ *          - error code (non-zero if rdr2geo fails to converge
+ *            for any pixel)
+ */
 std::tuple<std::vector<isce3::core::Vec3>, isce3::error::ErrorCode>
 computeRadarGridGeoPoints(
     const isce3::container::RadarGeometry& geom,
     const isce3::geometry::DEMInterpolator& dem,
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params);
 
+/**
+ * @brief Compute 3D geo coordinates for a radar grid (pre-allocated).
+ *
+ * Computes the 3D XYZ position for every pixel in a radar geometry
+ * grid using rdr2geo_bracket, writing results into a pre-allocated buffer.
+ * The caller must allocate the buffer to at least
+ * geom.gridLength() * geom.gridWidth() elements.
+ *
+ * @param[out] points      Output 3D XYZ positions (ECEF, m)
+ * @param[in]  geom        Radar geometry grid, orbit, and doppler
+ * @param[in]  dem         Digital elevation model (DEM)
+ * @param[in]  r2g_params  rdr2geo_bracket configuration parameters
+ *
+ * @returns Error code indicating success or failure of the
+ *          computation (non-zero if rdr2geo fails to converge
+ *          for any pixel)
+ */
 isce3::error::ErrorCode
 computeRadarGridGeoPoints(
     isce3::core::Vec3* points,
