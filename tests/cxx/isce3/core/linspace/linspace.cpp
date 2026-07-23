@@ -198,6 +198,20 @@ TEST(LinspaceTest, Comparison)
     EXPECT_TRUE( x1 != x3 );
 }
 
+TEST(LinspaceTest, Edges)
+{
+    double first = 1.0;
+    double spacing = 2.0;
+    int size = 5;
+
+    isce3::core::Linspace<double> x(first, spacing, size);
+
+    auto [leading, trailing] = x.edges();
+
+    EXPECT_DOUBLE_EQ( leading, 0.0 );
+    EXPECT_DOUBLE_EQ( trailing, 10.0 );
+}
+
 int main(int argc, char * argv[])
 {
     testing::InitGoogleTest(&argc, argv);
