@@ -97,6 +97,37 @@ struct PolarGrid {
     }
 };
 
+/**
+ * @brief Backproject range-compressed signal into a polar grid.
+ *
+ * Performs time-domain backprojection of range-compressed SAR signal data
+ * onto a polar coordinate grid. For each output pixel in the polar grid,
+ * the signal is resampled from the input data by accumulating contributions
+ * from all pulses according to the instantaneous slant range, with phase
+ * compensation for motion and the troposphere.
+ *
+ * @param[in]  in              Input range-compressed signal data
+ * @param[in]  in_slant_range  Slant range grid of the input data (m)
+ * @param[in]  pos             Platform position vectors at each pulse
+ *                             (ECEF, m)
+ * @param[in]  vel             Platform velocity vectors at each pulse
+ *                             (ECEF, m/s)
+ * @param[in]  out_grid        Target polar grid to backproject onto
+ * @param[in]  dem             DEM
+ * @param[in]  fc              Center frequency (Hz)
+ * @param[in]  kernel          1-D interpolation kernel
+ * @param[in]  dry_tropo_model Dry troposphere path delay model
+ * @param[in]  r2g_params      rdr2geo configuration parameters
+ *
+ * @returns A tuple containing:
+ *          - error code (non-zero if geometry fails to converge for
+ *            any pixel, in which case values for those pixels are NaN)
+ *          - focused signal data on the polar grid (size =
+ *            out_grid.width() * out_grid.length())
+ *          - per-pixel height above the ellipsoid (m)
+ *
+ * @see PolarGrid for a description of the polar grid coordinate system.
+ */
 std::tuple<isce3::error::ErrorCode,
         std::unique_ptr<std::complex<float>[]>,
         std::unique_ptr<float[]>>
