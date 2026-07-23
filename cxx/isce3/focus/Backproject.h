@@ -329,10 +329,34 @@ makeSubApertureMask(
     const double* pixel_end,
     bool* mask);
 
-// interpolate polar grid to given set of XYZ positions
+/**
+ * @brief Interpolate a polar grid image to given XYZ positions.
+ *
+ * Accumulates (adds) contributions from a polar grid image into an
+ * output complex signal array at specified 3D positions. For each
+ * position, the target location in the polar grid is computed via
+ * geo2polar, and the image is interpolated using NFFT. The phase is
+ * compensated by the wavenumber-range product kw * range.
+ *
+ * The output image is accumulated, so it must be zero-initialized
+ * by the caller before calling this function.
+ *
+ * @param[out] image     Output complex signal data (accumulates,
+ *                       so caller must init to zero)
+ * @param[in]  xyz       Target 3D positions (ECEF, m)
+ * @param[in]  n         Number of target positions
+ * @param[in]  grid      Polar grid containing the image data
+ * @param[in]  nfft      NFFT interpolator for the polar grid
+ * @param[in]  kw        Wavenumber (rad/m); equals 4*pi*fc/c
+ * @param[in]  mask      Optional mask; pixels with false are skipped
+ * @param[in]  dr_atm    Optional atmospheric path delay correction
+ *                       (m), added to the range before interpolation
+ *
+ * @returns Error code indicating success or failure of the interpolation
+ */
 isce3::error::ErrorCode
 accumulatePolarImageToGeoPoints(
-        std::complex<float>* image,  // accumulates, so init to zero!
+        std::complex<float>* image,
         const isce3::core::Vec3* xyz,
         const size_t n,
         const PolarGrid& grid,
