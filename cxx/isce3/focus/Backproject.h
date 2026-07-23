@@ -268,6 +268,34 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     const std::optional<double>& dq_min = {},
     const std::optional<double>& tq = {});
 
+/**
+ * @brief Merge subaperture polar grid images into a single output grid.
+ *
+ * Combines multiple subaperture polar grid images onto a merged output
+ * polar grid. For each pixel in the output grid, the 3D target position
+ * is computed via polar2geo, and the input image data is accumulated
+ * via NFFT-based interpolation. The output image is expected to be
+ * zero-initialized by the caller.
+ *
+ * @param[in]  grids               List of subaperture input polar grids
+ * @param[in]  image_interpolators NFFT interpolators for each input grid
+ * @param[in]  output_grid         Merged output polar grid
+ * @param[out] output_image        Accumulated output image (must be
+ *                                 zero-initialized); dimensions must
+ *                                 match output_grid
+ * @param[in]  fc                  Center frequency (Hz)
+ * @param[in]  dem                 Digital elevation model (DEM)
+ * @param[in]  r2g_params          rdr2geo_bracket configuration parameters
+ * @param[in]  az_block_size       Number of azimuth rows to process at
+ *                                 a time (defaults to 1024)
+ *
+ * @throws isce3::except::LengthError if output image dimensions or
+ *         grid/interpolator counts are inconsistent
+ * @throws isce3::except::InvalidArgument if look directions are
+ *         inconsistent or az_block_size is negative
+ * @throws isce3::except::DomainError if polar2geo fails to converge
+ * @throws isce3::except::RuntimeError if NFFT interpolation fails
+ */
 void mergePolarImages(
     const std::vector<PolarGrid>& grids,
     const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
