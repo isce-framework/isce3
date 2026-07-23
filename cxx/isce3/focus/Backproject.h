@@ -51,11 +51,35 @@ backproject(std::complex<float>* out,
         float* height = nullptr);
 
 
+/** Structure describing the coordinate system of a polar image. */
 struct PolarGrid {
-    double aztime_start, aztime_end;  // end is one PRI past last pulse
-    isce3::core::Vec3 origin, axis;
+    /** Start azimuth time of the synthetic aperture (s) */
+    double aztime_start;
+
+    /** End azimuth time of the synthetic aperture (s); one PRI past the last pulse */
+    double aztime_end;
+
+    /** ECEF origin of the polar coordinate system (m).
+     *
+     * This is the reference point from which polar coordinates are defined,
+     * typically computed as the mean platform position over the aperture.
+     */
+    isce3::core::Vec3 origin;
+
+    /** Unit vector along the azimuth (along-track) axis of the polar grid.
+     *
+     * This is the normalized mean platform velocity, used to define the
+     * azimuth direction of the polar coordinate system.
+     */
+    isce3::core::Vec3 axis;
+
+    /** Slant range grid (m) */
     isce3::core::Linspace<double> range;
+
+    /** Sine of the squint angle (dimensionless Doppler) grid */
     isce3::core::Linspace<double> sin_squint;
+
+    /** Side looking direction (left or right of flight track) */
     isce3::core::LookSide look_side;
 
     PolarGrid() = delete;
