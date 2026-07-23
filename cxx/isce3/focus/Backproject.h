@@ -306,6 +306,21 @@ void mergePolarImages(
     const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
     int az_block_size = 1024);
 
+/**
+ * @brief Compute a mask of pixels overlapping a subaperture.
+ *
+ * For each pixel, determines whether the pixel's coherent processing
+ * interval [pixel_start, pixel_end] overlaps with the subaperture
+ * [subaperture_start, subaperture_end].
+ *
+ * @param[in]  subaperture_start Start time of the subaperture (s)
+ * @param[in]  subaperture_end   End time of the subaperture (s)
+ * @param[in]  n                 Number of pixels
+ * @param[in]  pixel_start       Start time of each pixel's CPI (s)
+ * @param[in]  pixel_end         End time of each pixel's CPI (s)
+ * @param[out] mask              Output mask; true if the pixel
+ *                               overlaps the subaperture
+ */
 void
 makeSubApertureMask(
     const double subaperture_start, const double subaperture_end,
