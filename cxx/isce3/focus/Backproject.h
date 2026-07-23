@@ -142,6 +142,36 @@ backprojectToPolarGrid(const std::complex<float>* in,
         DryTroposphereModel dry_tropo_model,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {});
 
+/**
+ * @brief Accumulate polar grid images onto an output radar geometry grid.
+ *
+ * Combines multiple subaperture polar grid images together onto a stripmap
+ * radar geometry grid. For each pixel in the output grid, the target
+ * position is computed via rdr2geo, the corresponding coherent processing
+ * interval is determined via geo2rdr, and the polar image data is
+ * accumulated using NFFT-based interpolation.
+ *
+ * The caller is responsible for allocating the output arrays to the
+ * appropriate size (out_geometry.gridLength() * out_geometry.gridWidth()).
+ *
+ * @param[out] out              Accumulated focused signal data
+ * @param[in]  out_geometry     Target output grid, orbit, and Doppler
+ * @param[in]  in_orbit         Input data orbit
+ * @param[in]  in_doppler       Input data Doppler centroid LUT
+ * @param[in]  grids            List of subaperture polar grids
+ * @param[in]  image_interpolators  NFFT interpolators for each polar grid
+ * @param[in]  dem              Digital elevation model (DEM)
+ * @param[in]  fc               Center frequency (Hz)
+ * @param[in]  ds               Desired azimuth resolution (m)
+ * @param[in]  dry_tropo_model  Dry troposphere path delay model
+ * @param[in]  r2g_params       rdr2geo_bracket configuration parameters
+ * @param[in]  g2r_params       geo2rdr_bracket configuration parameters
+ * @param[out] height           Height of each pixel (m) above the
+ *                              ellipsoid (optional, may be nullptr)
+ *
+ * @returns Non-zero error code if rdr2geo or geo2rdr fails to converge
+ *          for any pixel, and the values for these pixels are set to NaN.
+ */
 isce3::error::ErrorCode
 accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const isce3::container::RadarGeometry& out_geometry,
