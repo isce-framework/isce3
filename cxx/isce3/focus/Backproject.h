@@ -404,7 +404,31 @@ findPolarGridBoundingBoxInRadarCoord(
     const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
     const int nextra = 0);
 
-// figure out subset of stripmap radar grid that is covered by a polar grid
+/**
+ * @brief Find the subset of a radar grid covered by a polar grid.
+ *
+ * Computes the bounding box of the polar grid in stripmap radar
+ * coordinates using findPolarGridBoundingBoxInRadarCoord, then
+ * converts this bounding box to integer radar grid indices
+ * (azimuth line, range sample). If the polar grid does not
+ * overlap the radar grid at all, a zero-sized subset (0, 0, 0, 0)
+ * is returned.
+ *
+ * @param[in]  polar_grid    Input polar grid
+ * @param[in]  radar_geom    Target radar geometry grid
+ * @param[in]  dem           Digital elevation model (DEM)
+ * @param[in]  r2g_params    rdr2geo_bracket configuration parameters
+ * @param[in]  g2r_params    geo2rdr_bracket configuration parameters
+ * @param[in]  nextra        Number of extra perimeter points per
+ *                           edge (defaults to 0)
+ *
+ * @returns A tuple of:
+ *          - i0: starting azimuth line index
+ *          - i1: ending azimuth line index (exclusive)
+ *          - j0: starting range sample index
+ *          - j1: ending range sample index (exclusive)
+ *          - error code (from findPolarGridBoundingBoxInRadarCoord)
+ */
 std::tuple<int, int, int, int, isce3::error::ErrorCode>
 findPolarGridBoundingBoxInRadarGrid(
     const PolarGrid& polar_grid,
