@@ -106,4 +106,13 @@ bool operator!=(const Linspace<T> & lhs, const Linspace<U> & rhs)
     return !(lhs == rhs);
 }
 
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+std::pair<T, T> Linspace<T>::edges() const
+{
+    const T half = spacing() / 2;
+    return std::pair(first() - half, last() + half);
+}
+
 }}
