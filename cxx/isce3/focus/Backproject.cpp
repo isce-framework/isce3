@@ -520,14 +520,14 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
         return std::make_tuple(r_out, ssq_out);
     };
 
-    // TODO We're working with pixel centers.  Probably we should match grid
-    // boundaries and throw a bunch of dx/2 terms around.  The Doppler spacing,
-    // especially, will be different.
-    auto [r_min, q_min] = polar2polar(grids[0], grids[0].range[0], grids[0].sin_squint[0]);
+    // NOTE Use grid _edges_ for determining extent.  Okay to initialize with
+    // center, though.
+    auto [r_min, q_min] = polar2polar(grids[0], grids[0].range[0],
+        grids[0].sin_squint[0]);
     auto r_max = r_min, q_max = q_min;
     for (const auto& grid : grids) {
-        for (const auto& ri : {grid.range.first(), grid.range.last()}) {
-            for (const auto& qi : {grid.sin_squint.first(), grid.sin_squint.last()}) {
+        for (const auto& ri : grid.range.bounds()) {
+            for (const auto& qi : grid.sin_squint.bounds()) {
                 const auto [ro, qo] = polar2polar(grid, ri, qi);
                 r_min = std::min(r_min, ro);
                 r_max = std::max(r_max, ro);
@@ -537,14 +537,18 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
         }
     }
 
-    int nr = 1 + static_cast<int>(std::round((r_max - r_min) / dr));
-    int nq = 1 + static_cast<int>(std::round((q_max - q_min) / dq));
+    const int nr = static_cast<int>(std::ceil((r_max - r_min) / dr));
+    const int nq = static_cast<int>(std::ceil((q_max - q_min) / dq));
 
-    // TODO The ceil() means potentially extra data.  It might be preferable to
-    // pad equally on both sides, rather than adding all the extra to the end.
+    // The ceil() means potentially extra coverage.  We'll center it so there's
+    // equal padding on both sides of the interval.  Note also that min/max are
+    // bin edges while we're specifying bin centers, hence (N-1) instead of N
+    // in the formulas.
+    const auto r_off = r_min - ((nr - 1) * dr - (r_max - r_min)) / 2;
+    const auto q_off = q_min - ((nq - 1) * dq - (q_max - q_min)) / 2;
     return PolarGrid{t_min, t_max, origin, axis,
-        Linspace<double>(r_min, dr, nr),
-        Linspace<double>(q_min, dq, nq),
+        Linspace<double>(r_min - r_off, dr, nr),
+        Linspace<double>(q_min - q_off, dq, nq),
         look_side};
 }
 
