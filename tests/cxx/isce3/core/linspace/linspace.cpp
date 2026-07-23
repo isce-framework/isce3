@@ -198,7 +198,7 @@ TEST(LinspaceTest, Comparison)
     EXPECT_TRUE( x1 != x3 );
 }
 
-TEST(LinspaceTest, Edges)
+TEST(LinspaceTest, Bounds)
 {
     double first = 1.0;
     double spacing = 2.0;
@@ -206,7 +206,7 @@ TEST(LinspaceTest, Edges)
 
     isce3::core::Linspace<double> x(first, spacing, size);
 
-    auto [leading, trailing] = x.edges();
+    auto [leading, trailing] = x.bounds();
 
     EXPECT_DOUBLE_EQ( leading, 0.0 );
     EXPECT_DOUBLE_EQ( trailing, 10.0 );
