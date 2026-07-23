@@ -544,11 +544,11 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
     // equal padding on both sides of the interval.  Note also that min/max are
     // bin edges while we're specifying bin centers, hence (N-1) instead of N
     // in the formulas.
-    const auto r_off = r_min - ((nr - 1) * dr - (r_max - r_min)) / 2;
-    const auto q_off = q_min - ((nq - 1) * dq - (q_max - q_min)) / 2;
+    const auto r0 = r_min - ((nr - 1) * dr - (r_max - r_min)) / 2;
+    const auto q0 = q_min - ((nq - 1) * dq - (q_max - q_min)) / 2;
     return PolarGrid{t_min, t_max, origin, axis,
-        Linspace<double>(r_min - r_off, dr, nr),
-        Linspace<double>(q_min - q_off, dq, nq),
+        Linspace<double>(r0, dr, nr),
+        Linspace<double>(q0, dq, nq),
         look_side};
 }
 
