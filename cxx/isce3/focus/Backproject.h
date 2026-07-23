@@ -186,7 +186,6 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         float* height = nullptr);
 
 
-// WIP stuff to do one polar image at a time.
 
 /**
  * @brief Get the time constant associated with polar angle spacing
@@ -211,7 +210,36 @@ double
 getPolarAngleTimeConstant(const double fc, const double vs,
     const double bandwidth = 0.0, const double c = isce3::core::speed_of_light);
 
-// set up polar grid for a group of pulses
+/**
+ * @brief Set up a polar grid for a group of pulses.
+ *
+ * Constructs a PolarGrid that covers the synthetic aperture defined by
+ * the given azimuth times, along with the platform position and velocity
+ * vectors interpolated at each pulse. The grid spacing in the sine of
+ * the squint angle and range is determined by the Doppler bandwidth,
+ * range bandwidth, and desired azimuth resolution.
+ *
+ * @param[in]  in_geometry          Input data grid, orbit, & doppler
+ * @param[in]  azimuth_time         Azimuth times at which to set up the grid (s)
+ * @param[in]  range_bandwidth      Radar range bandwidth (Hz)
+ * @param[in]  azimuth_resolution   Desired azimuth resolution (m)
+ * @param[in]  oversample_range     Range oversampling factor
+ *                                  (defaults to 1.2)
+ * @param[in]  oversample_azimuth   Azimuth oversampling factor
+ *                                  (defaults to 1.2)
+ * @param[in]  num_doppler_eval     Number of range locations to evaluate
+ *                                  Doppler centroid for bandwidth estimation
+ *                                  (defaults to 2)
+ * @param[in]  pri                  Pulse repetition interval (s); if not
+ *                                  provided, it is inferred from azimuth_time
+ *
+ * @returns A tuple containing:
+ *          - the constructed PolarGrid
+ *          - platform position vectors at each pulse (ECEF, m)
+ *          - platform velocity vectors at each pulse (ECEF, m/s)
+ *
+ * @see PolarGrid for a description of the polar grid coordinate system.
+ */
 std::tuple<PolarGrid, std::vector<isce3::core::Vec3>, std::vector<isce3::core::Vec3>>
 setupPolarGridForPulses(
         const isce3::container::RadarGeometry& in_geometry,
