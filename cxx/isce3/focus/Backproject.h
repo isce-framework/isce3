@@ -365,7 +365,33 @@ accumulatePolarImageToGeoPoints(
         const std::optional<const bool*>& mask = std::nullopt,
         const std::optional<const double*>& dr_atm = std::nullopt);
 
-// figure out bounds of polar grid in stripmap radar coordinates
+/**
+ * @brief Find the bounding box of a polar grid in radar coordinates.
+ *
+ * Converts the perimeter of the polar grid to stripmap radar coordinates
+ * (azimuth time, slant range) and finds the minimum bounding box.
+ * The perimeter is sampled with nextra+1 points along each edge
+ * (4 edges), yielding 4*(nextra+1) total perimeter points.
+ *
+ * @param[in]  polar_grid   Input polar grid
+ * @param[in]  orbit        Orbit used to convert XYZ to radar coords
+ * @param[in]  doppler      Doppler centroid LUT
+ * @param[in]  wavelength   Radar wavelength (m)
+ * @param[in]  lookside     Look side (left or right)
+ * @param[in]  dem          Digital elevation model (DEM)
+ * @param[in]  r2g_params   rdr2geo_bracket configuration parameters
+ * @param[in]  g2r_params   geo2rdr_bracket configuration parameters
+ * @param[in]  nextra       Number of extra perimeter points per edge
+ *                          (defaults to 0)
+ *
+ * @returns A tuple of:
+ *          - tmin: minimum azimuth time (s)
+ *          - tmax: maximum azimuth time (s)
+ *          - rmin: minimum slant range (m)
+ *          - rmax: maximum slant range (m)
+ *          - error code (non-zero if any perimeter point fails to
+ *            converge in polar2geo or geo2rdr)
+ */
 std::tuple<double, double, double, double, isce3::error::ErrorCode>
 findPolarGridBoundingBoxInRadarCoord(
     const PolarGrid& polar_grid,
