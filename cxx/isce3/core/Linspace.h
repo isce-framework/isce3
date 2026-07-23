@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common.h"
-#include <utility>
+#include <array>
 
 namespace isce3 { namespace core {
 
@@ -124,13 +124,13 @@ public:
     /**
      * Get the edges implied by a Linspace of bin center coordinates.
      *
-     * \returns The pair [leading_edge, trailing_edge] where leading_edge is a
+     * \returns The array [leading_edge, trailing_edge] where leading_edge is a
      * half step ahead of first() and trailing_edge is a half step beyond of
      * last()
      */
     CUDA_HOSTDEV
     constexpr
-    std::pair<T, T> edges() const;
+    std::array<T, 2> edges() const;
 
 private:
     T _first = {};
