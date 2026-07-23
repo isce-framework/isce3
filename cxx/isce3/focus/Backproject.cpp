@@ -825,8 +825,6 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     return ErrorCode::Success;
 }
 
-// WIP stuff to do one polar image at a time.
-
 void
 makeSubApertureMask(
     const double subaperture_start, const double subaperture_end,
