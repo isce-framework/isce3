@@ -166,27 +166,6 @@ NFFT2dResultView<T>::NFFT2dResultView(const NFFT2dResult<T>& result) :
     kernels_{result.kernels_}
     {}
 
-// FIXME If I put this here instead of inline in the header, then the unit
-// test doesn't compile...
-#if 0
-template <typename T>
-CUDA_DEV
-thrust::complex<T>
-NFFT2dResultView<T>::interp(const std::array<double, 2>& t, bool periodic) const
-{
-    constexpr int xdim = 1, ydim = 0;
-
-    // scale time index to account for zero-padding of spectrum.
-    double x = t[xdim] * fft_sizes_[xdim] / sizes_[xdim];
-    double y = t[ydim] * fft_sizes_[ydim] / sizes_[ydim];
-
-    return isce3::cuda::core::interp2d(kernels_[xdim],
-        kernels_[ydim], pxt_, fft_sizes_[xdim], /* stridex */ 1,
-        fft_sizes_[ydim], /* stridey */ fft_sizes_[xdim], x, y, periodic);
-}
-#endif
-
-
 template<typename T>
 NFFT2dResult<T> makeImageNFFT2d(
     const Eigen::Ref<const isce3::core::EArray2D<std::complex<T>>>& image,
