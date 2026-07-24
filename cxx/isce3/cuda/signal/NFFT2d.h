@@ -40,7 +40,7 @@ class NFFT2d {
         const dims_t& fft_sizes() const { return fft_sizes_; }
 
         const thrust::complex<T>* spectrum() const { return xf_.data().get(); }
-        
+
     private:
         dims_t m_, sizes_, fft_sizes_;
         thrust::device_vector<thrust::complex<T>> xf_;
