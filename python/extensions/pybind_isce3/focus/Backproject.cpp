@@ -226,6 +226,40 @@ void addbinding_backproject(py::module& m)
             },
             R"(
                 Focus in azimuth via time-domain backprojection.
+
+                Parameters
+                ----------
+                out : numpy.ndarray[complex64]
+                    Output 2D array of focused signal data.
+                out_geometry : isce3.container.RadarGeometry
+                    Target output grid, orbit, and Doppler.
+                in : numpy.ndarray[complex64]
+                    Input 2D array of range-compressed signal data.
+                in_geometry : isce3.container.RadarGeometry
+                    Input data grid, orbit, and Doppler.
+                dem : isce3.geometry.DEMInterpolator
+                    Digital elevation model.
+                fc : float
+                    Radar center frequency (Hz).
+                ds : float
+                    Desired azimuth resolution (m).
+                kernel : isce3.core.Kernel
+                    1-D interpolation kernel.
+                dry_tropo_model : str, optional
+                    Dry troposphere path delay model (defaults to "tsx").
+                rdr2geo_params : dict, optional
+                    rdr2geo_bracket configuration keyword arguments.
+                geo2rdr_params : dict, optional
+                    geo2rdr_bracket configuration keyword arguments.
+                height : numpy.ndarray[float32], optional
+                    Output array to store height of each pixel in meters above
+                    the ellipsoid.
+
+                Returns
+                -------
+                bool
+                    True if successful, False if geometry fails to converge for
+                    any pixel (those pixels are set to NaN).
             )",
             py::arg("out"),
             py::arg("out_geometry"),
@@ -369,7 +403,42 @@ void addbinding_backproject(py::module& m)
             return std::make_tuple(status, out, height);
             },
             R"(
-                Focus in azimuth via time-domain backprojection.
+                Focus in azimuth via time-domain backprojection onto a
+                polar grid.
+
+                Parameters
+                ----------
+                in : numpy.ndarray[complex64]
+                    Input 2D array of range-compressed signal data.
+                in_slant_range : isce3.core.Linspace
+                    Slant range grid of the input data (m).
+                position : list[numpy.ndarray]
+                    Platform position vectors at each pulse (ECEF, m).
+                velocity : list[numpy.ndarray]
+                    Platform velocity vectors at each pulse (ECEF, m/s).
+                out_grid : isce3.focus.PolarGrid
+                    Target polar grid to backproject onto.
+                dem : isce3.geometry.DEMInterpolator
+                    Digital elevation model.
+                fc : float
+                    Radar center frequency (Hz).
+                kernel : isce3.core.Kernel
+                    1D interpolation kernel.
+                dry_tropo_model : str, optional
+                    Dry troposphere path delay model (defaults to "nodelay").
+                rdr2geo_params : dict, optional
+                    rdr2geo_bracket configuration keyword arguments.
+
+                Returns
+                -------
+                tuple
+                    - success : bool
+                        True if successful, False if geometry fails
+                        to converge for any pixel.
+                    - out : numpy.ndarray[complex64]
+                        Focused signal data on the polar grid.
+                    - height : numpy.ndarray[float32]
+                        Per-pixel height above the ellipsoid (m).
             )",
             py::arg("in"),
             py::arg("in_slant_range"),
@@ -390,6 +459,30 @@ void addbinding_backproject(py::module& m)
             const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
             return mergePolarGrids(grids, dem, r2g_params, dq_min, tq);
         },
+        R"(
+            Create polar grid capable of sampling data from all input grids.
+
+            Parameters
+            ----------
+            grids : list[isce3.focus.PolarGrid]
+                List of subaperture grids.
+            dem : isce3.geometry.DEMInterpolator, optional
+                Digital elevation model reporting height (m) above the
+                ellipsoid associated with its CRS.
+            rdr2geo_params : dict, optional
+                rdr2geo_bracket configuration keyword arguments.
+            dq_min : float, optional
+                Minimum allowed dimensionless Doppler spacing.
+                Necessary for stripmap processing large subapertures.
+            tq : float, optional
+                Time constant for dimensionless Doppler spacing.
+                If not provided it will be inferred from input grids.
+
+            Returns
+            -------
+            isce3.focus.PolarGrid
+                Merged output polar grid.
+        )",
         py::arg("grids"),
         py::arg("dem") = DEMInterpolator(),
         py::arg("rdr2geo_params") = py::dict(),
@@ -411,6 +504,49 @@ void addbinding_backproject(py::module& m)
             return mergePolarImages(grids, image_interpolators, output_grid,
                 output_image, fc, dem, r2g_params, az_block_size);
         },
+        R"(
+            Merge subaperture polar grid images into a single output grid.
+
+            Combines multiple subaperture polar grid images onto a merged
+            output polar grid. For each pixel in the output grid, the 3D
+            target position is computed via polar2geo, and the input image
+            data is accumulated via NFFT-based interpolation. The output
+            image is expected to be zero-initialized by the caller.
+
+            Parameters
+            ----------
+            grids : list[isce3.focus.PolarGrid]
+                List of subaperture input polar grids.
+            image_interpolators : list[numpy.ndarray]
+                NFFT interpolators for each input grid.
+            output_grid : isce3.focus.PolarGrid
+                Merged output polar grid.
+            output_image : numpy.ndarray[complex64]
+                Accumulated output image (must be zero-initialized);
+                dimensions must match output_grid.
+            fc : float
+                Center frequency (Hz).
+            dem : isce3.geometry.DEMInterpolator, optional
+                Digital elevation model.
+            rdr2geo_parameters : dict, optional
+                rdr2geo_bracket configuration keyword arguments.
+            az_block_size : int, optional
+                Number of azimuth rows to process at a time
+                (defaults to 1024).
+
+            Raises
+            ------
+            isce3.except.LengthError
+                If output image dimensions or grid/interpolator
+                counts are inconsistent.
+            isce3.except.InvalidArgument
+                If look directions are inconsistent or
+                az_block_size is negative.
+            isce3.except.DomainError
+                If polar2geo fails to converge.
+            isce3.except.RuntimeError
+                If NFFT interpolation fails.
+        )",
         py::arg("grids"),
         py::arg("image_interpolators"),
         py::arg("output_grid"),
@@ -482,6 +618,52 @@ void addbinding_backproject(py::module& m)
             // TODO bind ErrorCode class.  For now return nonzero on failure.
             return err != ErrorCode::Success;
         },
+        R"(
+            Accumulate polar grid images onto an output stripmap radar grid.
+
+            Combines multiple subaperture polar grid images together onto a
+            stripmap radar geometry grid. For each pixel in the output grid,
+            the target position is computed via rdr2geo, the corresponding
+            coherent processing interval is determined via geo2rdr, and the
+            polar image data is accumulated using NFFT-based interpolation.
+
+            Parameters
+            ----------
+            out : numpy.ndarray[complex64]
+                Output 2D array of focused signal data.
+            out_geometry : isce3.container.RadarGeometry
+                Target output grid, orbit, and Doppler.
+            in_orbit : isce3.core.Orbit
+                Input data orbit.
+            in_doppler : isce3.core.LUT2d
+                Input data Doppler centroid LUT.
+            grids : list[isce3.focus.PolarGrid]
+                List of subaperture polar grids.
+            image_interpolators : list[numpy.ndarray]
+                NFFT interpolators for each polar grid.
+            dem : isce3.geometry.DEMInterpolator, optional
+                Digital elevation model.
+            fc : float
+                Center frequency (Hz).
+            ds : float
+                Desired azimuth resolution (m).
+            dry_tropo_model : str, optional
+                Dry troposphere path delay model (defaults to "tsx").
+            rdr2geo_params : dict, optional
+                rdr2geo_bracket configuration keyword arguments.
+            geo2rdr_params : dict, optional
+                geo2rdr_bracket configuration keyword arguments.
+            height : numpy.ndarray[float32], optional
+                Output array to store height of each pixel in meters
+                above the ellipsoid.
+
+            Returns
+            -------
+            bool
+                True if successful, False if rdr2geo or geo2rdr fails
+                to converge for any pixel (those pixels are set to
+                NaN).
+        )",
         py::arg("out"),
         py::arg("out_geometry"),
         py::arg("in_orbit"),
@@ -524,6 +706,43 @@ void addbinding_backproject(py::module& m)
                 std::nullopt);
             return std::make_tuple(rows, cols);
         },
+        R"(
+            Find the subset of a radar grid covered by a polar grid.
+
+            Computes the bounding box of the polar grid in stripmap radar
+            coordinates, then converts this bounding box to integer radar
+            grid indices (azimuth line, range sample). If the polar grid
+            does not overlap the radar grid at all, a zero-sized subset
+            (0, 0, 0, 0) is returned.
+
+            Parameters
+            ----------
+            polar_grid : isce3.focus.PolarGrid
+                Input polar grid.
+            radar_geom : isce3.container.RadarGeometry
+                Target radar geometry grid.
+            dem : isce3.geometry.DEMInterpolator
+                Digital elevation model.
+            rdr2geo_params : dict, optional
+                rdr2geo_bracket configuration keyword arguments.
+            geo2rdr_params : dict, optional
+                geo2rdr_bracket configuration keyword arguments.
+            nextra : int, optional
+                Number of extra perimeter points per edge (defaults to 0).
+
+            Returns
+            -------
+            tuple[slice, slice]
+                - rows : slice
+                    Azimuth line range (start, end).
+                - cols : slice
+                    Range sample range (start, end).
+
+            Raises
+            ------
+            isce3.except.RuntimeError
+                If the polar grid bounds cannot be determined.
+        )",
         py::arg("polar_grid"),
         py::arg("radar_geom"),
         py::arg("dem"),
@@ -558,6 +777,32 @@ void addbinding_backproject(py::module& m)
             }
             return points;
         },
+        R"(
+            Compute 3D geo coordinates for a radar grid.
+
+            Computes the 3D XYZ position for every pixel in a radar
+            geometry grid using rdr2geo_bracket.
+
+            Parameters
+            ----------
+            geom : isce3.container.RadarGeometry
+                Radar geometry grid, orbit, and Doppler.
+            dem : isce3.geometry.DEMInterpolator
+                Digital elevation model.
+            rdr2geo_params : dict, optional
+                rdr2geo_bracket configuration keyword arguments.
+
+            Returns
+            -------
+            numpy.ndarray[float64]
+                3D XYZ positions (ECEF, m) with shape (m, n, 3), where m is the
+                grid length and n is the grid width.
+
+            Raises
+            ------
+            isce3.except.RuntimeError
+                If rdr2geo fails to converge for any pixel.
+        )",
         py::arg("geom"),
         py::arg("dem"),
         py::arg("rdr2geo_params") = py::dict());
@@ -602,6 +847,40 @@ void addbinding_backproject(py::module& m)
                     "Could not compute map projection of polar grid coords.");
             }
         },
+        R"(
+            Interpolate a polar grid image to given XYZ positions.
+
+            Accumulates (adds) contributions from a polar grid image into
+            an output complex signal array at specified 3D positions. For
+            each position, the target location in the polar grid is
+            computed via geo2polar, and the image is interpolated using
+            NFFT. The phase is compensated by the wavenumber-range
+            product kw * range.
+
+            Parameters
+            ----------
+            image : numpy.ndarray[complex64]
+                Output complex signal data (accumulates, so caller
+                must init to zero).
+            xyz : numpy.ndarray[float64]
+                Target 3D positions (ECEF, m) with shape (n, 3).
+            grid : isce3.focus.PolarGrid
+                Polar grid containing the image data.
+            nfft : numpy.ndarray
+                NFFT interpolator for the polar grid.
+            wavelength : float
+                Radar wavelength (m).
+            mask : numpy.ndarray[bool], optional
+                Pixel mask; pixels with false are skipped.
+
+            Raises
+            ------
+            isce3.except.LengthError
+                If shape mismatch between geo image and position
+                arrays, or if mask size does not equal image size.
+            isce3.except.RuntimeError
+                If the computation fails.
+        )",
         py::arg("image"),
         py::arg("xyz"),
         py::arg("grid"),
