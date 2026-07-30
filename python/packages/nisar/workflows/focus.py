@@ -1711,6 +1711,43 @@ def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, write
               height=None, dem=isce3.geometry.DEMInterpolator(),
               rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
               use_gpu=False):
+    """
+    Perform azimuth compression using standard backprojection algorithm.
+
+    Parameters
+    ----------
+    azres : float
+        Desired azimuth resolution, in meters.
+    kernel : isce3.core.Kernel
+        Interpolation kernel for backprojection.
+    blocks_bounds : BlockPlan
+        List of tuples containing ((row_slice, col_slice), (t0, t1)) for each
+        processing block, where slices define the output grid region and (t0, t1)
+        are the required raw data time bounds in seconds.
+    igeom : isce3.container.RadarGeometry
+        Input radar geometry for range-compressed data.
+    rc_grid : RadarGridParameters
+        Grid parameters for range-compressed data.
+    rcdata : array-like
+        Range-compressed data, shape (azimuth, range).
+    ogrid : RadarGridParameters
+        Output zero-Doppler radar grid parameters.
+    writer : BackgroundWriter
+        Writer object for outputting focused data blocks.
+    height : array-like, optional
+        Optional storage for height above ellipsoid (in meters) for each output
+        pixel, shape matching ogrid.
+    dem : isce3.geometry.DEMInterpolator, optional
+        Digital elevation model. Default is ellipsoid (height=0).
+    rdr2geo_params : dict, optional
+        Parameters for rdr2geo_bracket solver.
+    geo2rdr_params : dict, optional
+        Parameters for geo2rdr_bracket solver.
+    atmos : str, optional
+        Atmospheric delay model. Default is "nodelay".
+    use_gpu : bool, optional
+        Use GPU acceleration if available. Default is False.
+    """
     if use_gpu:
         backproject = isce3.cuda.focus.backproject
     else:
@@ -1812,6 +1849,59 @@ def azcomp_fbp(factors: BackprojectionStageParameters,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
         rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
         use_gpu=False, bandwidth=0.0, debugfile=None):
+    """
+    Perform azimuth compression using factorized backprojection algorithm.
+
+    The factorized backprojection algorithm processes data in multiple stages,
+    first focusing blocks of pulses to intermediate polar grids, then merging
+    those grids hierarchically, and finally accumulating the results to the
+    output zero-Doppler radar grid.
+
+    Parameters
+    ----------
+    factors : BackprojectionStageParameters
+        List of factorization stage parameters defining the processing hierarchy.
+        Each stage specifies the number of pulses or polar images to combine,
+        oversample factors, and NFFT interpolation parameters.
+    azres : float
+        Desired azimuth resolution, in meters.
+    kernel : isce3.core.Kernel
+        Interpolation kernel for backprojection.
+    blocks_bounds : BlockPlan
+        List of tuples containing ((row_slice, col_slice), (t0, t1)) for each
+        processing block, where slices define the output grid region and (t0, t1)
+        are the required raw data time bounds in seconds.
+    igeom : isce3.container.RadarGeometry
+        Input radar geometry for range-compressed data.
+    rc_grid : RadarGridParameters
+        Grid parameters for range-compressed data.
+    rcdata : array-like
+        Range-compressed data, shape (azimuth, range).
+    ogrid : RadarGridParameters
+        Output zero-Doppler radar grid parameters.
+    writer : BackgroundWriter
+        Writer object for outputting focused data blocks.
+    height : array-like, optional
+        Height above ellipsoid (in meters) for each output pixel, shape matching
+        ogrid. If None, uses DEM.
+    dem : isce3.geometry.DEMInterpolator, optional
+        Digital elevation model. Default is ellipsoid (height=0).
+    rdr2geo_params : dict, optional
+        Parameters for rdr2geo_bracket solver.
+    geo2rdr_params : dict, optional
+        Parameters for geo2rdr_bracket solver.
+    atmos : str, optional
+        Atmospheric delay model. Applied at final stage only to avoid phase
+        modulation artifacts from DEM sampling across subimages. Default is "nodelay".
+    use_gpu : bool, optional
+        Use GPU acceleration if available. Default is False.
+    bandwidth : float, optional
+        Signal bandwidth in Hz, used to determine polar grid angular extent.
+        Default is 0.0.
+    debugfile : file-like, optional
+        HDF5 file handle for writing intermediate polar grids for debugging.
+        If None, no debug output is written.
+    """
     fc = isce3.core.speed_of_light / ogrid.wavelength
     zerodop = isce3.core.LUT2d()
 
