@@ -79,10 +79,14 @@ DataType interp2d(const KernelX& kernelx,
 
     const int MAX_WIDTH = 16;
 
-    // Small-size optimization to avoid heap allocation.
+    // Small-size optimization to avoid heap allocation.  The fixed-size stack
+    // buffers below hold widthx/widthy elements, so an over-wide kernel would
+    // overflow them.  Guard against that (device-side assert traps the kernel;
+    // host-side aborts) rather than silently corrupting memory.
     const int widthx = static_cast<int>(ceil(kernelx.width()));
     const int widthy = static_cast<int>(ceil(kernely.width()));
-    // TODO check < max
+    assert(widthx > 0 and widthx <= MAX_WIDTH);
+    assert(widthy > 0 and widthy <= MAX_WIDTH);
 
     using TX = typename KernelX::value_type;
     using TY = typename KernelY::value_type;

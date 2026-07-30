@@ -592,7 +592,7 @@ void mergePolarImages(
     }
 
     // Check block size and allocate scratch space.
-    if (az_block_size < 0) {
+    if (az_block_size <= 0) {
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
             "azimuth block size must be positive");
     }

@@ -127,6 +127,17 @@ NFFT2dResult<T> makeImageNFFT2d(
 {
     using isce3::fft::nextFastPower;
 
+    // NFFTKernel width = 2*m+1.  The CPU interp uses heap allocation so large m
+    // is okay, but the CUDA interp2d uses fixed-size stack arrays
+    // (MAX_WIDTH=16), so reject m > 7 here to avoid confusion when the same
+    // params work on CPU but overflow on GPU.
+    constexpr int MAX_NFFT_M = 7;
+    if (params.rows.m > MAX_NFFT_M or params.cols.m > MAX_NFFT_M) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "NFFT kernel m must be <= 7 (kernel width = 2*m+1 must fit in "
+            "CUDA device stack arrays of size 16)");
+    }
+
     auto rows_in = image.rows();
     auto cols_in = image.cols();
     using image_t = isce3::core::EArray2D<std::complex<T>>;

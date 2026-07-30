@@ -160,15 +160,14 @@ void addbinding_cuda_backproject(py::module& m)
 
             // TODO bind ErrorCode class.  For now return nonzero on failure.
             bool status = err == ErrorCode::Success;
-            // TODO verify that this ctor takes ownership of data pointer!
-            auto bytes = sizeof(std::complex<float>);
-            auto out = py::array_t<std::complex<float>>(
-                {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
-                outp.release());
-            bytes = sizeof(float);
-            auto height = py::array_t<float>(
-                {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
-                heightp.release());
+
+            auto out = move_to_numpy(std::move(outp),
+                {static_cast<py::ssize_t>(grid.length()),
+                 static_cast<py::ssize_t>(grid.width())});
+            auto height = move_to_numpy(std::move(heightp),
+                {static_cast<py::ssize_t>(grid.length()),
+                 static_cast<py::ssize_t>(grid.width())});
+
             return std::make_tuple(status, out, height);
             },
             R"(

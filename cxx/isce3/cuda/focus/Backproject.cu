@@ -1223,6 +1223,15 @@ projectPolarToGeo(
     using std::lround;
 
     const dims_t m = {params.rows.m, params.cols.m};
+
+    // NFFTKernel width = 2*m+1; interp2d uses fixed-size stack arrays of
+    // MAX_WIDTH=16, so reject m >= 8 here at the API entry point instead of
+    // corrupting memory in the device kernel.
+    constexpr int MAX_NFFT_M = 7;
+    if (m[0] > MAX_NFFT_M or m[1] > MAX_NFFT_M) {
+        return ErrorCode::InvalidArgument;
+    }
+
     const dims_t dims_in = {grid.length(), grid.width()};
     const dims_t dims_out = {
         nextFastPower(static_cast<int32_t>(lround(params.rows.s * dims_in[0]))),
