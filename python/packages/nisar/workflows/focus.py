@@ -35,7 +35,7 @@ import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
 from isce3.focus import (make_los_luts, fill_gaps, make_cal_luts, Notch,
     find_bad_rangline_slices)
-from isce3.focus.backprojection import (azcomp_bp, azcomp_fbp, BlockPlan,
+from isce3.focus.azcomp_bp import (azcomp_bp, azcomp_fbp, BlockPlan,
     TimeBounds)
 from isce3.focus.serialization import BackprojectionStageParameters
 from isce3.io.gdal import Raster, GDT_CFloat32
