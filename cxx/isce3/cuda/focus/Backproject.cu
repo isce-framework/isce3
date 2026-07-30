@@ -1229,7 +1229,7 @@ projectPolarToGeo(
     // corrupting memory in the device kernel.
     constexpr int MAX_NFFT_M = 7;
     if (m[0] > MAX_NFFT_M or m[1] > MAX_NFFT_M) {
-        return ErrorCode::InvalidArgument;
+        return ErrorCode::InvalidKernelSize;
     }
 
     const dims_t dims_in = {grid.length(), grid.width()};
