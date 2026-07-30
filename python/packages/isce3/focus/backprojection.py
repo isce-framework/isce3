@@ -25,17 +25,61 @@ BlockPlan = list[tuple[Selection2d, TimeBounds]]
 
 
 def is_overlapping(a, b, c, d):
+    """
+    Check if two intervals overlap.
+
+    Parameters
+    ----------
+    a : float
+        Start of first interval.
+    b : float
+        End of first interval.
+    c : float
+        Start of second interval.
+    d : float
+        End of second interval.
+
+    Returns
+    -------
+    bool
+        True if intervals [a, b] and [c, d] overlap, False otherwise.
+    """
     assert (b >= a) and (d >= c)
     return (d >= a) and (c <= b)
 
 
 class Task:
+    """
+    Deferred task wrapper for lazy evaluation.
+
+    Stores a function and its arguments for later execution, allowing
+    tasks to be defined without immediate evaluation. Used in factorized
+    backprojection to reduce memory pressure by only computing intermediate
+    results when needed.
+
+    Parameters
+    ----------
+    function : callable
+        Function to execute when result() is called.
+    *args
+        Positional arguments to pass to function.
+    **kwargs
+        Keyword arguments to pass to function.
+    """
     def __init__(self, function, *args, **kwargs):
         self.function = function
         self.args = args
         self.kwargs = kwargs
 
     def result(self):
+        """
+        Execute the stored function with its arguments.
+
+        Returns
+        -------
+        Any
+            Result of calling function(*args, **kwargs).
+        """
         return self.function(*self.args, **self.kwargs)
 
 
