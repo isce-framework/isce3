@@ -4,7 +4,9 @@ import h5py
 import numpy as np
 import numpy.testing as npt
 import isce3.ext.isce3 as isce
+import isce3
 from isce3.core import load_orbit_from_h5_group
+from isce3.focus.serialization import BackprojectionStageParameters
 from iscetest import data as test_data_dir
 from pathlib import Path
 import json
@@ -70,6 +72,7 @@ def load_h5(filename):
             "target_azimuth": target_azimuth,
             "target_range": target_range}
 
+
 def test_backproject():
     # load point target simulation data
     filename = Path(test_data_dir) / "point-target-sim-rc.h5"
@@ -128,6 +131,128 @@ def test_backproject():
             height=height)
 
     assert not err
+
+    # We used a constant DEM height, so make sure the debug height layer
+    # contains that value everywhere.
+    npt.assert_allclose(height, dem.ref_height)
+
+    # remove range carrier
+    kr = 4. * np.pi / out_grid.wavelength
+    r = np.array(out_geometry.slant_range)
+    out *= np.exp(-1j * kr * r)
+
+    info, _ = analyze_point_target(out, nchip//2, nchip//2, nov=upsample_factor,
+            chipsize=nchip//2)
+    tofloatvals(info)
+
+    # print point target info
+    print(json.dumps(info, indent=2))
+
+    # range resolution (m)
+    range_res = c / (2. * B)
+
+    # range position error & -3 dB main lobe width (m)
+    range_err = dr * info["range"]["offset"]
+    range_width = dr * info["range"]["resolution"]
+
+    # azimuth position error & -3 dB main lobe width (m)
+    _, vel = orbit.interpolate(target_azimuth)
+    azimuth_err = dt * info["azimuth"]["offset"] * np.linalg.norm(vel)
+    azimuth_width = dt * info["azimuth"]["resolution"] * np.linalg.norm(vel)
+
+    # require positioning error < resolution/128
+    assert(range_err < range_res / 128.)
+    assert(azimuth_err < azimuth_res / 128.)
+
+    # require 3dB width in range to be <= range resolution
+    assert(range_width <= range_res)
+
+    # azimuth response is spread slightly by the antenna pattern so the
+    # threshold is slightly higher - see
+    # https://github.jpl.nasa.gov/bhawkins/nisar-notebooks/blob/master/Azimuth%20Resolution.ipynb
+    assert(azimuth_width <= 6.62)
+
+
+class DummyWriter:
+    def __init__(self, shape):
+        self.shape = shape
+        self.data = np.zeros(shape, dtype="c8")
+
+    def queue_write(self, z, block):
+        self.data[block] = z
+
+
+# Copy/paste of existing BP test for FBP.  Uses the higher-level azcomp_fbp
+# interface instead of the pybind11 bindings directly, which would involve
+# even more copy/paste...
+def test_azcomp_fbp():
+    # load point target simulation data
+    filename = Path(test_data_dir) / "point-target-sim-rc.h5"
+    d = load_h5(filename)
+
+    # eww gross
+    signal_data = d["signal_data"]
+    radar_grid = d["radar_grid"]
+    orbit = d["orbit"]
+    doppler = d["doppler"]
+    range_sampling_rate = d["range_sampling_rate"]
+    dem = d["dem"]
+    dry_tropo_model = d["dry_tropo_model"]
+    target_azimuth = d["target_azimuth"]
+    target_range = d["target_range"]
+
+    # range bandwidth (Hz)
+    B = 20e6
+
+    # desired azimuth resolution (m)
+    azimuth_res = 6.
+
+    # output chip size
+    nchip = 129
+
+    # how much to upsample the output for point target analysis
+    upsample_factor = 128
+
+    # create 9-point Knab kernel
+    # use tabulated kernel for performance
+    kernel = isce.core.KnabKernel(9., B / range_sampling_rate)
+    kernel = isce.core.TabulatedKernelF32(kernel, 2048)
+
+    # create output radar grid centered on the target
+    dt = radar_grid.az_time_interval
+    dr = radar_grid.range_pixel_spacing
+    t0 = target_azimuth - 0.5 * (nchip - 1) * dt
+    r0 = target_range - 0.5 * (nchip - 1) * dr
+    out_grid = isce.product.RadarGridParameters(
+            t0, radar_grid.wavelength, radar_grid.prf, r0, dr,
+            radar_grid.lookside, nchip, nchip, orbit.reference_epoch)
+
+    # init output buffer
+    out = np.empty((nchip, nchip), np.complex64)
+    # and debug height layer
+    height = np.empty(out.shape, np.float32)
+
+    # collect input & output radar_grid, orbit, and Doppler
+    in_geometry = isce.container.RadarGeometry(radar_grid, orbit, doppler)
+    out_geometry = isce.container.RadarGeometry(out_grid, orbit, doppler)
+
+    fbp_factors = [
+        BackprojectionStageParameters(size=64),
+        BackprojectionStageParameters(size=2),
+    ]
+    blocks_bounds = [
+        (
+            (slice(None), slice(None)),
+            (radar_grid.sensing_start, radar_grid.sensing_stop),
+        ),
+    ]
+    writer = DummyWriter(out_grid.shape)
+
+    isce3.focus.azcomp_bp.azcomp_fbp(fbp_factors, azimuth_res, kernel,
+        blocks_bounds, in_geometry, radar_grid, signal_data, out_grid, writer,
+        height=height, dem=dem, atmos=dry_tropo_model, bandwidth=B)
+
+    out[...] = writer.data
 
     # We used a constant DEM height, so make sure the debug height layer
     # contains that value everywhere.
