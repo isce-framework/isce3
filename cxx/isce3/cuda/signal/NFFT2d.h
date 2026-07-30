@@ -19,6 +19,13 @@
 
 namespace isce3::cuda::signal {
 
+/**
+ * @brief GPU-accelerated Non-Uniform Fast Fourier Transform (NFFT) in 2D.
+ *
+ * This class performs a zero-padded, pre-filtered 2D inverse FFT to convert
+ * image-spectrum data into the time domain for interpolation.  All transform
+ * and intermediate spectral data reside in GPU device memory.
+ */
 template<typename T>
 class NFFT2d {
     public:
@@ -26,19 +33,56 @@ class NFFT2d {
         using dims_t = std::array<int, ndims>;
 
         NFFT2d() = delete;
+
+        /**
+         * @brief Construct a new NFFT2d object
+         *
+         * @param m         Interpolator half-length along {rows, columns}
+         * @param sizes     Image spectrum dimensions {rows, columns}
+         * @param fft_sizes Transform sizes along {rows, columns}.
+         *                  Usually larger than image size.
+         */
         NFFT2d(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes);
 
-        // input data in host memory
+        /**
+         * @brief Transform image spectrum to time domain, input in host memory.
+         *
+         * @param sizes     Image spectrum dimensions {rows, columns}.
+         *                  Must match dimensions provided in ctor.
+         * @param strides   Strides (in pixels) along each dimension {rows, columns}.
+         * @param x         Image spectrum.
+         *
+         * The input data is copied to device memory.  The spectrum will be
+         * zero-padded, pre-filtered, and transformed to the time-domain.
+         *
+         * @return NFFT2dResult<T> object containing the time-domain data.
+         */
         NFFT2dResult<T> transform_host(const dims_t& sizes,
             const dims_t& strides, const std::complex<T>* x);
 
-        // input data already on device
+        /**
+         * @brief Transform image spectrum to time domain, input on device.
+         *
+         * @param sizes     Image spectrum dimensions {rows, columns}.
+         *                  Must match dimensions provided in ctor.
+         * @param strides   Strides (in pixels) along each dimension {rows, columns}.
+         * @param x         Image spectrum (device pointer).
+         *
+         * The spectrum will be zero-padded, pre-filtered, and transformed
+         * to the time-domain entirely on the GPU.
+         *
+         * @return NFFT2dResult<T> object containing the time-domain data.
+         */
         NFFT2dResult<T> transform_device(const dims_t& sizes,
             const dims_t& strides, const thrust::complex<T>* x);
 
+        /** Image spectrum dimensions */
         const dims_t& sizes() const { return sizes_; }
+
+        /** Transform sizes */
         const dims_t& fft_sizes() const { return fft_sizes_; }
 
+        /** Pointer to most recent spectral data (filtered and padded) */
         const thrust::complex<T>* spectrum() const { return xf_.data().get(); }
 
     private:
@@ -48,6 +92,15 @@ class NFFT2d {
         std::array<isce3::cuda::core::NFFTKernel<T>, 2> kernels_;
 };
 
+
+/**
+ * @brief Result of a GPU NFFT2d transform, holding time-domain data on the device.
+ *
+ * The time-domain data (xt_) is stored in GPU device memory as a
+ * thrust::device_vector.  This object can be converted to the CPU
+ * counterpart (isce3::signal::NFFT2dResult) or wrapped in a
+ * NFFT2dResultView for GPU-side interpolation.
+ */
 template<typename T>
 class NFFT2dResult {
     friend class NFFT2d<T>;
@@ -58,6 +111,17 @@ public:
 
     NFFT2dResult() = delete;
 
+    /**
+     * @brief Construct a NFFT2dResult.
+     *
+     * @param m         Interpolator half-length along {rows, columns}
+     * @param sizes     Image spectrum dimensions {rows, columns}
+     * @param fft_sizes Transform sizes along {rows, columns}
+     * @param kernels   Interpolator kernels along {rows, columns}
+     * @param xt        Optional device pointer to time-domain data of length
+     *                  fft_sizes[0] * fft_sizes[1].  If null, a zero-filled
+     *                  device buffer is allocated.
+     */
     NFFT2dResult(const dims_t& m, const dims_t& sizes, const dims_t& fft_sizes,
             const std::array<isce3::cuda::core::NFFTKernel<T>, 2>& kernels,
             const thrust::complex<T>* xt = nullptr)
@@ -77,9 +141,13 @@ public:
     /** copy from host */
     NFFT2dResult(const isce3::signal::NFFT2dResult<T>& other);
 
+    /** Interpolator half-lengths along {rows, columns} */
     const dims_t& kernel_radii() const { return m_; }
+    /** Image spectrum dimensions */
     const dims_t& sizes() const { return sizes_; }
+    /** Transform sizes */
     const dims_t& fft_sizes() const { return fft_sizes_; }
+    /** Interpolator kernels along {rows, columns} */
     const auto& kernels() const { return kernels_; }
 
 private:
@@ -88,6 +156,15 @@ private:
     thrust::device_vector<thrust::complex<T>> xt_;
 };
 
+
+/**
+ * @brief Lightweight view for GPU-side interpolation of NFFT2d results.
+ *
+ * This class wraps a NFFT2dResult and provides a CUDA device-callable
+ * interpolation method.  It is intended for use within device kernels where
+ * multiple pixels need to be interpolated without transferring data back to
+ * the host.
+ */
 template<typename T>
 class NFFT2dResultView {
 public:
@@ -95,8 +172,18 @@ public:
     using dims_t = std::array<int, ndims>;
 
     NFFT2dResultView() = delete;
+
+    /** Construct a lightweight view of an NFFT2dResult. */
     NFFT2dResultView(const NFFT2dResult<T>& result);
 
+    /**
+     * @brief Interpolate the image on the device.
+     *
+     * @param t         Desired pixel location {row, column}
+     *                  Values should be in 0 <= t[i] < sizes()[i].
+     * @param periodic  Whether to use a periodic boundary condition.
+     * @return          Interpolated value.
+     */
     CUDA_DEV inline
     thrust::complex<T> interp(
             const std::array<double, 2>& t, bool periodic = true) const
@@ -112,6 +199,7 @@ public:
                 /* stridey */ fft_sizes_[xdim], x, y, periodic);
     };
 
+    /** Transform sizes */
     CUDA_DEV
     const dims_t& fft_sizes() const { return fft_sizes_; }
 
