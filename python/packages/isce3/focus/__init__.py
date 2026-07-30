@@ -1,4 +1,5 @@
 from isce3.ext.isce3.focus import *
+from . import azcomp_bp
 from .serialization import save_polar_grid_to_h5, save_polar_image_to_h5
 from .caltone import ToneRemover
 from .sar_duration import (get_sar_duration, get_radar_velocities,
