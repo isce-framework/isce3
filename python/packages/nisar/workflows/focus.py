@@ -1807,7 +1807,7 @@ def find_min_cache_size(key_lists):
     return min_size
 
 
-def azcomp_ffbp(factors: BackprojectionStageParameters,
+def azcomp_fbp(factors: BackprojectionStageParameters,
         azres, kernel, blocks_bounds, igeom, rc_grid,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
         rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
@@ -2615,7 +2615,7 @@ def focus(runconfig, runconfig_path=""):
                 if factors[0].size > 1:
                     debugfile = (temp(f"_{frequency}{pol}_fbp_factors.h5")
                         if not cfg.processing.delete_tempfiles else None)
-                    azcomp_ffbp(factors, azres, kernel,
+                    azcomp_fbp(factors, azres, kernel,
                         blocks_bounds[frequency], igeom,
                         rc_grid, rcfile.data, ogrid[frequency], writer,
                         hgt_mm if dump_height else None, dem,
