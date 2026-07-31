@@ -38,12 +38,14 @@ namespace detail {
         if (periodic) {
             // Careful that C++ modulo retains sign of dividend.
             if (low < 0) {
-                low %= size;
-                low += size;
+                // XXX need both operands signed for correct result
+                const auto lsize = static_cast<long>(size);
+                low %= lsize;
+                low += lsize;
             }
             for (int i = 0; i < width; ++i) {
                 // Already guaranteed positive from above.
-                long j = ((low + i) % size) * stride;
+                auto j = ((low + i) % size) * stride;
                 block[i] = data[j];
             }
         } else {
@@ -115,9 +117,11 @@ DataType interp2d(const KernelX& kernelx,
     for (int i_kernely = 0; i_kernely < widthy; ++i_kernely) {
         long i_datay = i_kernely + lowy;
         if (periodic) {
-            i_datay %= ny;
+            // XXX need both operands signed for correct result
+            const auto lny = static_cast<long>(ny);
+            i_datay %= lny;
             // Careful that C++ modulo retains sign of dividend.
-            if (i_datay < 0) i_datay += ny;
+            if (i_datay < 0) i_datay += lny;
         }
         if ((i_datay >= 0) and (i_datay < ny)) {
             const DataType* zi = &z[i_datay * stridey];
