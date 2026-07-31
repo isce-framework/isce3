@@ -60,8 +60,15 @@ __global__ void setSpectrum2d(thrust::complex<T>* xout, int rows_out, int cols_o
 
     long row_out = 0, col_out = 0;
 
-    const int m2 = rows_in / 2;
-    const int n2 = cols_in / 2;
+    int m2 = rows_in / 2;
+    int n2 = cols_in / 2;
+
+    if (rows_in % 2 == 1) {
+        ++m2;
+    }
+    if (cols_in % 2 == 1) {
+        ++n2;
+    }
 
     if (row < m2) {
         row_out = row;

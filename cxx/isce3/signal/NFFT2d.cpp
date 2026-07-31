@@ -58,22 +58,22 @@ NFFT2d<T>::transform(const dims_t& sizes,
     const size_t m2 = sizes_[0] / 2;
     const size_t n2 = sizes_[1] / 2;
 
-    // TODO extra logic for odd sizes
-    if ((sizes_[0] % 2 == 1) or (sizes_[1] % 2 == 1)) {
-        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "Odd transform sizes are not yet supported.");
-    }
-
     // Zero-pad and scale spectrum.
+    // For even n the non-zero intervals are [0, n // 2) and [-n // 2, n - 1]
+    // (Assuming we don't bother splitting the Nyquist bin).  For odd n it's
+    // the same except it's symmetric [0, n // 2] and [-n // 2, n - 1] with
+    // both intervals *closed*.
+    const auto row_end = (sizes_[0] % 2 == 0) ? m2 : m2 + 1;
+    const auto col_end = (sizes_[1] % 2 == 0) ? n2 : m2 + 1;
     #pragma omp parallel for
-    for (size_t i = 0; i < m2; ++i) {
+    for (size_t i = 0; i < row_end; ++i) {
         const auto wi = weights_[0][i];
         // pointer to row i of input data
         const auto pxi = x + (strides[0] * i);
         // pointer to row i of ifft buffer
         const auto pxfi = xf_.data() + (fft_sizes_[1] * i);
-        // columns [0, n2)
-        for (size_t j = 0; j < n2; ++j) {
+        // columns [0, n2) or [0, n2]
+        for (size_t j = 0; j < col_end; ++j) {
             const auto wj = weights_[1][j];
             pxfi[j] = wi * wj * pxi[strides[1] * j];
         }
@@ -89,7 +89,7 @@ NFFT2d<T>::transform(const dims_t& sizes,
         // pointer to row (ny - i)
         const auto pxi = x + (strides[0] * (sizes_[0] - i));
         const auto pxfi = xf_.data() + (fft_sizes_[1] * (fft_sizes_[0] - i));
-        for (size_t j = 0; j < n2; ++j) {
+        for (size_t j = 0; j < col_end; ++j) {
             const auto wj = weights_[1][j];
             pxfi[j] = wi * wj * pxi[strides[1] * j];
         }
