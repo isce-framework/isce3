@@ -280,7 +280,7 @@ def azcomp_fbp(factors: BackprojectionStageParameters,
 
     if debugfile is not None:
         import h5py
-        log.debug("Writing FBP metadata to file {debugfile.name}")
+        log.debug(f"Writing FBP metadata to file {debugfile.name}")
         with h5py.File(debugfile, "w") as h5:
             epoch = igeom.reference_epoch
             igeom.orbit.save_to_h5(h5.require_group("orbit"))
