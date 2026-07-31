@@ -2381,7 +2381,7 @@ def configure_logging():
     sh.setFormatter(fmt)
     log.addHandler(sh)
     for friend in ("Raw", "SLCWriter", "nisar.antenna.pattern", "rslc_cal",
-                   "isce3.focus.notch", "isce3.focus.backprojection"):
+                   "isce3.focus.notch", "isce3.focus.azcomp_bp"):
         l = logging.getLogger(friend)
         l.setLevel(log_level)
         l.addHandler(sh)

@@ -16,7 +16,7 @@ from isce3.geometry import DEMInterpolator
 from isce3.product import RadarGridParameters
 from typing import Optional
 
-log = logging.getLogger("isce3.focus.backprojection")
+log = logging.getLogger("isce3.focus.azcomp_bp")
 
 # Type aliases for processing block plan
 Selection2d = tuple[slice, slice]
