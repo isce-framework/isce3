@@ -112,10 +112,6 @@ NFFT2d<T>::transform_device(const dims_t& sizes, const dims_t& strides, const th
             throw isce3::except::LengthError(ISCE_SRCINFO(),
                 "Spectrum size != NFFT size.");
         }
-        if (sizes[idim] % 2 == 1) {
-            throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-                "Odd transform sizes are not yet supported.");
-        }
     }
     // Clear any old data.
     auto nout = static_cast<size_t>(fft_sizes_[0]) * fft_sizes_[1];
