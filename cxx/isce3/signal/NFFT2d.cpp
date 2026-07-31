@@ -58,6 +58,12 @@ NFFT2d<T>::transform(const dims_t& sizes,
     const size_t m2 = sizes_[0] / 2;
     const size_t n2 = sizes_[1] / 2;
 
+    // TODO extra logic for odd sizes
+    if ((sizes_[0] % 2 == 1) or (sizes_[1] % 2 == 1)) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Odd transform sizes are not yet supported.");
+    }
+
     // Zero-pad and scale spectrum.
     #pragma omp parallel for
     for (size_t i = 0; i < m2; ++i) {
