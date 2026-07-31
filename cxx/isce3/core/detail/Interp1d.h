@@ -62,7 +62,13 @@ const DataType* get_contiguous_view_or_copy(DataType block[], int width,
     }
     // else
     if (periodic) {
+        // Careful that C++ modulo retains sign of dividend.
+        if (low < 0) {
+            low %= size;
+            low += size;
+        }
         for (int i = 0; i < width; ++i) {
+            // Already guaranteed positive from above.
             long j = ((low + i) % size) * stride;
             block[i] = data[j];
         }
