@@ -64,7 +64,7 @@ NFFT2d<T>::transform(const dims_t& sizes,
     // the same except it's symmetric [0, n // 2] and [-n // 2, n - 1] with
     // both intervals *closed*.
     const auto row_end = (sizes_[0] % 2 == 0) ? m2 : m2 + 1;
-    const auto col_end = (sizes_[1] % 2 == 0) ? n2 : m2 + 1;
+    const auto col_end = (sizes_[1] % 2 == 0) ? n2 : n2 + 1;
     #pragma omp parallel for
     for (size_t i = 0; i < row_end; ++i) {
         const auto wi = weights_[0][i];
