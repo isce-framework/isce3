@@ -55,8 +55,19 @@ void addbinding(py::class_<NFFT2d<T>>& pyNFFT2d)
             // property implies reference_internal return value policy
             return py::array_t<std::complex<T>>(dims, ptr);
         })
+        .def("transform", [](NFFT2d<T>& self, const py::array_t<std::complex<T>>& z) {
+            const dims_t shape {
+                static_cast<int>(z.shape(0)),
+                static_cast<int>(z.shape(1))};
+            const auto itemsize = sizeof(std::complex<T>);
+            const dims_t strides {
+                static_cast<int>(z.strides(0) / itemsize),
+                static_cast<int>(z.strides(1) / itemsize)};
+            return self.transform(shape, strides, z.data());
+        })
+        .def_property_readonly("sizes", &NFFT2d<T>::sizes)
+        .def_property_readonly("fft_sizes", &NFFT2d<T>::fft_sizes)
         ;
-        // TODO more methods
 }
 
 template<typename T>
