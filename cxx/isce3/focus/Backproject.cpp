@@ -250,6 +250,10 @@ setupPolarGridForPulses(
 {
     // Interpolate platform position & velocity at each pulse
     const auto nt = azimuth_time.size();
+    if (nt < 1) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Need at least one pulse to setup polar grid.");
+    }
     std::vector<Vec3> pos(nt), vel(nt);
 
     for (auto i = decltype(nt){0}; i < nt; ++i) {
