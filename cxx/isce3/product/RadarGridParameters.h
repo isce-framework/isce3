@@ -434,6 +434,16 @@ validate() const
         errstr += "Slant range pixel spacing must be positive. \n";
     }
 
+    if (length() == 0)
+    {
+        errstr += "Radar Grid should have length of at least 1. \n";
+    }
+
+    if (width() == 0)
+    {
+        errstr += "Radar Grid should have width of at least 1. \n";
+    }
+
     if (! errstr.empty())
     {
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errstr);
