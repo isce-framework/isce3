@@ -31,7 +31,7 @@ namespace detail {
             bool periodic)
     {
         const long high = low + width;
-        if ((stride == 1) and (low >= 0) and (high < size)) {
+        if ((stride == 1) and (low >= 0) and (high <= size)) {
             return &data[low];
         }
         // else
