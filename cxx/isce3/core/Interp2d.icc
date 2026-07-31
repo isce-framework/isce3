@@ -33,8 +33,11 @@ DataType interp2d(const Kernel<KernelType>& kernelx,
     // Do X interp at each Y index.
     for (int i_kernely = 0; i_kernely < widthy; ++i_kernely) {
         long i_datay = i_kernely + lowy;
-        if (periodic)
+        if (periodic) {
             i_datay %= ny;
+            // Careful that C++ modulo retains sign of dividend.
+            if (i_datay < 0) i_datay += ny;
+        }
         if ((i_datay >= 0) and (i_datay < ny)) {
             const DataType* zi = &z[i_datay * stridey];
             const DataType* px = detail::get_contiguous_view_or_copy(
