@@ -43,6 +43,7 @@ signal/crossmul.py
 signal/crossmultiply.py
 signal/filter2D.py
 signal/multilook.py
+signal/nfft2d.py
 product/generic_product.py
 product/geogridparameters.py
 product/radargridparameters.py
