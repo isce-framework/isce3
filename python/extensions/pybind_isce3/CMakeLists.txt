@@ -10,6 +10,13 @@ pybind11_add_module(${ISCEEXTENSION} ${SRCS})
 # the name of the output
 set_target_properties(${ISCEEXTENSION} PROPERTIES LIBRARY_OUTPUT_NAME isce3)
 
+# Enable CUDA separable compilation for CUDA 13+ compatibility
+# This allows __global__ kernels in the main library to be called from
+# template code instantiated in this Python bindings module
+if(WITH_CUDA)
+    set_target_properties(${ISCEEXTENSION} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+endif()
+
 # include path
 target_include_directories(${ISCEEXTENSION} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
 
