@@ -232,8 +232,7 @@ void addbinding_cuda_backproject(py::module& m)
                 const isce3::core::Orbit& in_orbit,
                 const isce3::core::LUT2d<double>& in_doppler,
                 const std::vector<isce3::focus::PolarGrid>& grids,
-                // const std::vector<isce3::signal::NFFT2dResult<float>>& image_interpolators,
-                const py::sequence& image_interpolators,
+                const py::sequence& py_image_interpolators,
                 const DEMInterpolator& dem,
                 double fc,
                 double ds,
@@ -254,7 +253,8 @@ void addbinding_cuda_backproject(py::module& m)
                 throw InvalidArgument(ISCE_SRCINFO(), errmsg);
             }
 
-            if (grids.size() != image_interpolators.size()) {
+            const auto nimg = py_image_interpolators.size();
+            if (grids.size() != nimg) {
                 throw InvalidArgument(ISCE_SRCINFO(), "must have grid for each sub-image");
             }
 
@@ -278,13 +278,17 @@ void addbinding_cuda_backproject(py::module& m)
             const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
             const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
 
+            // Convert Python sequence to std::vector.  Element type is
+            // pointer so this shouldn't involve any copy.
             using T = isce3::cuda::signal::NFFT2dResult<float>;
-            auto interpolators = TypedPythonSequence<T>(image_interpolators);
+            auto interpolators = std::vector<const T*>(nimg);
+            std::transform(py_image_interpolators.begin(),
+                py_image_interpolators.end(), interpolators.begin(),
+                [](const auto& py_itp) { return &(py_itp.cast<const T&>()); });
 
             ErrorCode err;
             {
-                // Can't release GIL because we're using a Python sequence...
-                // py::gil_scoped_release release;
+                py::gil_scoped_release release;
                 err = isce3::cuda::focus::accumulatePolarImagesToRadarGrid(
                     out_data, out_geometry, in_orbit, in_doppler, grids,
                     interpolators, dem, fc, ds, atm, r2gparams, g2rparams,
@@ -309,8 +313,7 @@ void addbinding_cuda_backproject(py::module& m)
 
     m.def("merge_polar_images", [](
             const std::vector<isce3::focus::PolarGrid>& grids,
-            // const std::vector<NFFT2dResult<float>>& image_interpolators,
-            py::sequence image_interpolators,
+            py::sequence py_image_interpolators,
             const isce3::focus::PolarGrid& output_grid,
             Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
             const double fc,
@@ -318,8 +321,14 @@ void addbinding_cuda_backproject(py::module& m)
             const py::dict rdr2geo_params,  // only difference for python
             int az_block_size)
         {
+            // Convert Python sequence to std::vector.  Element type is
+            // pointer so this shouldn't involve any copy.
+            const auto nimg = py_image_interpolators.size();
             using T = isce3::cuda::signal::NFFT2dResult<float>;
-            auto interpolators = TypedPythonSequence<T>(image_interpolators);
+            auto interpolators = std::vector<const T*>(nimg);
+            std::transform(py_image_interpolators.begin(),
+                py_image_interpolators.end(), interpolators.begin(),
+                [](const auto& py_itp) { return &(py_itp.cast<const T&>()); });
 
             const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
 

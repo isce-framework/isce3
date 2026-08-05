@@ -3,6 +3,7 @@
 #include <isce3/container/forward.h>
 #include <isce3/cuda/container/forward.h>
 #include <isce3/cuda/geometry/forward.h>
+#include <isce3/cuda/signal/forward.h>
 #include <isce3/geometry/forward.h>
 
 #include <complex>
@@ -191,14 +192,14 @@ projectPolarToGeo(
  *          converge for any pixel, and the values for these
  *          pixels are set to NaN.
  */
-template <class SequenceType>
 isce3::error::ErrorCode
 accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const isce3::container::RadarGeometry& out_geometry,
         const isce3::core::Orbit& in_orbit,
         const isce3::core::LUT2d<double>& in_doppler,
         const std::vector<isce3::focus::PolarGrid>& grids,
-        const SequenceType& image_interpolators,
+        const std::vector<const isce3::cuda::signal::NFFT2dResult<float>*>&
+            image_interpolators,
         const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
         DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
         const Rdr2GeoBracketParams& r2g_params = {},
@@ -226,10 +227,10 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
  * @param[in]  az_block_size        Number of azimuth rows to process
  *                                  at a time (defaults to 1024)
  */
-template <class SequenceType>
 void mergePolarImages(
     const std::vector<isce3::focus::PolarGrid>& grids,
-    const SequenceType& image_interpolators,
+    const std::vector<const isce3::cuda::signal::NFFT2dResult<float>*>&
+        image_interpolators,
     const isce3::focus::PolarGrid& output_grid,
     Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
     const double fc,
@@ -238,7 +239,3 @@ void mergePolarImages(
     int az_block_size = 1024);
 
 }}} // namespace isce3::cuda::focus
-
-#define ISCE_CUDA_FOCUS_BACKPROJECT_ICC
-#include "Backproject.icc"
-#undef ISCE_CUDA_FOCUS_BACKPROJECT_ICC
