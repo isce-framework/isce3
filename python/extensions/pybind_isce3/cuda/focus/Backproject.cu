@@ -9,6 +9,7 @@
 #include <isce3/error/ErrorCode.h>
 #include <isce3/except/Error.h>
 #include <isce3/cuda/focus/Backproject.h>
+#include <isce3/cuda/signal/NFFT2d.h>
 #include <isce3/focus/DryTroposphereModel.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <optional>
@@ -284,7 +285,9 @@ void addbinding_cuda_backproject(py::module& m)
             auto interpolators = std::vector<const T*>(nimg);
             std::transform(py_image_interpolators.begin(),
                 py_image_interpolators.end(), interpolators.begin(),
-                [](const auto& py_itp) { return &(py_itp.cast<const T&>()); });
+                [](const py::handle& py_itp) -> const T* {
+                    return &(py_itp.cast<const T&>());
+                });
 
             ErrorCode err;
             {
@@ -328,7 +331,9 @@ void addbinding_cuda_backproject(py::module& m)
             auto interpolators = std::vector<const T*>(nimg);
             std::transform(py_image_interpolators.begin(),
                 py_image_interpolators.end(), interpolators.begin(),
-                [](const auto& py_itp) { return &(py_itp.cast<const T&>()); });
+                [](const py::handle& py_itp) -> const T* {
+                    return &(py_itp.cast<const T&>());
+                });
 
             const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
 
