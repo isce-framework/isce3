@@ -1008,12 +1008,6 @@ findPolarGridBoundingBoxInRadarGrid(
     j0 = static_cast<int>(std::floor((rmin - r0) / dr));
     j1 = static_cast<int>(std::ceil((rmax - r0) / dr));
 
-    // copy of radar grid but with shape = (0, 0)
-    using isce3::product::RadarGridParameters;
-    const auto& igrid = radar_geom.radarGrid();
-    const auto empty =  RadarGridParameters(t0, igrid.wavelength(),
-        igrid.prf(), r0, dr, igrid.lookSide(), 0, 0, igrid.refEpoch());
-
     // return empty grid if non-overlapping
     if ((i1 < 0) or (i0 >= m) or (j1 < 0) or (j0 >= n)) {
         return std::make_tuple(0, 0, 0, 0, status);
