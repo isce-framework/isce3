@@ -331,6 +331,12 @@ runconfig:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
 
+            tec_correction:
+                apply_slant_range_correction: True
+                apply_azimuth_correction: True
+                use_total_tec: False
+                reject_lowqual_toptec: False
+
         # OPTIONAL - Group containing CEOS Analysis Ready Data (CARD) parameters
         # to populate the output product's metadata
         ceos_analysis_ready_data:
