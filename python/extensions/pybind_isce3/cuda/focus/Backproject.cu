@@ -1,5 +1,4 @@
 #include "Backproject.h"
-#include "pybind_isce3/container/TypedPythonSequence.h"
 #include "pybind_isce3/focus/Backproject.h"  // parse parameter dicts
 #include "pybind_isce3/signal/NFFT2d.h"  // parse NFFT2d parameters
 
