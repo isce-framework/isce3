@@ -14,17 +14,6 @@ target_compile_options(${LISCECUDA} PUBLIC
     $<$<COMPILE_LANGUAGE:CUDA>:-Werror=cross-execution-space-call>
     )
 
-# CUDA 13.0 made __global__ kernels hidden and __global__ template stubs
-# internal-linkage by default, which breaks cross-shared-library kernel launches
-# (template code in the pybind module launches kernels defined in this library).
-# Restore the pre-13 behavior. These flags exist since CUDA 12.8.
-if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 12.8)
-    target_compile_options(${LISCECUDA} PUBLIC
-        $<$<COMPILE_LANGUAGE:CUDA>:--device-entity-has-hidden-visibility=false>
-        $<$<COMPILE_LANGUAGE:CUDA>:-static-global-template-stub=false>
-        )
-endif()
-
 # Disable thrust's architecture-specific inline namespace that was introduced in
 # https://github.com/NVIDIA/cccl/pull/443. Without this, thrust symbols in header files
 # will have different names in C++ TUs vs CUDA TUs, leading to numerous ODR violations
