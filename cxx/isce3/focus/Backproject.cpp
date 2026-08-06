@@ -559,7 +559,7 @@ mergePolarGrids(const std::vector<PolarGrid>& grids,
 
 void mergePolarImages(
     const std::vector<PolarGrid>& grids,
-    const std::vector<NFFT2dResult<float>>& image_interpolators,
+    const std::vector<const NFFT2dResult<float>*>& image_interpolators,
     const PolarGrid& output_grid,
     Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
     const double fc,
@@ -645,11 +645,11 @@ void mergePolarImages(
         // loop over input images
         for (auto i_img = decltype(num_images){0}; i_img < num_images; ++i_img) {
             const auto& input_grid = grids[i_img];
-            const auto& nfft = image_interpolators[i_img];
+            const auto* nfft = image_interpolators[i_img];
             const auto npix = static_cast<size_t>(n) * (i_row1 - i_row0);
             auto ec = accumulatePolarImageToGeoPoints(
                 output_image.row(i_row0).data(),
-                block_positions.data(), npix, input_grid, nfft, kw);
+                block_positions.data(), npix, input_grid, *nfft, kw);
             if (ec != ErrorCode::Success) {
                 throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                     "projectPolarToGeo failed with ErrorCode (" +
@@ -683,7 +683,7 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
         const isce3::core::Orbit& in_orbit,
         const isce3::core::LUT2d<double>& in_doppler,
         const std::vector<PolarGrid>& grids,
-        const std::vector<NFFT2dResult<float>>& image_interpolators,
+        const std::vector<const NFFT2dResult<float>*>& image_interpolators,
         const DEMInterpolator& dem, double fc, double ds,
         DryTroposphereModel dry_tropo_model,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
@@ -816,10 +816,10 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
     for (auto k = kstart; k < kstop; ++k) {
         // check if we need to replan FFTs
         const auto& grid = grids[k];
-        const auto& nfft = image_interpolators[k];
+        const auto* nfft = image_interpolators[k];
         makeSubApertureMask(grid.aztime_start, grid.aztime_end,
             nout, tstart.data(), tend.data(), mask.data());
-        accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, nfft, kw,
+        accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, *nfft, kw,
             mask.data(), dr_atm.data());
     }
 
