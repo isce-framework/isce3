@@ -1526,7 +1526,6 @@ accumulatePolarImagesToRadarGrid(std::complex<float>* out,
 }
 
 
-template <class NFFT2dSequence>
 void mergePolarImages(
     const std::vector<isce3::focus::PolarGrid>& grids,
     const std::vector<const NFFT2dResult<float>*>& image_interpolators,
