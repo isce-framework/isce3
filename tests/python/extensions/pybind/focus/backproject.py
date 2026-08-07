@@ -249,7 +249,7 @@ def test_azcomp_fbp():
     writer = DummyWriter(out_grid.shape)
 
     isce3.focus.azcomp_bp.azcomp_fbp(fbp_factors, azimuth_res, kernel,
-        blocks_bounds, in_geometry, radar_grid, signal_data, out_grid, writer,
+        blocks_bounds, in_geometry, signal_data, out_grid, writer,
         height=height, dem=dem, atmos=dry_tropo_model, bandwidth=B)
 
     out[...] = writer.data
