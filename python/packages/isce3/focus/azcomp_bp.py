@@ -135,7 +135,7 @@ def nfft_params_dict(p: isce3.focus.serialization.NonUniformFFT2DParams):
             s = p.range.zero_padding_factor))
 
 
-def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, writer,
+def azcomp_bp(azres, kernel, blocks_bounds, igeom, rcdata, ogrid, writer,
               height=None, dem=isce3.geometry.DEMInterpolator(),
               rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
               use_gpu=False):
@@ -154,14 +154,14 @@ def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, write
         are the required raw data time bounds in seconds.
     igeom : isce3.container.RadarGeometry
         Input radar geometry for range-compressed data.
-    rc_grid : RadarGridParameters
-        Grid parameters for range-compressed data.
     rcdata : array-like
         Range-compressed data, shape (azimuth, range).
     ogrid : RadarGridParameters
         Output zero-Doppler radar grid parameters.
     writer : BackgroundWriter
-        Writer object for outputting focused data blocks.
+        Writer object.  Must have a method `queue_write(z, block)` for writing
+        out image subset `z` into selection `block` of output image where `z`
+        is a 2D numpy array and `block` is a tuple[slice, slice].
     height : array-like, optional
         Optional storage for height above ellipsoid (in meters) for each output
         pixel, shape matching ogrid.
@@ -184,8 +184,8 @@ def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, write
     zerodop = isce3.core.LUT2d()
     for block, (t0, t1) in blocks_bounds:
         description = f"(i, j) = ({block[0].start}, {block[1].start})"
-        if not is_overlapping(t0, t1,
-                            rc_grid.sensing_start, rc_grid.sensing_stop):
+        if not is_overlapping(t0, t1, igeom.radar_grid.sensing_start,
+                igeom.radar_grid.sensing_stop):
             log.info(f"Skipping inactive azcomp block at {description}")
             continue
         log.info(f"Azcomp block at {description}")
@@ -201,7 +201,7 @@ def azcomp_bp(azres, kernel, blocks_bounds, igeom, rc_grid, rcdata, ogrid, write
 
 
 def azcomp_fbp(factors: BackprojectionStageParameters,
-        azres, kernel, blocks_bounds, igeom, rc_grid,
+        azres, kernel, blocks_bounds, igeom,
         rcdata, ogrid, writer, height=None, dem=isce3.geometry.DEMInterpolator(),
         rdr2geo_params=dict(), geo2rdr_params=dict(), atmos="nodelay",
         use_gpu=False, bandwidth=0.0, debugfile=None):
@@ -229,14 +229,14 @@ def azcomp_fbp(factors: BackprojectionStageParameters,
         are the required raw data time bounds in seconds.
     igeom : isce3.container.RadarGeometry
         Input radar geometry for range-compressed data.
-    rc_grid : RadarGridParameters
-        Grid parameters for range-compressed data.
     rcdata : array-like
         Range-compressed data, shape (azimuth, range).
     ogrid : RadarGridParameters
         Output zero-Doppler radar grid parameters.
     writer : BackgroundWriter
-        Writer object for outputting focused data blocks.
+        Writer object.  Must have a method `queue_write(z, block)` for writing
+        out image subset `z` into selection `block` of output image where `z`
+        is a 2D numpy array and `block` is a tuple[slice, slice].
     height : array-like, optional
         Height above ellipsoid (in meters) for each output pixel, shape matching
         ogrid. If None, uses DEM.
@@ -295,11 +295,11 @@ def azcomp_fbp(factors: BackprojectionStageParameters,
     # parallel using concurrent.futures or dask, for for now just store them in
     # a dict keyed by the PolarGrid associated with the imagelets.
     tasks = dict()
-    aztimes = np.array(rc_grid.sensing_times)
+    aztimes = np.array(igeom.radar_grid.sensing_times)
     pris = np.hstack((np.diff(aztimes), aztimes[-1] - aztimes[-2]))
     stage = factors[0]
     nfft2d_params = nfft_params_dict(stage.interpolation)
-    pulse_starts = range(0, rc_grid.length, stage.size)
+    pulse_starts = range(0, igeom.radar_grid.length, stage.size)
     log.info(f"Beginning initial factorizations of {stage.size} pulses")
     nblocks = len(pulse_starts)
 
@@ -326,7 +326,7 @@ def azcomp_fbp(factors: BackprojectionStageParameters,
         if len(ti) < 2:
             log.info("Skipping FBP block containing only a single pulse.")
             continue
-        fgrid = rc_grid[pulses, :]
+        fgrid = igeom.radar_grid[pulses, :]
         fgeom = isce3.container.RadarGeometry(fgrid, igeom.orbit, igeom.doppler)
         fdata = rcdata[pulses, :]
         iblock = i // stage.size
@@ -396,8 +396,8 @@ def azcomp_fbp(factors: BackprojectionStageParameters,
     blocks_grids = list()
     for block, (t0, t1) in blocks_bounds:
         description = f"(i, j) = ({block[0].start}, {block[1].start})"
-        if not is_overlapping(t0, t1,
-                            rc_grid.sensing_start, rc_grid.sensing_stop):
+        if not is_overlapping(t0, t1, igeom.radar_grid.sensing_start,
+                igeom.radar_grid.sensing_stop):
             log.info(f"Will skip inactive azcomp block at {description}")
             continue
         active_grids = [grid for grid in grids
