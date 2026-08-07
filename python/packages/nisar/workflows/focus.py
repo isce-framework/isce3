@@ -2329,14 +2329,14 @@ def focus(runconfig, runconfig_path=""):
                         if not cfg.processing.delete_tempfiles else None)
                     azcomp_fbp(factors, azres, kernel,
                         blocks_bounds[frequency], igeom,
-                        rc_grid, rcfile.data, ogrid[frequency], writer,
+                        rcfile.data, ogrid[frequency], writer,
                         hgt_mm if dump_height else None, dem,
                         get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
                         atmos, use_gpu, channel_out.band.width,
                         debugfile)
                 else:
                     azcomp_bp(azres, kernel, blocks_bounds[frequency], igeom,
-                        rc_grid, rcfile.data, ogrid[frequency], writer,
+                        rcfile.data, ogrid[frequency], writer,
                         hgt_mm if dump_height else None, dem,
                         get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
                         atmos, use_gpu)
