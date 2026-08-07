@@ -231,6 +231,9 @@ TEST_F(RasterTest, createRasterFromStdVector) {
   isce3::io::Raster msk = isce3::io::Raster( mskFilename,  // filename
                                                dataLineIn,   // line valarray or vector
                                                nl );         // number of lines in Raster
+  ASSERT_EQ( msk.length(), nl );
+  ASSERT_EQ( msk.width(), nc );
+
     for (uint i=0; i < msk.width(); ++i) {
     msk.setLine( dataLineIn,  i );
     msk.getLine( dataLineOut, i );
