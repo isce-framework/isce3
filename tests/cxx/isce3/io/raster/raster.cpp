@@ -234,7 +234,7 @@ TEST_F(RasterTest, createRasterFromStdVector) {
   ASSERT_EQ( msk.length(), nl );
   ASSERT_EQ( msk.width(), nc );
 
-    for (uint i=0; i < msk.width(); ++i) {
+  for (uint i=0; i < msk.length(); ++i) {
     msk.setLine( dataLineIn,  i );
     msk.getLine( dataLineOut, i );
     ASSERT_EQ( dataLineOut.sum(), (float) nc );              // sum of ones must be = nc
@@ -252,6 +252,8 @@ TEST_F(RasterTest, addRasterToVRT) {
   vrt.addRasterToVRT( msk );                    // add all bands in msk to vrt
   ASSERT_EQ( vrt.numBands(), refNumBands);      // must be five due to previous tests
   ASSERT_EQ( vrt.dtype(5), GDT_Byte);           // must be uint8_t as per previous test
+  ASSERT_EQ( vrt.length(), nl );
+  ASSERT_EQ( vrt.width(), nc );
 
   for (uint b=1; b<=vrt.numBands(); ++b)        // for each 1-indexed band
     for (uint l=0; l<vrt.length(); ++l)         // for each 0-indexed line
