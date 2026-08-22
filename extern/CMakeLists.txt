@@ -108,21 +108,17 @@ macro(getpackage_pybind11)
     # find same installation as modern FindPython
     set(PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
     set(PYBIND11_PYTHON_VERSION "${Python_VERSION}")
-    # pybind11 3.x has a signature-generation bug that corrupts function
-    # registration for some Eigen-typed bindings (throws "Internal error
-    # while parsing type signature (2)" at import time). Cap below 3.0
-    # until this is fixed upstream.
     if(ISCE3_FETCH_PYBIND11)
-        find_package(pybind11 2.5...<3.0 CONFIG)
+        find_package(pybind11 2.5 CONFIG)
         if(NOT pybind11_FOUND)
             fetch_extern_repo(pybind11
                 GIT_REPOSITORY  https://github.com/pybind/pybind11
-                GIT_TAG         v2.13.6
+                GIT_TAG         v3.1.0
                 GIT_SHALLOW     TRUE
                 )
         endif()
     else()
-        find_package(pybind11 2.5...<3.0 CONFIG REQUIRED)
+        find_package(pybind11 2.5 CONFIG REQUIRED)
     endif()
 endmacro()
 
