@@ -1,5 +1,11 @@
 #include "DryTroposphereModel.h"
 
+// dryTropoDelayTSX() takes Eigen (Vec3) arguments; without this, pybind11
+// silently uses a different type_caster for Vec3 here than in other
+// translation units binding the same argument types, which is an ODR
+// violation that can crash pybind11 3.x at import time.
+#include <pybind11/eigen.h>
+
 using isce3::focus::DryTroposphereModel;
 
 namespace py = pybind11;
