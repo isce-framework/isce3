@@ -890,7 +890,8 @@ class RawBase(Base, family='nisar.productreader.raw'):
         return swaths
 
 
-    def getSubSwathBboxes(self, frequency, polarization=None, epoch=None, num_ignore=0):
+    def getSubSwathBboxes(self, frequency, polarization=None, epoch=None,
+            num_ignore=0, min_segment_length=2000, max_pulse_gap=1):
         """
         Return the bounding box for each sub-swath.
 
@@ -909,6 +910,16 @@ class RawBase(Base, family='nisar.productreader.raw'):
             dithered-PRF one, in which case the gaps in the last few receive
             windows will have irregular spacing due to the dithered pulses in
             the air.
+        min_segment_length : int, optional
+            Segments with fewer than this number of consecutive valid pulses
+            will not be returned.  This helps avoid unnecessary bookkeeping when
+            lots of missing pulses are sprinkled throughout an observation. Must
+            be >= 2 pulses.
+        max_pulse_gap : int, optional
+            Segments (each of which must be at least min_segment_length pulses)
+            separated by max_pulse_gap or fewer invalid pulses will be joined
+            together.  This provides an easy way to ignore isolated gaps of a
+            single invlid pulse, for example.  Set to 0 to disable merging.
 
         Returns
         -------
@@ -916,6 +927,12 @@ class RawBase(Base, family='nisar.productreader.raw'):
             Bounding box in radar coordinates for each sub-swath for each
             segment of constant data window position/length.
         """
+        # Lower bound of two pulses (not one) so that we can look one pulse
+        # ahead in dithered case.
+        if min_segment_length < 2:
+            raise ValueError("Need at least two pulses per segment")
+        if max_pulse_gap < 0:
+            raise ValueError("max_pulse_gap must be non-negative")
         if polarization is None:
             polarization = self.polarizations[frequency][0]
         tx = polarization[0]
@@ -961,9 +978,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
                 (1, -1, 2))
 
         # Find runs of consecutive pulses with valid echo data.
-        segments = find_valid_pulse_intervals(subswaths, min_segment_length=2000)  # TODO param
+        segments = find_valid_pulse_intervals(subswaths,
+            min_segment_length=min_segment_length)
         # Join any that are separated by just one pulse.
-        segments = join_segments(segments, max_gap=1)  # TODO param
+        segments = join_segments(segments, max_gap=max_pulse_gap)
         # Split segments at DWP change boundaries.  Then we'll have segments
         # of valid data with constant DWP.
         changes = get_dwp_change_indices(rd, wd, wl)
