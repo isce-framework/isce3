@@ -138,7 +138,7 @@ TEST_F(GeometryTest, GeoToRdr)
     // undefined.  It also needs to fall within the domain of the Doppler
     // LUT2d, or the LUT2d must be configured to allow extrapolation.
     // In this case, orbit.midTime() satisfies both constraints.
-    double aztime = orbit.midTime(), slantRange;
+    double aztime = orbit.midTime(), slantRange = 0.0;
     int stat = isce3::geometry::geo2rdr(llh, ellipsoid, orbit, doppler, aztime,
             slantRange, swath.processedWavelength(), lookSide, 1.0e-10, 50,
             10.0);
