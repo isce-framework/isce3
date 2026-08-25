@@ -22,7 +22,8 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
                                      doppler_lut: isce3.core.LUT2d,
                                      radar_grid: isce3.product.RadarGridParameters,
                                      dem_interp: isce3.geometry.DEMInterpolator,
-                                     ellipsoid: isce3.core.Ellipsoid) -> np.ndarray:
+                                     ellipsoid: isce3.core.Ellipsoid,
+                                     total_tec_only: bool=False) -> np.ndarray:
     '''
     Compute near or far TEC delta range
 
@@ -51,6 +52,9 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
         Digital elevation model, m above ellipsoid. Defaults to h=0.
     ellipsoid: isce3.core.Ellipsoid
         Ellipsoid with same EPSG as DEM interpolator
+    total_tec_only: bool
+        If True, use total TEC only without subtracting the topside TEC.
+        Otherwise use the suborbital TEC (total TEC minus topside TEC).
 
     Returns
     -------
@@ -59,7 +63,8 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
     '''
     # compute sub orbital TEC from total and top TEC in JSON
     sub_orbital_tec = _get_suborbital_tec(tec_json_dict, nr_fr,
-                                          utc_time.mask)
+                                          utc_time.mask,
+                                          total_tec_only=total_tec_only)
 
     incidence = [compute_incidence_angle(t, nr_fr_rg, orbit, doppler_lut,
                                          radar_grid, dem_interp, ellipsoid)
@@ -72,7 +77,10 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
 
 def _get_suborbital_tec(tec_json_dict: dict,
                         nr_fr: str,
-                        tec_time_mask: np.ndarray) -> np.ndarray:
+                        tec_time_mask: np.ndarray,
+                        total_tec_only: bool=False,
+                        polyfit: bool=False,
+                        polyfit_degree: int=2) -> np.ndarray:
     '''
     Get the suborbital TEC from IMAGEN TEC product parsed as a dictionary by
     subtracting the total TEC by top (i.e. above the satellite) TEC
@@ -87,6 +95,15 @@ def _get_suborbital_tec(tec_json_dict: dict,
         Mask of TEC values that fall within radar grid or orbit time span. Mask
         follows NumPy masked array convention where True is masked and False is
         not.
+    total_tec_only: bool
+            If True, use total TEC only without subtracting the topside TEC.
+            Otherwise use the suborbital TEC (total TEC minus topside TEC).
+    polyfit: bool
+        If True, fit a polynomial of degree `polyfit_degree` to the suborbital
+        TEC profile and return the fitted (smoothed) values. Otherwise return
+        the suborbital TEC as is.
+    polyfit_degree: int
+        Degree of the polynomial fit applied when `polyfit` is True. Default 2.
 
     Returns
     -------
@@ -96,8 +113,17 @@ def _get_suborbital_tec(tec_json_dict: dict,
     # compute sub orbital TEC from total and top TEC in JSON
     tot_tec = np.array(tec_json_dict[f'totTec{nr_fr}'])
     top_tec = np.array(tec_json_dict[f'topTec{nr_fr}'])
-    sub_orbital_tec = tot_tec - top_tec
+    if total_tec_only:
+        sub_orbital_tec = tot_tec
+    else:
+        sub_orbital_tec = tot_tec - top_tec
     sub_orbital_tec = sub_orbital_tec[~tec_time_mask]
+
+    if polyfit:
+        # Fit a polynomial over the TEC profile to smooth out noise.
+        x = np.arange(len(sub_orbital_tec))
+        coeffs = np.polyfit(x, sub_orbital_tec, polyfit_degree)
+        sub_orbital_tec = np.polyval(coeffs, x)
 
     return sub_orbital_tec
 
@@ -106,7 +132,8 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
                             orbit: isce3.core.Orbit,
                             radar_grid: isce3.product.RadarGridParameters,
                             doppler_lut: isce3.core.LUT2d, dem_path: str,
-                            margin: float=40.0) -> isce3.core.LUT2d:
+                            margin: float=40.0,
+                            total_tec_only: bool=False) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for slant range correction from a JSON source
 
@@ -127,6 +154,9 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
     margin: float
         Margin (seconds) to pad to sensing start and stop times when extracting
         TEC data. Default 40 seconds.
+    total_tec_only: bool
+        If True, use total TEC only without subtracting the topside TEC.
+        Otherwise use the suborbital TEC (total TEC minus topside TEC).
 
     Returns
     -------
@@ -172,7 +202,8 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
                                                           doppler_lut,
                                                           radar_grid,
                                                           dem_interp,
-                                                          ellipsoid)
+                                                          ellipsoid,
+                                                          total_tec_only)
                          for nr_fr, rg in zip(['Nr', 'Fr'], rg_vec)]).T
 
     return isce3.core.LUT2d(rg_vec, t_since_epoch_masked.compressed(), delta_r)
@@ -181,7 +212,10 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
 def tec_lut2d_from_json_az(json_path: str, center_freq: float,
                            orbit: isce3.core.Orbit,
                            radar_grid: isce3.product.RadarGridParameters,
-                           margin: float=40.0) -> isce3.core.LUT2d:
+                           margin: float=40.0,
+                           total_tec_only: bool=False,
+                           polyfit: bool=False,
+                           polyfit_degree: int=2) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for azimuth time correction from a JSON source
 
@@ -198,6 +232,15 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     margin: float
         Margin (seconds) to pad to sensing start and stop times when extracting
         TEC data. Default 40 seconds.
+    total_tec_only: bool
+        If True, use total TEC only without subtracting the topside TEC.
+        Otherwise use the suborbital TEC (total TEC minus topside TEC).
+    polyfit: bool
+        If True, fit a polynomial of degree `polyfit_degree` to the suborbital
+        TEC profile before computing the azimuth gradient. Otherwise use the
+        suborbital TEC as is.
+    polyfit_degree: int
+        Degree of the polynomial fit applied when `polyfit` is True. Default 2.
 
     Returns
     -------
@@ -229,7 +272,10 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     # Transpose stacked output to get shape to be consistent with coordinates
     tec_suborbital = np.vstack([_get_suborbital_tec(tec_json_dict,
                                                     nr_fr,
-                                                    t_since_epoch_masked.mask)
+                                                    t_since_epoch_masked.mask,
+                                                    total_tec_only=total_tec_only,
+                                                    polyfit=polyfit,
+                                                    polyfit_degree=polyfit_degree)
                                 for nr_fr in ['Nr', 'Fr']]).T
 
     # set up up the LUT grids for az. iono. delay
@@ -299,7 +345,7 @@ def _get_tec_time(tec_json_dict: dict,
     # Get string UTC times from JSON as isce3.core.DateTime objects.
     json_utc_datetimes = [isce3.core.DateTime(iso_t_str)
                           for iso_t_str in tec_json_dict['utc']]
-    
+
     # Adjust the radar grid margin in case of the staggered grid.
     # The staggered grid needs at least half of the TEC spacing at each side.
     # When `margin` is not big enough, then increase it to half the spacing.
@@ -352,7 +398,7 @@ def _get_tec_time(tec_json_dict: dict,
 
     t_since_ref_epoch = np.ma.MaskedArray(data=t_since_ref_epoch,
                                           mask=np.logical_not(time_mask))
-    
+
     _check_tec_grid_contains_radargrid(radar_grid, t_since_ref_epoch,
                                        staggered_tec_grid)
 
@@ -390,7 +436,7 @@ def _check_tec_grid_contains_radargrid(radar_grid: isce3.product.RadarGridParame
 
     tec_grid_spacing = (tec_grid_end - tec_grid_start) / (len(tec_t) - 1)
 
-    # Adjust the radar grid start / stop time when staggered grid is used    
+    # Adjust the radar grid start / stop time when staggered grid is used
     if staggered:
         rdr_grid_start -= tec_grid_spacing / 2
         rdr_grid_stop += tec_grid_spacing / 2

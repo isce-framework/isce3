@@ -3,6 +3,8 @@ Compute azimuth and slant range geocoding corrections as LUT2d
 '''
 import itertools
 import pathlib
+import os
+import json
 
 import numpy as np
 from osgeo import gdal
@@ -139,7 +141,8 @@ def _read_llh(scratch_path):
     return x, y, z
 
 
-def _get_iono_azimuth_corrections(cfg, slc, frequency, orbit):
+def _get_iono_azimuth_corrections(cfg, slc, frequency, orbit,
+                                  use_totaltec_only=False):
     '''
     Compute and return TEC geolocation corrections for azimuth as a LUT2d.
 
@@ -154,6 +157,9 @@ def _get_iono_azimuth_corrections(cfg, slc, frequency, orbit):
         Str identification for NISAR SLC frequencies
     orbit: isce3.core.Orbit
         Object containing orbit associated with SLC
+    use_totaltec_only: bool
+        If True, use total TEC only without subtracting the topside TEC.
+        Otherwise use the suborbital TEC (total TEC minus topside TEC).
 
     Returns
     -------
@@ -166,13 +172,27 @@ def _get_iono_azimuth_corrections(cfg, slc, frequency, orbit):
     center_freq = slc.getSwathMetadata(frequency).processed_center_frequency
     radar_grid = slc.getRadarGrid(frequency)
 
+    polyfit_tec_profile = \
+        cfg['processing']['tec_correction']['polyfit_tec_profile']
+
     tec_correction = tec_lut2d_from_json_az(tec_file, center_freq, orbit,
-                                            radar_grid)
+                                            radar_grid,
+                                            total_tec_only=use_totaltec_only,
+                                            polyfit=polyfit_tec_profile)
+
+    if cfg['processing']['tec_correction']['apply_azimuth_correction'] is False:
+        # NOTE: Just returning an empty LUT2d() will disrupt the downstream procedure,
+        # especially comparing the LUT's axis with the RSLC's radargrid
+        zero_arr = np.zeros(tec_correction.data.shape)
+        tec_correction = isce3.core.LUT2d(tec_correction.x_axis,
+                                          tec_correction.y_axis,
+                                          zero_arr)
 
     return tec_correction
 
 
-def _get_iono_srange_corrections(cfg, slc, frequency, orbit):
+def _get_iono_srange_corrections(cfg, slc, frequency, orbit,
+                                 use_totaltec_only=False):
     '''
     Compute and return TEC corrections for slant range as LUT2d.
 
@@ -190,6 +210,9 @@ def _get_iono_srange_corrections(cfg, slc, frequency, orbit):
         Str identification for NISAR SLC frequencies
     orbit: isce3.core.Orbit
         Object containing orbit associated with SLC
+    use_totaltec_only: bool
+        If True, use total TEC only without subtracting the topside TEC.
+        Otherwise use the suborbital TEC (total TEC minus topside TEC).
 
     Yields
     ------
@@ -209,7 +232,16 @@ def _get_iono_srange_corrections(cfg, slc, frequency, orbit):
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
 
     tec_correction = tec_lut2d_from_json_srg(tec_file, center_freq, orbit,
-                                             radar_grid, doppler, dem_file)
+                                             radar_grid, doppler, dem_file,
+                                             total_tec_only=use_totaltec_only)
+
+    if cfg['processing']['tec_correction']['apply_slant_range_correction'] is False:
+            # NOTE: Just returning an empty LUT2d() will disrupt the downstream procedure,
+            # especially comparing the LUT's axis with the RSLC's radargrid
+            zero_arr = np.zeros(tec_correction.data.shape)
+            tec_correction = isce3.core.LUT2d(tec_correction.x_axis,
+                                              tec_correction.y_axis,
+                                              zero_arr)
 
     return tec_correction
 
@@ -256,6 +288,7 @@ class AzSrgCorrections:
         self.slc = slc
         self.frequency = frequency
         self.orbit = orbit
+        self.use_totaltec_only = False
 
         # Decimate radar grid to 5km resolution in azimuth and slant range
         radar_grid = self.slc.getRadarGrid(self.frequency)
@@ -271,6 +304,11 @@ class AzSrgCorrections:
         # Unpack flags and determine which corrections to generate
         self.correct_set = cfg['processing']['correction_luts']['solid_earth_tides_enabled']
         self.correct_tec = cfg["dynamic_ancillary_file_group"]['tec_file'] is not None
+
+        # Decide whether TEC correction should use total TEC only (i.e. without
+        # subtracting the topside TEC) based on the run config and TEC data.
+        self.use_totaltec_only = self._should_use_only_total_tec()
+
         if self.correct_set or self.correct_tec:
             self._compute_model_correction_luts()
 
@@ -282,6 +320,72 @@ class AzSrgCorrections:
 
         if self.apply_data_driven_correction:
             self._compute_offset_luts()
+
+
+    def _should_use_only_total_tec(self):
+        '''
+        Decide whether to use total TEC only or suborbital TEC.
+        If `use_total_tec_only` is explicitly turned ON,
+        processing will be forced to use total TEC only.
+        If it's turned OFF, then the logic will take a look at the flag
+        `ignore_low_quality_topside_tec` is turned on. If turned on,
+        this function will take a look at the data and decide whether or not to use topside TEC
+        '''
+
+        info_channel = journal.info("AzSrgCorrections._should_use_only_total_tec")
+        warning_channel = journal.warning("AzSrgCorrections._should_use_only_total_tec")
+        error_channel = journal.info("AzSrgCorrections._should_use_only_total_tec")
+
+        tec_path = self.cfg['dynamic_ancillary_file_group']['tec_file']
+
+        if tec_path is None:
+            warning_channel.log(f'TEC path was not provided: {tec_path}')
+            return False
+
+        if not os.path.exists(tec_path):
+            warning_channel.log(f'TEC path provided does not exist: {tec_path}')
+            return False
+
+        if self.cfg['processing']['tec_correction']['use_total_tec_only'] is True:
+            return True
+
+        with open(tec_path, 'r') as fin:
+            tec_dict = json.load(fin)
+        # For compatibility, skip the check if `topTecNrDataFlag` or `topTecFrDataFlag`
+        # do not exist.
+        required_keys = {"topTecNrDataFlag", "topTecRrDataFlag"}
+
+        if not required_keys.issubset(tec_dict):
+            warning_channel.log(f'TopTEC Dataflag do not exist in IMAGEN TEC file: {tec_path}')
+            return False
+
+        # Start the investigation.
+        if self.cfg['processing']['tec_correction']['ignore_low_quality_topside_tec'] is True:
+            # Convert the TEC UTC times to seconds since the radar grid
+            # reference epoch so they share the same time base as self.az_vec.
+            ref_epoch = self.radar_grid_scaled.ref_epoch
+            tec_t_since_epoch = np.array(
+                [(isce3.core.DateTime(t_str) - ref_epoch).total_seconds()
+                 for t_str in tec_dict['utc']])
+
+            # Crop the topside TEC data flags to the TEC samples that fall
+            # within the azimuth time span of the (decimated) radar grid.
+            within_radar_grid = ((tec_t_since_epoch >= self.az_vec[0]) &
+                                 (tec_t_since_epoch <= self.az_vec[-1]))
+
+            top_tec_flags = np.concatenate(
+                [np.array(tec_dict['topTecNrDataFlag'])[within_radar_grid],
+                 np.array(tec_dict['topTecFrDataFlag'])[within_radar_grid]])
+
+            # A flag value of 1 marks a low-quality topside TEC sample. If any
+            # exist within the radar grid, fall back to total TEC only.
+            if np.any(top_tec_flags == 1):
+                warning_channel.log(
+                    'Low-quality topside TEC detected within the radar grid; '
+                    'using total TEC only.')
+                return True
+
+        return False
 
 
     def _compute_offset_luts(self):
@@ -339,11 +443,13 @@ class AzSrgCorrections:
             low_res_tec_az = _get_iono_azimuth_corrections(self.cfg,
                                                            self.slc,
                                                            self.frequency,
-                                                           self.orbit)
+                                                           self.orbit,
+                                                           self.use_totaltec_only)
             low_res_tec_srange = _get_iono_srange_corrections(self.cfg,
                                                               self.slc,
                                                               self.frequency,
-                                                              self.orbit)
+                                                              self.orbit,
+                                                              self.use_totaltec_only)
 
             # If only TEC corrections generated, return existing TEC correction LUT2ds
             if not self.correct_set:

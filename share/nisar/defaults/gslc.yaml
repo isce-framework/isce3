@@ -334,8 +334,9 @@ runconfig:
             tec_correction:
                 apply_slant_range_correction: True
                 apply_azimuth_correction: True
-                use_total_tec: False
-                reject_lowqual_toptec: False
+                use_total_tec_only: False
+                ignore_low_quality_topside_tec: False
+                polyfit_tec_profile: False
 
         # OPTIONAL - Group containing CEOS Analysis Ready Data (CARD) parameters
         # to populate the output product's metadata
