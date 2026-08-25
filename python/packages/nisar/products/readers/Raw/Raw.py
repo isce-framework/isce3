@@ -960,14 +960,25 @@ class RawBase(Base, family='nisar.productreader.raw'):
             subswaths = np.vstack((min_starts, max_ends)).transpose().reshape(
                 (1, -1, 2))
 
+        # Find runs of consecutive pulses with valid echo data.
+        segments = find_valid_pulse_intervals(subswaths, min_segment_length=2000)  # TODO param
+        # Join any that are separated by just one pulse.
+        segments = join_segments(segments, max_gap=1)  # TODO param
+        # Split segments at DWP change boundaries.  Then we'll have segments
+        # of valid data with constant DWP.
         changes = get_dwp_change_indices(rd, wd, wl)
+        segments = split_segments(segments, changes)
 
         # Append first and last pulses to generate pairs of constant DWP.
-        breaks = np.hstack(([0], changes, [grid.shape[0] - 1]))
         bbox_lists = []
-        for ibreak in range(len(breaks) - 1):
-            ipulse0, ipulse1 = breaks[ibreak], breaks[ibreak + 1]
-            t0, t1 = times[ipulse0], times[ipulse1]  # one past end point
+        for ipulse0, ipulse1 in segments:
+            # Generally we want t1 equal to t0 of previous interval.  But for
+            # last interval we don't know the pulse time after the last pulse
+            # (PRI can vary within and between observations).  So last segment
+            # we'll report last pulse time and worry about mixed-mode case in
+            # higher level code.
+            ipulse1 = min(ipulse1, nt - 1)
+            t0, t1 = times[ipulse0], times[ipulse1]
             bboxes = []
             for iswath, (j0, j1) in enumerate(subswaths[:, ipulse0, :]):
                 # Exclude empty subswaths.
@@ -979,7 +990,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
                 # gaps.
                 if is_dithered:
                     assert iswath == 0  # due to restructuring above
-                    assert ipulse0 < (nt - 1)  # from construction of breaks
+                    assert ipulse0 < (nt - 1)  # since min_segment_length > 1
                     j0next = subswaths[iswath, ipulse0 + 1, 0]
                     j1next = subswaths[iswath, ipulse0 + 1, 1]
                     if j1next > j0next:
@@ -1124,6 +1135,74 @@ class LegacyRaw(RawBase, family='nisar.productreader.raw'):
 class Raw(RawBase, family='nisar.productreader.raw'):
     # TODO methods for new telemetry fields.
     pass
+
+
+def get_valid_pulse_mask(subswaths):
+    """
+    TODO
+    """
+    return (subswaths[..., 1] - subswaths[..., 0]).sum(axis=0) > 0
+
+
+def find_valid_pulse_intervals(subswaths, min_segment_length=1):
+    """
+    TODO
+    """
+    have_echo = get_valid_pulse_mask(subswaths)
+
+    # Find boundaries where have_echo changes, padded so that the endpoints
+    # are considered properly.
+    x = np.zeros(len(have_echo) + 2, np.int8)
+    x[1:-1] = have_echo
+    dx = np.diff(x)
+
+    # An interval starts when we go from not having data to having data.
+    # Likewise, it ends when we go from having data to not having data.
+    starts = np.where(dx > 0)[0]
+    ends = np.where(dx < 0)[0]
+    assert len(starts) == len(ends)
+
+    return [(start, end) for (start, end) in zip(starts, ends)
+        if (end - start) >= min_segment_length]
+
+
+def split_segments(segments, breaks):
+    """
+    TODO
+    """
+    updated_segments = []
+    # NOTE It'd be more efficient to sort segments and breaks, then only
+    # iterate over relevant breaks indices in each segment.  Assume arrays
+    # are small enough we don't care about efficiency.
+    for start, end in segments:
+        for i in breaks:
+            # Don't check equality since that implies there's already a
+            # segment boundary at the desired location.
+            if start < i < end:
+                updated_segments.append((start, i))
+                start = i
+        updated_segments.append((start, end))
+    return updated_segments
+
+
+def join_segments(segments, max_gap=0):
+    """
+    TODO
+    """
+    if len(segments) < 2:
+        return segments
+    updated_segments = []
+    prev_start, prev_end = segments[0]
+    for cur_start, cur_end in segments[1:]:
+        if not (cur_start >= prev_end):
+            raise ValueError("expected sorted segments")
+        if cur_start - prev_end > max_gap:
+            updated_segments.append((prev_start, prev_end))
+            prev_start, prev_end = cur_start, cur_end
+        else:
+            prev_end = cur_end
+    updated_segments.append((prev_start, prev_end))
+    return updated_segments
 
 
 def get_dwp_change_indices(rd, wd, wl):
