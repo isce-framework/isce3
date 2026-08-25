@@ -1157,14 +1157,44 @@ class Raw(RawBase, family='nisar.productreader.raw'):
 
 def get_valid_pulse_mask(subswaths):
     """
-    TODO
+    Determine which pulses contain any valid (non-gap) echo data.
+
+    Parameters
+    ----------
+    subswaths : np.ndarray
+        Array of [start, end) valid sample indices with shape (ns, nt, 2)
+        where ns is the number of sub-swaths and nt is the number of pulse
+        times, as returned by `RawBase.getSubSwaths`.
+
+    Returns
+    -------
+    np.ndarray(bool)
+        1-D boolean array of length nt that is True for pulses where at
+        least one sub-swath has a non-empty valid interval and False for
+        pulses that are entirely within a transmit gap.
     """
     return (subswaths[..., 1] - subswaths[..., 0]).sum(axis=0) > 0
 
 
 def find_valid_pulse_intervals(subswaths, min_segment_length=1):
     """
-    TODO
+    Find runs of consecutive pulses that all contain valid echo data.
+
+    Parameters
+    ----------
+    subswaths : np.ndarray
+        Array of [start, end) valid sample indices with shape (ns, nt, 2)
+        where ns is the number of sub-swaths and nt is the number of pulse
+        times, as returned by `RawBase.getSubSwaths`.
+    min_segment_length : int, optional
+        Minimum number of consecutive valid pulses required for a run to be
+        included in the output.  Shorter runs are dropped.  Defaults to 1.
+
+    Returns
+    -------
+    list[tuple[int, int]]
+        List of (start, end) pulse index pairs, each describing a half-open
+        interval [start, end) of consecutive pulses with valid echo data.
     """
     have_echo = get_valid_pulse_mask(subswaths)
 
@@ -1186,7 +1216,27 @@ def find_valid_pulse_intervals(subswaths, min_segment_length=1):
 
 def split_segments(segments, breaks):
     """
-    TODO
+    Split segments at the given break points.
+
+    Parameters
+    ----------
+    segments : list[tuple[int, int]]
+        List of (start, end) pulse index pairs, each describing a half-open
+        interval [start, end) of pulses, as returned by
+        `find_valid_pulse_intervals`.
+    breaks : array_like[int]
+        Pulse indices at which any segment spanning that index should be
+        divided into two.  An index i strictly inside a segment (start,
+        end), i.e. start < i < end, splits it into (start, i) and (i, end).
+        Indices equal to a segment boundary or outside all segments have
+        no effect.
+
+    Returns
+    -------
+    list[tuple[int, int]]
+        Updated list of (start, end) segments, with any segments spanning a
+        break point divided accordingly.  Order matches the order of the
+        input segments.
     """
     updated_segments = []
     # NOTE It'd be more efficient to sort segments and breaks, then only
@@ -1205,7 +1255,31 @@ def split_segments(segments, breaks):
 
 def join_segments(segments, max_gap=0):
     """
-    TODO
+    Merge adjacent segments that are separated by only a small gap.
+
+    Parameters
+    ----------
+    segments : list[tuple[int, int]]
+        Sorted, non-overlapping list of (start, end) pulse index pairs, each
+        describing a half-open interval [start, end) of pulses, as returned
+        by `find_valid_pulse_intervals`.
+    max_gap : int, optional
+        Maximum number of pulses between the end of one segment and the
+        start of the next for the two segments to be merged into one.
+        Defaults to 0, meaning only directly adjacent (touching) segments
+        are merged.
+
+    Returns
+    -------
+    list[tuple[int, int]]
+        Updated list of (start, end) segments with gaps of at most max_gap
+        pulses joined together.
+
+    Raises
+    ------
+    ValueError
+        If the input segments are not sorted in increasing, non-overlapping
+        order.
     """
     if len(segments) < 2:
         return segments
