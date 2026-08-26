@@ -429,7 +429,7 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 32768
+                    range: 65536
                     azimuth: 1024
 
                 # Desired azimuth resolution in meters.
