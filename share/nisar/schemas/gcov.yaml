@@ -429,6 +429,12 @@ geocode_options:
     # Processing upsampling factor on top of the input geogrid
     geogrid_upsampling: int(required=False)
 
+    # Value to represent areas without valid radar samples.
+    # If output is complex (e.g., off-diagonal terms), this value
+    # will be used for real- and imaginary parts. For example,
+    # `0` will become `complex(0, 0)`.
+    shadow_no_data_value: num(required=False)
+
     # Save the number of looks used to compute GCOV
     save_nlooks: bool(required=False)
 

@@ -401,6 +401,7 @@ def _run(cfg, raster_scratch_dir):
     apply_valid_samples_sub_swath_masking = \
         geocode_dict['apply_valid_samples_sub_swath_masking']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
+    shadow_no_data_value = geocode_dict['shadow_no_data_value']
     abs_cal_factor = geocode_dict['abs_rad_cal']
     clip_max = geocode_dict['clip_max']
     clip_min = geocode_dict['clip_min']
@@ -581,6 +582,8 @@ def _run(cfg, raster_scratch_dir):
         root_ds = f'{rslc.RootPath}/GCOV/grids/frequency{frequency}'
 
         optional_geo_kwargs['geogrid_upsampling'] = geogrid_upsampling
+        if shadow_no_data_value is not None:
+            optional_geo_kwargs['shadow_no_data_value'] = shadow_no_data_value
         optional_geo_kwargs['abs_cal_factor'] = abs_cal_factor
         optional_geo_kwargs['clip_min'] = clip_min
         optional_geo_kwargs['clip_max'] = clip_max

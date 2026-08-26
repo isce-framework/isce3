@@ -338,6 +338,12 @@ runconfig:
                 # Processing upsampling factor applied to input geogrid
                 geogrid_upsampling: 1
 
+                # Value to represent areas without valid radar samples.
+                # If output is complex (e.g., off-diagonal terms), this value
+                # will be used for real- and imaginary parts. For example,
+                # `0` will become `complex(0, 0)`.
+                shadow_no_data_value:
+
                 # Save the number of looks used to compute GCOV
                 save_nlooks: True
 
