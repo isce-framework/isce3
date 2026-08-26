@@ -109,7 +109,8 @@ def apply_noise_correction(data_block, noise_product, is_backscatter):
 
 def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
                  flag_rslc_to_backscatter, flag_apply_noise_correction,
-                 pol_2=None, format="ENVI"):
+                 pol_2=None, format="ENVI",
+                 radiometric_calibration_lut=None):
     '''
     Copy RSLC dataset to GDAL format converting RSLC real and
     imaginary parts from float16 to float32. If the flag
@@ -144,6 +145,8 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
         Polarization associated with the second RSLC
     format: str, optional
         GDAL-friendly format
+    radiometric_calibration_lut: isce3.core.LUT2d or None
+        Radiometric calibration look-up table (LUT)
 
     Returns
     -------
@@ -165,6 +168,8 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
                      f' {flag_symmetrize}')
     info_channel.log('    apply noise correction:'
                      f' {flag_apply_noise_correction}')
+    info_channel.log('    apply radiometric calibration LUT:'
+                     f' {radiometric_calibration_lut is not None}')
 
     pol_ref = f'HDF5:{in_file}:/{pol_dataset_path}'
 
@@ -225,8 +230,9 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
     lines_per_block = min(rslc_length, lines_per_block)
     num_blocks = int(np.ceil(rslc_length / lines_per_block))
 
-    # get radar_grid for noise correction
-    if flag_apply_noise_correction:
+    # get radar_grid for noise correction and radiometric calibration
+    if (flag_apply_noise_correction or
+            radiometric_calibration_lut is not None):
         radar_grid = rslc.getRadarGrid(frequency=freq)
 
     for block in range(num_blocks):
@@ -284,6 +290,27 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
             # average cross-pol channels
             data_block = 0.5 * (data_block + data_block_2)
 
+        if radiometric_calibration_lut is not None:
+            for i in range(block_length):
+                slant_ranges = radar_grid.slant_ranges
+                radiometric_calibraton_slant_ranges = \
+                    radiometric_calibration_lut.eval(i + line_start,
+                                                     slant_ranges)
+
+                # apply radiometric calibration by dividing the data block by
+                # the radiometric calibration slant-range line
+                if flag_rslc_to_backscatter:
+
+                    # if the data block is backscatter, convert the
+                    # radiometric calibration LUT to power/intensity
+                    # (square)
+                    data_block[i, :] = (data_block[i, :] /
+                                        radiometric_calibraton_slant_ranges **
+                                        2)
+                else:
+                    data_block[i, :] = (data_block[i, :] /
+                                        radiometric_calibraton_slant_ranges)
+
         # write to GDAL raster
         out_ds.GetRasterBand(1).WriteArray(data_block, yoff=line_start, xoff=0)
 
@@ -331,6 +358,7 @@ def _run(cfg, raster_scratch_dir):
 
     '''
     info_channel = journal.info("gcov.run")
+    error_channel = journal.error("gcov.run")
     info_channel.log("Starting GCOV workflow")
 
     # pull parameters from cfg
@@ -392,6 +420,10 @@ def _run(cfg, raster_scratch_dir):
     # unpack geocode run parameters
     geocode_dict = cfg['processing']['geocode']
 
+    radiometric_calibration_lut_name = \
+        geocode_dict['radiometric_calibration_lut']
+    flag_apply_rtc = geocode_dict['apply_rtc']
+
     apply_range_ionospheric_delay_correction = \
         geocode_dict['apply_range_ionospheric_delay_correction']
 
@@ -409,6 +441,10 @@ def _run(cfg, raster_scratch_dir):
     save_mask = geocode_dict['save_mask']
     min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
     max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
+
+    # unpack RTC run parameters
+    rtc_dict = cfg['processing']['rtc']
+    input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
 
     # optional keyword arguments , i.e. arguments that may or may not be
     # included in the call to geocode()
@@ -442,6 +478,36 @@ def _run(cfg, raster_scratch_dir):
 
     # init parameters shared between frequencyA and frequencyB sub-bands
     slc = SLC(hdf5file=input_hdf5)
+
+    radiometric_calibration_lut = None
+    if (radiometric_calibration_lut_name is not None and
+            radiometric_calibration_lut_name != 'disabled'):
+        info_channel.log('    radiometric calibration LUT:'
+                         f' {radiometric_calibration_lut_name}')
+
+        if flag_apply_rtc and radiometric_calibration_lut_name == "gamma0":
+            err_str = ('ERROR radiometric calibration LUT cannot be "gamma0"'
+                       ' if RTC is enabled (`apply_rtc is True`)')
+            error_channel.log(err_str)
+            raise ValueError(err_str)
+
+        # if RTC is enabled, ensure that `radiometric_calibration_lut_name`
+        # and `input_terrain_radiometry` are the same:
+        if (flag_apply_rtc and (radiometric_calibration_lut_name !=
+                                input_terrain_radiometry)):
+            err_str = ('The radiometric calibration LUT'
+                       f' ("{radiometric_calibration_lut_name}")'
+                       ' does not match the RTC input terrain radiometry'
+                       f' ("{input_terrain_radiometry}")')
+            error_channel.log(err_str)
+            raise ValueError(err_str)
+
+        radiometric_calibration_lut = \
+            slc.getRadiometricCalibrationLUT(
+                lut_name=radiometric_calibration_lut_name)
+    else:
+        info_channel.log('    radiometric calibration LUT: "disabled"')
+
     zero_doppler = isce3.core.LUT2d()
     native_doppler = slc.getDopplerCentroid()
 
@@ -518,7 +584,8 @@ def _run(cfg, raster_scratch_dir):
                 symmetrized_hv_temp.name, 2**11,  # 2**11 = 2048 lines
                 flag_rslc_to_backscatter=flag_rslc_to_backscatter,
                 flag_apply_noise_correction=flag_apply_noise_correction,
-                pol_2='VH', format=output_gcov_terms_raster_files_format)
+                pol_2='VH', format=output_gcov_terms_raster_files_format,
+                radiometric_calibration_lut=radiometric_calibration_lut)
 
             # Since HV and VH were symmetrized into HV, remove VH from
             # `pol_list` and `from input_raster_dict`.
@@ -551,7 +618,8 @@ def _run(cfg, raster_scratch_dir):
                     temp_pol_file.name, 2**12,  # 2**12 = 4096 lines
                     flag_rslc_to_backscatter=flag_rslc_to_backscatter,
                     flag_apply_noise_correction=flag_apply_noise_correction,
-                    format=output_gcov_terms_raster_files_format)
+                    format=output_gcov_terms_raster_files_format,
+                    radiometric_calibration_lut=radiometric_calibration_lut)
 
             input_raster_list.append(input_raster)
 

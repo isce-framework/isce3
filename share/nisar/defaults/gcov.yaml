@@ -249,10 +249,24 @@ runconfig:
                 # "area_projection" (default)
                 algorithm_type: area_projection
 
-                # Input terrain radiometry convention. Choices:
-                # "beta0" (default)
-                # "sigma0"
-                input_terrain_radiometry: beta0
+                # OPTIONAL - Choices:
+                # 'beta0' (default if `radiometric_calibration_lut` == 'beta0' or
+                #                     `radiometric_calibration_lut` == 'disabled'))
+                # 'sigma0' (default if `radiometric_calibration_lut` == 'sigma0')
+                #
+                # The field `input_terrain_radiometry` defines the input terrain
+                # radiometric convention for RTC. Its value should be consistent
+                # with the field `radiometric_calibration_lut` in the geocode
+                # group. If that field is set to 'beta0' or 'sigma0',
+                # the `input_terrain_radiometry` should be assigned to the same
+                # value.
+                # For that reason, if `input_terrain_radiometry` is not set and
+                # `radiometric_calibration_lut is set to either 'beta0' or
+                # 'sigma0', `input_terrain_radiometry` will default to
+                # to that value (i.e., 'beta0' or 'sigma0'). Otherwise,
+                # if `radiometric_calibration_lut` is disabled (default),
+                # the `input_terrain_radiometry` will default to 'beta0'.
+                input_terrain_radiometry:
 
                 # Minimum RTC area factor (in dB). Specifies the lowest
                 # allowable denominator (in dB) for dividing GCOV samples.
@@ -288,6 +302,24 @@ runconfig:
                 # Apply radiometric terrain correction
                 # If `False`, the entire `rtc` group is ignored.
                 apply_rtc: True
+
+                # Radiometric calibration look-up table (LUT)
+                #
+                # Determines the type of radiometric calibration to be applied to input
+                # RLSC values.
+                #
+                # The radiometric calibration is applied to the RSLC before RTC. 
+                # Therefore, if `apply_rtc` is enabled, this field should be consistent
+                # with the RTC group field `input_terrain_radiometry`. Otherwise,
+                # the software will raise an error.
+                #
+                # The value "gamma0" implies that the radiometric calibration will
+                # be applied instead of RTC. In that case, the field `apply_rtc`
+                # should be `False`, otherwise the software will raise an error.
+                #
+                # The field `abs_rad_cal` provides an additional constant factor
+                # that can be optionally applied to RSLC
+                radiometric_calibration_lut: disabled
 
                 # NOT YET IMPLEMENTED (it is expected that the RSLC product already
                 # incorporates static tropospheric delay corrections --

@@ -341,12 +341,24 @@ pre_process_options:
 
 rtc_options:
     # Output type (defines the terrain radiometry convention for the output
+    # It defaults to "gamma0".
     output_type: enum('gamma0', 'sigma0', required=False)
 
     # RTC algorithm type
     algorithm_type: enum('area_projection', 'bilinear_distribution', required=False)
 
-    # Input terrain radiometry convention
+    # The field `input_terrain_radiometry` defines the input terrain
+    # radiometric convention for RTC. Its value should be consistent
+    # with the field `radiometric_calibration_lut` in the geocode
+    # group. If that field is set to 'beta0' or 'sigma0',
+    # the `input_terrain_radiometry` should be assigned to the same
+    # value.
+    # For that reason, if `input_terrain_radiometry` is not set and
+    # `radiometric_calibration_lut is set to either 'beta0' or
+    # 'sigma0', `input_terrain_radiometry` will default to
+    # to that value (i.e., 'beta0' or 'sigma0'). Otherwise,
+    # if `radiometric_calibration_lut` is disabled (default),
+    # the `input_terrain_radiometry` will default to 'beta0'.
     input_terrain_radiometry: enum('beta0', 'sigma0', required=False)
 
     # Minimum RTC area factor (in dB). Specifies the lowest
@@ -377,6 +389,24 @@ geocode_options:
     # Geocoding algorithm type, area projection, or interpolation:
     # sinc, bilinear, bicubic, nearest, and biquintic
     algorithm_type: enum('area_projection', 'sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
+
+    # Radiometric calibration look-up table (LUT)
+    #
+    # Determines the type of radiometric calibration to be applied to input
+    # RLSC values.
+    #
+    # The radiometric calibration is applied to the RSLC before RTC. 
+    # Therefore, if `apply_rtc` is enabled, this field should be consistent
+    # with the RTC group field `input_terrain_radiometry`. Otherwise,
+    # the software will raise an error.
+    #
+    # The value "gamma0" implies that the radiometric calibration will
+    # be applied instead of RTC. In that case, the field `apply_rtc`
+    # should be `False`, otherwise the software will raise an error.
+    #
+    # The field `abs_rad_cal` provides an additional constant factor
+    # that can be optionally applied to RSLC
+    radiometric_calibration_lut: enum('disabled', 'beta0', 'sigma0', 'gamma0', required=False)
 
     # Apply radiometric terrain correction
     # If `False`, the entire `rtc` group is ignored.
