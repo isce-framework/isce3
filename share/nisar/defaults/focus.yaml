@@ -568,7 +568,7 @@ runconfig:
             compression_type: gzip
 
             # Level of compression applied to raster
-            compression_level: 4
+            compression_level: 2
 
             # Chunk size of raster.  Enter [-1, -1] to disable chunks.
             chunk_size: [512, 512]
