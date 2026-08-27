@@ -386,6 +386,10 @@ def _run(cfg, raster_scratch_dir):
     # DEM parameters
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
 
+    grid_doppler_str = cfg['processing']['grid_doppler']
+    platform_doppler_str = cfg['processing']['platform_doppler']
+    use_platform_doppler = grid_doppler_str != platform_doppler_str
+
     orbit_file = cfg["dynamic_ancillary_file_group"]['orbit_file']
     tec_file = cfg["dynamic_ancillary_file_group"]['tec_file']
 
@@ -593,11 +597,48 @@ def _run(cfg, raster_scratch_dir):
             f'frequency{frequency}_'
 
         # non-None file spacing strategy can only be used in 'w', 'w-', or 'x'
-        # mode. i.e. can not be used with an existing file. Otherwise ValueError
-        # will be raised by h5py.
+        # mode. i.e. can not be used with an existing file. Otherwise
+        # ValueError will be raised by h5py.
         if os.path.exists(output_hdf5):
             h5_write_mode = 'a'
             fs_strategy = None
+
+        # Doppler to compute the platform position
+        if grid_doppler_str == 'zero_doppler':
+            grid_doppler = isce3.core.LUT2d()
+        elif grid_doppler_str == 'native_doppler':
+
+            slc = SLC(hdf5file=input_hdf5)
+            grid_doppler = slc.getDopplerCentroid(
+                frequency=frequency.upper())
+            '''
+            The native-Doppler LUT bounds error is turned off to
+            computer cubes values outside radar-grid boundaries
+            '''
+            grid_doppler.bounds_error = False
+        else:
+            error_channel = journal.error("gcov.py")
+            error_msg = 'Invalid option for the platform Doppler'
+            error_channel.log(error_msg)
+            raise NotImplementedError(error_msg)
+
+        # Doppler to compute the platform position
+        if platform_doppler_str == 'zero_doppler':
+            platform_doppler = isce3.core.LUT2d()
+        elif platform_doppler_str == 'native_doppler':
+            platform_doppler = slc.getDopplerCentroid(
+                frequency=frequency.upper())
+            '''
+            The native-Doppler LUT bounds error is turned off to
+            computer cubes values outside radar-grid boundaries
+            '''
+            platform_doppler.bounds_error = False
+        else:
+            error_msg = 'Invalid option for the platform Doppler'
+            error_channel.log(error_msg)
+            raise NotImplementedError(error_msg)
+
+        optional_geo_kwargs['use_platform_doppler'] = use_platform_doppler
 
         with h5py.File(output_hdf5, h5_write_mode,
                        fs_strategy=fs_strategy,
@@ -607,6 +648,7 @@ def _run(cfg, raster_scratch_dir):
                             frequency, pol_list,
                             radar_grid, input_raster_list,
                             zero_doppler,
+                            platform_doppler,
                             raster_scratch_dir,
                             geogrid, orbit, gcov_terms_file_extension,
                             output_gcov_terms_raster_files_format,

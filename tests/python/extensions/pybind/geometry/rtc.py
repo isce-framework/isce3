@@ -30,24 +30,24 @@ def test_rtc():
     dem_obj = isce3.io.Raster(dem_file)
 
     # Crop original radar grid parameter
-    radar_grid_cropped = \
-            radar_grid_sl.offset_and_resize(30, 135, 128, 128)
+    radar_grid_cropped = radar_grid_sl.offset_and_resize(30, 135, 128, 128)
 
     # Multi-look original radar grid parameter
     nlooks_az = 5
     nlooks_rg = 5
-    radar_grid_ml = \
-            radar_grid_sl.multilook(nlooks_az, nlooks_rg)
+    radar_grid_ml = radar_grid_sl.multilook(nlooks_az, nlooks_rg)
 
     # Create orbit and Doppler LUT
     orbit = slc_obj.getOrbit()
     doppler = slc_obj.getDopplerCentroid()
     doppler.bounds_error = False
-    # doppler = isce3.core.LUT2d()
+    use_platform_doppler = False
 
     # set input parameters
-    input_terrain_radiometry = isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
-    output_terrain_radiometry = isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
+    input_terrain_radiometry = \
+        isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
+    output_terrain_radiometry = \
+        isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
 
     rtc_area_mode = isce3.geometry.RtcAreaMode.AREA_FACTOR
     rtc_area_beta_mode = isce3.geometry.RtcAreaBetaMode.AUTO
@@ -67,11 +67,11 @@ def test_rtc():
             # test removed because it requires high geogrid upsampling (too
             # slow)
             if (rtc_algorithm ==
-                        isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION and
-                radar_grid_str == 'cropped'):
+                    isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION and
+                    radar_grid_str == 'cropped'):
                 continue
             elif (rtc_algorithm ==
-                       isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION):
+                    isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION):
                 filename = './rtc_bilinear_distribution_' + radar_grid_str + '.bin'
             else:
                 filename = './rtc_area_proj_' + radar_grid_str + '.bin'
@@ -80,12 +80,14 @@ def test_rtc():
 
             # Create output raster
             out_raster = isce3.io.Raster(filename, radar_grid.width,
-                                         radar_grid.length, 1, gdal.GDT_Float32,
+                                         radar_grid.length, 1,
+                                         gdal.GDT_Float32,
                                          'ENVI')
 
             # Call RTC
-            isce3.geometry.compute_rtc(radar_grid, orbit, doppler, dem_obj, 
-                                       out_raster,
+            isce3.geometry.compute_rtc(radar_grid, orbit, doppler,
+                                       use_platform_doppler, doppler,
+                                       dem_obj, out_raster,
                                        input_terrain_radiometry, 
                                        output_terrain_radiometry,
                                        rtc_area_mode, rtc_algorithm,
@@ -100,13 +102,14 @@ def test_rtc():
             # test removed because it requires high geogrid upsampling (too
             # slow)
             if (rtc_algorithm ==
-                        isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION and
-                radar_grid_str == 'cropped'):
+                    isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION and
+                    radar_grid_str == 'cropped'):
                 continue
             elif (rtc_algorithm ==
-                       isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION):
+                    isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION):
                 max_rmse = 0.7
-                filename = './rtc_bilinear_distribution_' + radar_grid_str + '.bin'
+                filename = ('./rtc_bilinear_distribution_' + radar_grid_str +
+                            '.bin')
             else:
                 max_rmse = 0.1
                 filename = './rtc_area_proj_' + radar_grid_str + '.bin'
@@ -119,16 +122,18 @@ def test_rtc():
             # Open reference raster
             ref_filename = os.path.join(
                 iscetest.data, 'rtc/rtc_' + radar_grid_str + '.bin')
-            
+
             ref_gdal_dataset = gdal.Open(ref_filename)
             print('reference file:', ref_filename)
 
-            assert(test_gdal_dataset.RasterXSize == ref_gdal_dataset.RasterXSize)
-            assert(test_gdal_dataset.RasterYSize == ref_gdal_dataset.RasterYSize)
+            assert (test_gdal_dataset.RasterXSize ==
+                    ref_gdal_dataset.RasterXSize)
+            assert (test_gdal_dataset.RasterYSize ==
+                    ref_gdal_dataset.RasterYSize)
 
-            square_sum = 0.0 # sum of square difference
-            n_nan = 0          # number of NaN pixels
-            n_npos = 0          # number of non-positive pixels
+            square_sum = 0.0  # sum of square difference
+            n_nan = 0         # number of NaN pixels
+            n_npos = 0        # number of non-positive pixels
 
             # read test and ref arrays
             test_array = test_gdal_dataset.GetRasterBand(1).ReadAsArray()
@@ -144,12 +149,12 @@ def test_rtc():
                     if (np.isnan(test_array[i, j]) or np.isnan(ref_array[i, j])): 
                         n_nan = n_nan + 1
                         continue
-                    
+
                     # if n_npos, incremennt n_npos
                     if (ref_array[i, j] <= 0 or test_array[i, j] <= 0):
-                        n_npos = n_npos +1
+                        n_npos = n_npos + 1
                         continue
-                    
+
                     # otherwise, increment n_valid
                     n_valid = n_valid + 1
                     square_sum += (test_array[i, j] - ref_array[i, j]) ** 2
@@ -160,7 +165,7 @@ def test_rtc():
             print('    # NaNs:', n_nan)
             print('    # non-positive:', n_npos)
             print('    ----------------')
-            assert(n_valid != 0)
+            assert n_valid != 0
 
             # Compute average over entire image
             rmse = np.sqrt(square_sum / n_valid)
@@ -168,9 +173,8 @@ def test_rtc():
             print('    RMSE =', rmse)
             print('    ----------------')
             # Enforce bound on average pixel-error
-            assert(rmse < max_rmse)
+            assert rmse < max_rmse
 
             # Enforce bound on number of ignored pixels
-            assert(n_nan < 1e-4 * ref_gdal_dataset.RasterXSize * ref_gdal_dataset.RasterYSize)
-            assert(n_npos < 1e-4 * ref_gdal_dataset.RasterXSize * ref_gdal_dataset.RasterYSize)
-
+            assert (n_nan < 1e-4 * ref_gdal_dataset.RasterXSize * ref_gdal_dataset.RasterYSize)
+            assert (n_npos < 1e-4 * ref_gdal_dataset.RasterXSize * ref_gdal_dataset.RasterYSize)

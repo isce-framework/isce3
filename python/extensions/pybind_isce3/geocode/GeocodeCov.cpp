@@ -118,6 +118,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                             isce3::core::DEFAULT_MAX_BLOCK_SIZE,
                     py::arg("dem_interp_method") =
                             isce3::core::BIQUINTIC_METHOD,
+                    py::arg("use_platform_doppler") = false,
                     R"(
                     Geocode data from slant-range to map coordinates
 
@@ -269,6 +270,10 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         Maximum block size (per thread)
                     dem_interp_method: isce3.core.DataInterpMethod, optional
                         DEM interpolation method
+                    use_platform_doppler : bool
+                        Flag indicating whether the platform Doppler LUT should be
+                        used to estimate the platform position. If disabled, the
+                        grid Doppler LUT will be used instead
                     )");
 }
 

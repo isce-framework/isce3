@@ -112,6 +112,12 @@ runconfig:
             # DEM interpolation method
             dem_interpolation_method: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
+            # Grid Doppler
+            grid_doppler: enum('zero_doppler', 'native_doppler', required=False)
+
+            # Doppler to compute the platform position
+            platform_doppler: enum('zero_doppler', 'native_doppler', required=False)
+
             # Noise correction options
             noise_correction: include('noise_correction_options', required=False)
 

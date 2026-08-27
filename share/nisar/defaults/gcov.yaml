@@ -539,10 +539,16 @@ runconfig:
                 # Maximum number of iterations
                 maxiter: 50
 
-            # DEM interpolation method
             # Options: "sinc", "bilinear", "bicubic", "nearest", and "biquintic"
             dem_interpolation_method: biquintic
 
+            # Grid Doppler
+            grid_doppler: zero_doppler
+
+            # Doppler to compute the platform position
+            platform_doppler: native_doppler
+
+            # OPTIONAL - if noise correction desired
             noise_correction:
                 # Enable/disable noise correction
                 apply_correction: False

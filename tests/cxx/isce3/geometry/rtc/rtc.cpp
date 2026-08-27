@@ -44,6 +44,8 @@ TEST(TestRTC, RunRTC) {
 
     dop.boundsError(false);
 
+    bool use_platform_doppler = false;
+
     // Set input parameters
     isce3::geometry::rtcInputTerrainRadiometry inputTerrainRadiometry =
             isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT;
@@ -93,10 +95,11 @@ TEST(TestRTC, RunRTC) {
                                         "ENVI");
 
             // Call RTC
-            isce3::geometry::computeRtc(radar_grid, orbit, dop, dem, out_raster,
-                    inputTerrainRadiometry, outputTerrainRadiometry,
-                    rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
-                    geogrid_upsampling);
+            isce3::geometry::computeRtc(radar_grid, orbit, dop,
+                use_platform_doppler, dop, dem,
+                out_raster, inputTerrainRadiometry, outputTerrainRadiometry,
+                rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
+                geogrid_upsampling);
         }
     }
 }

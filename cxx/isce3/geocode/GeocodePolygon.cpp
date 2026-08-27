@@ -226,9 +226,11 @@ void GeocodePolygon<T>::getPolygonMean(
         const isce3::core::LUT2d<double>& slant_range_correction = {};
 
         isce3::io::Raster* out_sigma = nullptr;
+        const bool use_platform_doppler = false;
 
-        computeRtc(radar_grid_cropped, _orbit, input_dop, dem_raster,
-                   *rtc_raster, input_terrain_radiometry,
+        computeRtc(radar_grid_cropped, _orbit, input_dop,
+                   use_platform_doppler, input_dop,
+                   dem_raster, *rtc_raster, input_terrain_radiometry,
                    output_terrain_radiometry, rtc_area_mode,
                    rtc_algorithm, rtc_area_beta_mode,
                    geogrid_upsampling * 2, rtc_min_value_db,
