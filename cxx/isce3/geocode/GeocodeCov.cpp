@@ -285,6 +285,10 @@ void Geocode<T>::geocodeInterp(
     pyre::journal::warning_t warning("isce.geocode.GeocodeCov.geocodeInterp");
     auto start_time = std::chrono::high_resolution_clock::now();
 
+    info << "===============================================================" << pyre::journal::newline;
+    info << " Geocoding with Interpolation (GEO-IN)" << pyre::journal::newline;
+    info << "===============================================================" << pyre::journal::endl;
+
     isce3::product::GeoGridParameters geogrid(_geoGridStartX, _geoGridStartY,
             _geoGridSpacingX, _geoGridSpacingY, _geoGridWidth, _geoGridLength,
             _epsgOut);
@@ -314,22 +318,16 @@ void Geocode<T>::geocodeInterp(
         apply_valid_samples_sub_swath_masking?
         *apply_valid_samples_sub_swath_masking: sub_swaths != nullptr;
 
-    info << "geo2rdr threshold: " << _threshold << pyre::journal::newline;
-    info << "geo2rdr numiter: " << _numiter << pyre::journal::newline;
-    info << "baseband azimuth spectrum (0:false, 1:true): "
-         << flag_az_baseband_doppler << pyre::journal::newline;
-    info << "flatten phase (0:false, 1:true): " << flatten
+    info << "baseband azimuth spectrum: " << std::boolalpha
+         << flag_az_baseband_doppler << std::noboolalpha
          << pyre::journal::newline;
 
-    info << "remove phase screen (0: false, 1: true): "
-            << std::to_string(phase_screen_raster != nullptr)
-            << pyre::journal::newline;
-    info << "apply azimuth offset (0: false, 1: true): "
-            << std::to_string(az_time_correction.haveData())
-            << pyre::journal::newline;
-    info << "apply range offset (0: false, 1: true): "
-            << std::to_string(slant_range_correction.haveData())
-            << pyre::journal::newline;
+    info << "flatten phase: " << std::boolalpha 
+         << flatten << std::noboolalpha << pyre::journal::newline;
+
+    info << "remove phase screen: " << std::boolalpha
+         << static_cast<bool>(phase_screen_raster != nullptr) << std::noboolalpha 
+         << pyre::journal::newline;
 
     // number of bands in the input raster
     int nbands = inputRaster.numBands();
@@ -357,8 +355,6 @@ void Geocode<T>::geocodeInterp(
 
     isce3::core::Matrix<uint8_t> input_layover_shadow_mask;
     if (input_layover_shadow_mask_raster != nullptr) {
-        info << "input layover/shadow mask provided: True" <<
-            pyre::journal::newline;
         _validateInputLayoverShadowMaskRaster(
             input_layover_shadow_mask_raster, radar_grid);
 
@@ -406,23 +402,11 @@ void Geocode<T>::geocodeInterp(
                 radar_grid.width(), radar_grid.length(), 1);
     }
 
-    if (!std::isnan(clip_min))
-        info << "clip min: " << clip_min << pyre::journal::newline;
-
-    if (!std::isnan(clip_max))
-        info << "clip max: " << clip_max << pyre::journal::newline;
-
     // RTC
     double rtc_min_value = 0;
     if (!std::isnan(rtc_min_value_db) && flag_apply_rtc) {
         rtc_min_value = std::pow(10, (rtc_min_value_db / 10));
-        info << "RTC min. value: " << rtc_min_value_db
-             << " [dB] = " << rtc_min_value << pyre::journal::newline;
     }
-
-    if (abs_cal_factor != 1)
-        info << "absolute calibration factor: " << abs_cal_factor
-             << pyre::journal::newline;
 
     /*
     Complex-valued input and output rasters are assumed to be SLCs.
@@ -442,14 +426,9 @@ void Geocode<T>::geocodeInterp(
     std::unique_ptr<isce3::io::Raster> rtc_raster_sigma0_unique_ptr;
     isce3::core::Matrix<float> rtc_area_array, rtc_area_sigma0_array;
 
-    info << "flag_apply_rtc (0:false, 1:true): " << flag_apply_rtc
-         << pyre::journal::newline;
-
     if (flag_apply_rtc) {
         std::string input_terrain_radiometry_str =
                 get_input_terrain_radiometry_str(input_terrain_radiometry);
-        info << "input terrain radiometry: " << input_terrain_radiometry_str
-             << pyre::journal::newline;
 
         if (input_rtc == nullptr) {
 
@@ -532,8 +511,12 @@ void Geocode<T>::geocodeInterp(
     }
 
     geogrid.print();
-    _print_parameters(info, geocode_memory_mode, min_block_size,
-                      max_block_size);
+    _print_parameters(info, demRaster, geocode_memory_mode,
+                      min_block_size, max_block_size, flag_apply_rtc,
+                      input_terrain_radiometry, output_terrain_radiometry,
+                      rtc_min_value_db, input_layover_shadow_mask_raster,
+                      az_time_correction, slant_range_correction, clip_min,
+                      clip_max, abs_cal_factor);
 
     int nBlocks, block_length;
 
@@ -560,7 +543,7 @@ void Geocode<T>::geocodeInterp(
     info << "block length: " << block_length << pyre::journal::newline;
     info << pyre::journal::newline;
 
-    info << "starting geocoding" << pyre::journal::endl;
+    info << "starting geocoding (interpolation algorithm)" << pyre::journal::endl;
     // loop over the blocks of the geocoded Grid
     for (int block = 0; block < nBlocks; ++block) {
         info << "block: " << block << pyre::journal::endl;
@@ -1934,6 +1917,10 @@ void Geocode<T>::geocodeAreaProj(
         return;
     }
 
+    info << "===============================================================" << pyre::journal::newline;
+    info << " Geocoding with the Area-Based Projection Algorithm (GEO-AP)" << pyre::journal::newline;
+    info << "===============================================================" << pyre::journal::endl;
+
     /*
     If `apply_valid_samples_sub_swath_masking` is `true` and the
     `sub_swath` object was not provided, raise an error
@@ -1987,12 +1974,6 @@ void Geocode<T>::geocodeAreaProj(
         info << "full covariance: false" << pyre::journal::newline;
     }
 
-    if (!std::isnan(clip_min))
-        info << "clip min: " << clip_min << pyre::journal::newline;
-
-    if (!std::isnan(clip_max))
-        info << "clip max: " << clip_max << pyre::journal::newline;
-
     if (!std::isnan(min_nlooks))
         info << "nlooks min: " << min_nlooks << pyre::journal::newline;
 
@@ -2029,15 +2010,6 @@ void Geocode<T>::geocodeAreaProj(
     bool flag_rtc_sigma0_raster_is_in_memory = false;
 
     if (flag_apply_rtc) {
-        std::string input_terrain_radiometry_str =
-                get_input_terrain_radiometry_str(input_terrain_radiometry);
-        info << "input terrain radiometry: " << input_terrain_radiometry_str
-             << pyre::journal::newline;
-
-        std::string output_terrain_radiometry_str =
-                get_output_terrain_radiometry_str(output_terrain_radiometry);
-        info << "output terrain radiometry: " << output_terrain_radiometry_str
-             << pyre::journal::newline;
 
         if (input_rtc == nullptr) {
 
@@ -2143,9 +2115,6 @@ void Geocode<T>::geocodeAreaProj(
 
     isce3::core::Matrix<uint8_t> input_layover_shadow_mask;
     if (input_layover_shadow_mask_raster != nullptr) {
-        info << "input layover/shadow mask provided: True" <<
-            pyre::journal::newline;
-
         _validateInputLayoverShadowMaskRaster(
             input_layover_shadow_mask_raster, radar_grid);
 
@@ -2161,39 +2130,13 @@ void Geocode<T>::geocodeAreaProj(
                 input_layover_shadow_mask.data(), offset_x, offset_y,
                 radar_grid_cropped.width(), radar_grid_cropped.length(), 1);
         }
-    } else {
-        info << "input layover/shadow mask provided: False" <<
-            pyre::journal::newline;
     }
 
-    // number of bands in the input raster
-    info << "nbands: " << nbands << pyre::journal::newline;
-
-    info << "radar grid width: " << radar_grid_cropped.width()
+    info << "radar grid subset width: " << radar_grid_cropped.width()
          << ", length: " << radar_grid_cropped.length()
          << pyre::journal::newline;
 
     info << "geogrid upsampling: " << geogrid_upsampling << pyre::journal::newline;
-
-    int epsgcode = dem_raster.getEPSG();
-
-    info << "DEM EPSG: " << epsgcode << pyre::journal::endl;
-    if (epsgcode < 0) {
-        std::string error_msg = "invalid DEM EPSG";
-        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
-    }
-    info << "output EPSG: " << _epsgOut << pyre::journal::endl;
-
-    info << "reproject DEM (0: false, 1: true): "
-         << std::to_string(_epsgOut != dem_raster.getEPSG())
-         << pyre::journal::newline;
-
-    info << "apply azimuth offset (0: false, 1: true): "
-            << std::to_string(az_time_correction.haveData())
-            << pyre::journal::newline;
-    info << "apply range offset (0: false, 1: true): "
-            << std::to_string(slant_range_correction.haveData())
-            << pyre::journal::newline;
 
     const long long progress_block = ((long long) imax) * jmax / 100;
 
@@ -2201,20 +2144,18 @@ void Geocode<T>::geocodeAreaProj(
 
     if (!std::isnan(rtc_min_value_db) && flag_apply_rtc) {
         rtc_min_value = std::pow(10., (rtc_min_value_db / 10.));
-        info << "RTC min. value: " << rtc_min_value_db
-             << " [dB] = " << rtc_min_value << pyre::journal::newline;
     }
-
-    if (abs_cal_factor != 1)
-        info << "absolute calibration factor: " << abs_cal_factor
-             << pyre::journal::newline;
 
     if (radar_grid_nlooks != 1 && out_geo_nlooks != nullptr)
         info << "radar-grid nlooks multiplier: " << radar_grid_nlooks
              << pyre::journal::newline;
 
-    _print_parameters(info, geocode_memory_mode, min_block_size,
-                      max_block_size);
+    _print_parameters(info, dem_raster, geocode_memory_mode, min_block_size,
+                      max_block_size, flag_apply_rtc,
+                      input_terrain_radiometry, output_terrain_radiometry,
+                      rtc_min_value_db, input_layover_shadow_mask_raster,
+                      az_time_correction, slant_range_correction, clip_min, clip_max,
+                      abs_cal_factor);
 
     info << "is radar-grid single block: "
          << std::boolalpha  << is_radar_grid_single_block << std::noboolalpha 
@@ -2278,7 +2219,7 @@ void Geocode<T>::geocodeAreaProj(
     info << "block size Y (with upsampling): " << block_size_with_upsampling_y
          << pyre::journal::newline;
 
-    info << "starting geocoding" << pyre::journal::endl;
+    info << "starting geocoding (area projection)" << pyre::journal::endl;
     if (!std::is_same<T, T_out>::value && nbands_off_diag_terms == 0) {
         _Pragma("omp parallel for schedule(dynamic)")
         for (int block_y = 0; block_y < nblocks_y; ++block_y) {
@@ -3647,18 +3588,87 @@ std::string _get_geocode_memory_mode_str(
 }
 
 template<class T>
-void Geocode<T>::_print_parameters(pyre::journal::info_t& channel, 
-                                  isce3::core::GeocodeMemoryMode& geocode_memory_mode,
-                                  const long long min_block_size,
-                                  const long long max_block_size) {
-    channel << "geocode memory mode: "
+void Geocode<T>::_print_parameters(
+        pyre::journal::info_t& info,
+        const isce3::io::Raster& dem_raster,
+        const isce3::core::GeocodeMemoryMode& geocode_memory_mode,
+        const long long min_block_size,
+        const long long max_block_size,
+        const bool flag_apply_rtc,
+        const isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry,
+        const isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,
+        const float rtc_min_value_db,
+        const isce3::io::Raster* input_layover_shadow_mask_raster,
+        const isce3::core::LUT2d<double>& az_time_correction,
+        const isce3::core::LUT2d<double>& slant_range_correction,
+        const float clip_min,
+        const float clip_max,
+        const double abs_cal_factor) {
+
+    int dem_epsg = dem_raster.getEPSG();
+    info << "DEM EPSG: " << dem_epsg << pyre::journal::newline;
+    if (dem_epsg < 0) {
+        std::string error_msg = "invalid DEM EPSG";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+    info << "output EPSG: " << _epsgOut << pyre::journal::newline;
+
+    info << "geocode memory mode: "
             << _get_geocode_memory_mode_str(geocode_memory_mode)
             << pyre::journal::newline
             << "min. block size: " << isce3::core::getNbytesStr(min_block_size)
             << pyre::journal::newline
             << "max. block size: " << isce3::core::getNbytesStr(max_block_size)
-            << pyre::journal::newline
-            << pyre::journal::endl;
+            << pyre::journal::newline;
+
+    info << "apply radiometric terrain correction (RTC): "
+         << std::boolalpha  << flag_apply_rtc << std::noboolalpha 
+         << pyre::journal::newline;
+
+     if (flag_apply_rtc) {
+
+        std::string input_terrain_radiometry_str =
+                get_input_terrain_radiometry_str(input_terrain_radiometry);
+        info << "input terrain radiometry: " << input_terrain_radiometry_str
+             << pyre::journal::newline;
+
+        std::string output_terrain_radiometry_str =
+                get_output_terrain_radiometry_str(output_terrain_radiometry);
+        info << "output terrain radiometry: " << output_terrain_radiometry_str
+             << pyre::journal::newline;
+
+        if (!std::isnan(rtc_min_value_db)) {
+            const double rtc_min_value = std::pow(10, (rtc_min_value_db / 10));
+            info << "RTC min. value: " << rtc_min_value_db
+                << " [dB] = " << rtc_min_value << pyre::journal::newline;
+        }
+    }
+
+    info << "input layover/shadow mask provided: " << std::boolalpha
+         << static_cast<bool>(input_layover_shadow_mask_raster != nullptr)
+         << std::noboolalpha << pyre::journal::newline;
+
+    info << "apply azimuth timing correction: " << std::boolalpha
+            << az_time_correction.haveData() << std::noboolalpha 
+            << pyre::journal::newline;
+    info << "apply range delay correction: " << std::boolalpha
+            << slant_range_correction.haveData() << std::noboolalpha 
+            << pyre::journal::newline;
+
+    if (!std::isnan(clip_min))
+        info << "clip min: " << clip_min << pyre::journal::newline;
+
+    if (!std::isnan(clip_max))
+        info << "clip max: " << clip_max << pyre::journal::newline;
+
+    if (abs_cal_factor != 1) {
+        info << "absolute calibration factor: " << abs_cal_factor
+             << pyre::journal::newline;
+    }
+
+    info << "geo2rdr threshold: " << _threshold << pyre::journal::newline;
+    info << "geo2rdr numiter: " << _numiter << pyre::journal::endl;
+
 }
 
 template class Geocode<float>;

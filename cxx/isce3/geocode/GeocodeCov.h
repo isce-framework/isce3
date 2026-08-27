@@ -778,10 +778,21 @@ private:
             const double range_pixel_spacing, const double prf,
             const isce3::core::LUT2d<double>& doppler_lut);
 
-    void _print_parameters(pyre::journal::info_t& channel, 
-                           isce3::core::GeocodeMemoryMode& geocode_memory_mode,
+    void _print_parameters(pyre::journal::info_t& info,
+                           const isce3::io::Raster& dem_raster,
+                           const isce3::core::GeocodeMemoryMode& geocode_memory_mode,
                            const long long min_block_size,
-                           const long long max_block_size);
+                           const long long max_block_size,
+                           const bool flag_apply_rtc,
+                           const isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry,
+                           const isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,
+                           const float rtc_min_value_db,
+                           const isce3::io::Raster* input_layover_shadow_mask_raster,
+                           const isce3::core::LUT2d<double>& az_time_correction,
+                           const isce3::core::LUT2d<double>& slant_range_correction,
+                           const float clip_min,
+                           const float clip_max,
+                           const double abs_cal_factor);
 
     // isce3::core objects
     isce3::core::Orbit _orbit;
