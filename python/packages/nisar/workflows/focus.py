@@ -13,7 +13,7 @@ from nisar.antenna import AntennaPattern, get_calib_range_line_idx
 from nisar.noise.noise_estimation_from_raw import (
     est_noise_power_in_focus, NoiseEquivalentBackscatterProduct)
 from nisar.mixed_mode import (PolChannel, PolChannelSet, Band,
-    find_overlapping_channel)
+    find_overlapping_channel, check_mixed_mode)
 from nisar.products.readers.antenna import AntennaParser
 from nisar.products.readers.instrument import InstrumentParser
 from nisar.products.readers.Raw import (
@@ -1896,8 +1896,8 @@ def focus(runconfig, runconfig_path=""):
         is_full_frame=is_full_frame, frame_coverage=overlap,
         coverage_threshold=cfg.geometry.full_coverage_threshold_percent / 100,
         is_dithered=is_dithered, granule_id=granule_id,
-        is_mixed_mode=any(PolChannelSet.from_raw(raw) != common_mode
-            for raw in rawlist),
+        is_mixed_mode=check_mixed_mode([PolChannelSet.from_raw(raw)
+            for raw in rawlist]),
         **id_data)
     set_algorithm_metadata(cfg, slc, is_dithered)
     set_input_file_metadata(cfg, slc, runconfig_path)
