@@ -915,7 +915,8 @@ class RawBase(Base, family='nisar.productreader.raw'):
 
 
     def getSubSwathBboxes(self, frequency, polarization=None, epoch=None,
-            num_ignore=0, min_segment_length=2000, max_pulse_gap=1):
+            num_ignore=0, min_segment_length=2000, max_pulse_gap=1,
+            use_rx_pulse_mask=False):
         """
         Return the bounding box for each sub-swath.
 
@@ -944,6 +945,11 @@ class RawBase(Base, family='nisar.productreader.raw'):
             separated by max_pulse_gap or fewer invalid pulses will be joined
             together.  This provides an easy way to ignore isolated gaps of a
             single invlid pulse, for example.  Set to 0 to disable merging.
+        use_rx_pulse_mask : bool, optional
+            When True read the pulseHasValidSamples metadata to help determine
+            which pulses are valid.  Otherwise only the validSamplesSubSwath
+            metadata will be used, which is not specific to the receive
+            polarization.
 
         Returns
         -------
@@ -1002,8 +1008,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
                 (1, -1, 2))
 
         # Find runs of consecutive pulses with valid echo data.
+        rx_mask = (self.getValidPulses(frequency, polarization)
+            if use_rx_pulse_mask else None)
         segments = find_valid_pulse_intervals(subswaths,
-            min_segment_length=min_segment_length)
+            min_segment_length=min_segment_length, mask=rx_mask)
         # Join any that are separated by just one pulse.
         segments = join_segments(segments, max_gap=max_pulse_gap)
         # Split segments at DWP change boundaries.  Then we'll have segments
@@ -1200,7 +1208,7 @@ def get_valid_pulse_mask(subswaths):
     return (subswaths[..., 1] - subswaths[..., 0]).sum(axis=0) > 0
 
 
-def find_valid_pulse_intervals(subswaths, min_segment_length=1):
+def find_valid_pulse_intervals(subswaths, min_segment_length=1, mask=None):
     """
     Find runs of consecutive pulses that all contain valid echo data.
 
@@ -1213,6 +1221,9 @@ def find_valid_pulse_intervals(subswaths, min_segment_length=1):
     min_segment_length : int, optional
         Minimum number of consecutive valid pulses required for a run to be
         included in the output.  Shorter runs are dropped.  Defaults to 1.
+    mask : np.ndarray[bool], optional
+        Extra mask array indicating True for each valid pulse.  Will be ANDed
+        into the mask derived from the subswaths array.
 
     Returns
     -------
@@ -1221,6 +1232,8 @@ def find_valid_pulse_intervals(subswaths, min_segment_length=1):
         interval [start, end) of consecutive pulses with valid echo data.
     """
     have_echo = get_valid_pulse_mask(subswaths)
+    if mask is not None:
+        have_echo &= mask
 
     # Find boundaries where have_echo changes, padded so that the endpoints
     # are considered properly.
