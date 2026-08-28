@@ -513,6 +513,50 @@ def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
         threshold=allowed_range_gap)
 
 
+def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None):
+    m, n = grid.shape
+    if grid.shape != image.shape:
+        raise ValueError("Shape of output image must match grid shape")
+
+    # Use chunk-aligned access if image is an HDF5 dataset.
+    if blocksize is None:
+        blocksize = getattr(image, "chunks", (512,))[0]
+
+    # Allocate block workspace.  Then we'll assign full blocks at a time since
+    # access to the image may be slow (e.g., compressed HDF5 dataset).
+    image_block = np.zeros((blocksize, n), image.dtype)
+
+    dr = grid.range_pixel_spacing
+    r0, r1 = grid.slant_ranges[0], grid.slant_ranges[-1]
+
+    for i0 in range(0, m, blocksize):
+        i1 = min(i0 + blocksize, m)
+        image_block[...] = False
+        for iblock, itime in enumerate(range(i0, i1)):
+            # Scanline corresponding to a row of the radar image grid.
+            t = grid.sensing_times[itime]
+            line = shapely.LineString([(r0, t), (r1, t)])
+
+            for polygons in polygon_lists:
+                for polygon in polygons:
+                    intersection = line & polygon
+                    # Result can be empty, line, or multiline
+                    for segment in shapely.get_parts(intersection):
+                        if segment.is_empty:
+                            continue
+                        assert segment.geom_type == "LineString"
+                        r = np.array(sorted(segment.coords.xy[0]))
+                        j0, j1 = np.round((r - r0) / dr).astype(int)
+                        image_block[iblock, j0:j1] = True
+
+        source_rows = slice(0, i1 - i0)
+        dest_rows = slice(i0, i1)
+        if hasattr(image, "write_direct"):
+            image.write_direct(image_block, source_rows, dest_rows)
+        else:
+            image[dest_rows] = image_block[source_rows]
+
+
 def fill_gaps(data, swaths, value=np.complex64(0)):
     """
     Fill transmit gaps in raw data with a specified value.
