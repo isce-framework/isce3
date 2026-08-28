@@ -652,6 +652,30 @@ class RawBase(Base, family='nisar.productreader.raw'):
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             return f[path]["txPhase"][()]
 
+    def getValidPulses(self, frequency, polarization):
+        """Get valid pulse mask.
+
+        The mask reflects whether each pulse has any valid data samples.  The
+        result should be equivalent to reading each row of raw data and checking
+        whether all samples in the row are equal to the fill value.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically main science band is 'A'.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}
+            Transmit-Receive polarization.
+
+        Returns
+        -------
+        np.ndarray[bool]
+            Vector of boolean.  Length equal to number of rows in raw data
+            image.  True for rows with at least some valid data.
+        """
+        path_txrx = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            return fid[path_txrx]["pulseHasValidSamples"][()]
+
     def getCaltone(self, frequency='A', polarization=None):
         """Get complex caltone coefficients for all channels and range lines.
 
