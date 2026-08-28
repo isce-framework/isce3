@@ -3,6 +3,8 @@ from .sar_duration import get_sar_duration
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import reduce
+from isce3.geometry.polygons import shapely2ogr_polygon
+from osgeo import gdal, ogr, osr
 import isce3
 import numpy as np
 import shapely
@@ -514,6 +516,25 @@ def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
 
 
 def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None):
+    """
+    Rasterize valid data polygons onto a per-pixel boolean mask image.
+
+    Parameters
+    ----------
+    polygon_lists : list[list[shapely.Polygon]]
+        List of valid data regions for each file/observation specified in
+        image grid (x=range, y=time) coordinates, e.g., as produced by
+        `transform_polygons_raw2image`.  A pixel is marked valid if it falls
+        within any polygon from any list.
+    grid : isce3.product.RadarGridParameters
+        Grid for output image.
+    image : array_like
+        Output boolean mask, must have shape matching `grid.shape`.  May be
+        an HDF5 dataset, in which case writes are chunk-aligned.
+    blocksize : int, optional
+        Number of rows to rasterize and write at a time.  Defaults to the
+        chunk size of `image` if it is an HDF5 dataset, otherwise 512.
+    """
     m, n = grid.shape
     if grid.shape != image.shape:
         raise ValueError("Shape of output image must match grid shape")
@@ -522,39 +543,46 @@ def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None):
     if blocksize is None:
         blocksize = getattr(image, "chunks", (512,))[0]
 
-    # Allocate block workspace.  Then we'll assign full blocks at a time since
-    # access to the image may be slow (e.g., compressed HDF5 dataset).
-    image_block = np.zeros((blocksize, n), image.dtype)
-
     dr = grid.range_pixel_spacing
-    r0, r1 = grid.slant_ranges[0], grid.slant_ranges[-1]
+    r0 = grid.slant_ranges[0]
+    dt = 1.0 / grid.prf
+    t0 = grid.sensing_times[0]
+
+    # Build a single in-memory vector layer with all subswath polygons so we
+    # can rasterize them directly (via GDAL's scanline fill) instead of
+    # intersecting a line with every polygon for every row, which is
+    # dominated by per-call Python/GEOS overhead for large images.
+    # Assign a (meaningless) local SRS to the layer and raster below so GDAL
+    # can confirm they match instead of warning about it.
+    srs = osr.SpatialReference()
+    srs.SetLocalCS("radar image grid")
+
+    vector_ds = ogr.GetDriverByName("Memory").CreateDataSource("")
+    layer = vector_ds.CreateLayer("subswaths", srs=srs)
+    for polygons in polygon_lists:
+        for polygon in polygons:
+            feature = ogr.Feature(layer.GetLayerDefn())
+            feature.SetGeometry(shapely2ogr_polygon(polygon))
+            layer.CreateFeature(feature)
 
     for i0 in range(0, m, blocksize):
         i1 = min(i0 + blocksize, m)
-        image_block[...] = False
-        for iblock, itime in enumerate(range(i0, i1)):
-            # Scanline corresponding to a row of the radar image grid.
-            t = grid.sensing_times[itime]
-            line = shapely.LineString([(r0, t), (r1, t)])
+        nrows = i1 - i0
 
-            for polygons in polygon_lists:
-                for polygon in polygons:
-                    intersection = line & polygon
-                    # Result can be empty, line, or multiline
-                    for segment in shapely.get_parts(intersection):
-                        if segment.is_empty:
-                            continue
-                        assert segment.geom_type == "LineString"
-                        r = np.array(sorted(segment.coords.xy[0]))
-                        j0, j1 = np.round((r - r0) / dr).astype(int)
-                        image_block[iblock, j0:j1] = True
+        raster_ds = gdal.GetDriverByName("MEM").Create("", n, nrows, 1,
+            gdal.GDT_Byte)
+        raster_ds.SetSpatialRef(srs)
+        raster_ds.SetGeoTransform(
+            (r0 - dr / 2, dr, 0, t0 + i0 * dt - dt / 2, 0, dt))
+        gdal.RasterizeLayer(raster_ds, [1], layer, burn_values=[1])
+        image_block = raster_ds.GetRasterBand(1).ReadAsArray().astype(
+            image.dtype, copy=False)
 
-        source_rows = slice(0, i1 - i0)
         dest_rows = slice(i0, i1)
         if hasattr(image, "write_direct"):
-            image.write_direct(image_block, source_rows, dest_rows)
+            image.write_direct(image_block, None, dest_rows)
         else:
-            image[dest_rows] = image_block[source_rows]
+            image[dest_rows] = image_block
 
 
 def fill_gaps(data, swaths, value=np.complex64(0)):
