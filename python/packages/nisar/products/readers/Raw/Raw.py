@@ -673,8 +673,17 @@ class RawBase(Base, family='nisar.productreader.raw'):
             image.  True for rows with at least some valid data.
         """
         path_txrx = self._rawGroup(frequency, polarization)
+        name = "pulseHasValidSamples"
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
-            return fid[path_txrx]["pulseHasValidSamples"][()]
+            if name in fid[path_txrx]:
+                return fid[path_txrx][name][()]
+        # Kludge for old data that may lack this field: just return True for
+        # all pulses, which is equivalent to the old assumptions.
+        log.warning(f"L0B lacks dataset={name} so assuming all pulses valid "
+            f"for {frequency=} {polarization=}.  If possible, regenerate L0B "
+            "file with the latest software to get highest fidelity mask.")
+        _, t = self.getPulseTimes(frequency, tx=polarization[0])
+        return np.ones(len(t), bool)
 
     def getCaltone(self, frequency='A', polarization=None):
         """Get complex caltone coefficients for all channels and range lines.
