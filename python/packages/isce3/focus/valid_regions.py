@@ -614,7 +614,7 @@ def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None,
     """
     if image.dtype.kind not in "bui":
         raise ValueError("Expected integer or boolean data type for mask")
-    nbits = (1 if np.issubdtype(image.dtype, np.bool)
+    nbits = (1 if np.issubdtype(image.dtype, np.bool_)
         else 8 * image.dtype.itemsize)
     if not (0 <= bit < nbits):
         raise ValueError(f"Expected 0 <= bit < {nbits} but got {bit=}")
