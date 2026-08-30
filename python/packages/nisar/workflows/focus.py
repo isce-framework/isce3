@@ -1859,9 +1859,11 @@ def focus(runconfig, runconfig_path=""):
             log.info(f"Geting and saving valid data mask for {frequency}{pol}")
             pol_chan = [x for x in common_mode
                 if (x.freq_id == frequency and x.pol == pol)][0]
-            save_valid_data_mask(rawlist, pol_chan, og, orbit, dop[frequency],
-                dem, azres, mask, get_rdr2geo_params(cfg),
+            num_valid_pix = save_valid_data_mask(rawlist, pol_chan, og, orbit,
+                dop[frequency], dem, azres, mask, get_rdr2geo_params(cfg),
                 get_geo2rdr_params(cfg), **vars(cfg.processing.valid_data_mask))
+            frac_valid_pix = num_valid_pix / np.prod(og.shape)
+            mask.attrs[f"validPixelFraction{pol}"] = frac_valid_pix
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
