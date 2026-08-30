@@ -419,10 +419,10 @@ def rasterize_subswath_polygons(slc_polygon_lists, slc_grid, threshold=2):
                 j0, j1 = tmp_swaths[iswath, iobs]
 
                 # Cast to int to prevent unsigned underflow.
-                if abs(int(j0) - i1) <= threshold:
+                if abs(np.int64(j0) - i1) <= threshold:
                     # Join contiguous, previous first.
                     swaths[iswath, itime] = (i0, j1)
-                elif abs(int(i0) - j1) <= threshold:
+                elif abs(np.int64(i0) - j1) <= threshold:
                     # Join contiguous, current first.
                     swaths[iswath, itime] = (j0, i1)
                 elif (j1 - j0) > n:
