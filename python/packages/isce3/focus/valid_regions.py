@@ -582,9 +582,11 @@ def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
         threshold=allowed_range_gap)
 
 
-def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None):
+def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None,
+                                    bit=0):
     """
-    Rasterize valid data polygons onto a per-pixel boolean mask image.
+    Rasterize valid data polygons onto a per-pixel mask image.  Each pixel will
+    be bitwise-ORed with the existing value.
 
     Parameters
     ----------
@@ -597,11 +599,25 @@ def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None):
         Grid for output image.
     image : array_like
         Output boolean mask, must have shape matching `grid.shape`.  May be
-        an HDF5 dataset, in which case writes are chunk-aligned.
+        an HDF5 dataset, in which case writes are chunk-aligned.  Should be
+        initialized to zero (at least in the bit position specified by `bit`).
     blocksize : int, optional
         Number of rows to rasterize and write at a time.  Defaults to the
         chunk size of `image` if it is an HDF5 dataset, otherwise 512.
+    bit : int, optional
+        The bit to set in the output mask for valid pixels.
+    
+    Returns
+    -------
+    num_valid : int
+        Total number of valid pixels in the image.
     """
+    if image.dtype.kind not in "bui":
+        raise ValueError("Expected integer or boolean data type for mask")
+    nbits = (1 if np.issubdtype(image.dtype, np.bool)
+        else 8 * image.dtype.itemsize)
+    if not (0 <= bit < nbits):
+        raise ValueError(f"Expected 0 <= bit < {nbits} but got {bit=}")
     m, n = grid.shape
     if grid.shape != image.shape:
         raise ValueError("Shape of output image must match grid shape")
@@ -632,6 +648,8 @@ def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None):
             feature.SetGeometry(shapely2ogr_polygon(polygon))
             layer.CreateFeature(feature)
 
+    num_valid = 0
+
     for i0 in range(0, m, blocksize):
         i1 = min(i0 + blocksize, m)
         nrows = i1 - i0
@@ -645,11 +663,20 @@ def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None):
         image_block = raster_ds.GetRasterBand(1).ReadAsArray().astype(
             image.dtype, copy=False)
 
+        num_valid += np.sum(image_block)
+
+        # Shift mask to selected bit and OR with existing mask data.
+        if bit > 0:
+            image_block <<= bit
         dest_rows = slice(i0, i1)
+        image_block |= image[dest_rows]
+        # Write back out.
         if hasattr(image, "write_direct"):
             image.write_direct(image_block, None, dest_rows)
         else:
             image[dest_rows] = image_block
+
+    return num_valid
 
 
 def save_valid_data_mask(raw_bbox_lists, chirp_durations, orbit,
