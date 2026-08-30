@@ -40,7 +40,8 @@ class PolValidMask(enum.IntFlag):
 
 def get_raw_sub_swath_bboxes(rawlist, out_chan, orbit, num_ignore=25,
                              min_segment_length=2000, max_pulse_gap=1,
-                             max_observation_gap=0.002):
+                             max_observation_gap=0.002,
+                             use_rx_pulse_mask=False):
     """
     Determine bounding boxes of raw data sub-swaths for each observation,
     matched to the requested output channel, and force azimuth continuity
@@ -77,6 +78,11 @@ def get_raw_sub_swath_bboxes(rawlist, out_chan, orbit, num_ignore=25,
         and the first pulse of the following observation for the two to be
         considered seamless.  Larger raw data gaps may result in a synthetic
         aperture being marked invalid in the RSLC.
+    use_rx_pulse_mask : bool, optional
+        When True read the pulseHasValidSamples metadata to help determine
+        which pulses are valid for the receive polarization in `out_chan`.
+        Otherwise only the validSamplesSubSwath metadata will be used, which
+        is not specific to the receive polarization.
 
     Returns
     -------
@@ -96,9 +102,10 @@ def get_raw_sub_swath_bboxes(rawlist, out_chan, orbit, num_ignore=25,
         raw_chan = find_overlapping_channel(raw, out_chan)
 
         freq = raw_chan.freq_id
-        bbox_lists = raw.getSubSwathBboxes(freq, epoch=orbit.reference_epoch,
-            num_ignore=num_ignore, min_segment_length=min_segment_length,
-            max_pulse_gap=max_pulse_gap)
+        bbox_lists = raw.getSubSwathBboxes(freq, polarization=raw_chan.pol,
+            epoch=orbit.reference_epoch, num_ignore=num_ignore,
+            min_segment_length=min_segment_length, max_pulse_gap=max_pulse_gap,
+            use_rx_pulse_mask=use_rx_pulse_mask)
         raw_bbox_lists.extend(bbox_lists)
 
         txpol = raw_chan.pol[0]
@@ -338,7 +345,7 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     raw_bbox_lists, chirp_durations = get_raw_sub_swath_bboxes(rawlist,
         out_chan, orbit, num_ignore=num_ignore,
         min_segment_length=min_segment_length, max_pulse_gap=max_pulse_gap,
-        max_observation_gap=max_observation_gap)
+        max_observation_gap=max_observation_gap, use_rx_pulse_mask=True)
 
     try:
         num_valid = isce3.focus.save_valid_data_mask(raw_bbox_lists,
