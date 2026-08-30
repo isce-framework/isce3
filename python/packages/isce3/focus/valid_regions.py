@@ -686,7 +686,7 @@ def save_valid_data_mask(raw_bbox_lists, chirp_durations, orbit,
                          rdr2geo_params=dict(),
                          geo2rdr_params=dict(), max_segment_length=5000,
                          convolution_mode="valid",
-                         allowed_azimuth_gap=2, blocksize=None):
+                         allowed_azimuth_gap=2, blocksize=None, bit=0):
     """
     Determine valid data regions of a focused image, considering transmit
     gaps and gaps between files (in multi-observation processing), and write
@@ -736,6 +736,13 @@ def save_valid_data_mask(raw_bbox_lists, chirp_durations, orbit,
     blocksize : int, optional
         Number of rows to rasterize and write at a time.  Defaults to the
         chunk size of `image` if it is an HDF5 dataset, otherwise 512.
+    bit : int, optional
+        The bit to set in the output mask for valid pixels.
+
+    Returns
+    -------
+    num_valid : int
+        Total number of valid pixels in the image.
     """
     slc_polygons = get_focused_sub_swath_polygons(
         raw_bbox_lists=raw_bbox_lists, chirp_durations=chirp_durations,
@@ -746,8 +753,8 @@ def save_valid_data_mask(raw_bbox_lists, chirp_durations, orbit,
         convolution_mode=convolution_mode,
         allowed_azimuth_gap=allowed_azimuth_gap)
 
-    save_subswath_polygons_to_image(slc_polygons, grid, image,
-        blocksize=blocksize)
+    return save_subswath_polygons_to_image(slc_polygons, grid, image,
+        blocksize=blocksize, bit=bit)
 
 
 def fill_gaps(data, swaths, value=np.complex64(0)):
