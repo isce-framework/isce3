@@ -39,7 +39,8 @@ from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import (RadarGridParameters,
     get_radar_grid_nominal_ground_spacing)
-from nisar.focus.valid_regions import get_focused_sub_swaths
+from nisar.focus.valid_regions import (get_focused_sub_swaths,
+    save_valid_data_mask)
 from nisar.workflows.yaml_argparse import YamlArgparse
 import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
@@ -1842,15 +1843,25 @@ def focus(runconfig, runconfig_path=""):
         # Set anomaly mask. Need to do some geometry.
         opts = get_dataset_creation_options(cfg, og.shape)
         del opts["dtype"]
-        mask = slc.create_anomaly_mask(frequency, shape=og.shape, **opts)
+        qfsp_mask = slc.create_anomaly_mask(frequency, shape=og.shape, **opts)
         if instparser is not None:
             log.info(f"Writing inputDataExceptionMask for frequency{frequency}")
-            nisar.cal.qfsp_slip.write_anomaly_mask(anomaly_code, mask,
+            nisar.cal.qfsp_slip.write_anomaly_mask(anomaly_code, qfsp_mask,
                 og.sensing_times, og.slant_ranges, tn_lut, rn_lut, el_lut,
                 instparser)
         else:
             log.warning("Internal calibration (INT_CAL) file was not provided "
                 "so unable to populate inputDataExceptionMask")
+
+        # Set missing/valid data mask.
+        mask = slc.create_valid_data_mask(frequency, shape=og.shape, **opts)
+        for pol in pols:
+            log.info(f"Geting and saving valid data mask for {frequency}{pol}")
+            pol_chan = [x for x in common_mode
+                if (x.freq_id == frequency and x.pol == pol)][0]
+            save_valid_data_mask(rawlist, pol_chan, og, orbit, dop[frequency],
+                dem, azres, mask, get_rdr2geo_params(cfg),
+                get_geo2rdr_params(cfg), **vars(cfg.processing.valid_data_mask))
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
