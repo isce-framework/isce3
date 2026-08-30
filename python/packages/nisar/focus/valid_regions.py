@@ -340,7 +340,7 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     num_valid : int
         Total number of valid pixels in the image.
     """
-    bit = _PolBit[out_chan.pol]
+    bit = int(_PolBit[out_chan.pol])
 
     raw_bbox_lists, chirp_durations = get_raw_sub_swath_bboxes(rawlist,
         out_chan, orbit, num_ignore=num_ignore,
