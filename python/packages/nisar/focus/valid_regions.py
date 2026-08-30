@@ -1,10 +1,41 @@
 #!python3
+import enum
 import logging
 import isce3
 import numpy as np
 from nisar.mixed_mode import find_overlapping_channel
 
 log = logging.getLogger("focus")
+
+
+class _PolBit(enum.IntEnum):
+    """
+    Bit index assigned to each polarization channel in the valid-data mask
+    written by save_valid_data_mask.
+    """
+    HH = 0
+    HV = 1
+    VH = 2
+    VV = 3
+    LH = 4
+    LV = 5
+    RH = 6
+    RV = 7
+
+
+class PolValidMask(enum.IntFlag):
+    """
+    Bitmask value identifying which polarization channel(s) contributed a
+    valid pixel to the mask written by save_valid_data_mask.
+    """
+    HH = 1 << _PolBit.HH
+    HV = 1 << _PolBit.HV
+    VH = 1 << _PolBit.VH
+    VV = 1 << _PolBit.VV
+    LH = 1 << _PolBit.LH
+    LV = 1 << _PolBit.LV
+    RH = 1 << _PolBit.RH
+    RV = 1 << _PolBit.RV
 
 
 def get_raw_sub_swath_bboxes(rawlist, out_chan, orbit, num_ignore=25,
@@ -228,10 +259,12 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
                          ignore_failure=False, polygon_segment_length=50.0,
                          num_ignore=25, max_observation_gap=0.002,
                          min_segment_length=2000, max_pulse_gap=1,
-                         blocksize=None, bit=0):
+                         blocksize=None):
     """
     Determine fully-focused regions of the image and write the result as a
-    per-pixel boolean mask.
+    per-pixel boolean mask.  The bit used to mark valid pixels is chosen
+    according to `out_chan.pol` (see `PolValidMask`), so that mask images for
+    different polarization channels can be safely OR-ed into the same image.
 
     Parameters
     ----------
@@ -253,9 +286,10 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     azres : float
         Processed azimuth resolution, in meters.
     image : array_like
-        Output boolean mask, must have shape matching `grid.shape`.  May be
-        an HDF5 dataset, in which case writes are chunk-aligned.  Should be
-        initialized to zero (at least in the bit position specified by `bit`).
+        Output mask, must have shape matching `grid.shape`.  May be an HDF5
+        dataset, in which case writes are chunk-aligned.  Should be
+        initialized to zero (at least in the bit position assigned to
+        `out_chan.pol`, see `PolValidMask`).
     rdr2geo_params : dict
         Parameters for rdr2geo_bracket
     geo2rdr_params : dict
@@ -293,14 +327,14 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     blocksize : int, optional
         Number of rows to rasterize and write at a time.  Defaults to the
         chunk size of `image` if it is an HDF5 dataset, otherwise 512.
-    bit : int, optional
-        The bit to set in the output mask for valid pixels.
 
     Returns
     -------
     num_valid : int
         Total number of valid pixels in the image.
     """
+    bit = _PolBit[out_chan.pol]
+
     raw_bbox_lists, chirp_durations = get_raw_sub_swath_bboxes(rawlist,
         out_chan, orbit, num_ignore=num_ignore,
         min_segment_length=min_segment_length, max_pulse_gap=max_pulse_gap,
