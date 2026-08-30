@@ -526,6 +526,17 @@ class SLC(h5py.File):
         dset.attrs["units"] = np.bytes_("1")
         return dset
 
+    def create_valid_data_mask(self, frequency="A", **kw) -> h5py.Dataset:
+        log.info("Initializing storage for valid data mask for "
+            f"frequency={frequency} with HDF5 options={kw}")
+        kw.setdefault("dtype", np.uint8)
+        dset = self.swath(frequency).create_dataset("mask", **kw)
+        dset.attrs["description"] = np.bytes_("Bitwise OR of valid data mask "
+            "for each polarization.  High bit means the pixel is fully focused "
+            "(1:HH, 2:HV, 4:VH, 8:VV, 16:LH, 32:LV, 64:RH, 128:RV)")
+        dset.attrs["units"] = np.bytes_("1")
+        return dset
+
     def create_anomaly_mask(self, frequency="A", **kw) -> h5py.Dataset:
         log.info("Initializing storage for anomaly mask for "
             f"frequency={frequency} with HDF5 options={kw}")
