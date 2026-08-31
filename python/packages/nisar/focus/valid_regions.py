@@ -13,14 +13,14 @@ class _PolBit(enum.IntEnum):
     Bit index assigned to each polarization channel in the valid-data mask
     written by save_valid_data_mask.
     """
-    HH = 0
-    HV = 1
-    VH = 2
-    VV = 3
-    LH = 4
-    LV = 5
-    RH = 6
-    RV = 7
+    HH = 8
+    HV = 9
+    VH = 10
+    VV = 11
+    LH = 12
+    LV = 13
+    RH = 14
+    RV = 15
 
 
 class PolValidMask(enum.IntFlag):

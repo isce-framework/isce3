@@ -1843,18 +1843,17 @@ def focus(runconfig, runconfig_path=""):
         # Set anomaly mask. Need to do some geometry.
         opts = get_dataset_creation_options(cfg, og.shape)
         del opts["dtype"]
-        qfsp_mask = slc.create_anomaly_mask(frequency, shape=og.shape, **opts)
+        mask = slc.create_anomaly_mask(frequency, shape=og.shape, **opts)
         if instparser is not None:
             log.info(f"Writing inputDataExceptionMask for frequency{frequency}")
-            nisar.cal.qfsp_slip.write_anomaly_mask(anomaly_code, qfsp_mask,
+            nisar.cal.qfsp_slip.write_anomaly_mask(anomaly_code, mask,
                 og.sensing_times, og.slant_ranges, tn_lut, rn_lut, el_lut,
                 instparser)
         else:
             log.warning("Internal calibration (INT_CAL) file was not provided "
                 "so unable to populate inputDataExceptionMask")
 
-        # Set missing/valid data mask.
-        mask = slc.create_valid_data_mask(frequency, shape=og.shape, **opts)
+        # Set missing/valid data mask (same dataset).
         for pol in pols:
             log.info(f"Geting and saving valid data mask for {frequency}{pol}")
             pol_chan = [x for x in common_mode
