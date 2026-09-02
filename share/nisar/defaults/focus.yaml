@@ -447,9 +447,9 @@ runconfig:
                     fit_order: 2048
 
                 # List of aperture factorization parameters.
-                # Default to direct backprojection (one stage of single pulses)
+                # Default to two-stage with 128 pulses per subaperture.
                 factorization:
-                - size: 1
+                - size: 128
 
             dry_troposphere_model: tsx
 
