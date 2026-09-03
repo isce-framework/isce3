@@ -1212,7 +1212,8 @@ def get_valid_pulse_mask(subswaths):
         least one sub-swath has a non-empty valid interval and False for
         pulses that are entirely within a transmit gap.
     """
-    return (subswaths[..., 1] - subswaths[..., 0]).sum(axis=0) > 0
+    # NOTE Avoid subtraction in case subswaths is unsigned.
+    return np.any(subswaths[..., 1] > subswaths[..., 0], axis=0)
 
 
 def find_valid_pulse_intervals(subswaths, min_segment_length=1, mask=None):
