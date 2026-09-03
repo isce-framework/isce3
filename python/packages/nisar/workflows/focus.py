@@ -1855,7 +1855,7 @@ def focus(runconfig, runconfig_path=""):
 
         # Set missing/valid data mask (same dataset).
         for pol in pols:
-            log.info(f"Geting and saving valid data mask for {frequency}{pol}")
+            log.info(f"Getting and saving valid data mask for {frequency}{pol}")
             pol_chan = [x for x in common_mode
                 if (x.freq_id == frequency and x.pol == pol)][0]
             num_valid_pix = save_valid_data_mask(rawlist, pol_chan, og, orbit,
