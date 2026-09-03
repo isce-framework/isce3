@@ -1862,9 +1862,10 @@ def focus(runconfig, runconfig_path=""):
                 dop[frequency], dem, azres, mask, get_rdr2geo_params(cfg),
                 get_geo2rdr_params(cfg), **vars(cfg.processing.valid_data_mask))
             frac_valid_pix = num_valid_pix / np.prod(og.shape)
-            mask.attrs[f"validPixelFraction{pol}"] = frac_valid_pix
-            mask.attrs[f"validPulseFraction{pol}"] = get_valid_pulse_fraction(
-                rawlist, pol_chan, proc_begin, proc_end, og.ref_epoch)
+            mask.attrs[f"maskValidPixelFraction{pol}"] = frac_valid_pix
+            rawfrac = get_valid_pulse_fraction(rawlist, pol_chan, proc_begin,
+                proc_end, og.ref_epoch)
+            mask.attrs[f"rawValidPulseFraction{pol}"] = rawfrac
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
