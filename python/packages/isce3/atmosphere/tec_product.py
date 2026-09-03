@@ -23,7 +23,9 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
                                      radar_grid: isce3.product.RadarGridParameters,
                                      dem_interp: isce3.geometry.DEMInterpolator,
                                      ellipsoid: isce3.core.Ellipsoid,
-                                     total_tec_only: bool=False) -> np.ndarray:
+                                     total_tec_only: bool=False,
+                                     polyfit: bool=False,
+                                     polyfit_degree: int=2) -> np.ndarray:
     '''
     Compute near or far TEC delta range
 
@@ -55,6 +57,12 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
     total_tec_only: bool
         If True, use total TEC only without subtracting the topside TEC.
         Otherwise use the suborbital TEC (total TEC minus topside TEC).
+    polyfit: bool
+        If True, fit a polynomial of degree `polyfit_degree` to the suborbital
+        TEC profile and use the fitted (smoothed) values. Otherwise use the
+        suborbital TEC as is.
+    polyfit_degree: int
+        Degree of the polynomial fit applied when `polyfit` is True. Default 2.
 
     Returns
     -------
@@ -64,7 +72,9 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
     # compute sub orbital TEC from total and top TEC in JSON
     sub_orbital_tec = _get_suborbital_tec(tec_json_dict, nr_fr,
                                           utc_time.mask,
-                                          total_tec_only=total_tec_only)
+                                          total_tec_only=total_tec_only,
+                                          polyfit=polyfit,
+                                          polyfit_degree=polyfit_degree)
 
     incidence = [compute_incidence_angle(t, nr_fr_rg, orbit, doppler_lut,
                                          radar_grid, dem_interp, ellipsoid)
@@ -133,7 +143,9 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
                             radar_grid: isce3.product.RadarGridParameters,
                             doppler_lut: isce3.core.LUT2d, dem_path: str,
                             margin: float=40.0,
-                            total_tec_only: bool=False) -> isce3.core.LUT2d:
+                            total_tec_only: bool=False,
+                            polyfit: bool=False,
+                            polyfit_degree: int=2) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for slant range correction from a JSON source
 
@@ -157,6 +169,12 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
     total_tec_only: bool
         If True, use total TEC only without subtracting the topside TEC.
         Otherwise use the suborbital TEC (total TEC minus topside TEC).
+    polyfit: bool
+        If True, fit a polynomial of degree `polyfit_degree` to the suborbital
+        TEC profile and use the fitted (smoothed) values. Otherwise use the
+        suborbital TEC as is.
+    polyfit_degree: int
+        Degree of the polynomial fit applied when `polyfit` is True. Default 2.
 
     Returns
     -------
@@ -203,7 +221,9 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
                                                           radar_grid,
                                                           dem_interp,
                                                           ellipsoid,
-                                                          total_tec_only)
+                                                          total_tec_only,
+                                                          polyfit,
+                                                          polyfit_degree)
                          for nr_fr, rg in zip(['Nr', 'Fr'], rg_vec)]).T
 
     return isce3.core.LUT2d(rg_vec, t_since_epoch_masked.compressed(), delta_r)

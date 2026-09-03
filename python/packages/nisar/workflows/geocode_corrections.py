@@ -231,9 +231,13 @@ def _get_iono_srange_corrections(cfg, slc, frequency, orbit,
     # DEM file for DEM interpolator and EPSG for ellipsoid
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
 
+    polyfit_tec_profile = \
+        cfg['processing']['tec_correction']['polyfit_tec_profile']
+
     tec_correction = tec_lut2d_from_json_srg(tec_file, center_freq, orbit,
                                              radar_grid, doppler, dem_file,
-                                             total_tec_only=use_totaltec_only)
+                                             total_tec_only=use_totaltec_only,
+                                             polyfit=polyfit_tec_profile)
 
     if cfg['processing']['tec_correction']['apply_slant_range_correction'] is False:
             # NOTE: Just returning an empty LUT2d() will disrupt the downstream procedure,
@@ -353,7 +357,7 @@ class AzSrgCorrections:
             tec_dict = json.load(fin)
         # For compatibility, skip the check if `topTecNrDataFlag` or `topTecFrDataFlag`
         # do not exist.
-        required_keys = {"topTecNrDataFlag", "topTecRrDataFlag"}
+        required_keys = {"topTecNrDataFlag", "topTecFrDataFlag"}
 
         if not required_keys.issubset(tec_dict):
             warning_channel.log(f'TopTEC Dataflag do not exist in IMAGEN TEC file: {tec_path}')
