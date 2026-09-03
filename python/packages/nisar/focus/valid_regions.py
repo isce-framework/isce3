@@ -434,3 +434,20 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         else:
             raise e
     return num_valid
+
+
+def get_valid_pulse_fraction(rawlist, out_chan, t0, t1, epoch):
+    num_valid, num_total = 0, 0
+    for raw in rawlist:
+        raw_chan = find_overlapping_channel(raw, out_chan)
+
+        _, t = raw.getPulseTimes(raw_chan.freq_id, tx=raw_chan.pol[0],
+            epoch=epoch)
+
+        pulse_mask = (t0 <= t) & (t < t1)
+        num_total += np.sum(pulse_mask)
+
+        valid_mask = raw.getValidPulses(raw_chan.freq_id, raw_chan.pol)
+        num_valid += np.sum(valid_mask & pulse_mask)
+            
+    return num_valid / num_total

@@ -40,7 +40,7 @@ from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import (RadarGridParameters,
     get_radar_grid_nominal_ground_spacing)
 from nisar.focus.valid_regions import (get_focused_sub_swaths,
-    save_valid_data_mask)
+    save_valid_data_mask, get_valid_pulse_fraction)
 from nisar.workflows.yaml_argparse import YamlArgparse
 import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
@@ -1863,6 +1863,8 @@ def focus(runconfig, runconfig_path=""):
                 get_geo2rdr_params(cfg), **vars(cfg.processing.valid_data_mask))
             frac_valid_pix = num_valid_pix / np.prod(og.shape)
             mask.attrs[f"validPixelFraction{pol}"] = frac_valid_pix
+            mask.attrs[f"validPulseFraction{pol}"] = get_valid_pulse_fraction(
+                rawlist, pol_chan, proc_begin, proc_end, og.ref_epoch)
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
