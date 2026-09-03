@@ -437,6 +437,30 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
 
 
 def get_valid_pulse_fraction(rawlist, out_chan, t0, t1, epoch):
+    """
+    Compute the fraction of pulses with valid data samples in a given time
+    interval, across a group of raw data files.
+
+    Parameters
+    ----------
+    rawlist : list[nisar.products.readers.Raw.Raw]
+        List of raw data files (observations) that will be processed.
+    out_chan : nisar.mixed_mode.PolChannel
+        Desired channel to process (will be matched with available raw data
+        using mixed-mode logic).
+    t0 : float
+        Start of time interval, in seconds relative to `epoch`.
+    t1 : float
+        End of time interval (exclusive), in seconds relative to `epoch`.
+    epoch : isce3.core.DateTime
+        Time reference for `t0` and `t1`.
+
+    Returns
+    -------
+    fraction : float
+        Number of valid pulses in [t0, t1) divided by the total number of
+        pulses in [t0, t1), summed over all files in `rawlist`.
+    """
     num_valid, num_total = 0, 0
     for raw in rawlist:
         raw_chan = find_overlapping_channel(raw, out_chan)
