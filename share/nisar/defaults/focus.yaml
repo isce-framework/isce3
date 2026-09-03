@@ -511,7 +511,7 @@ runconfig:
                 # Data segments with fewer than this number of consecutive valid
                 # pulses will be excluded from the valid data mask.  This helps
                 # avoid unnecessary bookkeeping when lots of missing pulses are
-                # sprinkled throughout an observation. Must be >= 2 pulses.
+                # sprinkled throughout an observation. Must be >= 1 pulse.
                 min_segment_length: 2000
 
                 # Data segments (each of which must be at least

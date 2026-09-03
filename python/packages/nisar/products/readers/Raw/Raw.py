@@ -948,7 +948,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
             Segments with fewer than this number of consecutive valid pulses
             will not be returned.  This helps avoid unnecessary bookkeeping when
             lots of missing pulses are sprinkled throughout an observation. Must
-            be >= 2 pulses.
+            be >= 1 pulse.
         max_pulse_gap : int, optional
             Segments (each of which must be at least min_segment_length pulses)
             separated by max_pulse_gap or fewer invalid pulses will be joined
@@ -966,10 +966,8 @@ class RawBase(Base, family='nisar.productreader.raw'):
             Bounding box in radar coordinates for each sub-swath for each
             segment of constant data window position/length.
         """
-        # Lower bound of two pulses (not one) so that we can look one pulse
-        # ahead in dithered case.
-        if min_segment_length < 2:
-            raise ValueError("Need at least two pulses per segment")
+        if min_segment_length < 1:
+            raise ValueError("Need at least one pulse per segment")
         if max_pulse_gap < 0:
             raise ValueError("max_pulse_gap must be non-negative")
         if polarization is None:
@@ -1046,10 +1044,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
                 # If dithered peek ahead in case gap overlaps start or end of
                 # valid swath.  Only need to check one pulse ahead assuming
                 # dither sequence is correctly designed to avoid consecutive
-                # gaps.
-                if is_dithered:
+                # gaps.  Of course, only do this trick if the segment actually
+                # has a second pulse to check.
+                if is_dithered and ipulse1 > (ipulse0 + 1):
                     assert iswath == 0  # due to restructuring above
-                    assert ipulse0 < (nt - 1)  # since min_segment_length > 1
                     j0next = subswaths[iswath, ipulse0 + 1, 0]
                     j1next = subswaths[iswath, ipulse0 + 1, 1]
                     if j1next > j0next:

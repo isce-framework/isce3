@@ -67,7 +67,7 @@ def get_raw_sub_swath_bboxes(rawlist, out_chan, orbit, num_ignore=25,
         Segments with fewer than this number of consecutive valid pulses
         will not be returned.  This helps avoid unnecessary bookkeeping when
         lots of missing pulses are sprinkled throughout an observation. Must
-        be >= 2 pulses.
+        be >= 1 pulse.
     max_pulse_gap : int, optional
         Segments (each of which must be at least min_segment_length pulses)
         separated by max_pulse_gap or fewer invalid pulses will be joined
@@ -202,7 +202,7 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         Segments with fewer than this number of consecutive valid pulses
         will not be returned.  This helps avoid unnecessary bookkeeping when
         lots of missing pulses are sprinkled throughout an observation. Must
-        be >= 2 pulses.
+        be >= 1 pulse.
     max_pulse_gap : int, optional
         Segments (each of which must be at least min_segment_length pulses)
         separated by max_pulse_gap or fewer invalid pulses will be joined
@@ -325,7 +325,7 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         Segments with fewer than this number of consecutive valid pulses
         will not be returned.  This helps avoid unnecessary bookkeeping when
         lots of missing pulses are sprinkled throughout an observation. Must
-        be >= 2 pulses.
+        be >= 1 pulse.
     max_pulse_gap : int, optional
         Segments (each of which must be at least min_segment_length pulses)
         separated by max_pulse_gap or fewer invalid pulses will be joined
