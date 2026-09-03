@@ -151,7 +151,7 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
                            rdr2geo_params=dict(), geo2rdr_params=dict(),
                            ignore_failure=False, polygon_segment_length=50.0,
                            num_ignore=25, max_observation_gap=0.002,
-                           min_segment_length=2000, max_pulse_gap=1):
+                           min_segment_fraction=0.25, max_pulse_gap=1):
     """
     Determine fully-focused regions of the image in a format suitable for
     populating the validSamplesSubSwathX RSLC datasets.
@@ -199,16 +199,18 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         and the first pulse of the following observation for the two to be
         considered seamless.  Larger raw data gaps may result in a synthetic
         aperture being marked invalid in the RSLC.
-    min_segment_length : int, optional
+    min_segment_fraction : float, optional
+        Lower bound on the number of consecutive valid pulses, expressed as a
+        fraction of the synthetic aperture length.
         Segments with fewer than this number of consecutive valid pulses
         will not be returned.  This helps avoid unnecessary bookkeeping when
         lots of missing pulses are sprinkled throughout an observation. Must
         be >= 1 pulse.
     max_pulse_gap : int, optional
-        Segments (each of which must be at least min_segment_length pulses)
-        separated by max_pulse_gap or fewer invalid pulses will be joined
-        together.  This provides an easy way to ignore isolated gaps of a
-        single invlid pulse, for example.  Set to 0 to disable merging.
+        Segments (each lasting at least min_segment_fraction) separated by
+        max_pulse_gap or fewer invalid pulses will be joined together.  This
+        provides an easy way to ignore isolated gaps of a single invlid pulse,
+        for example.  Set to 0 to disable merging.
 
     Returns
     -------
@@ -217,6 +219,9 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
         where nswath is the number of valid sub-swaths and npulse is the length
         of the focused image grid.
     """
+    min_segment_length = _get_min_segment_length(min_segment_fraction, azres,
+        grid, orbit, dem.ellipsoid, _get_prf(rawlist))
+
     raw_bbox_lists, chirp_durations = get_raw_sub_swath_bboxes(rawlist,
         out_chan, orbit, num_ignore=num_ignore,
         min_segment_length=min_segment_length, max_pulse_gap=max_pulse_gap,
