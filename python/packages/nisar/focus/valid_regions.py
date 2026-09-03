@@ -221,6 +221,7 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     """
     min_segment_length = _get_min_segment_length(min_segment_fraction, azres,
         grid, orbit, dem.ellipsoid, _get_prf(rawlist))
+    log.info(f"Using {min_segment_length=} for valid sub swaths")
 
     raw_bbox_lists, chirp_durations = get_raw_sub_swath_bboxes(rawlist,
         out_chan, orbit, num_ignore=num_ignore,
@@ -385,6 +386,7 @@ def save_valid_data_mask(rawlist, out_chan, grid, orbit, doppler, dem, azres,
 
     min_segment_length = _get_min_segment_length(min_segment_fraction, azres,
         grid, orbit, dem.ellipsoid, _get_prf(rawlist))
+    log.info(f"Using {min_segment_length=} for valid data mask")
 
     raw_bbox_lists, chirp_durations = get_raw_sub_swath_bboxes(rawlist,
         out_chan, orbit, num_ignore=num_ignore,
