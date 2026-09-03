@@ -290,6 +290,33 @@ def _get_prf(rawlist, reduction=max):
 
 def _get_min_segment_length(min_segment_fraction, azres, grid, orbit, ellipsoid,
                             prf):
+    """
+    Convert a minimum segment length, expressed as a fraction of the
+    synthetic aperture length, to a number of pulses.
+
+    Parameters
+    ----------
+    min_segment_fraction : float
+        Lower bound on the number of consecutive valid pulses, expressed as a
+        fraction of the synthetic aperture length.  Must be in (0, 1].
+    azres : float
+        Processed azimuth resolution, in meters.
+    grid : isce3.product.RadarGridParameters
+        Grid for focused image (zero-Doppler).  Used to estimate the
+        synthetic aperture length at midswath, end range.
+    orbit : isce3.core.Orbit
+        Trajectory of antenna phase center.
+    ellipsoid : isce3.core.Ellipsoid
+        Reference ellipsoid used to estimate the synthetic aperture length.
+    prf : float
+        Pulse repetition frequency, in Hz.
+
+    Returns
+    -------
+    min_segment_length : int
+        Lower bound on the number of consecutive valid pulses, in pulses.
+        Always >= 1.
+    """
     if not (0 < min_segment_fraction <= 1.0):
         raise ValueError("Expected 0 < min_segment_fraction <= 1 but got "
             f"{min_segment_fraction}")
