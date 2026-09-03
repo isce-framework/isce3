@@ -284,7 +284,7 @@ def _get_prf(rawlist, reduction=max):
     prf : float
         Pulse repetition frequency in Hz
     """
-    return reduction(1.0 / np.mean(np.diff(raw.getPulseTimes()))
+    return reduction(1.0 / np.mean(np.diff(raw.getPulseTimes()[1]))
         for raw in rawlist)
 
 
