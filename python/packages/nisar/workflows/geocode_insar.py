@@ -1163,7 +1163,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                             interpolation_methods,
                                             invalid_values,
                                             iono_freq, pol_list_iono,
-                                            geogrid, rdr_geometry, dem_raster,
+                                            geogrid, rdr_geometry_iono, dem_raster,
                                             lines_per_block, input_hdf5_iono, dst_h5,
                                             subswaths=None,
                                             iono_sideband=iono_sideband_bool,
