@@ -65,17 +65,17 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                                       isce3::io::Raster*>
                             (&Topo::topo),
                     py::arg("dem_raster"),
-                    py::arg("x_raster"),
-                    py::arg("y_raster"),
-                    py::arg("height_raster"),
-                    py::arg("incidence_angle_raster"),
-                    py::arg("heading_angle_raster"),
-                    py::arg("local_incidence_angle_raster"),
-                    py::arg("local_Psi_raster"),
-                    py::arg("simulated_amplitude_raster"),
-                    py::arg("layover_shadow_raster"),
-                    py::arg("ground_to_sat_east_raster"),
-                    py::arg("ground_to_sat_north_raster"),
+                    py::arg("x_raster") = nullptr,
+                    py::arg("y_raster") = nullptr,
+                    py::arg("height_raster") = nullptr,
+                    py::arg("incidence_angle_raster") = nullptr,
+                    py::arg("heading_angle_raster") = nullptr,
+                    py::arg("local_incidence_angle_raster") = nullptr,
+                    py::arg("local_psi_raster") = nullptr,
+                    py::arg("simulated_amplitude_raster") = nullptr,
+                    py::arg("layover_shadow_raster") = nullptr,
+                    py::arg("ground_to_sat_east_raster") = nullptr,
+                    py::arg("ground_to_sat_north_raster") = nullptr,
                     R"(
         Run topo and output to user created topo rasters
 
