@@ -10,17 +10,18 @@
 using isce3::core::ProjectionBase;
 using isce3::core::Vec3;
 
-auto projTest(const ProjectionBase& p, const Vec3& ref_llh, const Vec3& ref_xyz)
+auto projTest(const ProjectionBase& p, const Vec3& ref_llh, const Vec3& ref_xyz, double tol = 1.0e-6)
 {
     Vec3 xyz = p.forward(ref_llh);
-    EXPECT_NEAR(xyz[0], ref_xyz[0], 1e-6);
-    EXPECT_NEAR(xyz[1], ref_xyz[1], 1e-6);
-    EXPECT_NEAR(xyz[2], ref_xyz[2], 1e-6);
+    EXPECT_NEAR(xyz[0], ref_xyz[0], tol);
+    EXPECT_NEAR(xyz[1], ref_xyz[1], tol);
+    EXPECT_NEAR(xyz[2], ref_xyz[2], tol);
 
     Vec3 llh = p.inverse(ref_xyz);
     EXPECT_NEAR(llh[0], ref_llh[0], 1e-9);
     EXPECT_NEAR(llh[1], ref_llh[1], 1e-9);
     EXPECT_NEAR(llh[2], ref_llh[2], 1e-6);
+
 }
 
 #define PROJ_TEST(testclass, proj, name, ...)                                  \
@@ -29,4 +30,19 @@ auto projTest(const ProjectionBase& p, const Vec3& ref_llh, const Vec3& ref_xyz)
         projTest(proj, __VA_ARGS__);                                           \
         fails += ::testing::Test::HasFailure();                                \
     }                                                                          \
+    struct consume_semicolon
+
+auto makeProjTest(const int code)
+{
+    ProjectionBase *p = isce3::core::createProj(code);
+    ASSERT_EQ(p->code(), code);
+    delete p;
+}
+
+#define MAKE_PROJ_TEST(testclass, code, name)                                 \
+    TEST_F(testclass, name)                                                   \
+    {                                                                         \
+        makeProjTest(code);                                                   \
+        fails += ::testing::Test::HasFailure();                               \
+    }                                                                         \
     struct consume_semicolon
