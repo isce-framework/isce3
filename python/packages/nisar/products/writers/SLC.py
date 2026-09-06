@@ -84,9 +84,9 @@ def add_cal_layer(group: h5py.Group, lut: LUT2d, name: str,
         # C++ API doesn't add descriptions...
         group[xname].attrs["description"] = np.bytes_("Slant range "
             "dimension corresponding to processing information records")
-        group[yname].attrs["description"] = np.bytes_("Zero Doppler time "
-            "since UTC epoch dimension corresponding to processing information "
-            "records")
+        group[yname].attrs["description"] = np.bytes_("Vector of zero Doppler "
+            "azimuth times, measured relative to a UTC epoch, corresponding to "
+            "processing information records")
         group[name].attrs["description"] = np.bytes_(description)
     else:
         raise IOError(f"Found only one of {xname} or {yname}."
