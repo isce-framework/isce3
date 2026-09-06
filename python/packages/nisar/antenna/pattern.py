@@ -1,4 +1,3 @@
-from warnings import warn
 from collections import defaultdict
 from isce3.core import Orbit, Attitude, Linspace
 from isce3.geometry import DEMInterpolator
@@ -11,7 +10,8 @@ from nisar.products.readers.Raw import (
 from nisar.antenna import TxTrmInfo, RxTrmInfo, TxBMF, RxDBF
 from nisar.antenna.beamformer import get_pulse_index
 from nisar.antenna.rx_channel_imbalance_helpers import (
-    compute_all_rx_channel_imbalances_from_l0b
+    compute_all_rx_channel_imbalances_from_l0b,
+    _is_product_from_second_band
 )
 import numpy as np
 
@@ -196,6 +196,16 @@ class AntennaPattern:
             self.freq_band = freq_band
         # get all polarization for a frequency band
         self.txrx_pols = raw.polarizations[self.freq_band]
+        # check if it is second band in only split spectrum scenario
+        is_second_band = True
+        for p in self.txrx_pols:
+            is_second_band &= _is_product_from_second_band(
+                raw, freq_band=freq_band, txrx_pol=p)
+        self._is_second_band = is_second_band
+        log.info(
+            f'Whether frequency band "{freq_band}" is the second band of '
+            f'SSP -> {self._is_second_band}'
+        )
         # comput all RX channel imbalances over all
         # txrx pols of a desired frequency band.
         # This RX imbalanced is basically LNA/CALTONE ratio.
@@ -276,7 +286,7 @@ class AntennaPattern:
             # fetch RX channel adjustment complex factors from
             # instrument file per RX pol.
             self.channel_adj_fact_rx[rx_p] = ins.channel_adjustment_factors_rx(
-                rx_p)
+                rx_p, is_second_band=self._is_second_band)
 
             # get rx el-cut patterns
             self.el_pat_rx[rx_p] = ant.el_cut_all(rx_p)
@@ -341,7 +351,8 @@ class AntennaPattern:
                 # fetch TX channel adjustment complex factors from
                 # instrument file per TX linear pol.
                 self.channel_adj_fact_tx[tx_lp] = (
-                    ins.channel_adjustment_factors_tx(tx_lp)
+                    ins.channel_adjustment_factors_tx(
+                        tx_lp, is_second_band=self._is_second_band)
                 )
 
                 # get tx el-cut patterns

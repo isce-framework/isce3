@@ -423,6 +423,15 @@ Note that a new instrument HDF5 sample file "REE_INSTRUMENT_TABLE_V2P0.h5" of ve
   The total number of range lines is *70*. The total number of range bins is *28927*.
   The Tx range lines types are of HPA, LNA, and BYPASS. BYPASS range line interval is *20*.
 
+- **REE_INSTRUMENT_TABLE_V3P0.h5**
+
+  The augmented version, *v3.0*, of the instrument HDF5 product "REE_INSTRUMENT_TABLE_V2P0.h5"
+  whose new spec are introduced on *06/21/2026*.
+  This file contains extra dataset "amplitudeB" for all polarizations covering both TX and RX
+  side. E.g, */HPOL/channelAdjustment/tx/amplitudeB*.
+  This new field supports instrument-related frequency-dependent adjustemnt factors for
+  the second frequency band (aka, "B") if available in split spectrum case.
+
 
 ## Geoid EGM96
 

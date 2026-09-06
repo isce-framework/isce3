@@ -151,3 +151,82 @@ def test_instrument_parser_v2p0():
             npt.assert_allclose(rx_adj_fact, adj_factors,
                                 err_msg='Wrong RX channel adjustment factors'
                                 f' for "{pol}"')
+            # check for band=B which does not exist to make sure it
+            # is handled properly for backward compatibility
+            tx_adj_fact = ins.channel_adjustment_factors_tx(
+                pol, is_second_band=True)
+            npt.assert_allclose(tx_adj_fact, adj_factors,
+                                err_msg=(
+                                    'Wrong TX channel adjustment factors '
+                                    f'of second band for "{pol}"'
+                                ))
+            rx_adj_fact = ins.channel_adjustment_factors_rx(
+                pol, is_second_band=True)
+            npt.assert_allclose(rx_adj_fact, adj_factors,
+                                err_msg=(
+                                    'Wrong RX channel adjustment factors '
+                                    f'of second band for "{pol}"'
+                                ))
+
+
+def test_instrument_parser_v3p0():
+    """
+    Parsing v3.0 of NISAR instrument table where new dataset
+    "amplitudeB" is added to v2.0 to support the TX/RX channel
+    adjustment factors on the second frequency band used in only
+    split spectrum case!
+
+    """
+    # sub directory for test files under "isce3/tests/data"
+    sub_dir = 'bf'
+
+    # HDF5 filename for instrument under "sub_dir"
+    instrument_file = 'REE_INSTRUMENT_TABLE_V3P0.h5'
+
+    # channel adjustment factors stored in the file
+    def _powdb_phasedeg_to_complex(pow_db: float, phs_deg: float) -> float:
+        """Convert (power, phase) (dB, deg) to a complex amplitude"""
+        return 10 ** (pow_db / 20) * np.exp(1j * np.deg2rad(phs_deg))
+
+    adj_fact_tx = {}
+    adj_fact_tx['H'] = np.full(
+        shape=(12,),
+        fill_value=_powdb_phasedeg_to_complex(0.1, 10),
+        dtype='c16'
+    )
+    adj_fact_tx['V'] = np.full(
+        shape=(12,),
+        fill_value=_powdb_phasedeg_to_complex(0.2, 20),
+        dtype='c16'
+    )
+
+    adj_fact_rx = {}
+    adj_fact_rx['H'] = np.full(
+        shape=(12,),
+        fill_value=_powdb_phasedeg_to_complex(-0.1, -10),
+        dtype='c16'
+    )
+    adj_fact_rx['V'] = np.full(
+        shape=(12,),
+        fill_value=_powdb_phasedeg_to_complex(-0.2, -20),
+        dtype='c16'
+    )
+
+    # construct the parser
+    with InstrumentParser(os.path.join(iscetest.data, sub_dir,
+                                       instrument_file)) as ins:
+        for pol in ('H', 'V'):
+            tx_adj_fact = ins.channel_adjustment_factors_tx(
+                pol, is_second_band=True)
+            npt.assert_allclose(tx_adj_fact, adj_fact_tx[pol],
+                                err_msg=(
+                                    'Wrong TX channel adjustment factors '
+                                    f'of second band for "{pol}"'
+            ))
+            rx_adj_fact = ins.channel_adjustment_factors_rx(
+                pol, is_second_band=True)
+            npt.assert_allclose(rx_adj_fact, adj_fact_rx[pol],
+                                err_msg=(
+                                    'Wrong RX channel adjustment factors '
+                                    f'of second band for "{pol}"'
+            ))
