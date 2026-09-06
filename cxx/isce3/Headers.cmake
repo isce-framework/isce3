@@ -114,6 +114,7 @@ geometry/metadataCubes.h
 geogrid/getRadarGrid.h
 geogrid/relocateRaster.h
 image/forward.h
+image/Flatten.h
 image/Resample.h
 image/ResampSlc.h
 image/ResampSlc.icc
