@@ -6,7 +6,7 @@ dependencies:
   - backoff
   - cmake>=3.18
   - cxx-compiler
-  - eigen>=3.3
+  - eigen>=3.3.7
   - fftw>=3.3
   # GDAL 3.6.0 was the first to build with cmake, needed for FindGDAL module
   # https://github.com/conda-forge/gdal-feedstock/pull/651
