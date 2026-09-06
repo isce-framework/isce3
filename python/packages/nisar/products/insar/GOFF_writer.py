@@ -93,7 +93,7 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
             for layer in proc_cfg["offsets_product"]
             if layer.startswith("layer")]
 
-        for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
+        for freq, _, pol_list in get_cfg_freq_pols(self.cfg):
             # add the common fields such as listofpolarizations, pixeloffset,
             # and centerfrequency
             grids_freq_group_name = \

@@ -292,7 +292,7 @@ class L1InSARWriter(InSARBaseWriter):
         Add datasets to pixel offsets group
         """
         pcfg = self.cfg['processing']
-        for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
+        for freq, _, offset_pol_list in get_cfg_freq_pols(self.cfg):
             # create the swath group
             swaths_freq_group_name = \
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
@@ -301,7 +301,7 @@ class L1InSARWriter(InSARBaseWriter):
             off_shape = get_pixel_offsets_dataset_shape(self.cfg, freq)
 
             # add the interferogram and pixelOffsets groups to the polarization group
-            for pol in pol_list:
+            for pol in offset_pol_list:
 
                 offset_pol_group_name = (
                     f"{swaths_freq_group_name}/pixelOffsets/{pol}"
