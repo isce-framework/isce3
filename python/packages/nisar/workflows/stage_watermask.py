@@ -15,8 +15,38 @@ from osgeo import gdal, osr
 from shapely.geometry import LinearRing, Point, Polygon, box
 
 
+# Public NISAR water mask, served over HTTPS by ASF's Earthdata Cloud
+# distribution, for use outside AWS us-west-2 where direct S3 access to
+# nisar-static-repo is denied by bucket policy. Select it with
+# --source https. Requires a NASA Earthdata Login (EDL) account and a
+# ~/.netrc entry:
+#
+#   machine urs.earthdata.nasa.gov
+#       login <EDL_USERNAME>
+#       password <EDL_PASSWORD>
+#
+# (chmod 600 ~/.netrc), plus a cookie jar so GDAL can follow the EDL OAuth
+# redirect on repeated requests:
+#
+#   export GDAL_HTTP_COOKIEFILE=~/.urs_cookies
+#   export GDAL_HTTP_COOKIEJAR=~/.urs_cookies
+BASE_URL = 'https://nisar.asf.earthdatacloud.nasa.gov/NISAR/WATER_MASK'
+
 # Enable exceptions
 gdal.UseExceptions()
+
+# Earthdata Login's redirect-based auth only persists across requests via a
+# cookie jar. Without one, GDAL's /vsicurl/ can HEAD a file successfully
+# (VSIStatL succeeds) while the actual GET returns an empty body, since the
+# auth cookie set during the redirect on the first request never reaches
+# the second. Default to a cookie jar under $HOME unless the caller already
+# set one. This only affects HTTP(S) access (--source https); it is inert
+# for S3 (--source s3, the default).
+_cookie_path = os.path.expanduser('~/.urs_cookies')
+gdal.SetConfigOption(
+    'GDAL_HTTP_COOKIEFILE', os.environ.get('GDAL_HTTP_COOKIEFILE', _cookie_path))
+gdal.SetConfigOption(
+    'GDAL_HTTP_COOKIEJAR', os.environ.get('GDAL_HTTP_COOKIEJAR', _cookie_path))
 
 EARTH_APPROX_CIRCUMFERENCE = 40075017.
 EARTH_RADIUS = EARTH_APPROX_CIRCUMFERENCE / (2 * np.pi)
@@ -66,6 +96,15 @@ def cmdLineParse():
     parser.add_argument('-v', '--version', type=str, action='store',
                         dest='version', default='0.5',
                         help='Version for water mask')
+    parser.add_argument('-s', '--source', type=str, action='store',
+                        choices=['s3', 'https'], default='s3',
+                        help='Water mask source: "s3" for the JPL-internal '
+                             'nisar-static-repo S3 bucket (requires AWS '
+                             'credentials; only reachable from AWS '
+                             'us-west-2), or "https" for the public NISAR '
+                             "water mask served by ASF's Earthdata Cloud "
+                             '(requires a NASA Earthdata Login account and '
+                             'a ~/.netrc entry).')
     return parser.parse_args()
 
 
@@ -349,6 +388,37 @@ def determine_projection(polys):
     return epsg
 
 
+def get_vrt_path(version, epsg, source):
+    """Build the GDAL-readable path to the water mask VRT for a given
+    version and EPSG code.
+
+    Parameters
+    ----------
+    version: str
+        Water mask version
+    epsg: int
+        EPSG code (4326, 3031, or 3413)
+    source: str
+        Either 's3' for the JPL-internal nisar-static-repo S3 bucket, or
+        'https' for the public NISAR water mask served over HTTPS by ASF's
+        Earthdata Cloud distribution.
+
+    Returns
+    -------
+    str
+        GDAL-readable path (/vsis3/... or /vsicurl/...) to the water mask VRT
+    """
+    if source == 's3':
+        if version == '0.2':
+            return f'{WATER_MASK_VSIS3_PATH}/v{version}/watermask.vrt'
+        return f'{WATER_MASK_VSIS3_PATH}/v{version}/EPSG{epsg}.vrt'
+    elif source == 'https':
+        if version == '0.2':
+            return f'/vsicurl/{BASE_URL}/v{version}/watermask.vrt'
+        return f'/vsicurl/{BASE_URL}/v{version}/EPSG{epsg}.vrt'
+    raise ValueError(f"Unknown water mask source {source!r}; must be 's3' or 'https'")
+
+
 @backoff.on_exception(backoff.expo, Exception, max_tries=8, max_value=32)
 def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max, epsg):
     """Translate water mask from nisar-WATERMASK bucket. This
@@ -423,7 +493,7 @@ def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max, epsg)
     ds = None
 
 
-def download_watermask(polys, epsg, outfile, version):
+def download_watermask(polys, epsg, outfile, version, source='s3'):
     """Download water mask from nisar-WATERMASK bucket
 
     Parameters
@@ -436,16 +506,17 @@ def download_watermask(polys, epsg, outfile, version):
         Path to the output WATERMASK file to be staged
     version: str
         Water mask version
+    source: str
+        Either 's3' for the JPL-internal nisar-static-repo S3 bucket, or
+        'https' for the public NISAR water mask served over HTTPS by ASF's
+        Earthdata Cloud distribution.
     """
     try:
         # Download WATERMASK for each polygon/epsg
         file_prefix = os.path.splitext(outfile)[0]
         watermask_list = []
         for n, poly in enumerate(polys):
-            if version == '0.2':
-                vrt_filename = f'{WATER_MASK_VSIS3_PATH}/v{version}/watermask.vrt'
-            else:
-                vrt_filename = f'{WATER_MASK_VSIS3_PATH}/v{version}/EPSG{epsg}.vrt'
+            vrt_filename = get_vrt_path(version, epsg, source)
             outpath = f'{file_prefix}_{n}.tiff'
             watermask_list.append(outpath)
             xmin, ymin, xmax, ymax = poly.bounds
@@ -794,6 +865,44 @@ def check_aws_connection(version):
         raise ValueError(errmsg)
 
 
+def check_earthdata_connection(version):
+    """Check connection to the public NISAR water mask over HTTPS.
+       Throw exception if no connection is established.
+
+    Parameters
+    ----------
+    version: str
+        Version for water mask
+    """
+    # A plain VSIStatL (HEAD-equivalent) can succeed even when the caller
+    # isn't authenticated, because Earthdata Login's redirect chain can
+    # answer a HEAD without the follow-up GET actually returning data. So
+    # this checks a real content read instead of just a stat.
+    test_path = get_vrt_path(version, 4326, 'https')
+    text = b''
+    try:
+        stat = gdal.VSIStatL(test_path)
+        if stat is not None:
+            fp = gdal.VSIFOpenL(test_path, 'rb')
+            if fp is not None:
+                try:
+                    text = gdal.VSIFReadL(1, min(stat.size, 100), fp)
+                finally:
+                    gdal.VSIFCloseL(fp)
+    except Exception:
+        text = b''
+
+    if not text:
+        errmsg = (
+            f'No access to the public NISAR water mask at {BASE_URL}. Make '
+            'sure you have a NASA Earthdata Login account and a ~/.netrc '
+            "entry for 'machine urs.earthdata.nasa.gov', and that "
+            'GDAL_HTTP_COOKIEFILE / GDAL_HTTP_COOKIEJAR are set so GDAL '
+            'can follow the Earthdata Login redirect.'
+        )
+        raise ValueError(errmsg)
+
+
 def apply_margin_to_geographic_box(polygon, margin_in_km=5):
     '''
     Assuming the polygon is in epsg 4326
@@ -960,8 +1069,7 @@ def main(opts):
     # the bbox is not in the valid part of the Water Mask, transform the bbox to
     # epsg 4326 and update watermask_epsg to be 4326
     if watermask_epsg in [3031, 3413]:
-        vrt_filename = \
-            f'{WATER_MASK_VSIS3_PATH}/v{opts.version}/EPSG{watermask_epsg}.vrt'
+        vrt_filename = get_vrt_path(opts.version, watermask_epsg, opts.source)
         xmin, ymin, xmax, ymax = polys[0].bounds
         covers_bbox = watermask_covers_bbox_polar_stereo(vrt_filename, xmin, xmax, ymin, ymax, watermask_epsg)
         if not covers_bbox:
@@ -978,16 +1086,20 @@ def main(opts):
             print('Insufficient water mask coverage. Errors might occur')
         print(f'water mask coverage is {overlap} %')
     else:
-        # Check connection to AWS s3 nisar-WATERMASK bucket
-        try:
-            check_aws_connection(opts.version)
-        except ImportError:
-            import warnings
-            warnings.warn('boto3 is required to verify AWS connection '
-                          'proceeding without verifying connection')
+        if opts.source == 's3':
+            # Check connection to AWS s3 nisar-WATERMASK bucket
+            try:
+                check_aws_connection(opts.version)
+            except ImportError:
+                import warnings
+                warnings.warn('boto3 is required to verify AWS connection '
+                              'proceeding without verifying connection')
+        else:
+            # Check connection to the public NISAR water mask over HTTPS
+            check_earthdata_connection(opts.version)
 
         # Download water mask
-        download_watermask(polys, watermask_epsg, opts.outfile, opts.version)
+        download_watermask(polys, watermask_epsg, opts.outfile, opts.version, opts.source)
         print('Done, water mask store locally')
 
 
