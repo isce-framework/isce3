@@ -16,6 +16,8 @@
 #include <vector>
 #include <valarray>
 #include <complex>
+#include <cmath>
+#include <stdexcept>
 
 // Macro wrappers to check vector lengths 
 // (adds calling function and variable name information to the exception)
@@ -332,27 +334,80 @@ namespace isce3 { namespace core {
         }
     }
     
-    /** Searches array for index closest to provided value */   
-    inline int binarySearch(const std::valarray<double> & array, double value) {
-   
-        // Do the binary search 
+    /** Searches array for index closest to provided value
+     *
+     *  Assumes the array is sorted in ascending order and contains no NaNs.
+     * 
+     * @param array The input array, which must be sorted in ascending order
+     * and contain no NaNs.
+     * @param value The value to search for.
+     * @param always_pick_left If true, and `value` is strictly between two
+     * array elements, the function will return the lower index (left).
+     * If false, the function returns the closest index (left or right).
+     *
+     * @return The index of the array element closest to `value`.
+    */
+    inline int binarySearch(const std::valarray<double> & array, double value,
+                            const bool always_pick_left = false) {
+
+        if (array.size() == 0) {
+                throw std::invalid_argument("input array must contain at least 1 element");
+        }
+        if (array.size() == 1) {
+                return 0;
+        }
+
         int left = 0;
         int right = array.size() - 1;
-        int index;
-        while (left <= right) {
-            const int middle = static_cast<int>(std::round(0.5 * (left + right)));
-            if (left == (right - 1)) {
-                index = left;
-                return index;
+
+        // Test extreme values
+        if (value <= array[left]) {
+            return left;
+        }
+        if (array[right] <= value) {
+            return right;
+        }
+
+        std::size_t count = 0;
+
+        // `max_iter` provides a safeguard against unexpected behavior.
+        // The loop is guaranteed to converge with correct input, but we include
+        // this check as a safe measure for unexpected edge cases.
+        constexpr std::size_t padding = 2;
+        std::size_t max_iter = std::ceil(std::log2(array.size())) + padding;
+        while (left + 1 < right) {
+            const int middle = left + (right - left) / 2;
+            const auto middle_value = array[middle];
+            if (std::isnan(middle_value)) {
+                throw std::invalid_argument("input array may not contain NaN values");
             }
-            if (array[middle] <= value) {
+            if (middle_value < value) {
                 left = middle;
-            } else if (array[middle] > value) {
+            } else {
                 right = middle;
             }
+            if (++count > max_iter) {
+                throw std::runtime_error(
+                    "Binary search failed to converge within the allowed iterations.");
+            }
         }
-        index = left;
-        return index;
+
+        // Test for NaNs
+        if (std::isnan(array[left]) || std::isnan(array[right])) {
+            throw std::invalid_argument("input array may not contain NaN values");
+        }
+
+        // If always pick left and the `right` index is not pointing at value
+        if (always_pick_left && value < array[right]) {
+            return left;
+        }
+
+        // Return the closest of left and right
+        if (std::abs(array[left] - value) <= std::abs(array[right] - value)) {
+            return left;
+        }
+
+        return right;
     }
 
     /** Clip a number between an upper and lower range (implements std::clamp for older GCC) */
