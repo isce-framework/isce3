@@ -14,6 +14,11 @@ from nisar.antenna import get_calib_range_line_idx
 
 log = logging.getLogger("nisar.antenna.rx_channel_imbalance_helpers")
 
+# A constant used for normalizing magnitude of Caltone in function
+# "compute_rx_channel_imbalance". The value is obtained from HRT
+# of some L0B products to avoid big changes in already-computed abscal.
+CALTONE_NORM = 1945.0
+
 
 @dataclass(frozen=True)
 class RxChannelImbalanceProduct:
@@ -168,8 +173,24 @@ def compute_rx_channel_imbalance(
         txrx_pol,
         caltone_freq=caltone_freq
     )
-    # peak normalized
-    max_ratio = np.nanmax(abs(lna_caltone_ratio))
+    # Get active RX channel indicies
+    idx_rxs_active = raw.getListOfRxTRMs(freq_band, txrx_pol) - 1
+    caltone_ofs_mag = np.sqrt(np.nanmean(
+        np.abs(caltone_mean[idx_rxs_active]) ** 2
+    ))
+    # Form complex scalar offset whose magnitude comes from caltone
+    # averaged power among all active channels while its phase is computed
+    # from average phase of LNA among all channels.
+    # Note that LNA and Caltone share the same RF path but at different
+    # frequency!
+    # One can use BYPASS cal for phase offset instead of LNA to capture
+    # phase jumps due to waveform generator reset (a common source).
+    lna_ofs_phs = np.nanmean(
+        np.unwrap(np.angle(lna_mean[idx_rxs_active]))
+    )
+    scalar_ofs = (caltone_ofs_mag / CALTONE_NORM) * np.exp(1j * lna_ofs_phs)
+    # peak normalized and apply complex scalar offset
+    max_ratio = scalar_ofs * np.nanmax(abs(lna_caltone_ratio))
     if not np.isclose(max_ratio, 0):
         lna_caltone_ratio /= max_ratio
     return lna_caltone_ratio, n_tap_dominant, time_delays, max_ratio

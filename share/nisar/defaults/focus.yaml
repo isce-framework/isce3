@@ -526,7 +526,13 @@ runconfig:
                 # table v50 and v51, which went into operations on
                 # 2025-10-17T00:00:00Z.  The v50 frequency is 1216.904297e6 Hz
                 # while the v51 frequency is 1214.882813e6 Hz.
-                frequency: 1214.882813e6
+                # For RCID=164 (77 MHz) over Antartica, it is set to
+                # 1209.492036e6 Hz since 2026-06-08T01:24:07Z.
+                # Default (Null or missing in user runconfig) implies that
+                # the Caltone frequency will be extracted from L0B DRT if
+                # available in L0B product otherwise it will be set to
+                # 1214.882813e6 Hz internally.
+                frequency: null
 
                 # Length of constant-overlap add (COLA) window.
                 wavelet_size: 64

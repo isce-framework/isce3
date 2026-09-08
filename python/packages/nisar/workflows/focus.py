@@ -21,7 +21,8 @@ from nisar.products.readers.Raw import (
     open_rrsd,
     chirpcorrelator_caltype_from_raw,
     is_raw_quad_pol,
-    first_tx_pol_for_quad
+    first_tx_pol_for_quad,
+    caltone_frequency_from_raw
 )
 from nisar.products.readers.rslc_cal import (RslcCalibration,
     parse_rslc_calibration, get_scale_and_delay, check_cal_validity_dates)
@@ -1706,7 +1707,55 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     return swaths
 
 
-def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
+def get_caltone_frequency(cfg, raw, pol, freq_lim=(1209e6, 1301e6)):
+    """
+    Get Caltone frequency either from RSLC runconfig or from
+    parsing it from raw L0B low-rate telemetry (DRT).
+
+    Parameters
+    ----------
+    cfg : Struct
+        RSLC runconfig data.
+    raw : nisar.products.readers.raw.Raw
+        NISAR L0B product pareser object
+    pol : str
+        Tx-Rx polarization such as "HH", "HV", etc
+    freq_lim: tuple of (float, float) or None, default=(1209e6, 1301e6)
+        (min ,max) frequency limit (Hz) for the parsed Caltone from L0B.
+        If  not None and Caltone frequency is not provided in config `cfg`,
+        the parsed Caltone from L0B will be checked against
+        this range and if out of range, ValueError exception will be raised.
+        Default limit is based on NISAR L-band instrument!
+
+    Returns
+    -------
+    float
+        Caltone frequency in Hz.
+
+    """
+    caltone_freq = cfg.processing.caltone.frequency
+    caltone_freq_raw = caltone_frequency_from_raw(raw=raw, txrx_pol=pol)
+    if  caltone_freq is None:
+        caltone_freq = caltone_freq_raw
+        name = os.path.basename(raw.filename)
+        log.info(f'Caltone frequency parsed from raw L0B "{name}" '
+                    f'is {caltone_freq * 1e-6} (MHz)')
+        if freq_lim is not None and (
+            caltone_freq < freq_lim[0] or caltone_freq > freq_lim[1]):
+            raise ValueError(
+                f'Caltone frequency {caltone_freq} (Hz) is out of range '
+                f'{freq_lim} (Hz)!'
+            )
+    elif not np.isclose(caltone_freq, caltone_freq_raw, rtol=1e-6):
+        log.warning(
+            'Noticeable mismtach in Caltone frequency between user-provided '
+            f'one {caltone_freq} (Hz) and L0B-parsed one {caltone_freq_raw} '
+            '(Hz)!'
+        )
+    return caltone_freq
+
+
+def get_caltone_algorithm(cfg, fc, fs, n, is_dithered, caltone_freq):
     """Helper for configuring caltone removal.
 
     Parameters
@@ -1721,6 +1770,8 @@ def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
         Number of samples in raw data.
     is_dithered : bool
         Whether we're analyzing a mode with dithered PRI.
+    caltone_freq : float
+        Caltone frequency in Hz.
 
     Returns
     -------
@@ -1743,7 +1794,7 @@ def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
     elif algorithm == "wavelet":
         log.info("Will remove wavelet caltone estimate from each pulse.")
         wavelets = isce3.focus.ToneRemover(
-            (cfg.processing.caltone.frequency - fc) / fs,
+            (caltone_freq - fc) / fs,
             n, cfg.processing.caltone.wavelet_size)
     else:
         algorithm = "disabled"
@@ -2071,9 +2122,11 @@ def focus(runconfig, runconfig_path=""):
                 log.info("Will fill gaps between sub-swaths with zeros.")
 
             fs = raw.getChirpParameters(channel_in.freq_id, pol[0])[1]
+            caltone_freq = get_caltone_frequency(cfg=cfg, raw=raw, pol=pol)
+            log.info(f'Caltone frequency is {caltone_freq * 1e-6} (MHz)')
             caltone_algorithm, wavelets = get_caltone_algorithm(cfg,
                 channel_in.band.center, fs, raw_grid.shape[1],
-                raw.isDithered(channel_in.freq_id))
+                raw.isDithered(channel_in.freq_id), caltone_freq)
 
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
@@ -2133,12 +2186,6 @@ def focus(runconfig, runconfig_path=""):
 
             # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
-                # XXX Due to a bug in respective DRT of some L0B products
-                # (CRID=05007), caltone.frequency is extrated from runconfig
-                # otherwise, it shall be set to None to be determined from DRT!
-                # The latter requires RSLC runconfig update to allow caltone
-                # frequency to be parsed directly from L0B product for more
-                # flexible configuration over wide range of L0B products.
                 # XXX the intrument-related delay offset used in DBF process
                 # shall be eventually obtained from instrument INT CAL HDF5
                 # once the respective product spec is updated (delay_ofs_dbf)!
@@ -2147,7 +2194,7 @@ def focus(runconfig, runconfig_path=""):
                                         instparser, orbit, attitude,
                                         el_lut=el_lut,
                                         freq_band=channel_in.freq_id,
-                                        caltone_freq=cfg.processing.caltone.frequency,
+                                        caltone_freq=caltone_freq,
                                         delay_ofs_dbf=-2.1474e-6)
 
                 log.info("Precomputing antenna patterns")
