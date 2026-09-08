@@ -110,9 +110,19 @@ TopoLayers::TopoLayers(const size_t linesPerBlock, isce3::io::Raster* xRaster,
 
 void TopoLayers::writeData(size_t xidx, size_t yidx)
 {
-    std::vector<std::variant<double*, float*, short*>> valarrays {&_x[0],
-            &_y[0], &_z[0], &_inc[0], &_hdg[0], &_localInc[0], &_localPsi[0],
-            &_sim[0], &_mask[0], &_groundToSatEast[0], &_groundToSatNorth[0]};
+    // Layers whose raster wasn't requested are left with size-0 valarrays
+    // (see setBlockSize), so indexing element 0 unconditionally would be
+    // out-of-bounds. Only take the address when the valarray is non-empty.
+    auto safe_deref = [](auto& valarray) {
+        using T = typename std::remove_reference_t<decltype(valarray)>::value_type;
+        return valarray.size() ? &valarray[0] : static_cast<T*>(nullptr);
+    };
+
+    std::vector<std::variant<double*, float*, short*>> valarrays {
+            safe_deref(_x), safe_deref(_y), safe_deref(_z), safe_deref(_inc),
+            safe_deref(_hdg), safe_deref(_localInc), safe_deref(_localPsi),
+            safe_deref(_sim), safe_deref(_mask), safe_deref(_groundToSatEast),
+            safe_deref(_groundToSatNorth)};
 
     std::vector<isce3::io::Raster*> rasters {_xRaster, _yRaster, _zRaster,
             _incRaster, _hdgRaster, _localIncRaster, _localPsiRaster,

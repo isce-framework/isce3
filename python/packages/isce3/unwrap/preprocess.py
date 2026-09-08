@@ -2,7 +2,6 @@ import pathlib
 import journal
 import numpy as np
 
-from pyproj import Transformer
 from osgeo import gdal, osr
 from scipy.ndimage import median_filter, map_coordinates
 
@@ -564,9 +563,38 @@ def project_map_to_radar(cfg, input_data_path, freq):
     # NOTE: transforming (5000, 5000) points took about 2.5 seconds on M1 pro, so
     # this should not be a bottleneck.
     if bbox_epsg != 4326:
-        transformer_4326_to_watermask = Transformer.from_crs(4326, bbox_epsg, always_xy=True)
-        decimated_blocks['x'], decimated_blocks['y'] = transformer_4326_to_watermask.transform(
-                decimated_blocks['x'], decimated_blocks['y'])
+        # Create source spatial reference (EPSG:4326)
+        srs_src = osr.SpatialReference()
+        srs_src.ImportFromEPSG(4326)
+
+        # Create destination spatial reference (watermask EPSG)
+        srs_dst = osr.SpatialReference()
+        srs_dst.ImportFromEPSG(bbox_epsg)
+
+        # Set axis mapping to traditional GIS order (equivalent to pyproj's always_xy=True)
+        # This ensures (x, y) = (longitude, latitude) order instead of authority-defined order
+        # GDAL 3.x defaults to authority order, which for EPSG:4326 is (lat, lon) - causing swapped coordinates
+        srs_src.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+        srs_dst.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+
+        # Create coordinate transformation
+        transformer = osr.CoordinateTransformation(srs_src, srs_dst)
+
+        # Transform the 2D coordinate arrays
+        # Save original shape for later
+        original_shape = decimated_blocks['x'].shape
+
+        # Flatten arrays and stack into coordinate pairs
+        x_flat = decimated_blocks['x'].ravel()
+        y_flat = decimated_blocks['y'].ravel()
+        x_y_points = np.column_stack((x_flat, y_flat))
+
+        # Transform all points at once
+        transformed = np.array(transformer.TransformPoints(x_y_points))
+
+        # Extract x and y coordinates and reshape back to original 2D shape
+        decimated_blocks['x'] = transformed[:, 0].reshape(original_shape)
+        decimated_blocks['y'] = transformed[:, 1].reshape(original_shape)
 
     # update decimated extents after reprojection
     for xy in ['x', 'y']:

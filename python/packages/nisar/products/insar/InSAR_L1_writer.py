@@ -497,15 +497,15 @@ class L1InSARWriter(InSARBaseWriter):
                                     description=("Mask indicating the subswaths of valid samples and data anomalies"
                                                  " in the reference RSLC and the geometrically coregistered secondary RSLC."
                                                  " Each pixel value is encoded as a 32-bit unsigned integer."
-                                                 " Bits 0–7 represent subswath encoding,"
+                                                 " Bits 0-7 represent subswath encoding,"
                                                  " where the most significant digit corresponds to the subswath number of the reference RSLC"
                                                  " and the least significant digit corresponds to the subswath number of the secondary RSLC;"
                                                  " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
-                                                 " Bits 8–15 represent bitwise anomaly flags for the secondary RSLC,"
-                                                 " and bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
+                                                 " Bits 8-15 represent bitwise anomaly flags for the secondary RSLC,"
+                                                 " and bits 16-23 represent bitwise anomaly flags for the reference RSLC,"
                                                  " with each bit corresponding to a specific anomaly condition."
                                                  " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
-                                                 " Bits 24–31 are reserved for future use"),
+                                                 " Bits 24-31 are reserved for future use"),
                                     fill_value=255)
             offset_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")
             offset_group['mask'].attrs['valid_min'] = 0
@@ -711,20 +711,20 @@ class L1InSARWriter(InSARBaseWriter):
                 "Mask indicating the subswaths of valid samples and data anomalies"
                 " in the reference RSLC and the geometrically coregistered secondary RSLC."
                 " Each pixel value is encoded as a 32-bit unsigned integer."
-                " Bits 0–7 represent subswath encoding,"
+                " Bits 0-7 represent subswath encoding,"
                 " where the most significant digit corresponds to the subswath number of the reference RSLC"
                 " and the least significant digit corresponds to the subswath number of the secondary RSLC;"
                 " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
-                " Bits 8–15 represent bitwise anomaly flags for the secondary RSLC,"
-                " and bits 16–23 represent bitwise anomaly flags for the reference RSLC,"
+                " Bits 8-15 represent bitwise anomaly flags for the secondary RSLC,"
+                " and bits 16-23 represent bitwise anomaly flags for the reference RSLC,"
                 " with each bit corresponding to a specific anomaly condition."
                 " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
             )
-            mask_description_no_iono =  " Bits 24–31 are reserved for future use"
+            mask_description_no_iono =  " Bits 24-31 are reserved for future use"
             mask_description_iono = (
                 " Bit 24 indicates a bit mask for ionospheric phase mask used during filtering of ionospheric phase."
                 " This ionospheric phase mask indicates pixels which were masked out and filled with interpolated data."
-                " Bits 25–31 are reserved for future use")
+                " Bits 25-31 are reserved for future use")
 
             mask_description = (
                 mask_description_common + mask_description_iono
