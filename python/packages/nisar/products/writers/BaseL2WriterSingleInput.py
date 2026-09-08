@@ -82,11 +82,15 @@ def _get_attribute_dict(band,
     to_string_function: function, optional
         Function to convert input data type to string
     to_data_format_function: function, optional
-        Function to convert input data type to the desired output data type.
+        Function to convert input values to the desired output data type,
+        except for complex statistics, which are handled by
+        `to_stats_format_function`. By default, input values are returned
+        unchanged.
     to_stats_format_function: function, optional
-        Function to convert the statistics data to the desired
-        output statistics data type. This function may be needed, for example,
-        to convert the real and imaginary means of complex128 data to float64.
+        Function to convert real and imaginary statistics values to the
+        desired output data type. By default, statistics values are returned
+        unchanged. This may be needed, for example, to
+        convert statistics computed from complex128 data to float64.
 
     Returns
     -------
