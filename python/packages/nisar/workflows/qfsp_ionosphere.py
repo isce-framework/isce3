@@ -5,16 +5,17 @@ import warnings
 from scipy.ndimage import distance_transform_edt
 
 from isce3.math.offsets_polyfit import (ncoeffs,
-                                      polyfit_offsets,
-                                      predict_offsets)
+                                        polyfit_offsets,
+                                        predict_offsets)
+
 
 def check_qfsp_flag(slc_path):
     """
-    Check whether an RSLC reports an input-data exception.
+    Check whether a NISAR RSLC reports an input-data exception.
 
-    Older RSLC products may not contain the
-    `hasInputDataException` dataset. Such products are treated as not
-    reporting an input-data exception.
+    A missing dataset is treated as False for compatibility with
+    older products. This does not establish that the input is
+    free of artifacts.
 
     Parameters
     ----------
@@ -24,24 +25,21 @@ def check_qfsp_flag(slc_path):
     Returns
     -------
     bool
-        ``True`` if the product reports an input-data exception; otherwise
-        ``False``.
+        True if the product reports an input-data exception;
+        False if the flag is false or the dataset is absent.
 
     Warns
     -----
     RuntimeWarning
-        If the RSLC does not contain the expected dataset.
+        If the input-data exception dataset is absent.
     """
-    qfsp_path = (
-        "/science/LSAR/identification/"
-        "hasInputDataException"
-    )
+    qfsp_path = "/science/LSAR/identification/hasInputDataException"
 
     with h5py.File(slc_path, "r") as src:
         if qfsp_path not in src:
             warnings.warn(
                 f"{slc_path} does not contain {qfsp_path}; "
-                "assuming no input-data exception.",
+                "treating the input-data exception flag as False.",
                 RuntimeWarning,
                 stacklevel=2,
             )

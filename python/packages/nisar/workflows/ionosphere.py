@@ -23,8 +23,6 @@ from isce3.core.block_param_generator import (block_param_generator,
 from isce3.io import HDF5OptimizedReader
 from isce3.signal.interpolate_by_range import (decimate_freq_a_array,
                                                interpolate_freq_b_array)
-from isce3.signal.qfsp_slip_insar import (check_qfsp_flag,
-                                          correct_qfsp_phase_artifact)
 from isce3.splitspectrum import splitspectrum
 from isce3.unwrap.bridge_phase import bridge_unwrapped_phase
 from isce3.unwrap.preprocess import (parse_insar_mask,
@@ -37,6 +35,8 @@ from nisar.products.utils import (deepcopy_runconfig_and_keep_isce3_obj,
 from nisar.workflows import (crossmul, filter_interferogram, h5_prep,
                              prepare_insar_hdf5, resample_slc_v2, unwrap)
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
+from nisar.workflows.qfsp_ionosphere import (check_qfsp_flag,
+                                             correct_qfsp_phase_artifact)
 from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
