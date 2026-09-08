@@ -807,6 +807,9 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
                                      z_vect=heights, flag_cube=True)
 
     create_dataset_kwargs = {}
+     # L2 geocoded products require `grid_mapping` to reference the
+    # `projection` dataset
+    create_dataset_kwargs['grid_mapping'] = "projection"
     create_dataset_kwargs['chunk_size'] = chunk_size
     create_dataset_kwargs['compression_enabled'] = compression_enabled
     create_dataset_kwargs['compression_type'] = compression_type
@@ -911,11 +914,71 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
                              long_name=None, descr=None,
                              units=None, fill_value=None,
                              valid_min=None, valid_max=None,
+                             grid_mapping=None,
                              chunk_size=(1,512,512),
                              compression_enabled=True,
                              compression_type='gzip',
                              compression_level=9,
                              shuffle_filter=True):
+    """Create an HDF5 dataset and return an ISCE3 Raster backed by it.
+
+    The HDF5 dataset is created with the specified dimensions, data type,
+    metadata attributes, chunking, and compression settings. Optional
+    dimension scales are attached to the dataset.
+
+    Parameters
+    ----------
+    group : h5py.Group
+        HDF5 group in which to create the dataset.
+    ds_name : str
+        Name of the HDF5 dataset.
+    dtype : numpy.dtype or type
+        Data type of the dataset.
+    shape : tuple
+        Shape of the dataset.
+    zds, yds, xds : h5py.Dataset, optional
+        Dimension-scale datasets to attach to the corresponding dimensions.
+    standard_name : str, optional
+        CF-compliant standard name for the dataset.
+    long_name : str, optional
+        Descriptive name for the dataset.
+    descr : str, optional
+        Description of the dataset.
+    units : str, optional
+        Units of the dataset values.
+    fill_value : scalar, optional
+        Dataset fill value. If not specified, NaN is used for floating-point
+        datasets and ``NaN + NaNj`` for complex-valued datasets.
+    valid_min, valid_max : scalar, optional
+        Minimum and maximum valid values for the dataset.
+    grid_mapping : str, optional
+        Name of the grid mapping coordinate variable (e.g., 'projection') that
+        defines the projection/CRS for this dataset per CF Convention 5.6.
+        Must reference an existing dataset in the same group. Typically required
+        for L2 geocoded products, and omitted for L1 radar geometry products.
+        Default: None.
+    chunk_size : tuple, optional
+        Target HDF5 chunk size. The actual chunk size may be adjusted to fit
+        within ``shape``. Set to ``None`` to disable chunking.
+    compression_enabled : bool, default=True
+        Whether to enable HDF5 compression.
+    compression_type : str, optional, default='gzip'
+        HDF5 compression filter to use.
+    compression_level : int, optional, default=9
+        Compression level passed to the HDF5 compression filter.
+    shuffle_filter : bool, default=True
+        Whether to enable the HDF5 shuffle filter when compression is enabled.
+
+    Returns
+    -------
+    isce3.io.Raster
+        ISCE3 Raster backed directly by the created HDF5 dataset.
+
+    Raises
+    ------
+    ValueError
+        If compression is enabled and ``chunk_size`` is ``None``.
+    """
 
     create_dataset_kwargs = {}
     if compression_enabled:
@@ -950,7 +1013,8 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
     if xds is not None:
         dset.dims[2].attach_scale(xds)
 
-    dset.attrs['grid_mapping'] = np.bytes_("projection")
+    if grid_mapping is not None:
+        dset.attrs['grid_mapping'] = np.bytes_(grid_mapping)
 
     if standard_name is not None:
         dset.attrs['standard_name'] = np.bytes_(standard_name)
