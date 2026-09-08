@@ -1388,8 +1388,11 @@ def chirpcorrelator_caltype_from_raw(
     except KeyError:
         # XXX if the respective field does not exist then use co-pol under
         # swath in L0B for the sake of backward compatibility
-        freq_band = [f for f in raw.frequencies if
-                     txrx_pol in raw.polarizations[f]][0]
+        freq_bands = [f for f in raw.frequencies if
+                     txrx_pol in raw.polarizations[f]]
+        if len(freq_bands) == 0:
+            raise  # No band contains the desired pol, can't fall back.
+        freq_band = sorted(freq_bands)[0]
         chp_cor = raw.getChirpCorrelator(freq_band, txrx_pol[0])
         cal_type = raw.getCalType(freq_band, txrx_pol[0])
         return chp_cor, cal_type
