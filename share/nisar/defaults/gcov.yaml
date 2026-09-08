@@ -277,6 +277,13 @@ runconfig:
                 #     'algorithm_type' equal to 'area_projection'
                 area_beta_mode: auto
 
+            # TEC correction options. The apply-range/azimuth ionospheric delay
+            # flags live under the `geocode` group above.
+            tec_correction:
+                use_total_tec_only: False
+                ignore_low_quality_topside_tec: False
+                polyfit_tec_profile: False
+
             # Mechanism to specify output posting and DEM
             geocode:
 

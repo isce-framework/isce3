@@ -240,14 +240,92 @@ def _get_iono_srange_corrections(cfg, slc, frequency, orbit,
                                              polyfit=polyfit_tec_profile)
 
     if cfg['processing']['tec_correction']['apply_slant_range_correction'] is False:
-            # NOTE: Just returning an empty LUT2d() will disrupt the downstream procedure,
-            # especially comparing the LUT's axis with the RSLC's radargrid
-            zero_arr = np.zeros(tec_correction.data.shape)
-            tec_correction = isce3.core.LUT2d(tec_correction.x_axis,
-                                              tec_correction.y_axis,
-                                              zero_arr)
+        # NOTE: Just returning an empty LUT2d() will disrupt the downstream procedure,
+        # especially comparing the LUT's axis with the RSLC's radargrid
+        zero_arr = np.zeros(tec_correction.data.shape)
+        tec_correction = isce3.core.LUT2d(tec_correction.x_axis,
+                                          tec_correction.y_axis,
+                                          zero_arr)
 
     return tec_correction
+
+
+def should_use_only_total_tec(cfg, ref_epoch, az_start, az_stop):
+    '''
+    Decide whether to use total TEC only or suborbital TEC.
+    If `use_total_tec_only` is explicitly turned ON, processing will be forced
+    to use total TEC only. If it's turned OFF, then the logic looks at the flag
+    `ignore_low_quality_topside_tec`. If turned on, this inspects the topside
+    TEC data flags within the radar grid and decides whether to use topside TEC.
+
+    Parameters
+    ----------
+    cfg: dict
+        Dict containing the runconfiguration parameters
+    ref_epoch: isce3.core.DateTime
+        Reference epoch of the radar grid used to convert TEC UTC times to
+        seconds relative to the same time base as `az_start` / `az_stop`.
+    az_start: float
+        Azimuth start time (seconds since `ref_epoch`) of the radar grid.
+    az_stop: float
+        Azimuth stop time (seconds since `ref_epoch`) of the radar grid.
+
+    Returns
+    -------
+    bool
+        True if total TEC only should be used, False otherwise.
+    '''
+    warning_channel = journal.warning("geocode_corrections.should_use_only_total_tec")
+
+    tec_path = cfg['dynamic_ancillary_file_group']['tec_file']
+
+    if tec_path is None:
+        warning_channel.log(f'TEC path was not provided: {tec_path}')
+        return False
+
+    if not os.path.exists(tec_path):
+        warning_channel.log(f'TEC path provided does not exist: {tec_path}')
+        return False
+
+    if cfg['processing']['tec_correction']['use_total_tec_only'] is True:
+        return True
+
+    with open(tec_path, 'r') as fin:
+        tec_dict = json.load(fin)
+    # For compatibility, skip the check if `topTecNrDataFlag` or `topTecFrDataFlag`
+    # do not exist.
+    required_keys = {"topTecNrDataFlag", "topTecFrDataFlag"}
+
+    if not required_keys.issubset(tec_dict):
+        warning_channel.log(f'TopTEC Dataflag do not exist in IMAGEN TEC file: {tec_path}')
+        return False
+
+    # Start the investigation.
+    if cfg['processing']['tec_correction']['ignore_low_quality_topside_tec'] is True:
+        # Convert the TEC UTC times to seconds since the radar grid reference
+        # epoch so they share the same time base as the azimuth time span.
+        tec_t_since_epoch = np.array(
+            [(isce3.core.DateTime(t_str) - ref_epoch).total_seconds()
+             for t_str in tec_dict['utc']])
+
+        # Crop the topside TEC data flags to the TEC samples that fall within
+        # the azimuth time span of the (decimated) radar grid.
+        within_radar_grid = ((tec_t_since_epoch >= az_start) &
+                             (tec_t_since_epoch <= az_stop))
+
+        top_tec_flags = np.concatenate(
+            [np.array(tec_dict['topTecNrDataFlag'])[within_radar_grid],
+             np.array(tec_dict['topTecFrDataFlag'])[within_radar_grid]])
+
+        # A flag value of 1 marks a low-quality topside TEC sample. If any
+        # exist within the radar grid, fall back to total TEC only.
+        if np.any(top_tec_flags == 1):
+            warning_channel.log(
+                'Low-quality topside TEC detected within the radar grid; '
+                'using total TEC only.')
+            return True
+
+    return False
 
 
 class AzSrgCorrections:
@@ -311,7 +389,9 @@ class AzSrgCorrections:
 
         # Decide whether TEC correction should use total TEC only (i.e. without
         # subtracting the topside TEC) based on the run config and TEC data.
-        self.use_totaltec_only = self._should_use_only_total_tec()
+        self.use_totaltec_only = should_use_only_total_tec(
+            self.cfg, self.radar_grid_scaled.ref_epoch,
+            self.az_vec[0], self.az_vec[-1])
 
         if self.correct_set or self.correct_tec:
             self._compute_model_correction_luts()
@@ -324,72 +404,6 @@ class AzSrgCorrections:
 
         if self.apply_data_driven_correction:
             self._compute_offset_luts()
-
-
-    def _should_use_only_total_tec(self):
-        '''
-        Decide whether to use total TEC only or suborbital TEC.
-        If `use_total_tec_only` is explicitly turned ON,
-        processing will be forced to use total TEC only.
-        If it's turned OFF, then the logic will take a look at the flag
-        `ignore_low_quality_topside_tec` is turned on. If turned on,
-        this function will take a look at the data and decide whether or not to use topside TEC
-        '''
-
-        info_channel = journal.info("AzSrgCorrections._should_use_only_total_tec")
-        warning_channel = journal.warning("AzSrgCorrections._should_use_only_total_tec")
-        error_channel = journal.info("AzSrgCorrections._should_use_only_total_tec")
-
-        tec_path = self.cfg['dynamic_ancillary_file_group']['tec_file']
-
-        if tec_path is None:
-            warning_channel.log(f'TEC path was not provided: {tec_path}')
-            return False
-
-        if not os.path.exists(tec_path):
-            warning_channel.log(f'TEC path provided does not exist: {tec_path}')
-            return False
-
-        if self.cfg['processing']['tec_correction']['use_total_tec_only'] is True:
-            return True
-
-        with open(tec_path, 'r') as fin:
-            tec_dict = json.load(fin)
-        # For compatibility, skip the check if `topTecNrDataFlag` or `topTecFrDataFlag`
-        # do not exist.
-        required_keys = {"topTecNrDataFlag", "topTecFrDataFlag"}
-
-        if not required_keys.issubset(tec_dict):
-            warning_channel.log(f'TopTEC Dataflag do not exist in IMAGEN TEC file: {tec_path}')
-            return False
-
-        # Start the investigation.
-        if self.cfg['processing']['tec_correction']['ignore_low_quality_topside_tec'] is True:
-            # Convert the TEC UTC times to seconds since the radar grid
-            # reference epoch so they share the same time base as self.az_vec.
-            ref_epoch = self.radar_grid_scaled.ref_epoch
-            tec_t_since_epoch = np.array(
-                [(isce3.core.DateTime(t_str) - ref_epoch).total_seconds()
-                 for t_str in tec_dict['utc']])
-
-            # Crop the topside TEC data flags to the TEC samples that fall
-            # within the azimuth time span of the (decimated) radar grid.
-            within_radar_grid = ((tec_t_since_epoch >= self.az_vec[0]) &
-                                 (tec_t_since_epoch <= self.az_vec[-1]))
-
-            top_tec_flags = np.concatenate(
-                [np.array(tec_dict['topTecNrDataFlag'])[within_radar_grid],
-                 np.array(tec_dict['topTecFrDataFlag'])[within_radar_grid]])
-
-            # A flag value of 1 marks a low-quality topside TEC sample. If any
-            # exist within the radar grid, fall back to total TEC only.
-            if np.any(top_tec_flags == 1):
-                warning_channel.log(
-                    'Low-quality topside TEC detected within the radar grid; '
-                    'using total TEC only.')
-                return True
-
-        return False
 
 
     def _compute_offset_luts(self):
