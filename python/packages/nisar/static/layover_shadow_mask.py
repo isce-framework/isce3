@@ -195,6 +195,27 @@ def geocode_layover_shadow_mask(
     if geo2rdr_params is None:
         geo2rdr_params = {}
 
+    # XXX: There's currently no way to create a "Geocode" object that operates directly
+    # on uint8 data. Instead, the way this is done in the InSAR geocoding workflow is to
+    # create a `GeocodeFloat32` object, resulting in conversion of the input mask values
+    # to float32 during geocoding (and then conversion back to uint8 when they're
+    # written to the output uint8 raster). For the layover/shadow mask, this shouldn't
+    # cause any loss of fidelity since the mask values are small and we're using
+    # nearest neighbor interpolation.
+
+    # However, when geocoding a `GeocodeFloat32`, the C++ `GeocodeCov` internally
+    # uses NaN as a fill value for the area outside the radar grid extent.
+    # uint8 cannot represent NaN, which leads to the geocoding fill area
+    # incorrectly getting the value 0. Because 0 is a valid value in the layover
+    # shadow mask, this is unacceptable; the geocoding fill pixels must be 255
+    # per the spec.
+
+    # So, we'll use geocode's `out_mask` parameter, where out_mask==255 indicates
+    # pixels outside radar grid extent.
+    # We'll use this coverage information to mask the final geocoded layover
+    # shadow mask, setting its geocoding fill pixels' value to 255.
+
+    # Construct the output uint8 Geotiff raster
     geocoded_layover_shadow_mask = make_scratch_gtiff(
         shape=(geo_grid.length, geo_grid.width),
         dtype=np.uint8,
@@ -202,12 +223,15 @@ def geocode_layover_shadow_mask(
         prefix="geocoded-layover-shadow-mask_",
     )
 
-    # XXX: There's currently no way to create a "Geocode" object that operates directly
-    # on uint8 data. Instead, the way this is done in the InSAR geocoding workflow is to
-    # create a `GeocodeFloat32` object, resulting in conversion of the input mask values
-    # to float32 during geocoding (and then conversion back to uint8 when they're
-    # written to the output raster). This shouldn't cause any loss of fidelity since the
-    # mask values are small and we're using nearest neighbor interpolation.
+    # Create output mask to indicate which geocoded pixels are outside radar grid extent
+    out_mask = make_scratch_gtiff(
+        shape=(geo_grid.length, geo_grid.width),
+        dtype=np.uint8,
+        dir_=scratch_dir,
+        prefix="geocode-coverage-mask_",
+    )
+
+    # Setup the `GeocodeFloat32` object
     geocode = isce3.geocode.GeocodeFloat32()
     geocode.orbit = orbit
     geocode.ellipsoid = get_reference_ellipsoid(dem_raster)
@@ -228,17 +252,25 @@ def geocode_layover_shadow_mask(
     if "maxiter" in geo2rdr_params:
         geocode.numiter_geo2rdr = geo2rdr_params["maxiter"]
 
+    # Geocode uint8 layover shadow mask, with the out_mask
     geocode.geocode(
         radar_grid=radar_grid,
         input_raster=layover_shadow_mask,
         output_raster=geocoded_layover_shadow_mask,
         dem_raster=dem_raster,
         output_mode=GeocodeOutputMode.INTERP,
+        out_mask=out_mask,
         memory_mode=normalize_geocode_memory_mode(memory_mode),
         min_block_size=min_block_size,
         max_block_size=max_block_size,
         dem_interp_method=normalize_data_interp_method(dem_interp_method),
     )
+
+    # Set geocoding fill values to 255
+    mask_data = geocoded_layover_shadow_mask.get_block((slice(None), slice(None)))
+    out_mask_data = out_mask.get_block((slice(None), slice(None)))
+    mask_data[out_mask_data == 255] = 255
+    geocoded_layover_shadow_mask.set_block((slice(None), slice(None)), mask_data)
 
     return geocoded_layover_shadow_mask
 
