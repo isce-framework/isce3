@@ -1251,7 +1251,7 @@ def run(cfg: dict, runw_hdf5: str):
 
     # Run InSAR for sub-band SLCs (split-main-bands) or
     # for main and side bands for iono_freq_pols (main-side-bands)
-    # insar_ionosphere_pair(iono_insar_cfg, runw_hdf5)
+    insar_ionosphere_pair(iono_insar_cfg, runw_hdf5)
 
     t_all = time.time()
     # Define methods to use subband or sideband
