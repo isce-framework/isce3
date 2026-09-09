@@ -282,6 +282,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         geo2rdr_params = processing_params["geo2rdr"]
         with log_elapsed_time(logger.info, "Computing static geometry layers"):
             geometry_layers = compute_geometry_layers(
+                radar_grid=radar_grid,
                 geo_grid=geo_grid,
                 dem_raster=dem_raster,
                 orbit=orbit,

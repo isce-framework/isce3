@@ -75,7 +75,8 @@ void getRadarGrid(isce3::core::LookSide lookside,
                     isce3::io::Raster* ground_track_velocity_raster,
                     isce3::io::Raster* local_incidence_angle_raster,
                     isce3::io::Raster* projection_angle_raster,
-                    isce3::io::Raster* simulated_radar_brightness_raster)
+                    isce3::io::Raster* simulated_radar_brightness_raster,
+                    isce3::product::RadarGridParameters* radar_grid)
 {
 
     pyre::journal::info_t info("isce.geogrid.getRadarGrid");
@@ -167,12 +168,18 @@ void getRadarGrid(isce3::core::LookSide lookside,
             const isce3::core::Vec3 input_dem =
                     GetDemCoords(pos_x, pos_y, dem_interp, proj.get());
 
-            if (interpolated_dem_raster != nullptr) {
+            // Populate the DEM raster if the radar grid has not been provided.
+            // If the radar grid has been provided, first verify whether
+            // the point is inside the radar grid.
+            if (interpolated_dem_raster != nullptr && radar_grid == nullptr) {
                 interpolated_dem_array(i, j) = input_dem[2];
             }
 
-            // If nothing else to save, skip
-            if (slant_range_raster == nullptr &&
+            // Skip if there is nothing else to save.
+            // For the DEM raster, the only condition that prevents skipping is when
+            // both `interpolated_dem_raster` and `radar_grid` are provided.
+            if (!(interpolated_dem_raster != nullptr && radar_grid != nullptr) &&
+                slant_range_raster == nullptr &&
                 azimuth_time_raster == nullptr &&
                 incidence_angle_raster == nullptr &&
                 los_unit_vector_x_raster == nullptr &&
@@ -205,6 +212,19 @@ void getRadarGrid(isce3::core::LookSide lookside,
                 azimuth_time = std::numeric_limits<double>::quiet_NaN();
                 slant_range = std::numeric_limits<double>::quiet_NaN();
                 continue;
+            }
+
+            // If the radar grid has been provided, check whether the
+            // point is inside the radar grid.
+            if (radar_grid != nullptr) {
+                // If not inside, continue to the next pixel
+                if (!radar_grid->contains(azimuth_time, slant_range)) {
+                    continue;
+                }
+                // Otherwise, check if DEM raster needs to be populated
+                if (interpolated_dem_raster != nullptr) {
+                    interpolated_dem_array(i, j) = input_dem[2];
+                }
             }
 
             // save grid Doppler slant-range position
