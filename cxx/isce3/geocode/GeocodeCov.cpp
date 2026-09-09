@@ -128,7 +128,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
         isce3::io::Raster& dem_raster, geocodeOutputMode output_mode,
         bool flag_az_baseband_doppler, bool flatten, double geogrid_upsampling,
-        bool flag_upsample_radar_grid, bool flag_apply_rtc,
+        double fill_value, bool flag_upsample_radar_grid,
+        bool flag_apply_rtc,
         isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry,
         isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,
         int exponent, float rtc_min_value_db, double rtc_geogrid_upsampling,
@@ -159,7 +160,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
     bool flag_run_geocode_interp = output_mode == geocodeOutputMode::INTERP;
     if (flag_run_geocode_interp && !flag_complex_to_real)
         geocodeInterp<T>(radar_grid, input_raster, output_raster, dem_raster,
-                flag_apply_rtc, flag_az_baseband_doppler, flatten,
+                fill_value, flag_apply_rtc,
+                flag_az_baseband_doppler, flatten,
                 input_terrain_radiometry, output_terrain_radiometry,
                 rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
                 rtc_area_beta_mode,
@@ -175,7 +177,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
              (std::is_same<T, double>::value ||
                      std::is_same<T, std::complex<double>>::value))
         geocodeInterp<double>(radar_grid, input_raster, output_raster,
-                dem_raster, flag_apply_rtc, flag_az_baseband_doppler, flatten,
+                dem_raster, fill_value,
+                flag_apply_rtc, flag_az_baseband_doppler, flatten,
                 input_terrain_radiometry, output_terrain_radiometry,
                 rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
                 rtc_area_beta_mode,
@@ -189,7 +192,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 dem_interp_method);
     else if (flag_run_geocode_interp)
         geocodeInterp<float>(radar_grid, input_raster, output_raster,
-                dem_raster, flag_apply_rtc, flag_az_baseband_doppler, flatten,
+                dem_raster, fill_value,
+                flag_apply_rtc, flag_az_baseband_doppler, flatten,
                 input_terrain_radiometry, output_terrain_radiometry,
                 rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
                 rtc_area_beta_mode,
@@ -203,7 +207,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 dem_interp_method);
     else if (!flag_complex_to_real)
         geocodeAreaProj<T>(radar_grid, input_raster, output_raster, dem_raster,
-                geogrid_upsampling, flag_upsample_radar_grid, flag_apply_rtc,
+                geogrid_upsampling, fill_value,
+                flag_upsample_radar_grid, flag_apply_rtc,
                 input_terrain_radiometry, output_terrain_radiometry,
                 rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
                 rtc_area_beta_mode,
@@ -219,7 +224,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
     else if (std::is_same<T, double>::value ||
              std::is_same<T, std::complex<double>>::value)
         geocodeAreaProj<double>(radar_grid, input_raster, output_raster,
-                dem_raster, geogrid_upsampling, flag_upsample_radar_grid,
+                dem_raster, geogrid_upsampling, fill_value,
+                flag_upsample_radar_grid,
                 flag_apply_rtc, input_terrain_radiometry,
                 output_terrain_radiometry, rtc_min_value_db,
                 rtc_geogrid_upsampling, rtc_algorithm, rtc_area_beta_mode,
@@ -235,7 +241,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 dem_interp_method);
     else
         geocodeAreaProj<float>(radar_grid, input_raster, output_raster,
-                dem_raster, geogrid_upsampling, flag_upsample_radar_grid,
+                dem_raster, geogrid_upsampling, fill_value,
+                flag_upsample_radar_grid,
                 flag_apply_rtc, input_terrain_radiometry,
                 output_terrain_radiometry, rtc_min_value_db,
                 rtc_geogrid_upsampling, rtc_algorithm, rtc_area_beta_mode,
@@ -256,8 +263,8 @@ template<class T_out>
 void Geocode<T>::geocodeInterp(
         const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster& inputRaster, isce3::io::Raster& outputRaster,
-        isce3::io::Raster& demRaster, bool flag_apply_rtc,
-        bool flag_az_baseband_doppler, bool flatten,
+        isce3::io::Raster& demRaster, double fill_value,
+        bool flag_apply_rtc, bool flag_az_baseband_doppler, bool flatten,
         isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry,
         isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,
         float rtc_min_value_db, double rtc_geogrid_upsampling,
@@ -749,6 +756,8 @@ void Geocode<T>::geocodeInterp(
         using T_out_real = typename isce3::real<T_out>::type;
         T_out nan_t_out = 0;
         nan_t_out *= std::numeric_limits<T_out_real>::quiet_NaN();
+        
+        T_out fill_value_t_out = static_cast<T_out>(fill_value);
 
         // define the geo-block matrix based on the raster bands data type
         isce3::core::Matrix<T_out> geoDataBlock(
@@ -758,7 +767,7 @@ void Geocode<T>::geocodeInterp(
         if (azimuthFirstLine > azimuthLastLine ||
                 rangeFirstPixel > rangeLastPixel) {
 
-            geoDataBlock.fill(nan_t_out);
+            geoDataBlock.fill(fill_value_t_out);
             for (int band = 0; band < nbands; ++band) {
                 outputRaster.setBlock(geoDataBlock.data(), 0, lineStart,
                         geogrid.width(), geoBlockLength, band + 1);
@@ -860,7 +869,7 @@ void Geocode<T>::geocodeInterp(
             geoDataBlock with NaNs before each use. This prevents residual values
             from previous iterations from being mistakenly retained.
             */
-            geoDataBlock.fill(nan_t_out);
+            geoDataBlock.fill(fill_value_t_out);
  
             _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY,
                     rdrBlockWidth, rdrBlockLength, azimuthFirstLine,
@@ -868,7 +877,8 @@ void Geocode<T>::geocodeInterp(
                     flag_az_baseband_doppler, flatten, phase_screen_raster,
                     phase_screen_array, rtc_min_value,
                     abs_cal_factor_effective, clip_min, clip_max,
-                    flag_apply_rtc, rtc_area_array, rtc_area_sigma0_array, out_geo_rtc_band,
+                    flag_apply_rtc, rtc_area_array, rtc_area_sigma0_array,
+                    out_geo_rtc_band,
                     out_geo_rtc_array, out_geo_rtc_gamma0_to_sigma0_band,
                     out_geo_rtc_gamma0_to_sigma0_array,
                     input_layover_shadow_mask_raster,
@@ -1511,13 +1521,15 @@ static int _geo2rdrWrapper(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
 * @param[in]  this_block_size_x  Size of the current block in the X direction
 * @param[in]  this_block_size_y  Size of the current block in the Y direction
 * @param[out] output_raster      Output raster
+* @param[in]  fill_value         Fill value. If the output is complex,
+# this value is used for the real part with the imaginary part set to 0
 *
 */
 template<class T>
 inline void _fillGcovBlocksWithNans(
     int block_x, int block_size_x, int block_y,
     int block_size_y, int this_block_size_x, int this_block_size_y,
-    isce3::io::Raster* output_raster)
+    isce3::io::Raster* output_raster, double fill_value)
 {
 
     // The output raster may be optional (e.g., off-diagonal raster). If
@@ -1529,14 +1541,11 @@ inline void _fillGcovBlocksWithNans(
     // declare matrix that will hold the NaNs
     isce3::core::Matrix<T> data_block(this_block_size_y, this_block_size_x);
 
-    // declare variable to hold NaN values according to the templateT,
-    // i.e. real (NaN) or complex (NaN, NaN)
-    using T_real = typename isce3::real<T>::type;
-    T nan_t = 0;
-    nan_t *= std::numeric_limits<T_real>::quiet_NaN();
+    // Cast fill value to output template class T
+    T fill_value_t = static_cast<T>(fill_value);
 
     // fill matrix with NaN
-    data_block.fill(nan_t);
+    data_block.fill(fill_value_t);
 
     const int nbands = output_raster->numBands();
     for (int band = 0; band < nbands; ++band) {
@@ -1872,7 +1881,8 @@ void Geocode<T>::geocodeAreaProj(
         const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
         isce3::io::Raster& dem_raster, double geogrid_upsampling,
-        bool flag_upsample_radar_grid, bool flag_apply_rtc,
+        double fill_value, bool flag_upsample_radar_grid,
+        bool flag_apply_rtc,
         isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry,
         isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,
         float rtc_min_value_db, double rtc_geogrid_upsampling,
@@ -1917,10 +1927,10 @@ void Geocode<T>::geocodeAreaProj(
         const float upsampled_radar_grid_nlooks = radar_grid_nlooks / 2;
         geocodeAreaProj<T_out>(upsampled_radar_grid, input_raster,
                 output_raster, dem_raster, geogrid_upsampling,
-                flag_upsample_radar_grid, flag_apply_rtc,
-                input_terrain_radiometry, output_terrain_radiometry,
-                rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
-                rtc_area_beta_mode,
+                fill_value, flag_upsample_radar_grid,
+                flag_apply_rtc, input_terrain_radiometry,
+                output_terrain_radiometry, rtc_min_value_db,
+                rtc_geogrid_upsampling, rtc_algorithm, rtc_area_beta_mode,
                 abs_cal_factor, clip_min, clip_max, min_nlooks,
                 upsampled_radar_grid_nlooks, out_off_diag_terms, out_geo_rdr,
                 out_geo_dem, out_geo_nlooks, out_geo_rtc,
@@ -2287,7 +2297,8 @@ void Geocode<T>::geocodeAreaProj(
                         is_radar_grid_single_block, rdrData, block_size_y,
                         block_size_with_upsampling_y, block_y, block_size_x,
                         block_size_with_upsampling_x, block_x, numdone,
-                        progress_block, geogrid_upsampling, nbands,
+                        progress_block, geogrid_upsampling,
+                        fill_value, nbands,
                         nbands_off_diag_terms, dem_interp_method, dem_raster,
                         out_off_diag_terms, out_geo_rdr, out_geo_dem,
                         out_geo_nlooks, out_geo_rtc,
@@ -2315,7 +2326,8 @@ void Geocode<T>::geocodeAreaProj(
                         is_radar_grid_single_block, rdrDataT, block_size_y,
                         block_size_with_upsampling_y, block_y, block_size_x,
                         block_size_with_upsampling_x, block_x, numdone,
-                        progress_block, geogrid_upsampling, nbands,
+                        progress_block, geogrid_upsampling,
+                        fill_value, nbands,
                         nbands_off_diag_terms, dem_interp_method, dem_raster,
                         out_off_diag_terms, out_geo_rdr, out_geo_dem,
                         out_geo_nlooks, out_geo_rtc,
@@ -2504,7 +2516,8 @@ void Geocode<T>::_runBlock(
         int block_size_y, int block_size_with_upsampling_y, int block_y,
         int block_size_x, int block_size_with_upsampling_x, int block_x,
         long long& numdone, const long long& progress_block,
-        double geogrid_upsampling, int nbands, int nbands_off_diag_terms,
+        double geogrid_upsampling, double fill_value,
+        int nbands, int nbands_off_diag_terms,
         isce3::core::dataInterpMethod dem_interp_method,
         isce3::io::Raster& dem_raster, isce3::io::Raster* out_off_diag_terms,
         isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_dem,
@@ -2650,11 +2663,11 @@ void Geocode<T>::_runBlock(
 
         _fillGcovBlocksWithNans<T_out>(block_x, block_size_x, block_y,
             block_size_y, this_block_size_x, this_block_size_y,
-            &output_raster);
+            &output_raster, fill_value);
 
         _fillGcovBlocksWithNans<T>(block_x, block_size_x, block_y,
             block_size_y, this_block_size_x, this_block_size_y,
-            out_off_diag_terms);
+            out_off_diag_terms, fill_value);
 
         _saveOptionalFiles(block_x, block_size_x, block_y, block_size_y,
                 this_block_size_x, this_block_size_y,
@@ -2842,11 +2855,11 @@ void Geocode<T>::_runBlock(
 
             _fillGcovBlocksWithNans<T_out>(block_x, block_size_x, block_y,
                 block_size_y, this_block_size_x, this_block_size_y,
-                &output_raster);
+                &output_raster, fill_value);
 
             _fillGcovBlocksWithNans<T>(block_x, block_size_x, block_y,
                 block_size_y, this_block_size_x, this_block_size_y,
-                out_off_diag_terms);
+                out_off_diag_terms, fill_value);
 
             _saveOptionalFiles(block_x, block_size_x, block_y, block_size_y,
                     this_block_size_x, this_block_size_y,
@@ -3531,10 +3544,16 @@ void Geocode<T>::_runBlock(
             for (int j = 0; j < this_block_size_x; ++j) {
                 T_out geo_value = geoDataBlock[band]->operator()(i, j);
 
-                // no data
-                if (std::isnan(std::abs(geo_value)))
+                // if the geogrid pixel is `NaN` and `fill_value` is `NaN`,
+                // continue to the next pixel
+                if (std::isnan(std::abs(geo_value)) && std::isnan(fill_value))
                     continue;
-
+                // otherwise, if the geogrid pixel is `Nan` and `fill_value` is
+                // not `NaN`, update the geogrid pixel with `fill_value`
+                else if (std::isnan(std::abs(geo_value))) {
+                    T_out v = static_cast<T_out>(fill_value);
+                    geoDataBlock[band]->operator()(i, j) = v;
+                    }
                 // clip min (complex)
                 else if (!std::isnan(clip_min) &&
                          std::abs(geo_value) < clip_min &&
@@ -3579,9 +3598,17 @@ void Geocode<T>::_runBlock(
                     T geo_value_off_diag =
                             geoDataBlockOffDiag[band]->operator()(i, j);
 
-                    // no data (complex)
-                    if (std::isnan(std::abs(geo_value_off_diag)))
+                    // if the geogrid pixel is `NaN` and `fill_value` is `NaN`,
+                    // continue to the next pixel
+                    if (std::isnan(std::abs(geo_value_off_diag)) &&
+                            std::isnan(fill_value))
                         continue;
+                    // otherwise, if the geogrid pixel is `Nan` and `fill_value` is
+                    // not `NaN`, update the geogrid pixel with `fill_value`
+                    else if (std::isnan(std::abs(geo_value_off_diag))) {
+                        T2 v = static_cast<T2>(fill_value);
+                        geoDataBlockOffDiag[band]->operator()(i, j) = v;
+                        }
 
                     // clip min (complex)
                     else if (!std::isnan(clip_min) &&

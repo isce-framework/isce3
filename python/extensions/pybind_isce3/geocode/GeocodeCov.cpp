@@ -72,6 +72,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("flag_az_baseband_doppler") = false,
                     py::arg("flatten") = false,
                     py::arg("geogrid_upsampling") = 1,
+                    py::arg("fill_value") = std::numeric_limits<double>::quiet_NaN(),
                     py::arg("flag_upsample_radar_grid") = false,
                     py::arg("flag_apply_rtc") = false,
                     py::arg("input_terrain_radiometry") =
@@ -161,6 +162,14 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         Flatten the geocoded SLC
                     geogrid_upsampling: int, optional
                         Geogrid upsampling
+                    fill_value: float, optional
+                        Fill value. Defaults to NaN. The fill value will be cast
+                        to the GDAL data type of `output_raster` and `out_off_diag_terms`
+                        (when provided). If the output data type is integer and the
+                        fill value is NaN, the fill value will be stored as 0 in
+                        the output. If the output data type is complex (e.g., for
+                        off-diagonal terms), the fill value is used as the real part,
+                        with the imaginary part set to 0.
                     flag_upsample_radar_grid: bool, optional
                         Double the radar grid sampling rate
                     flag_apply_rtc: bool, optional
@@ -176,9 +185,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     rtc_min_value_db: float, optional
                         Minimum value for the RTC area factor. Radar data with
                         RTC area factor below this limit will be set to NaN.
-                    rtc_geogrid_upsampling: int, optional
+                    rtc_upsampling: int, optional
                         Geogrid upsampling to compute the radiometric terrain
-                        correction RTC.
+                        correction (RTC).
                     rtc_algorithm: isce3.geometry.RtcAlgorithm, optional
                         RTC algorithm
                     rtc_factor_area_mode : isce3.geometry.RtcAreaBetaMode, optional
