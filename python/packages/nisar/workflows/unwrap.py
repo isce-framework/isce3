@@ -271,7 +271,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     # Clean connected components raster
                     del conn_comp_raster
 
-                elif algorithm is ["snaphu", "whirlwind"]:
+                elif algorithm in ["snaphu", "whirlwind"]:
 
                     info_channel.log(f"Unwrapping with {algorithm}")
                     # Get SNAPHU or whirlwind dictionary with user params
