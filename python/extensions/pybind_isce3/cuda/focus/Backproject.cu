@@ -332,9 +332,11 @@ void addbinding_cuda_backproject(py::module& m)
         {
             // Convert Python sequence to std::vector.  Element type is
             // pointer so this shouldn't involve any copy.  Keep an owning
-            // reference to each element alive for consistency with the
-            // GIL-releasing binding above, in case this call is ever
-            // parallelized similarly.
+            // reference to each element alive for the duration of the call,
+            // since the GIL is released below and another thread could
+            // otherwise mutate py_image_interpolators and drop the last
+            // reference to one of its elements while we hold a raw pointer
+            // into it.
             const auto nimg = py_image_interpolators.size();
             using T = isce3::cuda::signal::NFFT2dResult<float>;
             std::vector<py::object> interpolator_owners(
@@ -348,8 +350,11 @@ void addbinding_cuda_backproject(py::module& m)
 
             const auto r2g_params = parse_rdr2geo_params(rdr2geo_params);
 
-            return mergePolarImages(grids, interpolators, output_grid,
-                output_image, fc, dem, r2g_params, az_block_size);
+            {
+                py::gil_scoped_release release;
+                mergePolarImages(grids, interpolators, output_grid,
+                    output_image, fc, dem, r2g_params, az_block_size);
+            }
         },
         py::arg("grids"),
         py::arg("image_interpolators"),
