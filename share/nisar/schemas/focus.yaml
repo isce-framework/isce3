@@ -371,6 +371,9 @@ nesz_options:
   # supported noise estimator algorithms:
   # - MEE:  Min Eigenvalue Estimator, Default.
   # - MVE: Min Variance Estimator
+  # Note that MVE will be always enforced if the number of noise-only
+  # range lines being processed by RSLC output grid is one!
+  # In case of no noise-only range lines, the noise power will be zero.
   algorithm: enum('MEE', 'MVE', required=False)
   # Number of range blocks. This determines the size
   # of noise power array as a function of slant range.
