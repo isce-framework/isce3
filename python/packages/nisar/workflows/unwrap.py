@@ -11,6 +11,7 @@ import isce3
 import journal
 import numpy as np
 import snaphu
+import whirlwind
 from isce3.core import crop_external_orbit
 from isce3.io import HDF5OptimizedReader
 from isce3.unwrap.bridge_phase import bridge_unwrapped_phase
@@ -269,26 +270,27 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     log_unwrap_attributes(phass_obj, info_channel, algorithm)
                     # Clean connected components raster
                     del conn_comp_raster
-                elif algorithm == "snaphu":
-                    info_channel.log("Unwrapping with SNAPHU")
 
-                    # Get SNAPHU dictionary with user params
-                    snaphu_cfg = unwrap_args["snaphu"]
+                elif algorithm is ["snaphu", "whirlwind"]:
 
-                    # Get input array to run unwrapping with snaphu-py
+                    info_channel.log(f"Unwrapping with {algorithm}")
+                    # Get SNAPHU or whirlwind dictionary with user params
+                    algorithm_cfg = unwrap_args[f"{algorithm}"]
+
+                    # Get input array to run unwrapping with snaphu-py or the whirlwind-insar
                     igram_array = open_raster(igram_path)
                     coh_array = open_raster(corr_path)
 
                     mask_array = open_raster(
-                        snaphu_cfg['mask']) if snaphu_cfg['mask'] is not None else None
+                        algorithm_cfg['mask']) if algorithm_cfg['mask'] is not None else None
 
                     # Combine the snaphu and preprocessing mask
                     if mask is not None:
                         mask_array = ~mask if mask_array is None else mask_array & ~mask
 
                     # Get effective number of looks
-                    if snaphu_cfg['nlooks'] is not None:
-                        nlooks = snaphu_cfg['nlooks']
+                    if algorithm_cfg['nlooks'] is not None:
+                        nlooks = algorithm_cfg['nlooks']
                     else:
                         rg_spacing = src_h5[f"{src_freq_group_path}/interferogram/slantRangeSpacing"][()]
                         az_spacing = src_h5[f"{src_freq_group_path}/interferogram/sceneCenterAlongTrackSpacing"][()]
@@ -296,82 +298,43 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         az_bw = src_h5[f"{src_freq_bandwidth_group_path}/azimuthBandwidth"][()]
                         nlooks = get_effective_looks(ref_slc, ref_orbit, rg_spacing,
                                                      az_spacing, rg_bw, az_bw, freq=freq)
-                    # Run snaphu using snaphu-py
-                    snaphu.unwrap(igram_array, coh_array, nlooks,
-                                  unw=dst_h5[unw_path],
-                                  conncomp=dst_h5[conn_comp_path],
-                                  cost=snaphu_cfg['cost_mode'],
-                                  mask=mask_array,
-                                  init=snaphu_cfg['initialization_method'],
-                                  min_conncomp_frac=snaphu_cfg['min_conncomp_frac'],
-                                  phase_grad_window=snaphu_cfg['phase_grad_window'],
-                                  ntiles=snaphu_cfg['ntiles'],
-                                  tile_overlap=snaphu_cfg['tile_overlap'],
-                                  nproc=snaphu_cfg['nproc'],
-                                  tile_cost_thresh=snaphu_cfg['tile_cost_thresh'],
-                                  min_region_size=snaphu_cfg['min_region_size'],
-                                  single_tile_reoptimize=snaphu_cfg['single_tile_reoptimize'],
-                                  regrow_conncomps=snaphu_cfg['regrow_conncomps'],
-                                  scratchdir=unwrap_scratch,
-                                  delete_scratch=True)
+
+                    if algorithm == 'snaphu':
+                        # Run snaphu using snaphu-py
+                        snaphu.unwrap(igram_array, coh_array, nlooks,
+                                    unw=dst_h5[unw_path],
+                                    conncomp=dst_h5[conn_comp_path],
+                                    cost=algorithm_cfg['cost_mode'],
+                                    mask=mask_array,
+                                    init=algorithm_cfg['initialization_method'],
+                                    min_conncomp_frac=algorithm_cfg['min_conncomp_frac'],
+                                    phase_grad_window=algorithm_cfg['phase_grad_window'],
+                                    ntiles=algorithm_cfg['ntiles'],
+                                    tile_overlap=algorithm_cfg['tile_overlap'],
+                                    nproc=algorithm_cfg['nproc'],
+                                    tile_cost_thresh=algorithm_cfg['tile_cost_thresh'],
+                                    min_region_size=algorithm_cfg['min_region_size'],
+                                    single_tile_reoptimize=algorithm_cfg['single_tile_reoptimize'],
+                                    regrow_conncomps=algorithm_cfg['regrow_conncomps'],
+                                    scratchdir=unwrap_scratch,
+                                    delete_scratch=True)
+
+                    elif algorithm == 'whirlwind':
+                        # Get whirlwind parameters using helper function
+                        ww_kwargs = set_whirlwind_attributes(algorithm_cfg)
+                        ww_kwargs['nlooks'] = float(nlooks)
+                        ww_kwargs['mask'] = mask_array
+
+                        # Run whirlwind unwrapping
+                        unwrapped, conncomp = whirlwind.unwrap(igram_array, coh_array, **ww_kwargs)
+
+                        # Write results to HDF5
+                        dst_h5[unw_path][:, :] = np.asarray(unwrapped, dtype=np.float32)
+                        dst_h5[conn_comp_path][:, :] = np.asarray(conncomp, dtype=np.uint32)
 
                     # Compute statistics (stats module supports isce3.io.Raster)
                     unw_raster = isce3.io.Raster(unw_raster_path)
                     compute_stats_real_data(unw_raster, unw_dataset)
-                elif algorithm == "whirlwind":
-                    info_channel.log("Unwrapping with whirlwind")
-
-                    # Get whirlwind dictionary with user params
-                    whirlwind_cfg = unwrap_args["whirlwind"]
-
-                    # Get input array to run unwrapping with whirlwind-insar
-                    igram_array = open_raster(igram_path)
-                    coh_array = open_raster(corr_path)
-
-                    mask_array = open_raster(
-                        whirlwind_cfg['mask']) if whirlwind_cfg['mask'] is not None else None
-
-                    # Combine the snaphu and preprocessing mask
-                    if mask is not None:
-                        mask_array = ~mask if mask_array is None else mask_array & ~mask
-
-                    # Get effective number of looks
-                    if whirlwind_cfg['nlooks'] is not None:
-                        nlooks = whirlwind_cfg['nlooks']
-                    else:
-                        rg_spacing = src_h5[f"{src_freq_group_path}/interferogram/slantRangeSpacing"][()]
-                        az_spacing = src_h5[f"{src_freq_group_path}/interferogram/sceneCenterAlongTrackSpacing"][()]
-                        rg_bw = src_h5[f"{src_freq_bandwidth_group_path}/rangeBandwidth"][()]
-                        az_bw = src_h5[f"{src_freq_bandwidth_group_path}/azimuthBandwidth"][()]
-                        nlooks = get_effective_looks(ref_slc, ref_orbit, rg_spacing,
-                                                     az_spacing, rg_bw, az_bw, freq=freq)
-
-                    # Run whirlwind using whirlwind-insar
-                    try:
-                        import whirlwind as ww
-                    except ImportError:
-                        err_str = ("whirlwind-insar is not installed. "
-                                   "Install it with 'pip install whirlwind-insar' or "
-                                   "'conda install -c conda-forge whirlwind-insar'")
-                        error_channel.log(err_str)
-                        raise ImportError(err_str)
-
-                    # Get whirlwind parameters using helper function
-                    ww_kwargs = set_whirlwind_attributes(whirlwind_cfg)
-                    ww_kwargs['nlooks'] = float(nlooks)
-                    ww_kwargs['mask'] = mask_array
-
-                    # Run whirlwind unwrapping
-                    unwrapped, conncomp = ww.unwrap(igram_array, coh_array, **ww_kwargs)
-
-                    # Write results to HDF5
-                    dst_h5[unw_path][:, :] = np.asarray(unwrapped, dtype=np.float32)
-                    dst_h5[conn_comp_path][:, :] = np.asarray(conncomp, dtype=np.uint32)
-
-                    # Compute statistics
-                    unw_raster = isce3.io.Raster(unw_raster_path)
-                    compute_stats_real_data(unw_raster, unw_dataset)
-
                 else:
                     err_str = f"{algorithm} is an invalid unwrapping algorithm"
                     error_channel.log(err_str)
