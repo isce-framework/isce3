@@ -748,7 +748,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "isOffsetsBlendingApplied",
-                is_roff,
+                str(is_roff),
                 (
                     "Flag to indicate if pixel offsets are the results of"
                     " blending multi-resolution layers of pixel offsets"
