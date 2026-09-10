@@ -560,7 +560,7 @@ geocode_options:
 
 tec_correction_options:
     use_total_tec_only: bool(required=False)
-    ignore_low_quality_topside_tec: bool(required=False)
+    ignore_invalid_topside_tec: bool(required=False)
     polyfit_tec_profile: bool(required=False)
 
 ceos_analysis_ready_data_options:

@@ -443,5 +443,5 @@ tec_correction_options:
     apply_slant_range_correction: bool(required=False)
     apply_azimuth_correction: bool(required=False)
     use_total_tec_only: bool(required=False)
-    ignore_low_quality_topside_tec: bool(required=False)
+    ignore_invalid_topside_tec: bool(required=False)
     polyfit_tec_profile: bool(required=False)

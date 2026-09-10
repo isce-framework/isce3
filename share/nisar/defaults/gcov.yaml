@@ -281,7 +281,7 @@ runconfig:
             # flags live under the `geocode` group above.
             tec_correction:
                 use_total_tec_only: False
-                ignore_low_quality_topside_tec: False
+                ignore_invalid_topside_tec: False
                 polyfit_tec_profile: False
 
             # Mechanism to specify output posting and DEM
