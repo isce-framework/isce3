@@ -119,6 +119,65 @@ def get_mask_ds_input_output(src_freq_path, dst_freq_path, input_hdf5,
 
     return input_rasters, dataset_paths
 
+def get_valid_mask_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
+                                input_product_type=InputProduct.RUNW):
+    """Create input raster objects and output dataset paths for valid masks
+
+    Collects the validMask datasets associated with the given frequency and
+    polarization, and pairs each one with the HDF5 path it should be written
+    to in the geocoded output product. Which groups are visited depends on the
+    input product type: RUNW yields both the pixel offsets and interferogram
+    masks, while RIFG and ROFF each yield a single mask.
+
+    Parameters
+    ----------
+    src_freq_path : str
+        HDF5 path to frequency group of input dataset
+    dst_freq_path : str
+        HDF5 path to frequency group of output dataset
+    pol : str
+        Polarization of input dataset
+    input_hdf5 : str
+        Path to input RUNW, RIFG, or ROFF HDF5
+    input_product_type : InputProduct
+        Input product type, one of RUNW, RIFG, ROFF
+
+    Returns
+    -------
+    input_rasters : list of isce3.io.Raster
+        Valid mask input raster objects
+    dataset_paths : list of str
+        HDF5 paths to the geocoded valid mask datasets, in the same order as
+        `input_rasters`
+    """
+
+    src_group_paths = []
+    dst_group_paths = []
+
+    input_rasters = []
+    dataset_paths = []
+
+    if input_product_type is InputProduct.RUNW:
+        src_group_paths.append(f'{src_freq_path}/pixelOffsets/{pol}')
+        dst_group_paths.append(f'{dst_freq_path}/pixelOffsets/{pol}')
+        src_group_paths.append(f'{src_freq_path}/interferogram/{pol}')
+        dst_group_paths.append(f'{dst_freq_path}/unwrappedInterferogram/{pol}')
+    elif input_product_type is InputProduct.RIFG:
+        src_group_paths.append(f'{src_freq_path}/interferogram/{pol}')
+        dst_group_paths.append(f'{dst_freq_path}/wrappedInterferogram/{pol}')
+    elif input_product_type is InputProduct.ROFF:
+        src_group_paths.append(f'{src_freq_path}/pixelOffsets/{pol}')
+        dst_group_paths.append(f'{dst_freq_path}/pixelOffsets/{pol}')
+
+    # prepare input valid mask raster
+    for src_group_path, dst_group_path in zip(src_group_paths,dst_group_paths):
+        input_raster_str = f"HDF5:{input_hdf5}:/{src_group_path}/validMask"
+        input_raster = isce3.io.Raster(input_raster_str)
+        input_rasters.append(input_raster)
+        dataset_paths.append(f"{dst_group_path}/validMask")
+
+    return input_rasters, dataset_paths
+
 def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
                         dataset_name, off_layer=None,
                         input_product_type=InputProduct.RUNW):
@@ -391,12 +450,22 @@ def get_raster_lists(all_geocoded_dataset_flags,
         if not all_geocoded_dataset_flags[ds_name]:
             continue
 
-        if ds_name == 'mask':
-            input_rasters, mask_out_ds_paths = \
-                get_mask_ds_input_output(src_freq_path,
-                                         dst_freq_path,
-                                         input_hdf5,input_product_type,
-                                         is_runw_offset_product)
+        if ds_name in ['mask', 'valid_mask']:
+            if ds_name == 'mask':
+                input_rasters, mask_out_ds_paths = \
+                    get_mask_ds_input_output(src_freq_path,
+                                            dst_freq_path,
+                                            input_hdf5,input_product_type,
+                                            is_runw_offset_product)
+            if ds_name == 'valid_mask':
+                mask_out_ds_paths = []
+                for pol in pol_list:
+                    _input_rasters, _mask_out_ds_paths = \
+                        get_valid_mask_input_output(src_freq_path, dst_freq_path, pol,
+                                                    input_hdf5,input_product_type)
+                    input_rasters += _input_rasters
+                    mask_out_ds_paths += _mask_out_ds_paths
+
             # Prepare output raster access the HDF5 dataset for datasets to be
             # geocoded
             for path in mask_out_ds_paths:
@@ -713,7 +782,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     dem_raster, block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
 
-                desired = ["mask"]
+                desired = ["mask", "valid_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5,
@@ -778,7 +847,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     az_correction=az_correction,
                                     srg_correction=srg_correction)
 
-                desired = ["mask"]
+                desired = ["mask","valid_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
@@ -813,7 +882,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     az_correction=az_correction,
                                     srg_correction=srg_correction)
 
-                desired = ["mask"]
+                desired = ["mask", "valid_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
@@ -1087,9 +1156,10 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode subswath mask
-                desired_geo_dataset_names = ["mask"]
-                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST]
-                invalid_values = [255]
+                desired_geo_dataset_names = ["mask", "valid_mask"]
+                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST] * \
+                    len(desired_geo_dataset_names)
+                invalid_values = [255] * len(desired_geo_dataset_names)
 
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid,
                                                              orbit,
@@ -1269,9 +1339,10 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode subswath mask
-                desired_geo_dataset_names = ["mask"]
-                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST]
-                invalid_values = [255]
+                desired_geo_dataset_names = ["mask", "valid_mask"]
+                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST] * \
+                    len(desired_geo_dataset_names)
+                invalid_values = [255] * len(desired_geo_dataset_names)
 
                 gpu_geocode_rasters(geocoded_dataset_flags,
                                     desired_geo_dataset_names,
@@ -1316,9 +1387,10 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode subswath mask
-                desired_geo_dataset_names = ["mask"]
-                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST]
-                invalid_values = [255]
+                desired_geo_dataset_names = ["mask", "valid_mask"]
+                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST] * \
+                    len(desired_geo_dataset_names)
+                invalid_values = [255] * len(desired_geo_dataset_names)
 
                 gpu_geocode_rasters(geocoded_dataset_flags,
                                     desired_geo_dataset_names,
