@@ -889,8 +889,8 @@ def generate_insar_mask(ref_rslc_obj,
 
         # To accommodate the old RSLC with uint8 inputDataExceptionMask,
         # and the valid polarization dependent mask will use the
-        # subswath mask
-        if ref_exception_mask._dset.dtype == np.dtype('uint8'):
+        # subswath mask.
+        if ref_exception_mask._block.dtype == np.dtype('uint8'):
             pol_mask_row = (ref_num > 0).astype(np.uint16) << 8
         else:
             # polarization dependent mask for the reference RSLC
@@ -911,7 +911,7 @@ def generate_insar_mask(ref_rslc_obj,
         # To accommodate the old RSLC with uint8 inputDataExceptionMask,
         # and the valid polarization dependent mask will use the
         # subswath mask
-        if sec_exception_mask._dset.dtype == np.dtype('uint8'):
+        if sec_exception_mask._block.dtype == np.dtype('uint8'):
             pol_mask_row |= (sec_num > 0).astype(np.uint16)
         else:
             # polarization dependent mask combing with the secondary RSLC
