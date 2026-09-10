@@ -605,8 +605,9 @@ runconfig:
                     enabled: false
                     # The degrees for the polyfitting
                     degree: 2
-                    # Critical value for the w-test to remove the outliers
-                    critical_value: 0.1
+                    # Critical value for the w-test to remove the outliers.
+                    # 3.29 is Baarda's data-snooping convention (alpha=0.001).
+                    critical_value: 3.29
                     # Number of samples along the range in pixels for polyfitting
                     samples_along_range: 200
                     # Number of samples  along the azimuth in pixels for polyfitting
