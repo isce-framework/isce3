@@ -887,8 +887,14 @@ def generate_insar_mask(ref_rslc_obj,
         mask_row |= (ref_exception_mask_row
                      .astype(np.uint8).astype(np.uint32) << 16)
 
-        # polarization dependent mask for the reference RSLC
-        pol_mask_row = ref_exception_mask_row & np.uint16(0xFF00)
+        # To accommodate the old RSLC with uint8 inputDataExceptionMask,
+        # and the valid polarization dependent mask will use the
+        # subswath mask
+        if ref_exception_mask._dset.dtype == np.dtype('uint8'):
+            pol_mask_row = (ref_num > 0).astype(np.uint16) << 8
+        else:
+            # polarization dependent mask for the reference RSLC
+            pol_mask_row = ref_exception_mask_row & np.uint16(0xFF00)
 
         # Secondary RSLC input exception mask bits at the nearest
         # secondary sample (round() of the scalar code, i.e. half to
@@ -902,8 +908,14 @@ def generate_insar_mask(ref_rslc_obj,
         mask_row |= (sec_exception_mask_row
                      .astype(np.uint8).astype(np.uint32) << 8)
 
-        # polarization dependent mask combing with the secondary RSLC
-        pol_mask_row |= (sec_exception_mask_row & np.uint16(0xFF00)) >> 8
+        # To accommodate the old RSLC with uint8 inputDataExceptionMask,
+        # and the valid polarization dependent mask will use the
+        # subswath mask
+        if sec_exception_mask._dset.dtype == np.dtype('uint8'):
+            pol_mask_row |= (sec_num > 0).astype(np.uint16)
+        else:
+            # polarization dependent mask combing with the secondary RSLC
+            pol_mask_row |= (sec_exception_mask_row & np.uint16(0xFF00)) >> 8
 
         mask_row[col_out_of_swath] = 0
         pol_mask_row[col_out_of_swath] = 0
