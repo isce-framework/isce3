@@ -279,11 +279,18 @@ void addbinding_cuda_backproject(py::module& m)
             const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
 
             // Convert Python sequence to std::vector.  Element type is
-            // pointer so this shouldn't involve any copy.
+            // pointer so this shouldn't involve any copy.  Keep an owning
+            // reference to each element alive for the duration of the call,
+            // since the GIL is released below and another thread could
+            // otherwise mutate py_image_interpolators and drop the last
+            // reference to one of its elements while we hold a raw pointer
+            // into it.
             using T = isce3::cuda::signal::NFFT2dResult<float>;
+            std::vector<py::object> interpolator_owners(
+                py_image_interpolators.begin(), py_image_interpolators.end());
             auto interpolators = std::vector<const T*>(nimg);
-            std::transform(py_image_interpolators.begin(),
-                py_image_interpolators.end(), interpolators.begin(),
+            std::transform(interpolator_owners.begin(),
+                interpolator_owners.end(), interpolators.begin(),
                 [](const py::handle& py_itp) -> const T* {
                     return &(py_itp.cast<const T&>());
                 });
@@ -324,12 +331,17 @@ void addbinding_cuda_backproject(py::module& m)
             int az_block_size)
         {
             // Convert Python sequence to std::vector.  Element type is
-            // pointer so this shouldn't involve any copy.
+            // pointer so this shouldn't involve any copy.  Keep an owning
+            // reference to each element alive for consistency with the
+            // GIL-releasing binding above, in case this call is ever
+            // parallelized similarly.
             const auto nimg = py_image_interpolators.size();
             using T = isce3::cuda::signal::NFFT2dResult<float>;
+            std::vector<py::object> interpolator_owners(
+                py_image_interpolators.begin(), py_image_interpolators.end());
             auto interpolators = std::vector<const T*>(nimg);
-            std::transform(py_image_interpolators.begin(),
-                py_image_interpolators.end(), interpolators.begin(),
+            std::transform(interpolator_owners.begin(),
+                interpolator_owners.end(), interpolators.begin(),
                 [](const py::handle& py_itp) -> const T* {
                     return &(py_itp.cast<const T&>());
                 });
