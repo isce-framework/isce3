@@ -255,7 +255,7 @@ def should_use_only_total_tec(cfg, ref_epoch, az_start, az_stop):
     Decide whether to use total TEC only or suborbital TEC.
     If `use_total_tec_only` is explicitly turned ON, processing will be forced
     to use total TEC only. If it's turned OFF, then the logic looks at the flag
-    `ignore_low_quality_topside_tec`. If turned on, this inspects the topside
+    `ignore_invalid_topside_tec`. If turned on, this inspects the topside
     TEC data flags within the radar grid and decides whether to use topside TEC.
 
     Parameters
@@ -275,7 +275,9 @@ def should_use_only_total_tec(cfg, ref_epoch, az_start, az_stop):
     bool
         True if total TEC only should be used, False otherwise.
     '''
+    info_channel = journal.info("geocode_corrections.should_use_only_total_tec")
     warning_channel = journal.warning("geocode_corrections.should_use_only_total_tec")
+    error_channel = journal.warning("geocode_corrections.should_use_only_total_tec")
 
     tec_path = cfg['dynamic_ancillary_file_group']['tec_file']
 
@@ -284,8 +286,8 @@ def should_use_only_total_tec(cfg, ref_epoch, az_start, az_stop):
         return False
 
     if not os.path.exists(tec_path):
-        warning_channel.log(f'TEC path provided does not exist: {tec_path}')
-        return False
+        error_channel.log(f'TEC path provided does not exist: {tec_path}')
+        raise FileNotFoundError
 
     if cfg['processing']['tec_correction']['use_total_tec_only'] is True:
         return True
@@ -301,7 +303,7 @@ def should_use_only_total_tec(cfg, ref_epoch, az_start, az_stop):
         return False
 
     # Start the investigation.
-    if cfg['processing']['tec_correction']['ignore_low_quality_topside_tec'] is True:
+    if cfg['processing']['tec_correction']['ignore_invalid_topside_tec']:
         # Convert the TEC UTC times to seconds since the radar grid reference
         # epoch so they share the same time base as the azimuth time span.
         tec_t_since_epoch = np.array(
@@ -319,11 +321,13 @@ def should_use_only_total_tec(cfg, ref_epoch, az_start, az_stop):
 
         # A flag value of 1 marks a low-quality topside TEC sample. If any
         # exist within the radar grid, fall back to total TEC only.
-        if np.any(top_tec_flags == 1):
+        if np.any(top_tec_flags):
             warning_channel.log(
                 'Low-quality topside TEC detected within the radar grid; '
                 'using total TEC only.')
             return True
+
+    info_channel.log('Data flag satisfactory. Using suborbital TEC')
 
     return False
 
