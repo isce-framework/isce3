@@ -30,4 +30,5 @@ dependencies:
   - scipy!=1.10.0
   - shapely>=2
   - snaphu>=0.4
+  - whirlwind-insar >= 0.9.0
   - yamale

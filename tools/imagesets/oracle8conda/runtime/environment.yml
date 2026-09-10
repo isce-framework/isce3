@@ -28,4 +28,5 @@ dependencies:
   - shapely>=2
   - snaphu>=0.4
   - sysroot_linux-64>=2.17
+  - whirlwind-insar >= 0.9.0
   - yamale
