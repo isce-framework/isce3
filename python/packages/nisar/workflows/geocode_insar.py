@@ -82,7 +82,7 @@ def get_mask_ds_input_output(src_freq_path, dst_freq_path, input_hdf5,
     input_product_type: enum
         Input product type, which is one of RUNW, ROFF, RIFG
     is_runw_offset_product : bool
-        Is THE pixel offset products of the RUNW product
+        Is the pixel offset products of the RUNW product
     Returns
     -------
     input_raster : isce3.io.Raster
@@ -120,7 +120,8 @@ def get_mask_ds_input_output(src_freq_path, dst_freq_path, input_hdf5,
     return input_rasters, dataset_paths
 
 def get_valid_mask_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
-                                input_product_type=InputProduct.RUNW):
+                                input_product_type=InputProduct.RUNW,
+                                is_runw_offset_product = False):
     """Create input raster objects and output dataset paths for valid masks
 
     Collects the validMask datasets associated with the given frequency and
@@ -141,7 +142,8 @@ def get_valid_mask_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         Path to input RUNW, RIFG, or ROFF HDF5
     input_product_type : InputProduct
         Input product type, one of RUNW, RIFG, ROFF
-
+    is_runw_offset_product : bool
+        Is the pixel offset products of the RUNW product
     Returns
     -------
     input_rasters : list of isce3.io.Raster
@@ -158,10 +160,12 @@ def get_valid_mask_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
     dataset_paths = []
 
     if input_product_type is InputProduct.RUNW:
-        src_group_paths.append(f'{src_freq_path}/pixelOffsets/{pol}')
-        dst_group_paths.append(f'{dst_freq_path}/pixelOffsets/{pol}')
-        src_group_paths.append(f'{src_freq_path}/interferogram/{pol}')
-        dst_group_paths.append(f'{dst_freq_path}/unwrappedInterferogram/{pol}')
+         if is_runw_offset_product:
+            src_group_paths.append(f'{src_freq_path}/pixelOffsets/{pol}')
+            dst_group_paths.append(f'{dst_freq_path}/pixelOffsets/{pol}')
+         else:
+            src_group_paths.append(f'{src_freq_path}/interferogram/{pol}')
+            dst_group_paths.append(f'{dst_freq_path}/unwrappedInterferogram/{pol}')
     elif input_product_type is InputProduct.RIFG:
         src_group_paths.append(f'{src_freq_path}/interferogram/{pol}')
         dst_group_paths.append(f'{dst_freq_path}/wrappedInterferogram/{pol}')
@@ -462,7 +466,8 @@ def get_raster_lists(all_geocoded_dataset_flags,
                 for pol in pol_list:
                     _input_rasters, _mask_out_ds_paths = \
                         get_valid_mask_input_output(src_freq_path, dst_freq_path, pol,
-                                                    input_hdf5,input_product_type)
+                                                    input_hdf5,input_product_type,
+                                                    is_runw_offset_product)
                     input_rasters += _input_rasters
                     mask_out_ds_paths += _mask_out_ds_paths
 
@@ -804,7 +809,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
 
-                desired = ["mask"]
+                desired = ["mask", "valid_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5,
@@ -1271,9 +1276,10 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode subswath mask
-                desired_geo_dataset_names = ["mask"]
-                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST]
-                invalid_values = [255]
+                desired_geo_dataset_names = ["mask", "valid_mask"]
+                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST] * \
+                    len(desired_geo_dataset_names)
+                invalid_values = [255] * len(desired_geo_dataset_names)
 
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid,
                                                              orbit,
