@@ -2103,6 +2103,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 else:
                     new_var_array = noise_product.power_linear
 
+                # Ensure that the `noiseEquivalentBackscatter` LUT
+                # is computed and stored as float32
+                # to match NISAR product specifications
+                new_var_array = new_var_array.astype(np.float32)
+
             temp_file = tempfile.NamedTemporaryFile(dir=scratch_path,
                                                     suffix='.bin')
             length, width = new_var_array.shape
