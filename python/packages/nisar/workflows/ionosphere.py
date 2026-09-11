@@ -1987,7 +1987,13 @@ def run(cfg: dict, runw_hdf5: str):
                     qfsp_background_mask = (
                         available_mask
                     )
-                    n_background = np.count_nonzero(qfsp_background_mask)
+                    valid_background = (
+                        qfsp_background_mask
+                        & ~mask_anomaly_array
+                        & np.isfinite(diff_phase)
+                        & (diff_phase != 0)
+                    )
+                    n_background = np.count_nonzero(valid_background)
                     n_artifact = np.count_nonzero(mask_anomaly_array)
 
                     apply_qfsp_correction = True
@@ -2035,7 +2041,10 @@ def run(cfg: dict, runw_hdf5: str):
                             block_row=row_start,
                             data_shape=[rows_output, cols_output])
 
-                    diff_phase = qfsp_output["corrected_phase"]
+                        diff_phase = qfsp_output["corrected_phase"]
+                    else:
+                        diff_phase = diff_phase_original
+
                     write_array(
                         qfsp_corrected_path,
                         diff_phase,
