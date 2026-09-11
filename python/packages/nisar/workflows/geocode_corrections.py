@@ -312,8 +312,9 @@ def should_use_only_total_tec(cfg, ref_epoch, az_start, az_stop):
 
         # Crop the topside TEC data flags to the TEC samples that fall within
         # the azimuth time span of the (decimated) radar grid.
-        within_radar_grid = ((tec_t_since_epoch >= az_start) &
-                             (tec_t_since_epoch <= az_stop))
+        i_start = np.searchsorted(tec_t_since_epoch, az_start, side='left')
+        i_stop = np.searchsorted(tec_t_since_epoch, az_stop, side='right')
+        within_radar_grid = slice(i_start, i_stop)
 
         top_tec_flags = np.concatenate(
             [np.array(tec_dict['topTecNrDataFlag'])[within_radar_grid],
