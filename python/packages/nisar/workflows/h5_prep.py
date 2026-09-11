@@ -14,7 +14,7 @@ from isce3.io import HDF5OptimizedReader, optimize_chunk_size
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.projection import build_projection_dataset_attrs_dict
 from nisar.products.readers import SLC
-
+from nisar.products.utils import to_bytes
 
 def get_dataset_output_options(cfg: dict):
     '''
@@ -214,7 +214,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
 
     with HDF5OptimizedReader(name=input_hdf5, mode='r', libver='latest', swmr=True) as src_h5, \
             h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5:
-        dst_h5.attrs['Conventions'] = np.bytes_("CF-1.7")
+        dst_h5.attrs['Conventions'] = to_bytes("CF-1.7")
 
         # Copy of identification group
         ident_path = f'{common_path}/identification'
@@ -245,24 +245,24 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
             del ident['isGeocoded']
         is_geocoded = dst in ['GCOV', 'GSLC', 'GUNW', 'GOFF']
         dst_h5[ident_path].create_dataset('isGeocoded',
-                                          data=np.bytes_(str(is_geocoded)))
+                                          data=to_bytes(str(is_geocoded)))
         desc = "Flag to indicate radar geometry or geocoded product"
-        dst_h5[ident_path].attrs["description"] = np.bytes_(desc)
+        dst_h5[ident_path].attrs["description"] = to_bytes(desc)
 
         # Assign productType
-        dst_h5[f'{ident_path}/productType'] = np.bytes_(dst)
+        dst_h5[f'{ident_path}/productType'] = to_bytes(dst)
 
         # Assign product version
         dst_h5[f'{ident_path}/productVersion'] = \
-            np.bytes_(cfg['primary_executable']['product_version'])
+            to_bytes(cfg['primary_executable']['product_version'])
 
         # Assign product specification version
         dst_h5[f'{ident_path}/productSpecificationVersion'] = \
-            np.bytes_('1.5.0')
+            to_bytes('1.5.0')
 
         # Assign granule ID
         dst_h5[f'{ident_path}/granuleId'] = \
-            np.bytes_(cfg['primary_executable']['partial_granule_id'])
+            to_bytes(cfg['primary_executable']['partial_granule_id'])
 
         # copy orbit information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/orbit',
@@ -285,9 +285,9 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                             f'{src_meta_path}/processingInformation/algorithms',
                             dst_proc_path, excludes=excludes)
             dst_h5[dst_proc_path].create_dataset('crossCorrelation',
-                                                 data=np.bytes_('Ampcor'))
+                                                 data=to_bytes('Ampcor'))
             descr = "Cross-correlation algorithm"
-            dst_h5[dst_proc_path].attrs["description"] = np.bytes_(descr)
+            dst_h5[dst_proc_path].attrs["description"] = to_bytes(descr)
         else:
            cp_h5_meta_data(src_h5, dst_h5,
                            f'{src_meta_path}/processingInformation/algorithms',
@@ -306,26 +306,26 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
             # Geocoding algorithm
             algorithms_ds = f'{dst_meta_path}/processingInformation/algorithms/geocoding'
             dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
-                                   data=np.bytes_(geocoding_algorithm))
+                                   data=to_bytes(geocoding_algorithm))
             desc = "Geocoding algorithm"
-            dset.attrs["description"] = np.bytes_(desc)
+            dset.attrs["description"] = to_bytes(desc)
 
             # DEM interpolation method
             algorithms_ds = \
                 f'{dst_meta_path}/processingInformation/algorithms/demInterpolation'
             dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
-                                          data=np.bytes_(dem_interp_method))
+                                          data=to_bytes(dem_interp_method))
             desc = "DEM interpolation method"
-            dset.attrs["description"] = np.bytes_(desc)
+            dset.attrs["description"] = to_bytes(desc)
 
         if dst in ["GCOV"]:
             # RTC algorithm
             algorithms_ds = \
                 f'{dst_meta_path}/processingInformation/algorithms/radiometricTerrainCorrection'
             dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
-                                          data=np.bytes_(rtc_algorithm))
+                                          data=to_bytes(rtc_algorithm))
             desc = "Radiometric terrain correction (RTC) algorithm"
-            dset.attrs["description"] = np.bytes_(desc)
+            dset.attrs["description"] = to_bytes(desc)
 
         # copy processingInformation/inputs group
         cp_h5_meta_data(src_h5, dst_h5,
@@ -338,10 +338,10 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
             inputs.append(secondary_hdf5)
         input_grp = dst_h5[f'{dst_meta_path}/processingInformation/inputs']
         dset = input_grp.create_dataset("l1SlcGranules",
-                                        data=np.bytes_(inputs))
+                                        data=to_bytes(inputs))
         desc = "List of input L1 RSLC products used"
-        dset.attrs["description"] = np.bytes_(desc)
-        dset.attrs["long_name"] = np.bytes_("list of L1 RSLC products")
+        dset.attrs["description"] = to_bytes(desc)
+        dset.attrs["long_name"] = to_bytes("list of L1 RSLC products")
 
         # Copy processingInformation/parameters
         if dst in ['GUNW', 'GOFF']:
@@ -596,9 +596,9 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
     attributes to avoid boilerplate calls
     '''
     if len(shape) == 1:
-        if ctype == np.bytes_:
+        if ctype == to_bytes:
             ds = dst_grp.create_dataset(dataset_name,
-                                        data=np.bytes_("         "))
+                                        data=to_bytes("         "))
         else:
             ds = dst_grp.create_dataset(dataset_name, dtype=ctype, data=data)
     else:
@@ -616,19 +616,19 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
             ds = dst_grp.create_dataset(dataset_name, dtype=ctype, shape=shape,
                                         **kwargs)
 
-    ds.attrs['description'] = np.bytes_(descr)
+    ds.attrs['description'] = to_bytes(descr)
 
     if units is not None:
-        ds.attrs['units'] = np.bytes_(units)
+        ds.attrs['units'] = to_bytes(units)
 
     if grids is not None:
-        ds.attrs['grid_mapping'] = np.bytes_(grids)
+        ds.attrs['grid_mapping'] = to_bytes(grids)
 
     if standard_name is not None:
-        ds.attrs['standard_name'] = np.bytes_(standard_name)
+        ds.attrs['standard_name'] = to_bytes(standard_name)
 
     if long_name is not None:
-        ds.attrs['long_name'] = np.bytes_(long_name)
+        ds.attrs['long_name'] = to_bytes(long_name)
 
     if yds is not None:
         ds.dims[0].attach_scale(yds)
@@ -659,7 +659,7 @@ def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
     pols_array = np.array(pols, dtype="S2")
     dset = grp.create_dataset(name, data=pols_array)
     desc = f"List of processed polarization layers with frequency {frequency}"
-    dset.attrs["description"] = np.bytes_(desc)
+    dset.attrs["description"] = to_bytes(desc)
 
 
 def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
@@ -695,9 +695,9 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
         xds_spacing = hdf5_obj.require_dataset(xds_spacing_name,
                                                shape=(),
                                                dtype=np.float64, data=dx)
-        xds_spacing.attrs["description"] = np.bytes_(descr)
-        xds_spacing.attrs["units"] = np.bytes_(x_coord_units)
-        xds_spacing.attrs["long_name"] = np.bytes_("X coordinates spacing")
+        xds_spacing.attrs["description"] = to_bytes(descr)
+        xds_spacing.attrs["units"] = to_bytes(x_coord_units)
+        xds_spacing.attrs["long_name"] = to_bytes("X coordinates spacing")
 
         # yCoordinateSpacing
         descr = (f'Nominal spacing in {y_coord_units}'
@@ -706,9 +706,9 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
         yds_spacing = hdf5_obj.require_dataset(yds_spacing_name,
                                                shape=(),
                                                dtype=np.float64, data=dy)
-        yds_spacing.attrs["description"] = np.bytes_(descr)
-        yds_spacing.attrs["units"] = np.bytes_(y_coord_units)
-        yds_spacing.attrs["long_name"] = np.bytes_("Y coordinates spacing")
+        yds_spacing.attrs["description"] = to_bytes(descr)
+        yds_spacing.attrs["units"] = to_bytes(y_coord_units)
+        yds_spacing.attrs["long_name"] = to_bytes("Y coordinates spacing")
 
     # xCoordinates
     descr = 'X coordinates in specified projection'
@@ -717,10 +717,10 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                                    shape=x_vect.shape,
                                    dtype=x_vect.dtype,
                                    data=x_vect)
-    xds.attrs['standard_name'] = x_standard_name
-    xds.attrs["description"] = np.bytes_(descr)
-    xds.attrs["units"] = np.bytes_(x_coord_units)
-    xds.attrs["long_name"] = np.bytes_("X coordinates of projection")
+    xds.attrs['standard_name'] = to_bytes(x_standard_name)
+    xds.attrs["description"] = to_bytes(descr)
+    xds.attrs["units"] = to_bytes(x_coord_units)
+    xds.attrs["long_name"] = to_bytes("X coordinates of projection")
 
     # yCoordinates
     descr = 'Y coordinates in specified projection'
@@ -731,10 +731,10 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                                    dtype=y_vect.dtype,
                                    data=y_vect)
 
-    yds.attrs['standard_name'] = y_standard_name
-    yds.attrs["description"] = np.bytes_(descr)
-    yds.attrs["units"] = np.bytes_(y_coord_units)
-    yds.attrs["long_name"] = np.bytes_("Y coordinates of projection")
+    yds.attrs['standard_name'] = to_bytes(y_standard_name)
+    yds.attrs["description"] = to_bytes(descr)
+    yds.attrs["units"] = to_bytes(y_coord_units)
+    yds.attrs["long_name"] = to_bytes("Y coordinates of projection")
 
     coordinates_list = [xds, yds]
 
@@ -748,10 +748,10 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
                                        shape=z_vect.shape,
                                        dtype=np.float64,
                                        data=z_vect)
-        zds.attrs['standard_name'] = np.bytes_(
+        zds.attrs['standard_name'] = to_bytes(
             "height_above_reference_ellipsoid")
-        zds.attrs["description"] = np.bytes_(descr)
-        zds.attrs['units'] = np.bytes_("meters")
+        zds.attrs["description"] = to_bytes(descr)
+        zds.attrs['units'] = to_bytes("meters")
         coordinates_list.append(zds)
 
     try:
@@ -773,13 +773,13 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     projds.attrs.update(projds_attrs)
 
     # Add projection description
-    projds.attrs['description'] = np.bytes_('Product map grid projection: EPSG code, '
+    projds.attrs['description'] = to_bytes('Product map grid projection: EPSG code, '
                                              'with additional projection information as HDF5 Attributes')
 
     if epsg_code != 4326:
         # Setup common parameters
-        xds.attrs['long_name'] = np.bytes_("X coordinate of projection")
-        yds.attrs['long_name'] = np.bytes_("Y coordinate of projection")
+        xds.attrs['long_name'] = to_bytes("X coordinate of projection")
+        yds.attrs['long_name'] = to_bytes("Y coordinate of projection")
 
     if z_vect is not None:
         return zds, yds, xds
@@ -950,19 +950,19 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
     if xds is not None:
         dset.dims[2].attach_scale(xds)
 
-    dset.attrs['grid_mapping'] = np.bytes_("projection")
+    dset.attrs['grid_mapping'] = to_bytes("projection")
 
     if standard_name is not None:
-        dset.attrs['standard_name'] = np.bytes_(standard_name)
+        dset.attrs['standard_name'] = to_bytes(standard_name)
 
     if long_name is not None:
-        dset.attrs['long_name'] = np.bytes_(long_name)
+        dset.attrs['long_name'] = to_bytes(long_name)
 
     if descr is not None:
-        dset.attrs["description"] = np.bytes_(descr)
+        dset.attrs["description"] = to_bytes(descr)
 
     if units is not None:
-        dset.attrs['units'] = np.bytes_(units)
+        dset.attrs['units'] = to_bytes(units)
 
     if fill_value is not None:
         dset.attrs.create('_FillValue', data=fill_value)
@@ -1137,8 +1137,8 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
         del hdf5_obj[epsg_dataset_name]
     epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name,
                                            data=np.array(epsg, "i4"))
-    epsg_dataset.attrs["description"] = np.bytes_(descr)
-    epsg_dataset.attrs["long_name"] = np.bytes_("EPSG code")
+    epsg_dataset.attrs["description"] = to_bytes(descr)
+    epsg_dataset.attrs["long_name"] = to_bytes("EPSG code")
 
     # Slant range
     descr = "Slant range values corresponding to the geolocation grid"
@@ -1146,9 +1146,9 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     if rg_dataset_name in hdf5_obj:
         del hdf5_obj[rg_dataset_name]
     rg_dataset = hdf5_obj.create_dataset(rg_dataset_name, data=rg_vect)
-    rg_dataset.attrs["description"] = np.bytes_(descr)
-    rg_dataset.attrs["units"] = np.bytes_(rg_coord_units)
-    rg_dataset.attrs["long_name"] = np.bytes_("Slant range")
+    rg_dataset.attrs["description"] = to_bytes(descr)
+    rg_dataset.attrs["units"] = to_bytes(rg_coord_units)
+    rg_dataset.attrs["long_name"] = to_bytes("Slant range")
     coordinates_list.append(rg_dataset)
 
     # Zero-doppler time
@@ -1158,9 +1158,9 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     if az_dataset_name in hdf5_obj:
         del hdf5_obj[az_dataset_name]
     az_dataset = hdf5_obj.create_dataset(az_dataset_name, data=az_vect)
-    az_dataset.attrs["description"] = np.bytes_(descr)
-    az_dataset.attrs["units"] = np.bytes_(az_coord_units)
-    az_dataset.attrs["long_name"] = np.bytes_("Zero-Doppler time")
+    az_dataset.attrs["description"] = to_bytes(descr)
+    az_dataset.attrs["units"] = to_bytes(az_coord_units)
+    az_dataset.attrs["long_name"] = to_bytes("Zero-Doppler time")
     coordinates_list.append(az_dataset)
 
     # Height above reference ellipsoid
@@ -1169,9 +1169,9 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     if height_dataset_name in hdf5_obj:
         del hdf5_obj[height_dataset_name]
     height_dataset = hdf5_obj.create_dataset(height_dataset_name, data=z_vect)
-    height_dataset.attrs['standard_name'] = np.bytes_("height_above_reference_ellipsoid")
-    height_dataset.attrs["description"] = np.bytes_(descr)
-    height_dataset.attrs['units'] = np.bytes_("meters")
+    height_dataset.attrs['standard_name'] = to_bytes("height_above_reference_ellipsoid")
+    height_dataset.attrs["description"] = to_bytes(descr)
+    height_dataset.attrs['units'] = to_bytes("meters")
     coordinates_list.append(height_dataset)
 
     return coordinates_list
