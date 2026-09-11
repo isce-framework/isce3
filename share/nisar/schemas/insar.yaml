@@ -773,6 +773,8 @@ ionosphere_phase_correction_options:
     # Unwrapping correction bool. If False, only filtering
     # is applied
     unwrap_correction: include('unwrap_correction_options', required=False)
+    # qFSP phase-slip artifact correction options
+    qfsp_correction: include('qfsp_correction_options', required=False)
 
 dispersive_filter_options:
     # Boolean flag to enable/disable ionosphere phase correction
@@ -843,6 +845,35 @@ dispersive_filter_options:
     # During deramping, uniform sampling is applied
     # when number of samples is larger than maximum pixel
     bridge_ramp_maximum_pixel: num(min=0, required=False)
+
+qfsp_correction_options:
+    # Boolean flag to enable/disable residual qFSP phase-slip
+    # artifact correction
+    enabled: bool(required=False)
+    # Polynomial order used to estimate the background phase
+    background_order: int(min=0, max=3, required=False)
+    # Critical value used by polyfit_offsets for iterative outlier
+    # rejection. Larger values reject fewer samples.
+    background_crit_value: num(min=0.0, required=False)
+    # Maximum number of outliers removed during background fitting.
+    # polyfit_offsets removes at most one sample per iteration.
+    # Set to 0 to disable outlier rejection.
+    background_max_iterations: int(min=0, required=False)
+    # Maximum number of valid phase samples used for background fitting.
+    # Deterministic subsampling is applied when more samples are available.
+    background_max_samples: int(min=1, required=False)
+    # Minimum quality value used when constructing fitting weights.
+    # This parameter is applied only when quality weights, such as
+    # coherence, are provided.
+    background_minimum_quality: num(min=0.0, max=1.0, required=False)
+    # Smoothing window size used for qFSP template estimation
+    template_smooth_win: int(min=1, required=False)
+    # Number of pixels to shrink from the inner artifact region
+    inner_shrink: int(min=0, required=False)
+    # Number of pixels used for feathering around the artifact boundary
+    outer_feather: int(min=0, required=False)
+    # Return diagnostic outputs and write qFSP debug rasters.
+    debug_flag: bool(required=False)
 
 split_range_spectrum_options:
     # Number of lines per block for block processing)

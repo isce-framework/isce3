@@ -345,6 +345,37 @@ runconfig:
                     # During deramping, uniform sampling is applied
                     # when number of samples is larger than maximum pixel
                     bridge_ramp_maximum_pixel: 1e6
+                qfsp_correction:
+                    # Apply qFSP phase-slip artifact correction.
+                    enabled: True
+                    # Polynomial order used to estimate the smooth background
+                    # phase from non-anomaly pixels.
+                    # 0: constant, 1: linear, 2: quadratic.
+                    background_order: 2
+                    # Window size, in pixels, used to smooth the estimated qFSP
+                    # artifact template. Use an odd integer when possible.
+                    template_smooth_win: 3
+                    # Number of pixels to shrink from the inner artifact region
+                    # before estimating/applying the correction.
+                    inner_shrink: 2
+                    # Number of pixels used to feather the correction outside
+                    # the artifact boundary.
+                    outer_feather: 10
+                    # Critical value used by polyfit_offsets for iterative outlier
+                    # rejection. Larger values reject fewer samples.
+                    background_crit_value: 5.0
+                    # Maximum number of outliers removed during background fitting.
+                    # polyfit_offsets removes at most one sample per iteration.
+                    # Set to 0 to disable outlier rejection.
+                    background_max_iterations: 50
+                    # Maximum number of valid phase samples used for background fitting.
+                    # Deterministic subsampling is applied when more samples are available.
+                    background_max_samples: 20000
+                    # Minimum quality value used when constructing fitting weights.
+                    # This parameter is applied only when quality weights, such as
+                    # coherence, are provided.
+                    background_minimum_quality: 0.05
+                    debug_flag: false
 
             troposphere_delay:
                 # Boolean flag to activate (True) troposphere delay computation
