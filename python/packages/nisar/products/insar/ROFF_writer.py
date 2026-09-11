@@ -341,6 +341,19 @@ class ROFFWriter(L1InSARWriter):
                     f"{swaths_freq_group_name}/pixelOffsets/{pol}"
                 pixeloffsets_pol_group = \
                     self.require_group(offset_pol_group_name)
+
+                self._create_2d_dataset(
+                    pixeloffsets_pol_group,
+                    "validMask",
+                    off_shape,
+                    np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)"),
+                    units=Units.unitless,
+                    long_name="Valid data mask",
+                    fill_value=np.uint8(255),
+                )
+
                 for layer in proc_cfg["offsets_product"]:
                     if layer.startswith("layer"):
                         layer_group_name = f"{offset_pol_group_name}/{layer}"
