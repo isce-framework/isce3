@@ -286,54 +286,32 @@ def _fit_2d_polynomial_surface(
     return surface, fit_info
 
 
-def _find_column_groups(
-    artifact_mask,
-    min_fraction_rows=0.3,
-):
+def _find_column_groups(artifact_mask):
     """
-    Find contiguous column groups affected by an artifact.
-
-    A column is considered affected when the fraction of artifact pixels
-    along its rows is greater than or equal to `min_fraction_rows`.
+    Find contiguous column groups containing artifact pixels.
 
     Parameters
     ----------
     artifact_mask : numpy.ndarray
-        Two-dimensional boolean array in which ``True`` indicates an
+        Two-dimensional boolean array in which True indicates an
         artifact-affected pixel.
-    min_fraction_rows : float, optional
-        Minimum fraction of rows containing artifact pixels required for
-        a column to be considered affected. Expected to be between 0 and 1.
-        Defaults to 0.3.
 
     Returns
     -------
-    groups : list of tuple of int
-        List of ``(start, end)`` column-index pairs. Each interval follows
-        Python slicing convention: `start` is inclusive and `end` is
-        exclusive.
+    groups : list[slice]
+        Slices identifying contiguous artifact column groups.
+        Each slice includes its start index and excludes its stop index.
     """
-    nrows, ncols = artifact_mask.shape
-    frac = artifact_mask.sum(axis=0) / max(nrows, 1)
-    affected_cols = frac >= min_fraction_rows
+    affected_cols = np.any(artifact_mask, axis=0)
 
-    groups = []
-    in_group = False
-    start = None
+    # Pad with False to detect groups touching either image boundary.
+    padded = np.concatenate(([False], affected_cols, [False]))
+    edges = np.flatnonzero(padded[1:] != padded[:-1])
 
-    for j in range(ncols):
-        if affected_cols[j] and not in_group:
-            start = j
-            in_group = True
-        elif not affected_cols[j] and in_group:
-            end = j
-            groups.append((start, end))
-            in_group = False
-
-    if in_group:
-        groups.append((start, ncols))
-
-    return groups
+    return [
+        slice(int(start), int(end))
+        for start, end in zip(edges[::2], edges[1::2])
+    ]
 
 
 def _moving_average_1d(x, win):
@@ -360,6 +338,11 @@ def _moving_average_1d(x, win):
         input samples.
     """
     x = np.asarray(x, dtype=float)
+    if x.size == 0:
+        return x.copy()
+
+    win = min(win, x.size)
+
     if win <= 1:
         return x.copy()
 
@@ -451,7 +434,6 @@ def correct_qfsp_phase_artifact(
     background_max_iterations,
     background_max_samples,
     background_minimum_quality,
-    min_fraction_rows,
     template_smooth_win,
     inner_shrink,
     outer_feather,
@@ -472,8 +454,7 @@ def correct_qfsp_phase_artifact(
     Parameters
     ----------
     phase : numpy.ndarray
-        Two-dimensional differential interferogram phase array with shape
-        ``(nrows, ncols)``. Non-finite values and zero-valued pixels are
+        Two-dimensional differential interferogram unwrapped phase array with shape        ``(nrows, ncols)``. Non-finite values and zero-valued pixels are
         treated as invalid and are excluded from background fitting and
         template estimation.
 
@@ -487,9 +468,7 @@ def correct_qfsp_phase_artifact(
 
     artifact_mask : numpy.ndarray
         Boolean array with the same shape as ``phase``. Pixels set to
-        ``True`` identify locations affected by the qFSP artifact. The mask
-        is reduced to affected range-column groups using
-        ``min_fraction_rows``.
+        ``True`` identify locations affected by the qFSP artifact.
 
     background_order : int, default=2
         Polynomial order of the two-dimensional surface fitted to the valid,
@@ -510,11 +489,6 @@ def correct_qfsp_phase_artifact(
     background_minimum_quality : float
         Lower bound applied to quality values before converting them to
         fitting weights.
-
-    min_fraction_rows : float, default=0.3
-        Minimum fraction of all rows that must be marked as artifact-affected
-        for a range column to be included in an artifact group. This value
-        should normally be in the interval ``[0, 1]``.
 
     template_smooth_win : int, default=3
         Window length, in range pixels, used to smooth each one-dimensional
@@ -567,10 +541,9 @@ def correct_qfsp_phase_artifact(
             Boolean mask of valid artifact pixels used to estimate the
             one-dimensional templates.
 
-        ``"groups"`` : list of tuple of int
-            Detected artifact-column intervals represented as ``(c0, c1)``.
-            Each interval follows Python slicing convention: ``c0`` is
-            included and ``c1`` is excluded.
+        ``"groups"`` : list[slice]
+            Slices identifying contiguous artifact column groups.
+            Each slice includes its start index and excludes its stop index.
 
         ``"templates"`` : list of numpy.ndarray
             One-dimensional residual-phase template estimated for each
@@ -579,6 +552,7 @@ def correct_qfsp_phase_artifact(
 
         ``"correction_weight"`` : numpy.ndarray
             Two-dimensional feather weight applied to the artifact model.
+            (same dimensions as `phase`)
 
         ``"valid_corr"`` : numpy.ndarray
             Boolean mask identifying pixels where the correction was
@@ -615,7 +589,7 @@ def correct_qfsp_phase_artifact(
         & valid_phase
         & fit_background_mask
     )
-    background, background_fit_info = (
+    background, _ = (
         _fit_2d_polynomial_surface(
             phase,
             fit_mask,
@@ -630,19 +604,16 @@ def correct_qfsp_phase_artifact(
 
     residual = phase - background
 
-    groups = _find_column_groups(
-        artifact_mask,
-        min_fraction_rows=min_fraction_rows,
-    )
+    groups = _find_column_groups(artifact_mask)
 
     artifact_2d = np.full_like(phase, fill_value, dtype=float)
     templates = []
 
-    for c0, c1 in groups:
-        group_residual = residual[:, c0:c1]
+    for col_slice in groups:
+        group_residual = residual[:, col_slice]
 
         valid_for_template = (
-            template_estimation_mask[:, c0:c1]
+            template_estimation_mask[:, col_slice]
             & np.isfinite(group_residual)
         )
 
@@ -660,6 +631,7 @@ def correct_qfsp_phase_artifact(
 
         # Extend the artifact model slightly outside the artifact columns
         # so feathering can smoothly taper the correction.
+        c0, c1 = col_slice.start, col_slice.stop
         c0_ext = max(0, c0 - outer_feather)
         c1_ext = min(ncols, c1 + outer_feather)
 
@@ -689,7 +661,7 @@ def correct_qfsp_phase_artifact(
     valid_corr = (
         (correction_weight > 0)
         & np.isfinite(artifact_2d)
-        & np.isfinite(corrected_phase)
+        & valid_phase
     )
 
     corrected_phase[valid_corr] -= (

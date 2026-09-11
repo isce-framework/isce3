@@ -1180,7 +1180,6 @@ def run(cfg: dict, runw_hdf5: str):
     iono_qfsp_correction_flag = qfsp_cfg.get("enabled", False)
 
     qfsp_background_order = qfsp_cfg["background_order"]
-    qfsp_min_fraction_rows = qfsp_cfg["min_fraction_rows"]
     qfsp_template_smooth_win = qfsp_cfg["template_smooth_win"]
     qfsp_inner_shrink = qfsp_cfg["inner_shrink"]
     qfsp_outer_feather = qfsp_cfg["outer_feather"]
@@ -2016,7 +2015,6 @@ def run(cfg: dict, runw_hdf5: str):
                             background_max_iterations=qfsp_background_max_iterations,
                             background_max_samples=qfsp_background_max_samples,
                             background_minimum_quality=qfsp_background_minimum_quality,
-                            min_fraction_rows=qfsp_min_fraction_rows,
                             template_smooth_win=qfsp_template_smooth_win,
                             inner_shrink=qfsp_inner_shrink,
                             outer_feather=qfsp_outer_feather,

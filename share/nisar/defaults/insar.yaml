@@ -347,16 +347,11 @@ runconfig:
                     bridge_ramp_maximum_pixel: 1e6
                 qfsp_correction:
                     # Apply qFSP phase-slip artifact correction.
-                    enabled: False
+                    enabled: True
                     # Polynomial order used to estimate the smooth background
                     # phase from non-anomaly pixels.
                     # 0: constant, 1: linear, 2: quadratic.
                     background_order: 2
-                    # Minimum fraction of rows that must contain usable artifact
-                    # samples to estimate a qFSP artifact template.
-                    # If the valid artifact support is smaller than this value,
-                    # correction may be skipped or considered unreliable.
-                    min_fraction_rows: 0.05
                     # Window size, in pixels, used to smooth the estimated qFSP
                     # artifact template. Use an odd integer when possible.
                     template_smooth_win: 3
@@ -366,7 +361,7 @@ runconfig:
                     # Number of pixels used to feather the correction outside
                     # the artifact boundary.
                     outer_feather: 10
-                  # Critical value used by polyfit_offsets for iterative outlier
+                    # Critical value used by polyfit_offsets for iterative outlier
                     # rejection. Larger values reject fewer samples.
                     background_crit_value: 5.0
                     # Maximum number of outliers removed during background fitting.
