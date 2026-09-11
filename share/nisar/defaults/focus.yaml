@@ -963,12 +963,18 @@ runconfig:
                 # multiplying the peak power by the 3dB response widths in
                 # along-track and cross-track directions.
 
+                # 'adjusted_box':
+                # Similar to 'box' but adjusted to account for the effects of
+                # apodization windows in range and azimuth. This should give
+                # results more comparable with methods that integrate sidelobes
+                # (e.g., ESA).
+
                 # 'integrated':
                 # Measures power using the integrated power method. The total
                 # power is measured by summing the power of bins whose power
                 # exceeds a predefined minimum power threshold.
-                # Default: box
-                power_method: box
+                # Default: adjusted_box
+                power_method: adjusted_box
 
                 # The minimum power threshold, measured in dB below the
                 # peak power, for estimating the target signal power using the
