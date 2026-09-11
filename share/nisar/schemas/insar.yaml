@@ -872,6 +872,8 @@ qfsp_correction_options:
     inner_shrink: int(min=0, required=False)
     # Number of pixels used for feathering around the artifact boundary
     outer_feather: int(min=0, required=False)
+    # Return diagnostic outputs and write qFSP debug rasters.
+    debug_flag: bool(required=False)
 
 split_range_spectrum_options:
     # Number of lines per block for block processing)

@@ -439,6 +439,7 @@ def correct_qfsp_phase_artifact(
     outer_feather,
     background_weights=None,
     fill_value=np.nan,
+    debug_flag=False,
 ):
     """
     Estimate and remove a range-dependent qFSP phase artifact.
@@ -515,10 +516,17 @@ def correct_qfsp_phase_artifact(
         model is estimated. Non-finite fill values prevent correction at
         those pixels through ``valid_corr``.
 
+    debug_flag : bool, optional
+        If True, return the corrected phase and diagnostic outputs as a
+        dictionary. If False, return only the corrected phase array.
+        Defaults to False.
+
     Returns
     -------
-    result : dict
-        Dictionary containing the following entries:
+    result : numpy.ndarray or dict
+        Corrected phase array when debug_flag is False.
+        When debug_flag is True, a dictionary containing the corrected
+        phase and diagnostic outputs.
 
         ``"corrected_phase"`` : numpy.ndarray
             Copy of the input phase after subtracting the weighted artifact
@@ -608,7 +616,7 @@ def correct_qfsp_phase_artifact(
     groups = _find_column_groups(artifact_mask)
 
     artifact_2d = np.full_like(phase, fill_value, dtype=float)
-    templates = []
+    templates = [] if debug_flag else None
 
     for col_slice in groups:
         group_residual = residual[:, col_slice]
@@ -622,13 +630,15 @@ def correct_qfsp_phase_artifact(
         template = np.nanmean(tmp, axis=0)
 
         if np.all(~np.isfinite(template)):
-            templates.append(template)
+            if debug_flag:
+                templates.append(template)
             continue
 
         if template_smooth_win > 1:
             template = _moving_average_1d(template, template_smooth_win)
 
-        templates.append(template)
+        if debug_flag:
+            templates.append(template)
 
         # Extend the artifact model slightly outside the artifact columns
         # so feathering can smoothly taper the correction.
@@ -668,6 +678,9 @@ def correct_qfsp_phase_artifact(
     corrected_phase[valid_corr] -= (
         correction_weight[valid_corr] * artifact_2d[valid_corr]
     )
+
+    if not debug_flag:
+        return corrected_phase
 
     return {
         "corrected_phase": corrected_phase,

@@ -375,6 +375,7 @@ runconfig:
                     # This parameter is applied only when quality weights, such as
                     # coherence, are provided.
                     background_minimum_quality: 0.05
+                    debug_flag: false
 
             troposphere_delay:
                 # Boolean flag to activate (True) troposphere delay computation

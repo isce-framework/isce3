@@ -1178,6 +1178,7 @@ def run(cfg: dict, runw_hdf5: str):
     qfsp_cfg = iono_args.get("qfsp_correction", {})
 
     iono_qfsp_correction_flag = qfsp_cfg.get("enabled", False)
+    qfsp_debug_flag = qfsp_cfg["debug_flag"]
 
     qfsp_background_order = qfsp_cfg["background_order"]
     qfsp_template_smooth_win = qfsp_cfg["template_smooth_win"]
@@ -2026,24 +2027,41 @@ def run(cfg: dict, runw_hdf5: str):
                             outer_feather=qfsp_outer_feather,
                             background_weights=None,
                             fill_value=np.nan,
+                            debug_flag=qfsp_debug_flag,
                         )
-                        write_array(
-                            os.path.join(qfsp_out_dir, "qFSP_artifact_2d"),
-                            qfsp_output["artifact_2d"],
-                            data_type=gdal.GDT_Float32,
-                            block_row=row_start,
-                            data_shape=[rows_output, cols_output])
-                        print("background", np.unique(qfsp_output["background"]))
-                        write_array(
-                            os.path.join(qfsp_out_dir, "qFSP_background"),
-                            qfsp_output["background"],
-                            data_type=gdal.GDT_Float32,
-                            block_row=row_start,
-                            data_shape=[rows_output, cols_output])
 
-                        diff_phase = qfsp_output["corrected_phase"]
-                    else:
-                        diff_phase = diff_phase_original
+                        if qfsp_debug_flag:
+                            diff_phase = qfsp_output["corrected_phase"]
+
+                            write_array(
+                                os.path.join(qfsp_out_dir, "qFSP_artifact_2d"),
+                                qfsp_output["artifact_2d"],
+                                data_type=gdal.GDT_Float32,
+                                block_row=row_start,
+                                data_shape=[rows_output, cols_output])
+
+                            write_array(
+                                os.path.join(qfsp_out_dir, "qFSP_background"),
+                                qfsp_output["background"],
+                                data_type=gdal.GDT_Float32,
+                                block_row=row_start,
+                                data_shape=[rows_output, cols_output])
+
+                            write_array(
+                                os.path.join(qfsp_out_dir, "qFSP_background_mask"),
+                                qfsp_background_mask.astype(np.uint8),
+                                data_type=gdal.GDT_Byte,
+                                block_row=row_start,
+                                data_shape=[rows_output, cols_output])
+
+                            write_array(
+                                os.path.join(qfsp_out_dir, "qFSP_anomaly_mask"),
+                                mask_anomaly_array.astype(np.uint8),
+                                data_type=gdal.GDT_Byte,
+                                block_row=row_start,
+                                data_shape=[rows_output, cols_output])
+                        else:
+                            diff_phase = qfsp_output
 
                     write_array(
                         qfsp_corrected_path,
@@ -2051,22 +2069,7 @@ def run(cfg: dict, runw_hdf5: str):
                         data_type=gdal.GDT_Float32,
                         block_row=row_start,
                         data_shape=[rows_output, cols_output])
-                    print("qFSP_background_mask", np.unique(qfsp_background_mask))
 
-                    write_array(
-                        os.path.join(qfsp_out_dir, "qFSP_background_mask"),
-                        qfsp_background_mask.astype(np.uint8),
-                        data_type=gdal.GDT_Byte,
-                        block_row=row_start,
-                        data_shape=[rows_output, cols_output])
-                    print("qFSP_anomaly_mask", np.unique(mask_anomaly_array))
-
-                    write_array(
-                        os.path.join(qfsp_out_dir, "qFSP_anomaly_mask"),
-                        mask_anomaly_array.astype(np.uint8),
-                        data_type=gdal.GDT_Byte,
-                        block_row=row_start,
-                        data_shape=[rows_output, cols_output])
                     if iono_method == "main_diff_low_high_subband":
                         diff_subband_image = diff_phase
 
