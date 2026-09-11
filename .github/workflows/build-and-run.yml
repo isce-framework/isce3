@@ -48,7 +48,7 @@ jobs:
           - deps:
               label: Minimum Python supported
               extra-specs: |
-                python=3.9
+                python=3.11
           - deps:
               label: Documentation
               extra-specs: >-
