@@ -252,6 +252,8 @@ whirlwind_options:
     conncomp_reliability: num(required=False)
     min_size_px: int(min=1, required=False)
     max_ncomps: int(min=1, required=False)
+    connect_gaps: bool(required=False)
+    connect_gaps_max_px: int(min=1, required=False)
     goldstein_alpha: num(min=0, max=1, required=False)
     goldstein_psize: int(min=1, required=False)
 

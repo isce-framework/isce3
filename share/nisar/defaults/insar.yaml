@@ -863,6 +863,17 @@ runconfig:
                     min_size_px: 100
                     # Maximum number of connected components to keep (largest first).
                     max_ncomps: 1024
+                    # Draw phase paths across bounded runs of invalid pixels before
+                    # unwrapping, then drop those synthetic pixels from both outputs. The
+                    # paths let the solver pick a relative 2pi level between regions that
+                    # would otherwise be solved independently, which is what levels the
+                    # NISAR sub-swaths. Unlike ``interpolate``, it extrapolates the phase
+                    # slope on each side of a gap, so a winding estimate survives the
+                    # crossing. Default False.
+                    connect_gaps: False
+                    # Widest invalid run, in pixels, that ``connect_gaps`` will cross.
+                    # Default 300.
+                    connect_gaps_max_px: 300
                     # Goldstein adaptive-filter strength in [0,1]. 0 (default) disables filtering;
                     # typical "on" value is 0.7. When enabled, filter only informs MCF; integer cycle
                     # field is applied to original wrapped phase, so every per-pixel value is preserved.

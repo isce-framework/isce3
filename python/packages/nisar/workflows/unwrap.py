@@ -532,7 +532,9 @@ def set_whirlwind_attributes(cfg: dict):
         'bridge', 'interpolate', 'interp_cutoff',
         'interp_num_neighbors', 'interp_max_radius', 'interp_min_radius',
         'interp_alpha', 'conncomp_min_coherence','conncomp_reliability',
-        'goldstein_psize', 'goldstein_alpha', 'min_size_px', 'max_ncomps',
+        'connect_gaps', 'connect_gaps_max_px',
+        'goldstein_psize', 'goldstein_alpha',
+        'min_size_px', 'max_ncomps',
     )
 
     return {key: cfg[key] for key in WHIRLWIND_OPTIONS
