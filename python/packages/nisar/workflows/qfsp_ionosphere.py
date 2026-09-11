@@ -454,7 +454,8 @@ def correct_qfsp_phase_artifact(
     Parameters
     ----------
     phase : numpy.ndarray
-        Two-dimensional differential interferogram unwrapped phase array with shape        ``(nrows, ncols)``. Non-finite values and zero-valued pixels are
+        Two-dimensional differential interferogram unwrapped phase array with shape
+        ``(nrows, ncols)``. Non-finite values and zero-valued pixels are
         treated as invalid and are excluded from background fitting and
         template estimation.
 
