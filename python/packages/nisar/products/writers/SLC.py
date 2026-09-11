@@ -4,7 +4,6 @@ import logging
 import numpy as np
 from numpy.linalg import norm
 from numpy.testing import assert_allclose
-import os
 from shapely import Polygon
 from typing import Optional
 import isce3

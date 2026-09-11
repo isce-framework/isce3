@@ -46,7 +46,6 @@ class CRInfoSlc:
 
 class OutOfSlcBoundWarning(UserWarning):
     """Warning when CR LLH is out of SLC azimuth-range bound"""
-    pass
 
 
 # functions

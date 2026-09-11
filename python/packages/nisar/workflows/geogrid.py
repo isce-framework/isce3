@@ -1,7 +1,6 @@
 '''
 collection of functions for determining and setting geogrid
 '''
-import copy
 
 import numpy as np
 from osgeo import osr

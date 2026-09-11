@@ -448,7 +448,6 @@ class FaradayRotAngleSlc(ABC):
             Too small block sizes in either range or azimuth.
 
         """
-        pass
 
 
 class FaradayRotEstBickelBates(FaradayRotAngleSlc):

@@ -72,7 +72,6 @@ class BackgroundWorker(abc.ABC):
         """
         User-defined task to operate in background thread.
         """
-        pass
 
     def queue_work(self, *args, **kw):
         """
@@ -146,7 +145,6 @@ class BackgroundWriter(BackgroundWorker):
         """
         User-defined method for writing data.
         """
-        pass
 
 
 class BackgroundReader(BackgroundWorker):
@@ -199,4 +197,3 @@ class BackgroundReader(BackgroundWorker):
         """
         User-defined method for reading a chunk of data.
         """
-        pass

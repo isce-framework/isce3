@@ -3,7 +3,6 @@
 import numpy as np
 import argparse
 from osgeo import gdal
-import sys
 import os
 import isce3
 from nisar.products.readers import SLC

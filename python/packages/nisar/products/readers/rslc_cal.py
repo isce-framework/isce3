@@ -6,7 +6,7 @@ from isce3.core import DateTime
 import logging
 from numpy import angle, deg2rad, rad2deg, exp, pi
 from ruamel.yaml import YAML
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 
 log = logging.getLogger("rslc_cal")

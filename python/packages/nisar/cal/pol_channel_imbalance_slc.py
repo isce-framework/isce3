@@ -18,7 +18,6 @@ from nisar.log import set_logger
 
 class OutOfSlcBoundError(Exception):
     """Azimuth time or slant range values are out of SLC data boundary"""
-    pass
 
 
 @dataclass(frozen=True)

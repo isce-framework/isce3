@@ -2,7 +2,6 @@
 Unit test for Phass unwrapper
 '''
 
-import os
 
 import numpy as np
 import numpy.testing as npt

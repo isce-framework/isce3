@@ -1,7 +1,6 @@
 '''
 Package to compute TEC LUT from JSON file
 '''
-from datetime import datetime, timedelta
 import json
 import os
 

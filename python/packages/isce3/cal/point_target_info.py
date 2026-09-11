@@ -21,12 +21,10 @@ desc = __doc__
 class MissingNull(Exception):
     """Raised when mainlobe null(s) cannot be determined"""
 
-    pass
 
 class UnsupportedWindow(Exception):
     """Raised if window_type input is not supported."""
 
-    pass
 
 def get_chip(x: DatasetReader, i: float, j: float, nchip: int = 64) -> np.ndarray:
     """

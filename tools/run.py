@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, os
+import argparse
 from imagesets import imagesets, projsrcdir
 
 def run(*, steps, imgset, **kwargs):

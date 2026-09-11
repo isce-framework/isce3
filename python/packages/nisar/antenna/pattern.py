@@ -1,4 +1,3 @@
-from warnings import warn
 from collections import defaultdict
 from isce3.core import Orbit, Attitude, Linspace
 from isce3.geometry import DEMInterpolator

@@ -13,7 +13,6 @@ object to manage and run the Fortran estimate_dop.f90.
 """
 
 import os
-import sys
 
 class EstimateDoptest(object):
     def __init__(self):

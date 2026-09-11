@@ -1,7 +1,6 @@
 import os
 import pytest
 import numpy as np
-from dataclasses import dataclass
 from osgeo import gdal
 from pathlib import Path
 from tempfile import TemporaryDirectory

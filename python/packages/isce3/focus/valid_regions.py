@@ -2,7 +2,6 @@
 from .sar_duration import get_sar_duration
 from copy import deepcopy
 from dataclasses import dataclass
-from functools import reduce
 import isce3
 import numpy as np
 import shapely

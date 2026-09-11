@@ -15,7 +15,6 @@ from isce3.antenna import CrossTalk
 
 class MissingInstrumentFieldWarning(UserWarning):
     """Used for missing field in instrument table """
-    pass
 
 
 class InstrumentParser:

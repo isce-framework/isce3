@@ -5,7 +5,6 @@ from collections import defaultdict
 from functools import reduce
 import h5py
 from itertools import chain
-import json
 import logging
 import math
 import os

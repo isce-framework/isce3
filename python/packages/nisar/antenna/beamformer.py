@@ -18,7 +18,6 @@ DEFAULT_NUM_PULSE_SKIP = 12
 
 class BadHPACalWarning(Warning):
     """Warning for Bad HPA CAL values"""
-    pass
 
 
 class ElevationBeamformer(ABC):
