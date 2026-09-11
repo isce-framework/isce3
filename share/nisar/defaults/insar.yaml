@@ -677,7 +677,7 @@ runconfig:
                         # 1) median_filter: compute mask with median absolute deviation thresholding
                         # 2) coherence: compute mask with normalized InSAR coherence thresholding
                         # 3) water: extract water areas from water mask file in dynamic ancillary data
-                        mask_type: coherence
+                        mask_type: ['subswath_mask']
                         # buffer from the land. Unit is [km]. Buffer should be integer.
                         ocean_water_buffer: 1
                         inland_water_buffer: 1
