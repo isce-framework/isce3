@@ -1,5 +1,6 @@
 from . import antenna
 from . import cal
+from . import focus
 from . import h5
 from . import log
 from . import mixed_mode

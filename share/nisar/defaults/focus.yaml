@@ -508,6 +508,20 @@ runconfig:
                 # RSLC.
                 max_observation_gap: 0.002
 
+                # Data segments with less than this amount of consecutive valid
+                # pulses will be excluded from the valid data mask.  This helps
+                # avoid unnecessary bookkeeping when lots of missing pulses are
+                # sprinkled throughout an observation.  Expressed as a fraction
+                # of the synthetic aperture length, values in (0, 1]
+                min_segment_fraction: 0.25
+
+                # Data segments (each lasting at least min_segment_fraction)
+                # separated by max_pulse_gap or fewer invalid pulses will be
+                # joined together.  This provides an easy way to ignore isolated
+                # gaps of a single invlid pulse, for example.  Set to 0 to
+                # disable merging.
+                max_pulse_gap: 1
+
             caltone:
                 # If "azimuth_mean", subtract the azimuth mean from the raw
                 # data, which is useful when the caltone is nearly constant in
