@@ -38,7 +38,6 @@ from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
 
-
 def write_disp_block_hdf5(
         hdf5_path,
         path,
@@ -337,6 +336,7 @@ def copy_iono_datasets(iono_insar_cfg,
     else:
         freq = 'B'
 
+    iono_layers_for_stats = []
     with HDF5OptimizedReader(name=input_runw, mode='a',
                              libver='latest', swmr=True) as src_h5, \
          HDF5OptimizedReader(name=output_runw, mode='a',
@@ -398,6 +398,7 @@ def copy_iono_datasets(iono_insar_cfg,
 
                 src_iono_paths = [src_iono_path, src_iono_unct_path]
                 dst_iono_paths = [iono_path, iono_unct_path]
+                iono_layers_for_stats += dst_iono_paths
                 for block in range(0, nblocks):
                     row_start = block * blocksize
                     if (row_start + blocksize > rows_main):
@@ -422,9 +423,11 @@ def copy_iono_datasets(iono_insar_cfg,
                             dest_sel=np.s_[
                                     row_start:row_start+block_rows_data, :])
 
-                # Add statistics to ionosphere datasets in RUNW
-                for dst_iono_path in dst_iono_paths:
-                    compute_stats_real_hdf5_dataset(dst_h5[dst_iono_path])
+    # Add statistics to ionosphere datasets in RUNW
+    with HDF5OptimizedReader(name=output_runw, mode='a',
+                             libver='latest', swmr=True) as dst_h5:
+        for dst_iono_path in iono_layers_for_stats:
+            compute_stats_real_hdf5_dataset(dst_h5[dst_iono_path])
 
 
 def compute_differential_phase(
@@ -1146,7 +1149,7 @@ def run(cfg: dict, runw_hdf5: str):
     filling_guide_median_size = filter_cfg['filling_guide_median_size']
     filling_outlier_threshold = filter_cfg['filling_outlier_threshold']
     filling_outlier_min_scale = filter_cfg['filling_outlier_min_scale']
-    filling_outlier_mad_scale_factor = filter_cfg['filling_outlier_mad_scale_factor']    
+    filling_outlier_mad_scale_factor = filter_cfg['filling_outlier_mad_scale_factor']
 
     filter_iterations = filter_cfg['filter_iterations']
     median_filter_size = filter_cfg['median_filter_size']
