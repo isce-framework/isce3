@@ -155,6 +155,8 @@ runconfig:
             # Options to generate model-based slant range and azimuth correction LUTs
             correction_luts: include('lut_options', required=False)
 
+            tec_correction: include('tec_correction_options', required=False)
+
         # To setup type of worker
         worker: include('worker_options', required=False)
 
@@ -1234,6 +1236,13 @@ output_options:
 lut_options:
     # Boolean flag to activate/deactivate model-based solid earth tide corrections
     solid_earth_tides_enabled: bool(required=False)
+
+tec_correction_options:
+    apply_slant_range_correction: bool(required=False)
+    apply_azimuth_correction: bool(required=False)
+    use_total_tec_only: bool(required=False)
+    ignore_invalid_topside_tec: bool(required=False)
+    polyfit_tec_profile: bool(required=False)
 
 product_version_options:
     rifg_version: str('^\d+\.\d+\.\d+$', required=False)

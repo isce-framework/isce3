@@ -830,6 +830,13 @@ runconfig:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
 
+            tec_correction:
+                apply_slant_range_correction: True
+                apply_azimuth_correction: True
+                use_total_tec_only: False
+                ignore_invalid_topside_tec: True
+                polyfit_tec_profile: False
+
             # Set of options to enable compression, choose compression level,
             # chunk size and shuffle filter
         output:

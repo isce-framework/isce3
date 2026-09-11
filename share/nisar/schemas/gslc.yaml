@@ -107,6 +107,8 @@ runconfig:
 
             ampcor: include('ampcor_options', required=False)
 
+            tec_correction: include('tec_correction_options', required=False)
+
             blocksize:
                 x: int(min=100, max=100000)
                 y: int(min=100, max=10000)
@@ -436,3 +438,10 @@ output_options:
 lut_options:
     # Boolean flag to activate/deactivate model-based solid earth tide corrections
     solid_earth_tides_enabled: bool(required=False)
+
+tec_correction_options:
+    apply_slant_range_correction: bool(required=False)
+    apply_azimuth_correction: bool(required=False)
+    use_total_tec_only: bool(required=False)
+    ignore_invalid_topside_tec: bool(required=False)
+    polyfit_tec_profile: bool(required=False)
