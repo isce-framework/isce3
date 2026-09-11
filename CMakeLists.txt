@@ -90,6 +90,11 @@ if(ISCE3_WITH_CYTHON)
     message(ERROR "isce3's cython extension has been removed!")
 endif()
 
+option(ISCE3_ENABLE_FBP_TIMING "Log factorized backprojection timing" OFF)
+if(ISCE3_ENABLE_FBP_TIMING)
+    add_definitions(-DISCE3_ENABLE_FBP_TIMING)
+endif()
+
 ###Layout same install directory structure as pyre
 include(GNUInstallDirs)
 InitInstallDirLayout()

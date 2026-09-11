@@ -6,6 +6,7 @@
 #include <random>
 #include <gtest/gtest.h>
 #include "isce3/signal/NFFT.h"
+#include "isce3/signal/NFFT2d.h"
 #include "isce3/signal/Filter.h"
 
 const int seed = 1234;
@@ -153,6 +154,33 @@ TEST(Kernel, Singularity)
     // Window should be monotonically decreasing.
     EXPECT_GT(window(m-dx), window(m));
     EXPECT_GT(window(m), window(m+dx));
+}
+
+TEST(NFFT2d, IRF)
+{
+    using T = float;
+    using dims_t = isce3::signal::NFFT2d<T>::dims_t;
+    dims_t dims = {32, 84};
+    constexpr int s = 2, my = 4, mx = 4;
+    dims_t fft_dims = {dims[0] * s, dims[1] * s};
+    auto nfft = isce3::signal::NFFT2d<T>({my, mx}, dims, fft_dims);
+
+    // Set spectrum to all ones.
+    size_t nimg = static_cast<size_t>(dims[0]) * dims[1];
+    std::vector<std::complex<T>> z(nimg);
+    z.assign(nimg, std::complex<T>(1.0, 0.0));
+
+    // Transform is the impulse response, which for NFFT should be approximately
+    // a sinc.
+    const auto result = nfft.transform(dims, {dims[1], 1}, z.data());
+
+    // Zero phase on spectrum, so IRF should be centered at (0, 0).
+    const auto Z0 = result.interp({0.0, 0.0}, true);
+
+    const auto err_real = std::abs(std::real(Z0) - 1.0);
+    const auto err_imag = std::abs(std::imag(Z0));
+    EXPECT_LT(err_real, 1e-4);
+    EXPECT_LT(err_imag, 1e-4);
 }
 
 int

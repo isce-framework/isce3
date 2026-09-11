@@ -429,7 +429,7 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 32768
+                    range: 65536
                     azimuth: 1024
 
                 # Desired azimuth resolution in meters.
@@ -445,6 +445,11 @@ runconfig:
 
                     fit: Table # null or Cheby or Table
                     fit_order: 2048
+
+                # List of aperture factorization parameters.
+                # Default to two-stage with 128 pulses per subaperture.
+                factorization:
+                - size: 128
 
             dry_troposphere_model: tsx
 
@@ -563,7 +568,7 @@ runconfig:
             compression_type: gzip
 
             # Level of compression applied to raster
-            compression_level: 4
+            compression_level: 2
 
             # Chunk size of raster.  Enter [-1, -1] to disable chunks.
             chunk_size: [512, 512]

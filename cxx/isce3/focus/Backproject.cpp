@@ -5,14 +5,18 @@
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/Interp1d.h>
+#include <isce3/core/Interp2d.h>
 #include <isce3/core/Kernels.h>
 #include <isce3/core/Projections.h>
 #include <isce3/except/Error.h>
+#include <isce3/fft/FFT.h>
+#include <isce3/fft/FFTUtil.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/geometry/rdr2geo_roots.h>
 #include <isce3/geometry/geo2rdr_roots.h>
 #include <limits>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -23,6 +27,10 @@ using namespace isce3::geometry;
 using isce3::error::ErrorCode;
 
 using isce3::container::RadarGeometry;
+using isce3::signal::NFFT2dResult;
+using isce3::signal::NFFT2dParams;
+using isce3::fft::planfft2d;
+using isce3::fft::nextFastPower;
 
 namespace isce3 {
 namespace focus {
@@ -209,6 +217,848 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
         return ErrorCode::FailedToConverge;
     }
     return ErrorCode::Success;
+}
+
+
+static Vec3 vector_mean(const std::vector<Vec3>& vecs)
+{
+    Vec3 sum = {0, 0, 0};
+    for (const auto& vec : vecs) {
+        sum += vec;
+    }
+    return sum * (1.0 / vecs.size());
+}
+
+double
+getPolarAngleTimeConstant(const double fc, const double vs,
+        const double bandwidth, const double c)
+{
+    // Yegulalp, Eq. (11)
+    const auto fmax = fc + bandwidth / 2;
+    return c / (2 * fmax * vs);
+}
+
+
+std::tuple<PolarGrid, std::vector<Vec3>, std::vector<Vec3>>
+setupPolarGridForPulses(
+        const RadarGeometry& in_geometry,
+        const Eigen::Ref<const Eigen::VectorXd>& azimuth_time,
+        double range_bandwidth,
+        double azimuth_resolution,
+        double oversample_range, double oversample_azimuth,
+        int num_doppler_eval, std::optional<double> pri)
+{
+    // Interpolate platform position & velocity at each pulse
+    const auto nt = azimuth_time.size();
+    if (nt < 1) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Need at least one pulse to setup polar grid.");
+    }
+    std::vector<Vec3> pos(nt), vel(nt);
+
+    for (auto i = decltype(nt){0}; i < nt; ++i) {
+        double t = azimuth_time[i];
+        in_geometry.orbit().interpolate(&pos[i], &vel[i], t);
+    }
+
+    // For the along-track axis we could fit a line to the positions, or use the
+    // dominant eigenvector of the position sample covariance.  But the average
+    // velocity is probably about the same and simpler to compute.
+    Vec3 axis = vector_mean(vel);
+    const auto vs = axis.norm();
+    axis *= 1.0 / vs;
+
+    constexpr auto c = isce3::core::speed_of_light;
+    const auto fc = c / in_geometry.wavelength();
+    const auto slant_range = in_geometry.slantRange();
+
+    // Our polar data structures use a constant Doppler centroid (DC) vs range.
+    // If we have some DC variation over the swath, we'll increase the Doppler
+    // bandwidth enough to accommodate it.  Later we can mask out the pixels
+    // outside the desired azimuth band if desired.
+    // We will assume the DC is stable over the slow-time span of the pulses.
+    const auto
+        r0 = slant_range.first(),
+        r1 = slant_range.last(),
+        t0 = azimuth_time[0],
+        t1 = azimuth_time[nt - 1],
+        tmid = (t0 + t1) / 2,
+        dop2q = c / (fc * 2 * vs),
+        pri_ = pri.value_or((t1 - t0) / (nt - 1));
+
+    auto q0 = in_geometry.doppler().eval(tmid, r0) * dop2q;
+    auto q1 = q0;
+    for (int i = 1; i < num_doppler_eval; ++i) {
+        const auto ri = r0 + i * (r1 - r0) / (num_doppler_eval - 1);
+        const auto qi = in_geometry.doppler().eval(tmid, ri) * dop2q;
+        q0 = std::min(q0, qi);
+        q1 = std::max(q1, qi);
+    }
+    auto qmid = (q0 + q1) / 2;
+    auto qspan = (q1 - q0) + c / (fc * 2 * azimuth_resolution);
+
+    // Use mean position as origin of polar grid.
+    Vec3 origin = vector_mean(pos);
+
+    // Bistatic correction, roughly 22 m for NISAR-like geometry (many pulses).
+    // If neglected causes a noticeable spectral shift for short apertures
+    // that can mess up baseband interpolation.
+    const auto rmid = (r0 + r1) / 2;
+    const auto ds_dr = vs / (c - qmid * vs);
+    origin += rmid * ds_dr * axis;
+
+    // Depends on range, so adjust aperture duration by variation in shift.
+    // This will cause a higher sample rate and hopefully avoid aliasing.
+    // Roughly 4 m for NISAR-like geometry (one pulse, almost negligible).
+    const auto duration = (t1 - t0 + pri_) + (r1 - r0) * ds_dr / vs;
+
+    // Yegulalp, Eq. (11) and (12)
+    const auto tq = getPolarAngleTimeConstant(fc, vs, range_bandwidth, c);
+    auto dq = tq / (duration * oversample_azimuth);
+    auto dr = c / (2 * range_bandwidth * oversample_range);
+
+    // Though inefficient, user might try to combine more pulses than are
+    // needed to achieve the desired azimuth resolution.  For example, they
+    // might try to backproject all pulses from a stripmap radar in one shot.
+    const auto dq_min = azimuth_resolution /
+        (slant_range.last() * oversample_azimuth);
+    if (dq < dq_min) {
+        // TODO emit a warning?
+        dq = dq_min;
+    }
+
+    int nr = 1 + static_cast<int>(std::ceil((r1 - r0) / dr));
+    int nq = 1 + static_cast<int>(std::ceil(qspan / dq));
+
+    auto pgrid = PolarGrid{t0, t1 + pri_,
+        origin, axis, Linspace<double>(r0, dr, nr),
+        Linspace<double>(qmid - dq * (nq - 1) / 2, dq, nq),
+        in_geometry.lookSide()};
+
+    return {pgrid, pos, vel};
+}
+
+
+std::tuple<ErrorCode, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
+backprojectToPolarGrid(
+        const std::complex<float>* in, const Linspace<double>& in_slant_range,
+        const std::vector<Vec3>& pos,
+        const std::vector<Vec3>& vel,
+        const PolarGrid& out_grid,
+        const DEMInterpolator& dem, double fc,
+        const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+{
+    using isce3::geometry::detail::polar2geo_bracket;
+
+    const auto nt = pos.size();
+    if (vel.size() != nt) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "require same number of position and velocity vectors");
+    }
+
+    static constexpr double c = isce3::core::speed_of_light;
+    static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
+
+    // check that dry_tropo_model is supported internally
+    if (not(dry_tropo_model == DryTroposphereModel::NoDelay or
+            dry_tropo_model == DryTroposphereModel::TSX)) {
+
+        std::string errmsg = "unexpected dry troposphere model";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+    }
+
+    const auto npix = static_cast<size_t>(out_grid.length()) * out_grid.width();
+    auto height = std::make_unique<float[]>(npix);
+    auto out = std::make_unique<std::complex<float>[]>(npix);
+
+    // range sampling window
+    double swst = 2. * in_slant_range.first() / c;
+    double dtau = 2. * in_slant_range.spacing() / c;
+    int nr = in_slant_range.size();
+    Linspace<double> sampling_window(swst, dtau, nr);
+
+    // reference ellipsoid
+    int epsg = dem.epsgCode();
+    const Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+
+    // loop over targets in output grid
+    bool all_converged = true;
+#pragma omp parallel for
+    for (int j = 0; j < out_grid.sin_squint.size(); ++j) {
+        const double
+            q = out_grid.sin_squint[j],
+            c = std::sqrt(1.0 - q * q);
+        for (int i = 0; i < out_grid.range.size(); ++i) {
+
+            // Run polar2geo to get target position.
+            // Only need LLH if dumping height or using TSX atmosphere model,
+            // but just compute it unconditionally.
+            Vec3 x, llh;
+            {
+                const double r = out_grid.range[i];
+                double look_angle;
+
+                const auto status = polar2geo_bracket(&x, &look_angle,
+                        out_grid.origin, out_grid.axis, r, q, c, dem, ellipsoid,
+                        out_grid.look_side, r2g_params);
+
+                llh = ellipsoid.xyzToLonLat(x);
+                height[j * out_grid.width() + i] = llh[2];
+
+                if (status != isce3::error::ErrorCode::Success) {
+                    all_converged = false;
+                    out[j * out_grid.width() + i] = {nan, nan};
+                    height[j * out_grid.width() + i] = nan;
+                    continue;
+                }
+            }
+
+            // estimate dry troposphere delay
+            double tau_atm = 0.;
+            if (dry_tropo_model == DryTroposphereModel::TSX) {
+                tau_atm = dryTropoDelayTSX(out_grid.origin, llh, ellipsoid);
+            }
+
+            // TODO range-dependent Doppler mask?
+            int kstart = 0, kstop = static_cast<int>(nt);
+
+            // integrate pulses
+            out[j * out_grid.width() + i] =
+                    sumCoherent(in, sampling_window, pos, vel, x, fc, tau_atm,
+                                kernel, kstart, kstop);
+        }
+    }
+
+    // baseband
+    const double kw = 4 * M_PI / (c / fc);
+    #pragma omp parallel for
+    for (int i = 0; i < out_grid.range.size(); ++i) {
+        const double phi = -kw * out_grid.range[i];
+        const auto phasor = std::complex<float>(std::cos(phi), std::sin(phi));
+        for (int j = 0; j < out_grid.sin_squint.size(); ++j) {
+            out[j * out_grid.width() + i] *= phasor;
+        }
+    }
+
+    auto status =
+            all_converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
+    return std::make_tuple(status, std::move(out), std::move(height));
+}
+
+PolarGrid
+mergePolarGrids(const std::vector<PolarGrid>& grids,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    const std::optional<double>& dq_min,
+    const std::optional<double>& tq)
+{
+    if (grids.size() <= 0) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "can't find common grid among empty list");
+    } else if (grids.size() == 1) {
+        return grids[0];
+    }
+
+    // reference ellipsoid
+    Ellipsoid ellipsoid = makeProjection(dem.epsgCode())->ellipsoid();
+
+    // Compute a bunch of stats with a first pass over the data.
+    // Average origin and axis, weighted by aperture duration.
+    Vec3 origin{0, 0, 0}, axis{0, 0, 0};
+    // Inferred dimensionless Doppler spacing time constant
+    double tq_inferred = 0.0;
+    // Min range spacing (in case different among grids)
+    auto dr = grids[0].range.spacing();
+    // Need total aperture size and sum of subaperture sizes.
+    // These are not equal if there are gaps or overlap between subapertures.
+    auto t_min = grids[0].aztime_start;  // assume start > end
+    auto t_max = grids[0].aztime_end;  // assume start > end
+    double sum_durations = 0;
+    const auto look_side = grids[0].look_side;
+
+    for (const auto& grid : grids) {
+        const auto duration = grid.aztime_end - grid.aztime_start;
+        sum_durations += duration;
+        t_min = std::min(t_min, grid.aztime_start);  // assume start > end
+        t_max = std::max(t_max, grid.aztime_end);  // assume start > end
+        dr = std::min(dr, grid.range.spacing());
+        origin += duration * grid.origin;
+        axis += duration * grid.axis;
+        tq_inferred += duration * (grid.sin_squint.spacing() * duration);
+        if (grid.look_side != look_side) {
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "inconsistent look_side among input polar grids");
+        }
+    }
+    origin *= 1.0 / sum_durations;
+    axis *= 1.0 / axis.norm();
+    tq_inferred /= sum_durations;
+
+    // In general, figuring out the required Doppler spacing is pretty complex.
+    // You'd want to figure out the Doppler bandwidth observed by all targets
+    // across all grids, maxing out around the azimuth resolution.
+    // For now let's just just be conservative and increase it linearly.
+    auto dq = tq.value_or(tq_inferred) / (t_max - t_min);
+
+    // But the user can override this.
+    if (dq_min) {
+        dq = std::max(dq_min.value(), dq);
+    }
+
+    // Compute range & Doppler bounds of new grid using corners of each input.
+    // Use lambda to avoid copy/paste.
+    using isce3::geometry::detail::polar2polar_bracket;
+    auto polar2polar = [&](const PolarGrid& grid, double r, double ssq) {
+        auto csq = std::sqrt(1.0 - ssq * ssq);
+        double r_out, ssq_out;
+        auto ec = polar2polar_bracket(&ssq_out, &r_out, ssq, csq, r,
+            grid.origin, grid.axis, origin, axis, dem, ellipsoid, look_side,
+            r2g_params);
+        if (ec != ErrorCode::Success) {
+            throw isce3::except::DomainError(ISCE_SRCINFO(),
+                "polar2polar failed with ErrorCode (" +
+                isce3::error::getErrorString(ec) + ") for point at r="
+                + std::to_string(r) + " sin_squint=" + std::to_string(ssq));
+        }
+        return std::make_tuple(r_out, ssq_out);
+    };
+
+    // NOTE Use grid _edges_ for determining extent.  Okay to initialize with
+    // center, though.
+    auto [r_min, q_min] = polar2polar(grids[0], grids[0].range[0],
+        grids[0].sin_squint[0]);
+    auto r_max = r_min, q_max = q_min;
+    for (const auto& grid : grids) {
+        for (const auto& ri : grid.range.bounds()) {
+            for (const auto& qi : grid.sin_squint.bounds()) {
+                const auto [ro, qo] = polar2polar(grid, ri, qi);
+                r_min = std::min(r_min, ro);
+                r_max = std::max(r_max, ro);
+                q_min = std::min(q_min, qo);
+                q_max = std::max(q_max, qo);
+            }
+        }
+    }
+
+    const int nr = static_cast<int>(std::ceil((r_max - r_min) / dr));
+    const int nq = static_cast<int>(std::ceil((q_max - q_min) / dq));
+
+    // The ceil() means potentially extra coverage.  We'll center it so there's
+    // equal padding on both sides of the interval.  Note also that min/max are
+    // bin edges while we're specifying bin centers, hence (N-1) instead of N
+    // in the formulas.
+    const auto r0 = r_min - ((nr - 1) * dr - (r_max - r_min)) / 2;
+    const auto q0 = q_min - ((nq - 1) * dq - (q_max - q_min)) / 2;
+    return PolarGrid{t_min, t_max, origin, axis,
+        Linspace<double>(r0, dr, nr),
+        Linspace<double>(q0, dq, nq),
+        look_side};
+}
+
+
+void mergePolarImages(
+    const std::vector<PolarGrid>& grids,
+    const std::vector<const NFFT2dResult<float>*>& image_interpolators,
+    const PolarGrid& output_grid,
+    Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> output_image,
+    const double fc,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    int az_block_size)
+{
+    // check that output grid dimensions match buffer size
+    const auto m = output_grid.length(), n = output_grid.width();
+    if ((m != output_image.rows()) or (n != output_image.cols())) {
+        std::string msg = "Dimensions of image grid (" + std::to_string(m)
+            + ", " + std::to_string(n) + ") do not match dimensions of image "
+            "buffer (" + std::to_string(output_image.rows()) + ", "
+            + std::to_string(output_image.cols()) + ")";
+        throw isce3::except::LengthError(ISCE_SRCINFO(), msg);
+    }
+
+    // check that we have a grid for each input image
+    const auto num_images = image_interpolators.size();
+    if (grids.size() != num_images) {
+        std::string msg = "Size mismatch: got " + std::to_string(num_images) +
+            " sub images but " + std::to_string(grids.size()) + " grids";
+        throw isce3::except::LengthError(ISCE_SRCINFO(), msg);
+    }
+
+    // check look directions for consistency
+    const auto look_side = output_grid.look_side;
+    for (const auto& grid : grids) {
+        if (grid.look_side != look_side) {
+            std::string msg = "Output grid look direction does not match "
+                "input grid look direction";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), msg);
+        }
+    }
+
+    // Check block size and allocate scratch space.
+    if (az_block_size <= 0) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "azimuth block size must be positive");
+    }
+    az_block_size = std::min(az_block_size, output_grid.sin_squint.size());
+
+    auto block_positions = isce3::core::EArray2D<Vec3>();
+    block_positions.resize(az_block_size, output_grid.width());
+
+    // reference ellipsoid
+    Ellipsoid ellipsoid = makeProjection(dem.epsgCode())->ellipsoid();
+
+    // wavenumber
+    const double kw = 4 * M_PI * fc / isce3::core::speed_of_light;
+
+    using isce3::geometry::detail::polar2polar_bracket;
+    using isce3::geometry::geo2polar;
+
+    // loop over output blocks
+    auto n_blocks = (m + az_block_size - 1) / az_block_size;
+    for (auto i_block = decltype(n_blocks){0}; i_block < n_blocks; ++i_block) {
+        auto i_row0 = i_block * az_block_size;
+        auto i_row1 = std::min(i_row0 + az_block_size, m);
+
+        // Compute output pixel 3D locations
+        using isce3::geometry::detail::polar2geo_bracket;
+        #pragma omp parallel for collapse(2)
+        for (auto i_row = i_row0; i_row < i_row1; ++i_row) {
+            for (auto j = decltype(n){0}; j < n; ++j) {
+                auto i = i_row - i_row0;
+                double look_angle;
+                const auto ssq = output_grid.sin_squint[i_row];
+                const auto csq = std::sqrt(1.0 - ssq * ssq);
+                auto ec = polar2geo_bracket(&block_positions(i, j), &look_angle,
+                    output_grid.origin, output_grid.axis, output_grid.range[j],
+                    ssq, csq, dem, ellipsoid, output_grid.look_side, r2g_params);
+                if (ec != ErrorCode::Success) {
+                    throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "polar2geo failed with ErrorCode (" +
+                        isce3::error::getErrorString(ec) + ") for point at r="
+                        + std::to_string(output_grid.range[j]) + " sin_squint="
+                        + std::to_string(ssq));
+                } // err
+            } // columns
+        } // rows
+
+        // loop over input images
+        for (auto i_img = decltype(num_images){0}; i_img < num_images; ++i_img) {
+            const auto& input_grid = grids[i_img];
+            const auto* nfft = image_interpolators[i_img];
+            const auto npix = static_cast<size_t>(n) * (i_row1 - i_row0);
+            auto ec = accumulatePolarImageToGeoPoints(
+                output_image.row(i_row0).data(),
+                block_positions.data(), npix, input_grid, *nfft, kw);
+            if (ec != ErrorCode::Success) {
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                    "projectPolarToGeo failed with ErrorCode (" +
+                    isce3::error::getErrorString(ec) + ")");
+            } // error
+        } // images
+    } // blocks
+
+    // Baseband.  Note that we could do this at the same time as the
+    // reprojection but it'd require a fair bit of copy/paste.
+    Eigen::VectorXcf phasors(n);
+    #pragma omp parallel for
+    for (auto j = decltype(n){0}; j < n; ++j) {
+        const double arg = -kw * output_grid.range[j];
+        phasors(j) = std::complex<float>(std::cos(arg), std::sin(arg));
+    }
+    #pragma omp parallel for collapse(2)
+    for (auto i = decltype(m){0}; i < m; ++i) {
+        for (auto j = decltype(n){0}; j < n; ++j) {
+            output_image(i, j) *= phasors(j);
+        } // columns
+    } // rows
+}
+
+
+// For now structure like backproject() with inner loop on target.
+// Might make more sense to project one image at a time instead.
+ErrorCode
+accumulatePolarImagesToRadarGrid(std::complex<float>* out,
+        const RadarGeometry& out_geometry,
+        const isce3::core::Orbit& in_orbit,
+        const isce3::core::LUT2d<double>& in_doppler,
+        const std::vector<PolarGrid>& grids,
+        const std::vector<const NFFT2dResult<float>*>& image_interpolators,
+        const DEMInterpolator& dem, double fc, double ds,
+        DryTroposphereModel dry_tropo_model,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+        float* height)
+{
+    static constexpr double c = isce3::core::speed_of_light;
+    static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
+
+    // check that dry_tropo_model is supported internally
+    if (not(dry_tropo_model == DryTroposphereModel::NoDelay or
+            dry_tropo_model == DryTroposphereModel::TSX)) {
+
+        std::string errmsg = "unexpected dry troposphere model";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+    }
+
+    // will search sorted intervals to figure out active sub images per target
+    auto starts = std::vector<double>(grids.size());
+    std::transform(grids.begin(), grids.end(), starts.begin(),
+        [](const PolarGrid& grid) { return grid.aztime_start; });
+    auto ends = std::vector<double>(grids.size());
+    std::transform(grids.begin(), grids.end(), ends.begin(),
+        [](const PolarGrid& grid) { return grid.aztime_end; });
+
+    // get input & output radar grid azimuth time & slant range
+    Linspace<double> out_azimuth_time = out_geometry.sensingTime();
+    Linspace<double> out_slant_range = out_geometry.slantRange();
+
+    // reference ellipsoid
+    int epsg = dem.epsgCode();
+    Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+
+    // carrier wavelength
+    const double wvl = c / fc;
+    const double kw = 4 * M_PI / wvl;
+
+    const size_t nout = out_geometry.gridLength() * out_geometry.gridWidth();
+    std::vector<Vec3> x(nout);
+    std::vector<double> tstart(nout), tend(nout), dr_atm(nout);
+
+    // loop over targets in output grid
+    bool all_converged = true;
+    #pragma omp parallel for
+    for (size_t iflat = 0; iflat < nout; ++iflat) {
+        const size_t j = iflat / out_slant_range.size();
+        const size_t i = iflat % out_slant_range.size();
+
+        // Run rdr2geo using orbit and Doppler associated with output grid
+        // to get target position.  Only need LLH if dumping height or
+        // using TSX atmosphere model, but just compute it unconditionally.
+        Vec3 llh;
+        {
+            double t = out_azimuth_time[j];
+            double r = out_slant_range[i];
+            double fD = out_geometry.doppler().eval(t, r);
+
+            const int converged = rdr2geo_bracket(t, r, fD,
+                    out_geometry.orbit(), dem, x[iflat], wvl,
+                    out_geometry.lookSide(), r2g_params.tol_height,
+                    r2g_params.look_min, r2g_params.look_max);
+
+            llh = ellipsoid.xyzToLonLat(x[iflat]);
+
+            if (height != nullptr) {
+                height[iflat] = llh[2];
+            }
+            if (not converged) {
+                all_converged = false;
+                out[iflat] = {nan, nan};
+                if (height != nullptr) {
+                    height[iflat] = nan;
+                }
+                continue;
+            }
+        }
+
+        // run geo2rdr to estimate the center of the coherent processing
+        // window for the target
+        double t, r;
+        {
+            auto converged =
+                    geo2rdr_bracket(x[iflat], in_orbit,
+                            in_doppler, t, r, wvl,
+                            out_geometry.lookSide(),  // assumed same side
+                            g2r_params.tol_aztime,
+                            g2r_params.time_start, g2r_params.time_end);
+
+            if (not converged) {
+                all_converged = false;
+                out[iflat] = {nan, nan};
+                continue;
+            }
+        }
+
+        // get platform position and velocity at center of CPI
+        Vec3 p, v;
+        in_orbit.interpolate(&p, &v, t);
+
+        // estimate synthetic aperture length required to achieve the
+        // desired azimuth resolution
+        double l = wvl * r * (p.norm() / x[iflat].norm()) / (2. * ds);
+
+        // approximate CPI duration (assuming constant platform velocity)
+        double cpi = l / v.norm();
+
+        // get coherent integration bounds (pulse indices)
+        tstart[iflat] = t - cpi / 2;
+        tend[iflat] = tstart[iflat] + cpi;
+
+        // Calculate dry troposphere delay (in units of one-way range).
+        if (dry_tropo_model == DryTroposphereModel::TSX) {
+            dr_atm[iflat] = dryTropoDelayTSX(p, llh, ellipsoid) * c / 2.;
+        }
+        // else zero-initialized by vector ctor
+    }
+
+    // std::vector<bool> unsuitable due to bit packing optimizations
+    Eigen::Array<bool, Eigen::Dynamic, 1> mask(nout);
+
+    // TODO reduce tstart & tend
+    // TODO check this O(log(n)) algorithm
+    //const auto kstart = std::distance(ends.begin(),
+    //    std::lower_bound(ends.begin(), ends.end(), tstart));
+    //const auto kstop = std::distance(starts.begin(),
+    //    std::upper_bound(starts.start(), starts.end(), tstart + cpi));
+    const auto num_images = image_interpolators.size();
+    const decltype(num_images) kstart = 0, kstop = num_images;
+
+    for (auto k = kstart; k < kstop; ++k) {
+        // check if we need to replan FFTs
+        const auto& grid = grids[k];
+        const auto* nfft = image_interpolators[k];
+        makeSubApertureMask(grid.aztime_start, grid.aztime_end,
+            nout, tstart.data(), tend.data(), mask.data());
+        accumulatePolarImageToGeoPoints(out, x.data(), nout, grid, *nfft, kw,
+            mask.data(), dr_atm.data());
+    }
+
+    if (not all_converged) {
+        return ErrorCode::FailedToConverge;
+    }
+    return ErrorCode::Success;
+}
+
+void
+makeSubApertureMask(
+    const double subaperture_start, const double subaperture_end,
+    const size_t n,
+    const double* pixel_start,
+    const double* pixel_end,
+    bool* mask)
+{
+    #pragma omp parallel for
+    for (auto i = decltype(n){0}; i < n; ++i) {
+        mask[i] = (subaperture_end > pixel_start[i])
+            and (subaperture_start < pixel_end[i]);
+    }
+}
+
+ErrorCode
+accumulatePolarImageToGeoPoints(
+        std::complex<float>* image,
+        const Vec3* xyz,
+        const size_t n,
+        const PolarGrid& grid,
+        const NFFT2dResult<float>& nfft,
+        const double kw,
+        const std::optional<const bool*>& mask,
+        const std::optional<const double*>& dr_atm)
+{
+    #pragma omp parallel for
+    for (size_t i= 0; i < n; ++i) {
+        if (mask.has_value() and not mask.value()[i]) {
+            continue;
+        }
+        // compute target location in polar grid
+        double sin_squint, range;
+        geo2polar(&sin_squint, &range, xyz[i], grid.origin, grid.axis);
+        if (dr_atm.has_value()) {
+            range += dr_atm.value()[i];
+        }
+        // convert to image index
+        const double ix = (range - grid.range.first()) / grid.range.spacing(),
+            iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
+        // interpolate baseband data
+        const auto z = nfft.interp({iy, ix}, /* periodic */ false);
+        // compensate phase and sum contribution
+        const double phase = kw * range;
+        image[i] +=
+            z * std::complex<float>(std::cos(phase), std::sin(phase));
+    }
+    return ErrorCode::Success;
+}
+
+std::tuple<double, double, double, double, isce3::error::ErrorCode>
+findPolarGridBoundingBoxInRadarCoord(
+    const PolarGrid& polar_grid,
+    const Orbit& orbit,
+    const LUT2d<double>& doppler,
+    const double wavelength,
+    const LookSide lookside,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+    const int nextra)
+{
+    using isce3::geometry::detail::polar2geo_bracket;
+    if (nextra < 0) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "specified negative number of extra points");
+    }
+
+    // get (angle, range) points along perimeter of polar grid
+    const int n = 4 * (1 + nextra);
+    int nwritten = 0;
+    std::vector<std::array<double, 2>> points(n);
+    for (int i = 0; i <= nextra; ++i) {
+        const auto q = polar_grid.sin_squint.first();
+        const auto dr = (polar_grid.range.last() - polar_grid.range.first()) /
+            (1 + nextra);
+        const auto r = polar_grid.range.first() + i * dr;
+        points[nwritten++] = {q, r};
+    }
+    for (int i = 0; i <= nextra; ++i) {
+        const auto r = polar_grid.range.last();
+        const auto dq = (polar_grid.sin_squint.last() - polar_grid.sin_squint.first()) /
+            (1 + nextra);
+        const auto q = polar_grid.sin_squint.first() + i * dq;
+        points[nwritten++] = {q, r};
+    }
+    for (int i = 0; i <= nextra; ++i) {
+        const auto q = polar_grid.sin_squint.last();
+        const auto dr = (polar_grid.range.last() - polar_grid.range.first()) /
+            (1 + nextra);
+        const auto r = polar_grid.range.last() - i * dr;
+        points[nwritten++] = {q, r};
+    }
+    for (int i = 0; i <= nextra; ++i) {
+        const auto r = polar_grid.range.first();
+        const auto dq = (polar_grid.sin_squint.last() - polar_grid.sin_squint.first()) /
+            (1 + nextra);
+        const auto q = polar_grid.sin_squint.last() - i * dq;
+        points[nwritten++] = {q, r};
+    }
+    assert(nwritten == n);
+
+    int epsg = dem.epsgCode();
+    Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+    auto status = ErrorCode::Success;
+
+    #pragma omp parallel for
+    for (int i = 0; i < n; ++i) {
+        // read polar coordinate
+        const double ssq = points[i][0];
+        const double rin = points[i][1];
+        // compute cos from sin assuming abs(squint) < 90 deg
+        const double csq = std::sqrt(1.0 - ssq * ssq);
+        // convert to xyz
+        Vec3 xyz;
+        double lookangle;
+        auto err = polar2geo_bracket(&xyz, &lookangle, polar_grid.origin,
+            polar_grid.axis, rin, ssq, csq, dem, ellipsoid,
+            lookside, r2g_params);
+        if (err != ErrorCode::Success) {
+            status = err;
+        }
+        // convert to stripmap radar coordinates
+        double tout, rout;
+        int success = geo2rdr_bracket(xyz, orbit,
+            doppler, tout, rout, wavelength,
+            lookside, g2r_params.tol_aztime, g2r_params.time_start,
+            g2r_params.time_end);
+        if (!success) {
+            status = ErrorCode::FailedToConverge;
+        }
+        // write back
+        points[i] = {tout, rout};
+    }
+
+    // find extrema
+    double tmin, tmax, rmin, rmax;
+    tmin = tmax = points[0][0];
+    rmin = rmax = points[0][1];
+    for (int i = 1; i < n; ++i) {
+        const double t = points[i][0], r = points[i][1];
+        if (t > tmax) tmax = t;
+        if (t < tmin) tmin = t;
+        if (r > rmax) rmax = r;
+        if (r < rmin) rmin = r;
+    }
+
+    return std::make_tuple(tmin, tmax, rmin, rmax, status);
+}
+
+std::tuple<int, int, int, int, isce3::error::ErrorCode>
+findPolarGridBoundingBoxInRadarGrid(
+    const PolarGrid& polar_grid,
+    const RadarGeometry& radar_geom,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+    const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+    const int nextra)
+{
+    auto [tmin, tmax, rmin, rmax, status] =
+        findPolarGridBoundingBoxInRadarCoord(polar_grid, radar_geom.orbit(),
+            radar_geom.doppler(), radar_geom.wavelength(),
+            radar_geom.lookSide(), dem, r2g_params, g2r_params, nextra);
+
+    // too much typing
+    const auto t0 = radar_geom.sensingTime().first();
+    const auto dt = radar_geom.sensingTime().spacing();
+    const auto r0 = radar_geom.slantRange().first();
+    const auto dr = radar_geom.slantRange().spacing();
+    const int m = static_cast<int>(radar_geom.gridLength());
+    const int n = static_cast<int>(radar_geom.gridWidth());
+
+    // convert extrema to indices in radar grid
+    int i0, j0, i1, j1;
+    i0 = static_cast<int>(std::floor((tmin - t0) / dt));
+    i1 = static_cast<int>(std::ceil((tmax - t0) / dt));
+    j0 = static_cast<int>(std::floor((rmin - r0) / dr));
+    j1 = static_cast<int>(std::ceil((rmax - r0) / dr));
+
+    // return empty grid if non-overlapping
+    if ((i1 < 0) or (i0 >= m) or (j1 < 0) or (j0 >= n)) {
+        return std::make_tuple(0, 0, 0, 0, status);
+    }
+
+    // otherwise clamp to grid bounds
+    i0 = std::max(0, std::min(i0, m - 1));
+    i1 = std::max(0, std::min(i1, m));
+    j0 = std::max(0, std::min(j0, n - 1));
+    j1 = std::max(0, std::min(j1, n));
+
+    return std::make_tuple(i0, i1, j0, j1, status);
+}
+
+std::tuple<std::vector<Vec3>, ErrorCode>
+computeRadarGridGeoPoints(
+    const RadarGeometry& geom,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+{
+    const size_t n = geom.gridLength() * geom.gridWidth();
+    std::vector<Vec3> points(n);
+    auto status = computeRadarGridGeoPoints(points.data(), geom, dem, r2g_params);
+    return std::make_tuple(points, status);
+}
+
+ErrorCode
+computeRadarGridGeoPoints(
+    Vec3* points,
+    const RadarGeometry& geom,
+    const DEMInterpolator& dem,
+    const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params)
+{
+    const size_t n = geom.gridLength() * geom.gridWidth();
+    ErrorCode status = ErrorCode::Success;
+    #pragma omp parallel for
+    for (size_t k = 0; k < n; ++k) {
+        const int i = static_cast<int>(k / geom.gridWidth());
+        const int j = static_cast<int>(k % geom.gridWidth());
+        const double t = geom.sensingTime()[i];
+        const double r = geom.slantRange()[j];
+        const double fd = geom.doppler().eval(t, r);
+        const int success = isce3::geometry::rdr2geo_bracket(t, r, fd,
+            geom.orbit(), dem, points[k], geom.wavelength(), geom.lookSide(),
+            r2g_params.tol_height, r2g_params.look_min, r2g_params.look_max);
+        if (!success) {
+            // race condition okay since always pushing the same value
+            status = ErrorCode::FailedToConverge;
+        }
+    }
+    return status;
 }
 
 } // namespace focus

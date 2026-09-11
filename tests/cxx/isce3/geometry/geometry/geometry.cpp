@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 #include <sstream>
 #include <string>
 
@@ -302,6 +303,19 @@ TEST(Geometry, SrLkvHeadDemNed)
     EXPECT_NEAR(
             (sc_vel_enu - est_sc_vel_enu).cwiseAbs().maxCoeff(), 0.0, abs_err)
             << "Wrong S/C Vel in ENU";
+}
+
+TEST(Geometry, GeoToPolar)
+{
+    double sinSquint = 100.0, range = 0.0;
+    isce3::core::Vec3 target_xyz{-1, 0, 0}, origin{0, 0, 1}, axis{0, 1, 0};
+    auto status = isce3::geometry::geo2polar(&sinSquint, &range, target_xyz,
+        origin, axis);
+
+    EXPECT_EQ(status, isce3::error::ErrorCode::Success);
+    const double atol = 1e-14;
+    EXPECT_NEAR(sinSquint, 0.0, atol);
+    EXPECT_NEAR(range, std::sqrt(2.0), atol);
 }
 
 int main(int argc, char* argv[])

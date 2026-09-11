@@ -6,14 +6,17 @@
 #include <isce3/core/LookSide.h>
 #include <isce3/core/Vector.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/core/Projections.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/rdr2geo_roots.h>
+#include <isce3/geometry/detail/Rdr2Geo.h>
 #include <pybind_isce3/core/LookSide.h>
 
 namespace py = pybind11;
 
 using namespace isce3::core;
 using namespace isce3::geometry;
+using isce3::geometry::detail::polar2geo_bracket;
 
 void addbinding_rdr2geo_roots(py::module& m)
 {
@@ -91,4 +94,35 @@ void addbinding_rdr2geo_roots(py::module& m)
             of the nadir vector into a plane perpendicular to the velocity.  For
             simplicity, we use the geocentric nadir definition.
             )");
+
+
+    m.def("polar2geo_bracket",
+        [](const Vec3& origin, const Vec3& axis, const double slant_range,
+                const double sin_squint,
+                py::object py_side,
+                const DEMInterpolator& dem,
+                double tol_height,
+                double look_min, double look_max) {
+            Vec3 target_xyz;
+            double look_angle;
+            const auto side = duck_look_side(py_side);
+            const auto csq = std::sqrt(1.0 - sin_squint * sin_squint);
+            const auto ellipsoid = makeProjection(dem.epsgCode())->ellipsoid();
+            auto ec = polar2geo_bracket(&target_xyz, &look_angle, origin, axis,
+                slant_range, sin_squint, csq, dem, ellipsoid, side,
+                {tol_height, look_min, look_max});
+            if (ec != isce3::error::ErrorCode::Success) {
+                throw std::runtime_error("failed to converge");
+            }
+            return std::make_tuple(target_xyz, look_angle);
+        },
+        py::arg("origin"),
+        py::arg("axis"),
+        py::arg("slant_range"),
+        py::arg("sin_squint"),
+        py::arg("side"),
+        py::arg("dem") = DEMInterpolator(),
+        py::arg("tol_height") = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
+        py::arg("look_min") = 0.0,
+        py::arg("look_max") = M_PI / 2);
 }

@@ -35,7 +35,9 @@ import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
 from isce3.focus import (make_los_luts, fill_gaps, make_cal_luts, Notch,
     find_bad_rangline_slices)
-from isce3.geometry import los2doppler
+from isce3.focus.azcomp_bp import (azcomp_bp, azcomp_fbp, BlockPlan,
+    TimeBounds)
+from isce3.focus.serialization import BackprojectionStageParameters
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import (RadarGridParameters,
     get_radar_grid_nominal_ground_spacing)
@@ -739,10 +741,6 @@ def get_geo2rdr_params(cfg: Struct, orbit: Optional[Orbit] = None) -> dict:
     return geo2rdr_params
 
 
-Selection2d = tuple[slice, slice]
-TimeBounds = tuple[float, float]
-BlockPlan = list[tuple[Selection2d, TimeBounds]]
-
 def plan_processing_blocks(cfg: Struct, grid: RadarGridParameters,
                            doppler: LUT2d, dem: isce3.geometry.DEMInterpolator,
                            orbit: Orbit, pad: float = 0.1) -> BlockPlan:
@@ -808,10 +806,6 @@ def total_bounds(blocks_bounds: BlockPlan) -> TimeBounds:
     end = max(t1 for _, (t0, t1) in blocks_bounds)
     return (begin, end)
 
-
-def is_overlapping(a, b, c, d):
-    assert (b >= a) and (d >= c)
-    return (d >= a) and (c <= b)
 
 def get_kernel(cfg: Struct):
     # TODO
@@ -1706,6 +1700,15 @@ def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
     return swaths
 
 
+def get_azcomp_stage_config(cfg: Struct):
+    factors = cfg.processing.azcomp.factorization
+    if not isinstance(factors, Iterable) or len(factors) < 1:
+        raise ValueError("Must specify at least one factorization stage "
+            "in config file.")
+    T = isce3.focus.serialization.BackprojectionStageParameters
+    return [T.from_dict(struct2dict(factor)) for factor in factors]
+
+
 def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
     """Helper for configuring caltone removal.
 
@@ -1787,10 +1790,6 @@ def focus(runconfig, runconfig_path=""):
         isce3.cuda.core.set_device(device)
 
         log.info(f"Processing using CUDA device {device.id} ({device.name})")
-
-        backproject = isce3.cuda.focus.backproject
-    else:
-        backproject = isce3.focus.backproject
 
     # Generate output grids.
     grid_epoch, t0, t1, r0, r1 = get_total_grid_bounds(rawnames)
@@ -2323,27 +2322,24 @@ def focus(runconfig, runconfig_path=""):
 
             # Do azimuth compression.
             igeom = isce3.container.RadarGeometry(rc_grid, orbit, dop[frequency])
-
-            for block, (t0, t1) in blocks_bounds[frequency]:
-                description = f"(i, j) = ({block[0].start}, {block[1].start})"
-                if not cfg.processing.is_enabled.azcomp:
-                    continue
-                if not is_overlapping(t0, t1,
-                                    rc_grid.sensing_start, rc_grid.sensing_stop):
-                    log.info(f"Skipping inactive azcomp block at {description}")
-                    continue
-                log.info(f"Azcomp block at {description}")
-                bgrid = ogrid[frequency][block]
-                ogeom = isce3.container.RadarGeometry(bgrid, orbit, zerodop)
-                z = np.zeros(bgrid.shape, 'c8')
-                hgt = hgt_mm[block] if dump_height else None
-                err = backproject(z, ogeom, rcfile.data, igeom, dem,
-                            channel_out.band.center, azres,
-                            kernel, atmos, get_rdr2geo_params(cfg),
-                            get_geo2rdr_params(cfg, orbit), height=hgt)
-                if err:
-                    log.warning("azcomp block contains some invalid pixels")
-                writer.queue_write(z, block)
+            if cfg.processing.is_enabled.azcomp:
+                factors = get_azcomp_stage_config(cfg)
+                if factors[0].size > 1:
+                    debugfile = (temp(f"_{frequency}{pol}_fbp_factors.h5")
+                        if not cfg.processing.delete_tempfiles else None)
+                    azcomp_fbp(factors, azres, kernel,
+                        blocks_bounds[frequency], igeom,
+                        rcfile.data, ogrid[frequency], writer,
+                        hgt_mm if dump_height else None, dem,
+                        get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
+                        atmos, use_gpu, channel_out.band.width,
+                        debugfile)
+                else:
+                    azcomp_bp(azres, kernel, blocks_bounds[frequency], igeom,
+                        rcfile.data, ogrid[frequency], writer,
+                        hgt_mm if dump_height else None, dem,
+                        get_rdr2geo_params(cfg), get_geo2rdr_params(cfg, orbit),
+                        atmos, use_gpu)
 
             # Raster/GDAL creates a .hdr file we have to clean up manually.
             hdr = fd.name.replace(".c8", ".hdr")
@@ -2385,7 +2381,7 @@ def configure_logging():
     sh.setFormatter(fmt)
     log.addHandler(sh)
     for friend in ("Raw", "SLCWriter", "nisar.antenna.pattern", "rslc_cal",
-                   "isce3.focus.notch"):
+                   "isce3.focus.notch", "isce3.focus.azcomp_bp"):
         l = logging.getLogger(friend)
         l.setLevel(log_level)
         l.addHandler(sh)

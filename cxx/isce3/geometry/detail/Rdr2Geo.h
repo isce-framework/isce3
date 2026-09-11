@@ -130,6 +130,62 @@ rdr2geo_bracket(isce3::core::Vec3* xyz,
         double wavelength, isce3::core::LookSide side,
         const Rdr2GeoBracketParams& params = {});
 
+
+/**
+ * \internal
+ * Lower level version of rdr2geo_bracket that works directly in polar
+ * coordinates.  Also avoids repeated Orbit interpolations and trig calls.
+ *
+ * @param[out] xyz              Output target ECEF XYZ position (m)
+ * @param[out] lookAngle        Output pseudo-look angle of target (rad)
+ * @param[in]  origin           Origin of the polar grid, ECEF XYZ (m)
+ * @param[in]  axis             Along-track axis of polar grid, unit ECEF XYZ
+ * @param[in]  slantRange       Distance from origin to target (m)
+ * @param[in]  sinSquint        Sine of squint angle
+ * @param[in]  cosSquint        Cosine of squint angle
+ * @param[in]  dem              Digital elevation model (m above ellipsoid)
+ * @param[in]  ellipsoid        Ellipsoid associated with DEM
+ * @param[in]  side             Look direction (Left or Right)
+ * @param[in]  params           Root finding algorithm parameters
+ */
+template<class DEMInterpolator>
+CUDA_HOSTDEV isce3::error::ErrorCode
+polar2geo_bracket(isce3::core::Vec3* xyz, double* lookAngle,
+        const isce3::core::Vec3& origin, const isce3::core::Vec3& axis,
+        const double slantRange, const double sinSquint, const double cosSquint,
+        const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
+        isce3::core::LookSide side, const Rdr2GeoBracketParams& params);
+
+
+/**
+ * \internal
+ * Low level version of polar2polar_bracket.
+ *
+ * @param[in]  outSinSquint     Sine of squint angle in output grid.
+ * @param[in]  outRange         Distance from output origin to target (m)
+ * @param[in]  inSinSquint      Sine of squint angle in input grid.
+ * @param[in]  inCosSquint      Cosine of squint angle in input grid
+ *                              Equal to sqrt(1 - inSinSquint^2)
+ * @param[in]  inRange          Distance from input origin to target (m)
+ * @param[in]  inOrigin         Origin of the input polar grid, ECEF XYZ (m)
+ * @param[in]  inAxis           Along-track axis of input polar grid, unit ECEF XYZ
+ * @param[in]  outOrigin        Origin of the output polar grid, ECEF XYZ (m)
+ * @param[in]  outAxis          Along-track axis of output polar grid, unit ECEF XYZ
+ * @param[in]  dem              Digital elevation model (m above ellipsoid)
+ * @param[in]  ellipsoid        Ellipsoid associated with DEM
+ * @param[in]  side             Look direction (Left or Right)
+ * @param[in]  params           Root finding algorithm parameters
+ */
+template<class DEMInterpolator>
+CUDA_HOSTDEV isce3::error::ErrorCode
+polar2polar_bracket(double* outSinSquint, double* outRange,
+        const double inSinSquint, const double inCosSquint,
+        const double inRange,
+        const isce3::core::Vec3& inOrigin, const isce3::core::Vec3& inAxis,
+        const isce3::core::Vec3& outOrigin, const isce3::core::Vec3& outAxis,
+        const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
+        const isce3::core::LookSide& side, const Rdr2GeoBracketParams& params);
+
 }}} // namespace isce3::geometry::detail
 
 #include "Rdr2Geo.icc"

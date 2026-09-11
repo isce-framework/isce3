@@ -15,7 +15,8 @@ using isce3::except::RuntimeError;
 
 template <typename KernelType, typename DataType>
 static py::object
-interp_duckt(const Kernel<KernelType> & kernel, py::buffer_info & info, py::object t)
+interp_duckt(const Kernel<KernelType> & kernel, py::buffer_info & info,
+    py::object t, bool periodic)
 {
     DataType* data = static_cast<DataType*>(info.ptr);
     int stride = info.strides[0] / sizeof(DataType);
@@ -31,12 +32,12 @@ interp_duckt(const Kernel<KernelType> & kernel, py::buffer_info & info, py::obje
             py::gil_scoped_release release;
             #pragma omp parallel for
             for (size_t i=0; i < ta.size(); ++i) {
-                outbuf[i] = interp1d(kernel, data, n, stride, ta(i));
+                outbuf[i] = interp1d(kernel, data, n, stride, ta(i), periodic);
             }
         } else {
             // can't release GIL since kernel is a Python object
             for (size_t i=0; i < ta.size(); ++i) {
-                outbuf[i] = interp1d(kernel, data, n, stride, ta(i));
+                outbuf[i] = interp1d(kernel, data, n, stride, ta(i), periodic);
             }
         }
         return out;
@@ -47,7 +48,7 @@ interp_duckt(const Kernel<KernelType> & kernel, py::buffer_info & info, py::obje
 
 template <typename T>
 static py::object
-interp_duckbuf(Kernel<T> & kernel, py::buffer buf, py::object t)
+interp_duckbuf(Kernel<T> & kernel, py::buffer buf, py::object t, bool periodic)
 {
     py::buffer_info info = buf.request();
     using C8 = std::complex<float>;
@@ -56,30 +57,30 @@ interp_duckbuf(Kernel<T> & kernel, py::buffer buf, py::object t)
         throw RuntimeError(ISCE_SRCINFO(), "data buffer must be 1-D");
     }
     if (info.format == py::format_descriptor<float>::format()) {
-        return interp_duckt<T,float>(kernel, info, t);
+        return interp_duckt<T,float>(kernel, info, t, periodic);
     }
     else if (info.format == py::format_descriptor<double>::format()) {
-        return interp_duckt<T,double>(kernel, info, t);
+        return interp_duckt<T,double>(kernel, info, t, periodic);
     }
     else if (info.format == py::format_descriptor<C8>::format()) {
-        return interp_duckt<T,C8>(kernel, info, t);
+        return interp_duckt<T,C8>(kernel, info, t, periodic);
     }
     else if (info.format == py::format_descriptor<C16>::format()) {
-        return interp_duckt<T,C16>(kernel, info, t);
+        return interp_duckt<T,C16>(kernel, info, t, periodic);
     }
     throw RuntimeError(ISCE_SRCINFO(), "Unsupported types for interp1d");
 }
 
 void addbinding_interp1d(py::module & m)
 {
-    m.def("interp1d", [](py::object pyKernel, py::buffer buf, py::object t) {
+    m.def("interp1d", [](py::object pyKernel, py::buffer buf, py::object t, bool periodic) {
         if (py::isinstance<Kernel<float>>(pyKernel)) {
             auto kernel = pyKernel.cast<Kernel<float> *>();
-            return interp_duckbuf(*kernel, buf, t);
+            return interp_duckbuf(*kernel, buf, t, periodic);
         }
         else if (py::isinstance<Kernel<double>>(pyKernel)) {
             auto kernel = pyKernel.cast<Kernel<double> *>();
-            return interp_duckbuf(*kernel, buf, t);
+            return interp_duckbuf(*kernel, buf, t, periodic);
         }
         throw RuntimeError(ISCE_SRCINFO(), "Expected Kernel or KernelF32");
     },
@@ -88,5 +89,5 @@ void addbinding_interp1d(py::module & m)
         units are sample numbers (starting at zero), and `time` may be a
         scalar or an array.
     )",
-    py::arg("kernel"), py::arg("data"), py::arg("time"));
+    py::arg("kernel"), py::arg("data"), py::arg("time"), py::arg("periodic") = false);
 }

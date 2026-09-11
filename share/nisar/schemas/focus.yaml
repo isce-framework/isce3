@@ -219,6 +219,8 @@ runconfig:
           fit: enum('Cheby', 'Table', required=False)
           fit_order: int(min=1, required=False)
 
+        factorization: list(include('fbp_parameters'), min=1, required=False)
+
 
       dry_troposphere_model: enum('nodelay', 'tsx', required=False)
 
@@ -662,3 +664,34 @@ output_options:
     # Ideally at least large enough to hold `chunk_size` amount of uncompressed
     # data as well as its metadata.
     fs_page_size: int(min=512, max=1073741824, required=False)
+
+
+nfft_parameters:
+    # Minimum spectral zero padding factor (ratio of transform size to data
+    # size).  Actual padding may be larger to achive efficient transform size.
+    zero_padding_factor: num(min=1.0, required=False)
+
+    # Size of interpolator is equal to (1 + 2 * kernel_halfwidth)
+    kernel_halfwidth: int(min=1, required=False)
+
+nfft2d_parameters:
+    range: include("nfft_parameters", required=False)
+    azimuth: include("nfft_parameters", required=False)
+
+fbp_parameters:
+    # For the initial factorization stage, this is the number of pulses to
+    # merge into each subaperture.  For later stages, this is this number of
+    # subapertures to merge together.
+    size: int(min=1, required=False)
+
+    # Minimum ratio of sample rate to Nyquist limit in range in polar grid.
+    # Actual ratio may be larger to achieve efficient transform sizes.
+    oversample_range: num(min=1.0, required=False)
+
+    # Minimum ratio of sample rate to Nyquist limit in azimuth in polar grid.
+    # Actual ratio may be larger to achieve efficient transform sizes.
+    oversample_azimuth: num(min=1.0, required=False)
+
+    # Settings for interpolating the resulting polar grid using 2D non-uniform
+    # fast Fourier transform (NFFT).
+    interpolation: include("nfft2d_parameters", required=False)

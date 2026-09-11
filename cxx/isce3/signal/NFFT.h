@@ -153,12 +153,14 @@ class isce3::signal::NFFT {
 
         /** Interpolate the transformed signal.
          *
-         * @param[in] t     Location in [0,n) to sample the time-domain signal.
+         * @param[in] t         Location in [0,n) to sample the time-domain
+         *                      signal.
+         * @param[in] periodic  Whether to treat the domain as periodic.
          *
          * @see execute is an alternative strategy.
          * @see set_spectrum must be called first.
          */
-        std::complex<T> interp(double t) const;
+        std::complex<T> interp(double t, bool periodic = true) const;
 
         size_t size_kernel() const {return 2*_m+1;}
         size_t size_spectrum() const {return _n;}
