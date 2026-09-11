@@ -51,8 +51,12 @@ def compute_stats_real_data(raster, h5_ds):
     """
     if raster.datatype() == gdal.GDT_Float64:
         stats_obj = isce3.math.compute_raster_stats_float64(raster)[0]
-    else:
+    elif raster.datatype() == gdal.GDT_Float32:
         stats_obj = isce3.math.compute_raster_stats_float32(raster)[0]
+    else:
+        raise ValueError(f"Unsupported raster datatype: {raster.datatype()}. "
+                         "Only GDT_Float32 and GDT_Float64 are supported.")
+        
     h5_ds.attrs.create('min_value', data=h5_ds.dtype.type(stats_obj.min))
     h5_ds.attrs.create('mean_value', data=h5_ds.dtype.type(stats_obj.mean))
     h5_ds.attrs.create('max_value', data=h5_ds.dtype.type(stats_obj.max))
