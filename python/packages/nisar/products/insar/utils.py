@@ -494,6 +494,62 @@ def generate_dem_rdr(radar_grid_obj,
     dem_src = None
 
 
+def _subswath_numbers(subswaths,
+                      intervals,
+                      azi_idx_arr,
+                      rg_idx_arr):
+    """
+    Vectorized equivalent of SubSwaths.get_sample_sub_swath over index
+    arrays.
+
+    Returns 0 for out-of-swath samples, otherwise the 1-based number of
+    the first sub-swath whose per-line valid-sample interval
+    [start, end) contains the sample. An empty interval array claims
+    every in-bounds sample (matching the scalar API's short-circuit),
+    and a dataset without sub-swath information assigns 1 everywhere in
+    bounds.
+
+    Parameters
+    ----------
+    subswaths : isce3.product.SubSwaths
+        The subswath object of the RSLC
+    intervals : list of numpy.ndarray
+        Per-sub-swath [start, end) valid-sample interval arrays, i.e.
+        [subswaths.get_valid_samples_array(s) for s = 1..num_sub_swaths]
+    azi_idx_arr : numpy.ndarray
+        Integer azimuth indices
+    rg_idx_arr : numpy.ndarray
+        Integer slant range indices
+
+    Returns
+    ----------
+    numpy.ndarray
+        int64 sub-swath numbers, same shape as the index arrays
+    """
+    in_bounds = ((azi_idx_arr >= 0) & (azi_idx_arr < subswaths.length) &
+                 (rg_idx_arr >= 0) & (rg_idx_arr < subswaths.width))
+    numbers = np.zeros(azi_idx_arr.shape, dtype=np.int64)
+    if not intervals:
+        return np.where(in_bounds, np.int64(1), numbers)
+
+    # Clipped so the per-line gather stays legal; out-of-bounds samples
+    # are excluded through in_bounds
+    azi_gather = np.clip(azi_idx_arr, 0, subswaths.length - 1)
+    for number, interval in enumerate(intervals, start=1):
+        if interval.size == 0:
+            claimed = in_bounds
+        else:
+            claimed = (in_bounds &
+                       (rg_idx_arr >= interval[azi_gather, 0]) &
+                       (rg_idx_arr < interval[azi_gather, 1]))
+        unassigned = numbers == 0
+        numbers[unassigned & claimed] = number
+        if not unassigned.any():
+            break
+
+    return numbers
+
+
 def generate_insar_mask(ref_rslc_obj,
                         sec_rslc_obj,
                         ref_rslc_h5_obj,
@@ -558,59 +614,74 @@ def generate_insar_mask(ref_rslc_obj,
                                                     sec_rslc_obj,
                                                     sec_swath)
 
-    mask = []
-    for i in azi_idx_arr:
-        # Check if the azimuth index is within the radar grid
-        if i >= 0 and i < ref_swath.lines:
-            range_off = \
-                range_offset_band.ReadAsArray(0,
-                                            int(i),
-                                            ref_swath.samples,
-                                            1)
-            azimuth_off = \
-                azimuth_offset_band.ReadAsArray(0,
-                                                int(i),
-                                                ref_swath.samples,
-                                                1)
-            for j in rg_idx_arr:
+    # Fetch each sub-swath's per-line valid-sample interval array once
+    # (1-based API); the per-sample sub-swath tests below then run as
+    # numpy array operations instead of two scalar
+    # SubSwaths.get_sample_sub_swath calls per output pixel
+    ref_intervals = [ref_subswaths.get_valid_samples_array(s)
+                     for s in range(1, ref_subswaths.num_sub_swaths + 1)]
+    sec_intervals = [sec_subswaths.get_valid_samples_array(s)
+                     for s in range(1, sec_subswaths.num_sub_swaths + 1)]
 
-                # Initialize the all mask ids to be 0
-                mask_id = 0
-                subswath_mask_id = 0
-                ref_input_exception_mask_id = 0
-                sec_input_exception_mask_id = 0
+    azi_idx_arr = np.asarray(azi_idx_arr, dtype=np.float64)
+    rg_idx_arr = np.asarray(rg_idx_arr, dtype=np.float64)
 
-                # Check if the range index is within the swath
-                if j >= 0 and j < ref_swath.samples:
-                    subswath_mask_id =  _compute_subswath_mask_id(int(i),int(j),
-                                            azimuth_off[0,int(j)],
-                                            range_off[0,int(j)],
-                                            ref_subswaths,
-                                            sec_subswaths)
+    # int() truncates toward zero, as does astype on non-negative and
+    # negative values alike
+    rg_idx_int = rg_idx_arr.astype(np.int64)
+    col_in_swath = (rg_idx_arr >= 0) & (rg_idx_arr < ref_swath.samples)
+    # Clipped copy so the per-row gathers stay legal; out-of-swath
+    # columns are zeroed through col_in_swath at the end
+    rg_gather = np.clip(rg_idx_int, 0, ref_swath.samples - 1)
 
-                    # reference RSLC input exception mask id
-                    ref_input_exception_mask_id = ref_input_exception_mask[int(i),int(j)] << 16
+    mask = np.zeros((len(azi_idx_arr), len(rg_idx_arr)), dtype=np.uint32)
+    for row, i in enumerate(azi_idx_arr):
+        # The azimuth index is not in the radar grid meaning no
+        # subswath mask
+        if not (0 <= i < ref_swath.lines):
+            continue
 
-                    # secondary RSLC input  exception mask id
-                    sec_i = round(i + azimuth_off[0,int(j)])
-                    sec_j = round(j + range_off[0,int(j)])
-                    if ((sec_i >=0 and sec_i < sec_swath.lines) and
-                        (sec_j >=0 and sec_j < sec_swath.samples)):
-                        sec_input_exception_mask_id = sec_input_exception_mask[sec_i,sec_j] << 8
+        i_int = int(i)
+        range_off = range_offset_band.ReadAsArray(
+            0, i_int, ref_swath.samples, 1)[0]
+        azimuth_off = azimuth_offset_band.ReadAsArray(
+            0, i_int, ref_swath.samples, 1)[0]
+        rg_off = range_off[rg_gather]
+        az_off = azimuth_off[rg_gather]
 
-                    # mask id
-                    mask_id = subswath_mask_id | ref_input_exception_mask_id | sec_input_exception_mask_id
+        # Sub-swath numbers of the reference RSLC and, through the
+        # nearest neighbor of the geometric coregistration offsets, of
+        # the secondary RSLC (int(x + 0.5) of the scalar code =
+        # truncation toward zero)
+        ref_num = _subswath_numbers(
+            ref_subswaths, ref_intervals,
+            np.full(rg_gather.shape, i_int, dtype=np.int64), rg_idx_int)
+        sec_num = _subswath_numbers(
+            sec_subswaths, sec_intervals,
+            np.trunc(i_int + az_off + 0.5).astype(np.int64),
+            np.trunc(rg_idx_int + rg_off + 0.5).astype(np.int64))
+        mask_row = (10 * ref_num + sec_num).astype(np.uint32)
 
-                # append the mask id
-                mask.append(mask_id)
+        # Reference RSLC input exception mask bits; widened to uint32
+        # before the shift so the packing is safe under NEP 50 scalar
+        # promotion as well
+        mask_row |= (ref_input_exception_mask[i_int, rg_gather]
+                     .astype(np.uint32) << 16)
 
-        # The azimuth index is not in the radar grid meaning no subswath mask
-        else:
-            mask += [0] * len(rg_idx_arr)
+        # Secondary RSLC input exception mask bits; round() of the
+        # scalar code is round-half-even, as is np.rint
+        sec_i = np.rint(i + az_off).astype(np.int64)
+        sec_j = np.rint(rg_idx_arr + rg_off).astype(np.int64)
+        sec_in_swath = ((sec_i >= 0) & (sec_i < sec_swath.lines) &
+                        (sec_j >= 0) & (sec_j < sec_swath.samples))
+        sec_exception = sec_input_exception_mask[
+            np.clip(sec_i, 0, sec_swath.lines - 1),
+            np.clip(sec_j, 0, sec_swath.samples - 1)].astype(np.uint32) << 8
+        mask_row |= np.where(sec_in_swath, sec_exception, np.uint32(0))
+
+        mask[row] = np.where(col_in_swath, mask_row, np.uint32(0))
 
     del ref_input_exception_mask
     del sec_input_exception_mask
 
-    return np.array(mask).reshape(
-        (len(azi_idx_arr),
-         len(rg_idx_arr))).astype(np.uint32)
+    return mask
