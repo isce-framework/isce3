@@ -314,61 +314,73 @@ def get_unwrapped_interferogram_dataset_shape(cfg : dict, freq : str):
 
     return igram_shape
 
-def _compute_subswath_mask_id(azi_idx,
-                              range_idx,
-                              azi_offset,
-                              range_offset,
-                              ref_subswaths,
-                              sec_subswaths):
+def _get_sample_subswath_grid(subswaths, azi_idx, rg_idx):
     """
-    Compute the subswath mask id between the reference and secondary RSLC
-    using the range and azimuth offsets by the geometric coregistration where
-    the offsets are used to compute the original azimuth and range indices of
-    the secondary RSLC.
+    Vectorized equivalent of ``subswaths.get_sample_sub_swath(azi_idx, rg_idx)``
+    applied elementwise over same-shaped index arrays.
 
     Parameters
     ---------
-    azi_idx : int
-        Index along the azimuth of reference RSLC starting from 0
-    range_idx: int
-        Index along the slant range of reference RSLC starting from 0
-    azi_offset: float
-        The azimuth offset between the reference and secondary RSLC
-    range_offset: float
-        The range offset between the reference and secondary RSLC
-    ref_subswaths : isce3.product.SubSwaths
-        The subswath object of the reference RSLC
-    sec_subswaths : isce3.product.SubSwaths
-        The subswath object of the secondary RSLC
+    subswaths : isce3.product.SubSwaths
+        The subswath object to query.
+    azi_idx : np.ndarray of int
+        Azimuth indices. May be out of [0, subswaths.length).
+    rg_idx : np.ndarray of int
+        Range indices, same shape as `azi_idx`. May be out of
+        [0, subswaths.width).
 
     Returns
     ----------
-    subswath_mask_id : int
-        The subswath mask id
+    np.ndarray of int
+        The 1-based sub-swath number containing each (azi_idx, rg_idx) pair,
+        or 0 if out of bounds or not contained in any sub-swath.
     """
+    in_bounds = ((azi_idx >= 0) & (azi_idx < subswaths.length) &
+                (rg_idx >= 0) & (rg_idx < subswaths.width))
+    azi_clip = np.clip(azi_idx, 0, subswaths.length - 1)
+    rg_clip = np.clip(rg_idx, 0, subswaths.width - 1)
 
-    # subswath number of the reference RSLC
-    ref_subswath_num = \
-        ref_subswaths.get_sample_sub_swath(azi_idx,range_idx)
+    result = np.zeros(azi_idx.shape, dtype=np.int64)
+    found = np.zeros(azi_idx.shape, dtype=bool)
+    for s in range(1, subswaths.num_sub_swaths + 1):
+        valid_samples = np.asarray(subswaths.get_valid_samples_array(s))
+        if valid_samples.size == 0:
+            # Empty array means fully valid (see SubSwaths.getSampleSubSwath).
+            in_swath = np.ones(azi_idx.shape, dtype=bool)
+        else:
+            start = valid_samples[azi_clip, 0]
+            end = valid_samples[azi_clip, 1]
+            in_swath = (rg_clip >= start) & (rg_clip < end)
+        take = in_swath & ~found
+        result[take] = s
+        found |= take
+    return np.where(in_bounds, result, 0)
 
-    # Nearest neighbor to get the subswath number of the
-    # secondary RSLC where offsets are used to compute the original
-    # range and azimuth indices of the secondary RSLC.
-    sec_subswath_num = \
-        sec_subswaths.get_sample_sub_swath(
-            int(azi_idx+azi_offset+0.5),
-            int(range_idx+range_offset+0.5))
 
-    # Compute the subswath mask id based on the subswath number of
-    # reference and secondary RSLC. The mask id has 3 digits where
-    # the last digit is the subswath number of secondary RSLC,
-    # the second digit is the subswath number of reference RSLC,
-    # and the first digit is reserved for the land (0) or water (1).
+def _compute_subswath_mask_id(ref_subswath_num, sec_subswath_num):
+    """
+    Combine reference/secondary sub-swath numbers into a single mask id.
 
-    # For example, 12 means land, subwath number of reference and secodnary
-    # RSLC are 1 and 2 respectively.
+    The mask id has 3 digits where the last digit is the sub-swath number
+    of the secondary RSLC, the second digit is the sub-swath number of the
+    reference RSLC, and the first digit is reserved for the land (0) or
+    water (1). For example, 12 means land, sub-swath number of reference
+    and secondary RSLC are 1 and 2 respectively.
+
+    Parameters
+    ---------
+    ref_subswath_num : np.ndarray of int
+        Reference RSLC sub-swath number per output pixel.
+    sec_subswath_num : np.ndarray of int
+        Secondary RSLC sub-swath number per output pixel, same shape.
+
+    Returns
+    ----------
+    np.ndarray of int
+        The combined sub-swath mask id per output pixel.
+    """
     subswath_mask_id = \
-        int(10 * ref_subswath_num + sec_subswath_num)
+        10 * ref_subswath_num + sec_subswath_num
 
     return subswath_mask_id
 
@@ -536,6 +548,11 @@ def generate_insar_mask(ref_rslc_obj,
     ref_subswaths = ref_rslc_obj.getSwathMetadata(freq).sub_swaths()
     sec_subswaths = sec_rslc_obj.getSwathMetadata(freq).sub_swaths()
 
+    # azi_idx_arr/rg_idx_arr give, for each output mask pixel, the
+    # corresponding azimuth/range position in the reference RSLC's grid.
+    azi_idx_arr = np.asarray(azi_idx_arr).astype(np.int64)
+    rg_idx_arr = np.asarray(rg_idx_arr).astype(np.int64)
+
     # Read the range and azimuth offsets products
     src_range_offset = gdal.Open(range_offset_path)
     src_azimuth_offset = gdal.Open(azimuth_offset_path)
@@ -558,59 +575,59 @@ def generate_insar_mask(ref_rslc_obj,
                                                     sec_rslc_obj,
                                                     sec_swath)
 
-    mask = []
-    for i in azi_idx_arr:
-        # Check if the azimuth index is within the radar grid
-        if i >= 0 and i < ref_swath.lines:
-            range_off = \
-                range_offset_band.ReadAsArray(0,
-                                            int(i),
-                                            ref_swath.samples,
-                                            1)
-            azimuth_off = \
-                azimuth_offset_band.ReadAsArray(0,
-                                                int(i),
-                                                ref_swath.samples,
-                                                1)
-            for j in rg_idx_arr:
 
-                # Initialize the all mask ids to be 0
-                mask_id = 0
-                subswath_mask_id = 0
-                ref_input_exception_mask_id = 0
-                sec_input_exception_mask_id = 0
+    # Pixels outside the reference radar grid get mask id 0.
+    in_grid = (
+        (azi_idx_arr >= 0) & (azi_idx_arr < ref_swath.lines))[:, None] & (
+        (rg_idx_arr >= 0) & (rg_idx_arr < ref_swath.samples))[None, :]
 
-                # Check if the range index is within the swath
-                if j >= 0 and j < ref_swath.samples:
-                    subswath_mask_id =  _compute_subswath_mask_id(int(i),int(j),
-                                            azimuth_off[0,int(j)],
-                                            range_off[0,int(j)],
-                                            ref_subswaths,
-                                            sec_subswaths)
+    # Clip for safe fancy-indexing; `in_grid` masks out-of-grid pixels below.
+    azi_idx_clip = np.clip(azi_idx_arr, 0, ref_swath.lines - 1)
+    rg_idx_clip = np.clip(rg_idx_arr, 0, ref_swath.samples - 1)
+    azi_grid, rg_grid = np.meshgrid(azi_idx_clip, rg_idx_clip, indexing='ij')
 
-                    # reference RSLC input exception mask id
-                    ref_input_exception_mask_id = ref_input_exception_mask[int(i),int(j)] << 16
+    # Build the (azi_idx x rg_idx) offset grid one row at a time rather than
+    # reading the whole raster -- azi_idx_arr is typically a decimated
+    # subset, so the full raster can be far larger than what's used here.
+    range_off = np.empty((len(azi_idx_clip), len(rg_idx_clip)), dtype=np.float64)
+    azimuth_off = np.empty((len(azi_idx_clip), len(rg_idx_clip)), dtype=np.float64)
+    for out_row, in_row in enumerate(azi_idx_clip):
+        range_row = range_offset_band.ReadAsArray(0, int(in_row), ref_swath.samples, 1)[0]
+        azimuth_row = azimuth_offset_band.ReadAsArray(0, int(in_row), ref_swath.samples, 1)[0]
+        range_off[out_row, :] = range_row[rg_idx_clip]
+        azimuth_off[out_row, :] = azimuth_row[rg_idx_clip]
 
-                    # secondary RSLC input  exception mask id
-                    sec_i = round(i + azimuth_off[0,int(j)])
-                    sec_j = round(j + range_off[0,int(j)])
-                    if ((sec_i >=0 and sec_i < sec_swath.lines) and
-                        (sec_j >=0 and sec_j < sec_swath.samples)):
-                        sec_input_exception_mask_id = sec_input_exception_mask[sec_i,sec_j] << 8
+    # Reference sub-swath number for each output pixel.
+    ref_subswath_num = _get_sample_subswath_grid(ref_subswaths, azi_grid, rg_grid)
 
-                    # mask id
-                    mask_id = subswath_mask_id | ref_input_exception_mask_id | sec_input_exception_mask_id
+    # Secondary sub-swath number (original's int(idx+offset+0.5) rounding).
+    sec_i_subswath = np.trunc(azi_grid + azimuth_off + 0.5).astype(np.int64)
+    sec_j_subswath = np.trunc(rg_grid + range_off + 0.5).astype(np.int64)
+    sec_subswath_num = _get_sample_subswath_grid(
+        sec_subswaths, sec_i_subswath, sec_j_subswath)
 
-                # append the mask id
-                mask.append(mask_id)
+    subswath_mask_id = _compute_subswath_mask_id(ref_subswath_num, sec_subswath_num)
 
-        # The azimuth index is not in the radar grid meaning no subswath mask
-        else:
-            mask += [0] * len(rg_idx_arr)
+    # reference RSLC input exception mask id
+    ref_exc_id = ref_input_exception_mask[azi_grid, rg_grid].astype(np.uint32) << 16
 
-    del ref_input_exception_mask
-    del sec_input_exception_mask
+    # secondary RSLC input exception mask id
+    sec_i = np.round(azi_grid + azimuth_off).astype(np.int64)
+    sec_j = np.round(rg_grid + range_off).astype(np.int64)
+    # sec_i/sec_j can legitimately fall outside the secondary swath (e.g.
+    # near the reference swath's edges); sec_in_bounds gives those pixels 0
+    # instead of an out-of-bounds lookup, and the clip below just keeps the
+    # fancy-indexing itself valid.
+    sec_in_bounds = ((sec_i >= 0) & (sec_i < sec_swath.lines) &
+                     (sec_j >= 0) & (sec_j < sec_swath.samples))
+    sec_i_clip = np.clip(sec_i, 0, sec_swath.lines - 1)
+    sec_j_clip = np.clip(sec_j, 0, sec_swath.samples - 1)
+    sec_exc_id = np.where(
+        sec_in_bounds,
+        sec_input_exception_mask[sec_i_clip, sec_j_clip].astype(np.uint32) << 8,
+        0)
 
-    return np.array(mask).reshape(
-        (len(azi_idx_arr),
-         len(rg_idx_arr))).astype(np.uint32)
+    mask_id = subswath_mask_id.astype(np.uint32) | ref_exc_id | sec_exc_id
+    mask_id = np.where(in_grid, mask_id, 0)
+
+    return mask_id.astype(np.uint32)
