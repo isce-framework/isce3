@@ -6,6 +6,7 @@ import numpy as np
 from osgeo import gdal
 import pytest
 from scipy import ndimage
+import numpy.testing as npt
 import iscetest
 import isce3.ext.isce3 as isce
 import isce3
@@ -74,12 +75,19 @@ def test_geocode_cov():
         sub_swath_array = np.zeros((radar_grid.length, 2), np.int32)
         valid_values = np.logical_and(xy_array > quantile_10_value,
                                       xy_array < quantile_90_value)
+
         if axis == 'x':
             x_quantile_10_value = quantile_10_value
             x_quantile_90_value = quantile_90_value
+
+            # Test different fill values x: NaN and y: 255
+            fill_value = np.nan
         else:
             y_quantile_10_value = quantile_10_value
             y_quantile_90_value = quantile_90_value
+
+            # Test different fill values x: NaN and y: 255
+            fill_value = 255
 
         for i in range(radar_grid.length):
             for j in range(radar_grid.width):
@@ -134,7 +142,9 @@ def test_geocode_cov():
                                 input_raster,
                                 output_raster,
                                 dem_raster,
-                                value, **sub_swath_kwargs)
+                                value,
+                                fill_value=fill_value,
+                                **sub_swath_kwargs)
 
     # flush output layers
     output_raster.close_dataset()
@@ -167,6 +177,16 @@ def test_geocode_cov():
                 print(f'    file: {test_raster}')
                 ds = gdal.Open(test_raster, gdal.GA_ReadOnly)
                 geo_arr = ds.GetRasterBand(1).ReadAsArray()
+
+                # verify fill values. Assume pixel [0, 0] is populated with
+                # fill value x: NaN and y: 255
+                if axis == 'x':
+                    npt.assert_equal(geo_arr[0, 0], np.nan)
+                elif axis == 'y':
+                    npt.assert_equal(geo_arr[0, 0], 255)
+                    # update geo_arr fill_value from 255 to np.nan
+                    geo_arr[geo_arr == 255] = np.nan
+
                 geo_arr = np.ma.masked_array(geo_arr, mask=np.isnan(geo_arr))
                 ds = None
 

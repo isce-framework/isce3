@@ -23,6 +23,7 @@
 #include <isce3/signal/signalUtils.h>
 
 #include "GeocodeHelpers.h"
+#include "gdal_priv.h"
 
 using isce3::core::OrbitInterpBorderMode;
 using isce3::core::Vec3;
@@ -158,6 +159,44 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
             input_raster, output_raster, exponent);
 
     bool flag_run_geocode_interp = output_mode == geocodeOutputMode::INTERP;
+
+    pyre::journal::warning_t warning("isce.geocode.GeocodeCov.geocode");
+    GDALDataType outputRasterDataType = output_raster.dtype();
+
+    // Print a warning if output_raster has an integer data type.
+    if (GDALDataTypeIsInteger(outputRasterDataType)) {
+        warning << "The output raster has an integer data type, "
+                << "which is not natively supported by the GeocodeCov "
+                << "module. The data values and fill value will therefore "
+                << "be cast to an integer type by isce3::io::Raster. "
+                << "NaN values will be cast to 0."
+                << pyre::journal::endl;
+    }
+
+    // Print a warning if output_raster has a complex data type.
+    if (GDALDataTypeIsComplex(outputRasterDataType)) {
+        warning << "The output raster has a complex data type, "
+                << "whereas the variable `fill_value` has a double data type. "
+                << "The real-valued fill value will be cast by "
+                << "isce3::io::Raster with a 0 imaginary part as "
+                << "<REAL_PART> + 0j."
+                << pyre::journal::endl;
+    }
+
+    // Print a warning if out_off_diag_terms has a complex data type.
+    if (out_off_diag_terms != nullptr) {
+        GDALDataType outputOffDiagRasterDataType = out_off_diag_terms->dtype();
+
+        if (GDALDataTypeIsComplex(outputOffDiagRasterDataType)) {
+            warning << "The output off-diagonal raster has a complex data type, "
+                    << "whereas the variable `fill_value` has a double data type. "
+                    << "The real-valued fill value will be cast by "
+                    << "isce3::io::Raster with a 0 imaginary part as "
+                    << "<REAL_PART> + 0j."
+                    << pyre::journal::endl;
+        }
+    }
+
     if (flag_run_geocode_interp && !flag_complex_to_real)
         geocodeInterp<T>(radar_grid, input_raster, output_raster, dem_raster,
                 fill_value, flag_apply_rtc,
