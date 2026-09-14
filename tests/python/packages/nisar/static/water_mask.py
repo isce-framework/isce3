@@ -9,14 +9,14 @@ import isce3
 
 
 def test_binarize_nisar_water_mask():
-    # Create three arrays of water pixels (filled with zeros), non-water pixels (filled
+    # Create three arrays of non-water pixels (filled with zeros), water pixels (filled
     # with values in range [1, 200]), and invalid pixels (filled with 255).
-    water = np.zeros((20, 10), dtype=np.uint8)
-    nonwater = np.arange(1, 201, dtype=np.uint8).reshape(20, 10)
+    nonwater = np.zeros((20, 10), dtype=np.uint8)
+    water = np.arange(1, 201, dtype=np.uint8).reshape(20, 10)
     invalid = np.full((20, 10), fill_value=255, dtype=np.uint8)
 
     # Concatenate the three arrays into a single 20x30 array.
-    water_distance = np.concatenate([water, nonwater, invalid], axis=1)
+    water_distance = np.concatenate([nonwater, water, invalid], axis=1)
 
     # Convert the water distance map into a binary water mask
     water_mask = binarize_nisar_water_mask(water_distance)
@@ -25,8 +25,8 @@ def test_binarize_nisar_water_mask():
     assert water_mask.dtype == np.uint8
 
     # Check the mask values.
-    np.testing.assert_equal(water_mask[:, :10], 1)
-    np.testing.assert_equal(water_mask[:, 10:20], 0)
+    np.testing.assert_equal(water_mask[:, :10], 0)
+    np.testing.assert_equal(water_mask[:, 10:20], 1)
     np.testing.assert_equal(water_mask[:, 20:], 255)
 
 
