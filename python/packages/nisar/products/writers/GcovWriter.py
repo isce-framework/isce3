@@ -500,7 +500,7 @@ class GcovWriter(BaseL2WriterSingleInput):
         """
         Populate the data group `grids` of the GCOV product
         """
-        for frequency in self.freq_pols_dict.keys():
+        for frequency, pol_list in self.freq_pols_dict.items():
 
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
@@ -520,12 +520,25 @@ class GcovWriter(BaseL2WriterSingleInput):
                 self.output_hdf5_obj[axis_path].attrs[
                     "pixel_coordinate_convention"] = np.bytes_('center')
 
+            # Geocode unsigned integer 16 'inputDataExceptionMask' with
+            # fill value 65535 (2**16 -1)
             self.geocode_lut(f'{output_grids_freq_path}',
                              f'{input_swaths_freq_path}',
                              output_ds_name_list=['inputDataExceptionMask'],
                              skip_if_not_present=True,
                              compute_stats=False,
-                             data_interpolator='nearest')
+                             data_interpolator='nearest',
+                             fill_value=65535)
+
+            # copy 'inputDataExceptionMask' H5 dataset attributes
+            # `maskValidPixelFraction{pol}` and `rawValidPulseFraction{pol}``
+            input_ds = f'{input_swaths_freq_path}/inputDataExceptionMask'
+            output_ds = f'{output_grids_freq_path}/inputDataExceptionMask'
+            for pol in pol_list:
+                for attr_name in [f'maskValidPixelFraction{pol}',
+                                  f'rawValidPulseFraction{pol}']:
+                    self.output_hdf5_obj[output_ds].attrs[attr_name] = \
+                        self.input_hdf5_obj[input_ds].attrs[attr_name]
 
     def populate_processing_information(self):
         """

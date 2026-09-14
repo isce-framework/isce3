@@ -1635,7 +1635,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     input_ds_name_list=None,
                     skip_if_not_present=False,
                     compute_stats=False,
-                    data_interpolator=None):
+                    data_interpolator=None,
+                    fill_value=None):
         """
         Geocode a look-up table (LUT) from the input product in
         radar coordinates to the output product in map coordinates
@@ -1674,6 +1675,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Otherwise, if the LUT contains < 5 rows or columns, bilinear
             interpolation will be used. Otherwise, biquintic interpolation
             will be used.
+        fill_value : float, optional
+            Value to populate the HDF5 dataset attribute "_FillValue".
+            Defaults to "nan" or "(nan+nanj)" if the raster layer
+            is real- or complex-valued, respectively. If the layer data
+            type is integer and `fill_value` is None, the attribute "_FillValue"
+            will not be populated as an attribute of the HDF5 dataset.
 
         Returns
         -------
@@ -1750,7 +1757,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             output_h5_group_path,
             skip_if_not_present,
             compute_stats,
-            data_interpolator)
+            data_interpolator,
+            fill_value=fill_value)
 
     def geocode_metadata_group(self,
                                frequency,
@@ -1761,7 +1769,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                output_h5_group_path,
                                skip_if_not_present,
                                compute_stats=False,
-                               data_interpolator=None):
+                               data_interpolator=None,
+                               fill_value=None):
         """
         Geocode look-up tables (LUTs) from the input product in
         radar coordinates to the output product in map coordinates
@@ -1802,6 +1811,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Otherwise, if the LUT contains < 5 rows or columns, bilinear
             interpolation will be used. Otherwise, biquintic interpolation
             will be used.
+        fill_value : float, optional
+            Value to populate the HDF5 dataset attribute "_FillValue".
+            Defaults to "nan" or "(nan+nanj)" if the raster layer
+            is real- or complex-valued, respectively. If the layer data
+            type is integer and `fill_value` is None, the attribute "_FillValue"
+            will not be populated as an attribute of the HDF5 dataset.
 
         Returns
         -------
@@ -2157,6 +2172,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                             metadata_geogrid,
                             compute_stats,
                             data_interpolator=data_interpolator,
+                            fill_value=fill_value,
                             **geocode_kwargs)
 
         input_temp.close()
@@ -2171,6 +2187,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                        metadata_geogrid,
                        compute_stats,
                        data_interpolator=None,
+                       fill_value=None,
                        **geocode_kwargs):
         """
         Geocode an ISCE3 Raster object containing look-up tables (LUTs)
@@ -2198,6 +2215,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             output raster layer. Defaults to False.
         data_interpolator: str, optional
             Interpolation algorithm to use for geocoding
+        fill_value : float, optional
+            Value to populate the HDF5 dataset attribute "_FillValue".
+            Defaults to "nan" or "(nan+nanj)" if the raster layer
+            is real- or complex-valued, respectively. If the layer data
+            type is integer and `fill_value` is None, the attribute "_FillValue"
+            will not be populated as an attribute of the HDF5 dataset.
         **geocode_kwargs
             Keyword arguments to be passed to the `geocode()`.
         """
@@ -2298,6 +2321,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         save_dataset(temp_output.name, self.output_hdf5_obj,
                      output_h5_group_path,
                      yds, xds, output_ds_name_list,
+                     fill_value=fill_value,
                      compute_stats=compute_stats)
 
         temp_output.close()
