@@ -83,7 +83,7 @@ class GslcWriter(BaseL2WriterSingleInput):
                              output_ds_name_list=['inputDataExceptionMask'],
                              skip_if_not_present=True,
                              compute_stats=False,
-                             data_interpolator='nearest'
+                             data_interpolator='nearest',
                              fill_value=65535)
 
             # copy 'inputDataExceptionMask' H5 dataset attributes
