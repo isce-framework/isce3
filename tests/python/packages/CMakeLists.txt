@@ -45,6 +45,7 @@ nisar/noise/noise_estimation_from_raw.py
 nisar/pointing/doppler_lut_from_raw.py
 #nisar/pointing/el_null_range_from_raw_ant.py
 nisar/products/granule_id.py
+nisar/products/insar/utils.py
 nisar/products/readers/antenna_parser.py
 nisar/products/readers/attitude.py
 nisar/products/readers/GSLC.py
