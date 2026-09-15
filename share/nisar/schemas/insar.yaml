@@ -178,7 +178,7 @@ troposphere_weather_model_options:
 phase_unwrap_options:
     crossmul_path: str(required=False)
 
-    algorithm: enum('icu', 'phass', 'snaphu', required=False)
+    algorithm: enum('icu', 'phass', 'snaphu', 'whirlwind', required=False)
 
     range_looks: int(min=1, required=False)
 
@@ -189,6 +189,8 @@ phase_unwrap_options:
     phass: include('phass_options', required=False)
 
     snaphu: include('snaphu_options', required=False)
+
+    whirlwind: include('whirlwind_options', required=False)
 
     preprocess_wrapped_phase: include('preprocess_wrapped_phase_options', required=False)
 
@@ -235,6 +237,25 @@ snaphu_options:
     min_region_size: int(min=1, required=False)
     single_tile_reoptimize: bool(required=False)
     regrow_conncomps: bool(required=False)
+
+whirlwind_options:
+    nlooks: num(min=1, required=False)
+    mask: str(required=False)
+    bridge: bool(required=False)
+    interpolate: bool(required=False)
+    interp_cutoff: num(min=0, max=1, required=False)
+    interp_num_neighbors: int(min=1, required=False)
+    interp_max_radius: int(min=0, required=False)
+    interp_min_radius: int(min=0, required=False)
+    interp_alpha: num(min=0, required=False)
+    conncomp_min_coherence: any(num(min=0, max=1), enum('auto'), required=False)
+    conncomp_reliability: num(required=False)
+    min_size_px: int(min=1, required=False)
+    max_ncomps: int(min=1, required=False)
+    connect_gaps: bool(required=False)
+    connect_gaps_max_px: int(min=1, required=False)
+    goldstein_alpha: num(min=0, max=1, required=False)
+    goldstein_psize: int(min=1, required=False)
 
 preprocess_wrapped_phase_options:
     enabled: bool(required=False)
