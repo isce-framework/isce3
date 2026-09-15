@@ -97,6 +97,9 @@ runconfig:
             # Geocode options: (e.g. output posting)
             geocode: include('geocode_options', required=False)
 
+            # TEC correction options
+            tec_correction: include('tec_correction_options', required=False)
+
             # Radar grids cube options
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
@@ -554,6 +557,11 @@ geocode_options:
     # block, considering the data type and the number of bands
     # (polarizations) to process.
     max_block_size: num(min=0, required=False)
+
+tec_correction_options:
+    use_total_tec_only: bool(required=False)
+    ignore_invalid_topside_tec: bool(required=False)
+    polyfit_tec_profile: bool(required=False)
 
 ceos_analysis_ready_data_options:
 

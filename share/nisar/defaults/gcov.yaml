@@ -20,7 +20,7 @@ runconfig:
             # REQUIRED - Digital elevation model
             dem_file:
 
-            # Description of the digital elevation model (DEM) file  
+            # Description of the digital elevation model (DEM) file
             # to be included in the output product metadata
             dem_file_description:
 
@@ -153,7 +153,7 @@ runconfig:
             # field will be set to "(NOT SPECIFIED)".
             processing_center:
 
-            # Processing center. If not provided, the metadata field 
+            # Processing center. If not provided, the metadata field
             # `granuleId` will be set to "(NOT SPECIFIED)".
             partial_granule_id:
 
@@ -277,6 +277,13 @@ runconfig:
                 #     'algorithm_type' equal to 'area_projection'
                 area_beta_mode: auto
 
+            # TEC correction options. The apply-range/azimuth ionospheric delay
+            # flags live under the `geocode` group above.
+            tec_correction:
+                use_total_tec_only: False
+                ignore_invalid_topside_tec: True
+                polyfit_tec_profile: False
+
             # Mechanism to specify output posting and DEM
             geocode:
 
@@ -399,7 +406,7 @@ runconfig:
 
                 # Pixel spacing in the units of the output EPSG coordinate
                 # system (output_epsg).
-                # 
+                #
                 # If not specified and `output_epsg` differs from the DEM’s EPSG:
                 #   - Defaults to 0.00017966305682390427 degrees for geographic
                 # coordinate systems.
