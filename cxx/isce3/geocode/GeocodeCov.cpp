@@ -2073,7 +2073,7 @@ void Geocode<T>::geocodeAreaProj(
     if (!std::isnan(min_nlooks))
         info << "nlooks min: " << min_nlooks << pyre::journal::newline;
 
-    T_out nan_t_out = _get_geocodecov_fill_value<T_out>(
+    T_out fill_value_t_out = _get_geocodecov_fill_value<T_out>(
         std::numeric_limits<double>::quiet_NaN());
 
     info << "fill value (input parameter): " << fill_value << pyre::journal::newline;
@@ -2083,7 +2083,7 @@ void Geocode<T>::geocodeAreaProj(
         T nan_t = _get_geocodecov_fill_value<T>(
             std::numeric_limits<double>::quiet_NaN()); 
         info << "fill value (cast to class template type): "
-             << fill_value_t_out << pyre::journal::newline;
+             << nan_t << pyre::journal::newline;
     }
 
     // create projection based on epsg code
