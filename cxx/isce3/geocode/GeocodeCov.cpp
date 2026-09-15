@@ -131,8 +131,8 @@ T_out _get_geocodecov_fill_value(double fill_value)
     // Set the output data fill value based on the user parameter `fill_value`.
     // For complex types, a NaN `fill_value` is represented as NaN + NaN.j
     // rather than NaN + 0.j.
-    if (std::is_same<T_out, std::complex<float>::value> ||
-            std::is_same<T_out, std::complex<double>>::value) {
+    if (std::is_same_v<T_out, std::complex<float>> ||
+            std::is_same_v<T_out, std::complex<double>>) {
         if (std::isnan(fill_value)) {
             const auto nan =
                 std::numeric_limits<typename T_out::value_type>::quiet_NaN();
