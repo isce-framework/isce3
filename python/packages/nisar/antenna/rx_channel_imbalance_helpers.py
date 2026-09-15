@@ -17,7 +17,7 @@ log = logging.getLogger("nisar.antenna.rx_channel_imbalance_helpers")
 # A constant used for normalizing magnitude of Caltone in function
 # "compute_rx_channel_imbalance". The value is obtained from HRT
 # of some L0B products to avoid big changes in already-computed abscal.
-CALTONE_NORM = 1945.0
+CALTONE_NORM = 1990.0
 
 
 @dataclass(frozen=True)
