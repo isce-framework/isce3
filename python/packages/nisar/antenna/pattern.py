@@ -3,6 +3,7 @@ from collections import defaultdict
 from isce3.core import Orbit, Attitude, Linspace
 from isce3.geometry import DEMInterpolator
 import logging
+from pathlib import Path
 from nisar.products.readers.antenna import AntennaParser
 from nisar.products.readers.instrument import InstrumentParser
 from nisar.products.readers.Raw import (
@@ -119,8 +120,16 @@ def build_tx_trm(raw: Raw, pulse_times: np.ndarray, freq_band: str,
     # Parse Tx-related Cal stuff used for Tx BMF
     tx_chanl = raw.getListOfTxTRMs(freq_band, tx_pol)
     # get chirp correlator and cal type for co-pol product
+    copol = 2 * tx_pol
+    if copol not in raw.polarizations[freq_band]:
+        name = Path(raw.filename).name
+        raise ValueError(f"Require co-pol ({copol}) telemetry to build "
+            "transmit antenna pattern but these data are missing from "
+            f"raw data file ({name}).  Consider disabling elevation "
+            "antenna pattern correction by setting processing.is_enabled.eap "
+            "to False in the run configuration file.")
     chp_corr, cal_type = chirpcorrelator_caltype_from_raw(
-        raw, txrx_pol=2 * tx_pol)
+        raw, txrx_pol=copol)
     corr_tap2 = chp_corr[..., 1]
     # build TxTRM  from Tx Cal stuff w/o optional "tx_phase"
     return TxTrmInfo(pulse_times, tx_chanl, corr_tap2,

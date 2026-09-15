@@ -12,7 +12,9 @@ runconfig:
       # [REQUIRED] File path or URL of the input water mask raster file.
       # Must be an existing file in a GDAL-compatible raster format that spans the
       # region of interest and conforms to the NISAR Water Mask Product Specification
-      # (JPL D-107710).
+      # (JPL D-107710), where a value of 0 indicates a not-water pixel, a value
+      # of 255 represents a no-data (invalid) pixel, and values in 1-200 represent
+      # water pixels.
       water_mask_raster_file:
       # [REQUIRED] Path to the input orbit ephemeris XML file.
       # Must be an existing XML file conforming to the NISAR Orbit Ephemeris Product

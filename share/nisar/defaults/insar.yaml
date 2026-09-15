@@ -810,6 +810,76 @@ runconfig:
                     # `ntiles` is (1, 1). It has no effect if `single_tile_reoptimize` was also
                     #  enabled (since regrowing connected components would be redundant in that case).
                     regrow_conncomps: True
+                whirlwind:
+                    # Effective number of looks used to form the sample coherence. Must be at least 1.
+                    # A higher number of looks means higher confidence in coherence and a narrower
+                    # coherence cost model. Very large values (above ~80 looks) are capped for the
+                    # cost model since the phase PDF has effectively converged by then.
+                    # If not specified, nlooks (n_e) is estimated as:
+                    # $$
+                    # n_e = \frac{d_r d_a}{\rho_r \rho_a}
+                    # $$
+                    # where $d_r$ and $d_a$ are the sample spacing in range and azimuth,
+                    # and $\rho_r$ and $\rho_a$ are the range and azimuth resolution.
+                    nlooks:
+                    # GDAL-readable raster file path to a mask of valid pixels. Zeros in this raster indicate
+                    # interferogram pixels that should be masked out. If provided, it must have
+                    # the same dimensions as the input interferogram.
+                    # If not provided, defaults to (igram != 0) & (coherence > 0).
+                    mask:
+                    # This supersedes the sibling `bridge` group below: when this is True that
+                    # group is skipped, since re-leveling an already-bridged result can add a
+                    # spurious cycle slip. Set this False to use the `bridge` group instead.
+                    bridge: True
+                    # Spiral persistent-scatterer interpolation pre-pass. When True, every valid
+                    # pixel whose coherence is below interp_cutoff has its phase replaced by a
+                    # Gaussian distance-weighted average of nearest high-coherence pixels' unit
+                    # phasors before the solve. Integer cycle field after unwrapping is applied
+                    # back to original wrapped phase, so every per-pixel value is preserved.
+                    # Useful for scenes with isolated low-coherence speckle seeding spurious residues.
+                    interpolate: False
+                    # Coherence below which a valid pixel is interpolated (only when interpolate=True).
+                    # Coherence is used as the weight map.
+                    interp_cutoff: 0.1
+                    # Number of nearest high-coherence pixels averaged per interpolated pixel.
+                    interp_num_neighbors: 30
+                    # Maximum search radius in pixels for the concentric-circle neighbor search.
+                    interp_max_radius: 101
+                    # Minimum search radius in pixels; closer neighbors are skipped.
+                    interp_min_radius: 0
+                    # Gaussian distance-weighting falloff for the neighbor average.
+                    interp_alpha: 0.75
+                    # Coherence below which pixels are labeled 0 (background) in the connected
+                    # components. "auto" uses 0.32/sqrt(nlooks); pass a float for a fixed cutoff,
+                    # or leave unset to disable the cutoff and use conncomp_reliability instead.
+                    # Takes precedence over conncomp_reliability.
+                    conncomp_min_coherence: auto
+                    # Lower-level conservativeness knob for the connected components, in
+                    # inverse-variance (1/sigma2) units, so values are small. Used only when
+                    # conncomp_min_coherence is unset. 0 labels essentially every reliably
+                    # unwrapped pixel; raise to cut more low-coherence interior edges.
+                    conncomp_reliability: 0.5
+                    # Discard connected components smaller than this many pixels.
+                    min_size_px: 100
+                    # Maximum number of connected components to keep (largest first).
+                    max_ncomps: 1024
+                    # Draw phase paths across bounded runs of invalid pixels before
+                    # unwrapping, then drop those synthetic pixels from both outputs. The
+                    # paths let the solver pick a relative 2pi level between regions that
+                    # would otherwise be solved independently, which is what levels the
+                    # NISAR sub-swaths. Unlike ``interpolate``, it extrapolates the phase
+                    # slope on each side of a gap, so a winding estimate survives the
+                    # crossing. Default False.
+                    connect_gaps: False
+                    # Widest invalid run, in pixels, that ``connect_gaps`` will cross.
+                    # Default 300.
+                    connect_gaps_max_px: 300
+                    # Goldstein adaptive-filter strength in [0,1]. 0 (default) disables filtering;
+                    # typical "on" value is 0.7. When enabled, filter only informs MCF; integer cycle
+                    # field is applied to original wrapped phase, so every per-pixel value is preserved.
+                    goldstein_alpha: 0.0
+                    # Goldstein FFT patch size (only used when goldstein_alpha > 0).
+                    goldstein_psize: 64
                 bridge:
                     enabled: True
                     # Maximum radius used when bridging disconnected regions.
