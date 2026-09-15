@@ -32,14 +32,14 @@ def geocode_insar_cfg_check(cfg):
                      'ionosphere_phase_screen_uncertainty',
                      'unwrapped_phase', 'along_track_offset',
                      'slant_range_offset', 'correlation_surface_peak',
-                     'mask']
+                     'mask','valid_mask']
     goff_datasets = ['along_track_offset', 'snr',
                      'along_track_offset_variance',
                      'correlation_surface_peak', 'cross_offset_variance',
                      'slant_range_offset', 'slant_range_offset_variance',
-                     'mask']
+                     'mask', 'valid_mask']
     wrapped_datasets = ['coherence_magnitude', 'wrapped_interferogram',
-                        'mask']
+                        'mask', 'valid_mask']
 
     # insert both geocode datasets in dict keyed on datasets name
     geocode_datasets = {'gunw_datasets': gunw_datasets,

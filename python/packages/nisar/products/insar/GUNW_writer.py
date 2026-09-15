@@ -349,23 +349,27 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 unwrapped_ds_params = [
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
-                     Units.unitless),
+                     Units.unitless, None, None),
                     ("connectedComponents", np.uint16,
                      f"Connected components for {pol} layer",
-                     Units.unitless),
+                     Units.unitless,None, None),
                     ("ionospherePhaseScreen", np.float32,
                      "Ionosphere phase screen",
-                     Units.radian),
+                     Units.radian,None, None),
                     ("ionospherePhaseScreenUncertainty", np.float32,
                      "Uncertainty of the ionosphere phase screen",
-                     "radians"),
+                     "radians",None, None),
                     ("unwrappedPhase", np.float32,
                     f"Unwrapped interferogram between {pol} layers",
-                     Units.radian),
+                     Units.radian,None, None),
+                    ("validMask", np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)"),
+                     Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
                 for ds_param in unwrapped_ds_params:
-                    ds_name, ds_datatype, ds_description, ds_unit\
+                    ds_name, ds_datatype, ds_description, ds_unit, fill_value, long_name\
                         = ds_param
                     self._create_2d_dataset(
                         unwrapped_pol_group,
@@ -377,7 +381,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
+                        long_name=long_name,
+                        fill_value=fill_value
                     )
+                unwrapped_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
 
                 wrapped_pol_name = f"{wrapped_group_name}/{pol}"
                 wrapped_pol_group = self.require_group(wrapped_pol_name)
@@ -393,14 +400,18 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 wrapped_ds_params = [
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
-                     Units.unitless),
+                     Units.unitless, None, None),
                     ("wrappedInterferogram", np.complex64,
                      f"Complex wrapped interferogram between {pol} layers",
-                     Units.unitless),
+                     Units.unitless, None, None),
+                    ("validMask", np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)"),
+                     Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
                 for ds_param in wrapped_ds_params:
-                    ds_name, ds_datatype, ds_description, ds_unit\
+                    ds_name, ds_datatype, ds_description, ds_unit, fill_value, long_name\
                         = ds_param
                     self._create_2d_dataset(
                         wrapped_pol_group,
@@ -412,7 +423,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
+                        long_name=long_name,
+                        fill_value=fill_value
                     )
+                wrapped_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
 
                 pixeloffsets_pol_name = f"{pixeloffsets_group_name}/{pol}"
                 pixeloffsets_pol_group = self.require_group(
@@ -430,17 +444,21 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 pixel_offsets_ds_params = [
                     ("alongTrackOffset", np.float32,
                      "Along-track offset",
-                     Units.meter),
+                     Units.meter, None, None),
                     ("correlationSurfacePeak", np.float32,
                      "Normalized cross-correlation surface peak",
-                     Units.unitless),
+                     Units.unitless, None, None),
                     ("slantRangeOffset", np.float32,
                      "Slant range offset",
-                     Units.meter),
+                     Units.meter, None, None),
+                    ("validMask", np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)"),
+                     Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
                 for ds_param in pixel_offsets_ds_params:
-                    ds_name, ds_datatype, ds_description, ds_unit\
+                    ds_name, ds_datatype, ds_description, ds_unit, fill_value, long_name\
                         = ds_param
                     self._create_2d_dataset(
                         pixeloffsets_pol_group,
@@ -452,4 +470,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
+                        long_name=long_name,
+                        fill_value=fill_value
                     )
+                pixeloffsets_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)

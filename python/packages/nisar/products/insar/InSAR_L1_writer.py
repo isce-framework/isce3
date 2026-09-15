@@ -17,8 +17,8 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_base_writer import InSARBaseWriter
 from .product_paths import L1GroupsPaths
 from .units import Units
-from .utils import (extract_datetime_from_string, generate_dem_rdr,
-                    generate_insar_mask,
+from .utils import (extract_datetime_from_string, extract_pol_valid_mask,
+                    generate_dem_rdr, generate_insar_mask,
                     get_geolocation_grid_cube_obj, save_to_hdf5_ds)
 
 
@@ -312,30 +312,52 @@ class L1InSARWriter(InSARBaseWriter):
                 pixel_offsets_ds_params = [
                     (
                         "alongTrackOffset",
+                        np.float32,
                         "Along-track offset",
                         Units.meter,
+                        None,
                     ),
                     (
                         "correlationSurfacePeak",
+                        np.float32,
                         "Normalized correlation surface peak",
                         Units.unitless,
+                        None,
                     ),
                     (
                         "slantRangeOffset",
+                        np.float32,
                         "Slant range offset",
                         Units.meter,
+                        None,
+                    ),
+                    (
+                        "slantRangeOffset",
+                        np.float32,
+                        "Slant range offset",
+                        Units.meter,
+                        None,
+                    ),
+                    (
+                        "validMask",
+                        np.uint8,
+                        f"Valid mask for the {pol} layers: bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)",
+                        Units.unitless,
+                        np.uint8(255),
                     ),
                 ]
 
                 for pixel_offsets_ds_param in pixel_offsets_ds_params:
-                    ds_name, ds_description, ds_unit = pixel_offsets_ds_param
+                    ds_name, ds_type, ds_description, ds_unit, fill_value\
+                        = pixel_offsets_ds_param
                     self._create_2d_dataset(
                         offset_pol_group,
                         ds_name,
                         off_shape,
-                        np.float32,
+                        ds_type,
                         ds_description,
                         units=ds_unit,
+                        fill_value=fill_value,
                     )
 
     def add_pixel_offsets_to_swaths_group(self):
@@ -531,7 +553,7 @@ class L1InSARWriter(InSARBaseWriter):
             az_idx = np.round([rslc_radar_grid.azimuth_index(az)
                                for az in offset_zero_doppler_time])
 
-            offset_group['mask'][...] = \
+            offset_group['mask'][...], pol_valid_mask = \
                 generate_insar_mask(self.ref_rslc,
                                     self.sec_rslc,
                                     self.ref_h5py_file_obj,
@@ -544,6 +566,21 @@ class L1InSARWriter(InSARBaseWriter):
 
         # add the datasets to pixel offsets group
         self._add_datasets_to_pixel_offset_group()
+
+        # Update the validMask in the pixelOffsets groups for each polarization
+        for pol in pol_list:
+
+            offset_pol_group_name = (
+                f"{offset_group_name}/{pol}"
+            )
+            offset_pol_group = self.require_group(offset_pol_group_name)
+
+            # Extract polarization-dependent valid mask
+            valid_mask = extract_pol_valid_mask(pol_valid_mask, pol)
+
+            offset_pol_group['validMask'][...] = valid_mask
+            offset_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
+            offset_pol_group['validMask'].attrs['long_name'] = to_bytes("Valid data mask")
 
     def add_interferogram_to_swaths_group(self, is_unwrapped=False):
         """
@@ -762,7 +799,7 @@ class L1InSARWriter(InSARBaseWriter):
             az_idx = np.round([rslc_radar_grid.azimuth_index(az)
                                for az in igram_zero_doppler_time])
 
-            igram_group['mask'][...] = \
+            igram_group['mask'][...], pol_valid_mask = \
                 generate_insar_mask(self.ref_rslc,
                                     self.sec_rslc,
                                     self.ref_h5py_file_obj,
@@ -787,11 +824,20 @@ class L1InSARWriter(InSARBaseWriter):
                         np.float32,
                         f"Coherence magnitude between {pol} layers",
                         Units.unitless,
+                        None,
+                    ),
+                    (
+                        "validMask",
+                        np.uint8,
+                        f"Valid mask for the {pol} layers: bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)",
+                        Units.unitless,
+                        np.uint8(255),
                     ),
                 ]
 
                 for igram_ds_param in igram_ds_params:
-                    ds_name, ds_dtype, ds_description, ds_unit = igram_ds_param
+                    ds_name, ds_dtype, ds_description, ds_unit, fill_value\
+                        = igram_ds_param
                     self._create_2d_dataset(
                         igram_pol_group,
                         ds_name,
@@ -799,7 +845,15 @@ class L1InSARWriter(InSARBaseWriter):
                         ds_dtype,
                         ds_description,
                         units=ds_unit,
+                        fill_value=fill_value
                     )
+                    if ds_name == 'validMask':
+                        # Extract polarization-dependent valid mask
+                        valid_mask = extract_pol_valid_mask(pol_valid_mask, pol)
+
+                        igram_pol_group['validMask'][...] = valid_mask
+                        igram_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
+                        igram_pol_group['validMask'].attrs['long_name'] = to_bytes("Valid data mask")
 
     def add_swaths_to_hdf5(self):
         """
