@@ -133,11 +133,11 @@ def test_geocode_cov():
                         fill_value = np.nan
                     elif dtype == 'byte':
                         geo_obj = isce.geocode.GeocodeFloat32()
-                        gdal_dtype = gdal.GDT_Float32
+                        gdal_dtype = gdal.GDT_Byte
                         fill_value = 255
                     else:   # uint16
                         geo_obj = isce.geocode.GeocodeFloat32()
-                        gdal_dtype = gdal.GDT_Float32
+                        gdal_dtype = gdal.GDT_UInt16
                         fill_value = 65535
 
                     geo_obj.orbit = rslc.getOrbit()
