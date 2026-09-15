@@ -73,7 +73,10 @@ public:
      * `out_off_diag_terms` (when provided). If the output data type is
      * integer and the fill value is NaN, the fill value will be stored as 0 in
      * the output. If the output data type is complex (e.g., for off-diagonal
-     * terms), the fill value is used as the real part, with the imaginary part
+     * terms) and the fill value is NaN, the fill value will be stored as
+     * NaN + NaN.j to match the NISAR specifications document. Otherwise,
+     * if the output data type is complex and the fill value is not NaN,
+     * the fill value will be used as the real part, with the imaginary part
      * set to 0.
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
      * @param[in]  flag_apply_rtc      Apply radiometric terrain correction
@@ -238,7 +241,10 @@ public:
      * `out_off_diag_terms` (when provided). If the output data type is
      * integer and the fill value is NaN, the fill value will be stored as 0 in
      * the output. If the output data type is complex (e.g., for off-diagonal
-     * terms), the fill value is used as the real part, with the imaginary part
+     * terms) and the fill value is NaN, the fill value will be stored as
+     * NaN + NaN.j to match the NISAR specifications document. Otherwise,
+     * if the output data type is complex and the fill value is not NaN,
+     * the fill value will be used as the real part, with the imaginary part
      * set to 0.
      * @param[in]  flag_apply_rtc      Apply radiometric terrain correction
      * (RTC)
@@ -386,7 +392,10 @@ public:
      * `out_off_diag_terms` (when provided). If the output data type is
      * integer and the fill value is NaN, the fill value will be stored as 0 in
      * the output. If the output data type is complex (e.g., for off-diagonal
-     * terms), the fill value is used as the real part, with the imaginary part
+     * terms) and the fill value is NaN, the fill value will be stored as
+     * NaN + NaN.j to match the NISAR specifications document. Otherwise,
+     * if the output data type is complex and the fill value is not NaN,
+     * the fill value will be used as the real part, with the imaginary part
      * set to 0.
      * * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
      * @param[in]  flag_apply_rtc      Apply radiometric terrain correction

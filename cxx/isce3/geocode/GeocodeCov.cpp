@@ -124,6 +124,25 @@ static void _validateInputLayoverShadowMaskRaster(
     }
 }
 
+
+template <typename T_out>
+T_out _get_geocodecov_fill_value(double fill_value)
+{
+    // Set the output data fill value based on the user parameter `fill_value`.
+    // For complex types, a NaN `fill_value` is represented as NaN + NaN.j
+    // rather than NaN + 0.j.
+    if (std::is_same<T_out, std::complex<float>::value> ||
+            std::is_same<T_out, std::complex<double>>::value) {
+        if (std::isnan(fill_value)) {
+            const auto nan =
+                std::numeric_limits<typename T_out::value_type>::quiet_NaN();
+            return T_out{nan, nan};
+        }
+    }
+
+    return static_cast<T_out>(fill_value);
+}
+
 template<class T>
 void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
@@ -792,11 +811,13 @@ void Geocode<T>::geocodeInterp(
 
         // set NaN values according to T_out, i.e. real (NaN) or complex (NaN,
         // NaN)
-        using T_out_real = typename isce3::real<T_out>::type;
-        T_out nan_t_out = 0;
-        nan_t_out *= std::numeric_limits<T_out_real>::quiet_NaN();
+        T_out nan_t_out = _get_geocodecov_fill_value<T_out>(
+            std::numeric_limits<double>::quiet_NaN());
         
-        T_out fill_value_t_out = static_cast<T_out>(fill_value);
+        // set the output data fill value based on user parameter `fill_value`.
+        // For complex types, if the users sets `fill_value` to NaN, the output
+        // fill value will be NaN + NaN.j rather than NaN + 0.j.
+        T_out fill_value_t_out = _get_geocodecov_fill_value<T_out>(fill_value);
 
         // define the geo-block matrix based on the raster bands data type
         isce3::core::Matrix<T_out> geoDataBlock(
@@ -1580,8 +1601,10 @@ inline void _fillGcovBlocksWithNans(
     // declare matrix that will hold the NaNs
     isce3::core::Matrix<T> data_block(this_block_size_y, this_block_size_x);
 
-    // Cast fill value to output template class T
-    T fill_value_t = static_cast<T>(fill_value);
+    // Cast fill value to output template class T.
+    // For complex types, if the users sets `fill_value` to NaN, the output
+    // fill value will be NaN + NaN.j rather than NaN + 0.j.
+    T fill_value_t = _get_geocodecov_fill_value<T>(fill_value);
 
     // fill matrix with NaN
     data_block.fill(fill_value_t);
@@ -2592,11 +2615,6 @@ void Geocode<T>::_runBlock(
     const double dr = radar_grid.rangePixelSpacing();
     const double r0 = radar_grid.startingRange() - 0.5 * dr;
 
-    // set NaN values according to T_out, i.e. real (NaN) or complex (NaN, NaN)
-    using T_out_real = typename isce3::real<T_out>::type;
-    T_out nan_t_out = 0;
-    nan_t_out *= std::numeric_limits<T_out_real>::quiet_NaN();
-
     double abs_cal_factor_effective;
     if (!isce3::is_complex<T_out>())
         abs_cal_factor_effective = abs_cal_factor;
@@ -2955,9 +2973,10 @@ void Geocode<T>::_runBlock(
     for (int band = 0; band < nbands; ++band)
         geoDataBlock.emplace_back(std::make_unique<isce3::core::Matrix<T_out>>(
                 this_block_size_y, this_block_size_x));
-
-    nan_t_out *= std::numeric_limits<T_out_real>::quiet_NaN();
- 
+    
+    // set NaN values according to T_out, i.e. real (NaN) or complex (NaN, NaN)
+    T_out nan_t_out = _get_geocodecov_fill_value<T_out>(
+        std::numeric_limits<double>::quiet_NaN());
     for (int band = 0; band < nbands; ++band)
         geoDataBlock[band]->fill(nan_t_out);
 
@@ -2967,9 +2986,8 @@ void Geocode<T>::_runBlock(
 
         // set NaN values according to T_out, i.e. real (NaN) or complex (NaN,
         // NaN)
-        using T_out_real = typename isce3::real<T>::type;
-        T nan_t = 0;
-        nan_t *= std::numeric_limits<T_out_real>::quiet_NaN();
+        T nan_t = _get_geocodecov_fill_value<T>(
+            std::numeric_limits<double>::quiet_NaN());
 
         for (int band = 0; band < nbands_off_diag_terms; ++band)
             geoDataBlockOffDiag.emplace_back(
@@ -3590,7 +3608,7 @@ void Geocode<T>::_runBlock(
                 // otherwise, if the geogrid pixel is `Nan` and `fill_value` is
                 // not `NaN`, update the geogrid pixel with `fill_value`
                 else if (std::isnan(std::abs(geo_value))) {
-                    T_out v = static_cast<T_out>(fill_value);
+                    T_out v = _get_geocodecov_fill_value<T_out>(fill_value);
                     geoDataBlock[band]->operator()(i, j) = v;
                     }
                 // clip min (complex)
@@ -3645,7 +3663,7 @@ void Geocode<T>::_runBlock(
                     // otherwise, if the geogrid pixel is `Nan` and `fill_value` is
                     // not `NaN`, update the geogrid pixel with `fill_value`
                     else if (std::isnan(std::abs(geo_value_off_diag))) {
-                        T2 v = static_cast<T2>(fill_value);
+                        T2 v = _get_geocodecov_fill_value<T2>(fill_value);
                         geoDataBlockOffDiag[band]->operator()(i, j) = v;
                         }
 
