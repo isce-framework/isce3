@@ -367,7 +367,7 @@
         <integer name="/science/LSAR/GCOV/grids/frequencyA/inputDataExceptionMask"
               shape="realDataFrequencyAShape"
               signed="false"
-              width="8">
+              width="16">
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"
@@ -782,7 +782,7 @@
         <integer name="/science/LSAR/GCOV/grids/frequencyB/inputDataExceptionMask"
               shape="realDataFrequencyBShape"
               signed="false"
-              width="8">
+              width="16">
           <annotation app="conformance"
                       lang="en"
                       DIMENSION_LIST="HDF5 internal attribute"

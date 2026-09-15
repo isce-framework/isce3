@@ -1,5 +1,6 @@
 import nisar.workflows.helpers as helpers
 from nisar.products.writers import BaseL2WriterSingleInput
+import journal
 
 
 class GslcWriter(BaseL2WriterSingleInput):
@@ -46,7 +47,7 @@ class GslcWriter(BaseL2WriterSingleInput):
 
     def populate_data_parameters(self):
 
-        for frequency, _ in self.freq_pols_dict.items():
+        for frequency, pol_list in self.freq_pols_dict.items():
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
             output_grids_freq_path = ('{PRODUCT}/grids/'
@@ -76,12 +77,41 @@ class GslcWriter(BaseL2WriterSingleInput):
                 f'{output_grids_freq_path}/zeroDopplerTimeSpacing',
                 '{PRODUCT}/swaths/zeroDopplerTimeSpacing')
 
+            # Geocode the uint16 inputDataExceptionMask using
+            # 65535 (2**16 - 1) as the fill value.
             self.geocode_lut(f'{output_grids_freq_path}',
                              f'{input_swaths_freq_path}',
                              output_ds_name_list=['inputDataExceptionMask'],
                              skip_if_not_present=True,
                              compute_stats=False,
-                             data_interpolator='nearest')
+                             data_interpolator='nearest',
+                             fill_value=65535)
+
+            # copy 'inputDataExceptionMask' H5 dataset attributes
+            # `maskValidPixelFraction{pol}` and `rawValidPulseFraction{pol}``
+            input_ds = (f'{self.input_product_path}/swaths/frequency{frequency}/'
+                        'inputDataExceptionMask')
+            output_ds = (f'{self.output_product_path}/grids/frequency{frequency}/'
+                         'inputDataExceptionMask')
+
+            if (input_ds not in self.input_hdf5_obj or
+                    output_ds not in self.output_hdf5_obj):           
+                continue
+
+            warning_channel = journal.warning(
+                "GslcWriter.populate_data_parameters()")
+
+            for pol in pol_list:
+                for attr_name in [f'maskValidPixelFraction{pol}',
+                                  f'rawValidPulseFraction{pol}']:
+                    if attr_name not in self.input_hdf5_obj[input_ds].attrs:
+                        warning_channel.log(
+                            'WARNING there was an error copying H5 attribute'
+                            f' {attr_name} from input H5 dataset {input_ds}.'
+                            ' Skipping attribute.')
+                        continue
+                    self.output_hdf5_obj[output_ds].attrs[attr_name] = \
+                        self.input_hdf5_obj[input_ds].attrs[attr_name]
 
     def populate_calibration_information_gslc_specific(self):
         # geocode radiometric terrain correction (RTC) LUTs
