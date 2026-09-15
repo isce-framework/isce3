@@ -184,6 +184,7 @@ def test_geocode_cov():
             if dtype == 'cfloat64':
                 assert np.issubdtype(data_fill_value.dtype, np.complexfloating)
                 assert np.isnan(data_fill_value.real)
+                assert np.isnan(data_fill_value.imag)
 
             elif dtype == 'float64':
                 assert np.issubdtype(data_fill_value.dtype, np.floating)
