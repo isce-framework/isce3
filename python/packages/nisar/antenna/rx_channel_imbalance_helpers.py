@@ -15,9 +15,10 @@ from nisar.antenna import get_calib_range_line_idx
 log = logging.getLogger("nisar.antenna.rx_channel_imbalance_helpers")
 
 # A constant used for normalizing magnitude of Caltone in function
-# "compute_rx_channel_imbalance". The value is obtained from HRT
-# of some L0B products to avoid big changes in already-computed abscal.
-CALTONE_NORM = 1990.0
+# "compute_rx_channel_imbalance". The value is obtained from H-pol HRT
+# of RCID=240 collected on 02/09/2026 to avoid noticeable change
+# in already-computed AbsCal.
+CALTONE_NORM = 2082.0
 
 
 @dataclass(frozen=True)
