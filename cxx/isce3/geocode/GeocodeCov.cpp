@@ -188,10 +188,10 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         GDALDataType outputOffDiagRasterDataType = out_off_diag_terms->dtype();
 
         if (GDALDataTypeIsComplex(outputOffDiagRasterDataType)) {
-            warning << "The output off-diagonal raster has a complex data type, "
-                    << "whereas the variable `fill_value` has a double data type. "
-                    << "The real-valued fill value will be cast by "
-                    << "isce3::io::Raster with a 0 imaginary part as "
+            warning << "The output off-diagonal terms raster has a complex "
+                    << "data type, whereas the variable `fill_value` has a "
+                    << "double data type. The real-valued fill value will be "
+                    << "cast by isce3::io::Raster with a 0 imaginary part as "
                     << "<REAL_PART> + 0j."
                     << pyre::journal::endl;
         }
