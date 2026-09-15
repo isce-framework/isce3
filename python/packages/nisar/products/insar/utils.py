@@ -589,15 +589,18 @@ def generate_insar_mask(ref_rslc_obj,
                                             sec_subswaths)
 
                     # reference RSLC input exception mask id
-                    ref_input_exception_mask_id = ref_input_exception_mask[int(i),int(j)] << 16
+                    ref_input_exception_mask_id = int(
+                        ref_input_exception_mask[int(i), int(j)]
+                    ) << 16
 
                     # secondary RSLC input  exception mask id
                     sec_i = round(i + azimuth_off[0,int(j)])
                     sec_j = round(j + range_off[0,int(j)])
                     if ((sec_i >=0 and sec_i < sec_swath.lines) and
                         (sec_j >=0 and sec_j < sec_swath.samples)):
-                        sec_input_exception_mask_id = sec_input_exception_mask[sec_i,sec_j] << 8
-
+                        sec_input_exception_mask_id = int(
+                            sec_input_exception_mask[sec_i, sec_j]
+                        ) << 8
                     # mask id
                     mask_id = subswath_mask_id | ref_input_exception_mask_id | sec_input_exception_mask_id
 
