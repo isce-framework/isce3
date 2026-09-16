@@ -947,8 +947,9 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
     units : str, optional
         Units of the dataset values.
     fill_value : scalar, optional
-        Dataset fill value. If not specified, NaN is used for floating-point
-        datasets and ``NaN + NaNj`` for complex-valued datasets.
+        Fill value to store in the ``_FillValue`` attribute. If
+        ``fill_value`` is not provided, the fill value defaults to NaN for
+        floating-point datasets and ``NaN + NaNj`` for complex-valued datasets.
     valid_min, valid_max : scalar, optional
         Minimum and maximum valid values for the dataset.
     grid_mapping : str, optional
@@ -1016,6 +1017,8 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
     if grid_mapping is not None:
         dset.attrs['grid_mapping'] = to_bytes(grid_mapping)
 
+    np_dtype = np.dtype(dtype)
+
     if standard_name is not None:
         dset.attrs['standard_name'] = to_bytes(standard_name)
 
@@ -1029,11 +1032,11 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
         dset.attrs['units'] = to_bytes(units)
 
     if fill_value is not None:
-        dset.attrs.create('_FillValue', data=fill_value)
-    elif np.issubdtype(dtype, np.floating):
-        dset.attrs.create('_FillValue', data=np.nan)
-    elif np.issubdtype(dtype, np.complexfloating):
-        dset.attrs.create('_FillValue', data=np.nan + 1j * np.nan)
+        dset.attrs.create('_FillValue', data=np_dtype.type(fill_value))
+    elif np.issubdtype(np_dtype, np.floating):
+        dset.attrs.create('_FillValue', data=np_dtype.type(np.nan))
+    elif np.issubdtype(np_dtype, np.complexfloating):
+        dset.attrs.create('_FillValue', data=np_dtype.type(np.nan + 1j * np.nan))
 
     if valid_min is not None:
         dset.attrs.create('valid_min', data=valid_min)
