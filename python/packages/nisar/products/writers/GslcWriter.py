@@ -110,7 +110,9 @@ class GslcWriter(BaseL2WriterSingleInput):
                             f' the input H5 dataset {input_ds}. Skipping'
                             ' attribute.')
                         continue
-                    self.output_hdf5_obj[output_ds].attrs[attr_name] = \
+
+                    dest_attr_name = attr_name.replace('mask', 'rslc')
+                    self.output_hdf5_obj[output_ds].attrs[dest_attr_name] = \
                         self.input_hdf5_obj[input_ds].attrs[attr_name]
 
     def populate_calibration_information_gslc_specific(self):
