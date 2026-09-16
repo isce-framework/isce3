@@ -106,9 +106,9 @@ class GslcWriter(BaseL2WriterSingleInput):
                                   f'rawValidPulseFraction{pol}']:
                     if attr_name not in self.input_hdf5_obj[input_ds].attrs:
                         warning_channel.log(
-                            'WARNING there was an error copying H5 attribute'
-                            f' {attr_name} from input H5 dataset {input_ds}.'
-                            ' Skipping attribute.')
+                            f'WARNING H5 attribute {attr_name} not found in'
+                            f' the input H5 dataset {input_ds}. Skipping'
+                            ' attribute.')
                         continue
                     self.output_hdf5_obj[output_ds].attrs[attr_name] = \
                         self.input_hdf5_obj[input_ds].attrs[attr_name]
