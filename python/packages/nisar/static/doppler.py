@@ -15,6 +15,8 @@ def make_native_doppler_lut(
     dem: isce3.geometry.DEMInterpolator,
     az_spacing: float,
     rg_spacing: float,
+    az_margin: float | None,
+    rg_margin: float | None,
     *,
     interp_method: DataInterpMethod | str = DataInterpMethod.BILINEAR,
     bounds_error: bool = True,
@@ -48,6 +50,14 @@ def make_native_doppler_lut(
     rg_spacing : float
         The slant range spacing, in meters, of the output LUT coordinate grid.
         Must be > 0.
+    az_margin : float | None
+        Additional azimuth time margin, in seconds, to add to the start
+        and end of the Doppler LUT.
+        Must be >= 0 or None. If None, defaults to 20% of the radar grid time interval.
+    rg_margin : float | None
+        Additional slant range margin, in meters, to add to the near and
+        far edges of the Doppler LUT.
+        Must be >= 0 or None. If None, defaults to 20% of the radar grid slant-range width.
     interp_method : isce3.core.DataInterpMethod or str, optional
         Interpolation method used by the output LUT. Defaults to bilinear interpolation.
     bounds_error : bool, optional
@@ -78,6 +88,19 @@ def make_native_doppler_lut(
     if not (rg_spacing > 0.0):
         raise ValueError(f"{rg_spacing=}, must be > 0")
 
+    if az_margin is not None and az_margin < 0.0:
+        raise ValueError(f"{az_margin=}, must be >= 0 or None")
+    if rg_margin is not None and rg_margin < 0.0:
+        raise ValueError(f"{rg_margin=}, must be >= 0 or None")
+
+    # Expand radar grid by 20% in each direction to compute the
+    # native Doppler LUT
+    if az_margin is None:
+        az_margin = int(0.2 * radar_grid.length / radar_grid.prf)
+    if rg_margin is None:
+        rg_margin = int(0.2 * radar_grid.width *
+                        radar_grid.range_pixel_spacing)
+
     # Create a 1-D array with uniform spacing `step` that contains the interval
     # [`start`, `stop`].
     def make_step_range(start, stop, step) -> np.ndarray:
@@ -86,12 +109,12 @@ def make_native_doppler_lut(
 
     # Choose azimuth time and slant range coordinates of the Doppler LUT grid such that
     # it fully contains the input radar grid.
-    start_time = radar_grid.sensing_start
-    stop_time = radar_grid.sensing_stop
+    start_time = radar_grid.sensing_start - az_margin
+    stop_time = radar_grid.sensing_stop + az_margin
     az_time = make_step_range(start_time, stop_time, az_spacing)
 
-    near_range = radar_grid.starting_range
-    far_range = radar_grid.end_range
+    near_range = radar_grid.starting_range - rg_margin
+    far_range = radar_grid.end_range + rg_margin
     slant_range = make_step_range(near_range, far_range, rg_spacing)
 
     return isce3.geometry.make_doppler_lut_from_attitude(

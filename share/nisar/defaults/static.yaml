@@ -12,7 +12,9 @@ runconfig:
       # [REQUIRED] File path or URL of the input water mask raster file.
       # Must be an existing file in a GDAL-compatible raster format that spans the
       # region of interest and conforms to the NISAR Water Mask Product Specification
-      # (JPL D-107710).
+      # (JPL D-107710), where a value of 0 indicates a not-water pixel, a value
+      # of 255 represents a no-data (invalid) pixel, and values in 1-200 represent
+      # water pixels.
       water_mask_raster_file:
       # [REQUIRED] Path to the input orbit ephemeris XML file.
       # Must be an existing XML file conforming to the NISAR Orbit Ephemeris Product
@@ -203,6 +205,14 @@ runconfig:
         # Must be > 0.
         # Defaults to 2000.
         rg_spacing: 2000.0
+        # [OPTIONAL] Additional azimuth time margin, in seconds, to add to the start
+        # and end of the Doppler LUT.
+        # Must be >= 0. If empty, defaults to 20% of the radar grid time interval.
+        az_margin:
+        # [OPTIONAL] Additional slant range margin, in meters, to add to the near and
+        # far edges of the Doppler LUT.
+        # Must be >= 0. If empty, defaults to 20% of the radar grid slant-range width.
+        rg_margin:
         # [OPTIONAL] Interpolation method used for sampling the Doppler LUT.
         # Must be one of:
         #   - 'nearest': nearest neighbor interpolation
@@ -241,6 +251,10 @@ runconfig:
           # Must be >= 2.
           # Defaults to 5.
           pts_per_side: 5
+          # [OPTIONAL] Azimuth decimation factor to compute the layover shadow mask.
+          layover_shadow_mask_az_decimation: 1
+          # [OPTIONAL] Range decimation factor to compute the layover shadow mask.
+          layover_shadow_mask_rg_decimation: 1
         bounding_box:
           # [OPTIONAL] Azimuth start UTC date and time of the start of the radar
           # observation, as a string in ISO 8601 format with up to nanosecond precision.
@@ -248,7 +262,6 @@ runconfig:
           # If provided, must be a valid azimuth time within the observation time
           # interval.
           start_time:
-
           # [OPTIONAL] Azimuth ending UTC date and time of the end of the radar
           # observation, as a string in ISO 8601. format with up to nanosecond precision.
           # Must be >= `start_time`.
@@ -256,17 +269,14 @@ runconfig:
           # If provided, must be a valid azimuth time within the observation time
           # interval.
           end_time:
-
           # [OPTIONAL] Starting range, in meters, of the first column of the radar grid.
           # If not provided, it will be inferred from the specified geographic grid.
           # If provided, must be a positive value.
           start_range:
-
           # [OPTIONAL] Ending range, in meters, of the last column of the radar grid.
           # If not provided, it will be inferred from the specified geographic grid.
           # If provided, must be a positive value.
           end_range:
-
           # [OPTIONAL] Lower bound on the height of targets within the region of interest,
           # in meters above the reference ellipsoid of the output product.
           # Used to estimate the bounds of a radar grid that spans the region of interest.

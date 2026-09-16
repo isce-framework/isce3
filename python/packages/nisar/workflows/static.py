@@ -117,6 +117,12 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     radar_grid_spacing_params = radar_grid_params["spacing"]
     az_spacing = radar_grid_spacing_params["az_spacing"]
     rg_spacing = radar_grid_spacing_params["rg_spacing"]
+    layover_shadow_mask_az_decimation = \
+        radar_grid_spacing_params[
+            'layover_shadow_mask_az_decimation']
+    layover_shadow_mask_rg_decimation = \
+        radar_grid_spacing_params[
+            'layover_shadow_mask_rg_decimation']
 
     pts_per_side = radar_grid_spacing_params["pts_per_side"]
 
@@ -293,11 +299,15 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         # mask).
         # Results are stored as GeoTIFF files in the scratch directory.
         logger.info("Compute geocoded layover/shadow mask layer")
+        radar_grid_multilooked = radar_grid.multilook(
+            layover_shadow_mask_az_decimation,
+            layover_shadow_mask_rg_decimation
+        )
         geocode_params = processing_params["geocode"]
         with log_elapsed_time(logger.info,
                               "Computing geocoded layover/shadow mask"):
             layover_shadow_mask = compute_geocoded_layover_shadow_mask(
-                radar_grid=radar_grid,
+                radar_grid=radar_grid_multilooked,
                 orbit=orbit,
                 img_grid_doppler=img_grid_doppler,
                 geo_grid=geo_grid,
