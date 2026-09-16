@@ -2,8 +2,6 @@
 Package to compute TEC LUT from JSON file
 '''
 from datetime import datetime, timedelta
-from itertools import combinations
-from math import comb
 import json
 import os
 
@@ -90,24 +88,17 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
     return delta_r
 
 
-def _ransac_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
-                    inlier_scale: float=3.0,
-                    max_combinations: int=1000) -> np.ndarray:
+def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
+                 sigma: float=1.0) -> np.ndarray:
     '''
     Robustly fit a polynomial to a TEC profile by rejecting noisy samples using
-    an exhaustive RANSAC-style search.
+    a MAD-based threshold.
 
-    A polynomial of the given degree is fit to every combination of the minimal
-    number of points (`degree` + 1). For each candidate fit, the consensus set
-    is all samples whose absolute residual falls within an inlier threshold
-    derived from a robust (MAD-based) estimate of the noise scale. The candidate
-    with the largest consensus set is selected (ties broken by smaller sum of
-    squared inlier residuals).
-
-    Because the initial noise scale comes from a full-data fit that the outliers
-    themselves corrupt, the threshold is then recomputed from the consensus set
-    and the search repeated until the consensus set stabilizes. A final
-    polynomial is fit to the resulting consensus set and evaluated at every `x`.
+    A polynomial of the given degree is fit to all samples. Samples whose
+    absolute residual about that fit exceeds an inlier threshold derived from a
+    robust (MAD-based) estimate of the noise scale are rejected as outliers, and
+    a final polynomial is fit to the surviving inliers and evaluated at every
+    `x`.
 
     Parameters
     ----------
@@ -117,87 +108,36 @@ def _ransac_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
         Sample values (the TEC profile) to fit.
     degree: int
         Degree of the polynomial to fit.
-    inlier_scale: float
+    sigma: float
         Multiplier `k` on the robust noise scale that sets the inlier
-        threshold: `k * 1.4826 * MAD`. Default 3.0.
-    max_combinations: int
-        Upper bound on the number of minimal subsets to enumerate. If the
-        exhaustive search would exceed this, fall back to a plain polynomial
-        fit over all samples. Default 1000.
+        threshold: `k * 1.4826 * MAD`. Default 1.0.
 
     Returns
     -------
     np.ndarray
         The fitted (smoothed) values evaluated at every `x`.
     '''
-    warning_channel = journal.warning("tec_product._ransac_polyfit")
-    info_channel = journal.info("tec_product._ransac_polyfit")
+    info_channel = journal.info("tec_product._mad_polyfit")
 
-    n = len(y)
-    n_min = degree + 1
+    # Initial fit over all samples and its residuals.
+    coeffs = np.polyfit(x, y, degree)
+    resid = y - np.polyval(coeffs, x)
 
-    # Not enough points to separate inliers from outliers; plain fit.
-    if n <= n_min:
-        coeffs = np.polyfit(x, y, degree)
-        return np.polyval(coeffs, x)
-
-    # Guard against combinatorial blow-up for very long TEC profiles.
-    if comb(n, n_min) > max_combinations:
-        warning_channel.log(
-            f'Number of minimal subsets C({n}, {n_min}) exceeds '
-            f'max_combinations={max_combinations}; falling back to a plain '
-            'polynomial fit without outlier rejection.')
-        coeffs = np.polyfit(x, y, degree)
-        return np.polyval(coeffs, x)
-
-    def _robust_scale(inliers):
-        # k * 1.4826 * MAD of residuals about the fit over `inliers`.
-        coeffs = np.polyfit(x[inliers], y[inliers], degree)
-        resid = (y - np.polyval(coeffs, x))[inliers]
-        mad = np.median(np.abs(resid - np.median(resid)))
-        return inlier_scale * 1.4826 * mad
-
-    def _largest_consensus(threshold):
-        # Exhaustive search over minimal subsets for the largest consensus set.
-        best_inliers = None
-        best_count = -1
-        best_ssr = np.inf
-        for combo in combinations(range(n), n_min):
-            combo = list(combo)
-            coeffs = np.polyfit(x[combo], y[combo], degree)
-            resid = np.abs(y - np.polyval(coeffs, x))
-            inliers = resid <= threshold
-            count = int(np.count_nonzero(inliers))
-            ssr = float(np.sum(resid[inliers] ** 2))
-            if count > best_count or (count == best_count and ssr < best_ssr):
-                best_count = count
-                best_ssr = ssr
-                best_inliers = inliers
-        return best_inliers
-
-    # Initial noise scale from a full-data fit.
-    threshold = _robust_scale(np.ones(n, dtype=bool))
+    # Robust noise scale: k * 1.4826 * MAD of the residuals.
+    mad = np.median(np.abs(resid - np.median(resid)))
+    threshold = sigma * 1.4826 * mad
 
     # Degenerate noise scale (near-perfect fit); nothing to reject.
     if not np.isfinite(threshold) or threshold <= 0:
-        coeffs = np.polyfit(x, y, degree)
         return np.polyval(coeffs, x)
 
-    # Iterate: the full-data threshold is inflated by the outliers, so recompute
-    # the scale from the (cleaner) consensus set and reselect until it settles.
-    inliers = _largest_consensus(threshold)
-    for _ in range(5):
-        new_threshold = _robust_scale(inliers)
-        if not np.isfinite(new_threshold) or new_threshold <= 0:
-            break
-        new_inliers = _largest_consensus(new_threshold)
-        if np.array_equal(new_inliers, inliers):
-            break
-        inliers = new_inliers
+    # Keep only inliers, but fall back to the plain fit if too few survive.
+    inliers = np.abs(resid) <= threshold
+    if np.count_nonzero(inliers) <= degree:
+        return np.polyval(coeffs, x)
 
-    # Final fit on the largest consensus set.
     coeffs = np.polyfit(x[inliers], y[inliers], degree)
-    info_channel.log('RANSAC outlier detection and polynimial fitting completed.')
+    info_channel.log('MAD outlier detection and polynomial fitting completed.')
     return np.polyval(coeffs, x)
 
 
@@ -247,9 +187,9 @@ def _get_suborbital_tec(tec_json_dict: dict,
 
     if polyfit:
         # Fit a polynomial over the TEC profile to smooth out noise, rejecting
-        # noisy samples first via an exhaustive RANSAC-style search.
+        # noisy samples first via a MAD-based threshold.
         x = np.arange(len(sub_orbital_tec))
-        sub_orbital_tec = _ransac_polyfit(x, sub_orbital_tec, polyfit_degree)
+        sub_orbital_tec = _mad_polyfit(x, sub_orbital_tec, polyfit_degree)
 
     return sub_orbital_tec
 
