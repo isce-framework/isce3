@@ -15,8 +15,37 @@ from shapely.geometry import LinearRing, Point, Polygon, box
 
 bucket_name = 'nisar-dem'
 
+# Public NISAR DEM, served over HTTPS by ASF's Earthdata Cloud distribution,
+# for use outside AWS us-west-2 where direct S3 access to nisar-dem is
+# denied by bucket policy. Select it with --source https. Requires a NASA
+# Earthdata Login (EDL) account and a ~/.netrc entry:
+#
+#   machine urs.earthdata.nasa.gov
+#       login <EDL_USERNAME>
+#       password <EDL_PASSWORD>
+#
+# (chmod 600 ~/.netrc), plus a cookie jar so GDAL can follow the EDL OAuth
+# redirect on repeated requests:
+#
+#   export GDAL_HTTP_COOKIEFILE=~/.urs_cookies
+#   export GDAL_HTTP_COOKIEJAR=~/.urs_cookies
+BASE_URL = 'https://nisar.asf.earthdatacloud.nasa.gov/NISAR/DEM'
+
 # Enable exceptions
 gdal.UseExceptions()
+
+# Earthdata Login's redirect-based auth only persists across requests via a
+# cookie jar. Without one, GDAL's /vsicurl/ can HEAD a file successfully
+# (VSIStatL succeeds) while the actual GET returns an empty body, since the
+# auth cookie set during the redirect on the first request never reaches
+# the second. Default to a cookie jar under $HOME unless the caller already
+# set one. This only affects HTTP(S) access (--source https); it is inert
+# for S3 (--source s3, the default).
+_cookie_path = os.path.expanduser('~/.urs_cookies')
+gdal.SetConfigOption(
+    'GDAL_HTTP_COOKIEFILE', os.environ.get('GDAL_HTTP_COOKIEFILE', _cookie_path))
+gdal.SetConfigOption(
+    'GDAL_HTTP_COOKIEJAR', os.environ.get('GDAL_HTTP_COOKIEJAR', _cookie_path))
 
 # Earth circumference and radius in meters
 EARTH_APPROX_CIRCUMFERENCE = 40075017.
@@ -64,6 +93,14 @@ def cmdLineParse():
     parser.add_argument('-v', '--version', type=str, action='store',
                         default='1.2', dest='version',
                         help='DEM version in the form of major_number.minor_number')
+    parser.add_argument('-s', '--source', type=str, action='store',
+                        choices=['s3', 'https'], default='s3',
+                        help='DEM source: "s3" for the JPL-internal nisar-dem '
+                             'S3 bucket (requires AWS credentials; only '
+                             'reachable from AWS us-west-2), or "https" for '
+                             "the public NISAR DEM served by ASF's Earthdata "
+                             'Cloud (requires a NASA Earthdata Login account '
+                             'and a ~/.netrc entry).')
     return parser.parse_args()
 
 
@@ -343,6 +380,33 @@ def determine_projection(polys):
     return epsg
 
 
+def get_vrt_path(version, epsg, source):
+    """Build the GDAL-readable path to the hierarchical DEM VRT for a given
+    DEM version and EPSG code.
+
+    Parameters
+    ----------
+    version: str
+        DEM version in the form of major_number.minor_number
+    epsg: int
+        EPSG code (4326, 3031, or 3413)
+    source: str
+        Either 's3' for the JPL-internal nisar-dem S3 bucket, or 'https' for
+        the public NISAR DEM served over HTTPS by ASF's Earthdata Cloud
+        distribution.
+
+    Returns
+    -------
+    str
+        GDAL-readable path (/vsis3/... or /vsicurl/...) to the DEM VRT
+    """
+    if source == 's3':
+        return f'/vsis3/{bucket_name}/v{version}/EPSG{epsg}/EPSG{epsg}.vrt'
+    elif source == 'https':
+        return f'/vsicurl/{BASE_URL}/v{version}/EPSG{epsg}/EPSG{epsg}.vrt'
+    raise ValueError(f"Unknown DEM source {source!r}; must be 's3' or 'https'")
+
+
 @backoff.on_exception(backoff.expo, Exception, max_tries=8, max_value=32)
 def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max, epsg):
     """Translate DEM from nisar-dem bucket. This
@@ -396,7 +460,7 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max, epsg):
 
     gdal.Translate(outpath, ds, format='GTiff',
                    projWin=[x_min, y_max, x_max, y_min])
-    
+
     # stage_dem.py takes a bbox as an input. The longitude coordinates
     # of this bbox are unwrapped i.e., range in [0, 360] deg. If the
     # bbox crosses the anti-meridian, the script divides it in two
@@ -415,7 +479,7 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max, epsg):
     ds = None
 
 
-def download_dem(polys, epsg, outfile, version):
+def download_dem(polys, epsg, outfile, version, source='s3'):
     """Download DEM from nisar-dem bucket
 
     Parameters
@@ -430,12 +494,16 @@ def download_dem(polys, epsg, outfile, version):
         DEM version. This is contained in the filepath to
         the DEM VRTs (e.g., s3://nisar-dem/v1.2/EPSG4326/<EPSG4326_FILES>).
         DEM version is in the form of major_version.minor_version
+    source: str
+        Either 's3' for the JPL-internal nisar-dem S3 bucket, or 'https' for
+        the public NISAR DEM served over HTTPS by ASF's Earthdata Cloud
+        distribution.
     """
     # Download DEM for each polygon/epsg
     file_prefix = os.path.splitext(outfile)[0]
     dem_list = []
     for n, poly in enumerate(polys):
-        vrt_filename = f'/vsis3/{bucket_name}/v{version}/EPSG{epsg}/EPSG{epsg}.vrt'
+        vrt_filename = get_vrt_path(version, epsg, source)
         outpath = f'{file_prefix}_{n}.tiff'
         dem_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
@@ -443,7 +511,7 @@ def download_dem(polys, epsg, outfile, version):
             xmin, ymin, xmax, ymax = adjust_lat_lon_coordinates(xmin, ymin, xmax, ymax, vrt_filename)
 
         translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax, epsg)
-            
+
     # Get the DEM description from the README.txt file using GDAL
     # The full description consists of the 'Short description' (which includes
     # the version number) and 'Notes' (which includes the license info)
@@ -523,10 +591,10 @@ def dem_covers_bbox_polar_stereo(vrt_filename, x_min, x_max, y_min, y_max, epsg)
         # the DEM does not cover the bbox
         print("The DEM does NOT cover the bbox.")
         return False
-    
+
     # the DEM covers the bbox
     print("The DEM covers the bbox.")
-    
+
     # If epsg in [3031, 3413] we need an extra check
     # to make sure the bbox is in valid region of the DEM
     # The copernicus DEM for NISAR projected to 3031
@@ -546,13 +614,13 @@ def dem_covers_bbox_polar_stereo(vrt_filename, x_min, x_max, y_min, y_max, epsg)
     #            |     .-'           '-.  |
     #            |   .'                 '.|
     #            | /                     \|
-    #            |                        |      
-    #            |    VALID    REGION     |      
-    #            |                        |      
-    #            | \                     /|       
-    #            |  '.                 .' |       
-    #            |   '-.             .-'  |        
-    #            |       '-..-+-..-'      |       
+    #            |                        |
+    #            |    VALID    REGION     |
+    #            |                        |
+    #            | \                     /|
+    #            |  '.                 .' |
+    #            |   '-.             .-'  |
+    #            |       '-..-+-..-'      |
     #            -----------+--------------
     #
     poly = box(x_min, y_min, x_max, y_max)
@@ -699,14 +767,14 @@ def transform_bbox_to_latlon(poly, epsg):
 
     Parameters
     ----------
-    poly: shapely.Geometry.Polygon 
+    poly: shapely.Geometry.Polygon
         Input bbox in form of shapely polygon
     epsg: int
         Epsg code corresponding to input poly
 
     Returns
     -------
-    poly: shapely.Geometry.Polygon 
+    poly: shapely.Geometry.Polygon
         Output bbox in epsg 4326
     """
 
@@ -730,7 +798,7 @@ def transform_bbox_to_latlon(poly, epsg):
 
     poly = Polygon([(ul_longitude, ul_latitude), (ur_longitude, ur_latitude),
                    (lr_longitude, lr_latitude),(ll_longitude, ll_latitude)])
-    
+
     return poly
 
 def check_dem_overlap(DEMFilepath, polys):
@@ -790,6 +858,36 @@ def check_aws_connection(version='1.2'):
     except Exception:
         errmsg = 'No access to nisar-dem s3 bucket. Check your AWS credentials ' \
                  'and re-run the code'
+        raise ValueError(errmsg)
+
+
+def check_earthdata_connection(version='1.2'):
+    """Check connection to the public NISAR DEM over HTTPS.
+       Throw exception if no connection is established.
+
+    Parameters
+    ---------
+    version: str
+        DEM Version
+    """
+    # A plain VSIStatL (HEAD-equivalent) can succeed even when the caller
+    # isn't authenticated, because Earthdata Login's redirect chain can
+    # answer a HEAD without the follow-up GET actually returning data. So
+    # this checks a real content read instead of just a stat.
+    test_path = get_vrt_path(version, 4326, 'https').replace(
+        'EPSG4326.vrt', 'README.txt')
+    try:
+        text = get_readme_contents(test_path)
+    except Exception:
+        text = None
+    if not text:
+        errmsg = (
+            f'No access to the public NISAR DEM at {BASE_URL}. Make sure '
+            'you have a NASA Earthdata Login account and a ~/.netrc entry '
+            "for 'machine urs.earthdata.nasa.gov', and that "
+            'GDAL_HTTP_COOKIEFILE / GDAL_HTTP_COOKIEJAR are set so GDAL '
+            'can follow the Earthdata Login redirect.'
+        )
         raise ValueError(errmsg)
 
 
@@ -923,28 +1021,28 @@ def main(opts):
     # the epsg of the output DEM if not specified is assumed to be
     # the same as the epsg of the bounding box
     dem_epsg = opts.dem_epsg or bbox_epsg
-    
+
     # The Copernicus DEM for NISAR only contains three EPSG codes
     valid_epsg_values = {4326, 3413, 3031}
     if bbox_epsg not in valid_epsg_values or dem_epsg not in valid_epsg_values:
         raise ValueError("Both bbox_epsg and dem_epsg must be one of 4326, 3413, or 3031.")
-    
+
     if bbox_epsg != dem_epsg:
         if bbox_epsg != 4326:
             # Users are allowed to provide bbox_epsg in lat/lon (epsg 4326) and ask for a DEM
-            # in dem_epsg different than bbox_epsg (i.e., 3413, 3031). However, we do 
-            # not encourage the opposite. 
+            # in dem_epsg different than bbox_epsg (i.e., 3413, 3031). However, we do
+            # not encourage the opposite.
             raise ValueError("If bbox epsg and dem_epsg are different, then bbox epsg cannot be 3413 or 3031.")
-        # Transform the polygon in 4326 to polar stereo 
+        # Transform the polygon in 4326 to polar stereo
         poly = transform_polygon_coords(poly, dem_epsg)
 
-    # At this point the polygon is at dem_epsg projection. 
-    # So no more use for bbox_epsg from this point  
+    # At this point the polygon is at dem_epsg projection.
+    # So no more use for bbox_epsg from this point
 
     if dem_epsg == 4326:
         # Apply margin to the identified polygon in lat/lon
         poly = apply_margin_to_geographic_box(poly, opts.margin)
-    
+
         # Check dateline crossing. Returns list of polygons
         polys = check_dateline(poly)
     else:
@@ -952,13 +1050,13 @@ def main(opts):
         # Apply margin to the identified polygon in polar stereo
         poly = apply_margin_to_projected_box(poly, opts.margin)
         polys = [poly]
-        
+
     # check if the DEM in epsg 3031 or 3413 covers the bbox and if the bbox falls
-    # to the valid part of the DEM. If the DEM does not cover the bbox, or if 
-    # the bbox is not in the valid part of the DEM, transform the bbox to 
+    # to the valid part of the DEM. If the DEM does not cover the bbox, or if
+    # the bbox is not in the valid part of the DEM, transform the bbox to
     # epsg 4326 and update dem_epsg to be 4326
     if dem_epsg in [3031, 3413]:
-        vrt_filename = f'/vsis3/{bucket_name}/v{opts.version}/EPSG{dem_epsg}/EPSG{dem_epsg}.vrt'
+        vrt_filename = get_vrt_path(opts.version, dem_epsg, opts.source)
         xmin, ymin, xmax, ymax = polys[0].bounds
         covers_bbox = dem_covers_bbox_polar_stereo(vrt_filename, xmin, xmax, ymin, ymax, dem_epsg)
         if not covers_bbox:
@@ -967,7 +1065,7 @@ def main(opts):
             poly = transform_bbox_to_latlon(polys[0], dem_epsg)
             dem_epsg = 4326
             polys = check_dateline(poly)
-        
+
     if os.path.isfile(opts.filepath):
         print('Check overlap with user-provided DEM')
         overlap = check_dem_overlap(opts.filepath, polys)
@@ -975,15 +1073,19 @@ def main(opts):
             print('Insufficient DEM coverage. Errors might occur')
         print(f'DEM coverage is {overlap} %')
     else:
-        # Check connection to AWS s3 nisar-dem bucket
-        try:
-            check_aws_connection(opts.version)
-        except ImportError:
-            import warnings
-            warnings.warn('boto3 is require to verify AWS connection '
-                          'proceeding without verifying connection')
+        if opts.source == 's3':
+            # Check connection to AWS s3 nisar-dem bucket
+            try:
+                check_aws_connection(opts.version)
+            except ImportError:
+                import warnings
+                warnings.warn('boto3 is require to verify AWS connection '
+                              'proceeding without verifying connection')
+        else:
+            # Check connection to the public NISAR DEM over HTTPS
+            check_earthdata_connection(opts.version)
         # Download DEM
-        download_dem(polys, dem_epsg, opts.outfile, opts.version)
+        download_dem(polys, dem_epsg, opts.outfile, opts.version, opts.source)
         print('Done, DEM store locally')
 
 
