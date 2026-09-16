@@ -95,6 +95,7 @@ nisar/workflows/nisar_l0b_dm2_to_dbf.py
 nisar/workflows/noise_estimator.py
 nisar/workflows/pol_channel_imbalance_from_rslc.py
 nisar/workflows/geocode_corrections.py
+nisar/workflows/qfsp_ionosphere.py
 )
 
 if(WITH_CUDA)

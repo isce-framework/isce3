@@ -508,7 +508,7 @@ class L1InSARWriter(InSARBaseWriter):
                                                  " Bits 24-31 are reserved for future use"),
                                     fill_value=255)
             offset_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")
-            offset_group['mask'].attrs['valid_min'] = 0
+            offset_group['mask'].attrs['valid_min'] = np.uint32(0)
 
             range_offset_path = \
                 os.path.join( self.topo_path,
@@ -738,7 +738,7 @@ class L1InSARWriter(InSARBaseWriter):
                                     dtype=np.uint32,
                                     description=mask_description,
                                     fill_value=255)
-            igram_group['mask'].attrs['valid_min'] = 0
+            igram_group['mask'].attrs['valid_min'] = np.uint32(0)
             igram_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")
 
             range_offset_path = \

@@ -316,6 +316,20 @@ mask_options:
   # RSLC.
   max_observation_gap: num(min=0, required=False)
 
+  # Data segments with less than this amount of consecutive valid
+  # pulses will be excluded from the valid data mask.  This helps
+  # avoid unnecessary bookkeeping when lots of missing pulses are
+  # sprinkled throughout an observation.  Expressed as a fraction
+  # of the synthetic aperture length, values in (0, 1]
+  min_segment_fraction: num(min=0, max=1, required=False)
+
+  # Data segments (each lasting at least min_segment_fraction)
+  # separated by max_pulse_gap or fewer invalid pulses will be
+  # joined together.  This provides an easy way to ignore isolated
+  # gaps of a single invlid pulse, for example.  Set to 0 to
+  # disable merging.
+  max_pulse_gap: int(min=0, required=False)
+
 caltone_options:
   frequency: num(min=0, required=False)
   algorithm: enum('wavelet', 'azimuth_mean', 'auto', 'disabled', required=False)
@@ -371,6 +385,9 @@ nesz_options:
   # supported noise estimator algorithms:
   # - MEE:  Min Eigenvalue Estimator, Default.
   # - MVE: Min Variance Estimator
+  # Note that MVE will be always enforced if the number of noise-only
+  # range lines being processed by RSLC output grid is one!
+  # In case of no noise-only range lines, the noise power will be zero.
   algorithm: enum('MEE', 'MVE', required=False)
   # Number of range blocks. This determines the size
   # of noise power array as a function of slant range.

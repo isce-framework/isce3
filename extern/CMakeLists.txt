@@ -113,7 +113,7 @@ macro(getpackage_pybind11)
         if(NOT pybind11_FOUND)
             fetch_extern_repo(pybind11
                 GIT_REPOSITORY  https://github.com/pybind/pybind11
-                GIT_TAG         v2.5.0
+                GIT_TAG         v3.1.0
                 GIT_SHALLOW     TRUE
                 )
         endif()

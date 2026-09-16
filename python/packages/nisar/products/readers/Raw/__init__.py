@@ -7,6 +7,8 @@ from .Raw import (
     first_tx_pol_for_quad,
     opposite_linear_pol,
     caltone_frequency_from_raw,
-    range_delay_sequential_tx_from_raw
+    range_delay_sequential_tx_from_raw,
+    get_valid_pulse_mask,
+    find_valid_pulse_intervals
 )
 from .DataDecoder import complex32, DataDecoder

@@ -442,7 +442,7 @@ class InSARBaseWriter(h5py.File):
             swath_frequency_group.copy("slantRangeSpacing",
                                        rslc_frequency_group)
             rslc_frequency_group['slantRangeSpacing'].attrs['description'] = \
-                 f"Slant range spacing of {rslc_name} RSLC"
+                 to_bytes(f"Slant range spacing of {rslc_name} RSLC")
             rslc_frequency_group['slantRangeSpacing'].attrs['units'] = to_bytes(Units.meter)
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
@@ -748,7 +748,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "isOffsetsBlendingApplied",
-                str(merge_gross_offset),
+                str(is_roff),
                 (
                     "Flag to indicate if pixel offsets are the results of"
                     " blending multi-resolution layers of pixel offsets"
@@ -1440,10 +1440,10 @@ class InSARBaseWriter(h5py.File):
             ds.dims[1].attach_scale(xds)
 
         if fill_value is not None:
-            ds.attrs["_FillValue"] = fill_value
+            ds.attrs["_FillValue"] = np.dtype(dtype).type(fill_value)
         # create fill value if not specified
         elif np.issubdtype(dtype, np.floating):
-            ds.attrs["_FillValue"] = np.nan
+            ds.attrs["_FillValue"] = np.dtype(dtype).type(np.nan)
         elif np.issubdtype(dtype, np.unsignedinteger):
             ds.attrs["_FillValue"] = np.iinfo(dtype).max
         elif np.issubdtype(dtype, np.signedinteger):
