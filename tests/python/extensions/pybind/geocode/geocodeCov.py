@@ -179,6 +179,7 @@ def test_geocode_cov():
             print(f'    file: {test_raster}')
 
             ds = gdal.Open(test_raster, gdal.GA_ReadOnly)
+            # we know that first pixel is fill_value
             data_fill_value = ds.GetRasterBand(1).ReadAsArray(0, 0, 1, 1)[0, 0]
 
             if dtype == 'cfloat64':
