@@ -547,13 +547,16 @@ class GcovWriter(BaseL2WriterSingleInput):
             for pol in pol_list:
                 for attr_name in [f'maskValidPixelFraction{pol}',
                                   f'rawValidPulseFraction{pol}']:
+
                     if attr_name not in self.input_hdf5_obj[input_ds].attrs:
                         warning_channel.log(
                             f'WARNING H5 attribute {attr_name} not found in'
                             f' the input H5 dataset {input_ds}. Skipping'
                             ' attribute.')
                         continue
-                    self.output_hdf5_obj[output_ds].attrs[attr_name] = \
+
+                    dest_attr_name = attr_name.replace('mask', 'rslc')
+                    self.output_hdf5_obj[output_ds].attrs[dest_attr_name] = \
                         self.input_hdf5_obj[input_ds].attrs[attr_name]
 
     def populate_processing_information(self):
