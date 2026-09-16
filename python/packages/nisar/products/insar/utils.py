@@ -314,64 +314,6 @@ def get_unwrapped_interferogram_dataset_shape(cfg : dict, freq : str):
 
     return igram_shape
 
-def _compute_subswath_mask_id(azi_idx,
-                              range_idx,
-                              azi_offset,
-                              range_offset,
-                              ref_subswaths,
-                              sec_subswaths):
-    """
-    Compute the subswath mask id between the reference and secondary RSLC
-    using the range and azimuth offsets by the geometric coregistration where
-    the offsets are used to compute the original azimuth and range indices of
-    the secondary RSLC.
-
-    Parameters
-    ---------
-    azi_idx : int
-        Index along the azimuth of reference RSLC starting from 0
-    range_idx: int
-        Index along the slant range of reference RSLC starting from 0
-    azi_offset: float
-        The azimuth offset between the reference and secondary RSLC
-    range_offset: float
-        The range offset between the reference and secondary RSLC
-    ref_subswaths : isce3.product.SubSwaths
-        The subswath object of the reference RSLC
-    sec_subswaths : isce3.product.SubSwaths
-        The subswath object of the secondary RSLC
-
-    Returns
-    ----------
-    subswath_mask_id : int
-        The subswath mask id
-    """
-
-    # subswath number of the reference RSLC
-    ref_subswath_num = \
-        ref_subswaths.get_sample_sub_swath(azi_idx,range_idx)
-
-    # Nearest neighbor to get the subswath number of the
-    # secondary RSLC where offsets are used to compute the original
-    # range and azimuth indices of the secondary RSLC.
-    sec_subswath_num = \
-        sec_subswaths.get_sample_sub_swath(
-            int(azi_idx+azi_offset+0.5),
-            int(range_idx+range_offset+0.5))
-
-    # Compute the subswath mask id based on the subswath number of
-    # reference and secondary RSLC. The mask id has 3 digits where
-    # the last digit is the subswath number of secondary RSLC,
-    # the second digit is the subswath number of reference RSLC,
-    # and the first digit is reserved for the land (0) or water (1).
-
-    # For example, 12 means land, subwath number of reference and secodnary
-    # RSLC are 1 and 2 respectively.
-    subswath_mask_id = \
-        int(10 * ref_subswath_num + sec_subswath_num)
-
-    return subswath_mask_id
-
 def save_to_hdf5_ds(input_file_path,
                     hdf5_ds_obj,
                     lines_per_block = 1000):
@@ -492,62 +434,6 @@ def generate_dem_rdr(radar_grid_obj,
     dem_raster = None
     rdr2geo_obj = None
     dem_src = None
-
-
-def _subswath_numbers(subswaths,
-                      intervals,
-                      azi_idx_arr,
-                      rg_idx_arr):
-    """
-    Vectorized equivalent of SubSwaths.get_sample_sub_swath over index
-    arrays.
-
-    Returns 0 for out-of-swath samples, otherwise the 1-based number of
-    the first sub-swath whose per-line valid-sample interval
-    [start, end) contains the sample. An empty interval array claims
-    every in-bounds sample (matching the scalar API's short-circuit),
-    and a dataset without sub-swath information assigns 1 everywhere in
-    bounds.
-
-    Parameters
-    ----------
-    subswaths : isce3.product.SubSwaths
-        The subswath object of the RSLC
-    intervals : list of numpy.ndarray
-        Per-sub-swath [start, end) valid-sample interval arrays, i.e.
-        [subswaths.get_valid_samples_array(s) for s = 1..num_sub_swaths]
-    azi_idx_arr : numpy.ndarray
-        Integer azimuth indices
-    rg_idx_arr : numpy.ndarray
-        Integer slant range indices
-
-    Returns
-    ----------
-    numpy.ndarray
-        int64 sub-swath numbers, same shape as the index arrays
-    """
-    in_bounds = ((azi_idx_arr >= 0) & (azi_idx_arr < subswaths.length) &
-                 (rg_idx_arr >= 0) & (rg_idx_arr < subswaths.width))
-    numbers = np.zeros(azi_idx_arr.shape, dtype=np.int64)
-    if not intervals:
-        return np.where(in_bounds, np.int64(1), numbers)
-
-    # Clipped so the per-line gather stays legal; out-of-bounds samples
-    # are excluded through in_bounds
-    azi_gather = np.clip(azi_idx_arr, 0, subswaths.length - 1)
-    for number, interval in enumerate(intervals, start=1):
-        if interval.size == 0:
-            claimed = in_bounds
-        else:
-            claimed = (in_bounds &
-                       (rg_idx_arr >= interval[azi_gather, 0]) &
-                       (rg_idx_arr < interval[azi_gather, 1]))
-        unassigned = numbers == 0
-        numbers[unassigned & claimed] = number
-        if not unassigned.any():
-            break
-
-    return numbers
 
 
 class _RSLCInputDataExceptionMask:
