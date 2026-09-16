@@ -195,12 +195,12 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
 
     // Print a warning if output_raster has a complex data type.
     if (GDALDataTypeIsComplex(outputRasterDataType)) {
-            warning << "The output raster has a complex data type, "
-                    << "whereas the variable `fill_value` has a double data type. "
-                    << "The real-valued fill value will be cast by "
-                    << "isce3::io::Raster as <REAL_PART> + 0j, except for NaN, "
-                    << "which will be cast as NaN + NaN.j."
-                    << pyre::journal::endl;
+        warning << "The output raster has a complex data type, "
+                << "whereas the variable `fill_value` has a double data type. "
+                << "The real-valued fill value will be cast by "
+                << "isce3::io::Raster as <REAL_PART> + 0j, except for NaN, "
+                << "which will be cast as NaN + NaN.j."
+                << pyre::journal::endl;
     }
 
     // Print a warning if out_off_diag_terms has a complex data type.
