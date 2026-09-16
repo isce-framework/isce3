@@ -126,7 +126,7 @@ static void _validateInputLayoverShadowMaskRaster(
 
 
 template <typename T_out>
-T_out _get_geocodecov_fill_value(double fill_value)
+T_out _getGeocodeCovFillValue(double fill_value)
 {
     // Set the output data fill value based on the user parameter `fill_value`.
     // For complex types, a NaN `fill_value` is represented as NaN + NaN.j
@@ -812,13 +812,13 @@ void Geocode<T>::geocodeInterp(
 
         // set NaN values according to T_out, i.e. real (NaN) or complex (NaN,
         // NaN)
-        T_out nan_t_out = _get_geocodecov_fill_value<T_out>(
+        T_out nan_t_out = _getGeocodeCovFillValue<T_out>(
             std::numeric_limits<double>::quiet_NaN());
         
         // set the output data fill value based on user parameter `fill_value`.
         // For complex types, if the users sets `fill_value` to NaN, the output
         // fill value will be NaN + NaN.j rather than NaN + 0.j.
-        T_out fill_value_t_out = _get_geocodecov_fill_value<T_out>(fill_value);
+        T_out fill_value_t_out = _getGeocodeCovFillValue<T_out>(fill_value);
 
         info << "fill value (input parameter): " << fill_value << pyre::journal::newline;
         info << "fill value (cast to class output template type): "
@@ -1609,7 +1609,7 @@ inline void _fillGcovBlocksWithNans(
     // Cast fill value to output template class T.
     // For complex types, if the users sets `fill_value` to NaN, the output
     // fill value will be NaN + NaN.j rather than NaN + 0.j.
-    T fill_value_t = _get_geocodecov_fill_value<T>(fill_value);
+    T fill_value_t = _getGeocodeCovFillValue<T>(fill_value);
 
     // fill matrix with NaN
     data_block.fill(fill_value_t);
@@ -2073,14 +2073,14 @@ void Geocode<T>::geocodeAreaProj(
     if (!std::isnan(min_nlooks))
         info << "nlooks min: " << min_nlooks << pyre::journal::newline;
 
-    T_out fill_value_t_out = _get_geocodecov_fill_value<T_out>(
+    T_out fill_value_t_out = _getGeocodeCovFillValue<T_out>(
         std::numeric_limits<double>::quiet_NaN());
 
     info << "fill value (input parameter): " << fill_value << pyre::journal::newline;
     info << "fill value (cast to class output template type): "
          << fill_value_t_out << pyre::journal::newline;
     if (out_off_diag_terms != nullptr) {
-        T nan_t = _get_geocodecov_fill_value<T>(
+        T nan_t = _getGeocodeCovFillValue<T>(
             std::numeric_limits<double>::quiet_NaN()); 
         info << "fill value (cast to class template type): "
              << nan_t << pyre::journal::newline;
@@ -2993,7 +2993,7 @@ void Geocode<T>::_runBlock(
                 this_block_size_y, this_block_size_x));
     
     // set NaN values according to T_out, i.e. real (NaN) or complex (NaN, NaN)
-    T_out nan_t_out = _get_geocodecov_fill_value<T_out>(
+    T_out nan_t_out = _getGeocodeCovFillValue<T_out>(
         std::numeric_limits<double>::quiet_NaN());
     for (int band = 0; band < nbands; ++band)
         geoDataBlock[band]->fill(nan_t_out);
@@ -3004,7 +3004,7 @@ void Geocode<T>::_runBlock(
 
         // set NaN values according to T_out, i.e. real (NaN) or complex (NaN,
         // NaN)
-        T nan_t = _get_geocodecov_fill_value<T>(
+        T nan_t = _getGeocodeCovFillValue<T>(
             std::numeric_limits<double>::quiet_NaN());
 
         for (int band = 0; band < nbands_off_diag_terms; ++band)
@@ -3626,7 +3626,7 @@ void Geocode<T>::_runBlock(
                 // otherwise, if the geogrid pixel is `Nan` and `fill_value` is
                 // not `NaN`, update the geogrid pixel with `fill_value`
                 else if (std::isnan(std::abs(geo_value))) {
-                    T_out v = _get_geocodecov_fill_value<T_out>(fill_value);
+                    T_out v = _getGeocodeCovFillValue<T_out>(fill_value);
                     geoDataBlock[band]->operator()(i, j) = v;
                     }
                 // clip min (complex)
@@ -3681,7 +3681,7 @@ void Geocode<T>::_runBlock(
                     // otherwise, if the geogrid pixel is `Nan` and `fill_value` is
                     // not `NaN`, update the geogrid pixel with `fill_value`
                     else if (std::isnan(std::abs(geo_value_off_diag))) {
-                        T2 v = _get_geocodecov_fill_value<T2>(fill_value);
+                        T2 v = _getGeocodeCovFillValue<T2>(fill_value);
                         geoDataBlockOffDiag[band]->operator()(i, j) = v;
                         }
 
