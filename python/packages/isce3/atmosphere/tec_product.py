@@ -89,7 +89,7 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
 
 
 def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
-                 sigma: float=1.0) -> np.ndarray:
+                 sigma: float=1.5) -> np.ndarray:
     '''
     Robustly fit a polynomial to a TEC profile by rejecting noisy samples using
     a MAD-based threshold.
@@ -110,7 +110,7 @@ def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
         Degree of the polynomial to fit.
     sigma: float
         Multiplier `k` on the robust noise scale that sets the inlier
-        threshold: `k * 1.4826 * MAD`. Default 1.0.
+        threshold: `k * MAD`. Default 1.5.
 
     Returns
     -------
@@ -125,15 +125,18 @@ def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
 
     # Robust noise scale: k * 1.4826 * MAD of the residuals.
     mad = np.median(np.abs(resid - np.median(resid)))
-    threshold = sigma * 1.4826 * mad
+    threshold = sigma * mad
+    info_channel.log(f'TEC MAD threshold={threshold}')
 
     # Degenerate noise scale (near-perfect fit); nothing to reject.
     if not np.isfinite(threshold) or threshold <= 0:
+        info_channel.log('TEC MAD Threshold is not valid. Keeping all TEC samples for polynomial fitting.')
         return np.polyval(coeffs, x)
 
     # Keep only inliers, but fall back to the plain fit if too few survive.
     inliers = np.abs(resid) <= threshold
     if np.count_nonzero(inliers) <= degree:
+        info_channel.log('Not enough iners from TEC sample. Keeping all TEC samples for polynomial fitting.')
         return np.polyval(coeffs, x)
 
     coeffs = np.polyfit(x[inliers], y[inliers], degree)
