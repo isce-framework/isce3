@@ -330,8 +330,8 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     yds=yds,
                     fill_value=255,
                 )
-                ds_group['mask'].attrs['valid_min'] = 0
-                ds_group['mask'].attrs['percentage_water'] = 0.0
+                ds_group['mask'].attrs['valid_min'] = np.uint32(0)
+                ds_group['mask'].attrs['percentage_water'] = np.float32(0.0)
                 ds_group['mask'].attrs['disclaimer'] = to_bytes(self.water_mask_source)
 
             for pol in pol_list:

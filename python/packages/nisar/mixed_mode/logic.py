@@ -256,3 +256,13 @@ def find_overlapping_channel(raw: RawBase, desired: PolChannel) -> PolChannel:
         if chan.intersection(desired).isvalid:
             return chan
     raise ValueError(f"Raw file does not contain channel intersecting {desired}.")
+
+
+def check_mixed_mode(modes: list[PolChannelSet]) -> bool:
+    """
+    Determine whether a list of modes represents a mixed-mode case.  True if any
+    mode doesn't match one of the others.
+    """
+    if len(modes) == 0:
+        return False
+    return any(mode != modes[0] for mode in modes)
