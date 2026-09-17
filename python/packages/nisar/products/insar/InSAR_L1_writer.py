@@ -368,6 +368,9 @@ class L1InSARWriter(InSARBaseWriter):
         rg_skip, az_skip, rg_search, az_search,\
         rg_chip, az_chip, _ = get_pixel_offsets_params(self.cfg)
 
+        # add the datasets to pixel offsets group
+        self._add_datasets_to_pixel_offset_group()
+
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = \
@@ -564,23 +567,19 @@ class L1InSARWriter(InSARBaseWriter):
                                     az_idx,
                                     rg_idx)
 
-        # add the datasets to pixel offsets group
-        self._add_datasets_to_pixel_offset_group()
+            # Fill the valid mask value for each polarization
+            for pol in pol_list:
+                offset_pol_group_name = (
+                    f"{offset_group_name}/{pol}"
+                )
+                offset_pol_group = self.require_group(offset_pol_group_name)
 
-        # Update the validMask in the pixelOffsets groups for each polarization
-        for pol in pol_list:
+                # Extract polarization-dependent valid mask
+                valid_mask = extract_pol_valid_mask(pol_valid_mask, pol)
 
-            offset_pol_group_name = (
-                f"{offset_group_name}/{pol}"
-            )
-            offset_pol_group = self.require_group(offset_pol_group_name)
-
-            # Extract polarization-dependent valid mask
-            valid_mask = extract_pol_valid_mask(pol_valid_mask, pol)
-
-            offset_pol_group['validMask'][...] = valid_mask
-            offset_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
-            offset_pol_group['validMask'].attrs['long_name'] = to_bytes("Valid data mask")
+                offset_pol_group['validMask'][...] = valid_mask
+                offset_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
+                offset_pol_group['validMask'].attrs['long_name'] = to_bytes("Valid data mask")
 
     def add_interferogram_to_swaths_group(self, is_unwrapped=False):
         """
