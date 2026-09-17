@@ -2277,9 +2277,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             geo = isce3.geocode.GeocodeCFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_CFloat64:
             geo = isce3.geocode.GeocodeCFloat64()
-        elif (input_raster_obj.datatype() == gdal.GDT_Byte or
-              input_raster_obj.datatype() == gdal.GDT_Int16 or
-              input_raster_obj.datatype() == gdal.GDT_UInt16):
+        elif input_raster_obj.datatype() in (gdal.GDT_Byte, gdal.GDT_Int16, gdal.GDT_UInt16):
             geo = isce3.geocode.GeocodeFloat32()
         else:
             err_str = 'Unsupported raster type for geocoding'
