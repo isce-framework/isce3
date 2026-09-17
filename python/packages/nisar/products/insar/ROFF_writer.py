@@ -344,11 +344,13 @@ class ROFFWriter(L1InSARWriter):
 
                 self._create_2d_dataset(
                     pixeloffsets_pol_group,
-                    "validMask",
+                    "validDataMask",
                     off_shape,
                     np.uint8,
                     (f"Valid mask for the {pol} layers: "
-                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)"),
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
                     units=Units.unitless,
                     long_name="Valid data mask",
                     fill_value=np.uint8(255),

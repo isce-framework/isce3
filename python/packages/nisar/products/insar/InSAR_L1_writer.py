@@ -339,9 +339,12 @@ class L1InSARWriter(InSARBaseWriter):
                         None,
                     ),
                     (
-                        "validMask",
+                        "validDataMask",
                         np.uint8,
-                        f"Valid mask for the {pol} layers: bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)",
+                        (f"Valid mask for the {pol} layers: "
+                         "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                         " Valid represents fully focused data and invalid"
+                         " represents partially focused or missing data"),
                         Units.unitless,
                         np.uint8(255),
                     ),
@@ -577,9 +580,9 @@ class L1InSARWriter(InSARBaseWriter):
                 # Extract polarization-dependent valid mask
                 valid_mask = extract_pol_valid_mask(pol_valid_mask, pol)
 
-                offset_pol_group['validMask'][...] = valid_mask
-                offset_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
-                offset_pol_group['validMask'].attrs['long_name'] = to_bytes("Valid data mask")
+                offset_pol_group['validDataMask'][...] = valid_mask
+                offset_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
+                offset_pol_group['validDataMask'].attrs['long_name'] = to_bytes("Valid data mask")
 
     def add_interferogram_to_swaths_group(self, is_unwrapped=False):
         """
@@ -826,9 +829,12 @@ class L1InSARWriter(InSARBaseWriter):
                         None,
                     ),
                     (
-                        "validMask",
+                        "validDataMask",
                         np.uint8,
-                        f"Valid mask for the {pol} layers: bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)",
+                        (f"Valid mask for the {pol} layers: "
+                         "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                         " Valid represents fully focused data and invalid"
+                         " represents partially focused or missing data"),
                         Units.unitless,
                         np.uint8(255),
                     ),
@@ -846,13 +852,13 @@ class L1InSARWriter(InSARBaseWriter):
                         units=ds_unit,
                         fill_value=fill_value
                     )
-                    if ds_name == 'validMask':
+                    if ds_name == 'validDataMask':
                         # Extract polarization-dependent valid mask
                         valid_mask = extract_pol_valid_mask(pol_valid_mask, pol)
 
-                        igram_pol_group['validMask'][...] = valid_mask
-                        igram_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
-                        igram_pol_group['validMask'].attrs['long_name'] = to_bytes("Valid data mask")
+                        igram_pol_group['validDataMask'][...] = valid_mask
+                        igram_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
+                        igram_pol_group['validDataMask'].attrs['long_name'] = to_bytes("Valid data mask")
 
     def add_swaths_to_hdf5(self):
         """

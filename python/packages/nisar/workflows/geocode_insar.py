@@ -454,14 +454,14 @@ def get_raster_lists(all_geocoded_dataset_flags,
         if not all_geocoded_dataset_flags[ds_name]:
             continue
 
-        if ds_name in ['mask', 'valid_mask']:
+        if ds_name in ['mask', 'valid_data_mask']:
             if ds_name == 'mask':
                 input_rasters, mask_out_ds_paths = \
                     get_mask_ds_input_output(src_freq_path,
                                             dst_freq_path,
                                             input_hdf5,input_product_type,
                                             is_runw_offset_product)
-            if ds_name == 'valid_mask':
+            if ds_name == 'valid_data_mask':
                 mask_out_ds_paths = []
                 for pol in pol_list:
                     _input_rasters, _mask_out_ds_paths = \
@@ -787,7 +787,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     dem_raster, block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
 
-                desired = ["mask", "valid_mask"]
+                desired = ["mask", "valid_data_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5,
@@ -809,7 +809,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
 
-                desired = ["mask", "valid_mask"]
+                desired = ["mask", "valid_data_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5,
@@ -852,7 +852,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     az_correction=az_correction,
                                     srg_correction=srg_correction)
 
-                desired = ["mask","valid_mask"]
+                desired = ["mask","valid_data_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
@@ -887,7 +887,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     az_correction=az_correction,
                                     srg_correction=srg_correction)
 
-                desired = ["mask", "valid_mask"]
+                desired = ["mask", "valid_data_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
@@ -1161,7 +1161,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode subswath mask
-                desired_geo_dataset_names = ["mask", "valid_mask"]
+                desired_geo_dataset_names = ["mask", "valid_data_mask"]
                 interpolation_methods = [isce3.core.DataInterpMethod.NEAREST] * \
                     len(desired_geo_dataset_names)
                 invalid_values = [255] * len(desired_geo_dataset_names)
@@ -1276,7 +1276,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode subswath mask
-                desired_geo_dataset_names = ["mask", "valid_mask"]
+                desired_geo_dataset_names = ["mask", "valid_data_mask"]
                 interpolation_methods = [isce3.core.DataInterpMethod.NEAREST] * \
                     len(desired_geo_dataset_names)
                 invalid_values = [255] * len(desired_geo_dataset_names)
@@ -1345,7 +1345,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode subswath mask
-                desired_geo_dataset_names = ["mask", "valid_mask"]
+                desired_geo_dataset_names = ["mask", "valid_data_mask"]
                 interpolation_methods = [isce3.core.DataInterpMethod.NEAREST] * \
                     len(desired_geo_dataset_names)
                 invalid_values = [255] * len(desired_geo_dataset_names)
@@ -1393,7 +1393,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode subswath mask
-                desired_geo_dataset_names = ["mask", "valid_mask"]
+                desired_geo_dataset_names = ["mask", "valid_data_mask"]
                 interpolation_methods = [isce3.core.DataInterpMethod.NEAREST] * \
                     len(desired_geo_dataset_names)
                 invalid_values = [255] * len(desired_geo_dataset_names)

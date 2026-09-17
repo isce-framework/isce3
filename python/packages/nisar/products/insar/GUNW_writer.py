@@ -362,9 +362,11 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     ("unwrappedPhase", np.float32,
                     f"Unwrapped interferogram between {pol} layers",
                      Units.radian,None, None),
-                    ("validMask", np.uint8,
+                    ("validDataMask", np.uint8,
                     (f"Valid mask for the {pol} layers: "
-                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)"),
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
                      Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
@@ -384,7 +386,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         long_name=long_name,
                         fill_value=fill_value
                     )
-                unwrapped_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
+                unwrapped_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
 
                 wrapped_pol_name = f"{wrapped_group_name}/{pol}"
                 wrapped_pol_group = self.require_group(wrapped_pol_name)
@@ -404,9 +406,11 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     ("wrappedInterferogram", np.complex64,
                      f"Complex wrapped interferogram between {pol} layers",
                      Units.unitless, None, None),
-                    ("validMask", np.uint8,
+                    ("validDataMask", np.uint8,
                     (f"Valid mask for the {pol} layers: "
-                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)"),
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
                      Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
@@ -426,7 +430,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         long_name=long_name,
                         fill_value=fill_value
                     )
-                wrapped_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
+                wrapped_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
 
                 pixeloffsets_pol_name = f"{pixeloffsets_group_name}/{pol}"
                 pixeloffsets_pol_group = self.require_group(
@@ -451,9 +455,11 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     ("slantRangeOffset", np.float32,
                      "Slant range offset",
                      Units.meter, None, None),
-                    ("validMask", np.uint8,
+                    ("validDataMask", np.uint8,
                     (f"Valid mask for the {pol} layers: "
-                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)"),
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
                      Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
@@ -473,4 +479,4 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         long_name=long_name,
                         fill_value=fill_value
                     )
-                pixeloffsets_pol_group['validMask'].attrs['valid_min'] = np.uint8(0)
+                pixeloffsets_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
