@@ -3,19 +3,127 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import traceback
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Callable
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
 import numpy as np
 import shapely
+from scipy.integrate import quad
+from scipy.optimize import root_scalar
 
 import isce3
+from isce3.core import abs2
 import nisar
 
+log = logging.getLogger("nisar.workflows.estimate_abscal_factor")
+
+
+def make_irf(weights, normalize=True):
+    """
+    Create an impulse response function (IRF) from frequency domain weights.
+
+    Parameters
+    ----------
+    weights : array_like
+        Frequency domain weights (e.g., window or filter coefficients).
+    normalize : bool, optional
+        If True, normalize the weights to sum to 1. Defaults to True.
+
+    Returns
+    -------
+    callable
+        A function that evaluates the impulse response at a given time offset t.
+    """
+    w = np.fft.fftshift(weights) / len(weights)
+    if normalize:
+        w *= 1.0 / np.sum(w)
+    f = np.fft.fftfreq(len(w))
+    return lambda t: np.exp(1j * 2 * np.pi * f * t).dot(w)
+
+def get_irf_width_area(irf: Callable[[float], float], t_max=np.inf):
+    """
+    Compute the full width at half maximum (FWHM) and integrated area of an
+    impulse response.
+
+    Parameters
+    ----------
+    irf : callable
+        Impulse response function that takes a time offset and returns a
+        complex value.
+    t_max : float, optional
+        Maximum integration limit for computing the area. Defaults to infinity.
+
+    Returns
+    -------
+    width : float
+        Full width at half maximum (FWHM) of the impulse response power.
+    area : float
+        Integrated area under the impulse response power curve.
+    """
+    # Find half-power width using bracketing root-finding algorithm.
+    hw = root_scalar(lambda t: abs2(irf(t)) - 0.5, x0=0.0, x1=1.0).root
+    # full width = 2 * half width
+    width = float(2 * hw)
+
+    # Find area with numerical integration (quadrature).
+    # Integrate from [0, inf) and double the result.
+    area = 2 * quad(lambda t: abs2(irf(t)), 0, t_max,
+        limit=10_000, epsabs=1e-6)[0]
+    return width, area
+
+def get_window_correction(weights):
+    """
+    Compute the radiometric correction factor for a windowing function.
+
+    The correction factor accounts for the power loss due to apodization
+    (windowing) relative to a rectangular window. It is computed as the ratio of
+    the IRF mainlobe area density (area/width) for the windowed response to that
+    of a rectangular window.
+
+    Parameters
+    ----------
+    weights : array_like
+        Frequency domain weights representing the window function.
+
+    Returns
+    -------
+    float
+        Window correction factor (dimensionless, typically < 1).
+    """
+    # Note that DTFT is periodic, so limit integration to one period.
+    t_max = len(weights) / 2
+    width_win, area_win = get_irf_width_area(make_irf(weights), t_max=t_max)
+    width_box, area_box = get_irf_width_area(make_irf(weights > 0.0), t_max=t_max)
+    return area_win / width_win / (area_box / width_box)
+
+def get_abscal_correction(rslc):
+    """
+    Compute the combined window correction factor for absolute calibration.
+
+    Calculates the 2-D radiometric correction by multiplying the range and
+    azimuth window correction factors derived from the chirp weighting functions
+    in the RSLC product.
+
+    Parameters
+    ----------
+    rslc : nisar.products.readers.SLC
+        The input RSLC product containing chirp weighting information.
+
+    Returns
+    -------
+    float
+        Combined window correction factor for range and azimuth (dimensionless).
+    """
+    weights_az = rslc.azimuthChirpWeighting
+    weights_rg, _, _ = rslc.rangeChirpWeighting
+    corr_az = get_window_correction(weights_az)
+    corr_rg = get_window_correction(weights_rg)
+    return corr_rg * corr_az
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -115,6 +223,11 @@ def estimate_abscal_factor(
           assumes that the target response can be approximated by a 2-D rectangular
           function. The total power is estimated by multiplying the peak power by the
           3dB response widths in along-track and cross-track directions.
+
+        'adjusted_box':
+          Similar to 'box' but adjusted to account for the effects of
+          apodization windows in range and azimuth.  This should give results
+          more comparable with methods that integrate sidelobes (e.g., ESA).
 
         'integrated':
           Measures power using the integrated power method. The total power is measured
@@ -245,6 +358,13 @@ def estimate_abscal_factor(
     # Get platform attitude data.
     attitude = rslc.getAttitude()
 
+    window_correction = 1.0
+    meas_power_method = power_method
+    if power_method == "adjusted_box":
+        meas_power_method = "box"
+        window_correction = get_abscal_correction(rslc)
+        log.info(f"Will adjust 'box' RCS estimates by {window_correction = }")
+
     # Estimate the absolute calibration error (the ratio of the measured RCS to the
     # predicted RCS) for a single corner reflector.
     def estimate_abscal_error(
@@ -269,11 +389,11 @@ def estimate_abscal_factor(
             upsample_factor=upsample_factor,
             peak_find_domain=peak_find_domain,
             nfit=nfit,
-            power_method=power_method,
+            power_method=meas_power_method,
             pthresh=pthresh,
         )
 
-        return measured_rcs / predicted_rcs
+        return measured_rcs / predicted_rcs * window_correction
 
     # Estimate the absolute radiometric calibration error of each corner reflector, and
     # format the results into an object that can be easily JSON-ified.
@@ -457,7 +577,7 @@ def parse_cmdline_args() -> dict[str, Any]:
     parser.add_argument(
         "--power-method",
         type=str,
-        choices=["box", "integrated"],
+        choices=["box", "adjusted_box", "integrated"],
         default="box",
         help=(
             "The method for estimating the target signal power (rectangular box method"

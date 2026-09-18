@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from functools import cached_property
 import h5py
 import journal
 import logging
@@ -387,6 +388,51 @@ class RSLC(SLCBase, family='nisar.productreader.rslc'):
             noise_product.ref_epoch,
             noise_product.freq_band,
             noise_product.txrx_pol)
+
+
+    @cached_property
+    def rangeChirpWeighting(self):
+        """
+        Get the range spectral weights.
+
+        Returns
+        -------
+        values : numpy.ndarray
+            Expected shape of amplitude spectrum in range.  Typically 256
+            frequency bins, shifted so that the carrier frequency is in the
+            middle.
+        name : str
+            Name of the weighting function.
+        shape : float
+            Shape parameter of the window function.
+        """
+        path = _h5join(self.ProcessingInformationPath, "parameters",
+            "rangeChirpWeighting")
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as h5:
+            dset = h5[path]
+            name = dset.attrs["window_name"].decode()
+            shape = float(dset.attrs["window_shape"])
+            values = dset[:]
+        return values, name, shape
+
+
+    @cached_property
+    def azimuthChirpWeighting(self):
+        """
+        Get the azimuth spectral weights (antenna pattern).
+
+        Returns
+        -------
+        values : numpy.ndarray
+            Expected shape of amplitude spectrum in azimuth.  Typically 256
+            frequency bins, shifted so that the Doppler centroid is in the
+            middle.
+        """
+        path = _h5join(self.ProcessingInformationPath, "parameters",
+            "azimuthChirpWeighting")
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as h5:
+            values = h5[path][:]
+        return values
 
 
 def _h5join(*paths: str) -> str:
