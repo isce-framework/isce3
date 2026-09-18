@@ -93,7 +93,7 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
     return delta_r
 
 
-def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
+def _smooth_mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
                  num_sigma: float=1.5) -> np.ndarray:
     '''
     Robustly fit a polynomial to a TEC profile by rejecting noisy samples using
@@ -121,7 +121,7 @@ def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
     np.ndarray
         The fitted (smoothed) values evaluated at every `x`.
     '''
-    info_channel = journal.info("tec_product._mad_polyfit")
+    info_channel = journal.info("tec_product._smooth_mad_polyfit")
 
     # Initial fit over all samples and its residuals.
     coeffs = np.polyfit(x, y, degree)
@@ -199,7 +199,7 @@ def _get_suborbital_tec(tec_json_dict: dict,
         # Fit a polynomial over the TEC profile to smooth out noise, rejecting
         # noisy samples first via a MAD-based threshold.
         x = np.arange(len(sub_orbital_tec))
-        sub_orbital_tec = _mad_polyfit(x, sub_orbital_tec, polyfit_degree,
+        sub_orbital_tec = _smooth_mad_polyfit(x, sub_orbital_tec, polyfit_degree,
                                        num_sigma=num_sigma)
 
     return sub_orbital_tec
