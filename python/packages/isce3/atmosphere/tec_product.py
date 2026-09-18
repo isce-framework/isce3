@@ -97,7 +97,7 @@ def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
                  num_sigma: float=1.5) -> np.ndarray:
     '''
     Robustly fit a polynomial to a TEC profile by rejecting noisy samples using
-    a MAD-based threshold.
+    a thresholding based on MAD (Median Absolute Deviation).
 
     A polynomial of the given degree is fit to all samples. Samples whose
     absolute residual about that fit exceeds an inlier threshold derived from a
