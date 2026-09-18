@@ -186,7 +186,7 @@ def _get_iono_azimuth_corrections(cfg, slc, frequency, orbit,
         zero_arr = np.zeros(tec_correction.data.shape)
         tec_correction = isce3.core.LUT2d(tec_correction.x_axis,
                                           tec_correction.y_axis,
-                                          zero_arr)
+                                          zero_arr, b_error=False)
 
     return tec_correction
 
@@ -245,7 +245,7 @@ def _get_iono_srange_corrections(cfg, slc, frequency, orbit,
         zero_arr = np.zeros(tec_correction.data.shape)
         tec_correction = isce3.core.LUT2d(tec_correction.x_axis,
                                           tec_correction.y_axis,
-                                          zero_arr)
+                                          zero_arr, b_error=False)
 
     return tec_correction
 
