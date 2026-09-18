@@ -1696,7 +1696,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             interpolation will be used. Otherwise, biquintic interpolation
             will be used.
         fill_value : float, optional
-            Value to populate the HDF5 dataset attribute "_FillValue".
+            Fill value passed to the geocoding module (GeocodeCov) and used to
+            populate the HDF5 dataset ``_FillValue`` attribute.
             Defaults to "nan" or "(nan+nanj)" if the raster layer
             is real- or complex-valued, respectively. If the layer data
             type is integer and `fill_value` is None, the attribute "_FillValue"
@@ -1832,7 +1833,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             interpolation will be used. Otherwise, biquintic interpolation
             will be used.
         fill_value : float, optional
-            Value to populate the HDF5 dataset attribute "_FillValue".
+            Fill value passed to the geocoding module (GeocodeCov) and used to
+            populate the HDF5 dataset ``_FillValue`` attribute.
             Defaults to "nan" or "(nan+nanj)" if the raster layer
             is real- or complex-valued, respectively. If the layer data
             type is integer and `fill_value` is None, the attribute "_FillValue"
@@ -2241,7 +2243,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         data_interpolator: str, optional
             Interpolation algorithm to use for geocoding
         fill_value : float, optional
-            Value to populate the HDF5 dataset attribute "_FillValue".
+            Fill value passed to the geocoding module (GeocodeCov) and used to
+            populate the HDF5 dataset ``_FillValue`` attribute.
             Defaults to "nan" or "(nan+nanj)" if the raster layer
             is real- or complex-valued, respectively. If the layer data
             type is integer and `fill_value` is None, the attribute "_FillValue"
@@ -2316,6 +2319,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         output_raster_obj = isce3.io.Raster(
             temp_output.name, metadata_geogrid.width, metadata_geogrid.length,
             input_raster_obj.num_bands, dtype, 'GTiff')
+
+        # Copy so that adding fill_value does not modify the user-provided kwargs.
+        geocode_kwargs = geocode_kwargs.copy()
+
+        if fill_value is not None:
+            geocode_kwargs['fill_value'] = fill_value
 
         # geocode rasters
         geo.geocode(radar_grid=radar_grid,
