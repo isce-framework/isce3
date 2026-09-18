@@ -139,7 +139,7 @@ def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
     # Keep only inliers, but fall back to the plain fit if too few survive.
     inliers = np.abs(resid) <= threshold
     if np.count_nonzero(inliers) <= degree:
-        info_channel.log('Not enough iners from TEC sample. Keeping all TEC samples for polynomial fitting.')
+        info_channel.log('Not enough inliers from TEC sample. Keeping all TEC samples for polynomial fitting.')
         return np.polyval(coeffs, x)
 
     coeffs = np.polyfit(x[inliers], y[inliers], degree)
