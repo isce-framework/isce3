@@ -174,11 +174,13 @@ def _get_iono_azimuth_corrections(cfg, slc, frequency, orbit,
 
     polyfit_tec_profile = \
         cfg['processing']['tec_correction']['polyfit_tec_profile']
+    num_sigma = cfg['processing']['tec_correction']['num_sigma']
 
     tec_correction = tec_lut2d_from_json_az(tec_file, center_freq, orbit,
                                             radar_grid,
                                             total_tec_only=use_totaltec_only,
-                                            polyfit=polyfit_tec_profile)
+                                            polyfit=polyfit_tec_profile,
+                                            num_sigma=num_sigma)
 
     if cfg['processing']['tec_correction']['apply_azimuth_correction'] is False:
         # NOTE: Just returning an empty LUT2d() will disrupt the downstream procedure,
@@ -233,11 +235,13 @@ def _get_iono_srange_corrections(cfg, slc, frequency, orbit,
 
     polyfit_tec_profile = \
         cfg['processing']['tec_correction']['polyfit_tec_profile']
+    num_sigma = cfg['processing']['tec_correction']['num_sigma']
 
     tec_correction = tec_lut2d_from_json_srg(tec_file, center_freq, orbit,
                                              radar_grid, doppler, dem_file,
                                              total_tec_only=use_totaltec_only,
-                                             polyfit=polyfit_tec_profile)
+                                             polyfit=polyfit_tec_profile,
+                                             num_sigma=num_sigma)
 
     if cfg['processing']['tec_correction']['apply_slant_range_correction'] is False:
         # NOTE: Just returning an empty LUT2d() will disrupt the downstream procedure,

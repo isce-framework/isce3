@@ -562,6 +562,7 @@ tec_correction_options:
     use_total_tec_only: bool(required=False)
     ignore_invalid_topside_tec: bool(required=False)
     polyfit_tec_profile: bool(required=False)
+    num_sigma: num(min=0.0, required=False)
 
 ceos_analysis_ready_data_options:
 

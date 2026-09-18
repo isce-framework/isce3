@@ -25,7 +25,8 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
                                      ellipsoid: isce3.core.Ellipsoid,
                                      total_tec_only: bool=False,
                                      polyfit: bool=False,
-                                     polyfit_degree: int=2) -> np.ndarray:
+                                     polyfit_degree: int=2,
+                                     num_sigma: float=1.5) -> np.ndarray:
     '''
     Compute near or far TEC delta range
 
@@ -66,6 +67,9 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
         suborbital TEC as is.
     polyfit_degree: int
         Degree of the polynomial fit applied when `polyfit` is True. Default 2.
+    num_sigma: float
+        Multiplier on the robust (MAD-based) noise scale that sets the outlier
+        rejection threshold used when `polyfit` is True. Default 1.5.
 
     Returns
     -------
@@ -77,7 +81,8 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
                                           utc_time.mask,
                                           total_tec_only=total_tec_only,
                                           polyfit=polyfit,
-                                          polyfit_degree=polyfit_degree)
+                                          polyfit_degree=polyfit_degree,
+                                          num_sigma=num_sigma)
 
     incidence = [compute_incidence_angle(t, nr_fr_rg, orbit, doppler_lut,
                                          radar_grid, dem_interp, ellipsoid)
@@ -89,7 +94,7 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
 
 
 def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
-                 sigma: float=1.5) -> np.ndarray:
+                 num_sigma: float=1.5) -> np.ndarray:
     '''
     Robustly fit a polynomial to a TEC profile by rejecting noisy samples using
     a MAD-based threshold.
@@ -108,9 +113,8 @@ def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
         Sample values (the TEC profile) to fit.
     degree: int
         Degree of the polynomial to fit.
-    sigma: float
-        Multiplier `k` on the robust noise scale that sets the inlier
-        threshold: `k * MAD`. Default 1.5.
+    num_sigma: float
+        Multiplier on the MAD to scale the threshold. Default 1.5.
 
     Returns
     -------
@@ -125,7 +129,7 @@ def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
 
     # Robust noise scale: k * 1.4826 * MAD of the residuals.
     mad = np.median(np.abs(resid - np.median(resid)))
-    threshold = sigma * mad
+    threshold = num_sigma * mad
     info_channel.log(f'TEC MAD threshold={threshold}')
 
     # Degenerate noise scale (near-perfect fit); nothing to reject.
@@ -149,7 +153,8 @@ def _get_suborbital_tec(tec_json_dict: dict,
                         tec_time_mask: np.ndarray,
                         total_tec_only: bool=False,
                         polyfit: bool=False,
-                        polyfit_degree: int=2) -> np.ndarray:
+                        polyfit_degree: int=2,
+                        num_sigma: float=1.5) -> np.ndarray:
     '''
     Get the suborbital TEC from IMAGEN TEC product parsed as a dictionary by
     subtracting the total TEC by top (i.e. above the satellite) TEC
@@ -173,6 +178,9 @@ def _get_suborbital_tec(tec_json_dict: dict,
         the suborbital TEC as is.
     polyfit_degree: int
         Degree of the polynomial fit applied when `polyfit` is True. Default 2.
+    num_sigma: float
+        Multiplier on the robust (MAD-based) noise scale that sets the outlier
+        rejection threshold used when `polyfit` is True. Default 1.5.
 
     Returns
     -------
@@ -192,7 +200,8 @@ def _get_suborbital_tec(tec_json_dict: dict,
         # Fit a polynomial over the TEC profile to smooth out noise, rejecting
         # noisy samples first via a MAD-based threshold.
         x = np.arange(len(sub_orbital_tec))
-        sub_orbital_tec = _mad_polyfit(x, sub_orbital_tec, polyfit_degree)
+        sub_orbital_tec = _mad_polyfit(x, sub_orbital_tec, polyfit_degree,
+                                       num_sigma=num_sigma)
 
     return sub_orbital_tec
 
@@ -204,7 +213,8 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
                             margin: float=40.0,
                             total_tec_only: bool=False,
                             polyfit: bool=False,
-                            polyfit_degree: int=2) -> isce3.core.LUT2d:
+                            polyfit_degree: int=2,
+                            num_sigma: float=1.5) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for slant range correction from a JSON source
 
@@ -234,6 +244,9 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
         suborbital TEC as is.
     polyfit_degree: int
         Degree of the polynomial fit applied when `polyfit` is True. Default 2.
+    num_sigma: float
+        Multiplier on the robust (MAD-based) noise scale that sets the outlier
+        rejection threshold used when `polyfit` is True. Default 1.5.
 
     Returns
     -------
@@ -282,7 +295,8 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
                                                           ellipsoid,
                                                           total_tec_only,
                                                           polyfit,
-                                                          polyfit_degree)
+                                                          polyfit_degree,
+                                                          num_sigma)
                          for nr_fr, rg in zip(['Nr', 'Fr'], rg_vec)]).T
 
     return isce3.core.LUT2d(rg_vec, t_since_epoch_masked.compressed(), delta_r)
@@ -294,7 +308,8 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
                            margin: float=40.0,
                            total_tec_only: bool=False,
                            polyfit: bool=False,
-                           polyfit_degree: int=2) -> isce3.core.LUT2d:
+                           polyfit_degree: int=2,
+                           num_sigma: float=1.5) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for azimuth time correction from a JSON source
 
@@ -320,6 +335,9 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
         suborbital TEC as is.
     polyfit_degree: int
         Degree of the polynomial fit applied when `polyfit` is True. Default 2.
+    num_sigma: float
+        Multiplier on the robust (MAD-based) noise scale that sets the outlier
+        rejection threshold used when `polyfit` is True. Default 1.5.
 
     Returns
     -------
@@ -354,7 +372,8 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
                                                     t_since_epoch_masked.mask,
                                                     total_tec_only=total_tec_only,
                                                     polyfit=polyfit,
-                                                    polyfit_degree=polyfit_degree)
+                                                    polyfit_degree=polyfit_degree,
+                                                    num_sigma=num_sigma)
                                 for nr_fr in ['Nr', 'Fr']]).T
 
     # set up up the LUT grids for az. iono. delay

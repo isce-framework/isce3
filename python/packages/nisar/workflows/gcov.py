@@ -402,6 +402,7 @@ def _run(cfg, raster_scratch_dir):
     # TEC correction options
     polyfit_tec_profile = \
         cfg['processing']['tec_correction']['polyfit_tec_profile']
+    tec_num_sigma = cfg['processing']['tec_correction']['num_sigma']
 
     apply_valid_samples_sub_swath_masking = \
         geocode_dict['apply_valid_samples_sub_swath_masking']
@@ -582,7 +583,8 @@ def _run(cfg, raster_scratch_dir):
             az_correction = tec_lut2d_from_json_az(
                 tec_file, center_freq, orbit, radar_grid,
                 total_tec_only=use_total_tec_only,
-                polyfit=polyfit_tec_profile)
+                polyfit=polyfit_tec_profile,
+                num_sigma=tec_num_sigma)
             timing_corrections_dict['az_correction'][frequency] = az_correction
             optional_geo_kwargs['az_time_correction'] = az_correction
 
@@ -592,7 +594,8 @@ def _run(cfg, raster_scratch_dir):
                 tec_file, center_freq, orbit, radar_grid,
                 zero_doppler, dem_file,
                 total_tec_only=use_total_tec_only,
-                polyfit=polyfit_tec_profile)
+                polyfit=polyfit_tec_profile,
+                num_sigma=tec_num_sigma)
             timing_corrections_dict['rg_correction'][frequency] = rg_correction
             optional_geo_kwargs['slant_range_correction'] = rg_correction
 

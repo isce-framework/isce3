@@ -1243,6 +1243,7 @@ tec_correction_options:
     use_total_tec_only: bool(required=False)
     ignore_invalid_topside_tec: bool(required=False)
     polyfit_tec_profile: bool(required=False)
+    num_sigma: num(min=0.0, required=False)
 
 product_version_options:
     rifg_version: str('^\d+\.\d+\.\d+$', required=False)
