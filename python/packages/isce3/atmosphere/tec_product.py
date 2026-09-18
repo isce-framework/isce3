@@ -127,7 +127,6 @@ def _mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
     coeffs = np.polyfit(x, y, degree)
     resid = y - np.polyval(coeffs, x)
 
-    # Robust noise scale: k * 1.4826 * MAD of the residuals.
     mad = np.median(np.abs(resid - np.median(resid)))
     threshold = num_sigma * mad
     info_channel.log(f'TEC MAD threshold={threshold}')
