@@ -660,8 +660,9 @@ def interpret_subswath_mask(subswath_mask, nodata=255):
         False otherwise.
     """
     arr = np.asarray(subswath_mask)
-
     nd = (arr == nodata)
+
+    subswath_mask = np.asarray(subswath_mask & 0xFF)
 
     secondary_valid = subswath_mask % 10 != 0
     reference_valid = (subswath_mask // 10) % 10 != 0

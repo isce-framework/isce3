@@ -122,35 +122,44 @@ def get_mask_ds_input_output(src_freq_path, dst_freq_path, input_hdf5,
 def get_valid_mask_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
                                 input_product_type=InputProduct.RUNW,
                                 is_runw_offset_product = False):
-    """Create input raster objects and output dataset paths for valid masks
+    """Build the valid-mask input raster and output path for one channel
 
-    Collects the validMask datasets associated with the given frequency and
-    polarization, and pairs each one with the HDF5 path it should be written
-    to in the geocoded output product. Which groups are visited depends on the
-    input product type: RUNW yields both the pixel offsets and interferogram
-    masks, while RIFG and ROFF each yield a single mask.
+    Selects a single validDataMask for the given frequency and
+    polarization: the source group in the input product and the
+    destination group in the geocoded output product are chosen from the
+    input product type (and, for RUNW, from `is_runw_offset_product`).
+    The mapping from source to destination group is:
+
+    - RUNW interferogram (is_runw_offset_product=False):
+      interferogram -> unwrappedInterferogram
+    - RUNW pixel offsets (is_runw_offset_product=True):
+      pixelOffsets -> pixelOffsets
+    - RIFG: interferogram -> wrappedInterferogram
+    - ROFF: pixelOffsets -> pixelOffsets
 
     Parameters
     ----------
     src_freq_path : str
-        HDF5 path to frequency group of input dataset
+        HDF5 path to the frequency group of the input product
     dst_freq_path : str
-        HDF5 path to frequency group of output dataset
+        HDF5 path to the frequency group of the output product
     pol : str
-        Polarization of input dataset
+        Polarization of the dataset
     input_hdf5 : str
-        Path to input RUNW, RIFG, or ROFF HDF5
+        Path to the input RUNW, RIFG, or ROFF HDF5 file
     input_product_type : InputProduct
         Input product type, one of RUNW, RIFG, ROFF
     is_runw_offset_product : bool
-        Is the pixel offset products of the RUNW product
+        For a RUNW input, select the pixel-offsets mask when True and the
+        interferogram mask when False. Ignored for RIFG and ROFF.
+
     Returns
     -------
     input_rasters : list of isce3.io.Raster
-        Valid mask input raster objects
+        The selected validDataMask input raster (a single-element list)
     dataset_paths : list of str
-        HDF5 paths to the geocoded valid mask datasets, in the same order as
-        `input_rasters`
+        HDF5 path to the geocoded valid-mask dataset, in the same order
+        as `input_rasters`
     """
 
     src_group_paths = []
@@ -172,13 +181,18 @@ def get_valid_mask_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
     elif input_product_type is InputProduct.ROFF:
         src_group_paths.append(f'{src_freq_path}/pixelOffsets/{pol}')
         dst_group_paths.append(f'{dst_freq_path}/pixelOffsets/{pol}')
+    else:
+        raise ValueError(
+            f"unsupported input product type {input_product_type}; "
+            "expected InputProduct.RUNW, InputProduct.RIFG, or "
+            "InputProduct.ROFF")
 
     # prepare input valid mask raster
     for src_group_path, dst_group_path in zip(src_group_paths,dst_group_paths):
-        input_raster_str = f"HDF5:{input_hdf5}:/{src_group_path}/validMask"
+        input_raster_str = f"HDF5:{input_hdf5}:/{src_group_path}/validDataMask"
         input_raster = isce3.io.Raster(input_raster_str)
         input_rasters.append(input_raster)
-        dataset_paths.append(f"{dst_group_path}/validMask")
+        dataset_paths.append(f"{dst_group_path}/validDataMask")
 
     return input_rasters, dataset_paths
 
