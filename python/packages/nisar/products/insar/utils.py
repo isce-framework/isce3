@@ -479,6 +479,12 @@ class _RSLCInputDataExceptionMask:
         self._samples = samples
         self._start = 0
 
+        if block_lines is None:
+            if dataset is not None and dataset.chunks is not None:
+                block_lines = dataset.chunks[0]
+            else:
+                block_lines = 512
+
         if dataset is None:
             # Zero-stride view of a single zero: spans the whole grid
             # without allocating it, so no request ever triggers a read
@@ -489,10 +495,8 @@ class _RSLCInputDataExceptionMask:
                 f"inputDataExceptionMask shape {dataset.shape} differs "
                 f"from the swath shape {(lines, samples)}")
 
-        if block_lines is None:
-            block_lines = 512
-        self._chunk_lines = dataset.chunks[0] if dataset.chunks else 1
-        self._block_lines = max(block_lines, self._chunk_lines)
+        self._chunk_lines = block_lines
+        self._block_lines = block_lines
         self._block = np.empty((0, samples), dtype=dataset.dtype)
 
     @property
@@ -777,13 +781,15 @@ def generate_insar_mask(ref_rslc_obj,
     pol_valid_mask = np.zeros((len(azi_idx_arr), len(rg_idx_arr)), dtype=np.uint16)
 
     for out_row, ref_azi in enumerate(azi_idx_arr):
-        # Rows outside the reference radar grid stay 0
-        if not (0 <= ref_azi < ref_swath.lines):
-            continue
 
         # Geometric coregistration offsets at the truncated reference
         # indices of the output pixels
         ref_azi_int = round(ref_azi)
+
+        # Rows outside the reference radar grid stay 0
+        if not (0 <= ref_azi_int < ref_swath.lines):
+            continue
+
         rg_off = range_offset_band.ReadAsArray(
             0, ref_azi_int, ref_swath.samples, 1)[0][rg_gather]
         az_off = azimuth_offset_band.ReadAsArray(
