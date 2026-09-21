@@ -617,7 +617,8 @@ def _subswath_numbers(length, width, intervals, azi_idx, rg_idx):
         Number of samples of the radar grid
     intervals : list of numpy.ndarray
         Per-sub-swath [start, end) valid-sample interval arrays, i.e.
-        [subswaths.get_valid_samples_array(s) for s = 1..num_sub_swaths]
+        subswaths.get_valid_samples_arrays_vect(); an entry may be empty
+        for a sub-swath without valid-sample information
     azi_idx : int or numpy.ndarray
         Integer azimuth indices, broadcastable against rg_idx
     rg_idx : int or numpy.ndarray
@@ -640,15 +641,11 @@ def _subswath_numbers(length, width, intervals, azi_idx, rg_idx):
     remaining = in_bounds
     for number, interval in enumerate(intervals, start=1):
         if interval.size == 0:
-            # An empty valid-samples array means this sub-swath claims
-            # every remaining in-bounds sample, matching the scalar
-            # SubSwaths.getSampleSubSwath short-circuit. This case is
-            # necessary rather than defensive: SubSwaths.numSubSwaths and
-            # setValidSamplesArray create sub-swaths with default-empty
-            # arrays, and validation explicitly skips them, so a product
-            # may legitimately report N sub-swaths with some arrays
-            # empty. Falling through to the indexing branch below would
-            # raise IndexError on the 0-length array.
+            # the RSLC reader sizes the vector to numberOfSubSwaths and leaves any sub-swath
+            # whose validSamplesSubSwath{i} dataset is missing as a 0-size
+            # entry, so a product may report N sub-swaths with some empty.
+            # Falling through to the indexing branch below would raise
+            # IndexError on the 0-length array.
             claimed = remaining
         else:
             claimed = (remaining &
