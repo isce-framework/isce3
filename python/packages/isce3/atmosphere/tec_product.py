@@ -133,14 +133,14 @@ def _smooth_mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
 
     # Degenerate noise scale (near-perfect fit); nothing to reject.
     if not np.isfinite(threshold) or threshold <= 0:
-        info_channel.log('TEC MAD Threshold is not valid. Keeping all TEC samples for polynomial fitting.')
-        return np.polyval(coeffs, x)
+        info_channel.log('TEC MAD Threshold is not valid. Returning the original TEC values.')
+        return y
 
     # Keep only inliers, but fall back to the plain fit if too few survive.
     inliers = np.abs(resid) <= threshold
     if np.count_nonzero(inliers) <= degree:
-        info_channel.log('Not enough inliers from TEC sample. Keeping all TEC samples for polynomial fitting.')
-        return np.polyval(coeffs, x)
+        info_channel.log('Not enough inliers from TEC sample. Returning the original TEC values.')
+        return y
 
     coeffs = np.polyfit(x[inliers], y[inliers], degree)
     info_channel.log('MAD outlier detection and polynomial fitting completed.')
