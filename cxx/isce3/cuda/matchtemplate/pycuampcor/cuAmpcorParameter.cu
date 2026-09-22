@@ -88,8 +88,8 @@ void cuAmpcorParameter::setupParameters()
     windowSizeWidth = windowSizeWidthRaw*rawDataOversamplingFactor;  //
     windowSizeHeight = windowSizeHeightRaw*rawDataOversamplingFactor;
 
-    searchWindowSizeWidthRaw =  windowSizeWidthRaw + 2*halfSearchRangeDownRaw;
-    searchWindowSizeHeightRaw = windowSizeHeightRaw + 2*halfSearchRangeAcrossRaw;
+    searchWindowSizeWidthRaw =  windowSizeWidthRaw + 2*halfSearchRangeAcrossRaw;
+    searchWindowSizeHeightRaw = windowSizeHeightRaw + 2*halfSearchRangeDownRaw;
 
     searchWindowSizeWidthRawZoomIn = windowSizeWidthRaw + 2*halfZoomWindowSizeRaw;
     searchWindowSizeHeightRawZoomIn = windowSizeHeightRaw + 2*halfZoomWindowSizeRaw;
@@ -237,14 +237,28 @@ void cuAmpcorParameter::setChunkStartPixels()
                     if(sChunkEA < vpixel) sChunkEA = vpixel;
                 }
             }
+            // Clamp chunk start pixels to valid image range
+            if (mChunkSD < 0) mChunkSD = 0;
+            if (mChunkSA < 0) mChunkSA = 0;
+            if (sChunkSD < 0) sChunkSD = 0;
+            if (sChunkSA < 0) sChunkSA = 0;
+            // Compute end pixels and clamp to image range
+            int mEndD = mChunkED + windowSizeHeightRaw;
+            if (mEndD > referenceImageHeight) mEndD = referenceImageHeight;
+            int mEndA = mChunkEA + windowSizeWidthRaw;
+            if (mEndA > referenceImageWidth) mEndA = referenceImageWidth;
+            int sEndD = sChunkED + searchWindowSizeHeightRaw;
+            if (sEndD > secondaryImageHeight) sEndD = secondaryImageHeight;
+            int sEndA = sChunkEA + searchWindowSizeWidthRaw;
+            if (sEndA > secondaryImageWidth) sEndA = secondaryImageWidth;
             referenceChunkStartPixelDown[idxChunk]   = mChunkSD;
             referenceChunkStartPixelAcross[idxChunk] = mChunkSA;
             secondaryChunkStartPixelDown[idxChunk]    = sChunkSD;
             secondaryChunkStartPixelAcross[idxChunk]  = sChunkSA;
-            referenceChunkHeight[idxChunk] = mChunkED - mChunkSD + windowSizeHeightRaw;
-            referenceChunkWidth[idxChunk]  = mChunkEA - mChunkSA + windowSizeWidthRaw;
-            secondaryChunkHeight[idxChunk]  = sChunkED - sChunkSD + searchWindowSizeHeightRaw;
-            secondaryChunkWidth[idxChunk]   = sChunkEA - sChunkSA + searchWindowSizeWidthRaw;
+            referenceChunkHeight[idxChunk] = mEndD - mChunkSD;
+            referenceChunkWidth[idxChunk]  = mEndA - mChunkSA;
+            secondaryChunkHeight[idxChunk]  = sEndD - sChunkSD;
+            secondaryChunkWidth[idxChunk]   = sEndA - sChunkSA;
             if(maxReferenceChunkHeight < referenceChunkHeight[idxChunk]) maxReferenceChunkHeight = referenceChunkHeight[idxChunk];
             if(maxReferenceChunkWidth  < referenceChunkWidth[idxChunk] ) maxReferenceChunkWidth  = referenceChunkWidth[idxChunk];
             if(maxSecondaryChunkHeight  < secondaryChunkHeight[idxChunk]) maxSecondaryChunkHeight = secondaryChunkHeight[idxChunk];
@@ -256,60 +270,37 @@ void cuAmpcorParameter::setChunkStartPixels()
 /// check whether reference and secondary windows are within the image range
 void cuAmpcorParameter::checkPixelInImageRange()
 {
+#ifdef CUAMPCOR_DEBUG
     int endPixel;
     for(int row=0; row<numberWindowDown; row++)
     {
         for(int col = 0; col < numberWindowAcross; col++)
         {
             int i = row*numberWindowAcross + col;
-            if(referenceStartPixelDown[i] <0)
-            {
-                fprintf(stderr, "Reference Window start pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, referenceStartPixelDown[i]);
-                exit(EXIT_FAILURE); //or raise range error
-            }
-            if(referenceStartPixelAcross[i] <0)
-            {
-                fprintf(stderr, "Reference Window start pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, referenceStartPixelAcross[i]);
-                exit(EXIT_FAILURE);
-            }
+            if(referenceStartPixelDown[i] < 0)
+                fprintf(stderr, "Warning: Reference Window start pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, referenceStartPixelDown[i]);
+            if(referenceStartPixelAcross[i] < 0)
+                fprintf(stderr, "Warning: Reference Window start pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, referenceStartPixelAcross[i]);
             endPixel = referenceStartPixelDown[i] + windowSizeHeightRaw;
             if(endPixel >= referenceImageHeight)
-            {
-                fprintf(stderr, "Reference Window end pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, endPixel);
-                exit(EXIT_FAILURE);
-            }
+                fprintf(stderr, "Warning: Reference Window end pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, endPixel);
             endPixel = referenceStartPixelAcross[i] + windowSizeWidthRaw;
             if(endPixel >= referenceImageWidth)
-            {
-                fprintf(stderr, "Reference Window end pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, endPixel);
-                exit(EXIT_FAILURE);
-            }
+                fprintf(stderr, "Warning: Reference Window end pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, endPixel);
             //secondary
-            if(secondaryStartPixelDown[i] <0)
-            {
-                fprintf(stderr, "Secondary Window start pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, secondaryStartPixelDown[i]);
-                exit(EXIT_FAILURE);
-            }
-            if(secondaryStartPixelAcross[i] <0)
-            {
-                fprintf(stderr, "Secondary Window start pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, secondaryStartPixelAcross[i]);
-                exit(EXIT_FAILURE);
-            }
+            if(secondaryStartPixelDown[i] < 0)
+                fprintf(stderr, "Warning: Secondary Window start pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, secondaryStartPixelDown[i]);
+            if(secondaryStartPixelAcross[i] < 0)
+                fprintf(stderr, "Warning: Secondary Window start pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, secondaryStartPixelAcross[i]);
             endPixel = secondaryStartPixelDown[i] + searchWindowSizeHeightRaw;
             if(endPixel >= secondaryImageHeight)
-            {
-                fprintf(stderr, "Secondary Window end pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, endPixel);
-                exit(EXIT_FAILURE);
-            }
+                fprintf(stderr, "Warning: Secondary Window end pixel out of range in Down, window (%d,%d), pixel %d\n", row, col, endPixel);
             endPixel = secondaryStartPixelAcross[i] + searchWindowSizeWidthRaw;
             if(endPixel >= secondaryImageWidth)
-            {
-                fprintf(stderr, "Secondary Window end pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, endPixel);
-                exit(EXIT_FAILURE);
-            }
-
+                fprintf(stderr, "Warning: Secondary Window end pixel out of range in Across, window (%d,%d), pixel %d\n", row, col, endPixel);
         }
     }
+#endif
 }
 
 
