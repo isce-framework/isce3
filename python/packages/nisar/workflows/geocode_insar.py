@@ -108,20 +108,17 @@ def add_valid_pixel_fraction_stats(cfg, output_hdf5, input_product_type, fill_va
 
             # Determine which datasets to process based on input product type
             if input_product_type is InputProduct.RUNW:
-                datasets = [
-                    ('unwrappedInterferogram', pol_list),
-                    ('pixelOffsets', pol_list)
-                ]
+                dataset_names = ['unwrappedInterferogram', 'pixelOffsets']
             elif input_product_type is InputProduct.RIFG:
-                datasets = [('wrappedInterferogram', pol_list)]
+                dataset_names = ['wrappedInterferogram']
             elif input_product_type is InputProduct.ROFF:
-                datasets = [('pixelOffsets', pol_list)]
+                dataset_names = ['pixelOffsets']
             else:
                 raise ValueError(f"Unsupported input product type: {input_product_type}")
 
             # Compute validPixelFraction for each dataset and polarization
-            for dataset_name, pols in datasets:
-                for pol in pols:
+            for dataset_name in dataset_names:
+                for pol in pol_list:
                     valid_mask_path = f"{dst_freq_path}/{dataset_name}/{pol}/validDataMask"
                     if valid_mask_path in dst_h5:
                         valid_mask_data = dst_h5[valid_mask_path][()]
@@ -928,7 +925,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 # cpu geocode. These params are added to as None for
                 # consistency with gpu_geocode_rasters, who needs it for
                 # get_raster_lists
-                layer_geocode_params = [(layer_name, None, None)
+                layer_geocode_params = [(layer_name, None, np.nan)
                                         for layer_name in offset_cfg.keys() if
                                         layer_name.startswith('layer')]
 
