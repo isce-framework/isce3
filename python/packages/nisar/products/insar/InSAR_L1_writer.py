@@ -577,7 +577,7 @@ class L1InSARWriter(InSARBaseWriter):
                 offset_pol_group['validDataMask'][...] = valid_mask
                 offset_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
                 offset_pol_group['validDataMask'].attrs['long_name'] = to_bytes("Valid data mask")
-                offset_pol_group['validDataMask'].attrs['validPixelFraction'] = compute_valid_pixel_fraction(valid_mask, 255)
+                offset_pol_group['validDataMask'].attrs['valid_pixel_fraction'] = compute_valid_pixel_fraction(valid_mask, 255)
 
     def add_interferogram_to_swaths_group(self, is_unwrapped=False):
         """
@@ -854,7 +854,7 @@ class L1InSARWriter(InSARBaseWriter):
                         igram_pol_group['validDataMask'][...] = valid_mask
                         igram_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
                         igram_pol_group['validDataMask'].attrs['long_name'] = to_bytes("Valid data mask")
-                        igram_pol_group['validDataMask'].attrs['validPixelFraction'] = compute_valid_pixel_fraction(valid_mask, 255)
+                        igram_pol_group['validDataMask'].attrs['valid_pixel_fraction'] = compute_valid_pixel_fraction(valid_mask, 255)
 
 
     def add_swaths_to_hdf5(self):

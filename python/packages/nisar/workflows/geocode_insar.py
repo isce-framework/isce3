@@ -72,12 +72,12 @@ def run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
 def add_valid_pixel_fraction_stats(cfg, output_hdf5, input_product_type, fill_value=255):
     """
-    Compute and save validPixelFraction statistics for validDataMask datasets.
+    Compute and save valid_pixel_fraction statistics for validDataMask datasets.
 
     This function iterates over all frequencies and polarizations in the
     geocoded output product (GUNW or GOFF) and computes the fraction of
     valid pixels for each validDataMask dataset. The computed fraction is
-    stored as an HDF5 attribute 'validPixelFraction'.
+    stored as an HDF5 attribute 'valid_pixel_fraction'.
 
     Parameters
     ----------
@@ -116,7 +116,7 @@ def add_valid_pixel_fraction_stats(cfg, output_hdf5, input_product_type, fill_va
             else:
                 raise ValueError(f"Unsupported input product type: {input_product_type}")
 
-            # Compute validPixelFraction for each dataset and polarization
+            # Compute valid pixel fraction for each dataset and polarization
             for dataset_name in dataset_names:
                 for pol in pol_list:
                     valid_mask_path = f"{dst_freq_path}/{dataset_name}/{pol}/validDataMask"
@@ -125,7 +125,7 @@ def add_valid_pixel_fraction_stats(cfg, output_hdf5, input_product_type, fill_va
                         valid_pixel_fraction = compute_valid_pixel_fraction(
                             valid_mask_data, fill_value=fill_value
                         )
-                        dst_h5[valid_mask_path].attrs['validPixelFraction'] = valid_pixel_fraction
+                        dst_h5[valid_mask_path].attrs['valid_pixel_fraction'] = valid_pixel_fraction
 
 
 def get_mask_ds_input_output(src_freq_path, dst_freq_path, input_hdf5,
