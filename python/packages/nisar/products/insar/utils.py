@@ -495,7 +495,6 @@ class _RSLCInputDataExceptionMask:
                 f"inputDataExceptionMask shape {dataset.shape} differs "
                 f"from the swath shape {(lines, samples)}")
 
-        self._chunk_lines = block_lines
         self._block_lines = block_lines
         self._block = np.empty((0, samples), dtype=dataset.dtype)
 
@@ -540,7 +539,7 @@ class _RSLCInputDataExceptionMask:
         else:
             # Request straddles the block: center on it
             start = lo - max(0, self._block_lines - (hi - lo + 1)) // 2
-        chunk = self._chunk_lines
+        chunk = self._block_lines
         start = max(0, start) // chunk * chunk
         stop = max(hi + 1, start + self._block_lines)
         stop = min(self._lines, -(-stop // chunk) * chunk)
