@@ -257,20 +257,30 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5,
 
         for mask_h5_path in mask_datasets:
             mask_layer = dst_h5[mask_h5_path][()]
-            # Exclude the _FillValue of the mask to prevent the overflow
+            # Exclude pixels containing the HDF5 fill value. The fill value applies
+            # to the complete uint32 mask, rather than only to its lower 8 bits.
             mask = (mask_layer != fill_value)
 
             # Masked water mask to exclude the fill value
             masked_water_mask = water_mask[mask]
-            # Add the water mask to the mask layer
-            subswath_mask = mask_layer & 0xFF # get the subswath mask
-            subswath_mask[mask] = (
-                subswath_mask[mask] % np.uint32(100)
+
+            # Extract bits 0-7. This byte uses decimal-style encoding:
+            # 100 * water + 10 * reference_subswath + secondary_subswath.
+            low_byte_mask = mask_layer & 0xFF # get the subswath mask
+
+            # Preserve the two subswath digits and set the water digit.
+            low_byte_mask[mask] = (
+                low_byte_mask[mask] % np.uint32(100)
                 + np.uint32(100) * water_mask[mask].astype(np.uint32)
             )
+
+            # Preserve bits 8-31 and replace bits 0-7 with the updated low byte.
+            # Directly OR-ing the old and new low bytes would be incorrect because
+            # the fields inside the low byte use decimal, not binary, encoding.
             mask_layer[mask] = (
                 mask_layer[mask] & np.uint32(0xFFFFFF00)
-            ) | subswath_mask[mask]
+            ) | low_byte_mask[mask]
+
             dst_h5[mask_h5_path][...] = mask_layer
 
             # Update the percentage of the water
