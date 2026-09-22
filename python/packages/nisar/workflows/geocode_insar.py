@@ -215,7 +215,7 @@ def _project_water_to_geogrid(input_water_path, geogrid):
 
 def add_water_to_mask(cfg, freq, geogrid, dst_h5,
                       input_product_type,
-                      fill_vaue = 255):
+                      fill_value = 255):
     """
     Add water mask to mask layer in GUNW and GOFF product.
 
@@ -258,7 +258,7 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5,
         for mask_h5_path in mask_datasets:
             mask_layer = dst_h5[mask_h5_path][()]
             # Exclude the _FillValue of the mask to prevent the overflow
-            mask = (mask_layer != fill_vaue)
+            mask = (mask_layer != fill_value)
 
             # Masked water mask to exclude the fill value
             masked_water_mask = water_mask[mask]
@@ -271,7 +271,7 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5,
             mask_layer[mask] = (
                 mask_layer[mask] & np.uint32(0xFFFFFF00)
             ) | subswath_mask[mask]
-            dst_h5[mask_h5_path][...] = mask_layer | subswath_mask
+            dst_h5[mask_h5_path][...] = mask_layer
 
             # Update the percentage of the water
             # where the region with fill value is excluded
@@ -732,7 +732,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 desired = ["mask"]
-                geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_mask_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5,
                                     radar_grid, dem_raster, block_size,
@@ -754,7 +753,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 desired = ["mask"]
-                geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_mask_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5,
                                     radar_grid_offset, dem_raster, block_size,
@@ -797,7 +795,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 desired = ["mask"]
-                geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_mask_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
@@ -832,7 +829,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 desired = ["mask"]
-                geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_mask_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
