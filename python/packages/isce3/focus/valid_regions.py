@@ -3,6 +3,8 @@ from .sar_duration import get_sar_duration
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import reduce
+from isce3.geometry.polygons import shapely2ogr_polygon
+from osgeo import gdal, ogr, osr
 import isce3
 import numpy as np
 import shapely
@@ -417,10 +419,10 @@ def rasterize_subswath_polygons(slc_polygon_lists, slc_grid, threshold=2):
                 j0, j1 = tmp_swaths[iswath, iobs]
 
                 # Cast to int to prevent unsigned underflow.
-                if abs(int(j0) - i1) <= threshold:
+                if abs(np.int64(j0) - i1) <= threshold:
                     # Join contiguous, previous first.
                     swaths[iswath, itime] = (i0, j1)
-                elif abs(int(i0) - j1) <= threshold:
+                elif abs(np.int64(i0) - j1) <= threshold:
                     # Join contiguous, current first.
                     swaths[iswath, itime] = (j0, i1)
                 elif (j1 - j0) > n:
@@ -431,6 +433,77 @@ def rasterize_subswath_polygons(slc_polygon_lists, slc_grid, threshold=2):
                     assert (j0 == j1) or ((j1 - j0) <= n)
 
     return swaths
+
+
+def get_focused_sub_swath_polygons(raw_bbox_lists, chirp_durations, orbit,
+                                   native_doppler, azres, grid,
+                                   dem=isce3.geometry.DEMInterpolator(),
+                                   image_grid_doppler=isce3.core.LUT2d(),
+                                   rdr2geo_params=dict(),
+                                   geo2rdr_params=dict(), max_segment_length=5000,
+                                   convolution_mode="valid",
+                                   allowed_azimuth_gap=2):
+    """
+    Determine valid data regions of a focused image, considering transmit
+    gaps and gaps between files (in multi-observation processing).
+
+    Parameters
+    ----------
+    raw_bbox_lists : list[list[RadarBoundingBox]]
+        Bounding boxes of all subswaths for each raw data file/observation.
+        Azimuth times should be specified in seconds relative to the orbit
+        reference epoch.
+    chirp_durations : list[float]
+        Duration of transmit chirp for each raw data file.
+    orbit : isce3.core.Orbit
+        Trajectory of radar antenna phase center.
+    native_doppler : isce3.core.LUT2d
+        Doppler centroid in Hz.  Time should be referenced to the same epoch
+        as the orbit.
+    azres : float
+        Intended azimuth resolution in meters.
+    grid : isce3.product.RadarGridParameters
+        Grid for focused image.
+    dem : isce3.geometry.DEMInterpolator, optional
+        Digital elevation model.  Defaults to 0 m above WGS84 ellipsoid.
+    image_grid_doppler : isce3.core.LUT2d, optional
+        Doppler (in Hz) associated with focused image grid geometry.
+        Defaults to zero-Doppler (NISAR convention).
+    rdr2geo_params : dict, optional
+        Parameters for rdr2geo_bracket
+    geo2rdr_params : dict, optional
+        Parameters for geo2rdr_bracket
+    max_segment_length : float, optional
+        Length scale over which subswath boundary can be considered linear,
+        in meters.
+    convolution_mode : {"valid", "full", "same"}, optional
+        How to handle boundary effects of focusing operation.  For "valid",
+        only return regions that will be fully focused.  For "full", return
+        regions with any nonzero data.  For "same", return regions that are
+        at least halfway focused.
+    allowed_azimuth_gap : int, optional
+        Amount of time (specified in pulse intervals) allowed between files
+        that is still considered contiguous.  If exceeded, the missing data
+        will be considered invalid and masked according to `convolution_mode`.
+
+    Returns
+    -------
+    slc_polygon_lists : list[list[shapely.Polygon]]
+        List of valid data regions for each file/observation specified in
+        focused radar image (x=range, y=time) coordinates.
+    """
+    raw_polygons = get_raw_sub_swath_polygons(raw_bbox_lists=raw_bbox_lists,
+        chirp_durations=chirp_durations, orbit=orbit,
+        wavelength=grid.wavelength, azres=azres, prf=grid.prf,
+        ellipsoid=dem.ellipsoid, convolution_mode=convolution_mode,
+        allowed_azimuth_gap=allowed_azimuth_gap)
+
+    return transform_polygons_raw2image(raw_polygon_lists=raw_polygons,
+        orbit=orbit, lookside=grid.lookside, native_doppler=native_doppler,
+        wavelength=grid.wavelength, dem=dem,
+        image_grid_doppler=image_grid_doppler,
+        max_segment_length=max_segment_length,
+        rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params)
 
 
 def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
@@ -496,21 +569,192 @@ def get_focused_sub_swaths(raw_bbox_lists, chirp_durations, orbit,
         where nswath is the number of valid sub-swaths and npulse is the length
         of the focused image grid.
     """
-    raw_polygons = get_raw_sub_swath_polygons(raw_bbox_lists=raw_bbox_lists,
-        chirp_durations=chirp_durations, orbit=orbit,
-        wavelength=grid.wavelength, azres=azres, prf=grid.prf,
-        ellipsoid=dem.ellipsoid, convolution_mode=convolution_mode,
-        allowed_azimuth_gap=allowed_azimuth_gap)
-
-    slc_polygons = transform_polygons_raw2image(raw_polygon_lists=raw_polygons,
-        orbit=orbit, lookside=grid.lookside, native_doppler=native_doppler,
-        wavelength=grid.wavelength, dem=dem,
-        image_grid_doppler=image_grid_doppler,
+    slc_polygons = get_focused_sub_swath_polygons(
+        raw_bbox_lists=raw_bbox_lists, chirp_durations=chirp_durations,
+        orbit=orbit, native_doppler=native_doppler, azres=azres, grid=grid,
+        dem=dem, image_grid_doppler=image_grid_doppler,
+        rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params,
         max_segment_length=max_segment_length,
-        rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params)
+        convolution_mode=convolution_mode,
+        allowed_azimuth_gap=allowed_azimuth_gap)
 
     return rasterize_subswath_polygons(slc_polygons, grid,
         threshold=allowed_range_gap)
+
+
+def save_subswath_polygons_to_image(polygon_lists, grid, image, blocksize=None,
+                                    bit=0):
+    """
+    Rasterize valid data polygons onto a per-pixel mask image.  Each pixel will
+    be bitwise-ORed with the existing value.
+
+    Parameters
+    ----------
+    polygon_lists : list[list[shapely.Polygon]]
+        List of valid data regions for each file/observation specified in
+        image grid (x=range, y=time) coordinates, e.g., as produced by
+        `transform_polygons_raw2image`.  A pixel is marked valid if it falls
+        within any polygon from any list.
+    grid : isce3.product.RadarGridParameters
+        Grid for output image.
+    image : array_like
+        Output boolean mask, must have shape matching `grid.shape`.  May be
+        an HDF5 dataset, in which case writes are chunk-aligned.  Should be
+        initialized to zero (at least in the bit position specified by `bit`).
+    blocksize : int, optional
+        Number of rows to rasterize and write at a time.  Defaults to the
+        chunk size of `image` if it is an HDF5 dataset, otherwise 512.
+    bit : int, optional
+        The bit to set in the output mask for valid pixels.
+    
+    Returns
+    -------
+    num_valid : int
+        Total number of valid pixels in the image.
+    """
+    if image.dtype.kind not in "bui":
+        raise ValueError("Expected integer or boolean data type for mask")
+    nbits = (1 if np.issubdtype(image.dtype, np.bool_)
+        else 8 * image.dtype.itemsize)
+    if not (0 <= bit < nbits):
+        raise ValueError(f"Expected 0 <= bit < {nbits} but got {bit=}")
+    m, n = grid.shape
+    if grid.shape != image.shape:
+        raise ValueError("Shape of output image must match grid shape")
+
+    # Use chunk-aligned access if image is an HDF5 dataset.
+    if blocksize is None:
+        blocksize = getattr(image, "chunks", (512,))[0]
+
+    dr = grid.range_pixel_spacing
+    r0 = grid.slant_ranges[0]
+    dt = 1.0 / grid.prf
+    t0 = grid.sensing_times[0]
+
+    # Build a single in-memory vector layer with all subswath polygons so we
+    # can rasterize them directly (via GDAL's scanline fill) instead of
+    # intersecting a line with every polygon for every row, which is
+    # dominated by per-call Python/GEOS overhead for large images.
+    # Assign a (meaningless) local SRS to the layer and raster below so GDAL
+    # can confirm they match instead of warning about it.
+    srs = osr.SpatialReference()
+    srs.SetLocalCS("radar image grid")
+
+    vector_ds = ogr.GetDriverByName("Memory").CreateDataSource("")
+    layer = vector_ds.CreateLayer("subswaths", srs=srs)
+    for polygons in polygon_lists:
+        for polygon in polygons:
+            feature = ogr.Feature(layer.GetLayerDefn())
+            feature.SetGeometry(shapely2ogr_polygon(polygon))
+            layer.CreateFeature(feature)
+
+    num_valid = 0
+
+    for i0 in range(0, m, blocksize):
+        i1 = min(i0 + blocksize, m)
+        nrows = i1 - i0
+
+        raster_ds = gdal.GetDriverByName("MEM").Create("", n, nrows, 1,
+            gdal.GDT_Byte)
+        raster_ds.SetSpatialRef(srs)
+        raster_ds.SetGeoTransform(
+            (r0 - dr / 2, dr, 0, t0 + i0 * dt - dt / 2, 0, dt))
+        gdal.RasterizeLayer(raster_ds, [1], layer, burn_values=[1])
+        image_block = raster_ds.GetRasterBand(1).ReadAsArray().astype(
+            image.dtype, copy=False)
+
+        num_valid += np.sum(image_block)
+
+        # Shift mask to selected bit and OR with existing mask data.
+        if bit > 0:
+            image_block <<= bit
+        dest_rows = slice(i0, i1)
+        image_block |= image[dest_rows]
+        # Write back out.
+        if hasattr(image, "write_direct"):
+            image.write_direct(image_block, None, dest_rows)
+        else:
+            image[dest_rows] = image_block
+
+    return num_valid
+
+
+def save_valid_data_mask(raw_bbox_lists, chirp_durations, orbit,
+                         native_doppler, azres, grid, image,
+                         dem=isce3.geometry.DEMInterpolator(),
+                         image_grid_doppler=isce3.core.LUT2d(),
+                         rdr2geo_params=dict(),
+                         geo2rdr_params=dict(), max_segment_length=5000,
+                         convolution_mode="valid",
+                         allowed_azimuth_gap=2, blocksize=None, bit=0):
+    """
+    Determine valid data regions of a focused image, considering transmit
+    gaps and gaps between files (in multi-observation processing), and write
+    the result as a per-pixel boolean mask.
+
+    Parameters
+    ----------
+    raw_bbox_lists : list[list[RadarBoundingBox]]
+        Bounding boxes of all subswaths for each raw data file/observation.
+        Azimuth times should be specified in seconds relative to the orbit
+        reference epoch.
+    chirp_durations : list[float]
+        Duration of transmit chirp for each raw data file.
+    orbit : isce3.core.Orbit
+        Trajectory of radar antenna phase center.
+    native_doppler : isce3.core.LUT2d
+        Doppler centroid in Hz.  Time should be referenced to the same epoch
+        as the orbit.
+    azres : float
+        Intended azimuth resolution in meters.
+    grid : isce3.product.RadarGridParameters
+        Grid for focused image.
+    image : array_like
+        Output boolean mask, must have shape matching `grid.shape`.  May be
+        an HDF5 dataset, in which case writes are chunk-aligned.
+    dem : isce3.geometry.DEMInterpolator, optional
+        Digital elevation model.  Defaults to 0 m above WGS84 ellipsoid.
+    image_grid_doppler : isce3.core.LUT2d, optional
+        Doppler (in Hz) associated with focused image grid geometry.
+        Defaults to zero-Doppler (NISAR convention).
+    rdr2geo_params : dict, optional
+        Parameters for rdr2geo_bracket
+    geo2rdr_params : dict, optional
+        Parameters for geo2rdr_bracket
+    max_segment_length : float, optional
+        Length scale over which subswath boundary can be considered linear,
+        in meters.
+    convolution_mode : {"valid", "full", "same"}, optional
+        How to handle boundary effects of focusing operation.  For "valid",
+        only return regions that will be fully focused.  For "full", return
+        regions with any nonzero data.  For "same", return regions that are
+        at least halfway focused.
+    allowed_azimuth_gap : int, optional
+        Amount of time (specified in pulse intervals) allowed between files
+        that is still considered contiguous.  If exceeded, the missing data
+        will be considered invalid and masked according to `convolution_mode`.
+    blocksize : int, optional
+        Number of rows to rasterize and write at a time.  Defaults to the
+        chunk size of `image` if it is an HDF5 dataset, otherwise 512.
+    bit : int, optional
+        The bit to set in the output mask for valid pixels.
+
+    Returns
+    -------
+    num_valid : int
+        Total number of valid pixels in the image.
+    """
+    slc_polygons = get_focused_sub_swath_polygons(
+        raw_bbox_lists=raw_bbox_lists, chirp_durations=chirp_durations,
+        orbit=orbit, native_doppler=native_doppler, azres=azres, grid=grid,
+        dem=dem, image_grid_doppler=image_grid_doppler,
+        rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params,
+        max_segment_length=max_segment_length,
+        convolution_mode=convolution_mode,
+        allowed_azimuth_gap=allowed_azimuth_gap)
+
+    return save_subswath_polygons_to_image(slc_polygons, grid, image,
+        blocksize=blocksize, bit=bit)
 
 
 def fill_gaps(data, swaths, value=np.complex64(0)):
