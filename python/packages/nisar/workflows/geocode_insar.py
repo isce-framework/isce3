@@ -22,7 +22,7 @@ from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.compute_stats import compute_stats_real_data
-
+from nisar.products.insar.utils import compute_valid_pixel_fraction
 from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.geocode_insar_runconfig import GeocodeInsarRunConfig
 from nisar.workflows.helpers import get_cfg_freq_pols, get_offset_radar_grid
@@ -65,6 +65,71 @@ def run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         gpu_run(cfg, input_hdf5, output_hdf5, input_product_type)
     else:
         cpu_run(cfg, input_hdf5, output_hdf5, input_product_type)
+
+    # Add the valid data mask fraction
+    add_valid_pixel_fraction_stats(cfg, output_hdf5, input_product_type)
+
+
+def add_valid_pixel_fraction_stats(cfg, output_hdf5, input_product_type, fill_value=255):
+    """
+    Compute and save validPixelFraction statistics for validDataMask datasets.
+
+    This function iterates over all frequencies and polarizations in the
+    geocoded output product (GUNW or GOFF) and computes the fraction of
+    valid pixels for each validDataMask dataset. The computed fraction is
+    stored as an HDF5 attribute 'validPixelFraction'.
+
+    Parameters
+    ----------
+    cfg : dict
+        Dictionary containing run configuration
+    output_hdf5 : str
+        Path to output GUNW or GOFF HDF5 file
+    input_product_type : InputProduct
+        Input product type (RUNW, RIFG, or ROFF)
+    fill_value : int, optional
+        Fill value to exclude from valid pixel calculation (default: 255)
+
+    Notes
+    -----
+    The function processes different dataset types based on input product:
+    - RUNW -> GUNW: unwrappedInterferogram and pixelOffsets
+    - RIFG -> GUNW: wrappedInterferogram
+    - ROFF -> GOFF: pixelOffsets
+    """
+    with HDF5OptimizedReader(name=output_hdf5, mode="a") as dst_h5:
+        # Determine destination path object based on product type
+        dst_paths_obj = (GOFFGroupsPaths() if input_product_type is InputProduct.ROFF
+                         else GUNWGroupsPaths())
+
+        # Iterate over frequencies and polarizations
+        for freq, pol_list, _ in get_cfg_freq_pols(cfg):
+            dst_freq_path = f"{dst_paths_obj.GridsPath}/frequency{freq}"
+
+            # Determine which datasets to process based on input product type
+            if input_product_type is InputProduct.RUNW:
+                datasets = [
+                    ('unwrappedInterferogram', pol_list),
+                    ('pixelOffsets', pol_list)
+                ]
+            elif input_product_type is InputProduct.RIFG:
+                datasets = [('wrappedInterferogram', pol_list)]
+            elif input_product_type is InputProduct.ROFF:
+                datasets = [('pixelOffsets', pol_list)]
+            else:
+                raise ValueError(f"Unsupported input product type: {input_product_type}")
+
+            # Compute validPixelFraction for each dataset and polarization
+            for dataset_name, pols in datasets:
+                for pol in pols:
+                    valid_mask_path = f"{dst_freq_path}/{dataset_name}/{pol}/validDataMask"
+                    if valid_mask_path in dst_h5:
+                        valid_mask_data = dst_h5[valid_mask_path][()]
+                        valid_pixel_fraction = compute_valid_pixel_fraction(
+                            valid_mask_data, fill_value=fill_value
+                        )
+                        dst_h5[valid_mask_path].attrs['validPixelFraction'] = valid_pixel_fraction
+
 
 def get_mask_ds_input_output(src_freq_path, dst_freq_path, input_hdf5,
                              input_product_type=InputProduct.RUNW,
@@ -803,7 +868,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 invalid_values = [65535] * len(desired)
                 geocode_obj.data_interpolator = 'NEAREST'
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
-                                    invalid_values,freq,
+                                    invalid_values, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
@@ -1452,6 +1517,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
+
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
