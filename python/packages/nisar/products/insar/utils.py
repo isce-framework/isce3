@@ -884,3 +884,32 @@ def extract_pol_valid_mask(pol_valid_mask, pol):
     valid_mask = ((ref_valid << 1) | sec_valid).astype(np.uint8)
 
     return valid_mask
+
+def compute_valid_pixel_fraction(valid_data_mask, fill_value=255):
+    """
+    Compute the fraction of valid pixels.
+
+    Parameters
+    ----------
+    valid_data_mask : np.ndarray
+        Mask where 3 indicates valid pixels
+    fill_value : int, optional
+        Value to exclude from calculation (default: 255)
+
+    Returns
+    -------
+    float
+        Fraction of valid pixels (0.0 to 1.0)
+    """
+    # Count valid pixels (value == 3) and non-fill pixels efficiently
+    # both the referene and secondary are valid
+    num_valid_pixels = np.count_nonzero(valid_data_mask == 3)
+    num_fill_pixels = np.count_nonzero(valid_data_mask == fill_value)
+    total_pixels = valid_data_mask.size - num_fill_pixels
+
+    if total_pixels <= 0:
+        return 0.0
+
+    return num_valid_pixels / total_pixels
+
+

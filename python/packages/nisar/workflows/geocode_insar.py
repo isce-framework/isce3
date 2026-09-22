@@ -578,7 +578,8 @@ def get_raster_lists(all_geocoded_dataset_flags,
     return (geocoded_rasters, geocoded_datasets, input_rasters, interp_methods,
             invalid_values)
 
-def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
+def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, invalid_values,
+                        freq, pol_list,
                         input_hdf5, dst_h5, radar_grid, dem_raster,
                         block_size, offset_params=None, scratch_path='',
                         compute_stats=True, input_product_type = InputProduct.RUNW,
@@ -587,14 +588,15 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         srg_correction=isce3.core.LUT2d(),
                         subswaths=None):
 
-    geocoded_rasters, geocoded_datasets, input_rasters, *_ = \
+    geocoded_rasters, geocoded_datasets, input_rasters, _, fill_values = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
                          dst_h5, offset_params, scratch_path, input_product_type,
-                         iono_sideband, is_runw_offset_product)
+                         iono_sideband, is_runw_offset_product,
+                         possible_invalid_values=invalid_values)
 
     if input_rasters:
-        geocode_tuples = zip(input_rasters, geocoded_rasters)
-        for input_raster, geocoded_raster in geocode_tuples:
+        geocode_tuples = zip(input_rasters, geocoded_rasters, fill_values)
+        for input_raster, geocoded_raster, fill_value in geocode_tuples:
             cpu_geo_obj.geocode(
                 radar_grid=radar_grid,
                 input_raster=input_raster,
@@ -606,7 +608,8 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                 az_time_correction=az_correction,
                 slant_range_correction=srg_correction,
                 apply_valid_samples_sub_swath_masking=False,
-                sub_swaths=subswaths)
+                sub_swaths=subswaths,
+                fill_value=fill_value)
 
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
@@ -738,9 +741,10 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
             block_size = lines_per_block * geo_grid.width * type_size
             if input_product_type is InputProduct.RUNW:
                 desired = ['coherence_magnitude', 'unwrapped_phase']
-
+                invalid_values = [np.nan] * len(desired)
                 geocode_obj.data_interpolator = interp_method
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values,freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
@@ -750,6 +754,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                     pol_list_iono = freq_pols_iono[freq]
                     desired = ['ionosphere_phase_screen',
                                'ionosphere_phase_screen_uncertainty']
+                    invalid_values = [np.nan] * len(desired)
                     geocode_iono_bool = True
                     input_hdf5_iono = input_hdf5
                     if is_iono_method_sideband and freq == 'A':
@@ -779,9 +784,9 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                     if geocode_iono_bool:
                         cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
-                                            freq, pol_list_iono, input_hdf5_iono,
-                                            dst_h5, radar_grid_iono, dem_raster,
-                                            block_size,
+                                            invalid_values,freq, pol_list_iono,
+                                            input_hdf5_iono, dst_h5, radar_grid_iono,
+                                            dem_raster, block_size,
                                             iono_sideband=iono_sideband_bool,
                                             az_correction=az_correction,
                                             srg_correction=srg_correction)
@@ -795,15 +800,19 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                 geo_grid.epsg)
 
                 desired = ["connected_components"]
+                invalid_values = [65535] * len(desired)
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values,freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
 
                 desired = ["mask", "valid_data_mask"]
+                invalid_values = [255] * len(desired)
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values, freq,
                                     pol_list, input_hdf5, dst_h5,
                                     radar_grid, dem_raster, block_size,
                                     scratch_path=scratch_path,
@@ -813,19 +822,23 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 desired = ['along_track_offset', 'slant_range_offset',
                            'correlation_surface_peak']
+                invalid_values = [np.nan] * len(desired)
                 geocode_obj.data_interpolator = interp_method
                 radar_grid_offset = get_offset_radar_grid(cfg,
                                                           radar_grid_slc)
 
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values,freq,
                                     offset_pol_list, input_hdf5, dst_h5,
                                     radar_grid_offset, dem_raster,
                                     block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
 
                 desired = ["mask", "valid_data_mask"]
+                invalid_values = [255] * len(desired)
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values, freq,
                                     pol_list, input_hdf5, dst_h5,
                                     radar_grid_offset, dem_raster, block_size,
                                     scratch_path=scratch_path,
@@ -843,7 +856,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                            'correlation_surface_peak',
                            'cross_offset_variance', 'slant_range_offset',
                            'snr']
-
+                invalid_values = [np.nan] * len(desired)
                 # Create list to tuples containing offset layer name with
                 # corresponding interpolation method and invalid value
                 # Interpolation method and invalid value are not used for
@@ -858,7 +871,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                                    slc.getRadarGrid(freq))
 
                 geocode_obj.data_interpolator = interp_method
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values, freq,
                                     offset_pol_list, input_hdf5, dst_h5,
                                     radar_grid, dem_raster, block_size,
                                     offset_params=layer_geocode_params,
@@ -867,8 +881,10 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 desired = ["mask","valid_data_mask"]
+                invalid_values = [255] * len(desired)
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
                                     input_product_type=InputProduct.ROFF,
@@ -881,9 +897,11 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 #RIFG
                 # Geocode the coherence
                 desired = ['coherence_magnitude']
+                invalid_values = [np.nan] * len(desired)
                 geocode_obj.data_interpolator = interp_method
 
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values, freq,
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
                                     input_product_type=InputProduct.RIFG,
@@ -892,9 +910,11 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 # Geocode the wrapped interferogram
                 desired = ['wrapped_interferogram']
+                invalid_values = [np.nan]
                 geocode_cplx_obj.data_interpolator = cfg["processing"]["geocode"]\
                         ['wrapped_interferogram']['interp_method']
-                cpu_geocode_rasters(geocode_cplx_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_cplx_obj, geo_datasets, desired,
+                                    invalid_values, freq,
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size * 2,
                                     input_product_type=InputProduct.RIFG,
@@ -902,8 +922,10 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 desired = ["mask", "valid_data_mask"]
+                invalid_values = [255] * len(desired)
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                    invalid_values, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
                                     input_product_type=InputProduct.RIFG,

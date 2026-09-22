@@ -17,9 +17,10 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_base_writer import InSARBaseWriter
 from .product_paths import L1GroupsPaths
 from .units import Units
-from .utils import (extract_datetime_from_string, extract_pol_valid_mask,
-                    generate_dem_rdr, generate_insar_mask,
-                    get_geolocation_grid_cube_obj, save_to_hdf5_ds)
+from .utils import (compute_valid_pixel_fraction, extract_datetime_from_string,
+                    extract_pol_valid_mask, generate_dem_rdr,
+                    generate_insar_mask, get_geolocation_grid_cube_obj,
+                    save_to_hdf5_ds)
 
 
 class L1InSARWriter(InSARBaseWriter):
@@ -576,6 +577,7 @@ class L1InSARWriter(InSARBaseWriter):
                 offset_pol_group['validDataMask'][...] = valid_mask
                 offset_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
                 offset_pol_group['validDataMask'].attrs['long_name'] = to_bytes("Valid data mask")
+                offset_pol_group['validDataMask'].attrs['validPixelFraction'] = compute_valid_pixel_fraction(valid_mask, 255)
 
     def add_interferogram_to_swaths_group(self, is_unwrapped=False):
         """
@@ -852,6 +854,8 @@ class L1InSARWriter(InSARBaseWriter):
                         igram_pol_group['validDataMask'][...] = valid_mask
                         igram_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
                         igram_pol_group['validDataMask'].attrs['long_name'] = to_bytes("Valid data mask")
+                        igram_pol_group['validDataMask'].attrs['validPixelFraction'] = compute_valid_pixel_fraction(valid_mask, 255)
+
 
     def add_swaths_to_hdf5(self):
         """
