@@ -264,7 +264,13 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5,
             masked_water_mask = water_mask[mask]
             # Add the water mask to the mask layer
             subswath_mask = mask_layer & 0xFF # get the subswath mask
-            subswath_mask[mask] += (100 * water_mask)[mask].astype(np.uint8)
+            subswath_mask[mask] = (
+                subswath_mask[mask] % np.uint32(100)
+                + np.uint32(100) * water_mask[mask].astype(np.uint32)
+            )
+            mask_layer[mask] = (
+                mask_layer[mask] & np.uint32(0xFFFFFF00)
+            ) | subswath_mask[mask]
             dst_h5[mask_h5_path][...] = mask_layer | subswath_mask
 
             # Update the percentage of the water
@@ -597,6 +603,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     # init geocode object
     geocode_obj = isce3.geocode.GeocodeFloat32()
     geocode_cplx_obj = isce3.geocode.GeocodeCFloat32()
+    geocode_mask_obj = isce3.geocode.GeocodeFloat64()
 
     # init geocode members
     orbit = slc.getOrbit()
@@ -620,6 +627,13 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     geocode_cplx_obj.numiter_geo2rdr = iteration_geo2rdr
     geocode_cplx_obj.data_interpolator = interp_method
 
+    geocode_mask_obj.orbit = orbit
+    geocode_mask_obj.ellipsoid = ellipsoid
+    geocode_mask_obj.doppler = grid_zero_doppler
+    geocode_mask_obj.threshold_geo2rdr = threshold_geo2rdr
+    geocode_mask_obj.numiter_geo2rdr = iteration_geo2rdr
+    geocode_mask_obj.data_interpolator = "NEAREST"
+
     t_all = time.time()
     with HDF5OptimizedReader(name=output_hdf5, mode="a") as dst_h5:
         for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
@@ -632,6 +646,10 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
             geo_grid = geogrids[freq]
             geocode_obj.geogrid(geo_grid.start_x, geo_grid.start_y,
+                        geo_grid.spacing_x, geo_grid.spacing_y,
+                        geo_grid.width, geo_grid.length, geo_grid.epsg)
+
+            geocode_mask_obj.geogrid(geo_grid.start_x, geo_grid.start_y,
                         geo_grid.spacing_x, geo_grid.spacing_y,
                         geo_grid.width, geo_grid.length, geo_grid.epsg)
 
@@ -715,7 +733,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 desired = ["mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_mask_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5,
                                     radar_grid, dem_raster, block_size,
                                     scratch_path=scratch_path,
@@ -737,7 +755,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 desired = ["mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_mask_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5,
                                     radar_grid_offset, dem_raster, block_size,
                                     scratch_path=scratch_path,
@@ -780,7 +798,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 desired = ["mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_mask_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
                                     input_product_type=InputProduct.ROFF,
@@ -815,7 +833,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 desired = ["mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                cpu_geocode_rasters(geocode_mask_obj, geo_datasets, desired, freq,
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
                                     input_product_type=InputProduct.RIFG,
