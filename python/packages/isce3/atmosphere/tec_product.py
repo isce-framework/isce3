@@ -77,7 +77,7 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
         TEC delta range
     '''
     # compute sub orbital TEC from total and top TEC in JSON
-    sub_orbital_tec = _get_suborbital_tec(tec_json_dict, nr_fr,
+    sub_orbital_tec = _get_tec_profile(tec_json_dict, nr_fr,
                                           utc_time.mask,
                                           total_tec_only=total_tec_only,
                                           polyfit=polyfit,
@@ -149,7 +149,7 @@ def _smooth_mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
     return np.polyval(coeffs, x)
 
 
-def _get_suborbital_tec(tec_json_dict: dict,
+def _get_tec_profile(tec_json_dict: dict,
                         nr_fr: str,
                         tec_time_mask: np.ndarray,
                         total_tec_only: bool=False,
@@ -185,26 +185,26 @@ def _get_suborbital_tec(tec_json_dict: dict,
 
     Returns
     -------
-    sub_orbital_tec: np.ndarray
+    tec_profile: np.ndarray
         Suborbital TEC
     '''
     # compute sub orbital TEC from total and top TEC in JSON
     tot_tec = np.array(tec_json_dict[f'totTec{nr_fr}'])
     top_tec = np.array(tec_json_dict[f'topTec{nr_fr}'])
     if total_tec_only:
-        sub_orbital_tec = tot_tec
+        tec_profile = tot_tec
     else:
-        sub_orbital_tec = tot_tec - top_tec
-    sub_orbital_tec = sub_orbital_tec[~tec_time_mask]
+        tec_profile = tot_tec - top_tec
+    tec_profile = tec_profile[~tec_time_mask]
 
     if polyfit:
         # Fit a polynomial over the TEC profile to smooth out noise, rejecting
         # noisy samples first via a MAD-based threshold.
-        x = np.arange(len(sub_orbital_tec))
-        sub_orbital_tec = _smooth_mad_polyfit(x, sub_orbital_tec, polyfit_degree,
+        x = np.arange(len(tec_profile))
+        tec_profile = _smooth_mad_polyfit(x, tec_profile, polyfit_degree,
                                        num_sigma=num_sigma)
 
-    return sub_orbital_tec
+    return tec_profile
 
 
 def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
@@ -368,7 +368,7 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     # Load the TEC information from IMAGEN parsed as dictionary
     # Use radar grid start/end range for near/far range
     # Transpose stacked output to get shape to be consistent with coordinates
-    tec_suborbital = np.vstack([_get_suborbital_tec(tec_json_dict,
+    tec_suborbital = np.vstack([_get_tec_profile(tec_json_dict,
                                                     nr_fr,
                                                     t_since_epoch_masked.mask,
                                                     total_tec_only=total_tec_only,
