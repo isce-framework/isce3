@@ -387,7 +387,7 @@
                       raw_valid_pulse_fraction_rv="Ratio of valid pulse count to total pulses required to form the input RSLC RV image"
                       rslc_valid_pixel_fraction_lh="Ratio of fully focused pixels to total number of pixels in the input RSLC LH mask"
                       raw_valid_pulse_fraction_lh="Ratio of valid pulse count to total pulses required to form the input RSLC LH image"
-                      rslc_valid_pixel_fraction_lh="Ratio of fully focused pixels to total number of pixels in the input RSLC LV mask"
+                      rslc_valid_pixel_fraction_lv="Ratio of fully focused pixels to total number of pixels in the input RSLC LV mask"
                       raw_valid_pulse_fraction_lv="Ratio of valid pulse count to total pulses required to form the input RSLC LV image"
                       grid_mapping="projection">Bitwise OR of input data exception codes for each image pixel (0: no anomaly, 2: NISAR LSAR qFSP-H1 sample slip). Also includes OR of validity mask bits, where each bit is set on for fully-focused data or off for partially focused or missing data (256:HH, 512:HV, 1024:VH, 2048:VV, 4096:LH, 8192:LV, 16384:RH, 32768:RV)</annotation>
         </integer>
@@ -819,7 +819,7 @@
                       raw_valid_pulse_fraction_rv="Ratio of valid pulse count to total pulses required to form the input RSLC RV image"
                       rslc_valid_pixel_fraction_lh="Ratio of fully focused pixels to total number of pixels in the input RSLC LH mask"
                       raw_valid_pulse_fraction_lh="Ratio of valid pulse count to total pulses required to form the input RSLC LH image"
-                      rslc_valid_pixel_fraction_lh="Ratio of fully focused pixels to total number of pixels in the input RSLC LV mask"
+                      rslc_valid_pixel_fraction_lv="Ratio of fully focused pixels to total number of pixels in the input RSLC LV mask"
                       raw_valid_pulse_fraction_lv="Ratio of valid pulse count to total pulses required to form the input RSLC LV image"
                       grid_mapping="projection">Bitwise OR of input data exception codes for each image pixel (0: no anomaly, 2: NISAR LSAR qFSP-H1 sample slip). Also includes OR of validity mask bits, where each bit is set on for fully-focused data or off for partially focused or missing data (256:HH, 512:HV, 1024:VH, 2048:VV, 4096:LH, 8192:LV, 16384:RH, 32768:RV)</annotation>
         </integer>
