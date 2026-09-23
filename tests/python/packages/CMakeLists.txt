@@ -11,6 +11,7 @@ isce3/core/orbit.py
 isce3/core/poly2d.py
 isce3/core/resample_block_generators.py
 isce3/focus/caltone.py
+isce3/focus/cheby_windows.py
 isce3/focus/valid_regions.py
 isce3/focus/notch.py
 isce3/geocode/geocode_slc.py

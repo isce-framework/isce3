@@ -37,6 +37,7 @@ void addbinding_cuda_backproject(py::module& m)
                 py::dict rdr2geo_params,
                 py::dict geo2rdr_params,
                 int batch,
+                const std::optional<isce3::core::ChebyKernel<float>> window,
                 std::optional<py::array_t<float, py::array::c_style>> height) {
 
             if (out.ndim() != 2) {
@@ -93,7 +94,7 @@ void addbinding_cuda_backproject(py::module& m)
                 py::gil_scoped_release release;
                 err = backproject(out_data, out_geometry, in_data, in_geometry,
                         dem, fc, ds, kernel, atm, r2gparams, g2rparams, batch,
-                        height_data);
+                        window, height_data);
             }
             // TODO bind ErrorCode class.  For now return nonzero on failure.
             return err != ErrorCode::Success;
@@ -113,5 +114,6 @@ void addbinding_cuda_backproject(py::module& m)
             py::arg("rdr2geo_params") = py::dict(),
             py::arg("geo2rdr_params") = py::dict(),
             py::arg("batch") = 1024,
+            py::arg("window") = py::none(),
             py::arg("height") = py::none());
 }
