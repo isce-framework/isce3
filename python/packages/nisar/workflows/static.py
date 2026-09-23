@@ -322,6 +322,12 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
                 max_block_size=geocode_params["max_block_size"],
             )
 
+        # Reproject the water mask to the output geogrid and copy the
+        # fill values from the layover/shadow mask. The geocoding of the
+        # layover/shadow mask assigns the fill value to areas outside the
+        # radar grid, which is then used to identify the corresponding fill
+        # values in the water mask and limit its classification to the
+        # radar grid boundaries.
         logger.info("Compute re-projected binary water mask layer")
         with log_elapsed_time(logger.info,
                               "Computing re-projected binary water mask"):
@@ -329,6 +335,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
                 water_distance_raster_file=water_mask_raster_file,
                 geo_grid=geo_grid,
                 scratch_dir=scratch_dir,
+                reference_fill_value=layover_shadow_mask,
                 **processing_params["water_mask"],
             )
 

@@ -18,15 +18,28 @@ def test_binarize_nisar_water_mask():
     # Concatenate the three arrays into a single 20x30 array.
     water_distance = np.concatenate([nonwater, water, invalid], axis=1)
 
+    # Create reference fill value mask with same shape as `water_distance`
+    reference_fill_value = np.zeros_like(water_distance)
+
+    # Add fill values over non water
+    reference_fill_value[:, 5:10] = 255
+
+    # Add fill values over water
+    reference_fill_value[:, 15:20] = 255
+
     # Convert the water distance map into a binary water mask
-    water_mask = binarize_nisar_water_mask(water_distance)
+    water_mask = binarize_nisar_water_mask(
+        water_distance, reference_fill_value=reference_fill_value
+    )
 
     # Check the datatype of the output mask.
     assert water_mask.dtype == np.uint8
 
     # Check the mask values.
-    np.testing.assert_equal(water_mask[:, :10], 0)
-    np.testing.assert_equal(water_mask[:, 10:20], 1)
+    np.testing.assert_equal(water_mask[:, :5], 0)
+    np.testing.assert_equal(water_mask[:, 5:10], 255)
+    np.testing.assert_equal(water_mask[:, 10:15], 1)
+    np.testing.assert_equal(water_mask[:, 15:20], 255)
     np.testing.assert_equal(water_mask[:, 20:], 255)
 
 
