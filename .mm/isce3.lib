@@ -4,7 +4,7 @@
 # the isce3 lib
 isce3.lib.root := cxx/isce3/
 isce3.lib.stem := isce3
-isce3.lib.extern := gdal hdf5 mpi eigen fftw pyre
+isce3.lib.extern := gdal hdf5 eigen fftw pyre
 # if we have cuda
 ifdef cuda.dir
   # add it to the pile of external dependencies

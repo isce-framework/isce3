@@ -4,14 +4,19 @@ theme:
 nav:
   - Home: index.md
   - Installation: buildinstall.md
-  - Python API: api/python/isce3/core.html
-  - C++ API (Unstable): isce3/annotated.html
+  - Python API: api/python/isce3.html
+  - C++ API (Unstable): api/cxx
+  - Maintainer Documentation:
+      - Release Procedure: maintainer/release-procedure.md
+      - Docker Image Updates: maintainer/docker-image-updates.md
+      - Security Scanning: maintainer/security-scanning.md
 
 extra_javascript:
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 markdown_extensions:
   - admonition
+  - pymdownx.blocks.caption
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.tabbed:

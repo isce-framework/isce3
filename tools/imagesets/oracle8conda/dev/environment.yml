@@ -1,0 +1,21 @@
+channels:
+  - nvidia/label/cuda-11.8.0
+  - conda-forge
+  - nodefaults
+dependencies:
+  - cmake>=3.18
+  - cuda-cudart-dev
+  - cuda-nvcc
+  - doxygen
+  - eigen>=3.3.7
+  - git
+  - gmock>=1.10
+  - gtest>=1.10
+  # CUDA 11.8 requires GCC <12 as host compiler (see
+  # https://docs.nvidia.com/cuda/archive/11.8.0/cuda-installation-guide-linux/index.html#system-requirements).
+  - gxx_linux-64>=9,<12
+  - libcufft-dev
+  - ninja
+  - pybind11>=2.5
+  - pytest
+  - rpm-tools

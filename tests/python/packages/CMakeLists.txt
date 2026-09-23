@@ -10,6 +10,7 @@ isce3/core/llh.py
 isce3/core/orbit.py
 isce3/core/poly2d.py
 isce3/core/resample_block_generators.py
+isce3/focus/caltone.py
 isce3/focus/cheby_windows.py
 isce3/focus/valid_regions.py
 isce3/focus/notch.py
@@ -17,16 +18,20 @@ isce3/geocode/geocode_slc.py
 isce3/geometry/bounding_polygon.py
 isce3/geometry/bounding_radar_grid.py
 isce3/geometry/polygons.py
+isce3/geometry/radar_grid_spacing.py
 isce3/image/resample_slc.py
 isce3/io/gdal/gdal_raster.py
 isce3/io/background.py
 isce3/matchtemplate/import_ampcor.py
 isce3/matchtemplate/test_ampcor.py
+isce3/math/offsets_polyfit.py
 isce3/product/cf_conventions.py
+isce3/signal/cola_windows.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/rfi_freq_null.py
 isce3/signal/rfi_process_evd.py
+isce3/signal/rfi_tone_rank.py
 isce3/solid_earth_tides/solid_earth_tides.py
 nisar/antenna/beamformer.py
 nisar/antenna/pattern.py
@@ -34,6 +39,7 @@ nisar/cal/corner_reflector_slc_func.py
 nisar/cal/corner_reflector.py
 nisar/cal/faraday_rotation_angle_slc.py
 nisar/cal/pol_channel_imbalance_slc.py
+nisar/cal/qfsp_slip.py
 nisar/mixed_mode/logic.py
 nisar/mixed_mode/processing.py
 nisar/noise/noise_estimation_from_raw.py
@@ -51,6 +57,12 @@ nisar/products/readers/rslc_cal.py
 nisar/products/product_spec.py
 nisar/products/projection.py
 nisar/products/utils.py
+nisar/static/ephemeris.py
+nisar/static/geo_grid.py
+nisar/static/granule_id.py
+nisar/static/product.py
+nisar/static/runconfig.py
+nisar/static/water_mask.py
 nisar/workflows/crossmul.py
 nisar/workflows/estimate_abscal_factor.py
 nisar/workflows/faraday_rot_angle_from_rslc.py
@@ -76,6 +88,7 @@ nisar/workflows/process_args.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/resample_slc_v2.py
+nisar/workflows/static.py
 nisar/workflows/unwrap.py
 nisar/workflows/point_target_analysis.py
 nisar/workflows/nisar_l0b_dm1_to_science.py
@@ -83,6 +96,7 @@ nisar/workflows/nisar_l0b_dm2_to_dbf.py
 nisar/workflows/noise_estimator.py
 nisar/workflows/pol_channel_imbalance_from_rslc.py
 nisar/workflows/geocode_corrections.py
+nisar/workflows/qfsp_ionosphere.py
 )
 
 if(WITH_CUDA)

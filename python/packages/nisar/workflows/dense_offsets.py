@@ -178,12 +178,22 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
         ampcor_obj.numberWindowAcross = cfg['offset_width']
     else:
         offset_width = (width - margin_rg) // ampcor_obj.skipSampleAcross
+        if offset_width <= 0:
+            err_str = (f"Image width ({width}) is too small for the configured parameters "
+                       f"(margin_rg={margin_rg}): no valid ampcor windows fit across range.")
+            error_channel.log(err_str)
+            raise ValueError(err_str)
         ampcor_obj.numberWindowAcross = offset_width
 
     if cfg['offset_length'] is not None:
         ampcor_obj.numberWindowDown = cfg['offset_length']
     else:
         offset_length = (length - margin_az) // ampcor_obj.skipSampleDown
+        if offset_length <= 0:
+            err_str = (f"Image length ({length}) is too small for the configured parameters "
+                       f"(margin_az={margin_az}): no valid ampcor windows fit along azimuth.")
+            error_channel.log(err_str)
+            raise ValueError(err_str)
         ampcor_obj.numberWindowDown = offset_length
 
     if cfg['cross_correlation_domain'] is not None:
@@ -202,7 +212,21 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
 
     if cfg['deramping_method'] is not None:
         deramp = cfg['deramping_method']
-        ampcor_obj.derampMethod = 0 if deramp == "magnitude" else 1
+        if deramp == "magnitude":
+            ampcor_obj.derampMethod = 0
+        elif deramp == "complex":
+            ampcor_obj.derampMethod = 1
+        else: # skip deramping
+            ampcor_obj.derampMethod = 2
+
+    if cfg['deramping_axis'] is not None:
+        deramp_axis = cfg['deramping_axis']
+        if deramp_axis == "azimuth":
+            ampcor_obj.derampAxis = 0
+        elif deramp_axis == "range":
+            ampcor_obj.derampAxis = 1
+        else: # both directions
+            ampcor_obj.derampAxis = 2
 
     if cfg['correlation_statistics_zoom'] is not None:
         ampcor_obj.corrStatWindowSize = cfg['correlation_statistics_zoom']
@@ -252,7 +276,7 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
     if cfg['merge_gross_offset'] is not None:
         ampcor_obj.mergeGrossOffset = 1 if cfg['merge_gross_offset'] else 0
 
-    # Check pixel in image range
+    # Check pixel in image range; warns to stderr when out of range but does not abort
     ampcor_obj.checkPixelInImageRange()
 
     return ampcor_obj

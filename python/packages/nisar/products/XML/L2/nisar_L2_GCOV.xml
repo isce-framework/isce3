@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.4.0 -->
+<!-- product specification version is 1.5.0 -->
 <algorithm name="L2_GeocodedCovariance"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GCOV_template">
@@ -223,11 +223,18 @@
                             lang="en">"True" if any portion of this product was acquired in a joint observation mode (e.g., L-band and S-band simultaneously), "False" otherwise</annotation>
         </string>
         <string length="0"
-                name="/science/LSAR/GCOV/identification/staticLayersDataAccess"
+                name="/science/LSAR/identification/staticLayersDataAccess"
                 shape="scalar">
           <annotation app="conformance"
                       lang="en">Location of the static layers product associated with this product (URL or DOI)</annotation>
         </string>
+        <integer name="/science/LSAR/identification/hasInputDataException"
+                 shape="scalar"
+                 signed="false"
+                 width="8">
+          <annotation app="conformance"
+                      lang="en">Indication of input data exceptions or anomalies present in this granule. Bitwise OR of instrument exception codes for all image pixels (0: no anomaly, 2: NISAR LSAR qFSP-H1 sample slip)</annotation>
+        </integer>
         <!-- End of product identification -->
 
         <!-- Main layers for frequencyA -->
@@ -356,6 +363,33 @@
                       valid_min="0"
                       _FillValue="255"
                       grid_mapping="projection">Mask indicating the subswath number associated with valid GCOV samples. A GCOV sample is only considered valid if it is generated from fully-focused radar samples. If at least one radar sample in the averaging set is partially focused or invalid, the corresponding mask pixel will contain the value 0. GCOV pixels outside of the radar acquisition extent are filled with the value 255</annotation>
+        </integer>
+        <integer name="/science/LSAR/GCOV/grids/frequencyA/inputDataExceptionMask"
+              shape="realDataFrequencyAShape"
+              signed="false"
+              width="16">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      valid_min="0"
+                      _FillValue="65535"
+                      rslc_valid_pixel_fraction_hh="Ratio of fully focused pixels to total number of pixels in the input RSLC HH mask"
+                      raw_valid_pulse_fraction_hh="Ratio of valid pulse count to total pulses required to form the input RSLC HH image"
+                      rslc_valid_pixel_fraction_hv="Ratio of fully focused pixels to total number of pixels in the input RSLC HV mask"
+                      raw_valid_pulse_fraction_hv="Ratio of valid pulse count to total pulses required to form the input RSLC HV image"
+                      rslc_valid_pixel_fraction_vh="Ratio of fully focused pixels to total number of pixels in the input RSLC VH mask"
+                      raw_valid_pulse_fraction_vh="Ratio of valid pulse count to total pulses required to form the input RSLC VH image"
+                      rslc_valid_pixel_fraction_vv="Ratio of fully focused pixels to total number of pixels in the input RSLC VV mask"
+                      raw_valid_pulse_fraction_vv="Ratio of valid pulse count to total pulses required to form the input RSLC VV image"
+                      rslc_valid_pixel_fraction_rh="Ratio of fully focused pixels to total number of pixels in the input RSLC RH mask"
+                      raw_valid_pulse_fraction_rh="Ratio of valid pulse count to total pulses required to form the input RSLC RH image"
+                      rslc_valid_pixel_fraction_rv="Ratio of fully focused pixels to total number of pixels in the input RSLC RV mask"
+                      raw_valid_pulse_fraction_rv="Ratio of valid pulse count to total pulses required to form the input RSLC RV image"
+                      rslc_valid_pixel_fraction_lh="Ratio of fully focused pixels to total number of pixels in the input RSLC LH mask"
+                      raw_valid_pulse_fraction_lh="Ratio of valid pulse count to total pulses required to form the input RSLC LH image"
+                      rslc_valid_pixel_fraction_lv="Ratio of fully focused pixels to total number of pixels in the input RSLC LV mask"
+                      raw_valid_pulse_fraction_lv="Ratio of valid pulse count to total pulses required to form the input RSLC LV image"
+                      grid_mapping="projection">Bitwise OR of input data exception codes for each image pixel (0: no anomaly, 2: NISAR LSAR qFSP-H1 sample slip). Also includes OR of validity mask bits, where each bit is set on for fully-focused data or off for partially focused or missing data (256:HH, 512:HV, 1024:VH, 2048:VV, 4096:LH, 8192:LV, 16384:RH, 32768:RV)</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyA/HHHH"
               shape="realDataFrequencyAShape"
@@ -761,6 +795,33 @@
                       valid_min="0"
                       _FillValue="255"
                       grid_mapping="projection">Mask indicating the subswath number associated with valid GCOV samples. A GCOV sample is only considered valid if it is generated from fully-focused radar samples. If at least one radar sample in the averaging set is partially focused or invalid, the corresponding mask pixel will contain the value 0. GCOV pixels outside of the radar acquisition extent are filled with the value 255</annotation>
+        </integer>
+        <integer name="/science/LSAR/GCOV/grids/frequencyB/inputDataExceptionMask"
+              shape="realDataFrequencyBShape"
+              signed="false"
+              width="16">
+          <annotation app="conformance"
+                      lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      valid_min="0"
+                      _FillValue="65535"
+                      rslc_valid_pixel_fraction_hh="Ratio of fully focused pixels to total number of pixels in the input RSLC HH mask"
+                      raw_valid_pulse_fraction_hh="Ratio of valid pulse count to total pulses required to form the input RSLC HH image"
+                      rslc_valid_pixel_fraction_hv="Ratio of fully focused pixels to total number of pixels in the input RSLC HV mask"
+                      raw_valid_pulse_fraction_hv="Ratio of valid pulse count to total pulses required to form the input RSLC HV image"
+                      rslc_valid_pixel_fraction_vh="Ratio of fully focused pixels to total number of pixels in the input RSLC VH mask"
+                      raw_valid_pulse_fraction_vh="Ratio of valid pulse count to total pulses required to form the input RSLC VH image"
+                      rslc_valid_pixel_fraction_vv="Ratio of fully focused pixels to total number of pixels in the input RSLC VV mask"
+                      raw_valid_pulse_fraction_vv="Ratio of valid pulse count to total pulses required to form the input RSLC VV image"
+                      rslc_valid_pixel_fraction_rh="Ratio of fully focused pixels to total number of pixels in the input RSLC RH mask"
+                      raw_valid_pulse_fraction_rh="Ratio of valid pulse count to total pulses required to form the input RSLC RH image"
+                      rslc_valid_pixel_fraction_rv="Ratio of fully focused pixels to total number of pixels in the input RSLC RV mask"
+                      raw_valid_pulse_fraction_rv="Ratio of valid pulse count to total pulses required to form the input RSLC RV image"
+                      rslc_valid_pixel_fraction_lh="Ratio of fully focused pixels to total number of pixels in the input RSLC LH mask"
+                      raw_valid_pulse_fraction_lh="Ratio of valid pulse count to total pulses required to form the input RSLC LH image"
+                      rslc_valid_pixel_fraction_lv="Ratio of fully focused pixels to total number of pixels in the input RSLC LV mask"
+                      raw_valid_pulse_fraction_lv="Ratio of valid pulse count to total pulses required to form the input RSLC LV image"
+                      grid_mapping="projection">Bitwise OR of input data exception codes for each image pixel (0: no anomaly, 2: NISAR LSAR qFSP-H1 sample slip). Also includes OR of validity mask bits, where each bit is set on for fully-focused data or off for partially focused or missing data (256:HH, 512:HV, 1024:VH, 2048:VV, 4096:LH, 8192:LV, 16384:RH, 32768:RV)</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyB/HHHH"
               shape="realDataFrequencyBShape"
@@ -1807,10 +1868,14 @@
               <annotation app="conformance"
                           lang="en"
                           DIMENSION_LIST="HDF5 internal attribute"
-                          mean_value="Arithmetic average of the numeric data points"
-                          min_value="Minimum value of the numeric data points"
-                          max_value="Maximum value of the numeric data points"
-                          sample_stddev="Standard deviation of the numeric data points"
+                          mean_real_value="Arithmetic average of the real part of the numeric data points"
+                          min_real_value="Minimum value of the real part of the numeric data points"
+                          max_real_value="Maximum value of the real part of the numeric data points"
+                          sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                          mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                          min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                          max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                          sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                           _FillValue="(nan+nan*j)"
                           grid_mapping="projection"
                           units="1">Crosstalk in H-transmit channel expressed as ratio txV / txH</annotation>
@@ -1822,10 +1887,14 @@
               <annotation app="conformance"
                           lang="en"
                           DIMENSION_LIST="HDF5 internal attribute"
-                          mean_value="Arithmetic average of the numeric data points"
-                          min_value="Minimum value of the numeric data points"
-                          max_value="Maximum value of the numeric data points"
-                          sample_stddev="Standard deviation of the numeric data points"
+                          mean_real_value="Arithmetic average of the real part of the numeric data points"
+                          min_real_value="Minimum value of the real part of the numeric data points"
+                          max_real_value="Maximum value of the real part of the numeric data points"
+                          sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                          mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                          min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                          max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                          sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                           _FillValue="(nan+nan*j)"
                           grid_mapping="projection"
                           units="1">Crosstalk in V-transmit channel expressed as ratio txH / txV</annotation>
@@ -1837,10 +1906,14 @@
               <annotation app="conformance"
                           lang="en"
                           DIMENSION_LIST="HDF5 internal attribute"
-                          mean_value="Arithmetic average of the numeric data points"
-                          min_value="Minimum value of the numeric data points"
-                          max_value="Maximum value of the numeric data points"
-                          sample_stddev="Standard deviation of the numeric data points"
+                          mean_real_value="Arithmetic average of the real part of the numeric data points"
+                          min_real_value="Minimum value of the real part of the numeric data points"
+                          max_real_value="Maximum value of the real part of the numeric data points"
+                          sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                          mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                          min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                          max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                          sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                           _FillValue="(nan+nan*j)"
                           grid_mapping="projection"
                           units="1">Crosstalk in H-receive channel expressed as ratio rxV / rxH</annotation>
@@ -1852,10 +1925,14 @@
               <annotation app="conformance"
                           lang="en"
                           DIMENSION_LIST="HDF5 internal attribute"
-                          mean_value="Arithmetic average of the numeric data points"
-                          min_value="Minimum value of the numeric data points"
-                          max_value="Maximum value of the numeric data points"
-                          sample_stddev="Standard deviation of the numeric data points"
+                          mean_real_value="Arithmetic average of the real part of the numeric data points"
+                          min_real_value="Minimum value of the real part of the numeric data points"
+                          max_real_value="Maximum value of the real part of the numeric data points"
+                          sample_stddev_real="Standard deviation of the real part of the numeric data points"
+                          mean_imag_value="Arithmetic average of the imaginary part of the numeric data points"
+                          min_imag_value="Minimum value of the imaginary part of the numeric data points"
+                          max_imag_value="Maximum value of the imaginary part of the numeric data points"
+                          sample_stddev_imag="Standard deviation of the imaginary part of the numeric data points"
                           _FillValue="(nan+nan*j)"
                           grid_mapping="projection"
                           units="1">Crosstalk in V-receive channel expressed as ratio rxH / rxV</annotation>
@@ -2589,6 +2666,9 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
                           long_name="Y coordinates of projection"
                           standard_name="projection_y_coordinate"
                           units="meters">Y coordinates in specified projection</annotation>
@@ -2598,6 +2678,9 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
+                          REFERENCE_LIST="HDF5 internal attribute"
+                          CLASS="HDF5 internal attribute"
+                          NAME="HDF5 internal attribute"
                           long_name="X coordinates of projection"
                           standard_name="projection_x_coordinate"
                           units="meters">X coordinates in specified projection</annotation>
@@ -2607,6 +2690,7 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          DIMENSION_LIST="HDF5 internal attribute"
                           _FillValue="nan"
                           grid_mapping="projection"
                           units="meters">Reference terrain height as a function of map coordinates</annotation>
@@ -2781,6 +2865,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -2815,6 +2901,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      grid_mapping="projection"
                       mean_value="Arithmetic average of the numeric data points"
                       min_value="Minimum value of the numeric data points"
                       max_value="Maximum value of the numeric data points"
@@ -2828,6 +2916,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      grid_mapping="projection"
                       mean_value="Arithmetic average of the numeric data points"
                       min_value="Minimum value of the numeric data points"
                       max_value="Maximum value of the numeric data points"
@@ -2849,6 +2939,8 @@
                         inverse_flattening="Inverse flattening of the ellipsoidal figure"
                         latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection"
                         longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum"
+                        longitude_of_central_meridian="The line of longitude at the center of a map projection generally used as the basis for constructing the projection"
+                        scale_factor_at_central_meridian="A multiplier for reducing a distance obtained from a map by computation or scaling to the actual distance along the central meridian"
                         semi_major_axis="Semi-major axis"
                         spatial_ref="Spatial reference"
                         utm_zone_number="UTM zone number"
@@ -2883,6 +2975,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      grid_mapping="projection"
                       mean_value="Arithmetic average of the numeric data points"
                       min_value="Minimum value of the numeric data points"
                       max_value="Maximum value of the numeric data points"
@@ -2895,6 +2989,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      DIMENSION_LIST="HDF5 internal attribute"
+                      grid_mapping="projection"
                       mean_value="Arithmetic average of the numeric data points"
                       min_value="Minimum value of the numeric data points"
                       max_value="Maximum value of the numeric data points"

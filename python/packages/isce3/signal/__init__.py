@@ -1,4 +1,5 @@
 from isce3.ext.isce3.signal import *
+from .cola_windows import cola_windows
 from .fir_filter_func import (cheby_equi_ripple_filter,
                               design_shaped_lowpass_filter,
                               design_shaped_bandpass_filter,
@@ -12,6 +13,7 @@ from . import rfi_detection_evd
 from . import rfi_freq_null
 from . import rfi_mitigation_evd
 from . import rfi_process_evd
+from . import rfi_tone_rank
 from .multi_channel_analysis import (
     form_single_tap_dbf_echo,
     dbf_onetap_from_dm2,

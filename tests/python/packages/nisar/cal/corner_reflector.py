@@ -42,7 +42,7 @@ def create_tmp_text_file(contents: str, suffix: str | None = None) -> Iterator[P
         yield filepath
 
 
-@pytest.mark.parametrize("validity", [-1, 8])
+@pytest.mark.parametrize("validity", [-1, 32])
 def test_bad_corner_reflector_validity(validity: int):
     errmsg = "validity flag has invalid value"
     with pytest.raises(ValueError, match=errmsg):
@@ -55,6 +55,7 @@ def test_bad_corner_reflector_validity(validity: int):
             survey_date=isce3.core.DateTime("1970-01-01"),
             validity=validity,
             velocity=[0.0, 0.0, 0.0],
+            shape="triangular",
         )
 
 
@@ -337,3 +338,16 @@ def test_parse_sample_nisar_csv(sample_nisar_csv: Path):
     # check that strings are parsed without issues due to spaces.
     npt.assert_(crs[0].id == "N01K")
     npt.assert_(crs[0].survey_date == isce3.core.DateTime("2021-06-04"))
+
+
+@pytest.fixture
+def sample_nisar_csv_with_shape() -> Path:
+    return Path(iscetest.data) / "abscal" / "NISAR_ANC_CORNER_REFLECTORS_006.csv"
+
+
+def test_parse_sample_nisar_csv(sample_nisar_csv_with_shape: Path):
+    crs = list(nisar.cal.parse_corner_reflector_csv(sample_nisar_csv_with_shape))
+    # The last one is a SWOT CR which is square.
+    npt.assert_(crs[-1].id == "S34R")
+    # should map "Square" -> "square"
+    npt.assert_(crs[-1].shape == "square")

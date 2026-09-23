@@ -256,8 +256,27 @@ def set_ampcor_params(cfg, ampcor_obj):
     ampcor_obj.algorithm = 0 if cfg['cross_correlation_domain'] == \
                                 'frequency' else 1
     ampcor_obj.rawDataOversamplingFactor = cfg['slc_oversampling_factor']
-    ampcor_obj.derampMethod = 0 if cfg['deramping_method'] == \
-                                   'magnitude' else 1
+
+    if cfg['deramping_method'] is not None:
+        deramp = cfg['deramping_method']
+        if deramp == "magnitude":
+            ampcor_obj.derampMethod = 0
+        elif deramp == "complex":
+            ampcor_obj.derampMethod = 1
+        else: # skip deramping
+            ampcor_obj.derampMethod = 2
+
+    if cfg['deramping_axis'] is not None:
+        deramp_axis = cfg['deramping_axis']
+        if deramp_axis == "azimuth":
+            ampcor_obj.derampAxis = 0
+        elif deramp_axis == "range":
+            ampcor_obj.derampAxis = 1
+        elif deramp_axis == "both":
+            ampcor_obj.derampAxis = 2
+        else:
+            raise ValueError(f"invalid {deramp_axis=}")
+
     ampcor_obj.corrStatWindowSize = cfg['correlation_statistics_zoom']
     ampcor_obj.corrSurfaceZoomInWindow = cfg['correlation_surface_zoom']
     ampcor_obj.corrSurfaceOverSamplingFactor = cfg[

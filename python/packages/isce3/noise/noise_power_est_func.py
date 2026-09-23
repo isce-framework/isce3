@@ -203,7 +203,7 @@ def noise_pow_min_eigval_est(dset, cpi=2, *, scalar=1, remove_mean=False,
     # all CPIs/range lines. This will lead to noise power est closer to the
     # thermal noise. The assumption is that noise stat is stationary over
     # all range lines.
-    cpi_slices = _cpi_slice_gen(nrgls, cpi)
+    cpi_slices = cpi_slice_gen(nrgls, cpi)
     pw_ns_all = []
     for cpi_slice in cpi_slices:
         d = dset[cpi_slice]
@@ -233,7 +233,7 @@ def noise_pow_min_eigval_est(dset, cpi=2, *, scalar=1, remove_mean=False,
 
 
 # helper function
-def _cpi_slice_gen(nrgl, cpi):
+def cpi_slice_gen(nrgl, cpi):
     """Helper function for CPI slice generator
 
     Parameters

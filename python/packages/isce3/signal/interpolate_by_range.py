@@ -1,26 +1,27 @@
 import numpy as np
 
+
 def decimate_freq_a_array(
         slant_main,
         slant_side,
         target_runw):
-    """decimate target_runw of main band to have same size with side band
-    assuming slant_main and slant_side are evenly spaced
+    """Decimate target_runw of main band to have same size as side band,
+    assuming slant_main and slant_side are evenly spaced.
 
     Parameters
     ----------
     slant_main : numpy.ndarray
-        slant range array of frequency A band
+        Slant range array of frequency A band
     slant_side : numpy.ndarray
-        slant range array of frequency B band
+        Slant range array of frequency B band
     target_runw : numpy.ndarray
-        RUNW array of frequency A band
-        width of target_runw should be same with length of slant_main
+        RUNW array of frequency A band.
+        Width of target_runw should be same as length of slant_main.
 
     Returns
     -------
     decimated_array : numpy.ndarray
-        decimated RUNW array
+        Decimated RUNW array with width == len(slant_side).
     """
     _, width = target_runw.shape
 
@@ -28,16 +29,46 @@ def decimate_freq_a_array(
     spacing_main = slant_main[1] - slant_main[0]
     spacing_side = slant_side[1] - slant_side[0]
 
-    resampling_scale_factor = int(np.round(spacing_side / spacing_main))
+    # make sure stride is at least 1
+    resampling_scale_factor = max(
+        1, int(np.round(spacing_side / spacing_main))
+    )
 
-    x_cand = np.arange(1, width + 1)
+    n_side = len(slant_side)
 
-    # find the maximum of the multiple of resampling_scale_factor
-    decimate_width_end = np.max(x_cand[x_cand % resampling_scale_factor == 0])
+    # slice whatever overlaps (no shifting); then pad left/right as needed
+    end_excl = min(width, first_index + n_side * resampling_scale_factor)
     decimated_array = target_runw[
-        :, first_index:decimate_width_end:resampling_scale_factor]
+        :, first_index:end_excl:resampling_scale_factor
+    ]
+    # how many side samples fall outside main on each side?
+    # (assumes increasing slant arrays)
+    left_missing = int(
+        np.ceil(
+            max(0.0, (slant_main[0] - slant_side[0]) / spacing_side)
+        )
+    )
+    right_missing = int(
+        np.ceil(
+            max(0.0, (slant_side[-1] - slant_main[-1]) / spacing_side)
+        )
+    )
+
+    # clamp in case both sides miss (very long slant_side)
+    total_missing = max(0, n_side - decimated_array.shape[1])
+    left_missing = min(left_missing, total_missing)
+    right_missing = min(right_missing, total_missing - left_missing)
+
+    if left_missing > 0 or right_missing > 0:
+        decimated_array = np.pad(
+            decimated_array,
+            pad_width=((0, 0), (left_missing, right_missing)),
+            mode="constant",
+            constant_values=0,
+        )
 
     return decimated_array
+
 
 def interpolate_freq_b_array(
         slant_main,

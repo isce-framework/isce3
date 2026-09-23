@@ -196,7 +196,7 @@ https://conda.anaconda.org/conda-forge/linux-64/pyproj-3.7.1-py312h03c6e1f_1.con
 https://conda.anaconda.org/conda-forge/linux-64/pyre-1.12.5-py312h7f27a60_5.conda
 https://conda.anaconda.org/conda-forge/linux-64/pyrsistent-0.20.0-py312h66e93f0_1.conda
 https://conda.anaconda.org/conda-forge/linux-64/pyside6-6.9.1-py312hdb827e4_0.conda
-https://conda.anaconda.org/conda-forge/linux-64/pysolid-0.3.3-py312he6b159b_3.conda
+https://conda.anaconda.org/conda-forge/linux-64/pysolid-0.3.4-py312h3f74e48_0.conda
 https://conda.anaconda.org/conda-forge/linux-64/python-3.12.11-h9e4cc4f_0_cpython.conda
 https://conda.anaconda.org/conda-forge/linux-64/python-eccodes-2.37.0-py312hc0a28a1_0.conda
 https://conda.anaconda.org/conda-forge/linux-64/python_abi-3.12-5_cp312.conda

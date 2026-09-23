@@ -2,6 +2,7 @@
 Function to generate Doppler LUT2d from Raw L0B data.
 """
 import os
+from collections.abc import Iterator
 import numpy as np
 from scipy import fft
 try:
@@ -16,6 +17,7 @@ from isce3.antenna import Frame
 from isce3.geometry import DEMInterpolator
 from isce3.signal import form_single_tap_dbf_echo
 from nisar.log import set_logger
+from isce3.focus import fill_gaps
 
 
 def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
@@ -24,6 +26,7 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
                          rangeline_limit=None, time_interval=2.0,
                          dop_method='CDE', subband=False,
                          polyfit_deg=3, polyfit=False, exclude_beams=None,
+                         duration_dc_remove_az=0.5,
                          out_path='.', plot=False, logger=None):
     """Generates 2-D Doppler LUT as a function of slant range and azimuth time.
 
@@ -111,6 +114,12 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
         The beam number is in the range [1, N], where N is the number
         of beams or RX channels. By default, all beams are included
         in the polyfitting of Doppler over entire swath of DM2 products.
+    duration_dc_remove_az: float or None, default=0.5
+        Approximate AZ-block duration in (seconds) to remove DC in order to
+        mitigate internal calibration signal such as Caltone that can bias
+        Doppler estimation. Must be a positive value not greater than
+        `az_block_dur`! Its value may be modified to make it an integer
+        fraction of `az_block_dur`! If None, no DC removal in AZ.
     out_path : str, default='.'
         Output directory for dumping PNG files, if `plot` is True.
     plot : bool, default=False
@@ -238,6 +247,30 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
     logger.info(f'Chirp pulsewidth -> {pulsewidth * 1e6:.2f} (us)')
     logger.info(f'Chirp center frequency -> {centerfreq * 1e-6:.2f} (MHz)')
     logger.info(f'PRF -> {prf:.3f} (Hz)')
+
+    if duration_dc_remove_az is not None:
+        # check allowable min/max value for AZ DC removal duration.
+        if (not (duration_dc_remove_az > 0.0) or
+                duration_dc_remove_az > az_block_dur):
+            raise ValueError(
+                f'"duration_dc_remove_az" {duration_dc_remove_az} (sec) must '
+                'be a positive value not greater than "az_block_dur" '
+                f'{az_block_dur} (sec)!'
+            )
+        # Now force DC-removal duration to be an integer
+        # fraction of Doppler duration
+        n_ratio = round(az_block_dur / duration_dc_remove_az)
+        dur_dc_rm_az_new = az_block_dur / n_ratio
+        logger.warning(
+            'To force "duration_dc_remove_az" to be an integer fraction of '
+            f'"az_block_dur" {az_block_dur} (sec), it is modified from '
+            f'{duration_dc_remove_az} (sec) to {dur_dc_rm_az_new} (sec)!'
+        )
+        nrgl_dc_rm = int(prf * dur_dc_rm_az_new)
+        logger.info('Number range lines used in AZ-blocked '
+                    f'DC removal -> {nrgl_dc_rm}')
+    else:
+        logger.warning('No blocked DC removal in AZ!')
 
     # Get raw dataset
     raw_dset = raw.getRawDataset(freq_band, txrx_pol)
@@ -518,6 +551,15 @@ def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
                     )
         else:  # single channel
             echo = raw_dset[slice_line]
+        # zero fill TX gap regions in particular for DM2 case
+        # where it is filled with strong TX chirp.
+        fill_gaps(echo, valid_sbsw_all[:, slice_line])
+        # Remove DC in AZ to mitigate internal cal signals such as
+        # Caltone and its intermods that can largely bias Doppler
+        # centroid est.
+        if duration_dc_remove_az is not None:
+            for slice_rm_dc in _slice_gen(num_lines, nrgl_dc_rm):
+                echo[slice_rm_dc] -= np.nanmean(echo[slice_rm_dc], axis=0)
 
         # create a mask for invalid/bad range bins for any reason
         # invalid values are either nan or zero but this does not include
@@ -915,3 +957,33 @@ def _form_mask_valid_range(tot_rgbs, rgb_valid_sbsw):
     for start_stop in rgb_valid_sbsw:
         msk_valid_rg[slice(*start_stop)] = True
     return msk_valid_rg
+
+
+def _slice_gen(
+        n_smp: int, n_smp_blk: int, idx_start: int = 0) -> Iterator[slice]:
+    """slice generator.
+
+    Parameters
+    ----------
+    n_smp : int
+        Total number of samples
+    n_smp_blk : int
+        Number of samples per full block
+    idx_start : int, default=0
+        Start index
+
+    Yields
+    ------
+    slice
+        slice object for each block.
+        The last block can have more
+        number of samples than `n_smp_blk`!
+
+    """
+    n_blk = n_smp // n_smp_blk
+    i_start = idx_start
+    for n in range(n_blk - 1):
+        i_stop = i_start + n_smp_blk
+        yield slice(i_start, i_stop)
+        i_start = i_stop
+    yield slice(i_start, idx_start + n_smp)

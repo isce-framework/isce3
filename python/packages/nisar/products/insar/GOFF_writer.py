@@ -118,22 +118,28 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                 offset_group,
                 "mask",
                 goff_shape,
-                np.uint8,
-                ("Combination of water mask and a mask of subswaths of valid samples"
-                 " in the reference RSLC and geometrically-coregistered secondary RSLC."
-                 " Each pixel value is a three-digit number:"
-                 " the most significant digit represents the water flag of that pixel in the reference RSLC,"
-                 " where 1 is water and 0 is non-water;"
-                 " the second digit represents the subswath number of that pixel in the reference RSLC;"
-                 " the least-significant digit represents the subswath number of that pixel in the secondary RSLC."
-                 " A value of 0 in either subswath digit indicates an invalid sample in the corresponding RSLC"),
+                np.uint32,
+                ("Combination of a water mask, a mask of subswaths of valid samples, and data anomalies"
+                 " in the reference RSLC and the geometrically coregistered secondary RSLC."
+                 " Each pixel value is encoded as a 32-bit unsigned integer."
+                 " Bits 0-7 represent subswath encoding, where the most significant digit represents"
+                 " the water flag of that pixel in the reference RSLC, where 1 is water"
+                 " and 0 is non-water; the second most significant digit corresponds to"
+                 " the subswath number of the reference RSLC, and the least significant digit"
+                 " corresponds to the subswath number of the secondary RSLC;"
+                 " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
+                 " Bits 8-15 represent bitwise anomaly flags for the secondary RSLC, and"
+                 " bits 16-23 represent bitwise anomaly flags for the reference RSLC,"
+                 " with each bit corresponding to a specific anomaly condition."
+                 " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
+                 " Bits 24-31 are reserved for future use"),
                 grid_mapping=grids_val,
                 xds=xds,
                 yds=yds,
                 fill_value=255,
             )
-            offset_group['mask'].attrs['valid_min'] = 0
-            offset_group['mask'].attrs['percentage_water'] = 0.0
+            offset_group['mask'].attrs['valid_min'] = np.uint32(0)
+            offset_group['mask'].attrs['percentage_water'] = np.float32(0.0)
             offset_group['mask'].attrs['disclaimer'] = to_bytes(self.water_mask_source)
 
             pixeloffsets_group_name = \
@@ -143,6 +149,38 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
             self.add_list_of_layers(grids_freq_group)
 
             for pol in pol_list:
+
+                # Create the valid mask for each polarization
+                pixeloffsets_pol_name = \
+                    f"{pixeloffsets_group_name}/{pol}"
+                pixeloffsets_pol_group = \
+                    self.require_group(pixeloffsets_pol_name)
+
+                yds, xds = set_get_geo_info(
+                    self,
+                    pixeloffsets_pol_name,
+                    goff_geogrids,
+                )
+                self._create_2d_dataset(
+                    pixeloffsets_pol_group,
+                    "validDataMask",
+                    goff_shape,
+                    np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid),"
+                     " bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
+                    Units.unitless,
+                    grids_val,
+                    long_name="Valid data mask",
+                    xds=xds,
+                    yds=yds,
+                    fill_value=np.uint8(255),
+                )
+                pixeloffsets_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
+
+                # Create the offsets layers
                 for layer in layers:
                     pixeloffsets_pol_layer_name = \
                         f"{pixeloffsets_group_name}/{pol}/{layer}"

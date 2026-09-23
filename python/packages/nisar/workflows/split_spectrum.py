@@ -79,6 +79,15 @@ def prep_subband_h5(src_rslc_hdf5: str,
                             excludes=pols_excludes)
 
 
+def _write_pol_list(h5, dset_path, pol_list):
+    # ensure ASCII fixed/variable string dtype
+    # (2 chars is enough for HH/VV/VH/HV)
+    sdt = h5py.string_dtype(encoding='ascii', length=2)
+    if dset_path in h5:
+        del h5[dset_path]
+    h5.create_dataset(dset_path, data=np.array(pol_list, dtype=sdt))
+
+
 def run(cfg: dict):
     '''
     run split spectrum
@@ -247,18 +256,20 @@ def run(cfg: dict):
                     dst_h5_high[dest_pol_path].attrs['units'] = ""
 
                 # update meta information for bandpass SLC
+                dset_pol_path = f"{dest_freq_path}/listOfPolarizations"
+
                 data = dst_h5_low[f"{dest_freq_path}/processedCenterFrequency"]
                 data[...] = subband_meta_low['center_frequency']
                 data = dst_h5_low[f"{dest_freq_path}/processedRangeBandwidth"]
                 data[...] = subband_meta_low['rg_bandwidth']
-                data = dst_h5_low[f"{dest_freq_path}/listOfPolarizations"]
-                data[...] = pol_list
+                _write_pol_list(dst_h5_low,  dset_pol_path, pol_list)
+
                 data = dst_h5_high[f"{dest_freq_path}/processedCenterFrequency"]
                 data[...] = subband_meta_high['center_frequency']
                 data = dst_h5_high[f"{dest_freq_path}/processedRangeBandwidth"]
                 data[...] = subband_meta_high['rg_bandwidth']
-                data = dst_h5_high[f"{dest_freq_path}/listOfPolarizations"]
-                data[...] = pol_list
+                _write_pol_list(dst_h5_high, dset_pol_path, pol_list)
+
     else:
         info_channel.log('Split spectrum is not needed')
 

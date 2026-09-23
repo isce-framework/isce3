@@ -97,6 +97,9 @@ runconfig:
             # Geocode options: (e.g. output posting)
             geocode: include('geocode_options', required=False)
 
+            # TEC correction options
+            tec_correction: include('tec_correction_options', required=False)
+
             # Radar grids cube options
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
@@ -284,22 +287,31 @@ qa_validation_options:
     metadata_luts_fail_if_all_nan: bool(required=False)
 
 qa_reports_options:
-    backscatter_img:
-        linear_units: bool(required=False)
-        nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
-        nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
-        longest_side_max: int(min=1, required=False)
-        percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
-        gamma: num(min=0.0, required=False)
-        nan_color_in_pdf: str(required=False)
-        tile_shape: list(int(min=-1), min=2, max=2, required=False)
-        output_individual_pngs: bool(required=False)
-    histogram:
-        decimation_ratio: list(int(min=1), min=2, max=2, required=False)
-        backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
-        phase_histogram_y_axis_range: list(any(num(), null()), min=2, max=2, required=False)
-        phs_in_radians: bool(required=False)
-        tile_shape: list(int(min=-1), min=2, max=2, required=False)
+    backscatter_img: include('backscatter_img_options', required=False)
+    browse_latlon: include('browse_latlon_options', required=False)
+    histogram: include('histogram_options', required=False)
+
+backscatter_img_options:
+    linear_units: bool(required=False)
+    nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
+    nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
+    longest_side_max: int(min=1, required=False)
+    percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
+    gamma: num(min=0.0, required=False)
+    nan_color_in_pdf: str(required=False)
+    tile_shape: list(int(min=-1), min=2, max=2, required=False)
+    output_individual_pngs: bool(required=False)
+
+browse_latlon_options:
+    output_browse_latlon: bool(required=False)
+    resample: enum('near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode', required=False)
+
+histogram_options:
+    decimation_ratio: list(int(min=1), min=2, max=2, required=False)
+    backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+    phase_histogram_y_axis_range: list(any(num(), null()), min=2, max=2, required=False)
+    phs_in_radians: bool(required=False)
+    tile_shape: list(int(min=-1), min=2, max=2, required=False)
 
 log_nfo:
     # Path to log file
@@ -545,6 +557,12 @@ geocode_options:
     # block, considering the data type and the number of bands
     # (polarizations) to process.
     max_block_size: num(min=0, required=False)
+
+tec_correction_options:
+    use_total_tec_only: bool(required=False)
+    ignore_invalid_topside_tec: bool(required=False)
+    polyfit_tec_profile: bool(required=False)
+    num_sigma: num(min=0.0, required=False)
 
 ceos_analysis_ready_data_options:
 

@@ -52,7 +52,9 @@ def _get_attribute_dict(band,
                         valid_max=None,
                         stats_obj_list=None,
                         stats_real_imag_obj_list=None,
-                        to_string_function=str):
+                        to_string_function=str,
+                        to_data_format_function=lambda x: x,
+                        to_stats_format_function=lambda x: x):
     '''
     Get attribute dictionary for a raster layer
 
@@ -79,6 +81,16 @@ def _get_attribute_dict(band,
         List of complex stats object
     to_string_function: function, optional
         Function to convert input data type to string
+    to_data_format_function: function, optional
+        Function to convert input values to the desired output data type,
+        except for complex statistics, which are handled by
+        `to_stats_format_function`. By default, input values are returned
+        unchanged.
+    to_stats_format_function: function, optional
+        Function to convert real and imaginary statistics values to the
+        desired output data type. By default, statistics values are returned
+        unchanged. This may be needed, for example, to
+        convert statistics computed from complex128 data to float64.
 
     Returns
     -------
@@ -97,33 +109,42 @@ def _get_attribute_dict(band,
         attr_dict['units'] = to_string_function(units)
 
     if fill_value is not None:
-        attr_dict['_FillValue'] = fill_value
+        attr_dict['_FillValue'] = to_data_format_function(fill_value)
 
     if stats_obj_list is not None:
         stats_obj = stats_obj_list[band]
-        attr_dict['min_value'] = stats_obj.min
-        attr_dict['mean_value'] = stats_obj.mean
-        attr_dict['max_value'] = stats_obj.max
-        attr_dict['sample_stddev'] = stats_obj.sample_stddev
+        attr_dict['min_value'] = to_data_format_function(stats_obj.min)
+        attr_dict['mean_value'] = to_data_format_function(stats_obj.mean)
+        attr_dict['max_value'] = to_data_format_function(stats_obj.max)
+        attr_dict['sample_stddev'] = \
+            to_data_format_function(stats_obj.sample_stddev)
 
     elif stats_real_imag_obj_list is not None:
 
         stats_obj = stats_real_imag_obj_list[band]
-        attr_dict['min_real_value'] = stats_obj.real.min
-        attr_dict['mean_real_value'] = stats_obj.real.mean
-        attr_dict['max_real_value'] = stats_obj.real.max
-        attr_dict['sample_stddev_real'] = stats_obj.real.sample_stddev
+        attr_dict['min_real_value'] = \
+            to_stats_format_function(stats_obj.real.min)
+        attr_dict['mean_real_value'] = \
+            to_stats_format_function(stats_obj.real.mean)
+        attr_dict['max_real_value'] = \
+            to_stats_format_function(stats_obj.real.max)
+        attr_dict['sample_stddev_real'] = \
+            to_stats_format_function(stats_obj.real.sample_stddev)
 
-        attr_dict['min_imag_value'] = stats_obj.imag.min
-        attr_dict['mean_imag_value'] = stats_obj.imag.mean
-        attr_dict['max_imag_value'] = stats_obj.imag.max
-        attr_dict['sample_stddev_imag'] = stats_obj.imag.sample_stddev
+        attr_dict['min_imag_value'] = \
+            to_stats_format_function(stats_obj.imag.min)
+        attr_dict['mean_imag_value'] = \
+            to_stats_format_function(stats_obj.imag.mean)
+        attr_dict['max_imag_value'] = \
+            to_stats_format_function(stats_obj.imag.max)
+        attr_dict['sample_stddev_imag'] = \
+            to_stats_format_function(stats_obj.imag.sample_stddev)
 
     if valid_min is not None:
-        attr_dict['valid_min'] = valid_min
+        attr_dict['valid_min'] = to_data_format_function(valid_min)
 
     if valid_max is not None:
-        attr_dict['valid_max'] = valid_max
+        attr_dict['valid_max'] = to_data_format_function(valid_max)
 
     return attr_dict
 
@@ -456,6 +477,14 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
     for band in range(nbands):
         gdal_band = gdal_ds.GetRasterBand(band+1)
 
+        to_data_format_function = gdal_array.GDALTypeCodeToNumericTypeCode(
+            gdal_band.DataType)
+
+        # Use the real component when writing statistics for
+        # complex-valued data.
+        dtype = np.dtype(to_data_format_function())
+        to_real_dtype = dtype.type().real.dtype.type
+
         attr_dict = _get_attribute_dict(
             band,
             standard_name=standard_name,
@@ -466,7 +495,9 @@ def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
             valid_max=valid_max,
             stats_obj_list=stats_obj_list,
             stats_real_imag_obj_list=stats_real_imag_obj_list,
-            to_string_function=np.bytes_)
+            to_string_function=np.bytes_,
+            to_data_format_function=to_data_format_function,
+            to_stats_format_function=to_real_dtype)
 
         if isinstance(output_ds_name, str):
             output_ds_name_band = output_ds_name
@@ -675,6 +706,13 @@ def save_raster(ds_filename, output_ds_name,
         if mantissa_nbits is not None:
             truncate_mantissa(data, mantissa_nbits)
 
+        to_data_format_function = gdal_array.GDALTypeCodeToNumericTypeCode(
+            gdal_band.DataType)
+
+        # Use the real component when writing statistics for
+        # complex-valued data.
+        to_real_dtype = data.real.dtype.type
+
         attr_dict = _get_attribute_dict(
             band,
             standard_name=standard_name,
@@ -684,7 +722,9 @@ def save_raster(ds_filename, output_ds_name,
             valid_min=valid_min,
             valid_max=valid_max,
             stats_obj_list=stats_obj_list,
-            stats_real_imag_obj_list=stats_real_imag_obj_list)
+            stats_real_imag_obj_list=stats_real_imag_obj_list,
+            to_data_format_function=to_data_format_function,
+            to_stats_format_function=to_real_dtype)
 
         if isinstance(output_ds_name, str):
             output_ds_name_band = output_ds_name
@@ -1614,7 +1654,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     frequency=None, output_ds_name_list=None,
                     input_ds_name_list=None,
                     skip_if_not_present=False,
-                    compute_stats=False):
+                    compute_stats=False,
+                    data_interpolator=None,
+                    fill_value=None):
         """
         Geocode a look-up table (LUT) from the input product in
         radar coordinates to the output product in map coordinates
@@ -1645,6 +1687,21 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         compute_stats: bool, optional
             Flag that indicates if statistics should be computed for the
             output raster layer. Defaults to False.
+        data_interpolator: str, optional
+            Interpolation algorithm to use for geocoding.
+            The default interpolation algorithm is determined dynamically
+            based on the dimensions of the LUT. If the LUT contains a single
+            row or column, nearest neighbor interpolation will be used.
+            Otherwise, if the LUT contains < 5 rows or columns, bilinear
+            interpolation will be used. Otherwise, biquintic interpolation
+            will be used.
+        fill_value : float, optional
+            Fill value passed to the geocoding module (GeocodeCov) and used to
+            populate the HDF5 dataset ``_FillValue`` attribute.
+            Defaults to "nan" or "(nan+nanj)" if the raster layer
+            is real- or complex-valued, respectively. If the layer data
+            type is integer and `fill_value` is None, the attribute "_FillValue"
+            will not be populated as an attribute of the HDF5 dataset.
 
         Returns
         -------
@@ -1688,6 +1745,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'calibrationInformation' in output_h5_group
         is_processing_information_group = \
             'processingInformation' in output_h5_group
+        is_grids_group = 'grids' in output_h5_group
 
         if (is_calibration_information_group and
                 is_processing_information_group):
@@ -1701,6 +1759,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             metadata_group = 'calibrationInformation'
         elif is_processing_information_group:
             metadata_group = 'processingInformation'
+        elif is_grids_group:
+            metadata_group = 'grids'
         else:
             error_msg = f'Could not determine LUT group for {output_h5_group}'
             error_channel.log(error_msg)
@@ -1717,7 +1777,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             input_h5_group_path,
             output_h5_group_path,
             skip_if_not_present,
-            compute_stats)
+            compute_stats,
+            data_interpolator,
+            fill_value=fill_value)
 
     def geocode_metadata_group(self,
                                frequency,
@@ -1728,7 +1790,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                output_h5_group_path,
                                skip_if_not_present,
                                compute_stats=False,
-                               data_interpolator=None):
+                               data_interpolator=None,
+                               fill_value=None):
         """
         Geocode look-up tables (LUTs) from the input product in
         radar coordinates to the output product in map coordinates
@@ -1769,6 +1832,13 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             Otherwise, if the LUT contains < 5 rows or columns, bilinear
             interpolation will be used. Otherwise, biquintic interpolation
             will be used.
+        fill_value : float, optional
+            Fill value passed to the geocoding module (GeocodeCov) and used to
+            populate the HDF5 dataset ``_FillValue`` attribute.
+            Defaults to "nan" or "(nan+nanj)" if the raster layer
+            is real- or complex-valued, respectively. If the layer data
+            type is integer and `fill_value` is None, the attribute "_FillValue"
+            will not be populated as an attribute of the HDF5 dataset.
 
         Returns
         -------
@@ -1783,9 +1853,16 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         if metadata_group == 'calibrationInformation':
             metadata_geogrid = self.cfg['processing'][
                 'calibration_information']['geogrid']
+            zero_doppler_group_path = input_h5_group_path
         elif metadata_group == 'processingInformation':
             metadata_geogrid = self.cfg['processing'][
                 'processing_information']['geogrid']
+            zero_doppler_group_path = input_h5_group_path
+        elif metadata_group == 'grids':
+            metadata_geogrid = \
+                self.cfg['processing']['geocode']['geogrids'][frequency]
+            zero_doppler_group_path = '/'.join(
+                input_h5_group_path.split('/')[0:-1])
         else:
             error_msg = f'Invalid metadata group {metadata_group}'
             error_channel.log(error_msg)
@@ -1806,7 +1883,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         # The LUT noise-equivalent backscatter is irregulary sampled in the
         # azimuth direction
         if not flag_luts_are_1d_rg and not flag_noise_equivalent_backscatter:
-            zero_doppler_path = f'{input_h5_group_path}/zeroDopplerTime'
+            zero_doppler_path = f'{zero_doppler_group_path}/zeroDopplerTime'
             try:
                 zero_doppler_h5_dataset = self.input_hdf5_obj[
                     zero_doppler_path]
@@ -2063,6 +2140,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 else:
                     new_var_array = noise_product.power_linear
 
+                # Ensure that the `noiseEquivalentBackscatter` LUT
+                # is computed and stored as float32
+                # to match NISAR product specifications
+                new_var_array = new_var_array.astype(np.float32)
+
             temp_file = tempfile.NamedTemporaryFile(dir=scratch_path,
                                                     suffix='.bin')
             length, width = new_var_array.shape
@@ -2117,6 +2199,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                             metadata_geogrid,
                             compute_stats,
                             data_interpolator=data_interpolator,
+                            fill_value=fill_value,
                             **geocode_kwargs)
 
         input_temp.close()
@@ -2131,6 +2214,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                        metadata_geogrid,
                        compute_stats,
                        data_interpolator=None,
+                       fill_value=None,
                        **geocode_kwargs):
         """
         Geocode an ISCE3 Raster object containing look-up tables (LUTs)
@@ -2158,6 +2242,13 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             output raster layer. Defaults to False.
         data_interpolator: str, optional
             Interpolation algorithm to use for geocoding
+        fill_value : float, optional
+            Fill value passed to the geocoding module (GeocodeCov) and used to
+            populate the HDF5 dataset ``_FillValue`` attribute.
+            Defaults to "nan" or "(nan+nanj)" if the raster layer
+            is real- or complex-valued, respectively. If the layer data
+            type is integer and `fill_value` is None, the attribute "_FillValue"
+            will not be populated as an attribute of the HDF5 dataset.
         **geocode_kwargs
             Keyword arguments to be passed to the `geocode()`.
         """
@@ -2189,6 +2280,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             geo = isce3.geocode.GeocodeCFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_CFloat64:
             geo = isce3.geocode.GeocodeCFloat64()
+        elif input_raster_obj.datatype() in (gdal.GDT_Byte, gdal.GDT_Int16, gdal.GDT_UInt16):
+            geo = isce3.geocode.GeocodeFloat32()
         else:
             err_str = 'Unsupported raster type for geocoding'
             error_channel.log(err_str)
@@ -2227,6 +2320,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             temp_output.name, metadata_geogrid.width, metadata_geogrid.length,
             input_raster_obj.num_bands, dtype, 'GTiff')
 
+        # Copy so that adding fill_value does not modify the user-provided kwargs.
+        geocode_kwargs = geocode_kwargs.copy()
+
+        if fill_value is not None:
+            geocode_kwargs['fill_value'] = fill_value
+
         # geocode rasters
         geo.geocode(radar_grid=radar_grid,
                     input_raster=input_raster_obj,
@@ -2254,6 +2353,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         save_dataset(temp_output.name, self.output_hdf5_obj,
                      output_h5_group_path,
                      yds, xds, output_ds_name_list,
+                     fill_value=fill_value,
                      compute_stats=compute_stats)
 
         temp_output.close()

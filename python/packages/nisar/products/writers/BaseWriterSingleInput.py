@@ -623,7 +623,7 @@ class BaseWriterSingleInput():
 
         self.set_value(
             'identification/productSpecificationVersion',
-            '1.4.0')
+            '1.5.0')
 
         self.copy_from_input(
             'identification/lookDirection',
@@ -684,6 +684,8 @@ class BaseWriterSingleInput():
         self.copy_from_input('identification/isFullFrame',
                              skip_if_not_present=True)
         self.copy_from_input('identification/isJointObservation',
+                             skip_if_not_present=True)
+        self.copy_from_input('identification/hasInputDataException',
                              skip_if_not_present=True)
 
         # Copy CRID from runconfig (defaults to "A10000")

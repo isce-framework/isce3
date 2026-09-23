@@ -155,6 +155,8 @@ runconfig:
             # Options to generate model-based slant range and azimuth correction LUTs
             correction_luts: include('lut_options', required=False)
 
+            tec_correction: include('tec_correction_options', required=False)
+
         # To setup type of worker
         worker: include('worker_options', required=False)
 
@@ -178,7 +180,7 @@ troposphere_weather_model_options:
 phase_unwrap_options:
     crossmul_path: str(required=False)
 
-    algorithm: enum('icu', 'phass', 'snaphu', required=False)
+    algorithm: enum('icu', 'phass', 'snaphu', 'whirlwind', required=False)
 
     range_looks: int(min=1, required=False)
 
@@ -190,7 +192,11 @@ phase_unwrap_options:
 
     snaphu: include('snaphu_options', required=False)
 
+    whirlwind: include('whirlwind_options', required=False)
+
     preprocess_wrapped_phase: include('preprocess_wrapped_phase_options', required=False)
+
+    bridge: include('bridge_options', required=False)
 
 icu_options:
     correlation_threshold_increments: num(min=0, max=1, required=False)
@@ -234,6 +240,25 @@ snaphu_options:
     single_tile_reoptimize: bool(required=False)
     regrow_conncomps: bool(required=False)
 
+whirlwind_options:
+    nlooks: num(min=1, required=False)
+    mask: str(required=False)
+    bridge: bool(required=False)
+    interpolate: bool(required=False)
+    interp_cutoff: num(min=0, max=1, required=False)
+    interp_num_neighbors: int(min=1, required=False)
+    interp_max_radius: int(min=0, required=False)
+    interp_min_radius: int(min=0, required=False)
+    interp_alpha: num(min=0, required=False)
+    conncomp_min_coherence: any(num(min=0, max=1), enum('auto'), required=False)
+    conncomp_reliability: num(required=False)
+    min_size_px: int(min=1, required=False)
+    max_ncomps: int(min=1, required=False)
+    connect_gaps: bool(required=False)
+    connect_gaps_max_px: int(min=1, required=False)
+    goldstein_alpha: num(min=0, max=1, required=False)
+    goldstein_psize: int(min=1, required=False)
+
 preprocess_wrapped_phase_options:
     enabled: bool(required=False)
     mask: include('unwrap_mask_options', required=False)
@@ -242,7 +267,7 @@ preprocess_wrapped_phase_options:
     distance_interpolator: include('distance_interp_options', required=False)
 
 unwrap_mask_options:
-    mask_type: enum('median_filter', 'coherence', 'water', required=False)
+    mask_type: list(enum('median_filter', 'coherence', 'water', 'subswath_mask'), required=False)
     mask_path: str(required=False)
     ocean_water_buffer: int(min=0, max=100, required=False)
     inland_water_buffer: int(min=0, max=100, required=False)
@@ -251,6 +276,20 @@ unwrap_mask_options:
 
 distance_interp_options:
     distance: int(required=False)
+
+bridge_options:
+    enabled: bool(required=False)
+    # Maximum radius used when bridging disconnected regions.
+    bridge_radius: num(min=1, required=False)
+    # Size of the structuring element used for erosion during bridge labeling.
+    bridge_erosion_size: num(min=1, required=False)
+    # Minimum number of pixel of connected components to retain during bridge algorithm.
+    bridge_minimum_samples: num(min=0, required=False)
+    # Ramp type to correct before bridge algoritm
+    bridge_ramp_type: enum('None', 'linear', 'quadratic', 'linear_range', 'linear_azimuth', 'quadratic_range', 'quadratic_azimuth', required=False)
+    # During deramping, uniform sampling is applied
+    # when number of samples is larger than maximum pixel
+    bridge_ramp_maximum_pixel: num(min=0, required=False)
 
 coarse_resample_options:
     # Path to coarse/fine offset directory
@@ -296,10 +335,10 @@ dense_offsets_options:
     window_azimuth: int(min=16, max=512, required=False)
 
     # Number of columns for search chip/template in secondary image
-    half_search_range: int(min=4, max=128, required=False)
+    half_search_range: int(min=4, max=256, required=False)
 
     # Number of lines for search chip/template in secondary image
-    half_search_azimuth: int(min=4, max=128, required=False)
+    half_search_azimuth: int(min=4, max=256, required=False)
 
     # Number of columns to skip in reference image for next offset estimate
     skip_range: int(min=1, required=False)
@@ -329,8 +368,11 @@ dense_offsets_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-    deramping_method: enum('magnitude', 'complex', required=False)
+    # Deramp data prior to FFT: 'magnitude' , 'complex' (linear phase ramp), or 'complex_no_deramp'
+    deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
+
+    # Deramp data axis prior to FFT: range, azimuth, or both
+    deramping_axis: enum('range', 'azimuth', 'both', required=False)
 
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
@@ -409,8 +451,11 @@ offsets_product_options:
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
 
-    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-    deramping_method: enum('magnitude', 'complex', required=False)
+    # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
+    deramping_method: enum('magnitude', 'complex', 'complex_no_deramp', required=False)
+
+    # Deramp data axis prior to FFT: range, azimuth, or both
+    deramping_axis: enum('range', 'azimuth', 'both', required=False)
 
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
@@ -465,10 +510,10 @@ offset_layer_options:
     window_azimuth: int(min=16, max=512, required=False)
 
     # Number of columns for search chip/template in secondary image
-    half_search_range: int(min=4, max=32, required=False)
+    half_search_range: int(min=4, max=256, required=False)
 
     # Number of lines for search chip/template in secondary image
-    half_search_azimuth: int(min=4, max=32, required=False)
+    half_search_azimuth: int(min=4, max=256, required=False)
 
 rubbersheet_options:
     # Path to dense offsets outputs (offsets, snr, covariance).
@@ -526,7 +571,17 @@ rubbersheet_options:
 
     # Interpolation method. Interpolation is used to fill residual
     # outlier holes (if present)
-    interpolation_method: enum('no_interpolation', 'nearest', 'linear', 'cubic', required=False)
+    interpolation_method: enum('no_interpolation', 'nearest', 'linear', 'cubic', 'idw', required=False)
+
+    # Aggressive azimuth offset filter applied right after outlier detection to suppress
+    # offset jumps caused by defocus from ionospheric disturbances.
+    azimuth_offset_filter: include('azimuth_offset_filter_options', required=False)
+
+    # Inverse distance weighting (IDW) interpolation method
+    idw_interpolation: include('idw_interpolation_options', required=False)
+
+    # Flag to enable the use of the subswath mask for the outlier detection
+    subswath_mask_apply_enabled: bool(required=False)
 
     # It is good practice to filter the offsets prior to interferogram
     # formation to reduce noise. We expose: no_filter: do not filter the offsets/
@@ -536,6 +591,7 @@ rubbersheet_options:
     median: include('offset_filter_options', required=False)
     boxcar: include('offset_filter_options', required=False)
     gaussian: include('gaussian_filter_options', required=False)
+    polyfitting: include('polyfitting_options', required=False)
 
 fill_smoothed_options:
     # Number of fill smoothed iterations
@@ -560,6 +616,37 @@ gaussian_filter_options:
     filter_size_azimuth: int(min=1, required=False)
     # Number of columns for 1D gaussian kernel
     filter_size_range: int(min=1, required=False)
+
+polyfitting_options:
+    enabled: bool(required=False)
+    # The degrees for the polyfitting
+    degree: num(min=1, required=False)
+    # Critical value for the w-test to remove the outliers
+    critical_value: num(min=0, required=False)
+    # Number of samples along the range in pixels for polyfitting
+    samples_along_range: num(min=0, required=False)
+    # Number of samples  along the azimuth in pixels for polyfitting
+    samples_along_azimuth: num(min=0, required=False)
+
+# Additional azimuth offset filtering applied after outlier detection
+# to suppress offset jumps caused by ionospheric disturbances,
+# decorrelation, or processing artifacts
+azimuth_offset_filter_options:
+    # Spatial filter type: 'none' (disabled), 'median', or 'mean'
+    offsets_filter: enum('none', 'median', 'mean', required=False)
+    # Kernel size in pixels for the spatial filter
+    kernel_size: int(min=3, required=False)
+
+idw_interpolation_options:
+    # Power parameter controlling the distance weighting;
+    # If the power is 0, then it is equally weighted
+    power: int(min=0, required=False)
+    # Number of nearest neighbors used for interpolation
+    number: int(min=1, required=False)
+    # Maximum search radius in pixels;
+    # If unspecified, all valid pixels are used,
+    # which can significantly increase runtime and is not recommended
+    radius: num(min=1, required=False)
 
 crossmul_options:
     # Path to HDF5 file or directory with coregistered SLCs
@@ -709,6 +796,8 @@ ionosphere_phase_correction_options:
     # Unwrapping correction bool. If False, only filtering
     # is applied
     unwrap_correction: include('unwrap_correction_options', required=False)
+    # qFSP phase-slip artifact correction options
+    qfsp_correction: include('qfsp_correction_options', required=False)
 
 dispersive_filter_options:
     # Boolean flag to enable/disable ionosphere phase correction
@@ -725,7 +814,7 @@ dispersive_filter_options:
     #   When multiple validation sources are enabled, take the intersection of
     #   their invalid masks to form a combined mask.
     #   Masked areas are then filled using spatial interpolation.
-    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', required=False)
+    filter_mask_type: list('water', 'median_filter', 'coherence', 'connected_components', 'subswath_mask', required=False)
     # Median filter size for mask generation
     median_filter_size: num(min=1, required=False)
     # Median filter threshold for mask generation
@@ -738,6 +827,24 @@ dispersive_filter_options:
     # distance : distance‑based interpolator that assigns weights to samples
     #            inversely proportional to their spatial distance.
     filling_method: enum('nearest', 'smoothed', 'distance', 'None', required=False)
+    # Method used to build the smooth guide image for outlier detection
+    # and gap filling. {'median_gaussian', 'gaussian', 'none'}, optional
+    filling_guide_filter_method: enum('median_gaussian', 'gaussian', 'none', required=False)
+    # Window size of the NaN-aware median filter used when
+    # `guide_filter_method='median_gaussian'`
+    filling_guide_median_size: num(min=1, required=False)
+    # Threshold multiplier for robust outlier detection. Pixels are marked
+    # as outliers when
+    #       abs(residual - median(residual)) >
+    #           outlier_threshold * robust_scale
+    # where `robust_scale = max(1.4826 * MAD, outlier_min_scale)`.
+    filling_outlier_threshold: num(min=1, required=False)
+    # Lower bound for the robust scale used in outlier detection.
+    # This prevents the threshold from becoming too small in very
+    # clean regions,
+    filling_outlier_min_scale: num(min=0, required=False)
+    filling_outlier_mad_scale_factor: num(min=0, required=False)
+
     # 1D gaussian kernel size [pixels] in range/ azimuth
     kernel_range: num(min=1, required=False)
     kernel_azimuth: num(min=1, required=False)
@@ -761,6 +868,35 @@ dispersive_filter_options:
     # During deramping, uniform sampling is applied
     # when number of samples is larger than maximum pixel
     bridge_ramp_maximum_pixel: num(min=0, required=False)
+
+qfsp_correction_options:
+    # Boolean flag to enable/disable residual qFSP phase-slip
+    # artifact correction
+    enabled: bool(required=False)
+    # Polynomial order used to estimate the background phase
+    background_order: int(min=0, max=3, required=False)
+    # Critical value used by polyfit_offsets for iterative outlier
+    # rejection. Larger values reject fewer samples.
+    background_crit_value: num(min=0.0, required=False)
+    # Maximum number of outliers removed during background fitting.
+    # polyfit_offsets removes at most one sample per iteration.
+    # Set to 0 to disable outlier rejection.
+    background_max_iterations: int(min=0, required=False)
+    # Maximum number of valid phase samples used for background fitting.
+    # Deterministic subsampling is applied when more samples are available.
+    background_max_samples: int(min=1, required=False)
+    # Minimum quality value used when constructing fitting weights.
+    # This parameter is applied only when quality weights, such as
+    # coherence, are provided.
+    background_minimum_quality: num(min=0.0, max=1.0, required=False)
+    # Smoothing window size used for qFSP template estimation
+    template_smooth_win: int(min=1, required=False)
+    # Number of pixels to shrink from the inner artifact region
+    inner_shrink: int(min=0, required=False)
+    # Number of pixels used for feathering around the artifact boundary
+    outer_feather: int(min=0, required=False)
+    # Return diagnostic outputs and write qFSP debug rasters.
+    debug_flag: bool(required=False)
 
 split_range_spectrum_options:
     # Number of lines per block for block processing)
@@ -863,11 +999,11 @@ rifg_options:
     qa_reports: include('rifg_qa_reports_options', required=False)
 
 rifg_qa_reports_options:
+    browse: include('rifg_browse_options', required=False)
     wrapped_igram: include('qa_threshold_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     correlation_surface_peak: include('qa_threshold_options', required=False)
-    browse_png: include('qa_browse_png_wrapped_options', required=False)
 
 runw_options:
     workflows: include('workflows_options', required=False)
@@ -876,6 +1012,7 @@ runw_options:
     qa_reports: include('runw_qa_reports_options', required=False)
 
 runw_qa_reports_options:
+    browse: include('runw_browse_options', required=False)
     phase_img: include('qa_phase_img_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
     connected_components: include('qa_cc_options', required=False)
@@ -883,7 +1020,6 @@ runw_qa_reports_options:
     ionosphere_phase_screen_uncertainty: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     correlation_surface_peak: include('qa_threshold_options', required=False)
-    browse_png: include('qa_browse_png_unwrapped_options', required=False)
 
 gunw_options:
     workflows: include('workflows_options', required=False)
@@ -892,6 +1028,7 @@ gunw_options:
     qa_reports: include('gunw_qa_reports_options', required=False)
 
 gunw_qa_reports_options:
+    browse: include('gunw_browse_options', required=False)
     phase_img: include('qa_phase_img_options', required=False)
     wrapped_igram: include('qa_threshold_options', required=False)
     coh_mag: include('qa_threshold_options', required=False)
@@ -900,21 +1037,29 @@ gunw_qa_reports_options:
     ionosphere_phase_screen_uncertainty: include('qa_threshold_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     correlation_surface_peak: include('qa_threshold_options', required=False)
-    browse_png: include('qa_browse_png_unwrapped_options', required=False)
 
 roff_options:
     workflows: include('workflows_options', required=False)
     software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
-    qa_reports: include('offsets_qa_reports_options', required=False)
+    qa_reports: include('roff_qa_reports_options', required=False)
 
 goff_options:
     workflows: include('workflows_options', required=False)
     software_config: include('qa_software_config_options', required=False)
     validation: include('qa_validation_options', required=False)
-    qa_reports: include('offsets_qa_reports_options', required=False)
+    qa_reports: include('goff_qa_reports_options', required=False)
 
-offsets_qa_reports_options:
+roff_qa_reports_options:
+    browse: include('roff_browse_options', required=False)
+    az_and_range_offsets: include('qa_threshold_options', required=False)
+    quiver_plots: include('qa_quiver_plots_options', required=False)
+    az_and_rg_variance: include('az_rg_var_options', required=False)
+    cross_offset_variance: include('cross_offset_var_options', required=False)
+    correlation_surface_peak: include('qa_threshold_options', required=False)
+
+goff_qa_reports_options:
+    browse: include('goff_browse_options', required=False)
     az_and_range_offsets: include('qa_threshold_options', required=False)
     quiver_plots: include('qa_quiver_plots_options', required=False)
     az_and_rg_variance: include('az_rg_var_options', required=False)
@@ -952,20 +1097,41 @@ qa_cc_options:
     zero_is_invalid: bool(required=False)
     max_num_cc: int(min=0.0, required=False)
 
-qa_browse_png_wrapped_options:
+rifg_browse_options:
     longest_side_max: int(min=1, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
-qa_browse_png_unwrapped_options:
+runw_browse_options:
     longest_side_max: int(min=1, required=False)
     rewrap: num(min=0.0, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
+
+gunw_browse_options:
+    longest_side_max: int(min=1, required=False)
+    rewrap: num(min=0.0, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode', required=False)
+
+roff_browse_options:
+    longest_side_max: int(min=1, required=False)
+    browse_decimation_freqa: list(int(min=1), min=2, max=2, required=False)
+    browse_decimation_freqb: list(int(min=1), min=2, max=2, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
+
+goff_browse_options:
+    longest_side_max: int(min=1, required=False)
+    browse_decimation_freqa: list(int(min=1), min=2, max=2, required=False)
+    browse_decimation_freqb: list(int(min=1), min=2, max=2, required=False)
+    output_browse_latlon: bool(required=False)
+    resample: enum('near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode', required=False)
 
 qa_quiver_plots_options:
     colorbar_min_max: list(num, min=2, max=2, required=False)
-    browse_decimation_freqa: list(int(min=1), min=2, max=2, required=False)
-    browse_decimation_freqb: list(int(min=1), min=2, max=2, required=False)
     arrow_density: num(min=1.0, required=False)
     arrow_scaling: num(min=0.0, required=False)
-    longest_side_max: int(min=1, required=False)
 
 az_rg_var_options:
     colorbar_min_max: list(num, min=2, max=2, required=False)
@@ -1099,6 +1265,9 @@ posting_options:
     y_posting: num(min=0, required=False)
 
 worker_options:
+    # Enable/disable the intermediate files removal
+    intermediate_files_removal_enabled: bool(required=False)
+
     # Enable/disable internet connection (e.g. for download DEM)
     internet_access: bool(required=False)
 
@@ -1119,6 +1288,14 @@ output_options:
 lut_options:
     # Boolean flag to activate/deactivate model-based solid earth tide corrections
     solid_earth_tides_enabled: bool(required=False)
+
+tec_correction_options:
+    apply_slant_range_correction: bool(required=False)
+    apply_azimuth_correction: bool(required=False)
+    use_total_tec_only: bool(required=False)
+    ignore_invalid_topside_tec: bool(required=False)
+    polyfit_tec_profile: bool(required=False)
+    num_sigma: num(min=0.0, required=False)
 
 product_version_options:
     rifg_version: str('^\d+\.\d+\.\d+$', required=False)

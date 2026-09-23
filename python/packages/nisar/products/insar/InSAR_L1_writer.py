@@ -17,9 +17,10 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_base_writer import InSARBaseWriter
 from .product_paths import L1GroupsPaths
 from .units import Units
-from .utils import (extract_datetime_from_string, generate_dem_rdr,
-                    generate_insar_subswath_mask,
-                    get_geolocation_grid_cube_obj, save_to_hdf5_ds)
+from .utils import (compute_valid_pixel_fraction, extract_datetime_from_string,
+                    extract_pol_valid_mask, generate_dem_rdr,
+                    generate_insar_mask, get_geolocation_grid_cube_obj,
+                    save_to_hdf5_ds)
 
 
 class L1InSARWriter(InSARBaseWriter):
@@ -312,30 +313,48 @@ class L1InSARWriter(InSARBaseWriter):
                 pixel_offsets_ds_params = [
                     (
                         "alongTrackOffset",
+                        np.float32,
                         "Along-track offset",
                         Units.meter,
+                        None,
                     ),
                     (
                         "correlationSurfacePeak",
+                        np.float32,
                         "Normalized correlation surface peak",
                         Units.unitless,
+                        None,
                     ),
                     (
                         "slantRangeOffset",
+                        np.float32,
                         "Slant range offset",
                         Units.meter,
+                        None,
+                    ),
+                    (
+                        "validDataMask",
+                        np.uint8,
+                        (f"Valid mask for the {pol} layers: "
+                         "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                         " Valid represents fully focused data and invalid"
+                         " represents partially focused or missing data"),
+                        Units.unitless,
+                        np.uint8(255),
                     ),
                 ]
 
                 for pixel_offsets_ds_param in pixel_offsets_ds_params:
-                    ds_name, ds_description, ds_unit = pixel_offsets_ds_param
+                    ds_name, ds_type, ds_description, ds_unit, fill_value\
+                        = pixel_offsets_ds_param
                     self._create_2d_dataset(
                         offset_pol_group,
                         ds_name,
                         off_shape,
-                        np.float32,
+                        ds_type,
                         ds_description,
                         units=ds_unit,
+                        fill_value=fill_value,
                     )
 
     def add_pixel_offsets_to_swaths_group(self):
@@ -345,6 +364,9 @@ class L1InSARWriter(InSARBaseWriter):
         is_roff,  margin, rg_start, az_start,\
         rg_skip, az_skip, rg_search, az_search,\
         rg_chip, az_chip, _ = get_pixel_offsets_params(self.cfg)
+
+        # add the datasets to pixel offsets group
+        self._add_datasets_to_pixel_offset_group()
 
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
@@ -402,7 +424,7 @@ class L1InSARWriter(InSARBaseWriter):
                 DatasetParams(
                     "zeroDopplerTime",
                     offset_zero_doppler_time,
-                    "Zero Doppler azimuth time since UTC epoch vector",
+                    "Vector of zero Doppler azimuth times measured relative to a UTC epoch",
                     {'units': zero_dopp_time_units},
                 ),
                 DatasetParams(
@@ -493,19 +515,22 @@ class L1InSARWriter(InSARBaseWriter):
             self._create_2d_dataset(offset_group,
                                     'mask',
                                     shape=(off_length, off_width),
-                                    dtype=np.uint8,
-                                    description=("Mask indicating the subswaths of valid samples in the reference RSLC"
-                                                 " and geometrically-coregistered secondary RSLC."
-                                                 " Each pixel value is a two-digit number:"
-                                                 " the least significant digit represents the"
-                                                 " subswath number of that pixel in the secondary RSLC,"
-                                                 " and the most significant digit represents"
-                                                 " the subswath number of that pixel in the reference RSLC."
-                                                 " A value of 0 in either digit indicates an invalid sample"
-                                                 " in the corresponding RSLC"),
+                                    dtype=np.uint32,
+                                    description=("Mask indicating the subswaths of valid samples and data anomalies"
+                                                 " in the reference RSLC and the geometrically coregistered secondary RSLC."
+                                                 " Each pixel value is encoded as a 32-bit unsigned integer."
+                                                 " Bits 0-7 represent subswath encoding,"
+                                                 " where the most significant digit corresponds to the subswath number of the reference RSLC"
+                                                 " and the least significant digit corresponds to the subswath number of the secondary RSLC;"
+                                                 " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
+                                                 " Bits 8-15 represent bitwise anomaly flags for the secondary RSLC,"
+                                                 " and bits 16-23 represent bitwise anomaly flags for the reference RSLC,"
+                                                 " with each bit corresponding to a specific anomaly condition."
+                                                 " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
+                                                 " Bits 24-31 are reserved for future use"),
                                     fill_value=255)
-            offset_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath mask")
-            offset_group['mask'].attrs['valid_min'] = 0
+            offset_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")
+            offset_group['mask'].attrs['valid_min'] = np.uint32(0)
 
             range_offset_path = \
                 os.path.join( self.topo_path,
@@ -528,19 +553,33 @@ class L1InSARWriter(InSARBaseWriter):
             az_idx = np.round([rslc_radar_grid.azimuth_index(az)
                                for az in offset_zero_doppler_time])
 
-            offset_group['mask'][...] = \
-                generate_insar_subswath_mask(self.ref_rslc,
-                                             self.sec_rslc,
-                                             range_offset_path,
-                                             azimuth_offset_path,
-                                             freq,
-                                             az_idx,
-                                             rg_idx)
+            offset_group['mask'][...], pol_valid_mask = \
+                generate_insar_mask(self.ref_rslc,
+                                    self.sec_rslc,
+                                    self.ref_h5py_file_obj,
+                                    self.sec_h5py_file_obj,
+                                    range_offset_path,
+                                    azimuth_offset_path,
+                                    freq,
+                                    az_idx,
+                                    rg_idx)
 
-        # add the datasets to pixel offsets group
-        self._add_datasets_to_pixel_offset_group()
+            # Fill the valid mask value for each polarization
+            for pol in pol_list:
+                offset_pol_group_name = (
+                    f"{offset_group_name}/{pol}"
+                )
+                offset_pol_group = self.require_group(offset_pol_group_name)
 
-    def add_interferogram_to_swaths_group(self):
+                # Extract polarization-dependent valid mask
+                valid_mask = extract_pol_valid_mask(pol_valid_mask, pol)
+
+                offset_pol_group['validDataMask'][...] = valid_mask
+                offset_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
+                offset_pol_group['validDataMask'].attrs['long_name'] = to_bytes("Valid data mask")
+                offset_pol_group['validDataMask'].attrs['valid_pixel_fraction'] = compute_valid_pixel_fraction(valid_mask, 255)
+
+    def add_interferogram_to_swaths_group(self, is_unwrapped=False):
         """
         Add the interferogram group to the swaths group
         """
@@ -607,7 +646,7 @@ class L1InSARWriter(InSARBaseWriter):
                 DatasetParams(
                     "zeroDopplerTime",
                     igram_zero_doppler_time,
-                    "Zero Doppler azimuth time since UTC epoch vector",
+                    "Vector of zero Doppler azimuth times measured relative to a UTC epoch",
                     {'units': zero_dopp_time_units},
                 ),
                 DatasetParams(
@@ -702,23 +741,39 @@ class L1InSARWriter(InSARBaseWriter):
                             'max_value', 'sample_stddev']:
                     igram_group['digitalElevationModel'].attrs[attr] = 0.0
 
+            mask_description_common = (
+                "Mask indicating the subswaths of valid samples and data anomalies"
+                " in the reference RSLC and the geometrically coregistered secondary RSLC."
+                " Each pixel value is encoded as a 32-bit unsigned integer."
+                " Bits 0-7 represent subswath encoding,"
+                " where the most significant digit corresponds to the subswath number of the reference RSLC"
+                " and the least significant digit corresponds to the subswath number of the secondary RSLC;"
+                " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
+                " Bits 8-15 represent bitwise anomaly flags for the secondary RSLC,"
+                " and bits 16-23 represent bitwise anomaly flags for the reference RSLC,"
+                " with each bit corresponding to a specific anomaly condition."
+                " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
+            )
+            mask_description_no_iono =  " Bits 24-31 are reserved for future use"
+            mask_description_iono = (
+                " Bit 24 indicates a bit mask for ionospheric phase mask used during filtering of ionospheric phase."
+                " This ionospheric phase mask indicates pixels which were masked out and filled with interpolated data."
+                " Bits 25-31 are reserved for future use")
+
+            mask_description = (
+                mask_description_common + mask_description_iono
+                if is_unwrapped else mask_description_common + mask_description_no_iono
+            )
+
             # add the subswath mask layer to the interferogram group
             self._create_2d_dataset(igram_group,
                                     'mask',
                                     shape=igram_shape,
-                                    dtype=np.uint8,
-                                    description=("Mask indicating the subswaths of valid samples in the reference RSLC"
-                                                 " and geometrically-coregistered secondary RSLC."
-                                                 " Each pixel value is a two-digit number:"
-                                                 " the least significant digit represents the"
-                                                 " subswath number of that pixel in the secondary RSLC,"
-                                                 " and the most significant digit represents"
-                                                 " the subswath number of that pixel in the reference RSLC."
-                                                 " A value of '0' in either digit indicates an invalid sample"
-                                                 " in the corresponding RSLC"),
+                                    dtype=np.uint32,
+                                    description=mask_description,
                                     fill_value=255)
-            igram_group['mask'].attrs['valid_min'] = 0
-            igram_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath mask")
+            igram_group['mask'].attrs['valid_min'] = np.uint32(0)
+            igram_group['mask'].attrs['long_name'] = to_bytes("Valid samples subswath and data anomaly mask")
 
             range_offset_path = \
                 os.path.join(self.topo_path,
@@ -741,14 +796,16 @@ class L1InSARWriter(InSARBaseWriter):
             az_idx = np.round([rslc_radar_grid.azimuth_index(az)
                                for az in igram_zero_doppler_time])
 
-            igram_group['mask'][...] = \
-                generate_insar_subswath_mask(self.ref_rslc,
-                                             self.sec_rslc,
-                                             range_offset_path,
-                                             azimuth_offset_path,
-                                             freq,
-                                             az_idx,
-                                             rg_idx)
+            igram_group['mask'][...], pol_valid_mask = \
+                generate_insar_mask(self.ref_rslc,
+                                    self.sec_rslc,
+                                    self.ref_h5py_file_obj,
+                                    self.sec_h5py_file_obj,
+                                    range_offset_path,
+                                    azimuth_offset_path,
+                                    freq,
+                                    az_idx,
+                                    rg_idx)
 
             # add the interferogram and pixelOffsets groups to the polarization group
             for pol in pol_list:
@@ -764,11 +821,23 @@ class L1InSARWriter(InSARBaseWriter):
                         np.float32,
                         f"Coherence magnitude between {pol} layers",
                         Units.unitless,
+                        None,
+                    ),
+                    (
+                        "validDataMask",
+                        np.uint8,
+                        (f"Valid mask for the {pol} layers: "
+                         "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                         " Valid represents fully focused data and invalid"
+                         " represents partially focused or missing data"),
+                        Units.unitless,
+                        np.uint8(255),
                     ),
                 ]
 
                 for igram_ds_param in igram_ds_params:
-                    ds_name, ds_dtype, ds_description, ds_unit = igram_ds_param
+                    ds_name, ds_dtype, ds_description, ds_unit, fill_value\
+                        = igram_ds_param
                     self._create_2d_dataset(
                         igram_pol_group,
                         ds_name,
@@ -776,7 +845,17 @@ class L1InSARWriter(InSARBaseWriter):
                         ds_dtype,
                         ds_description,
                         units=ds_unit,
+                        fill_value=fill_value
                     )
+                    if ds_name == 'validDataMask':
+                        # Extract polarization-dependent valid mask
+                        valid_mask = extract_pol_valid_mask(pol_valid_mask, pol)
+
+                        igram_pol_group['validDataMask'][...] = valid_mask
+                        igram_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
+                        igram_pol_group['validDataMask'].attrs['long_name'] = to_bytes("Valid data mask")
+                        igram_pol_group['validDataMask'].attrs['valid_pixel_fraction'] = compute_valid_pixel_fraction(valid_mask, 255)
+
 
     def add_swaths_to_hdf5(self):
         """

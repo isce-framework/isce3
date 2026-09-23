@@ -32,6 +32,7 @@ void addbinding_pycuampcor_cpu(pybind11::module& m)
         .DEF_PARAM(int, deviceID)
         .DEF_PARAM(int, nStreams)
         .DEF_PARAM(int, derampMethod)
+        .DEF_PARAM(int, derampAxis)
 
         .DEF_PARAM(str, referenceImageName)
         .DEF_PARAM(int, referenceImageHeight)

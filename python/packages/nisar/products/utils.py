@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import copy
+
+import journal
 import numpy as np
 from numpy.typing import ArrayLike
-import journal
 
 
 def to_bytes(s: str | ArrayLike) -> np.ndarray:
@@ -76,3 +78,135 @@ def get_static_layers_data_access(
                                                        granule_id)
 
     return static_layers_data_access
+
+
+def interpret_subswath_mask(mask, nodata=255):
+    """
+    Interprets a subswath mask integer by decoding its digits into boolean
+    flags indicating reference validity, secondary validity, and water
+    presence.
+
+    Parameters
+    ----------
+    mask : numpy.array
+        A mask inlcuding both the input exception and subswath mask, where
+        each digit in the subswath mask represents a specific flag:
+        - Units digit (1s place): Secondary subswath mask
+            Non-zero indicates valid; zero indicates invalid.
+        - Tens digit (10s place): Reference subswath mask
+            Non-zero indicates valid; zero indicates invalid.
+        - Hundreds digit (100s place): Water presence flag.
+            Non-zero indicates presence of water; zero indicates absence.
+    nodata : int, default 255
+
+    Returns
+    -------
+    reference_valid : bool
+        True if the reference is valid (tens digit is non-zero),
+        False otherwise.
+    secondary_valid : bool
+        True if the secondary is valid (units digit is non-zero),
+        False otherwise.
+    water : bool
+        True if water is present (hundreds digit is non-zero),
+        False otherwise.
+    """
+
+    nd = (mask == nodata)
+    subswath_mask = np.asarray(mask & 0xFF)
+
+    secondary_valid = subswath_mask % 10 != 0
+    reference_valid = (subswath_mask // 10) % 10 != 0
+    water = (subswath_mask // 100) % 10 != 0
+
+    secondary_valid = np.where(nd, False, secondary_valid)
+    reference_valid = np.where(nd, False, reference_valid)
+    water = np.where(nd, False, water)
+
+    return reference_valid, secondary_valid, water
+
+
+def interpret_valid_data_mask(mask, nodata=255):
+    """
+    Interpret a valid data mask by decoding its bits into boolean flags
+    indicating reference and secondary validity.
+
+    Parameters
+    ----------
+    mask : numpy.ndarray
+        A valid data mask where each value packs the per-input validity:
+        - Bit 0 (1s place): Secondary validity.
+            1 indicates valid; 0 indicates invalid.
+        - Bit 1 (2s place): Reference validity.
+            1 indicates valid; 0 indicates invalid.
+    nodata : int, default 255
+        Value flagging samples with no data, which are treated as invalid.
+
+    Returns
+    -------
+    reference_valid : numpy.ndarray of bool
+        True where the reference is valid (bit 1 is set), False otherwise.
+    secondary_valid : numpy.ndarray of bool
+        True where the secondary is valid (bit 0 is set), False otherwise.
+    """
+
+    nd = (mask == nodata)
+
+    secondary_valid = (mask & 0b01) != 0
+    reference_valid = (mask & 0b10) != 0
+
+    secondary_valid = np.where(nd, False, secondary_valid)
+    reference_valid = np.where(nd, False, reference_valid)
+
+    return reference_valid, secondary_valid
+
+
+def deepcopy_runconfig_and_keep_isce3_obj(obj):
+    """
+    Deep-copy a runconfig while preserving all `isce3.*` objects by reference.
+
+    This function performs a full `copy.deepcopy` of the input object graph,
+    except for any object whose type originates from the `isce3` module.
+    All `isce3` objects are reused (not cloned, not pickled) to avoid
+    deepcopy/pickling failures of pybind/C++ objects such as
+    `isce3.product.GeoGridParameters`.
+
+    Parameters
+    ----------
+    obj : Any
+        Arbitrary Python object (typically a nested runconfig composed of
+        dicts, lists, and dataclasses) that may contain `isce3` objects.
+
+    Returns
+    -------
+    Any
+        A deep-copied object graph in which all non-`isce3` objects are
+        independent copies, while all `isce3` objects are shared by reference.
+    """
+
+    memo = {}
+
+    def _register_isce3(o):
+        if id(o) in memo:
+            return
+
+        mod = getattr(type(o), "__module__", "")
+        if mod.startswith("isce3"):
+            memo[id(o)] = o
+            return
+
+        if isinstance(o, dict):
+            for k, v in o.items():
+                _register_isce3(k)
+                _register_isce3(v)
+        elif isinstance(o, (list, tuple, set)):
+            for x in o:
+                _register_isce3(x)
+        else:
+            d = getattr(o, "__dict__", None)
+            if isinstance(d, dict):
+                for v in d.values():
+                    _register_isce3(v)
+
+    _register_isce3(obj)
+    return copy.deepcopy(obj, memo)

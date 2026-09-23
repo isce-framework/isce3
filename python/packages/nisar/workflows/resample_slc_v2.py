@@ -10,7 +10,9 @@ import numpy as np
 from journal.Channel import Channel
 
 from isce3.core.gpu_check import use_gpu
+from isce3.core.types import ComplexFloat16Decoder, is_complex32
 from isce3.image.v2.resample_slc import resample_slc_blocks
+from isce3.io import HDF5OptimizedReader
 from isce3.io.gdal.gdal_raster import GDALRaster
 
 from nisar.products.readers import RSLC
@@ -32,7 +34,7 @@ def run(cfg: dict, resample_type: str) -> None:
         of the runconfig.
         "fine" uses ".off.vrt" files under the rubbersheet_offsets subdirectory of the
         offsets directory of the runconfig.
-    """ 
+    """
     sec_file_path = cfg["input_file_group"]["secondary_rslc_file"]
     ref_file_path = cfg["input_file_group"]["reference_rslc_file"]
     scratch_path = Path(cfg["product_path_group"]["scratch_path"])
@@ -73,7 +75,7 @@ def run(cfg: dict, resample_type: str) -> None:
             raise ValueError(
                 "resample_type must be 'coarse' or 'fine', instead got "
                 f"{resample_type!r}")
-        
+
         az_off_path = offsets_path / "azimuth.off"
         rg_off_path = offsets_path / "range.off"
 
@@ -91,7 +93,7 @@ def run(cfg: dict, resample_type: str) -> None:
 
         # Get polarization list for which resample SLCs
         pol_list = freq_pols[freq]
-        
+
         info_channel.log(f"Resampling SLC for frequency {freq}.")
         t_freq_elapsed = -perf_counter()
 
@@ -132,7 +134,7 @@ def resample_secondary_rslc_onto_reference(
     Resample a secondary RSLC product onto a reference one using NISAR HDF5 datasets.
 
     This function outputs several files named `coregistered_secondary.slc` into
-    subdirectories at `out_path`, one for each polarization on this frequency. 
+    subdirectories at `out_path`, one for each polarization on this frequency.
 
     Parameters
     ----------
@@ -164,7 +166,7 @@ def resample_secondary_rslc_onto_reference(
     doppler = sec_slc_obj.getDopplerCentroid(frequency=freq)
 
     ref_radar_grid = RSLC(hdf5file=os.fspath(ref_file_path)).getRadarGrid(freq)
-    
+
     # Get dimensions of sec grid
     out_length = ref_radar_grid.length
     out_width = ref_radar_grid.width
@@ -205,29 +207,38 @@ def resample_secondary_rslc_onto_reference(
                 driver_name="ENVI",
             )
         )
-    
+
     # ComplexFloat16Decoders and h5py Datasets implement the ISCE3 DatasetReader
     # protocol. Get a list of these for all polarizations in this frequency.
-    sec_readers = [
-        sec_slc_obj.getSlcDatasetAsNativeComplex(freq, pol)
-        for pol in pols
-    ]
+    #
+    # Open directly with a cache sized for this dataset's chunking, rather
+    # than via RSLC.getSlcDatasetAsNativeComplex()'s default h5py cache.
+    with HDF5OptimizedReader(
+        name=os.fspath(sec_file_path), mode='r', libver='latest', swmr=True
+    ) as sec_h5:
+        sec_readers = []
+        for pol in pols:
+            ds_path = sec_slc_obj.imageDatasetPath(freq, pol)
+            dataset = sec_h5[ds_path]
+            if is_complex32(dataset):
+                dataset = ComplexFloat16Decoder(dataset)
+            sec_readers.append(dataset)
 
-    # Resample the secondary RSLC onto the reference coordinate system.
-    # Because this function receives GDALRasters in its output, it will write
-    # automatically to these rasters.
-    resample_slc_blocks(
-        output_resampled_slcs=out_writers,
-        input_slcs=sec_readers,
-        az_offsets_dataset=az_off_reader,
-        rg_offsets_dataset=rg_off_reader,
-        input_radar_grid=sec_grid,
-        doppler=doppler,
-        block_size_az=block_size_az,
-        block_size_rg=block_size_rg,
-        fill_value=0.0 + 0.0j,
-        with_gpu=with_gpu,
-    )
+        # Resample the secondary RSLC onto the reference coordinate system.
+        # Because this function receives GDALRasters in its output, it will write
+        # automatically to these rasters.
+        resample_slc_blocks(
+            output_resampled_slcs=out_writers,
+            input_slcs=sec_readers,
+            az_offsets_dataset=az_off_reader,
+            rg_offsets_dataset=rg_off_reader,
+            input_radar_grid=sec_grid,
+            doppler=doppler,
+            block_size_az=block_size_az,
+            block_size_rg=block_size_rg,
+            fill_value=0.0 + 0.0j,
+            with_gpu=with_gpu,
+        )
 
 
 if __name__ == "__main__":

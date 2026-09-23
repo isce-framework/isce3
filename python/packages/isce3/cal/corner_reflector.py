@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional
 
 import numpy as np
@@ -11,11 +12,14 @@ from numpy.typing import ArrayLike
 
 import isce3
 
+class CRShape(str, Enum):
+    SQUARE = "square"
+    TRIANGULAR = "triangular"
 
 @dataclass(frozen=True)
-class TriangularTrihedralCornerReflector:
+class TrihedralCornerReflector:
     """
-    A triangular trihedral corner reflector (CR).
+    A trihedral corner reflector (CR).
 
     Parameters
     ----------
@@ -33,6 +37,8 @@ class TriangularTrihedralCornerReflector:
         geographic East, measured clockwise positive in the E-N plane.
     side_length : float
         The length of each leg of the trihedral, in meters.
+    shape : CRShape
+        The shape of the faces (triangular or square).
     """
 
     id: str
@@ -40,11 +46,12 @@ class TriangularTrihedralCornerReflector:
     elevation: float
     azimuth: float
     side_length: float
+    shape: CRShape
 
 
 def parse_triangular_trihedral_cr_csv(
     csvfile: os.PathLike,
-) -> Iterator[TriangularTrihedralCornerReflector]:
+) -> Iterator[TrihedralCornerReflector]:
     """
     Parse a CSV file containing triangular trihedral corner reflector (CR) data.
 
@@ -69,7 +76,7 @@ def parse_triangular_trihedral_cr_csv(
 
     Yields
     ------
-    cr : TriangularTrihedralCornerReflector
+    cr : TrihedralCornerReflector
         A corner reflector.
     """
     dtype = np.dtype(
@@ -103,10 +110,13 @@ def parse_triangular_trihedral_cr_csv(
     for attr in ["lat", "lon", "az", "el"]:
         crs[attr] = np.deg2rad(crs[attr])
 
+    # Old format, assume all corners are triangular.
+    shape = "triangular"
+
     for cr in crs:
         id, lat, lon, height, az, el, side_length = cr
         llh = isce3.core.LLH(lon, lat, height)
-        yield TriangularTrihedralCornerReflector(id, llh, el, az, side_length)
+        yield TrihedralCornerReflector(id, llh, el, az, side_length, shape)
 
 
 def cr_to_enu_rotation(el: float, az: float) -> isce3.core.Quaternion:
@@ -270,8 +280,60 @@ def target2platform_unit_vector(
     return normalize_vector(platform_xyz - target_xyz)
 
 
-def predict_triangular_trihedral_cr_rcs(
-    cr: TriangularTrihedralCornerReflector,
+def eval_trihedral_rcs_model(los, side_length, wavelength, shape):
+    """
+    Calculate RCS of a trihedral corner reflector (CR).
+
+    Parameters
+    ----------
+    los : array_like
+        Line-of-sight direction from the corner reflector vertex to target,
+        expressed as a unit-vector in the right-handed coordinate system
+        defined by the legs of the corner reflector (Z-up).
+    side_length : float
+        Length of a leg of the corner reflector (e.g., the shorter side for
+        triangular trihedrals) in m.
+    wavelength : float
+        Wavelength of the sensor in m.
+    shape : CRShape | str
+        Shape of each panel.
+
+    Returns
+    -------
+    rcs : float
+        Radar cross section in m^2
+    """
+    # Get the direction cosines sorted in ascending order.
+    p1, p2, p3 = np.sort(los)
+    if p1 < 0.0:
+        raise ValueError("invalid corner reflector viewing geometry"
+            f" los={los}")
+    # Require unit vector.
+    if not np.isclose(np.linalg.norm(los), 1.0):
+        raise ValueError("line-of-sight direction must be a unit vector")
+
+    # Compute expected RCS.
+    if shape == "triangular":
+        a = p1 + p2 + p3
+        if (p1 + p2) > p3:
+            # typical case close to boresight
+            b = a - 2.0 / a
+        else:
+            b = 4.0 * p1 * p2 / a
+    elif shape == "square":
+        if p2 >= (p3 / 2):
+            # typical case close to boresight
+            b = p1 * (4 - p3 / p2)
+        else:
+            b = 4 * p1 * p2 / p3
+    else:
+        raise ValueError(f"invalid trihedral shape={shape}")
+
+    return 4.0 * np.pi * (side_length**2 * b / wavelength)**2
+
+
+def predict_trihedral_cr_rcs(
+    cr: TrihedralCornerReflector,
     orbit: isce3.core.Orbit,
     doppler: isce3.core.LUT2d,
     wavelength: float,
@@ -280,14 +342,14 @@ def predict_triangular_trihedral_cr_rcs(
     geo2rdr_params: Optional[Mapping[str, float]] = None,
 ) -> float:
     r"""
-    Predict the radar cross-section (RCS) of a triangular trihedral corner reflector.
+    Predict the radar cross-section (RCS) of a trihedral corner reflector.
 
-    Calculate the predicted monostatic RCS of a triangular trihedral corner reflector,
+    Calculate the predicted monostatic RCS of a trihedral corner reflector,
     given the corner reflector dimensions and imaging geometry\ [1]_.
 
     Parameters
     ----------
-    cr : TriangularTrihedralCornerReflector
+    cr : TrihedralCornerReflector
         The corner reflector position, orientation, and size.
     orbit : isce3.core.Orbit
         The trajectory of the radar antenna phase center.
@@ -323,6 +385,9 @@ def predict_triangular_trihedral_cr_rcs(
        Cross-Sections - VI. Cross-sections of corner reflectors and other multiple
        scatterers at microwave frequencies,” University of Michigan Radiation
        Laboratory, Tech. Rep., October 1953.
+    .. [2] Armin W. Doerry and Billy C. Brock, "Radar Cross Section of
+       Triangular Trihedral Reflector with Extended Bottom Plate," Sandia
+       Report SAND2009-2993, May 2009, p. 21.
     """
     # Get the target-to-platform line-of-sight vector in ECEF coordinates.
     los_vec_ecef = target2platform_unit_vector(
@@ -341,20 +406,8 @@ def predict_triangular_trihedral_cr_rcs(
     )
     los_vec_cr = enu_to_cr_rotation(cr.elevation, cr.azimuth).rotate(los_vec_enu)
 
-    # Get the CR boresight unit vector in the same coordinates.
-    boresight_vec = normalize_vector([1.0, 1.0, 1.0])
-
-    # Get the direction cosines between the two vectors, sorted in ascending order.
-    p1, p2, p3 = np.sort(los_vec_cr * boresight_vec)
-
-    # Compute expected RCS.
-    a = p1 + p2 + p3
-    if (p1 + p2) > p3:
-        b = np.sqrt(3.0) * a - 2.0 / (np.sqrt(3.0) * a)
-    else:
-        b = 4.0 * p1 * p2 / a
-
-    return 4.0 * np.pi * cr.side_length ** 4 * b ** 2 / wavelength ** 2
+    return eval_trihedral_rcs_model(los_vec_cr, cr.side_length, wavelength,
+        cr.shape)
 
 
 def get_target_observation_time_and_elevation(
@@ -453,10 +506,10 @@ def get_target_observation_time_and_elevation(
 
 
 def get_crs_in_polygon(
-    crs: Iterable[TriangularTrihedralCornerReflector],
+    crs: Iterable[TrihedralCornerReflector],
     polygon: shapely.Polygon,
     buffer: float | None = None,
-) -> Iterator[TriangularTrihedralCornerReflector]:
+) -> Iterator[TrihedralCornerReflector]:
     """
     Filter out corner reflectors located outside of a Lon/Lat polygon.
 
@@ -469,7 +522,7 @@ def get_crs_in_polygon(
 
     Parameters
     ----------
-    crs : iterable of TriangularTrihedralCornerReflector
+    crs : iterable of TrihedralCornerReflector
         Input iterable of corner reflector data.
     polygon : shapely.Polygon
         A convex polygon, in geodetic Lon/Lat coordinates w.r.t the WGS 84 ellipsoid,
@@ -484,7 +537,7 @@ def get_crs_in_polygon(
 
     Yields
     ------
-    cr : TriangularTrihedralCornerReflector
+    cr : TrihedralCornerReflector
         A corner reflector from the input iterable that was contained within the
         polygon.
 

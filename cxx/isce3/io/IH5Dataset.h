@@ -11,6 +11,7 @@
 #include <gdal_pam.h>
 #include <gdal_priv.h>
 #include <gdal_rat.h>
+#include <gdal_version.h>
 #include "IH5.h"
 
 
@@ -62,8 +63,13 @@ class IH5Dataset final: public GDALDataset
 
         void *GetInternalHandle (const char *) override;
 
+#if GDAL_VERSION_MAJOR >= 4 || (GDAL_VERSION_MAJOR == 3 && GDAL_VERSION_MINOR >= 12)
+        virtual CPLErr GetGeoTransform( GDALGeoTransform &gt ) const override;
+        virtual CPLErr SetGeoTransform( const GDALGeoTransform &gt ) override;
+#else
         virtual CPLErr GetGeoTransform( double *padfTransform ) override;
-        virtual CPLErr SetGeoTransform( double * ) override;
+        virtual CPLErr SetGeoTransform( double *padfTransform ) override;
+#endif
         static GDALDataset *Open(GDALOpenInfo *info);
         static int Identify(GDALOpenInfo *info);
 };

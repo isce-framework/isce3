@@ -72,4 +72,5 @@ void addsubmodule_geometry(py::module & m)
     addbinding_pnt_intersect(geometry);
     addbinding_look_inc_from_sr(geometry);
     addbinding_DEM_raster2interpolator(geometry);
+    addbinding_load_dem_from_proj(geometry);
 }

@@ -89,6 +89,9 @@ runconfig:
 
         # TODO OPTIONAL - To setup type of worker
         worker:
+             # OPTIONAL - To remove the intermediate files. Default False
+            intermediate_files_removal_enabled: False
+
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
             internet_access: False
 
@@ -287,6 +290,29 @@ runconfig:
                     # Filling method for invalid regions
                     # (nearest, smoothed)
                     filling_method: nearest
+                    # Method used to build the smooth guide image for outlier detection
+                    # and gap filling. {'median_gaussian', 'gaussian', 'none'}, optional
+                    filling_guide_filter_method: median_gaussian
+                    # Window size of the NaN-aware median filter used when
+                    # `guide_filter_method='median_gaussian'`
+                    filling_guide_median_size: 3
+                    # Threshold multiplier for robust outlier detection. Pixels are marked
+                    # as outliers when
+                    #       abs(residual - median(residual)) >
+                    #           outlier_threshold * robust_scale
+                    # where `robust_scale = max(1.4826 * MAD, outlier_min_scale)`.
+                    filling_outlier_threshold: 3.5
+                    # Lower bound for the robust scale used in outlier detection.
+                    # This prevents the threshold from becoming too small in very
+                    # clean regions,
+                    filling_outlier_min_scale: 0.0
+                    # Scale factor that converts MAD (median absolute deviation)
+                    # into a sigma-like robust spread estimate for outlier detection.
+                    # For a standard normal variable Z ~ N(0, 1),
+                    # median(|Z|) = Phi^{-1}(0.75) ≈ 0.67449,
+                    # so std ≈ MAD / 0.67449 ≈ 1.4826 * MAD.
+                    filling_outlier_mad_scale_factor: 1.4826
+
                     # Kernel size in pixels
                     kernel_range: 100
                     kernel_azimuth: 100
@@ -304,9 +330,9 @@ runconfig:
                     # skipped entirely.
                     min_cluster_pixels: 2
 
+                    bridge_algorithm_enabled: True
                     # Maximum radius used when bridging disconnected
                     # regions.
-                    bridge_algorithm_enabled: True
                     bridge_radius: 500
                     # Size of the structuring element used for erosion
                     # during bridge labeling.
@@ -319,6 +345,37 @@ runconfig:
                     # During deramping, uniform sampling is applied
                     # when number of samples is larger than maximum pixel
                     bridge_ramp_maximum_pixel: 1e6
+                qfsp_correction:
+                    # Apply qFSP phase-slip artifact correction.
+                    enabled: True
+                    # Polynomial order used to estimate the smooth background
+                    # phase from non-anomaly pixels.
+                    # 0: constant, 1: linear, 2: quadratic.
+                    background_order: 2
+                    # Window size, in pixels, used to smooth the estimated qFSP
+                    # artifact template. Use an odd integer when possible.
+                    template_smooth_win: 3
+                    # Number of pixels to shrink from the inner artifact region
+                    # before estimating/applying the correction.
+                    inner_shrink: 2
+                    # Number of pixels used to feather the correction outside
+                    # the artifact boundary.
+                    outer_feather: 10
+                    # Critical value used by polyfit_offsets for iterative outlier
+                    # rejection. Larger values reject fewer samples.
+                    background_crit_value: 5.0
+                    # Maximum number of outliers removed during background fitting.
+                    # polyfit_offsets removes at most one sample per iteration.
+                    # Set to 0 to disable outlier rejection.
+                    background_max_iterations: 50
+                    # Maximum number of valid phase samples used for background fitting.
+                    # Deterministic subsampling is applied when more samples are available.
+                    background_max_samples: 20000
+                    # Minimum quality value used when constructing fitting weights.
+                    # This parameter is applied only when quality weights, such as
+                    # coherence, are provided.
+                    background_minimum_quality: 0.05
+                    debug_flag: false
 
             troposphere_delay:
                 # Boolean flag to activate (True) troposphere delay computation
@@ -405,8 +462,10 @@ runconfig:
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
-                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
+                # Deramp data axis prior to FFT: range, azimuth, or both
+                deramping_axis: 'azimuth'
                 # Flag to use constant range/azimuth offsets in dense offsets estimation
                 use_gross_offsets: True
                 # Constant offset along slant range to guide dense offset estimation
@@ -456,8 +515,10 @@ runconfig:
                 start_pixel_azimuth:
                 # Cross-correlation domain
                 cross_correlation_domain: 'frequency'
-                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
+                # Deramp data axis prior to FFT: range, azimuth, or both
+                deramping_axis: 'azimuth'
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
@@ -538,6 +599,28 @@ runconfig:
                 # Interpolation method. Interpolation is used to fill residual outlier
                 # holes if present
                 interpolation_method: linear
+
+                # Additional azimuth offset filtering applied after outlier detection
+                # to suppress offset jumps caused by ionospheric disturbances,
+                # decorrelation, or processing artifacts
+                azimuth_offset_filter:
+                    # Spatial filter type: 'none' (disabled), 'median', or 'mean'
+                    offsets_filter: none
+                    # Kernel size in pixels for spatial filtering
+                    kernel_size: 31
+
+                # Flag to enable the use of subswath mask for the outlier detection
+                subswath_mask_apply_enabled: True
+
+                # IDW interpolation method parameters
+                idw_interpolation:
+                    # Power parameter controlling the distance weighting
+                    power: 2
+                    # Number of nearest neighbors used for interpolation
+                    number: 100
+                    # Maximum search radius in pixels
+                    radius: 200
+
                 # It is good practice to filter the offsets prior to interferogram
                 # formation to reduce noise. We expose: no_filter: do not filter the offsets/
                 # degrade offsets resolution. median_filter, boxcar_filter (moving average),
@@ -547,6 +630,18 @@ runconfig:
                     # Filter size (median/boxcar) in slant range
                     filter_size_range: 5
                     filter_size_azimuth: 5
+                # Polyfit the dense offsets for the fine resampling
+                polyfitting:
+                    # Flag to enable/disable polyfitting
+                    enabled: false
+                    # The degrees for the polyfitting
+                    degree: 2
+                    # Critical value for the w-test to remove the outliers
+                    critical_value: 0.1
+                    # Number of samples along the range in pixels for polyfitting
+                    samples_along_range: 200
+                    # Number of samples  along the azimuth in pixels for polyfitting
+                    samples_along_azimuth: 200
 
             fine_resample:
                 # Flag to enable/disable fine resampling
@@ -613,7 +708,7 @@ runconfig:
                         # 1) median_filter: compute mask with median absolute deviation thresholding
                         # 2) coherence: compute mask with normalized InSAR coherence thresholding
                         # 3) water: extract water areas from water mask file in dynamic ancillary data
-                        mask_type: coherence
+                        mask_type: ['subswath_mask']
                         # buffer from the land. Unit is [km]. Buffer should be integer.
                         ocean_water_buffer: 1
                         inland_water_buffer: 1
@@ -746,10 +841,103 @@ runconfig:
                     # `ntiles` is (1, 1). It has no effect if `single_tile_reoptimize` was also
                     #  enabled (since regrowing connected components would be redundant in that case).
                     regrow_conncomps: True
+                whirlwind:
+                    # Effective number of looks used to form the sample coherence. Must be at least 1.
+                    # A higher number of looks means higher confidence in coherence and a narrower
+                    # coherence cost model. Very large values (above ~80 looks) are capped for the
+                    # cost model since the phase PDF has effectively converged by then.
+                    # If not specified, nlooks (n_e) is estimated as:
+                    # $$
+                    # n_e = \frac{d_r d_a}{\rho_r \rho_a}
+                    # $$
+                    # where $d_r$ and $d_a$ are the sample spacing in range and azimuth,
+                    # and $\rho_r$ and $\rho_a$ are the range and azimuth resolution.
+                    nlooks:
+                    # GDAL-readable raster file path to a mask of valid pixels. Zeros in this raster indicate
+                    # interferogram pixels that should be masked out. If provided, it must have
+                    # the same dimensions as the input interferogram.
+                    # If not provided, defaults to (igram != 0) & (coherence > 0).
+                    mask:
+                    # This supersedes the sibling `bridge` group below: when this is True that
+                    # group is skipped, since re-leveling an already-bridged result can add a
+                    # spurious cycle slip. Set this False to use the `bridge` group instead.
+                    bridge: True
+                    # Spiral persistent-scatterer interpolation pre-pass. When True, every valid
+                    # pixel whose coherence is below interp_cutoff has its phase replaced by a
+                    # Gaussian distance-weighted average of nearest high-coherence pixels' unit
+                    # phasors before the solve. Integer cycle field after unwrapping is applied
+                    # back to original wrapped phase, so every per-pixel value is preserved.
+                    # Useful for scenes with isolated low-coherence speckle seeding spurious residues.
+                    interpolate: False
+                    # Coherence below which a valid pixel is interpolated (only when interpolate=True).
+                    # Coherence is used as the weight map.
+                    interp_cutoff: 0.1
+                    # Number of nearest high-coherence pixels averaged per interpolated pixel.
+                    interp_num_neighbors: 30
+                    # Maximum search radius in pixels for the concentric-circle neighbor search.
+                    interp_max_radius: 101
+                    # Minimum search radius in pixels; closer neighbors are skipped.
+                    interp_min_radius: 0
+                    # Gaussian distance-weighting falloff for the neighbor average.
+                    interp_alpha: 0.75
+                    # Coherence below which pixels are labeled 0 (background) in the connected
+                    # components. "auto" uses 0.32/sqrt(nlooks); pass a float for a fixed cutoff,
+                    # or leave unset to disable the cutoff and use conncomp_reliability instead.
+                    # Takes precedence over conncomp_reliability.
+                    conncomp_min_coherence: auto
+                    # Lower-level conservativeness knob for the connected components, in
+                    # inverse-variance (1/sigma2) units, so values are small. Used only when
+                    # conncomp_min_coherence is unset. 0 labels essentially every reliably
+                    # unwrapped pixel; raise to cut more low-coherence interior edges.
+                    conncomp_reliability: 0.5
+                    # Discard connected components smaller than this many pixels.
+                    min_size_px: 100
+                    # Maximum number of connected components to keep (largest first).
+                    max_ncomps: 1024
+                    # Draw phase paths across bounded runs of invalid pixels before
+                    # unwrapping, then drop those synthetic pixels from both outputs. The
+                    # paths let the solver pick a relative 2pi level between regions that
+                    # would otherwise be solved independently, which is what levels the
+                    # NISAR sub-swaths. Unlike ``interpolate``, it extrapolates the phase
+                    # slope on each side of a gap, so a winding estimate survives the
+                    # crossing. Default False.
+                    connect_gaps: False
+                    # Widest invalid run, in pixels, that ``connect_gaps`` will cross.
+                    # Default 300.
+                    connect_gaps_max_px: 300
+                    # Goldstein adaptive-filter strength in [0,1]. 0 (default) disables filtering;
+                    # typical "on" value is 0.7. When enabled, filter only informs MCF; integer cycle
+                    # field is applied to original wrapped phase, so every per-pixel value is preserved.
+                    goldstein_alpha: 0.0
+                    # Goldstein FFT patch size (only used when goldstein_alpha > 0).
+                    goldstein_psize: 64
+                bridge:
+                    enabled: True
+                    # Maximum radius used when bridging disconnected regions.
+                    bridge_radius: 500
+                    # Size of the structuring element used for erosion
+                    # during bridge labeling.
+                    bridge_erosion_size: 2
+                    # Minimum number of pixel of connected components
+                    # to retain during processing.
+                    bridge_minimum_samples: 14
+                    # Ramp type to correct before bridge algoritm
+                    bridge_ramp_type:
+                    # During deramping, uniform sampling is applied
+                    # when number of samples is larger than maximum pixel
+                    bridge_ramp_maximum_pixel: 1e6
 
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
+
+            tec_correction:
+                apply_slant_range_correction: True
+                apply_azimuth_correction: True
+                use_total_tec_only: False
+                ignore_invalid_topside_tec: True
+                polyfit_tec_profile: False
+                num_sigma: 1.5
 
             # Set of options to enable compression, choose compression level,
             # chunk size and shuffle filter
@@ -764,9 +952,12 @@ runconfig:
             chunk_size: [512, 512]
             # Enable/disable shuffle filter
             shuffle: True
+
         qa:
             rifg:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -803,6 +994,33 @@ runconfig:
                     metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
+
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling method for ISCE3 geocoding. Options: 'sinc',
+                        # 'bilinear', 'bicubic', 'nearest', 'biquintic'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # When output browse image data contains phase discontinuities
+                        # (e.g. RIFG's wrapped interferogram), strongly recommend 'nearest';
+                        # other methods can create artifacts when interpolating across the jump.
+                        # Default: nearest
+                        resample: nearest
 
                     wrapped_igram:
 
@@ -971,16 +1189,11 @@ runconfig:
                         # fill value is zero, then zeros will still be included in the total.
                         # Default: True
                         zero_is_invalid: true
-
-                    browse_png:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image.
-                        # Default: 2048
-                        longest_side_max: 2048
 
             runw:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -1018,11 +1231,43 @@ runconfig:
 
                 qa_reports:
 
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # The multiple of pi to rewrap the unwrapped phase image
+                        # when generating the browse PNG. If None, no rewrapping will occur.
+                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+                        # Default: 7
+                        rewrap: 7
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling method for ISCE3 geocoding. Options: 'sinc',
+                        # 'bilinear', 'bicubic', 'nearest', 'biquintic'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # When output browse image data contains phase discontinuities
+                        # (e.g. RIFG's wrapped interferogram), strongly recommend 'nearest';
+                        # other methods can create artifacts when interpolating across the jump.
+                        # Default: bilinear
+                        resample: bilinear
+
                     phase_img:
 
                         # The multiple of pi to rewrap the unwrapped phase image in the report
-                        # PDF. Will be used for both the unwrapped phase image plot(s) and
-                        # the HSI image plot(s). If None, no rewrapping will occur.
+                        # PDF. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
                         # Default: 7
                         rewrap: 7
@@ -1327,21 +1572,10 @@ runconfig:
                         # Default: True
                         zero_is_invalid: true
 
-                    browse_png:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image.
-                        # Default: 2048
-                        longest_side_max: 2048
-
-                        # The multiple of pi to rewrap the unwrapped phase image
-                        # when generating the browse PNG. If None, no rewrapping will occur.
-                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-                        # Default: 7
-                        rewrap: 7
-
             gunw:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -1379,11 +1613,40 @@ runconfig:
 
                 qa_reports:
 
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # The multiple of pi to rewrap the unwrapped phase image
+                        # when generating the browse PNG. If None, no rewrapping will occur.
+                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+                        # Default: 7
+                        rewrap: 7
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling algorithm for GDAL reprojection. Options: 'near',
+                        # 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # Default: average
+                        resample: average
+
                     phase_img:
 
                         # The multiple of pi to rewrap the unwrapped phase image in the report
-                        # PDF. Will be used for both the unwrapped phase image plot(s) and
-                        # the HSI image plot(s). If None, no rewrapping will occur.
+                        # PDF. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
                         # Default: 7
                         rewrap: 7
@@ -1730,21 +1993,10 @@ runconfig:
                         # Default: True
                         zero_is_invalid: true
 
-                    browse_png:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image.
-                        # Default: 2048
-                        longest_side_max: 2048
-
-                        # The multiple of pi to rewrap the unwrapped phase image
-                        # when generating the browse PNG. If None, no rewrapping will occur.
-                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-                        # Default: 7
-                        rewrap: 7
-
             roff:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -1781,6 +2033,53 @@ runconfig:
                     metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
+
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image PNG.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # Stride along each axis of the Frequency A
+                        # image arrays for decimating the raster for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides based on `longeset_side_max`
+                        # and decimating the raster such that the pixels are roughly square.
+                        # Default: None
+                        browse_decimation_freqa:
+
+                        # Stride along each axis of the Frequency B
+                        # image arrays for decimating the raster for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides based on `longeset_side_max`
+                        # and decimating the raster such that the pixels are roughly square.
+                        # Default: None
+                        browse_decimation_freqb:
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling method for ISCE3 geocoding. Options: 'sinc',
+                        # 'bilinear', 'bicubic', 'nearest', 'biquintic'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # When output browse image data contains phase discontinuities
+                        # (e.g. RIFG's wrapped interferogram), strongly recommend 'nearest';
+                        # other methods can create artifacts when interpolating across the jump.
+                        # Default: bilinear
+                        resample: bilinear
 
                     az_and_range_offsets:
 
@@ -1834,26 +2133,6 @@ runconfig:
                         # Default: None
                         colorbar_min_max:
 
-                        # Stride along each axis of the Frequency A
-                        # image arrays for decimating the quiver plot image for the browse PNG.
-                        # This takes precedence over `longest_side_max`.
-                        # Format: [<num_rows>, <num_cols>]
-                        # Example: [6,7]
-                        # If None, QA-SAS will compute the decimation strides
-                        # based on `longest_side_max` and creating square pixels.
-                        # Default: None
-                        browse_decimation_freqa:
-
-                        # Stride along each axis of the Frequency B
-                        # image arrays for decimating the quiver plot image for the browse PNG.
-                        # This takes precedence over `longest_side_max`.
-                        # Format: [<num_rows>, <num_cols>]
-                        # Example: [6,7]
-                        # If None, QA-SAS will compute the decimation strides
-                        # based on `longest_side_max` and creating square pixels.
-                        # Default: None
-                        browse_decimation_freqb:
-
                         # Number of arrows (vectors) to plot per the
                         # longest edge of the raster.
                         # Default: 20
@@ -1867,12 +2146,6 @@ runconfig:
                         # See: The `scaling` parameter for `matplotlib.axes.Axes.quiver()`.
                         # Default: None
                         arrow_scaling:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image. If `decimation_freqX` is not
-                        # None, then `longest_side_max` will be ignored.
-                        # Default: 2048
-                        longest_side_max: 2048
 
                     az_and_rg_variance:
 
@@ -2027,7 +2300,9 @@ runconfig:
                         zero_is_invalid: true
 
             goff:
+
                 workflows:
+
                     # Flag to run `validate` workflow to validate the
                     # input file against its product spec.
                     # Default: True
@@ -2064,6 +2339,50 @@ runconfig:
                     metadata_luts_fail_if_all_nan: true
 
                 qa_reports:
+
+                    browse:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image PNG.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # Stride along each axis of the Frequency A
+                        # image arrays for decimating the raster for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides based on `longeset_side_max`
+                        # and decimating the raster such that the pixels are roughly square.
+                        # Default: None
+                        browse_decimation_freqa:
+
+                        # Stride along each axis of the Frequency B
+                        # image arrays for decimating the raster for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides based on `longeset_side_max`
+                        # and decimating the raster such that the pixels are roughly square.
+                        # Default: None
+                        browse_decimation_freqb:
+
+                        # True to generate a version of the native browse PNG+KML that is
+                        # projected to EPSG 4326 (lon/lat) coordinate system for accurate
+                        # geolocation in GIS software.
+                        # False to only generate native browse outputs.
+                        # The EPSG 4326 PNG+KML version will be in addition to the native
+                        # browse PNG+KML outputs (where the PNG reflects the input product's
+                        # native coordinate system). The EPSG 4326 outputs will be suffixed with
+                        # '_LATLON' (e.g., 'BROWSE_LATLON.png' and 'BROWSE_LATLON.kml').
+                        # Default: False
+                        output_browse_latlon: false
+
+                        # Resampling algorithm for GDAL reprojection. Options: 'near',
+                        # 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode'.
+                        # Ignored if `output_browse_latlon` is False.
+                        # Default: average
+                        resample: average
 
                     az_and_range_offsets:
 
@@ -2117,26 +2436,6 @@ runconfig:
                         # Default: None
                         colorbar_min_max:
 
-                        # Stride along each axis of the Frequency A
-                        # image arrays for decimating the quiver plot image for the browse PNG.
-                        # This takes precedence over `longest_side_max`.
-                        # Format: [<num_rows>, <num_cols>]
-                        # Example: [6,7]
-                        # If None, QA-SAS will compute the decimation strides
-                        # based on `longest_side_max` and creating square pixels.
-                        # Default: None
-                        browse_decimation_freqa:
-
-                        # Stride along each axis of the Frequency B
-                        # image arrays for decimating the quiver plot image for the browse PNG.
-                        # This takes precedence over `longest_side_max`.
-                        # Format: [<num_rows>, <num_cols>]
-                        # Example: [6,7]
-                        # If None, QA-SAS will compute the decimation strides
-                        # based on `longest_side_max` and creating square pixels.
-                        # Default: None
-                        browse_decimation_freqb:
-
                         # Number of arrows (vectors) to plot per the
                         # longest edge of the raster.
                         # Default: 20
@@ -2150,12 +2449,6 @@ runconfig:
                         # See: The `scaling` parameter for `matplotlib.axes.Axes.quiver()`.
                         # Default: None
                         arrow_scaling:
-
-                        # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image. If `decimation_freqX` is not
-                        # None, then `longest_side_max` will be ignored.
-                        # Default: 2048
-                        longest_side_max: 2048
 
                     az_and_rg_variance:
 

@@ -255,11 +255,12 @@ def test_freq_null():
     # Frequency Domain Nulling Parameters
     az_winsize = 25
     rng_winsize = 22
-    num_rng_blks = 3
+    num_samples_rng_blk = 700
     num_pulses_az_blk = 600
     trim_frac = 0.01
     pvalue_threshold = 0.005
     cdf_threshold = 0.68
+    use_entire_pulse = True
     nb_detect = True
     wb_detect = True
     mitigate_enable = True
@@ -269,12 +270,13 @@ def test_freq_null():
     rfi_likelihood = run_freq_notch(
         raw_data_rfi,
         num_pulses_az_blk,
-        num_rng_blks=num_rng_blks,
+        num_samples_rng_blk=num_samples_rng_blk,
         az_winsize=az_winsize,
         rng_winsize=rng_winsize,
         trim_frac=trim_frac,
         pvalue_threshold=pvalue_threshold,
         cdf_threshold=cdf_threshold,
+        use_entire_pulse=use_entire_pulse,
         nb_detect=nb_detect,
         wb_detect=wb_detect,
         mitigate_enable=mitigate_enable,

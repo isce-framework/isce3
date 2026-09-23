@@ -23,7 +23,7 @@ def extractScalar(h5grp, key, destType, logger=None, msg=None):
 
     try:
         val = h5grp[key][()]
-        val = destType(val)
+        val = destType(val.item() if hasattr(val, "item") else val)
     except KeyError as e:
         raise KeyError(handle_message(f'{key} not found at {h5grp.name}')) from e
     except Exception as e:

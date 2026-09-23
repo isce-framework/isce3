@@ -148,6 +148,20 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         """
         RUNWWriter.add_parameters_to_procinfo_group(self)
 
+        # Get the number of looks for both unwrapped and wrapped interferogram
+        proc_cfg = self.cfg["processing"]
+        wrap_igram_range_looks = proc_cfg["crossmul"]["range_looks"]
+        wrap_igram_azimuth_looks = proc_cfg["crossmul"]["azimuth_looks"]
+        unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
+        unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
+
+        if (unwrap_az_looks != 1) or (unwrap_rg_looks != 1):
+            unwrap_igram_range_looks = unwrap_rg_looks
+            unwrap_igram_azimuth_looks = unwrap_az_looks
+        else:
+            unwrap_igram_range_looks = wrap_igram_range_looks
+            unwrap_igram_azimuth_looks = wrap_igram_azimuth_looks
+
         # the unwrappedInterfergram group under the processingInformation/parameters
         # group is copied from the RUNW product, but the name in RUNW product is
         # 'interferogram', while in GUNW its name is 'unwrappedInterferogram'. Here
@@ -161,8 +175,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         for freq, *_ in get_cfg_freq_pols(self.cfg):
             number_of_azimuth_looks = \
                 self[f'{new_igram_group_name}/frequency{freq}/numberOfAzimuthLooks']
+            number_of_azimuth_looks[...] = unwrap_igram_azimuth_looks
             number_of_slant_range_looks = \
                 self[f'{new_igram_group_name}/frequency{freq}/numberOfRangeLooks']
+            number_of_slant_range_looks[...] = unwrap_igram_range_looks
             number_of_azimuth_looks.attrs['description'] = \
                 to_bytes('Number of looks applied in the'
                           ' along-track direction to form the'
@@ -177,9 +193,18 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         # 'interferogram', while in GUNW its name is 'wrappedInterferogram'. Here
         # is to rename the interfegram group name to wrappedInterferogram group name
         RIFGWriter.add_interferogram_to_procinfo_params_group(self)
+
         new_igram_group_name = \
             f"{self.group_paths.ParametersPath}/wrappedInterferogram"
         self.move(old_igram_group_name, new_igram_group_name)
+
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
+            number_of_azimuth_looks = \
+                self[f'{new_igram_group_name}/frequency{freq}/numberOfAzimuthLooks']
+            number_of_azimuth_looks[...] = wrap_igram_azimuth_looks
+            number_of_slant_range_looks = \
+                self[f'{new_igram_group_name}/frequency{freq}/numberOfRangeLooks']
+            number_of_slant_range_looks[...] = wrap_igram_range_looks
 
         L2InSARWriter.add_geocoding_to_procinfo_params_group(self)
 
@@ -204,6 +229,31 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
 
         grids_val = "projection"
 
+        mask_description_common = (
+            "Combination of a water mask, a mask of subswaths of valid samples, and data anomalies"
+            " in the reference RSLC and the geometrically coregistered secondary RSLC."
+            " Each pixel value is encoded as a 32-bit unsigned integer."
+            " Bits 0-7 represent subswath encoding, where the most significant digit represents"
+            " the water flag of that pixel in the reference RSLC, where 1 is water"
+            " and 0 is non-water; the second most significant digit corresponds to"
+            " the subswath number of the reference RSLC, and the least significant digit"
+            " corresponds to the subswath number of the secondary RSLC;"
+            " a value of 0 in either digit indicates an invalid sample in the corresponding RSLC."
+            " Bits 8-15 represent bitwise anomaly flags for the secondary RSLC, and"
+            " bits 16-23 represent bitwise anomaly flags for the reference RSLC,"
+            " with each bit corresponding to a specific anomaly condition."
+            " A value of 0 in the anomaly bits indicates that no anomaly is detected in the corresponding RSLC."
+        )
+
+        mask_description_iono = (
+            " Bit 24 indicates a bit mask for ionospheric phase mask used during filtering of ionospheric phase."
+            " This ionospheric phase mask indicates pixels which were masked out and filled with interpolated data."
+            " Bits 25-31 are reserved for future use"
+        )
+
+        mask_description_no_iono = (
+            " Bits 24-31 are reserved for future use"
+        )
         # Only add the common fields such as list of polarizations, pixel offsets, and center frequency
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
@@ -260,29 +310,29 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     ds_group_name,
                     ds_geogrid,
                 )
+                mask_description_suffix = (
+                    mask_description_no_iono
+                    if ds_group_name in [wrapped_group_name, pixeloffsets_group_name]
+                    else mask_description_iono
+                )
+
+                mask_description = mask_description_common + mask_description_suffix
 
                 self._create_2d_dataset(
                     ds_group,
                     "mask",
                     (ds_geogrid.length,
                      ds_geogrid.width),
-                    np.uint8,
-                    ("Combination of water mask and a mask of subswaths of valid samples"
-                     " in the reference RSLC and geometrically-coregistered secondary RSLC."
-                     " Each pixel value is a three-digit number:"
-                     " the most significant digit represents the water flag of that pixel in the reference RSLC,"
-                     " where 1 is water and 0 is non-water;"
-                     " the second digit represents the subswath number of that pixel in the reference RSLC;"
-                     " the least-significant digit represents the subswath number of that pixel in the secondary RSLC."
-                     " A value of 0 in either subswath digit indicates an invalid sample in the corresponding RSLC"),
+                    np.uint32,
+                    mask_description,
                     grid_mapping=grids_val,
                     xds=xds,
                     yds=yds,
                     fill_value=255,
                 )
-            ds_group['mask'].attrs['valid_min'] = 0
-            ds_group['mask'].attrs['percentage_water'] = 0.0
-            ds_group['mask'].attrs['disclaimer'] = to_bytes(self.water_mask_source)
+                ds_group['mask'].attrs['valid_min'] = np.uint32(0)
+                ds_group['mask'].attrs['percentage_water'] = np.float32(0.0)
+                ds_group['mask'].attrs['disclaimer'] = to_bytes(self.water_mask_source)
 
             for pol in pol_list:
                 unwrapped_pol_name = f"{unwrapped_group_name}/{pol}"
@@ -294,28 +344,34 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     unwrapped_geogrids,
                 )
 
-                #unwrapped dataset parameters as tuples in the following
-                #order: dataset name, data type, description, and units
+                # unwrapped dataset parameters as tuples in the following
+                # order: dataset name, data type, description, and units
                 unwrapped_ds_params = [
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
-                     Units.unitless),
+                     Units.unitless, None, None),
                     ("connectedComponents", np.uint16,
                      f"Connected components for {pol} layer",
-                     Units.unitless),
+                     Units.unitless,None, None),
                     ("ionospherePhaseScreen", np.float32,
                      "Ionosphere phase screen",
-                     Units.radian),
+                     Units.radian,None, None),
                     ("ionospherePhaseScreenUncertainty", np.float32,
                      "Uncertainty of the ionosphere phase screen",
-                     "radians"),
+                     "radians",None, None),
                     ("unwrappedPhase", np.float32,
                     f"Unwrapped interferogram between {pol} layers",
-                     Units.radian),
+                     Units.radian,None, None),
+                    ("validDataMask", np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
+                     Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
                 for ds_param in unwrapped_ds_params:
-                    ds_name, ds_datatype, ds_description, ds_unit\
+                    ds_name, ds_datatype, ds_description, ds_unit, fill_value, long_name\
                         = ds_param
                     self._create_2d_dataset(
                         unwrapped_pol_group,
@@ -327,7 +383,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
+                        long_name=long_name,
+                        fill_value=fill_value
                     )
+                unwrapped_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
 
                 wrapped_pol_name = f"{wrapped_group_name}/{pol}"
                 wrapped_pol_group = self.require_group(wrapped_pol_name)
@@ -343,14 +402,20 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 wrapped_ds_params = [
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
-                     Units.unitless),
+                     Units.unitless, None, None),
                     ("wrappedInterferogram", np.complex64,
                      f"Complex wrapped interferogram between {pol} layers",
-                     Units.unitless),
+                     Units.unitless, None, None),
+                    ("validDataMask", np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
+                     Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
                 for ds_param in wrapped_ds_params:
-                    ds_name, ds_datatype, ds_description, ds_unit\
+                    ds_name, ds_datatype, ds_description, ds_unit, fill_value, long_name\
                         = ds_param
                     self._create_2d_dataset(
                         wrapped_pol_group,
@@ -362,7 +427,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
+                        long_name=long_name,
+                        fill_value=fill_value
                     )
+                wrapped_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
 
                 pixeloffsets_pol_name = f"{pixeloffsets_group_name}/{pol}"
                 pixeloffsets_pol_group = self.require_group(
@@ -380,17 +448,23 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 pixel_offsets_ds_params = [
                     ("alongTrackOffset", np.float32,
                      "Along-track offset",
-                     Units.meter),
+                     Units.meter, None, None),
                     ("correlationSurfacePeak", np.float32,
                      "Normalized cross-correlation surface peak",
-                     Units.unitless),
+                     Units.unitless, None, None),
                     ("slantRangeOffset", np.float32,
                      "Slant range offset",
-                     Units.meter),
+                     Units.meter, None, None),
+                    ("validDataMask", np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid), bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
+                     Units.unitless,np.uint8(255), "Valid data mask"),
                 ]
 
                 for ds_param in pixel_offsets_ds_params:
-                    ds_name, ds_datatype, ds_description, ds_unit\
+                    ds_name, ds_datatype, ds_description, ds_unit, fill_value, long_name\
                         = ds_param
                     self._create_2d_dataset(
                         pixeloffsets_pol_group,
@@ -402,4 +476,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
+                        long_name=long_name,
+                        fill_value=fill_value
                     )
+                pixeloffsets_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)

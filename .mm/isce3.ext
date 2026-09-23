@@ -7,7 +7,7 @@ isce3.ext.stem := isce3
 isce3.ext.pkg := isce3.pkg
 isce3.ext.wraps := isce3.lib
 isce3.ext.capsule :=
-isce3.ext.extern := gdal hdf5 mpi eigen fftw pyre pybind11 python
+isce3.ext.extern := gdal hdf5 eigen fftw pyre pybind11 python
 
 # if there is cuda
 ifdef cuda.dir

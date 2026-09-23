@@ -83,6 +83,7 @@ def test_ampcor():
             ampcor.algorithm = 0  # frequency
             ampcor.corrSurfaceOverSamplingMethod = ovs
             ampcor.derampMethod = 1
+            ampcor.derampAxis = 0
 
             ampcor.corrStatWindowSize = 21
             ampcor.corrSurfaceZoomInWindow = 8
@@ -159,7 +160,8 @@ def test_ampcor():
                     meantol = 2e-2
                     tol = 1e-1
                 elif fname == "correlation_peak":
-                    meantol = 1e-2
+                    meantol = 2e-2
+                    tol = 5e-2
                 else:
                     meantol = 1 / 64 / 5
                     tol = 1 / 64

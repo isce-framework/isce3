@@ -89,8 +89,14 @@ class isce3::core::LUT2d {
         // Evaluate LUT
         T eval(const double y, const double x) const;
 
+        // Evaluate LUT, vectorized on x
         Eigen::Matrix<T, Eigen::Dynamic, 1>
         eval(double y, const Eigen::Ref<const Eigen::VectorXd>& x) const;
+
+        // Evaluate LUT, vectorized on y and x (same size)
+        Eigen::Matrix<T, Eigen::Dynamic, 1>
+        eval(const Eigen::Ref<const Eigen::VectorXd>& y,
+            const Eigen::Ref<const Eigen::VectorXd>& x) const;
 
         /** Check if point resides in domain of LUT */
         inline bool contains(double y, double x) const

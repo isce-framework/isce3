@@ -5,13 +5,17 @@ from __future__ import annotations
 
 import pathlib
 import time
+import warnings
 
+import isce3
 import journal
 import numpy as np
 from isce3.io import HDF5OptimizedReader
+from isce3.math import offsets_polyfit
+from isce3.unwrap.preprocess import interpret_subswath_mask
 from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.products.readers import SLC
-from nisar.workflows import prepare_insar_hdf5
+from nisar.workflows import h5_prep
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
 from nisar.workflows.helpers import (get_cfg_freq_pols,
                                      get_ground_track_velocity_product,
@@ -20,11 +24,229 @@ from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
 from scipy import interpolate, ndimage, signal
+from scipy.spatial import cKDTree
 
 
-def run(cfg: dict, output_hdf5: str = None):
+def run_rubbersheet_with_polyfit(cfg: dict, output_hdf5: str = None):
     '''
-    Run rubbersheet
+    Run rubbersheet via polyfitting method
+    '''
+    # Pull parameters from cfg dictionary
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
+    rubbersheet_params = cfg['processing']['rubbersheet']
+    geo2rdr_offsets_path = pathlib.Path(rubbersheet_params['geo2rdr_offsets_path'])
+    off_product_enabled = cfg['processing']['offsets_product']['enabled']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+
+    # If not set, set output HDF5 file
+    if output_hdf5 is None:
+        output_hdf5 = cfg['product_path_group']['sas_output_file']
+
+    info_channel = journal.info('rubbersheet.run_rubbersheet_with_polyfit')
+    t_all = time.time()
+
+    ref_slc = SLC(hdf5file=ref_hdf5)
+
+    with HDF5OptimizedReader(name=output_hdf5, mode='r+',
+                             libver='latest', swmr=True) as dst_h5:
+        for freq, _, pol_list in get_cfg_freq_pols(cfg):
+            # Get the slant range and zero doppler time spacing
+            ref_radar_grid = ref_slc.getRadarGrid(freq)
+            ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
+            ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
+
+            prf = ref_radar_grid.prf
+            rsr = isce3.core.speed_of_light/ref_slant_range_spacing * 0.5
+            rbw = ref_slc.getSwathMetadata(freq).processed_range_bandwidth
+            abw = ref_slc.getSwathMetadata(freq).processed_azimuth_bandwidth
+
+            ref_az_times = ref_slc.getZeroDopplerTime()
+            ref_slant_ranges = ref_slc.getSlantRange(freq)
+            minL, maxL, minP, maxP = 0, len(ref_az_times), 0, len(ref_slant_ranges)
+
+            freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
+            pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
+            geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'
+            rubbersheet_dir = scratch_path / 'rubbersheet_offsets' / f'freq{freq}'
+            off_slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
+            off_zero_doppler_time = dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
+
+            off_az_indices = ((off_zero_doppler_time - ref_az_times[0]) *
+                              ref_radar_grid.prf).round().astype(int)
+            off_rg_indices = ((off_slant_range - ref_slant_ranges[0])/
+                              ref_slant_range_spacing).round().astype(int)
+
+            # Produce ground track velocity for the frequency under processing
+            ground_track_velocity_file = \
+                get_ground_track_velocity_product(
+                    ref_rslc=ref_slc,
+                    slant_range=off_slant_range,
+                    zero_doppler_time=off_zero_doppler_time,
+                    dem_file=dem_file,
+                    output_dir=rubbersheet_dir)
+
+            for pol in pol_list:
+
+                pol_group_path = f'{pixel_offsets_path}/{pol}'
+                # Create input and output directories for pol under processing
+                out_dir = rubbersheet_dir / pol
+                out_dir.mkdir(parents=True, exist_ok=True)
+
+                if not off_product_enabled:
+                    # Dense offset is enabled and offset products are disabled
+                    dense_offsets_path = pathlib.Path(rubbersheet_params['dense_offsets_path'])
+                    dense_offsets_dir = dense_offsets_path / 'dense_offsets' / f'freq{freq}' / pol
+                    corr_peak_path = str(f'{dense_offsets_dir}/correlation_peak')
+                    dense_offsets_path =  str(f'{dense_offsets_dir}/dense_offsets')
+                else:
+                    off_prod_dir = scratch_path / 'offsets_product' / f'freq{freq}' / pol
+                    # Get layer keys
+                    layer_keys = [key for key in
+                                  cfg['processing']['offsets_product'].keys() if
+                                  key.startswith('layer')]
+
+                    # Get correlation peak path for the last offset layer since it has larger window size
+                    corr_peak_path = str(f'{off_prod_dir}/{layer_keys[-1]}/correlation_peak')
+                    dense_offsets_path =  str(f'{off_prod_dir}/{layer_keys[-1]}/dense_offsets')
+
+                # Check the number of samples along the azimuth and range
+                number_of_samples_along_azimuth = \
+                    rubbersheet_params['polyfitting']['samples_along_azimuth']
+                number_of_samples_along_range =  \
+                    rubbersheet_params['polyfitting']['samples_along_range']
+
+                # Add the warning if the number of samples are larger
+                if number_of_samples_along_azimuth > len(off_az_indices):
+                    warning_msg = (
+                        f'the number of samples along the azimuth {number_of_samples_along_azimuth} '
+                        f'is larger than the length {len(off_az_indices)} of the offsets product')
+                    warnings.warn(warning_msg)
+                    info_channel.log(warning_msg)
+                    number_of_samples_along_azimuth = len(off_az_indices)
+                if number_of_samples_along_range > len(off_rg_indices):
+                    warning_msg = (
+                        f'the number of samples along the range {number_of_samples_along_range} '
+                        f'is larger than the width {len(off_rg_indices)} of the offsets product')
+                    warnings.warn(warning_msg)
+                    info_channel.log(warning_msg)
+                    number_of_samples_along_range = len(off_rg_indices)
+
+                # Sampling
+                az_sampled_indices = np.linspace(0,
+                                                 len(off_az_indices)-1,
+                                                 number_of_samples_along_azimuth,
+                                                 dtype=int)
+                rg_sampled_indices = np.linspace(0,
+                                                 len(off_rg_indices)-1,
+                                                 number_of_samples_along_range,
+                                                 dtype=int)
+
+                az_polyfit_indices = off_az_indices[az_sampled_indices]
+                rg_polyfit_indices = off_rg_indices[rg_sampled_indices]
+
+                lines, pixels = np.meshgrid(az_sampled_indices,
+                                            rg_sampled_indices,
+                                            indexing="ij")
+
+                corr_peak = _open_raster(corr_peak_path, 1)
+                az_offsets = _open_raster(dense_offsets_path, 1)
+                rg_offsets = _open_raster(dense_offsets_path, 2)
+
+                corr_peak = corr_peak[lines, pixels]
+                az_offsets = az_offsets[lines, pixels]
+                rg_offsets = rg_offsets[lines, pixels]
+
+                data = np.column_stack([
+                    np.arange(corr_peak.size),
+                    np.repeat(az_polyfit_indices, len(rg_polyfit_indices)),
+                    np.tile(rg_polyfit_indices, len(az_polyfit_indices)),
+                    az_offsets.ravel(), rg_offsets.ravel(),
+                    corr_peak.ravel()
+                ])
+
+                # polyfitting the range and azimuth offsets
+                results = offsets_polyfit.polyfit_offsets(
+                    data,
+                    degree=rubbersheet_params['polyfitting']['degree'],
+                    crit_value=rubbersheet_params['polyfitting']['critical_value'],
+                    max_iterations=len(data),
+                    minL=minL, maxL=maxL,
+                    minP=minP, maxP=maxP,
+                    prf=prf, rbw=rbw,
+                    abw=abw, rsr=rsr)
+
+                polyfitting_degree = results["degree"]
+                polyfitting_coefL = results["coefL"]
+                polyfitting_coefP = results["coefP"]
+
+                print(f"Polyfitting Degree: {polyfitting_degree}")
+                print(f"Polyfitting CoefL: {polyfitting_coefL}")
+                print(f"Polyfitting CoefP: {polyfitting_coefP}")
+
+                info_channel.log(f"Polyfitting Degree: {polyfitting_degree}")
+                info_channel.log(f"Polyfitting CoefL: {polyfitting_coefL}")
+                info_channel.log(f"Polyfitting CoefP: {polyfitting_coefP}")
+
+                lines, pixels = np.meshgrid(off_az_indices, off_rg_indices, indexing="ij")
+                culled_az_offsets, culled_rg_offsets =\
+                    offsets_polyfit.predict_offsets(lines, pixels,
+                                                    results["coefL"],
+                                                    results["coefP"],
+                                                    results["degree"],
+                                                    minL, maxL, minP, maxP)
+
+                _write_to_disk(str(f'{out_dir}/culled_az_offsets'), culled_az_offsets)
+                _write_to_disk(str(f'{out_dir}/culled_rg_offsets'), culled_rg_offsets)
+
+                # Get ground velocity and correlation peak
+                ground_track_velocity = _open_raster(ground_track_velocity_file)
+
+                # Get datasets from HDF5 file and update datasets
+                offset_az_prod = dst_h5[f'{pol_group_path}/alongTrackOffset']
+                offset_rg_prod = dst_h5[f'{pol_group_path}/slantRangeOffset']
+                offset_peak_prod = dst_h5[f'{pol_group_path}/correlationSurfacePeak']
+
+                # Assign cross-correlation peak
+                offset_peak_prod[...] = _open_raster(corr_peak_path)
+                # Convert the along track and slant range pixel offsets to meters
+                offset_az_prod[...] = (culled_az_offsets *
+                                       ground_track_velocity *
+                                       ref_zero_doppler_time_spacing)
+
+                offset_rg_prod[...] = culled_rg_offsets * ref_slant_range_spacing
+
+                # Compute statistics for the offsets and correlation peak
+                datasets = [offset_peak_prod, offset_az_prod, offset_rg_prod]
+                for dataset in datasets:
+                    compute_stats_real_hdf5_dataset(dataset)
+
+                # Compute the offsets for fine resampling of secondary RSLC
+                rubber_offs = ['culled_az_offsets', 'culled_rg_offsets']
+                geo_offs = ['azimuth.off', 'range.off']
+                for rubber_off, geo_off in zip(rubber_offs, geo_offs):
+                    # Resample offsets to the size of the reference RSLC
+                    culled_off_path = str(out_dir / rubber_off)
+                    resamp_off_path = culled_off_path.replace('culled', 'resampled')
+                    ds = gdal.Open(culled_off_path, gdal.GA_ReadOnly)
+                    gdal.Translate(resamp_off_path, ds,
+                                width=ref_radar_grid.width,
+                                height=ref_radar_grid.length,
+                                resampleAlg='bilinear',
+                                format='ENVI')
+                    # Sum resampled offsets to geometry offsets
+                    sum_off_path = str(out_dir / geo_off)
+                    sum_gdal_rasters(str(geo_offset_dir / geo_off),
+                                    resamp_off_path, sum_off_path,
+                                    invalid_value=-1e6)
+
+    t_all_elapsed = time.time() - t_all
+    info_channel.log(
+        f"Successfully ran polyfit rubbersheet in {t_all_elapsed:.3f} seconds")
+
+def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
+    '''
+    Run rubbersheet with the interpolation method
     '''
 
     # Pull parameters from cfg dictionary
@@ -39,23 +261,25 @@ def run(cfg: dict, output_hdf5: str = None):
     if output_hdf5 is None:
         output_hdf5 = cfg['product_path_group']['sas_output_file']
 
-    info_channel = journal.info('rubbersheet.run')
+    info_channel = journal.info('rubbersheet.run_rubbersheet_with_interpolation')
     info_channel.log('Start rubbersheet')
     t_all = time.time()
 
     # Initialize parameters share by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
-    ref_radar_grid = ref_slc.getRadarGrid()
-
-    # Get the slant range and zero doppler time spacing
-    ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
-    ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
 
     # Pull the slant range and zero doppler time of the pixel offsets product
     # at frequencyA
     with HDF5OptimizedReader(name=output_hdf5, mode='r+', libver='latest', swmr=True) as dst_h5:
 
         for freq, _, pol_list in get_cfg_freq_pols(cfg):
+
+            ref_radar_grid = ref_slc.getRadarGrid(freq)
+
+            # Get the slant range and zero doppler time spacing
+            ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
+            ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
+
             freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
             pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
             geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'
@@ -63,13 +287,20 @@ def run(cfg: dict, output_hdf5: str = None):
             slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
             zero_doppler_time = dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
 
-
             # Produce ground track velocity for the frequency under processing
             ground_track_velocity_file = get_ground_track_velocity_product(ref_slc,
                                                                            slant_range,
                                                                            zero_doppler_time,
                                                                            dem_file,
                                                                            rubbersheet_dir)
+            valid_mask = None
+            # Apply the subswath mask to the outlier detection
+            if rubbersheet_params['subswath_mask_apply_enabled']:
+                pixel_offsets_mask_path = f'{pixel_offsets_path}/mask'
+                subswath_mask = dst_h5[pixel_offsets_mask_path][()]
+                ref_valid, sec_valid, _ = interpret_subswath_mask(subswath_mask)
+                valid_mask = ref_valid & sec_valid
+
             for pol in pol_list:
                 # Create input and output directories for pol under processing
                 pol_group_path = f'{pixel_offsets_path}/{pol}'
@@ -84,7 +315,22 @@ def run(cfg: dict, output_hdf5: str = None):
                     # Identify outliers
                     offset_az_culled, offset_rg_culled = identify_outliers(
                         str(dense_offsets_dir),
-                        rubbersheet_params)
+                        rubbersheet_params, valid_mask)
+
+                    # Apply aggressive azimuth offset filter to suppress the offsets jupmps
+                    # This additional filtering step improves azimuth offset quality by
+                    # applying a mean or median filter in both azimuth and range directions
+                    azimuth_filter_params = rubbersheet_params['azimuth_offset_filter']
+                    azimuth_filter_type = azimuth_filter_params.get('offsets_filter')
+                    if azimuth_filter_type is not None and azimuth_filter_type != 'none':
+                        azimuth_filter_kernel_size = azimuth_filter_params['kernel_size']
+                        offset_az_culled = apply_filter(
+                            offset_az_culled,
+                            azimuth_filter_kernel_size,
+                            filter_type=azimuth_filter_type,
+                            axis='both'
+                        )
+
                     # Fill outliers holes
                     offset_az = fill_outliers_holes(offset_az_culled,
                                                     rubbersheet_params)
@@ -104,7 +350,9 @@ def run(cfg: dict, output_hdf5: str = None):
                                   key.startswith('layer')]
                     # Apply offset blending
                     offset_az, offset_rg = _offset_blending(off_product_dir,
-                                                            rubbersheet_params, layer_keys)
+                                                            rubbersheet_params,
+                                                            layer_keys,
+                                                            valid_mask)
 
                     # Get correlation peak path for the first offset layer
                     corr_peak_path = str(f'{off_prod_dir}/{layer_keys[0]}/correlation_peak')
@@ -115,9 +363,18 @@ def run(cfg: dict, output_hdf5: str = None):
                     # If there are residual NaNs, use interpolation to fill residual holes
                     nan_count = np.count_nonzero(np.isnan(offset))
                     if nan_count > 0:
-                        offsets[k] = _interpolate_offsets(offset,
-                                                          rubbersheet_params['interpolation_method'])
-                    # If required, filter offsets
+                        if rubbersheet_params['interpolation_method'] == 'idw':
+                            # Get the IDW parameters
+                            power, number, radius = ( rubbersheet_params['idw_interpolation'].get(i)
+                                                     for i in ('power', 'number', 'radius'))
+                            offsets[k] = _interpolate_offsets_by_idw(offset, power, number, radius)
+                            # Additional linear interpolation is required to fill the extra outliers beyond the radius
+                            offsets[k] =  _interpolate_offsets(offsets[k],'linear')
+                        else:
+                            offsets[k] = _interpolate_offsets(offset,
+                                                              rubbersheet_params['interpolation_method'])
+
+                    # # If required, filter offsets
                     offsets[k] = _filter_offsets(offsets[k], rubbersheet_params)
                     # Save offsets on disk for resampling
                     off_type = 'culled_az_offsets' if k == 0 else 'culled_rg_offsets'
@@ -154,18 +411,19 @@ def run(cfg: dict, output_hdf5: str = None):
                     resamp_off_path = culled_off_path.replace('culled', 'resampled')
                     ds = gdal.Open(culled_off_path, gdal.GA_ReadOnly)
                     gdal.Translate(resamp_off_path, ds,
-                                   width=ref_radar_grid.width,
-                                   height=ref_radar_grid.length, format='ENVI')
+                                width=ref_radar_grid.width,
+                                height=ref_radar_grid.length,
+                                resampleAlg='bilinear',
+                                format='ENVI')
                     # Sum resampled offsets to geometry offsets
                     sum_off_path = str(out_dir / geo_off)
                     sum_gdal_rasters(str(geo_offset_dir / geo_off),
-                                     resamp_off_path, sum_off_path,
-                                     invalid_value=-1e6)
+                                    resamp_off_path, sum_off_path,
+                                    invalid_value=-1e6)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(
-        f"Successfully ran rubbersheet in {t_all_elapsed:.3f} seconds")
-
+        f"Successfully ran interpolation rubbersheet in {t_all_elapsed:.3f} seconds")
 
 def _open_raster(filepath, band=1):
     '''
@@ -212,7 +470,7 @@ def _write_to_disk(outpath, array, format='ENVI',
     ds.GetRasterBand(1).WriteArray(array)
     ds.FlushCache()
 
-def identify_outliers(offsets_dir, rubbersheet_params):
+def identify_outliers(offsets_dir, rubbersheet_params, mask = None):
     '''
     Identify outliers in the offset fields.
     Outliers are identified by a thresholding
@@ -226,6 +484,8 @@ def identify_outliers(offsets_dir, rubbersheet_params):
         where pixel offsets are located
     rubbersheet_params: cfg
         Dictionary containing rubbersheet parameters
+    mask: np.ndarray
+        A mask indicating the interested region (default: None)
 
     Returns
     -------
@@ -246,6 +506,10 @@ def identify_outliers(offsets_dir, rubbersheet_params):
     elif metric == 'median_filter':
         offset_az = _open_raster(f'{offsets_dir}/dense_offsets', 1)
         offset_rg = _open_raster(f'{offsets_dir}/dense_offsets', 2)
+        if mask is not None:
+            offset_az[~mask] = np.nan
+            offset_rg[~mask] = np.nan
+
         mask_data = compute_mad_mask(offset_az, window_az, window_rg, threshold) | \
                     compute_mad_mask(offset_rg, window_az, window_rg, threshold)
     elif metric == 'covariance':
@@ -449,7 +713,7 @@ def _fill_nan_with_mean(arr_in, arr_out, neighborhood_size):
     return filled_arr
 
 
-def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
+def _offset_blending(off_product_dir, rubbersheet_params, layer_keys, mask = None):
     '''
     Blends offsets layers at different resolution. Implements a
     pyramidal filling algorithm using the offset layer at higher
@@ -467,6 +731,8 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
         Dictionary containing the user-defined rubbersheet options
     layer_keys: list
         List of layers within the offset product
+    mask: np.ndarray
+        A mask indicting the interested region, default: None
 
     Returns
     -------
@@ -478,7 +744,7 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
 
     # Filter outliers from layer one
     offset_az, offset_rg = identify_outliers(str(off_product_dir / layer_keys[0]),
-                                             rubbersheet_params)
+                                             rubbersheet_params, mask)
 
     # Replace the NaN locations in layer1 with the mean of pixels in layers
     # at lower resolution computed in a neighborhood centered at the NaN location
@@ -489,12 +755,27 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
 
         if nan_count_az > 0:
             offset_az_culled, _ = identify_outliers(str(off_product_dir / layer_key),
-                                                    rubbersheet_params)
+                                                    rubbersheet_params, mask)
+
+            # Apply aggressive azimuth offset filter to suppress the offsets jupmps
+            # This additional filtering step improves azimuth offset quality by
+            # applying a mean or median filter in both azimuth and range directions
+            azimuth_filter_params = rubbersheet_params['azimuth_offset_filter']
+            azimuth_filter_type = azimuth_filter_params.get('offsets_filter')
+            if azimuth_filter_type is not None and azimuth_filter_type != 'none':
+                azimuth_filter_kernel_size = azimuth_filter_params['kernel_size']
+                offset_az_culled = apply_filter(
+                    offset_az_culled,
+                    azimuth_filter_kernel_size,
+                    filter_type=azimuth_filter_type,
+                    axis='both'
+                )
+
             offset_az = _fill_nan_with_mean(offset_az, offset_az_culled, filter_size)
 
         if nan_count_rg > 0:
             _, offset_rg_culled = identify_outliers(str(off_product_dir / layer_key),
-                                                    rubbersheet_params)
+                                                    rubbersheet_params, mask)
             offset_rg = _fill_nan_with_mean(offset_rg, offset_rg_culled, filter_size)
 
     # Fill remaining holes by iteratively filling the output offset layer
@@ -505,10 +786,84 @@ def _offset_blending(off_product_dir, rubbersheet_params, layer_keys):
 
     return offset_az, offset_rg
 
+def _interpolate_offsets_by_idw(
+    Z: np.ndarray,
+    power: float = 2.0,
+    number: int | None = 100,
+    radius: float | None = 200.0):
+    '''
+    Performs Inverse Distance Weighting (IDW) interpolation on a 2D grid containing NaN values.
+    Missing pixels are filled using IDW interpolation based on nearby
+    valid samples. The interpolation can optionally
+    limit the number of nearest neighbors and the maximum search
+    radius to improve efficiency and control smoothing.
 
-import numpy as np
-from scipy import interpolate
-import journal
+    Parameters
+    ---------
+    Z: np.ndarray
+        2D array of shape (H, W) containing NaN values to be filled
+    power: float
+        Power parameter p controlling the distance weighting
+    number: int or None
+        Number of nearest neighbors used for interpolation.
+        If None, all valid points are used (default: 100)
+    radius: float or None
+        Maximum search radius in pixels. If None, no radius
+        limitation is applied (default: 200)
+    eps: float
+        Small value added to distance to avoid division by zero
+
+    Returns
+    -------
+    filled: np.ndarray
+        2D array with the same shape as Z where NaN values
+        have been filled using IDW interpolation
+    '''
+
+    valid = np.isfinite(Z)
+    yy, xx = np.nonzero(valid)
+    if yy.size == 0:
+        raise ValueError("No valid points found to interpolate from.")
+
+    points = np.column_stack([xx, yy]).astype(float)
+    values = Z[yy, xx].astype(float)
+
+    qmask = ~valid
+    yq, xq = np.nonzero(qmask)
+    if yq.size == 0:
+        return Z.copy()
+
+    qpoints = np.column_stack([xq, yq]).astype(float)
+
+    tree = cKDTree(points)
+    k = points.shape[0] if number is None else min(number, points.shape[0])
+
+    dists, idxs = tree.query(
+        qpoints, k=k, workers=-1,
+        **({'distance_upper_bound': radius} if radius is not None else {}))
+
+    # Ensure 2D — tree.query returns 1D when k=1
+    dists = np.reshape(dists, (qpoints.shape[0], -1))
+    idxs  = np.reshape(idxs,  (qpoints.shape[0], -1))
+
+    use_mask = np.isfinite(dists) & (idxs < points.shape[0])
+
+    # Clip out-of-bounds sentinel indices before indexing into values
+    safe_idxs = np.clip(idxs, 0, points.shape[0] - 1)
+
+    w = np.where(use_mask, 1.0 / dists**power, 0.0)
+    v = np.where(use_mask, values[safe_idxs], 0.0)
+
+    ws = w.sum(axis=1)
+    ok = ws > 0
+
+    filled_vals = np.full(qpoints.shape[0], np.nan, dtype=float)
+    filled_vals[ok] = (w[ok] * v[ok]).sum(axis=1) / ws[ok]
+
+    out = Z.copy()
+    out[yq, xq] = filled_vals
+
+    return out
 
 def _interpolate_offsets(offset, interp_method):
     '''
@@ -571,6 +926,89 @@ def _interpolate_offsets(offset, interp_method):
     return offset_interp
 
 
+def apply_filter(array, window_size, filter_type='mean', axis='both'):
+    '''
+    Apply mean or median filter along specified axis or both directions.
+    Ignores NaN and Inf values when computing statistics.
+
+    Uses scipy.ndimage.generic_filter for memory-efficient processing
+    that handles NaN values properly without creating large intermediate arrays.
+
+    Parameters
+    ----------
+    array: np.ndarray
+        2D array to filter (shape: azimuth x range)
+    window_size: int or tuple
+        Size of the filtering window.
+        - If int: window size for the specified axis (or both if axis='both')
+        - If tuple: (window_size_azimuth, window_size_range) when axis='both'
+    filter_type: str
+        Type of filter to apply: 'mean' or 'median' (default: 'mean')
+    axis: str
+        Direction to filter: 'azimuth', 'range', or 'both' (default: 'both')
+
+    Returns
+    -------
+    filtered: np.ndarray
+        Filtered array with the same shape as input
+
+    Raises
+    ------
+    ValueError
+        If window_size is invalid, filter_type is not supported, or axis is invalid
+    '''
+    if axis not in ['azimuth', 'range', 'both']:
+        raise ValueError(f"axis must be 'azimuth', 'range', or 'both', got '{axis}'")
+
+    if filter_type not in ['mean', 'median']:
+        raise ValueError(f"filter_type must be 'mean' or 'median', got '{filter_type}'")
+
+    # Parse window sizes
+    if axis == 'both':
+        if isinstance(window_size, tuple):
+            window_size_az, window_size_rg = window_size
+        else:
+            window_size_az = window_size_rg = window_size
+    elif axis == 'azimuth':
+        window_size_az = window_size
+        window_size_rg = 1
+    else:  # range
+        window_size_az = 1
+        window_size_rg = window_size
+
+    # Validate window sizes
+    if window_size_az < 1:
+        raise ValueError(f"window_size_azimuth must be >= 1, got {window_size_az}")
+    if window_size_rg < 1:
+        raise ValueError(f"window_size_range must be >= 1, got {window_size_rg}")
+
+    # Handle trivial case
+    if window_size_az == 1 and window_size_rg == 1:
+        return array.copy()
+
+    # If no valid data, return copy
+    if not np.any(np.isfinite(array)):
+        return array.copy()
+
+    # Replace Inf with NaN for consistent handling
+    array_clean = array.copy()
+    array_clean[~np.isfinite(array_clean)] = np.nan
+
+    # Use numpy's built-in NaN-aware functions
+    filter_func = np.nanmean if filter_type == 'mean' else np.nanmedian
+
+    # Apply generic_filter with appropriate size
+    filtered = ndimage.generic_filter(
+        array_clean,
+        filter_func,
+        size=(window_size_az, window_size_rg),
+        mode='constant',
+        cval=np.nan
+    )
+
+    return filtered
+
+
 def _filter_offsets(offset, rubbersheet_params):
     '''
     Apply low-pass filter on 'offset'
@@ -604,7 +1042,15 @@ def _filter_offsets(offset, rubbersheet_params):
         error_channel.log(err_str)
         raise ValueError(err_str)
 
-
+def run(cfg: dict, output_hdf5: str = None):
+    '''
+    Run rubbersheet
+    '''
+    rubbersheet_params = cfg['processing']['rubbersheet']
+    if rubbersheet_params['polyfitting']['enabled']:
+        run_rubbersheet_with_polyfit(cfg, output_hdf5)
+    else:
+        run_rubbersheet_with_interpolation(cfg, output_hdf5)
 
 if __name__ == "__main__":
     '''
@@ -620,5 +1066,5 @@ if __name__ == "__main__":
 
     # Prepare RIFG. Culled offsets will be
     # allocated in RIFG product
-    out_paths = prepare_insar_hdf5.run(rubbersheet_runconfig.cfg)
+    _, out_paths = h5_prep.get_products_and_paths(rubbersheet_runconfig.cfg)
     run(rubbersheet_runconfig.cfg, out_paths['RIFG'])

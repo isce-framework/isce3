@@ -103,6 +103,7 @@ class Identification(object):
         self.plannedDatatake = None
         self.plannedObservation = None
 
+        self.hasInputDataException = None
 
 
         import h5py
@@ -237,6 +238,12 @@ class Identification(object):
             warn("Could not find isJointObservation in product identification.")
             # leave as None
 
-        ###Processing type info to be added
-
-# end of file
+        # Added in NISAR_PIX PR #351
+        try:
+            self.hasInputDataException = extractScalar(h5grp,
+                                       "hasInputDataException",
+                                       int, self.context['info'])
+        except KeyError:
+            warn("Could not find hasInputDataException in product "
+                 "identification.  Assuming there are no anomalies.")
+            self.hasInputDataException = 0

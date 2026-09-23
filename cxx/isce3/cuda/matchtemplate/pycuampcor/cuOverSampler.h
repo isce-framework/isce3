@@ -31,7 +31,7 @@ public:
      // set cuda stream
      void setStream(cudaStream_t stream_);
      // execute oversampling
-     void execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut, int deramp_method=0);
+     void execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut);
      // destructor
      ~cuOverSamplerC2C();
 };

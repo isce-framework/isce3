@@ -5,6 +5,7 @@ from __future__ import annotations
 from warnings import warn
 from dataclasses import dataclass
 from collections.abc import Iterator
+import re
 
 import numpy as np
 from scipy.interpolate import PchipInterpolator
@@ -15,6 +16,11 @@ from isce3.focus import fill_gaps
 from nisar.antenna import get_calib_range_line_idx
 from nisar.log import set_logger
 from isce3.core import DateTime, TimeDelta
+from nisar.products.readers.Raw import (
+    chirpcorrelator_caltype_from_raw,
+    is_raw_quad_pol,
+    first_tx_pol_for_quad
+)
 
 # Global Noise-related Constants
 # Min number of range bins recommended per noise range block
@@ -202,34 +208,44 @@ def extract_noise_only_lines(raw, freq_band, txrx_pol, max_lines=18944):
     # special RCIDs (NISAR mode numbers) to be treated as noise-only product
     rcid_special = (1, 2, 3)
     # get noise-only range lines if any
-    cal_path_mask = raw.getCalType(freq_band, tx=txrx_pol[0])
+    _, cal_path_mask = chirpcorrelator_caltype_from_raw(raw, txrx_pol=txrx_pol)
     _, _, _, noise_index = get_calib_range_line_idx(cal_path_mask)
     # check if it is a special case with RCID=1,2,3 where there is no
     # noise-only range line and TX=OFF.
-    # RCID is extracted from low rate telemetry if exists.
+    # RCID is extracted from granuleID if exists.
     dset = raw.getRawDataset(freq_band, txrx_pol)
     if len(noise_index) == 0:  # no noise-only range lines
         with h5py.File(raw.filename, mode='r', swmr=True) as fid:
             try:
-                rcids = fid[f'{raw._RootPath}/RRSD/lowRateTelemetry/DRT/'
-                            'IFSW/ST_IFSW_CUR_RCID'][()]
+                gid = fid[f'{raw._RootPath}/{raw._IdentificationPath}/'
+                          'granuleId'][()].decode()
             except KeyError:
                 # assumed it is not RCID=1,2,or3 but simply
                 # lacks any noise-only range line!
                 yield dset[noise_index], noise_index
             else:
-                # XXX Use last value to check for RCID given the delay
-                # in updating low-rate telemetry (DRT) for NISAR!
-                if rcids[-1] in rcid_special:
-                    if max_lines < 3:
-                        warn(f'Max number of noise-only lines {max_lines} is '
-                             'too short! The results may be biased!')
-                    # treat all range lines as noise-only data
-                    nrgls, _ = dset.shape
-                    # do blocking in AZ
-                    for rgl_slice in _slice_gen(nrgls, max_lines):
-                        yield dset[rgl_slice], np.arange(
-                            rgl_slice.start, rgl_slice.stop)
+                # XXX check the granuleID under indetificaion to extract
+                # the filename and from that extract the three-digit RICD.
+                # The expected unique pattern shall be "_xxxS_" where ecch
+                # x represents an integer within [0, 9].
+                pat = re.compile('_[0-9]{3}S_')
+                gid_matches = pat.findall(gid)
+                # there should be only one occurance!
+                if len(gid_matches) == 1:
+                    # get the string
+                    gid_match = gid_matches[0]
+                    # extract the first three digits representing RCID
+                    rcid = int(gid_match[1:4])
+                    if rcid in rcid_special:
+                        if max_lines < 3:
+                            warn(f'Max number of noise-only lines {max_lines} '
+                                 'is too short! The results may be biased!')
+                        # treat all range lines as noise-only data
+                        nrgls, _ = dset.shape
+                        # do blocking in AZ
+                        for rgl_slice in _slice_gen(nrgls, max_lines):
+                            yield dset[rgl_slice], np.arange(
+                                rgl_slice.start, rgl_slice.stop)
 
     else:  # there exists noise only range lines so not a special mode!
         yield dset[noise_index], noise_index
@@ -445,7 +461,11 @@ def est_noise_power_from_raw(
                 f'Number of range blocks is smaller than min {n_rg_blk_min}'
             )
     logger.info(f'Number of range blocks -> {num_rng_block}')
-
+    # check if product is quad
+    is_quad_pol = is_raw_quad_pol(raw)
+    if is_quad_pol:
+        first_tx_pol = first_tx_pol_for_quad(raw)
+        logger.info(f'Quad pol product w/ first {first_tx_pol}-pol TX!')
     # container for all noise products
     noise_prods = []
     # if quad pol, then do MVE or MEE
@@ -456,8 +476,9 @@ def est_noise_power_from_raw(
     # L-band NISAR.
     # loop over freq bands
     for freq_band in frq_pol:
-        # check if it is QP and product differentiation is set to True
-        if dif_quad and _is_quad_pol(frq_pol[freq_band]):
+        # check if it contains all linear pol combination and
+        # product differentiation is set to True
+        if dif_quad and _contains_all_linear_pols(frq_pol[freq_band]):
             logger.info('The difference of co-pol and cx-pol with'
                         ' the same RX pol will be used in Noise est!')
             # let's combine datasets with the same RX Pol
@@ -485,6 +506,7 @@ def est_noise_power_from_raw(
                 # loop over several AZ blocks of noise-only range lines
                 noise_power_azblk = []
                 az_dt_utc = []
+                ns_prod = None
                 for (dset_noise1, idx_rgl_ns), (dset_noise2, _) in zip(
                     extract_noise_only_lines(
                         raw, freq_band, txrx_pols[0], max_lines),
@@ -546,9 +568,12 @@ def est_noise_power_from_raw(
                         ns_prod.freq_band,
                         ns_prod.method
                     )
-                noise_prods.append(ns_prod)
+                if ns_prod is not None:
+                    noise_prods.append(ns_prod)
 
-        else:  # other pol types than QP
+        else:  # no polarimetric diff!
+            # For qaud pol, use noise range lines of the
+            # first TX pol for the other TX pol.
             for txrx_pol in frq_pol[freq_band]:
                 logger.info(
                     'Processing individually frequency band '
@@ -564,12 +589,21 @@ def est_noise_power_from_raw(
                 # calculate approximate ENBW for relatively white noise!
                 enbw = enbw_from_raw(raw, freq_band, txrx_pol[0])
                 logger.info(f'Approximate ENBW in (MHz) -> {enbw * 1e-6}')
+                # check if quad pol and the first TX pol is "H".
+                # Then use the opposite TX pol, "V", w/ the same RX pol
+                # for noise-only (sniffer) range lines!
+                txrx_p = txrx_pol
+                if is_quad_pol and txrx_pol[0] == 'H':
+                    txrx_p = 'V' + txrx_pol[1]
+                    logger.warning(f'Use noise-only range lines from {txrx_p} '
+                                   f'for {txrx_pol}!')
                 # parse one noise dataset
                 # loop over several AZ blocks of noise-only range lines
                 noise_power_azblk = []
                 az_dt_utc = []
+                ns_prod = None
                 for (dset_noise, idx_rgl_ns) in extract_noise_only_lines(
-                        raw, freq_band, txrx_pol, max_lines):
+                        raw, freq_band, txrx_p, max_lines):
                     if exclude_first_last:
                         logger.info(
                             'Exclude the first and last noise range lines.')
@@ -619,7 +653,8 @@ def est_noise_power_from_raw(
                         ns_prod.freq_band,
                         ns_prod.method
                     )
-                noise_prods.append(ns_prod)
+                if ns_prod is not None:
+                    noise_prods.append(ns_prod)
 
     return noise_prods
 
@@ -630,10 +665,10 @@ def _pow2db(p: float) -> float:
     return 10 * np.log10(p)
 
 
-def _is_quad_pol(txrx_pols):
+def _contains_all_linear_pols(txrx_pols):
     """
-    Whether the list of two-char TxRx Pols represents linear quad
-    polarization or not.
+    Whether the list of two-char TxRx Pols represents all
+    combinations of linear polarizations or not.
 
     Parameters
     ----------
@@ -878,19 +913,19 @@ def _noise_product_rng_blocks(
             if cpi is None:
                 # if not set, set CPI to max possible value equal or
                 # greater than 3 with at least two CPI blocks if possible.
-                cpi = min(max(
+                cpi_out = min(max(
                     min(nrgl_valid, 3),
                     np.ceil(nrgl_valid / max_num_cpi_blocks).astype(int)
                 ), MAX_CPI_LEN)
             else:
-                cpi = min(nrgl_valid, cpi)
-                if cpi > MAX_CPI_LEN:
+                cpi_out = min(nrgl_valid, cpi)
+                if cpi_out > MAX_CPI_LEN:
                     logger.warning(
                         f'Too large CPI value! It exceeds max {MAX_CPI_LEN}!'
-                        )
-            logger.info(f'MEE CPI size -> {cpi}')
+                    )
+            logger.info(f'MEE CPI size -> {cpi_out}')
             pow_noise[nn] = noise_pow_min_eigval_est(
-                noise_rng_blk[idx_valid], cpi, scalar=scalar,
+                noise_rng_blk[idx_valid], cpi_out, scalar=scalar,
                 remove_mean=remove_mean, median_ev=median_ev)
         elif algorithm == 'MVE':
             pow_noise[nn] = noise_pow_min_var_est(
@@ -991,6 +1026,12 @@ def est_noise_power_in_focus(
         1-D array of float representing slant ranges in meters.
         This has the same size as noise power.
 
+    Notes
+    -----
+    If the number of range lines of noise data is less than 2 and the
+    algorithm is MEE, then a warning will be issued and the algorithm
+    will be set to MVE.
+
     References
     ----------
     .. [1] M. Villano, "SNR and Noise Variance Estimation in Polarimetric SAR
@@ -1016,10 +1057,11 @@ def est_noise_power_in_focus(
     logger.info(f'Noise estimation algorithm -> {algorithm}')
     # check to make sure there are more than 1 range line for MEE
     if algorithm == 'MEE' and nrgls < 2:
-        raise ValueError(
-            'Number of noise-only range lines is less than 2 in "MEE"!'
-            'Use algorithm="MVE" instead!'
+        logger.warning(
+            'Number of noise-only range lines is less than 2 in "MEE"! '
+            'Using algorithm="MVE" instead!'
         )
+        algorithm = 'MVE'
     # fill-in TX gap regions with invalid value for noise-only range lines
     # This is to guarantee TX gap regions are mitigated and filled with
     # a common invalid value!
@@ -1060,6 +1102,7 @@ def est_noise_power_in_focus(
                  category=InvalidNoiseRangeBlockWarning)
             continue
         # run noise estimator per range block
+        cpi_out = cpi
         if algorithm == 'MEE':
             if nrgl_valid < 2:
                 # skip a range block if not enough number of valid noise-only
@@ -1072,14 +1115,14 @@ def est_noise_power_in_focus(
                 logger.warning(
                     f'CPI={cpi} is larger than valid noise-only range lines '
                     f'{nrgl_valid}. CPI is set to {nrgl_valid}!')
-                cpi = nrgl_valid
-            if cpi > MAX_CPI_LEN:
+                cpi_out = nrgl_valid
+            if cpi_out > MAX_CPI_LEN:
                 logger.warning(
                     f'Too large CPI value! It exceeds max {MAX_CPI_LEN}!'
                 )
-            logger.info(f'MEE CPI size -> {cpi}')
+            logger.info(f'MEE CPI size -> {cpi_out}')
             pow_noise[nn] = noise_pow_min_eigval_est(
-                noise_rng_blk[idx_valid], cpi, scalar=scalar,
+                noise_rng_blk[idx_valid], cpi_out, scalar=scalar,
                 remove_mean=remove_mean, median_ev=median_ev)
         elif algorithm == 'MVE':
             pow_noise[nn] = noise_pow_min_var_est(

@@ -71,7 +71,7 @@ def test_predict_triangular_trihedral_cr_rcs(bandwidth):
 
     for cr in d["corner_reflectors"]:
         # Compute predicted RCS.
-        predicted_rcs = isce3.cal.predict_triangular_trihedral_cr_rcs(
+        predicted_rcs = isce3.cal.predict_trihedral_cr_rcs(
             cr=cr,
             orbit=d["orbit"],
             doppler=d["native_doppler"],
@@ -97,7 +97,7 @@ class TestMeasureTargetRCS:
     def test_measure_target_rcs(self, peak_find_domain: str):
         d = get_test_data()
 
-        def measure_rcs_db(cr: isce3.cal.TriangularTrihedralCornerReflector) -> float:
+        def measure_rcs_db(cr: isce3.cal.TrihedralCornerReflector) -> float:
             rcs = isce3.cal.measure_target_rcs(
                 target_llh=cr.llh,
                 img_data=d["img_data"],

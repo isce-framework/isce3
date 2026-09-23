@@ -500,7 +500,7 @@ class GcovWriter(BaseL2WriterSingleInput):
         """
         Populate the data group `grids` of the GCOV product
         """
-        for frequency in self.freq_pols_dict.keys():
+        for frequency, pol_list in self.freq_pols_dict.items():
 
             input_swaths_freq_path = ('{PRODUCT}/swaths/'
                                       f'frequency{frequency}')
@@ -519,6 +519,46 @@ class GcovWriter(BaseL2WriterSingleInput):
                 axis_path = f'{output_grids_freq_full_path}/{axis}'
                 self.output_hdf5_obj[axis_path].attrs[
                     "pixel_coordinate_convention"] = np.bytes_('center')
+
+            # Geocode the uint16 inputDataExceptionMask using
+            # 65535 (2**16 - 1) as the fill value.
+            self.geocode_lut(f'{output_grids_freq_path}',
+                             f'{input_swaths_freq_path}',
+                             output_ds_name_list=['inputDataExceptionMask'],
+                             frequency=frequency,
+                             skip_if_not_present=True,
+                             compute_stats=False,
+                             data_interpolator='nearest',
+                             fill_value=65535)
+
+            # copy 'inputDataExceptionMask' H5 dataset attributes
+            # `mask_valid_pixel_fraction_{pol}` and `raw_valid_pulse_fraction_{pol}`
+            input_ds = (f'{self.input_product_path}/swaths/frequency{frequency}/'
+                        'inputDataExceptionMask')
+            output_ds = (f'{self.output_product_path}/grids/frequency{frequency}/'
+                         'inputDataExceptionMask')
+
+            if (input_ds not in self.input_hdf5_obj or
+                    output_ds not in self.output_hdf5_obj):           
+                continue
+
+            warning_channel = journal.warning(
+                "GcovWriter.populate_data_parameters()")
+
+            for pol in pol_list:
+                for attr_name in [f'mask_valid_pixel_fraction_{pol.lower()}',
+                                  f'raw_valid_pulse_fraction_{pol.lower()}']:
+
+                    if attr_name not in self.input_hdf5_obj[input_ds].attrs:
+                        warning_channel.log(
+                            f'WARNING H5 attribute {attr_name} not found in'
+                            f' the input H5 dataset {input_ds}. Skipping'
+                            ' attribute.')
+                        continue
+
+                    dest_attr_name = attr_name.replace('mask', 'rslc')
+                    self.output_hdf5_obj[output_ds].attrs[dest_attr_name] = \
+                        self.input_hdf5_obj[input_ds].attrs[attr_name]
 
     def populate_processing_information(self):
         """
@@ -575,9 +615,21 @@ class GcovWriter(BaseL2WriterSingleInput):
             f'{parameters_group}/shadowMaskingApplied',
             False)
 
-        self.copy_from_runconfig(
+        # Add geocoding algorithm reference
+        flag_symmetrized_runconfig = self.cfg['processing']['input_subset'][
+            'symmetrize_cross_pol_channels']
+
+        flag_has_hv_and_vh = any(
+            "HV" in pol_list and "VH" in pol_list
+            for pol_list in self.input_freq_pols_dict.values()
+        )
+
+        flag_symmetrized = (flag_symmetrized_runconfig and
+                            flag_has_hv_and_vh)
+
+        self.set_value(
             f'{parameters_group}/polarimetricSymmetrizationApplied',
-            'processing/input_subset/symmetrize_cross_pol_channels')
+            flag_symmetrized)
 
         # Populate algorithms parameters
 
@@ -637,22 +689,14 @@ class GcovWriter(BaseL2WriterSingleInput):
             'radiometricTerrainCorrection',
             rtc_algorithm_name)
 
-        input_pol_list = list(self.input_freq_pols_dict.keys())
-        flag_hv_and_vh_in_pol_list = ['HV' in input_pol_list and
-                                      'VH' in input_pol_list]
-
-        flag_symmetrize = (flag_hv_and_vh_in_pol_list and
-                           self.cfg['processing']['input_subset'][
-                            'symmetrize_cross_pol_channels'])
-
         flag_full_covariance = self.cfg['processing']['input_subset'][
             'fullcovariance']
 
-        if flag_symmetrize and not flag_full_covariance:
+        if flag_symmetrized and not flag_full_covariance:
             symmetrization_algorithm = \
                 ('Cross-Polarimetric Channels HV and VH Backscatter Average'
                  ' (Incoherent Average)')
-        elif flag_symmetrize:
+        elif flag_symmetrized:
             symmetrization_algorithm = \
                 ('Cross-Polarimetric Channels HV and VH SLCs Average'
                  ' (Coherent Average)')

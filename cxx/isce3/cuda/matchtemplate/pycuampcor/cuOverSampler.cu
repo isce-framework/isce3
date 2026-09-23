@@ -1,4 +1,4 @@
-/* 
+/*
  * @file cuOverSampler.cu
  * @brief Implementations of cuOverSamplerR2R (C2C) class
  */
@@ -22,17 +22,17 @@
  */
 cuOverSamplerC2C::cuOverSamplerC2C(int inNX, int inNY, int outNX, int outNY, int nImages, cudaStream_t stream_)
 {
-    
+
     int inNXp2 = inNX;
     int inNYp2 = inNY;
     int outNXp2 = outNX;
     int outNYp2 = outNY;
-    
+
     /* if expanded to 2^n
     int inNXp2 = nextpower2(inNX);
     int inNYp2 = nextpower2(inNY);
     int outNXp2 = inNXp2*outNX/inNX;
-    int outNYp2 = inNYp2*outNY/inNY; 
+    int outNYp2 = inNYp2*outNY/inNY;
     */
 
     // set up work arrays
@@ -67,25 +67,23 @@ void cuOverSamplerC2C::setStream(cudaStream_t stream_)
  * Execute fft oversampling
  * @param[in] imagesIn input batch of images
  * @param[out] imagesOut output batch of images
- * @param[in] method phase deramping method
  */
-void cuOverSamplerC2C::execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut, int method)
-{   
-    cuDeramp(method, imagesIn, stream);         
+void cuOverSamplerC2C::execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut)
+{
     cufft_Error(cufftExecC2C(forwardPlan, imagesIn->devData, workIn->devData, CUFFT_INVERSE ));
     cuArraysPaddingMany(workIn, workOut, stream);
     cufft_Error(cufftExecC2C(backwardPlan, workOut->devData, imagesOut->devData, CUFFT_FORWARD));
 }
 
 /// destructor
-cuOverSamplerC2C::~cuOverSamplerC2C() 
+cuOverSamplerC2C::~cuOverSamplerC2C()
 {
     // destroy fft handles
     cufft_Error(cufftDestroy(forwardPlan));
     cufft_Error(cufftDestroy(backwardPlan));
     // deallocate work arrays
     delete(workIn);
-    delete(workOut);	
+    delete(workOut);
 }
 
 // end of cuOverSamplerC2C
@@ -99,7 +97,7 @@ cuOverSamplerC2C::~cuOverSamplerC2C()
  */
 cuOverSamplerR2R::cuOverSamplerR2R(int inNX, int inNY, int outNX, int outNY, int nImages, cudaStream_t stream)
 {
-    
+
     int inNXp2 = inNX;
     int inNYp2 = inNY;
     int outNXp2 = outNX;
@@ -144,14 +142,14 @@ void cuOverSamplerR2R::execute(cuArrays<float> *imagesIn, cuArrays<float> *image
     cufft_Error(cufftExecC2C(forwardPlan, workSizeIn->devData, workSizeIn->devData, CUFFT_INVERSE));
     cuArraysPaddingMany(workSizeIn, workSizeOut, stream);
     cufft_Error(cufftExecC2C(backwardPlan, workSizeOut->devData, workSizeOut->devData,CUFFT_FORWARD ));
-    cuArraysCopyExtract(workSizeOut, imagesOut, make_int2(0,0), stream);	
+    cuArraysCopyExtract(workSizeOut, imagesOut, make_int2(0,0), stream);
 }
 
 /// destructor
-cuOverSamplerR2R::~cuOverSamplerR2R() 
+cuOverSamplerR2R::~cuOverSamplerR2R()
 {
     cufft_Error(cufftDestroy(forwardPlan));
-    cufft_Error(cufftDestroy(backwardPlan));	
+    cufft_Error(cufftDestroy(backwardPlan));
     workSizeIn->deallocate();
     workSizeOut->deallocate();
 }

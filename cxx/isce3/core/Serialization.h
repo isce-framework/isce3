@@ -266,7 +266,9 @@ inline void saveToH5(isce3::io::IGroup & group, const Attitude& att,
     isce3::io::setRefEpoch(group, "time", att.referenceEpoch(),
                            ensureEpochIntegerSeconds);
     std::array<size_t, 2> dims = {static_cast<size_t>(n), 4};
-    isce3::io::saveToH5(group, "quaternions", qflat, dims);
+    // Per NISAR convention, dimensionless quantities should have
+    // units="1".
+    isce3::io::saveToH5(group, "quaternions", qflat, dims, "1");
     // TODO convert and save EulerAngles
 }
 

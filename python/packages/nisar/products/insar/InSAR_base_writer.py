@@ -384,7 +384,7 @@ class InSARBaseWriter(h5py.File):
                 np.bytes_(rfi_mitigation),
                 (
                     f'Algorithm used for radio frequency interference (RFI) mitigation in ' \
-                      'the {rslc_name} RSLC, either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
+                      f'the {rslc_name} RSLC, either "ST-EVD" or "FDNF" (or "disabled" if no RFI ' \
                       'mitigation was applied)'
                 ),
             ),
@@ -442,7 +442,7 @@ class InSARBaseWriter(h5py.File):
             swath_frequency_group.copy("slantRangeSpacing",
                                        rslc_frequency_group)
             rslc_frequency_group['slantRangeSpacing'].attrs['description'] = \
-                 f"Slant range spacing of {rslc_name} RSLC"
+                 to_bytes(f"Slant range spacing of {rslc_name} RSLC")
             rslc_frequency_group['slantRangeSpacing'].attrs['units'] = to_bytes(Units.meter)
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
@@ -748,7 +748,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "isOffsetsBlendingApplied",
-                str(merge_gross_offset),
+                str(is_roff),
                 (
                     "Flag to indicate if pixel offsets are the results of"
                     " blending multi-resolution layers of pixel offsets"
@@ -1078,7 +1078,8 @@ class InSARBaseWriter(h5py.File):
                             "isJointObservation",
                             "plannedObservationId",
                             "plannedDatatakeId",
-                            "listOfObservationModes"]
+                            "listOfObservationModes",
+                            "hasInputDataException"]
         cap = lambda x: f"{x[0].upper()}{x[1:]}"
 
         for ds_name in datasets_to_copy:
@@ -1099,21 +1100,21 @@ class InSARBaseWriter(h5py.File):
             # rename the End time to stop
             time_in_description = 'stop' if start_or_stop == 'End' else 'start'
             ds.attrs['description'] = \
-                f"Azimuth {time_in_description} time (in UTC) of {rslc_name} RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss"
+                to_bytes(f"Azimuth {time_in_description} time (in UTC) of {rslc_name} RSLC product in the format YYYY-mm-ddTHH:MM:SS.sssssssss")
 
         for rslc_name in ['reference', 'secondary']:
              # Update descriptions for absolute orbit number, planned datatakes and observation
             ds = dst_id_group[f"{rslc_name}AbsoluteOrbitNumber"]
             ds.attrs['description'] = \
-            f'Absolute orbit number for the {rslc_name} RSLC'
+            to_bytes(f'Absolute orbit number for the {rslc_name} RSLC')
 
             ds = dst_id_group[f"{rslc_name}PlannedDatatakeId"]
             ds.attrs['description'] = \
-            f'List of planned datatakes included in the {rslc_name} RSLC'
+            to_bytes(f'List of planned datatakes included in the {rslc_name} RSLC')
 
             ds = dst_id_group[f"{rslc_name}PlannedObservationId"]
             ds.attrs['description'] = \
-            f'List of planned observations included in the {rslc_name} RSLC'
+            to_bytes(f'List of planned observations included in the {rslc_name} RSLC')
 
             #  Update the description for the isJointObservation
             #  If there is no isJointObservation in the identification group,
@@ -1135,6 +1136,20 @@ class InSARBaseWriter(h5py.File):
             ds_name = f"{rslc_name}ListOfObservationModes"
             description = 'List of observation modes of the L0B granules'+\
                 f' used to generate the {rslc_name} RSLC (one mode per L0B)'
+            if ds_name in dst_id_group:
+                ds = dst_id_group[ds_name]
+                ds.attrs['description'] = to_bytes(description)
+            else:
+                add_dataset_and_attrs(dst_id_group, DatasetParams(
+                    ds_name,
+                    to_bytes(['(NOT SPECIFIED)']),
+                    description))
+
+            # Update the description for the hasInputDataException
+            ds_name = f"{rslc_name}HasInputDataException"
+            description = f'Indication of input {rslc_name} RSLC data exceptions or anomalies.'+\
+                ' Zero when no known exception affects this product,'+\
+                    ' otherwise the bitwise OR of exception codes (2: NISAR LSAR qFSP-H1 sample slip)'
             if ds_name in dst_id_group:
                 ds = dst_id_group[ds_name]
                 ds.attrs['description'] = to_bytes(description)
@@ -1219,10 +1234,10 @@ class InSARBaseWriter(h5py.File):
                 "productLevel",
                 self.product_info.ProductLevel,
                 (
-                    "Product level. L0A: Unprocessed instrument data; L0B:"
-                    " Reformatted, unprocessed instrument data; L1: Processed"
-                    " instrument data in radar coordinates system; and L2:"
-                    " Processed instrument data in geocoded coordinates system"
+                    'Product level. "L0A": Unprocessed instrument data; "L0B":'
+                    ' Reformatted, unprocessed instrument data; "L1": Processed'
+                    ' instrument data in radar coordinates system; and "L2":'
+                    ' Processed instrument data in geocoded coordinates system'
                 ),
             ),
             DatasetParams(
@@ -1425,10 +1440,10 @@ class InSARBaseWriter(h5py.File):
             ds.dims[1].attach_scale(xds)
 
         if fill_value is not None:
-            ds.attrs["_FillValue"] = fill_value
+            ds.attrs["_FillValue"] = np.dtype(dtype).type(fill_value)
         # create fill value if not specified
         elif np.issubdtype(dtype, np.floating):
-            ds.attrs["_FillValue"] = np.nan
+            ds.attrs["_FillValue"] = np.dtype(dtype).type(np.nan)
         elif np.issubdtype(dtype, np.unsignedinteger):
             ds.attrs["_FillValue"] = np.iinfo(dtype).max
         elif np.issubdtype(dtype, np.signedinteger):

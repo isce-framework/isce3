@@ -19,6 +19,7 @@ from nisar.products.readers import SLC
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from isce3.atmosphere.tec_product import (tec_lut2d_from_json_srg,
                                           tec_lut2d_from_json_az)
+from nisar.workflows.geocode_corrections import should_use_only_total_tec
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 import nisar.workflows.helpers as helpers
@@ -398,6 +399,11 @@ def _run(cfg, raster_scratch_dir):
     apply_azimuth_ionospheric_delay_correction = \
         geocode_dict['apply_azimuth_ionospheric_delay_correction']
 
+    # TEC correction options
+    polyfit_tec_profile = \
+        cfg['processing']['tec_correction']['polyfit_tec_profile']
+    tec_num_sigma = cfg['processing']['tec_correction']['num_sigma']
+
     apply_valid_samples_sub_swath_masking = \
         geocode_dict['apply_valid_samples_sub_swath_masking']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
@@ -453,6 +459,8 @@ def _run(cfg, raster_scratch_dir):
         'az_correction': {},
         'rg_correction': {},
     }
+
+    rslc = SLC(hdf5file=input_hdf5)
 
     for frequency, input_pol_list in freq_pols.items():
 
@@ -562,21 +570,36 @@ def _run(cfg, raster_scratch_dir):
         # get azimuth ionospheric delay LUTs (if applicable)
         center_freq = \
             slc.getSwathMetadata(frequency).processed_center_frequency
+
+        # Decide whether TEC correction should use total TEC only (i.e. without
+        # subtracting the topside TEC) based on the run config and TEC data.
+        if apply_azimuth_ionospheric_delay_correction or \
+                apply_range_ionospheric_delay_correction:
+            use_total_tec_only = should_use_only_total_tec(
+                cfg, radar_grid.ref_epoch,
+                radar_grid.sensing_start, radar_grid.sensing_stop)
+
         if apply_azimuth_ionospheric_delay_correction:
-            az_correction = tec_lut2d_from_json_az(tec_file, center_freq,
-                                                   orbit, radar_grid)
+            az_correction = tec_lut2d_from_json_az(
+                tec_file, center_freq, orbit, radar_grid,
+                total_tec_only=use_total_tec_only,
+                polyfit=polyfit_tec_profile,
+                num_sigma=tec_num_sigma)
             timing_corrections_dict['az_correction'][frequency] = az_correction
             optional_geo_kwargs['az_time_correction'] = az_correction
 
         # get slant-range ionospheric delay LUTs (if applicable)
         if apply_range_ionospheric_delay_correction:
-            rg_correction = tec_lut2d_from_json_srg(tec_file, center_freq,
-                                                    orbit, radar_grid,
-                                                    zero_doppler, dem_file)
+            rg_correction = tec_lut2d_from_json_srg(
+                tec_file, center_freq, orbit, radar_grid,
+                zero_doppler, dem_file,
+                total_tec_only=use_total_tec_only,
+                polyfit=polyfit_tec_profile,
+                num_sigma=tec_num_sigma)
             timing_corrections_dict['rg_correction'][frequency] = rg_correction
             optional_geo_kwargs['slant_range_correction'] = rg_correction
 
-        root_ds = f'/science/LSAR/GCOV/grids/frequency{frequency}'
+        root_ds = f'{rslc.RootPath}/GCOV/grids/frequency{frequency}'
 
         optional_geo_kwargs['geogrid_upsampling'] = geogrid_upsampling
         optional_geo_kwargs['abs_cal_factor'] = abs_cal_factor
@@ -630,7 +653,7 @@ def _run(cfg, raster_scratch_dir):
                 length=int(radar_grid_cubes_geogrid.length),
                 epsg=radar_grid_cubes_geogrid.epsg)
 
-            cube_group_name = '/science/LSAR/GCOV/metadata/radarGrid'
+            cube_group_name = f'{rslc.RootPath}/GCOV/metadata/radarGrid'
             native_doppler = slc.getDopplerCentroid()
             '''
             The native-Doppler LUT bounds error is turned off to

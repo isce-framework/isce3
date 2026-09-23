@@ -1,4 +1,4 @@
-/* 
+/*
  * @file cuOverSampler.cu
  * @brief Implementations of cuOverSamplerR2R (C2C) class
  */
@@ -23,17 +23,17 @@ cuOverSamplerC2C::cuOverSamplerC2C(
         cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut,
         int inNX, int inNY, int outNX, int outNY, int nImages)
 {
-    
+
     int inNXp2 = inNX;
     int inNYp2 = inNY;
     int outNXp2 = outNX;
     int outNYp2 = outNY;
-    
+
     /* if expanded to 2^n
     int inNXp2 = nextpower2(inNX);
     int inNYp2 = nextpower2(inNY);
     int outNXp2 = inNXp2*outNX/inNX;
-    int outNYp2 = inNYp2*outNY/inNY; 
+    int outNYp2 = inNYp2*outNY/inNY;
     */
 
     // set up work arrays
@@ -70,25 +70,23 @@ cuOverSamplerC2C::cuOverSamplerC2C(
  * Execute fft oversampling
  * @param[in] imagesIn input batch of images
  * @param[out] imagesOut output batch of images
- * @param[in] method phase deramping method
  */
-void cuOverSamplerC2C::execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut, int method)
-{   
-    cuDeramp(method, imagesIn);
+void cuOverSamplerC2C::execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut)
+{
     fftwf_execute(forwardPlan);
     cuArraysPaddingMany(workIn, workOut);
     fftwf_execute(backwardPlan);
 }
 
 /// destructor
-cuOverSamplerC2C::~cuOverSamplerC2C() 
+cuOverSamplerC2C::~cuOverSamplerC2C()
 {
     // destroy fft handles
     fftwf_destroy_plan(forwardPlan);
     fftwf_destroy_plan(backwardPlan);
     // deallocate work arrays
     delete(workIn);
-    delete(workOut);	
+    delete(workOut);
 }
 
 // end of cuOverSamplerC2C
@@ -101,7 +99,7 @@ cuOverSamplerC2C::~cuOverSamplerC2C()
  */
 cuOverSamplerR2R::cuOverSamplerR2R(int inNX, int inNY, int outNX, int outNY, int nImages)
 {
-    
+
     int inNXp2 = inNX;
     int inNYp2 = inNY;
     int outNXp2 = outNX;
@@ -151,11 +149,11 @@ void cuOverSamplerR2R::execute(cuArrays<float> *imagesIn, cuArrays<float> *image
     fftwf_execute(forwardPlan);
     cuArraysPaddingMany(workSizeIn, workSizeOut);
     fftwf_execute(backwardPlan);
-    cuArraysCopyExtract(workSizeOut, imagesOut, make_int2(0,0));	
+    cuArraysCopyExtract(workSizeOut, imagesOut, make_int2(0,0));
 }
 
 /// destructor
-cuOverSamplerR2R::~cuOverSamplerR2R() 
+cuOverSamplerR2R::~cuOverSamplerR2R()
 {
     fftwf_destroy_plan(forwardPlan);
     fftwf_destroy_plan(backwardPlan);

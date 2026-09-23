@@ -14,6 +14,7 @@ from isce3.geometry import DEMInterpolator
 from isce3.product import get_radar_grid_nominal_ground_spacing
 from nisar.h5 import set_string
 from isce3.core.types import complex32
+from nisar.focus.valid_regions import PolValidMask
 from nisar.mixed_mode import PolChannelSet
 from nisar.products import descriptions
 from nisar.products.granule_id import get_polarization_code, format_datetime
@@ -247,8 +248,8 @@ def require_lut_axes(group, epoch, t, r, kind):
         t = group[name][:]
     else:
         write_dataset(group, name, np.float64, t,
-            "Zero Doppler time since UTC epoch dimension "
-            "corresponding to " + kind, time_units(epoch))
+            "Vector of zero Doppler azimuth times, measured relative to a "
+            "UTC epoch, corresponding to " + kind, time_units(epoch))
 
     name = "slantRange"
     if name in group:
@@ -391,8 +392,8 @@ class SLC(h5py.File):
         dset_name = "rangeChirpWeighting"
         if dset_name not in group:
             dset = write_dataset(group, dset_name, np.float32, values,
-                "1-D array in frequency domain for range processing. This is "
-                "used for processing L0b to L1. FFT length=256 (assumed)",
+                "1D array in frequency domain for range processing. This is "
+                "used for processing L0B to L1. FFT length=256 (assumed)",
                 units="1")
             dset.attrs["window_name"] = np.bytes_(window_name)
             dset.attrs["window_shape"] = window_shape
@@ -480,14 +481,14 @@ class SLC(h5py.File):
         name = "azimuthChirpWeighting"
         if name not in g:
             write_dataset(g, name, np.float32, azimuth_envelope,
-                "1-D array in frequency domain for azimuth processing. This is "
-                "used for processing L0b to L1. FFT length=256 (assumed)",
+                "1D array in frequency domain for azimuth processing. This is "
+                "used for processing L0B to L1. FFT length=256 (assumed)",
                 units="1")
         # TODO ref height
         if "referenceTerrainHeight" not in g:
             n = dop.data.shape[0]
             write_dataset(g, "referenceTerrainHeight", np.float32, np.zeros(n),
-                "Reference Terrain Height as a function of time", "meters")
+                "Reference terrain height as a function of time", "meters")
 
         t = dop.y_start + dop.y_spacing * np.arange(dop.data.shape[0])
         r = dop.x_start + dop.x_spacing * np.arange(dop.data.shape[1])
@@ -523,6 +524,22 @@ class SLC(h5py.File):
         kw.setdefault("dtype", complex32)
         dset = self.swath(frequency).create_dataset(pol, **kw)
         dset.attrs["description"] = np.bytes_(f"Focused RSLC image ({pol})")
+        dset.attrs["units"] = np.bytes_("1")
+        return dset
+
+    def create_anomaly_mask(self, frequency="A", **kw) -> h5py.Dataset:
+        log.info("Initializing storage for anomaly mask for "
+            f"frequency={frequency} with HDF5 options={kw}")
+        kw.setdefault("dtype", np.uint16)
+        dset = self.swath(frequency).create_dataset("inputDataExceptionMask",
+            **kw)
+        validity_description = ", ".join(f"{x.value}:{x.name}"
+            for x in PolValidMask)
+        dset.attrs["description"] = np.bytes_("Bitwise OR of input data "
+            "exception codes for each image pixel (0: no anomaly, 2: NISAR "
+            "LSAR qFSP-H1 sample slip).  Also includes OR of validity mask "
+            "bits, where each bit is set on for fully-focused data or off for "
+            f"partially focused or missing data ({validity_description})")
         dset.attrs["units"] = np.bytes_("1")
         return dset
 
@@ -568,7 +585,8 @@ class SLC(h5py.File):
         d = g.parent.require_dataset("zeroDopplerTime", t.shape, t.dtype, data=t)
         d.attrs["units"] = np.bytes_(time_units(epoch))
         d.attrs["description"] = np.bytes_(
-            "Zero Doppler time since UTC epoch dimension")
+            "Vector of zero Doppler azimuth times measured relative "
+            "to a UTC epoch")
 
         d = g.parent.require_dataset("zeroDopplerTimeSpacing", (), float)
         d[()] = t.spacing
@@ -596,14 +614,14 @@ class SLC(h5py.File):
         write_dataset(g, "acquiredCenterFrequency", float, acquired_fc,
             "Center frequency of the acquisition in hertz. In case of mode "
             "combination, this corresponds to the mode with highest center "
-            "frequency.", "hertz")
+            "frequency", "hertz")
         write_dataset(g, "acquiredRangeBandwidth", float,
             acquired_range_bandwidth, "Acquisition range bandwidth in "
             "hertz. In case of mode combination, this corresponds to mode with "
-            "largest bandwidth.", "hertz")
+            "largest bandwidth", "hertz")
         write_dataset(g, "nominalAcquisitionPRF", float, acquired_prf,
             "Nominal PRF of acquisition. In case of mode combination, this "
-            "corresponds to mode with least nominal PRF.", "hertz")
+            "corresponds to mode with least nominal PRF", "hertz")
         write_dataset(g, "processedAzimuthBandwidth", float, azimuth_bandwidth,
             "Processed azimuth bandwidth in hertz", "hertz")
         write_dataset(g, "processedRangeBandwidth", float, range_bandwidth,
@@ -686,9 +704,10 @@ class SLC(h5py.File):
                             frequencies: Optional[str] = None,
                             planned_datatake_id: Optional[str] = None,
                             planned_observation_id: Optional[str] = None,
+                            has_input_data_exception: int = None,
                             is_urgent: Optional[bool] = None,
                             is_joint: Optional[bool] = None,
-                            product_spec_version: str = "1.4.0",
+                            product_spec_version: str = "1.5.0",
                             processing_center: str = "JPL",
                             granule_id: str = "None",
                             product_version: str = "0.1.0",
@@ -714,6 +733,7 @@ class SLC(h5py.File):
             absoluteOrbitNumber
             boundingPolygon
             instrumentName
+            hasInputDataException
             isJointObservation
             isUrgentObservation
             listOfFrequencies
@@ -843,6 +863,14 @@ class SLC(h5py.File):
                 'Flag indicating if observation is nominal ("False") '
                 'or urgent ("True")')
 
+        if has_input_data_exception is not None:
+            d = g.require_dataset("hasInputDataException", (), np.uint8)
+            d[()] = np.uint8(has_input_data_exception)
+            d.attrs["description"] = np.bytes_("Indication of input data "
+                "exceptions or anomalies present in this granule. Bitwise OR "
+                "of instrument exception codes for all image pixels (0: no "
+                "anomaly, 2: NISAR LSAR qFSP-H1 sample slip)")
+
         d = set_string(g, "productSpecificationVersion", product_spec_version)
         d.attrs["description"] = np.bytes_("Product specification version "
             "which represents the schema of this product")
@@ -864,10 +892,10 @@ class SLC(h5py.File):
             "the product")
 
         d = set_string(g, "productLevel", "L1")
-        d.attrs["description"] = np.bytes_("Product level. L0A: Unprocessed "
-            "instrument data; L0B: Reformatted, unprocessed instrument data; "
-            "L1: Processed instrument data in radar coordinates system; and "
-            "L2: Processed instrument data in geocoded coordinates system")
+        d.attrs["description"] = np.bytes_('Product level. "L0A": Unprocessed '
+            'instrument data; "L0B": Reformatted, unprocessed instrument data; '
+            '"L1": Processed instrument data in radar coordinates system; and '
+            '"L2": Processed instrument data in geocoded coordinates system')
 
         d = set_string(g, "radarBand", self.band[0])
         d.attrs["description"] = np.bytes_('Acquired frequency band, '
@@ -875,11 +903,14 @@ class SLC(h5py.File):
 
         d = set_string(g, "processingType", processing_type)
         d.attrs["description"] = np.bytes_(
-            "Nominal (or) Urgent (or) Custom (or) Undefined")
+            'Processing pipeline used to generate this granule. '
+            '"Nominal": standard production system; "Urgent": time-sensitive '
+            'processing in response to urgent response events; "Custom": '
+            'user-initiated processing outside the nominal production system')
 
         d = set_string(g, "isDithered", str(is_dithered))
         d.attrs["description"] = np.bytes_('"True" if the pulse timing was '
-            'varied (dithered) during acquisition, "False" otherwise.')
+            'varied (dithered) during acquisition, "False" otherwise')
 
         d = set_string(g, "isFullFrame", str(is_full_frame))
         d.attrs["description"] = np.bytes_('"True" if the product fully covers '
@@ -890,7 +921,7 @@ class SLC(h5py.File):
         d = set_string(g, "isMixedMode", str(is_mixed_mode))
         d.attrs["description"] = np.bytes_('"True" if this product is a '
             'composite of data collected in multiple radar modes, '
-            '"False" otherwise.')
+            '"False" otherwise')
 
         d = set_string(g, "compositeReleaseId", composite_release_id)
         d.attrs["description"] = np.bytes_("Unique version identifier of the "
@@ -956,11 +987,6 @@ class SLC(h5py.File):
                                 gamma0_lut: LUT2d):
         assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
 
-        # TODO agree on LUT postings.
-        calibration_section_sampling = 50
-        t = az_time_orig_vect[::calibration_section_sampling]
-        r = slant_range_orig_vect[::calibration_section_sampling]
-
         cal_group = self.root.require_group("metadata/calibrationInformation")
 
         # TODO Populate backscatter conversion layers.  Plan is for beta0=1,
@@ -997,7 +1023,9 @@ class SLC(h5py.File):
         eap_group = cal_group.require_group(
             f"frequency{frequency}/elevationAntennaPattern")
 
-        t, r = require_lut_axes(eap_group, epoch, t, r,
+        t, r = require_lut_axes(
+            eap_group, epoch, az_time_orig_vect,
+            slant_range_orig_vect,
             "calibration elevationAntennaPattern records")
 
         dummy_array = np.ones((t.size, r.size), dtype=np.complex64)

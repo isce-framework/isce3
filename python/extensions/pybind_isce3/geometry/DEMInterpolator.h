@@ -5,3 +5,4 @@
 
 void addbinding(pybind11::class_<isce3::geometry::DEMInterpolator>&);
 void addbinding_DEM_raster2interpolator(pybind11::module&);
+void addbinding_load_dem_from_proj(pybind11::module&);
