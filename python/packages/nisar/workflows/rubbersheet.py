@@ -509,6 +509,7 @@ def identify_outliers(offsets_dir, rubbersheet_params, mask = None):
         if mask is not None:
             offset_az[~mask] = np.nan
             offset_rg[~mask] = np.nan
+
         mask_data = compute_mad_mask(offset_az, window_az, window_rg, threshold) | \
                     compute_mad_mask(offset_rg, window_az, window_rg, threshold)
     elif metric == 'covariance':

@@ -138,8 +138,8 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                 yds=yds,
                 fill_value=255,
             )
-            offset_group['mask'].attrs['valid_min'] = 0
-            offset_group['mask'].attrs['percentage_water'] = 0.0
+            offset_group['mask'].attrs['valid_min'] = np.uint32(0)
+            offset_group['mask'].attrs['percentage_water'] = np.float32(0.0)
             offset_group['mask'].attrs['disclaimer'] = to_bytes(self.water_mask_source)
 
             pixeloffsets_group_name = \
@@ -149,6 +149,38 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
             self.add_list_of_layers(grids_freq_group)
 
             for pol in pol_list:
+
+                # Create the valid mask for each polarization
+                pixeloffsets_pol_name = \
+                    f"{pixeloffsets_group_name}/{pol}"
+                pixeloffsets_pol_group = \
+                    self.require_group(pixeloffsets_pol_name)
+
+                yds, xds = set_get_geo_info(
+                    self,
+                    pixeloffsets_pol_name,
+                    goff_geogrids,
+                )
+                self._create_2d_dataset(
+                    pixeloffsets_pol_group,
+                    "validDataMask",
+                    goff_shape,
+                    np.uint8,
+                    (f"Valid mask for the {pol} layers: "
+                     "bit 1 = reference (1=valid, 0=invalid),"
+                     " bit 0 = secondary (1=valid, 0=invalid)."
+                     " Valid represents fully focused data and invalid"
+                     " represents partially focused or missing data"),
+                    Units.unitless,
+                    grids_val,
+                    long_name="Valid data mask",
+                    xds=xds,
+                    yds=yds,
+                    fill_value=np.uint8(255),
+                )
+                pixeloffsets_pol_group['validDataMask'].attrs['valid_min'] = np.uint8(0)
+
+                # Create the offsets layers
                 for layer in layers:
                     pixeloffsets_pol_layer_name = \
                         f"{pixeloffsets_group_name}/{pol}/{layer}"
