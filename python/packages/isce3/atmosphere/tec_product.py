@@ -102,8 +102,10 @@ def _smooth_mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
     A polynomial of the given degree is fit to all samples. Samples whose
     absolute residual about that fit exceeds an inlier threshold derived from a
     robust (MAD-based) estimate of the noise scale are rejected as outliers, and
-    a final polynomial is fit to the surviving inliers and evaluated at every
-    `x`.
+    a final polynomial is fit to the surviving inliers and evaluated at every  `x`.
+    The fitting will not happen when the computed threshold is invalid (not a finite number or <=0)
+    or there are not enough inliers for polynomial fitting. Original values will be
+    returned in those cases.
 
     Parameters
     ----------
