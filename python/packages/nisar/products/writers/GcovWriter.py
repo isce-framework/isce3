@@ -532,7 +532,7 @@ class GcovWriter(BaseL2WriterSingleInput):
                              fill_value=65535)
 
             # copy 'inputDataExceptionMask' H5 dataset attributes
-            # `maskValidPixelFraction{pol}` and `rawValidPulseFraction{pol}``
+            # `mask_valid_pixel_fraction_{pol}` and `raw_valid_pulse_fraction_{pol}`
             input_ds = (f'{self.input_product_path}/swaths/frequency{frequency}/'
                         'inputDataExceptionMask')
             output_ds = (f'{self.output_product_path}/grids/frequency{frequency}/'
@@ -546,8 +546,8 @@ class GcovWriter(BaseL2WriterSingleInput):
                 "GcovWriter.populate_data_parameters()")
 
             for pol in pol_list:
-                for attr_name in [f'maskValidPixelFraction{pol}',
-                                  f'rawValidPulseFraction{pol}']:
+                for attr_name in [f'mask_valid_pixel_fraction_{pol.lower()}',
+                                  f'raw_valid_pulse_fraction_{pol.lower()}']:
 
                     if attr_name not in self.input_hdf5_obj[input_ds].attrs:
                         warning_channel.log(
