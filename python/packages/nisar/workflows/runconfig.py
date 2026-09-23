@@ -220,7 +220,14 @@ class RunConfig:
             orbit_path = self.cfg['dynamic_ancillary_file_group']['orbit_file']
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
         tec_path = self.cfg['dynamic_ancillary_file_group']['tec_file']
-        
+
+        # Check if TEC file exists in the path provided
+        if tec_path and not os.path.isfile(tec_path):
+            error_channel = journal.error('RunConfig.check_temporal_coverage')
+            err_str = f'TEC file not found: {tec_path}'
+            error_channel.log(err_str)
+            raise FileNotFoundError(err_str)
+
         slc = SLC(hdf5file=input_path)
 
         if orbit_path is not None:
