@@ -76,11 +76,11 @@ runconfig:
 
                 slow_time_evd:
                     # Coherent processing interval length (pulses).  Defaults to 32.
-                    cpi_length: 16
+                    cpi_length: 12
                     # Maximum allowable number of emitters can be detected and
                     # suppressed per CPI. ST-EVD would ignore emitters exceeding
                     # this limit. This number should be less than cpi_length.
-                    max_emitters: 4
+                    max_emitters: 3
                     # Number of large value outliers to be trimmed in slow-time
                     # minimum Eigenvalues.
                     num_max_trim: 0
@@ -97,21 +97,48 @@ runconfig:
                     max_num_rfi_ev: 2
                     # Number of slow-time CPIs grouped together for determining and
                     # applying a common EV slope threshold.
-                    num_cpi_per_threshold_block: 15
-                    # minimum fraction of samples required for cross-variance terms
-                    # of sample covariance matrix
-                    off_diag_overlap_ratio: 0.25
-                    # minimum fraction of samples required for covariance terms
-                    # of sample covariance matrix
-                    diag_valid_ratio: 0.20
+                    num_cpi_per_threshold_block: 12
+                    # Minimum fraction of samples required for cross-variance terms
+                    # of sample covariance matrix.
+                    off_diag_overlap_ratio: 0.20
+                    # Minimum fraction of samples required for diagonal covariance
+                    # terms of sample covariance matrix.
+                    diag_valid_ratio: 0.15
                     # This ratio will be used to determine the minimum number of valid Eigenvalues
                     # required for a CPI. min_ev_valid_idx = int(np.round(min_rank_frac * cpi_len)) - 1
                     min_rank_frac: 0.70
-                    # radar platform receiver dynamic range, e.g. 50 dB. This is applied as a threshold
-                    # to determine if the Eigenvalue under test is meaningfully signficant.
+                    # Radar platform receiver dynamic range in dB. Applied as a threshold
+                    # to determine if the Eigenvalue under test is meaningfully significant.
                     rx_dynamic_range_db: 50.0
+                    # RFI detection threshold method. Supported values:
+                    #   - 'max_ev': Maximum Eigenvalue Estimation (default)
+                    #   - 'ev_slope': Eigenvalue slope (ST-EST)
+                    threshold_method: max_ev
+                    # Controls RFI-presence characterization. If False, no check is performed
+                    # and all TBs proceed to RFI detection. Otherwise, a TB is screened for
+                    # RFI-like Eigenvalue traits and skipped if RFI is determined to not be
+                    # present, based on dominant Eigenvalue spread and effective rank variability.
+                    rfi_check: True
+                    # Threshold in dB for the spread (std across CPIs) of the dominant Eigenvalues
+                    # in a TB. If the maximum spread among dominant EVs exceeds this value, RFI
+                    # is determined to be present. Only used when rfi_check=True.
+                    max_ev_spread_thresh_db: 2.0
+                    # Threshold for the standard deviation of per-CPI effective rank across a TB.
+                    # If exceeded, indicates RFI presence.
+                    eff_rank_std_thresh: 1.0
+                    # Aggressive safety margin in dB added to the extrapolated estimate for RFI candidates
+                    # in 'max_ev' method. Only used when threshold_method='max_ev'.
+                    sig_ev_margin_db: 1.0
+                    # Tolerance in dB for RFI candidate selection. CPIs where
+                    # (actual_EV0 - predicted_clean_EV0) > this value are flagged as RFI candidates
+                    # and receive thresholds. Used by both threshold methods.
+                    rfi_candidate_tolerance_db: 3.0
+                    # Number of buffer eigenvalue indices to skip after last possible RFI EV before
+                    # starting clean segment interpolation. Used by both 'max_ev' threshold method
+                    # and RFI candidate selection. The clean segment starts at index
+                    num_rfi_buffer: 1
                     # Parameters used to adaptively determine RFI eigenvalue
-                    # difference thresholds
+                    # difference thresholds (used when threshold_method = 'max_ev')
                     threshold_hyperparameters:
                         # The computed sigma ratio of maximum and minimum Eigenvalue
                         # first differences. It is a dimensionless figure of merit.
