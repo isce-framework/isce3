@@ -71,7 +71,7 @@ def get_irf_width_area(irf: Callable[[float], float], t_max=np.inf):
     width = float(2 * hw)
 
     # Find area with numerical integration (quadrature).
-    # Integrate from [0, inf) and double the result.
+    # Integrate from 0 to `t_max` and double the result.
     area = 2 * quad(lambda t: abs2(irf(t)), 0, t_max,
         limit=10_000, epsabs=1e-6)[0]
     return width, area
@@ -98,7 +98,7 @@ def get_window_correction(weights):
     # Note that DTFT is periodic, so limit integration to one period.
     t_max = len(weights) / 2
     width_win, area_win = get_irf_width_area(make_irf(weights), t_max=t_max)
-    width_box, area_box = get_irf_width_area(make_irf(weights > 0.0), t_max=t_max)
+    width_box, area_box = get_irf_width_area(make_irf(np.absolute(weights) > 0.0), t_max=t_max)
     return area_win / width_win / (area_box / width_box)
 
 def get_abscal_correction(rslc):
