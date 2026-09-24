@@ -813,14 +813,25 @@ def apply_margin_to_geographic_box(polygon, margin_in_km=5):
         Bounding box with margin applied
     '''
     lon_min, lat_min, lon_max, lat_max = polygon.bounds
-    lat_worst_case = max([lat_min, lat_max])
+
+    # The conversion of longitude margin in km to longitude
+    # degrees varies with the latitude. The margin in longitude
+    # will be larger as the polygon approaches the poles. So,
+    # we compute the worst case, i.e., the highest latitude
+    # in absolute values.
+    abs_lat_worst_case = max([abs(lat_min), abs(lat_max)])
 
     # Convert margin from km to degrees
     lat_margin = margin_km_to_deg(margin_in_km)
-    lon_margin = margin_km_to_longitude_deg(margin_in_km, lat=lat_worst_case)
+    lon_margin = margin_km_to_longitude_deg(margin_in_km,
+                                            lat=abs_lat_worst_case)
 
+    # If the polygon crosses the antimeridian, longitude minimum and
+    # maximum values may be wrapped and swapped. The lines below will fix it.
+    # For example: `lon_max = +179` and `lon_min = -179`. The new
+    # `lon_min` will be `+179` and the new `lon_max` will be `+182`
     if lon_max - lon_min > 180:
-        lon_min, lon_max = lon_max, lon_min
+        lon_min, lon_max = lon_max, lon_min + 360
 
     poly_with_margin = box(lon_min - lon_margin, max([lat_min - lat_margin, -90]),
                            lon_max + lon_margin, min([lat_max + lat_margin, 90]))
