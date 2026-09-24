@@ -283,7 +283,7 @@ class ROFFWriter(L1InSARWriter):
         # Add the ROFF specified datasets to the pixelOffset products
         proc_cfg = self.cfg["processing"]
 
-        for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
+        for freq, _, offset_pol_list in get_cfg_freq_pols(self.cfg):
             swaths_freq_group_name = (
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
@@ -336,7 +336,7 @@ class ROFFWriter(L1InSARWriter):
             self.add_list_of_layers(swaths_freq_group)
 
             # add the polarization dataset to pixelOffsets
-            for pol in pol_list:
+            for pol in offset_pol_list:
                 offset_pol_group_name = \
                     f"{swaths_freq_group_name}/pixelOffsets/{pol}"
                 pixeloffsets_pol_group = \
