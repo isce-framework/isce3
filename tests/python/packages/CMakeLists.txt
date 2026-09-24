@@ -19,6 +19,7 @@ isce3/geometry/bounding_radar_grid.py
 isce3/geometry/polygons.py
 isce3/geometry/radar_grid_spacing.py
 isce3/image/resample_slc.py
+isce3/image/modulate.py
 isce3/io/gdal/gdal_raster.py
 isce3/io/background.py
 isce3/matchtemplate/import_ampcor.py

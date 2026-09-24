@@ -27,7 +27,7 @@ using ConstArrayRef2D = Eigen::Ref<const Array2D<T, Options>>;
  * @param[in] azimuth_input_indices
  * azimuth (radar-coordinates y) index of the pixels in input grid
  * @param[in] radar_grid
- * RadarGridParameters of radar data
+ * parameters for the given radar grid
  * @param[in] native_doppler_lut
  * native doppler of SLC image
  * @param[in] fill_value

@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from time import perf_counter
 
 import journal
 import numpy as np
 from isce3.core import SINC_HALF, LUT2d
+from isce3.core.poly2d import Poly2d
 from isce3.core.resample_block_generators import get_blocks, get_blocks_by_offsets
 from isce3.ext.isce3.image.v2 import _resample_to_coords
+from isce3.image.modulate import (
+    modulate_carrier_phase,
+    modulate_carrier_phase_at_coords,
+)
 from isce3.io.dataset import DatasetReader, DatasetWriter
 from isce3.product import RadarGridParameters
 
@@ -24,6 +29,9 @@ def resample_slc_blocks(
     quiet: bool = False,
     fill_value: np.complex64 = np.nan + 1.0j * np.nan,
     with_gpu: bool = False,
+    *,
+    phase_carriers: Iterable[LUT2d | Poly2d] | None = None,
+    remodulate: bool = False,
 ) -> None:
     """
     Resamples one or more SLCs onto a geometry described by given offsets datasets.
@@ -63,6 +71,12 @@ def resample_slc_blocks(
     with_gpu : bool, optional
         If True, run the GPU resample workflow. If False, run the CPU resample workflow.
         Defaults to False.
+    phase_carriers: Iterable of LUT2d or Poly2d or None, optional
+        Carrier phase, in radians, to remove prior to resampling. If None, the carrier
+        phase is assumed to be zero. Defaults to None.
+    remodulate: bool, optional
+        If True, remodulate the phase_carriers phase into the output data. Use only if
+        phase_carriers is also given. Defaults to False.
     """
     info_channel = journal.info("resample_slc.resample_slc_blocks")
     warning_channel = journal.warning("resample_slc.resample_slc_blocks")
@@ -78,6 +92,11 @@ def resample_slc_blocks(
 
     if len(input_slcs) != len(output_resampled_slcs):
         err_log = "Number of input and output datasets do not match."
+        error_channel.log(err_log)
+        raise ValueError(err_log)
+
+    if remodulate and (phase_carriers is None):
+        err_log = "If remodulate is True, phase_carriers must also be given."
         error_channel.log(err_log)
         raise ValueError(err_log)
 
@@ -212,6 +231,22 @@ def resample_slc_blocks(
         # Run the resampling algorithm on the given blocks.
         for i in range(len(input_blocks)):
             input_block = input_blocks[i]
+            block_grid = input_radar_grid[in_slices]
+
+            if phase_carriers is not None:
+                if not quiet:
+                    info_channel.log(
+                        f"demodulating input SLC for block {out_block_slice}..."
+                    )
+
+                for carrier in phase_carriers:
+                    input_block = modulate_carrier_phase(
+                        slc_data_block=input_block,
+                        carrier_phase=carrier,
+                        radar_grid=block_grid,
+                        conjugate=True,
+                    )
+
             if not quiet:
                 info_channel.log(
                     f"interpolating to output SLC for block {out_block_slice}..."
@@ -219,14 +254,33 @@ def resample_slc_blocks(
                 # Reporting input block shape for debugging
                 info_channel.log(f"Input block: {in_slices}")
 
-            output_blocks[i] = resample(
+            output_block = resample(
                 input_block,
                 range_index_grid,
                 azimuth_index_grid,
-                input_radar_grid[in_slices],
+                block_grid,
                 doppler,
                 fill_value,
             )
+
+
+            if remodulate and (phase_carriers is not None):
+                if not quiet:
+                    info_channel.log(
+                        f"remodulating output SLC for block {out_block_slice}..."
+                    )
+
+                for carrier in phase_carriers:
+                    output_block = modulate_carrier_phase_at_coords(
+                        slc_data_block=output_block,
+                        carrier_phase=carrier,
+                        radar_grid=block_grid,
+                        azimuth_indices=azimuth_index_grid,
+                        range_indices=range_index_grid,
+                        conjugate=False,
+                    )
+            
+            output_blocks[i] = output_block
 
         block_processing_timer += perf_counter()
 
@@ -405,7 +459,7 @@ def resample_to_coords(
         raise ValueError(err_log)
 
     # Ensure that all of the input data blocks meet the requirements of the
-    # _resample_to_coords pybind (correct dtype, with flags C_CONTIGUOUS and WRITABLE)
+    # _resample_to_coords pybind (correct dtype, with flag C_CONTIGUOUS)
     # These function calls will return conforming copies of the data blocks if they
     # are not already conforming.
     input_data_block = np.require(
