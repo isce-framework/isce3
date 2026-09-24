@@ -58,6 +58,7 @@ geogrid/getRadarGrid.cpp
 geogrid/relocateRaster.cpp
 geogrid/geogrid.cpp
 geometry/lookIncFromSr.cpp
+image/Flatten.cpp
 image/image.cpp
 image/Resample.cpp
 image/ResampSlc.cpp
