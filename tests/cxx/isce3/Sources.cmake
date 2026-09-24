@@ -23,6 +23,7 @@ core/projections/utm.cpp
 core/serialization/serializeAttitude.cpp
 core/serialization/serializeDoppler.cpp
 core/serialization/serializeOrbit.cpp
+core/utilities/binarySearch.cpp
 fft/fft.cpp
 fft/fftplan.cpp
 fft/fftutil.cpp

@@ -677,7 +677,9 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
 
             // Compute nearest ctrack index for current ctrackGrid value
             const double crossTrack = ctrackGrid[i];
-            int k = isce3::core::binarySearch(ctrack, crossTrack);
+            const bool always_pick_left = true;
+            int k = isce3::core::binarySearch(ctrack, crossTrack, always_pick_left);
+
             // Adjust edges if necessary
             if (k == (width - 1)) {
                 k = width - 2;
