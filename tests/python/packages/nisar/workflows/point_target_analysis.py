@@ -137,6 +137,9 @@ def test_nisar_csv():
             "survey_date",
             "validity",
             "velocity",
+            "chip magnitude",
+            "chip phase",
+            "signal clutter ratio",
         }
         assert set(cr_info.keys()) == expected_keys
 
@@ -246,6 +249,9 @@ def test_uavsar_csv():
             "phase",
             "range",
             "azimuth",
+            "chip magnitude",
+            "chip phase",
+            "signal clutter ratio",
         }
         assert set(cr_info.keys()) == expected_keys
 
