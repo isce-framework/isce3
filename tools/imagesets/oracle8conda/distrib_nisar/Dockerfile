@@ -1,6 +1,6 @@
 ARG distrib_img
 # create intermediate image to hide credentials
-FROM public.ecr.aws/docker/library/alpine:latest
+FROM alpine
 
 # install git
 RUN apk add git
