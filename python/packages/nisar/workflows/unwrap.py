@@ -21,7 +21,8 @@ from isce3.unwrap.preprocess import project_map_to_radar
 from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
-from nisar.products.utils import interpret_subswath_mask
+from nisar.products.utils import (interpret_subswath_mask,
+                                   interpret_valid_data_mask)
 from nisar.workflows import crossmul, prepare_insar_hdf5
 from nisar.workflows.compute_stats import (compute_stats_real_data,
                                            compute_stats_real_hdf5_dataset)
@@ -176,10 +177,22 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                             mask = inland_water_mask | ocean_water_mask
 
                     if "subswath_mask" in preproc_cfg["mask"]["mask_type"]:
-                        mask_path = f'{dst_freq_group_path}/interferogram/mask'
-                        mask_layer = dst_h5[mask_path][()]
-                        reference_valid, secondary_valid, _ = \
-                            interpret_subswath_mask(mask_layer)
+                        valid_mask_path = \
+                            f'{dst_pol_group_path}/validDataMask'
+                        if valid_mask_path in dst_h5:
+                            # Prefer the polarization-dependent valid data mask
+                            valid_mask_layer = dst_h5[valid_mask_path][()]
+                            reference_valid, secondary_valid = \
+                                interpret_valid_data_mask(valid_mask_layer)
+                        else:
+                            # Fall back to the shared subswath mask for old
+                            # products that lack the validDataMask
+                            mask_path = \
+                                f'{dst_freq_group_path}/interferogram/mask'
+                            mask_layer = dst_h5[mask_path][()]
+                            reference_valid, secondary_valid, _ = \
+                                interpret_subswath_mask(mask_layer)
+                                
                         invalid = ~reference_valid | ~secondary_valid
                         if mask is not None:
                             mask = mask | invalid
