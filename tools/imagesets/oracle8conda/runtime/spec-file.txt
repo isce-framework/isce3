@@ -228,6 +228,7 @@ https://conda.anaconda.org/conda-forge/linux-64/ujson-5.10.0-py312h2ec8cdc_1.con
 https://conda.anaconda.org/conda-forge/linux-64/unicodedata2-16.0.0-py312h66e93f0_0.conda
 https://conda.anaconda.org/conda-forge/linux-64/uriparser-0.9.8-hac33072_0.conda
 https://conda.anaconda.org/conda-forge/linux-64/wayland-1.24.0-h3e06ad9_0.conda
+https://conda.anaconda.org/conda-forge/linux-64/whirlwind-insar-0.10.0-heeb25aa_0.conda
 https://conda.anaconda.org/conda-forge/linux-64/xcb-util-0.4.1-h4f16b4b_2.conda
 https://conda.anaconda.org/conda-forge/linux-64/xcb-util-cursor-0.1.5-hb9d3cd8_0.conda
 https://conda.anaconda.org/conda-forge/linux-64/xcb-util-image-0.4.0-hb711507_2.conda
