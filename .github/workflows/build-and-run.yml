@@ -108,8 +108,7 @@ jobs:
       - name: Configure cmake
         run: |
           # Hack: fix for missing cstdint include in pybind11 headers
-          # FIXME this hack seems broken
-          CFLAGS="$CFLAGS -include cstdint" \
+          CXXFLAGS="$CXXFLAGS -include cstdint" \
           cmake \
             -B build \
             -G Ninja \
