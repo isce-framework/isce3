@@ -8,7 +8,7 @@ from .workflowdata import workflowdata, workflowtests
 pjoin = os.path.join
 
 # Global configuration constants
-docker = "podman" # the docker executable
+docker = "docker" # the docker executable
 srcdir = "/src" # mount location in container of source directory
 blddir = "/bld" # mount location in container of build directory
 
@@ -23,7 +23,7 @@ container_testdir = f"/tmp/test"
 soilm_conda_env = 'SoilMoisture'
 
 # Query docker info
-docker_info = subprocess.check_output((docker + " info").split()).decode("utf-8")
+docker_info = subprocess.check_output("docker info".split()).decode("utf-8")
 docker_runtimes = " ".join(line for line in docker_info.split("\n") if "Runtimes:" in line)
 
 def run_with_logging(dockercall, cmd, logger, printlog=True):
@@ -175,7 +175,7 @@ class ImageSet:
         self.datadir = projblddir + "/workflow_testdata_tmp/data"
         self.testdir = projblddir + "/workflow_testdata_tmp/test"
         self.build_args = f'''
-            --network=host --format=docker 
+            --network=host
         ''' + " ".join(f"--build-arg {x}_img={self.imgname(repomod='dev', tagmod=x)}" for x in self.imgs)
 
         # Determine which GPU architectures to target. We will generate PTX + cubin for
@@ -215,13 +215,11 @@ class ImageSet:
 
         self.run_args = f'''
             --network=host
-            -v {projsrcdir}:{srcdir}:Z
-            -v {projblddir}:{blddir}:Z
+            -v {projsrcdir}:{srcdir}:ro
+            -v {projblddir}:{blddir}:rw
             -w {blddir}
-            -u 0:{os.getgid()}
+            -u {os.getuid()}:{os.getgid()}
             -e DESTDIR={blddir}/install
-            --device nvidia.com/gpu=all
-            --security-opt=label=disable
         '''
 
         # Allocate a pseudo-tty if available
@@ -334,7 +332,7 @@ class ImageSet:
         }
         build_args = " ".join(f"--build-arg {k}={v}" for (k, v) in build_args.items())
 
-        cmd = f"{docker} build --format=docker {build_args} \
+        cmd = f"{docker} build {build_args} \
                 {thisdir}/{self.name}/distrib_nisar -t {self.imgname()}"
         subprocess.check_call(cmd.split())
 
@@ -423,12 +421,12 @@ class ImageSet:
                 dataname = [dataname]
             for data in dataname:
                 datadir = os.path.abspath(pjoin(self.datadir, data))
-                datamount += f"-v {datadir}:{container_testdir}/input_{data}:Z "
+                datamount += f"-v {datadir}:{container_testdir}/input_{data}:ro "
 
         dockercall = f"{docker} run \
             -v {testdir}:{container_testdir} {datamount} \
             -w {container_testdir} \
-            -u 0:{os.getgid()} \
+            -u {os.getuid()}:{os.getgid()} \
             --rm -i {self.tty} {img} sh -ci"
         run_with_logging(dockercall, cmd, logger, printlog=self.printlog)
 
