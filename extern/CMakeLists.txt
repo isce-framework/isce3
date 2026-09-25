@@ -1,15 +1,15 @@
 macro(getpackage_eigen)
     if(ISCE3_FETCH_EIGEN)
-        find_package(Eigen3 3.3.7 CONFIG)
+        find_package(Eigen3 CONFIG)
     else()
-        find_package(Eigen3 3.3.7 REQUIRED CONFIG)
+        find_package(Eigen3 REQUIRED CONFIG)
     endif()
 
     if(NOT Eigen3_FOUND)
         include(FetchContent)
         FetchContent_Declare(eigen
             GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-            GIT_TAG 3.3.7
+            GIT_TAG 5.0.1
             GIT_SHALLOW TRUE)
         FetchContent_GetProperties(eigen)
         if(NOT eigen_POPULATED)
