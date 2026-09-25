@@ -60,6 +60,16 @@ jobs:
             # Build with CUDA so the Python CUDA extension is documented,
             # but don't try to run the tests since we're on a CPU-only builder.
             extra-cmake-args: -DWITH_CUDA=ON
+          - deps:
+              label: Minimum C++ standard
+              # Hold pyre back to isce3's originally-declared minimum
+              # version, predating pyre's C++23 requirement, so this lane
+              # actually exercises isce3's own C++17 floor instead of
+              # silently testing C++23 again (see ISCE3_EXPECT_CXX_STANDARD
+              # in CMakeLists.txt / cxx/isce3/config.cpp.in).
+              extra-specs: |
+                pyre=1.12.5
+            extra-cmake-args: -DISCE3_EXPECT_CXX_STANDARD=17
 
     name: Build And Test - ${{ matrix.os.label }} ${{ matrix.deps.label }} ${{ matrix.build-type }}
     runs-on: ${{ matrix.os.runner || 'ubuntu-latest' }}
