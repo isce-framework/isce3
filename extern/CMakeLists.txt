@@ -2,14 +2,30 @@ macro(getpackage_eigen)
     if(ISCE3_FETCH_EIGEN)
         find_package(Eigen3 CONFIG)
     else()
-        find_package(Eigen3 REQUIRED CONFIG)
+        find_package(Eigen3 CONFIG REQUIRED)
+    endif()
+
+    # Eigen3ConfigVersion.cmake treats a single requested version (e.g.
+    # "3.3.7") as a narrow window - matching only 3.3.7.x, not "3.3.7 or
+    # later" - so find_package()'s own version argument can't express a
+    # lower bound here. Check the resolved version by hand instead.
+    if(Eigen3_FOUND AND Eigen3_VERSION VERSION_LESS 3.3.7)
+        if(ISCE3_FETCH_EIGEN)
+            message(STATUS "Found Eigen3 ${Eigen3_VERSION}, but isce3 "
+                           "requires >= 3.3.7 (fetching a supported "
+                           "version instead)")
+            set(Eigen3_FOUND FALSE)
+        else()
+            message(FATAL_ERROR "Found Eigen3 ${Eigen3_VERSION}, but "
+                                 "isce3 requires >= 3.3.7")
+        endif()
     endif()
 
     if(NOT Eigen3_FOUND)
         include(FetchContent)
         FetchContent_Declare(eigen
             GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-            GIT_TAG 5.0.1
+            GIT_TAG 3.4.0
             GIT_SHALLOW TRUE)
         FetchContent_GetProperties(eigen)
         if(NOT eigen_POPULATED)
