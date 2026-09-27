@@ -6,4 +6,5 @@ from .valid_regions import (RadarPoint, RadarBoundingBox,
 	get_focused_sub_swath_polygons, get_focused_sub_swaths,
 	save_valid_data_mask, fill_gaps, find_bad_rangline_slices)
 from .calibration_luts import make_los_luts, make_cal_luts
+from .cheby_windows import get_window_approximation, WindowKind
 from .notch import Notch, FrequencyDomain

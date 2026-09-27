@@ -92,6 +92,7 @@ void addbinding_backproject(py::module& m)
                 const std::string& dry_tropo_model,
                 py::dict rdr2geo_params,
                 py::dict geo2rdr_params,
+                const std::optional<isce3::core::ChebyKernel<float>> window,
                 std::optional<py::array_t<float, py::array::c_style>> height) {
 
             if (out.ndim() != 2) {
@@ -143,7 +144,7 @@ void addbinding_backproject(py::module& m)
             {
                 py::gil_scoped_release release;
                 err = backproject(out_data, out_geometry, in_data, in_geometry,
-                    dem, fc, ds, kernel, atm, r2gparams, g2rparams,
+                    dem, fc, ds, kernel, atm, r2gparams, g2rparams, window,
                     height_data);
             }
             // TODO bind ErrorCode class.  For now return nonzero on failure.
@@ -163,5 +164,6 @@ void addbinding_backproject(py::module& m)
             py::arg("dry_tropo_model") = "tsx",
             py::arg("rdr2geo_params") = py::dict(),
             py::arg("geo2rdr_params") = py::dict(),
+            py::arg("window") = py::none(),
             py::arg("height") = py::none());
 }
