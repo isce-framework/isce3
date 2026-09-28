@@ -20,10 +20,10 @@ struct FrameTest : public ::testing::Test {
         std::for_each(
                 az_deg.begin(), az_deg.end(), [=](double& ang) { ang *= d2r; });
         // fill out a vector of expected XYZ values for each (EL,AZ) pair
-        est_xyz_eaz.reserve(el_deg.size());
-        est_xyz_eoa.reserve(el_deg.size());
-        est_xyz_aoe.reserve(el_deg.size());
-        est_xyz_tp.reserve(el_deg.size());
+        est_xyz_eaz.resize(el_deg.size());
+        est_xyz_eoa.resize(el_deg.size());
+        est_xyz_aoe.resize(el_deg.size());
+        est_xyz_tp.resize(el_deg.size());
 
         est_xyz_eaz[0] << -0.121864326797, -0.015668270588, 0.992423090799;
         est_xyz_eaz[1] << -0.034899213187, -0.006979842637, 0.999366462673;

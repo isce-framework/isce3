@@ -47,12 +47,17 @@ void cuArraysCopyToBatchWithOffset(cuArrays<float2> *image1, const int lda1, cuA
     const int outNX = image2->height;
     const int outNY = image2->width;
 
+    const int inNX = image1->height;
     for (int idxImage = 0; idxImage < image2->count; idxImage++) {
         for (int outx = 0; outx < outNX; outx++) {
             for (int outy = 0; outy < outNY; outy++) {
                 int idxOut = idxImage*outNX*outNY + outx*outNY + outy;
-                int idxIn = (offsetX[idxImage]+outx)*inNY + offsetY[idxImage] + outy;
-                imageOut[idxOut] = imageIn[idxIn];
+                int inx = offsetX[idxImage] + outx;
+                int iny = offsetY[idxImage] + outy;
+                if (inx >= 0 && inx < inNX && iny >= 0 && iny < inNY)
+                    imageOut[idxOut] = imageIn[inx*inNY + iny];
+                else
+                    imageOut[idxOut] = make_float2(0.0f, 0.0f);
             }
         }
     }
@@ -77,12 +82,17 @@ void cuArraysCopyToBatchAbsWithOffset(cuArrays<float2> *image1, const int lda1, 
     const float2* imageIn = image1->devData;
     const int inNY = lda1;
     float2* imageOut = image2->devData;
+    const int inNX = image1->height;
     for (int idxImage = 0; idxImage < image2->count; idxImage++) {
         for (int outx = 0; outx < outNX; outx++) {
             for (int outy = 0; outy < outNY; outy++) {
                 int idxOut = idxImage*outNX*outNY + outx*outNY + outy;
-                int idxIn = (offsetX[idxImage]+outx)*inNY + offsetY[idxImage] + outy;
-                imageOut[idxOut] = make_float2(complexAbs(imageIn[idxIn]), 0.0);
+                int inx = offsetX[idxImage] + outx;
+                int iny = offsetY[idxImage] + outy;
+                if (inx >= 0 && inx < inNX && iny >= 0 && iny < inNY)
+                    imageOut[idxOut] = make_float2(complexAbs(imageIn[inx*inNY + iny]), 0.0f);
+                else
+                    imageOut[idxOut] = make_float2(0.0f, 0.0f);
             }
         }
     }

@@ -22,7 +22,11 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
                                      doppler_lut: isce3.core.LUT2d,
                                      radar_grid: isce3.product.RadarGridParameters,
                                      dem_interp: isce3.geometry.DEMInterpolator,
-                                     ellipsoid: isce3.core.Ellipsoid) -> np.ndarray:
+                                     ellipsoid: isce3.core.Ellipsoid,
+                                     total_tec_only: bool=False,
+                                     polyfit: bool=False,
+                                     polyfit_degree: int=2,
+                                     num_sigma: float=1.5) -> np.ndarray:
     '''
     Compute near or far TEC delta range
 
@@ -51,6 +55,21 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
         Digital elevation model, m above ellipsoid. Defaults to h=0.
     ellipsoid: isce3.core.Ellipsoid
         Ellipsoid with same EPSG as DEM interpolator
+    total_tec_only: bool
+        If True, use total TEC only without subtracting the topside TEC.
+        If False, the topside TEC is evaluated using the corresponding data flag
+        and if all data are valid covering the scenes are found then
+        the suborbital TEC (total TEC minus topside TEC).
+        If not then only total TEC is used.
+    polyfit: bool
+        If True, fit a polynomial of degree `polyfit_degree` to the suborbital
+        TEC profile and use the fitted (smoothed) values. Otherwise use the
+        suborbital TEC as is.
+    polyfit_degree: int
+        Degree of the polynomial fit applied when `polyfit` is True. Default 2.
+    num_sigma: float
+        Multiplier on the robust (MAD-based) noise scale that sets the outlier
+        rejection threshold used when `polyfit` is True. Default 1.5.
 
     Returns
     -------
@@ -58,8 +77,12 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
         TEC delta range
     '''
     # compute sub orbital TEC from total and top TEC in JSON
-    sub_orbital_tec = _get_suborbital_tec(tec_json_dict, nr_fr,
-                                          utc_time.mask)
+    sub_orbital_tec = _get_tec_profile(tec_json_dict, nr_fr,
+                                          utc_time.mask,
+                                          total_tec_only=total_tec_only,
+                                          polyfit=polyfit,
+                                          polyfit_degree=polyfit_degree,
+                                          num_sigma=num_sigma)
 
     incidence = [compute_incidence_angle(t, nr_fr_rg, orbit, doppler_lut,
                                          radar_grid, dem_interp, ellipsoid)
@@ -70,9 +93,69 @@ def _compute_ionospheric_range_delay(utc_time: np.ma.MaskedArray,
     return delta_r
 
 
-def _get_suborbital_tec(tec_json_dict: dict,
+def _smooth_mad_polyfit(x: np.ndarray, y: np.ndarray, degree: int,
+                 num_sigma: float=1.5) -> np.ndarray:
+    '''
+    Robustly fit a polynomial to a TEC profile by rejecting noisy samples using
+    a thresholding based on MAD (Median Absolute Deviation).
+
+    A polynomial of the given degree is fit to all samples. Samples whose
+    absolute residual about that fit exceeds an inlier threshold derived from a
+    robust (MAD-based) estimate of the noise scale are rejected as outliers, and
+    a final polynomial is fit to the surviving inliers and evaluated at every  `x`.
+    The fitting will not happen when the computed threshold is invalid (not a finite number or <=0)
+    or there are not enough inliers for polynomial fitting. Original values will be
+    returned in those cases.
+
+    Parameters
+    ----------
+    x: np.ndarray
+        Sample x-axis (assumed distinct, e.g. sample indices).
+    y: np.ndarray
+        Sample values (the TEC profile) to fit.
+    degree: int
+        Degree of the polynomial to fit.
+    num_sigma: float
+        Multiplier on the MAD to scale the threshold. Default 1.5.
+
+    Returns
+    -------
+    np.ndarray
+        The fitted (smoothed) values evaluated at every `x`.
+    '''
+    info_channel = journal.info("tec_product._smooth_mad_polyfit")
+
+    # Initial fit over all samples and its residuals.
+    coeffs = np.polyfit(x, y, degree)
+    resid = y - np.polyval(coeffs, x)
+
+    mad = np.median(np.abs(resid - np.median(resid)))
+    threshold = num_sigma * mad
+    info_channel.log(f'TEC MAD threshold={threshold}')
+
+    # Degenerate noise scale (near-perfect fit); nothing to reject.
+    if not np.isfinite(threshold) or threshold <= 0:
+        info_channel.log('TEC MAD Threshold is not valid. Returning the original TEC values.')
+        return y
+
+    # Keep only inliers, but fall back to the plain fit if too few survive.
+    inliers = np.abs(resid) <= threshold
+    if np.count_nonzero(inliers) <= degree:
+        info_channel.log('Not enough inliers from TEC sample. Returning the original TEC values.')
+        return y
+
+    coeffs = np.polyfit(x[inliers], y[inliers], degree)
+    info_channel.log('MAD outlier detection and polynomial fitting completed.')
+    return np.polyval(coeffs, x)
+
+
+def _get_tec_profile(tec_json_dict: dict,
                         nr_fr: str,
-                        tec_time_mask: np.ndarray) -> np.ndarray:
+                        tec_time_mask: np.ndarray,
+                        total_tec_only: bool=False,
+                        polyfit: bool=False,
+                        polyfit_degree: int=2,
+                        num_sigma: float=1.5) -> np.ndarray:
     '''
     Get the suborbital TEC from IMAGEN TEC product parsed as a dictionary by
     subtracting the total TEC by top (i.e. above the satellite) TEC
@@ -87,26 +170,52 @@ def _get_suborbital_tec(tec_json_dict: dict,
         Mask of TEC values that fall within radar grid or orbit time span. Mask
         follows NumPy masked array convention where True is masked and False is
         not.
+    total_tec_only: bool
+            If True, use total TEC only without subtracting the topside TEC.
+            Otherwise use the suborbital TEC (total TEC minus topside TEC).
+    polyfit: bool
+        If True, fit a polynomial of degree `polyfit_degree` to the suborbital
+        TEC profile and return the fitted (smoothed) values. Otherwise return
+        the suborbital TEC as is.
+    polyfit_degree: int
+        Degree of the polynomial fit applied when `polyfit` is True. Default 2.
+    num_sigma: float
+        Multiplier on the robust (MAD-based) noise scale that sets the outlier
+        rejection threshold used when `polyfit` is True. Default 1.5.
 
     Returns
     -------
-    sub_orbital_tec: np.ndarray
+    tec_profile: np.ndarray
         Suborbital TEC
     '''
     # compute sub orbital TEC from total and top TEC in JSON
     tot_tec = np.array(tec_json_dict[f'totTec{nr_fr}'])
     top_tec = np.array(tec_json_dict[f'topTec{nr_fr}'])
-    sub_orbital_tec = tot_tec - top_tec
-    sub_orbital_tec = sub_orbital_tec[~tec_time_mask]
+    if total_tec_only:
+        tec_profile = tot_tec
+    else:
+        tec_profile = tot_tec - top_tec
+    tec_profile = tec_profile[~tec_time_mask]
 
-    return sub_orbital_tec
+    if polyfit:
+        # Fit a polynomial over the TEC profile to smooth out noise, rejecting
+        # noisy samples first via a MAD-based threshold.
+        x = np.arange(len(tec_profile))
+        tec_profile = _smooth_mad_polyfit(x, tec_profile, polyfit_degree,
+                                       num_sigma=num_sigma)
+
+    return tec_profile
 
 
 def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
                             orbit: isce3.core.Orbit,
                             radar_grid: isce3.product.RadarGridParameters,
                             doppler_lut: isce3.core.LUT2d, dem_path: str,
-                            margin: float=40.0) -> isce3.core.LUT2d:
+                            margin: float=40.0,
+                            total_tec_only: bool=False,
+                            polyfit: bool=False,
+                            polyfit_degree: int=2,
+                            num_sigma: float=1.5) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for slant range correction from a JSON source
 
@@ -127,6 +236,18 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
     margin: float
         Margin (seconds) to pad to sensing start and stop times when extracting
         TEC data. Default 40 seconds.
+    total_tec_only: bool
+        If True, use total TEC only without subtracting the topside TEC.
+        Otherwise use the suborbital TEC (total TEC minus topside TEC).
+    polyfit: bool
+        If True, fit a polynomial of degree `polyfit_degree` to the suborbital
+        TEC profile and use the fitted (smoothed) values. Otherwise use the
+        suborbital TEC as is.
+    polyfit_degree: int
+        Degree of the polynomial fit applied when `polyfit` is True. Default 2.
+    num_sigma: float
+        Multiplier on the robust (MAD-based) noise scale that sets the outlier
+        rejection threshold used when `polyfit` is True. Default 1.5.
 
     Returns
     -------
@@ -172,7 +293,11 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
                                                           doppler_lut,
                                                           radar_grid,
                                                           dem_interp,
-                                                          ellipsoid)
+                                                          ellipsoid,
+                                                          total_tec_only,
+                                                          polyfit,
+                                                          polyfit_degree,
+                                                          num_sigma)
                          for nr_fr, rg in zip(['Nr', 'Fr'], rg_vec)]).T
 
     return isce3.core.LUT2d(rg_vec, t_since_epoch_masked.compressed(), delta_r)
@@ -181,7 +306,11 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
 def tec_lut2d_from_json_az(json_path: str, center_freq: float,
                            orbit: isce3.core.Orbit,
                            radar_grid: isce3.product.RadarGridParameters,
-                           margin: float=40.0) -> isce3.core.LUT2d:
+                           margin: float=40.0,
+                           total_tec_only: bool=False,
+                           polyfit: bool=False,
+                           polyfit_degree: int=2,
+                           num_sigma: float=1.5) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for azimuth time correction from a JSON source
 
@@ -198,6 +327,18 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     margin: float
         Margin (seconds) to pad to sensing start and stop times when extracting
         TEC data. Default 40 seconds.
+    total_tec_only: bool
+        If True, use total TEC only without subtracting the topside TEC.
+        Otherwise use the suborbital TEC (total TEC minus topside TEC).
+    polyfit: bool
+        If True, fit a polynomial of degree `polyfit_degree` to the suborbital
+        TEC profile before computing the azimuth gradient. Otherwise use the
+        suborbital TEC as is.
+    polyfit_degree: int
+        Degree of the polynomial fit applied when `polyfit` is True. Default 2.
+    num_sigma: float
+        Multiplier on the robust (MAD-based) noise scale that sets the outlier
+        rejection threshold used when `polyfit` is True. Default 1.5.
 
     Returns
     -------
@@ -227,9 +368,13 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     # Load the TEC information from IMAGEN parsed as dictionary
     # Use radar grid start/end range for near/far range
     # Transpose stacked output to get shape to be consistent with coordinates
-    tec_suborbital = np.vstack([_get_suborbital_tec(tec_json_dict,
+    tec_suborbital = np.vstack([_get_tec_profile(tec_json_dict,
                                                     nr_fr,
-                                                    t_since_epoch_masked.mask)
+                                                    t_since_epoch_masked.mask,
+                                                    total_tec_only=total_tec_only,
+                                                    polyfit=polyfit,
+                                                    polyfit_degree=polyfit_degree,
+                                                    num_sigma=num_sigma)
                                 for nr_fr in ['Nr', 'Fr']]).T
 
     # set up up the LUT grids for az. iono. delay
@@ -299,7 +444,7 @@ def _get_tec_time(tec_json_dict: dict,
     # Get string UTC times from JSON as isce3.core.DateTime objects.
     json_utc_datetimes = [isce3.core.DateTime(iso_t_str)
                           for iso_t_str in tec_json_dict['utc']]
-    
+
     # Adjust the radar grid margin in case of the staggered grid.
     # The staggered grid needs at least half of the TEC spacing at each side.
     # When `margin` is not big enough, then increase it to half the spacing.
@@ -352,9 +497,12 @@ def _get_tec_time(tec_json_dict: dict,
 
     t_since_ref_epoch = np.ma.MaskedArray(data=t_since_ref_epoch,
                                           mask=np.logical_not(time_mask))
-    
+
     _check_tec_grid_contains_radargrid(radar_grid, t_since_ref_epoch,
                                        staggered_tec_grid)
+
+    # check if the TEC time grids are equally spaced
+    _check_tec_grid_equally_spaced(t_since_ref_epoch)
 
     return t_since_ref_epoch
 
@@ -390,7 +538,7 @@ def _check_tec_grid_contains_radargrid(radar_grid: isce3.product.RadarGridParame
 
     tec_grid_spacing = (tec_grid_end - tec_grid_start) / (len(tec_t) - 1)
 
-    # Adjust the radar grid start / stop time when staggered grid is used    
+    # Adjust the radar grid start / stop time when staggered grid is used
     if staggered:
         rdr_grid_start -= tec_grid_spacing / 2
         rdr_grid_stop += tec_grid_spacing / 2
@@ -408,6 +556,37 @@ def _check_tec_grid_contains_radargrid(radar_grid: isce3.product.RadarGridParame
                f'Relative timing w.r.t. Sensing start:\ntec_start={tec_t[0] - radar_grid.sensing_start}, '
                f'tec_end={tec_t[-1] - radar_grid.sensing_start}\n'
                f'radargrid start={0}, radargrid_stop={radar_grid.sensing_stop - radar_grid.sensing_start}')
+
+    error_channel.log(err_msg)
+    raise ValueError(err_msg)
+
+
+def _check_tec_grid_equally_spaced(t_since_ref_epoch: np.ma.MaskedArray) -> None:
+    '''
+    Helper function to check if the valid TEC time grid is equally spaced.
+
+    Parameters
+    ----------
+    t_since_ref_epoch: np.ma.MaskedArray
+        Masked array of the TEC time grid in seconds since reference epoch.
+
+    Raises
+    ------
+    ValueError: When the valid TEC time grid is not equally spaced.
+    '''
+    tec_t = t_since_ref_epoch.compressed()
+
+    spacings = np.diff(tec_t)
+    mean_spacing = spacings.mean()
+
+    if np.allclose(spacings, mean_spacing):
+        return
+
+    error_channel = journal.error(
+        "tec_product._check_tec_grid_equally_spaced")
+    err_msg = ('TEC time grid is not equally spaced.\n'
+               f'mean spacing={mean_spacing}\n'
+               f'min spacing={spacings.min()}, max spacing={spacings.max()}')
 
     error_channel.log(err_msg)
     raise ValueError(err_msg)

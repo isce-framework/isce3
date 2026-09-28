@@ -238,6 +238,7 @@ def geocode_layover_shadow_mask(
         min_block_size=min_block_size,
         max_block_size=max_block_size,
         dem_interp_method=normalize_data_interp_method(dem_interp_method),
+        fill_value=255,
     )
 
     return geocoded_layover_shadow_mask

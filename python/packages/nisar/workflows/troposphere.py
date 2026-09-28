@@ -157,6 +157,177 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             from RAiDER.delay import tropo_delay as raider_tropo_delay
             from RAiDER.models.hres import HRES
 
+            def _norm_lon(lon):
+                '''
+                Wrap longitudes to the [-180, 180) range.
+
+                Parameters
+                ----------
+                lon: array_like
+                    longitudes in degrees
+
+                Returns
+                -------
+                    longitudes wrapped to [-180, 180)
+                '''
+                return ((np.asarray(lon, float) + 180.0) % 360.0) - 180.0
+
+            def _crosses_dateline(lon):
+                '''
+                Test whether a set of longitudes spans the antimeridian.
+
+                Parameters
+                ----------
+                lon: array_like
+                    longitudes in degrees
+
+                Returns
+                -------
+                    True if the longitude span exceeds 180 deg (i.e. crosses +/-180)
+                '''
+                lon = _norm_lon(lon)
+                return bool(np.nanmax(lon) - np.nanmin(lon) > 180.0)
+
+            def _lon_per_xcolumn(lon_datacube):
+                '''
+                Representative longitude for each output x-column.
+
+                Computed in a 0..360 frame when the cube straddles the seam so the
+                per-column value is stable across +/-180. Used only to assign whole columns
+                to a side (east or west); not used for the bounding box.
+
+                Parameters
+                ----------
+                lon_datacube: np.ndarray
+                    radar-grid longitudes in degrees, last axis = range/x
+
+                Returns
+                -------
+                    1-D array of representative longitude per x-column
+                '''
+                lon = _norm_lon(lon_datacube)
+                if np.nanmax(lon) - np.nanmin(lon) > 180.0:
+                    lon = np.where(lon < 0, lon + 360.0, lon)
+                return np.nanmean(lon, axis=tuple(range(lon.ndim - 1)))
+
+            def _side_bounds(lat, lon, cols, side, margin):
+                '''
+                Geographic bounding box for a subset of output columns.
+
+                For a split side the box is extended to +/-180 so the east and west halves
+                meet at the seam; for side='all' it is the plain nan-safe min/max.
+
+                Parameters
+                ----------
+                lat: np.ndarray
+                    radar-grid latitudes in degrees, last axis = range/x
+                lon: np.ndarray
+                    radar-grid longitudes in degrees, last axis = range/x
+                cols: np.ndarray
+                    column indices belonging to this side
+                side: str
+                    one of 'west_dateline', 'east_dateline', or 'all'
+                margin: float
+                    bounding-box padding in degrees
+
+                Returns
+                -------
+                    bounding box as [S, N, W, E] in degrees
+                '''
+                lat = np.take(np.asarray(lat, float), cols, axis=-1)
+                lon = np.take(_norm_lon(lon), cols, axis=-1)
+                s = float(np.nanmin(lat)) - margin
+                n = float(np.nanmax(lat)) + margin
+                if side == "west_dateline":                                # +lon hemisphere
+                    pos = lon[np.isfinite(lon) & (lon >= 0)]
+                    return [s, n, float(np.min(pos)) - margin, 180.0]
+                if side == "east_dateline":                                # -lon hemisphere
+                    neg = lon[np.isfinite(lon) & (lon < 0)]
+                    return [s, n, -180.0, float(np.max(neg)) + margin]
+                return [s, n, float(np.nanmin(lon)) - margin, float(np.nanmax(lon)) + margin]
+
+            def compute_tropo_delay(dt, weather_model_file, lat_datacube, lon_datacube,
+                                    xpts, ypts, los, height_levels, out_proj,
+                                    weather_model_type=None,
+                                    weather_model_output_dir=None,
+                                    hres_converter=None, margin=0.1):
+                '''
+                Compute the RAiDER tropospheric delay with antimeridian handling.
+
+                Splits the output columns into an east and a west sub-AOI only when the
+                scene crosses +/-180, runs each against its own weather-model crop, and
+                merges the two delay cubes back along x. When the scene does not cross the
+                antimeridian it behaves like a single tropo_delay call.
+
+                Parameters
+                ----------
+                dt: datetime
+                    acquisition datetime, passed through to RAiDER
+                weather_model_file: str
+                    weather model file (RAiDER NetCDF, or HRES NetCDF if
+                    weather_model_type == 'HRES')
+                lat_datacube: np.ndarray
+                    radar-grid latitudes in degrees, last axis = range/x
+                lon_datacube: np.ndarray
+                    radar-grid longitudes in degrees, last axis = range/x
+                xpts: np.ndarray
+                    output-grid x coordinates (xcoord_radar_grid)
+                ypts: np.ndarray
+                    output-grid y coordinates (ycoord_radar_grid)
+                los: object
+                    RAiDER line-of-sight object (e.g. Zenith or Raytracing)
+                height_levels: list
+                    height levels of the output delay cube
+                out_proj: int or str
+                    output projection (EPSG code) of the delay cube
+                weather_model_type: str, optional
+                    weather model name; if 'HRES', hres_converter is applied per sub-AOI
+                weather_model_output_dir: str, optional
+                    output directory for the RAiDER internal NetCDF (HRES conversion)
+                hres_converter: callable, optional
+                    function(weather_model_file, lat_lon_bounds, output_dir) -> file path,
+                    used to convert an HRES NetCDF to the RAiDER internal NetCDF per sub-AOI
+                margin: float, optional
+                    AOI padding in degrees (default 0.1)
+
+                Returns
+                -------
+                    the (merged) xarray.Dataset tropospheric delay cube
+                '''
+
+                xpts = np.asarray(xpts, float)
+                ypts = np.asarray(ypts, float)
+
+                def _run(bounds, xsub):
+                    wm = weather_model_file
+                    if weather_model_type == "HRES" and hres_converter is not None:
+                        wm = hres_converter(weather_model_file, bounds,
+                                            weather_model_output_dir)
+                    aoi = BoundingBox(bounds)
+                    aoi.xpts, aoi.ypts = xsub, ypts
+                    return raider_tropo_delay(dt=dt, weather_model_file=wm,
+                                              aoi=aoi, los=los,
+                                              height_levels=height_levels,
+                                              out_proj=out_proj)[0]
+
+                # no crossing -> single call, original behaviour
+                if not _crosses_dateline(lon_datacube):
+                    bounds = _side_bounds(lat_datacube, lon_datacube,
+                                        np.arange(xpts.size), "all", margin)
+                    return _run(bounds, xpts)
+
+                # crossing -> split columns by side, run each, merge along x by orig index
+                rep = _lon_per_xcolumn(lon_datacube)
+                merged = None
+                for side, cols in (("west_dateline", np.where(rep <= 180.0)[0]),
+                                ("east_dateline", np.where(rep > 180.0)[0])):
+                    if cols.size == 0:
+                        continue
+                    bounds = _side_bounds(lat_datacube, lon_datacube, cols, side, margin)
+                    td = _run(bounds, xpts[cols]).assign_coords(_xidx=("x", cols))
+                    merged = td if merged is None else xr.concat([merged, td], dim="x")
+                return merged.sortby("_xidx").drop_vars("_xidx")
+
             def _convert_HRES_to_raider_NetCDF(weather_model_file,
                                               lat_lon_bounds,
                                               weather_model_output_dir):
@@ -229,27 +400,10 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 os.path.join(scratch_path, 'weather_model_files')
 
             # Acquisition time for reference and secondary images
-
             acquisition_time_ref = h5_obj[f'{gunw_obj.IdentificationPath}/referenceZeroDopplerStartTime'][()]\
                     .astype('datetime64[s]').astype(datetime)
             acquisition_time_second = h5_obj[f'{gunw_obj.IdentificationPath}/secondaryZeroDopplerStartTime'][()]\
                     .astype('datetime64[s]').astype(datetime)
-
-            # AOI bounding box
-            margin = 0.1
-            min_lat = np.min(lat_datacube)
-            max_lat = np.max(lat_datacube)
-            min_lon = np.min(lon_datacube)
-            max_lon = np.max(lon_datacube)
-
-            lat_lon_bounds = [min_lat - margin,
-                              max_lat + margin,
-                              min_lon - margin,
-                              max_lon + margin]
-
-            aoi = BoundingBox(lat_lon_bounds)
-            aoi.xpts = xcoord_radar_grid
-            aoi.ypts = ycoord_radar_grid
 
             # Zenith
             delay_direction_obj = Zenith()
@@ -260,34 +414,28 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             # Height levels
             height_levels = list(height_radar_grid)
 
-            # If the input weather model is HRES,
-            # convert it to the RAiDER internal NetCDF
-            if weather_model_type == 'HRES':
-                reference_weather_model_file = \
-                    _convert_HRES_to_raider_NetCDF(reference_weather_model_file,
-                                                   lat_lon_bounds, weather_model_output_dir)
+            # Copmute the tropo delay with dateline safe
+            tropo_delay_reference = compute_tropo_delay(
+                dt=acquisition_time_ref,
+                weather_model_file=reference_weather_model_file,
+                lat_datacube=lat_datacube, lon_datacube=lon_datacube,
+                xpts=xcoord_radar_grid, ypts=ycoord_radar_grid,
+                los=delay_direction_obj, height_levels=height_levels, out_proj=epsg,
+                weather_model_type=weather_model_type,
+                weather_model_output_dir=weather_model_output_dir,
+                hres_converter=_convert_HRES_to_raider_NetCDF)
 
-                secondary_weather_model_file = \
-                    _convert_HRES_to_raider_NetCDF(secondary_weather_model_file,
-                                                   lat_lon_bounds, weather_model_output_dir)
-
-            # Troposphere delay datacube computation
-            tropo_delay_reference, _ = raider_tropo_delay(dt=acquisition_time_ref,
-                                                          weather_model_file=reference_weather_model_file,
-                                                          aoi=aoi,
-                                                          los=delay_direction_obj,
-                                                          height_levels=height_levels,
-                                                          out_proj=epsg)
-
-            tropo_delay_secondary, _ = raider_tropo_delay(dt=acquisition_time_second,
-                                                          weather_model_file=secondary_weather_model_file,
-                                                          aoi=aoi,
-                                                          los=delay_direction_obj,
-                                                          height_levels=height_levels,
-                                                          out_proj=epsg)
+            tropo_delay_secondary = compute_tropo_delay(
+                dt=acquisition_time_second,
+                weather_model_file=secondary_weather_model_file,
+                lat_datacube=lat_datacube, lon_datacube=lon_datacube,
+                xpts=xcoord_radar_grid, ypts=ycoord_radar_grid,
+                los=delay_direction_obj, height_levels=height_levels, out_proj=epsg,
+                weather_model_type=weather_model_type,
+                weather_model_output_dir=weather_model_output_dir,
+                hres_converter=_convert_HRES_to_raider_NetCDF)
 
             for tropo_delay_product in tropo_delay_products:
-
                 # Compute troposphere delay with raider package
                 # comb is the summation of wet and hydro components
                 if tropo_delay_product == 'comb':

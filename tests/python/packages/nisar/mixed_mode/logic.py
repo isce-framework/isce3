@@ -1,6 +1,6 @@
 import iscetest
 from nisar.mixed_mode import (Band, null_band, PolChannel, PolChannelSet,
-    find_overlapping_channel)
+    find_overlapping_channel, check_mixed_mode)
 from nisar.products.readers.Raw import Raw
 import numpy.testing as npt
 from pathlib import Path
@@ -176,3 +176,15 @@ def test_quasi_dual_5p5():
         PolChannel("A", "HH", L05),
         PolChannel("B", "VV", QQ5)
     ]))
+
+def test_is_mixed_mode():
+    mode = PolChannelSet([
+        PolChannel("B", "HH", L05),
+        PolChannel("B", "VV", QQ5)
+    ])
+    npt.assert_(check_mixed_mode([mode, mode]) == False)
+
+    mode_missing_h = PolChannelSet([
+        PolChannel("B", "VV", QQ5)
+    ])
+    npt.assert_(check_mixed_mode([mode, mode_missing_h]) == True)

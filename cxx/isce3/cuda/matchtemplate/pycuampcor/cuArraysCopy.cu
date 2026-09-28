@@ -68,7 +68,7 @@ void cuArraysCopyToBatch(cuArrays<float2> *image1, cuArrays<float2> *image2,
 
 // kernel for cuArraysCopyToBatchWithOffset
 template<typename T_in, typename T_out>
-__global__ void cuArraysCopyToBatchWithOffset_kernel(const T_in *imageIn, const int inNY,
+__global__ void cuArraysCopyToBatchWithOffset_kernel(const T_in *imageIn, const int inNX, const int inNY,
     T_out *imageOut, const int outNX, const int outNY, const int nImages,
     const int *offsetX, const int *offsetY)
 {
@@ -77,8 +77,12 @@ __global__ void cuArraysCopyToBatchWithOffset_kernel(const T_in *imageIn, const 
     int outy = threadIdx.y + blockDim.y*blockIdx.y;
     if(idxImage>=nImages || outx >= outNX || outy >= outNY) return;
     int idxOut = idxImage*outNX*outNY + outx*outNY + outy;
-    int idxIn = (offsetX[idxImage]+outx)*inNY + offsetY[idxImage] + outy;
-    imageOut[idxOut] = T_out{imageIn[idxIn]};
+    int inx = offsetX[idxImage] + outx;
+    int iny = offsetY[idxImage] + outy;
+    if (inx >= 0 && inx < inNX && iny >= 0 && iny < inNY)
+        imageOut[idxOut] = T_out{imageIn[inx*inNY + iny]};
+    else
+        imageOut[idxOut] = T_out{0.0f};
 }
 
 /**
@@ -98,14 +102,14 @@ void cuArraysCopyToBatchWithOffset(cuArrays<float2> *image1, const int lda1, cuA
     dim3 blockSize(nthreads, nthreads, 1);
     dim3 gridSize(IDIVUP(image2->height,nthreads), IDIVUP(image2->width,nthreads), image2->count);
     cuArraysCopyToBatchWithOffset_kernel<<<gridSize,blockSize, 0 , stream>>> (
-        image1->devData, lda1,
+        image1->devData, image1->height, lda1,
         image2->devData, image2->height, image2->width, image2->count,
         offsetH, offsetW);
     getLastCudaError("cuArraysCopyToBatchAbsWithOffset_kernel");
 }
 
 // same as above, but from complex to real(take amplitudes)
-__global__ void cuArraysCopyToBatchAbsWithOffset_kernel(const float2 *imageIn, const int inNY,
+__global__ void cuArraysCopyToBatchAbsWithOffset_kernel(const float2 *imageIn, const int inNX, const int inNY,
     float2 *imageOut, const int outNX, const int outNY, const int nImages,
     const int *offsetX, const int *offsetY)
 {
@@ -114,8 +118,12 @@ __global__ void cuArraysCopyToBatchAbsWithOffset_kernel(const float2 *imageIn, c
     int outy = threadIdx.y + blockDim.y*blockIdx.y;
     if(idxImage>=nImages || outx >= outNX || outy >= outNY) return;
     int idxOut = idxImage*outNX*outNY + outx*outNY + outy;
-    int idxIn = (offsetX[idxImage]+outx)*inNY + offsetY[idxImage] + outy;
-    imageOut[idxOut] = make_float2(complexAbs(imageIn[idxIn]), 0.0);
+    int inx = offsetX[idxImage] + outx;
+    int iny = offsetY[idxImage] + outy;
+    if (inx >= 0 && inx < inNX && iny >= 0 && iny < inNY)
+        imageOut[idxOut] = make_float2(complexAbs(imageIn[inx*inNY + iny]), 0.0f);
+    else
+        imageOut[idxOut] = make_float2(0.0f, 0.0f);
 }
 
 /**
@@ -135,7 +143,7 @@ void cuArraysCopyToBatchAbsWithOffset(cuArrays<float2> *image1, const int lda1, 
     dim3 blockSize(nthreads, nthreads, 1);
     dim3 gridSize(IDIVUP(image2->height,nthreads), IDIVUP(image2->width,nthreads), image2->count);
     cuArraysCopyToBatchAbsWithOffset_kernel<<<gridSize,blockSize, 0 , stream>>> (
-        image1->devData, lda1,
+        image1->devData, image1->height, lda1,
         image2->devData, image2->height, image2->width, image2->count,
         offsetH, offsetW);
     getLastCudaError("cuArraysCopyToBatchAbsWithOffset_kernel");
@@ -158,7 +166,7 @@ void cuArraysCopyToBatchWithOffsetR2C(cuArrays<float> *image1, const int lda1, c
     dim3 blockSize(nthreads, nthreads, 1);
     dim3 gridSize(IDIVUP(image2->height,nthreads), IDIVUP(image2->width,nthreads), image2->count);
     cuArraysCopyToBatchWithOffset_kernel<<<gridSize,blockSize, 0 , stream>>> (
-        image1->devData, lda1,
+        image1->devData, image1->height, lda1,
         image2->devData, image2->height, image2->width, image2->count,
         offsetH, offsetW);
     getLastCudaError("cuArraysCopyToBatchWithOffsetR2C_kernel");

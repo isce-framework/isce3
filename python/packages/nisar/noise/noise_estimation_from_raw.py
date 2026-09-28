@@ -1026,6 +1026,12 @@ def est_noise_power_in_focus(
         1-D array of float representing slant ranges in meters.
         This has the same size as noise power.
 
+    Notes
+    -----
+    If the number of range lines of noise data is less than 2 and the
+    algorithm is MEE, then a warning will be issued and the algorithm
+    will be set to MVE.
+
     References
     ----------
     .. [1] M. Villano, "SNR and Noise Variance Estimation in Polarimetric SAR
@@ -1051,10 +1057,11 @@ def est_noise_power_in_focus(
     logger.info(f'Noise estimation algorithm -> {algorithm}')
     # check to make sure there are more than 1 range line for MEE
     if algorithm == 'MEE' and nrgls < 2:
-        raise ValueError(
-            'Number of noise-only range lines is less than 2 in "MEE"!'
-            'Use algorithm="MVE" instead!'
+        logger.warning(
+            'Number of noise-only range lines is less than 2 in "MEE"! '
+            'Using algorithm="MVE" instead!'
         )
+        algorithm = 'MVE'
     # fill-in TX gap regions with invalid value for noise-only range lines
     # This is to guarantee TX gap regions are mitigated and filled with
     # a common invalid value!

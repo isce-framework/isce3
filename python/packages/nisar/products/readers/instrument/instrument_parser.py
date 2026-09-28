@@ -273,7 +273,7 @@ class InstrumentParser:
 
         return fn_ta, fn_ac
 
-    def channel_adjustment_factors_tx(self, pol):
+    def channel_adjustment_factors_tx(self, pol, is_second_band=False):
         """
         Get channel adjustment complex factors for all TX channels
         of a polarization.
@@ -286,6 +286,12 @@ class InstrumentParser:
         pol : {'H', 'V'}
             Tx polarization. Must be a valid polarization in the instrument
             file.
+        is_second_band : bool, default=False
+            If True, it will get adjustment factors for the second
+            frequency band ("B").
+            If the respective dataset does not exist, it will use
+            the original dataset for both bands (backward compatibility)
+            while raising a warning "MissingInstrumentFieldWarning".
 
         Returns
         -------
@@ -305,11 +311,14 @@ class InstrumentParser:
         None if the field "channelAdjustment" does not exist in the
         instrument file. That is, no need for the TX channels adjustment
         in TX antenna pattern formation.
+        A new dataset "amplitudeB" is introduced to cover the second band
+        (typically called "B" for split spectrum case). This major change is
+        introduced in v3.0
 
         """
-        return self._channel_adjustment_factors('tx', pol)
+        return self._channel_adjustment_factors('tx', pol, is_second_band)
 
-    def channel_adjustment_factors_rx(self, pol):
+    def channel_adjustment_factors_rx(self, pol, is_second_band=False):
         """
         Get channel adjustment complex factors for all RX channels
         of a polarization.
@@ -323,6 +332,12 @@ class InstrumentParser:
         pol : {'H', 'V'}
             Rx polarization. Must be a valid polarization in the instrument
             file.
+        is_second_band : bool, default=False
+            If True, it will get adjustment factors for the second
+            frequency band ("B").
+            If the respective dataset does not exist, it will use
+            the original dataset for both bands (backward compatibility)
+            while raising a warning "MissingInstrumentFieldWarning".
 
         Returns
         -------
@@ -342,11 +357,14 @@ class InstrumentParser:
         None if the field "channelAdjustment" does not exist in the
         instrument file. That is, no need for the RX channels adjustment
         in RX antenna pattern formation.
+        A new dataset "amplitudeB" is introduced to cover the second band
+        (typically called "B" for split spectrum case). This major change is
+        introduced in v3.0.
 
         """
-        return self._channel_adjustment_factors('rx', pol)
+        return self._channel_adjustment_factors('rx', pol, is_second_band)
 
-    def _channel_adjustment_factors(self, side, pol):
+    def _channel_adjustment_factors(self, side, pol, is_second_band):
         """
         Helper function for obtaining TX or RX channel adjustment factors.
 
@@ -356,6 +374,12 @@ class InstrumentParser:
         pol : {'H', 'V'}
             Tx or Rx polarization depending on `side`. Must be a valid
             polarization in the instrument file.
+        is_second_band : bool, default=False
+            If True, it will get adjustment factors for the second
+            frequency band ("B").
+            If the respective dataset does not exist, it will use
+            the original dataset for both bands (backward compatibility)
+            while raising a warning "MissingInstrumentFieldWarning".
 
         Returns
         -------
@@ -375,6 +399,9 @@ class InstrumentParser:
         None if the field "channelAdjustment" does not exist in the
         instrument file. That is, no need for the TX/RX channels adjustment
         in TX/RX antenna pattern formation.
+        A new dataset "amplitudeB" is introduced to cover the second band
+        (typically called "B" for split spectrum case). This major change is
+        introduced in v3.0.
 
         """
         if pol not in self.pols:
@@ -391,7 +418,19 @@ class InstrumentParser:
                 stacklevel=2)
             return None
 
-        else:
+        else:  # the channel adjustment group exists
+            if is_second_band:
+                try:
+                    ds = grp[f'{side}/amplitudeB']
+                except KeyError:
+                    warnings.warn(
+                        f'{grp_name}{side}/amplitudeB',
+                        category=MissingInstrumentFieldWarning,
+                        stacklevel=2)
+                    # revert to the original dataset
+                    # used for all bands!
+                    ds = grp[f'{side}/amplitude']
+                return ds[()]
             return grp[f'{side}/amplitude'][()]
 
     def get_crosstalk(self):

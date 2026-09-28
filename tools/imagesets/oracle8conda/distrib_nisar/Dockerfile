@@ -12,7 +12,7 @@ RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/SoilMoisture \
  && git clone https://github.com/isce-framework/nisarqa.git \
  && cd /opt/nisarqa && git checkout v17.0.0 && rm -rf .git \
- && cd /opt/SoilMoisture && git checkout v0.4.2 && rm -rf .git
+ && cd /opt/SoilMoisture && git checkout v0.4.3 && rm -rf .git
 
 FROM $distrib_img
 
