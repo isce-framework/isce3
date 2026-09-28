@@ -301,11 +301,8 @@ def update_hdf5_mask_bit24_block(
     dst_mask[row_start:row_start + block_rows, :] = updated_mask
 
 
-def _get_mask_raster(h5_file, ifg_path, fallback_mask_path):
-    """Prefer the polarization-dependent mask over the shared subswath mask."""
-    pol_group_path = ifg_path.rsplit("/", 1)[0]
-    valid_mask_path = f"{pol_group_path}/validDataMask"
-
+def _get_mask_raster(h5_file, valid_mask_path, fallback_mask_path):
+    """Prefer validDataMask; fall back to the shared subswath mask."""
     if valid_mask_path in h5_file:
         return h5_file[valid_mask_path], True
 
@@ -313,21 +310,24 @@ def _get_mask_raster(h5_file, ifg_path, fallback_mask_path):
 
 
 def _read_valid_mask_block(
-        src_h5, pol_path, subswath_mask_path, row_slice):
-    """Read a block and decode joint reference/secondary validity.
-
-    This returns Boolean validity only. qFSP input-exception flags must
-    be read separately from the encoded shared mask.
-    """
+        src_h5, valid_mask_path, subswath_mask_path, row_slice):
+    """Read and decode joint reference/secondary validity for a block."""
     mask_raster, uses_valid_data_mask = _get_mask_raster(
-        src_h5, f"{pol_path}/unwrappedPhase", subswath_mask_path)
+        src_h5,
+        valid_mask_path,
+        subswath_mask_path,
+    )
     mask_block = mask_raster[row_slice, :]
+
     if uses_valid_data_mask:
         reference_valid, secondary_valid = interpret_valid_data_mask(
-            mask_block)
+            mask_block
+        )
     else:
         reference_valid, secondary_valid, _ = interpret_subswath_mask(
-            mask_block)
+            mask_block
+        )
+
     return (
         np.asarray(reference_valid, dtype=bool)
         & np.asarray(secondary_valid, dtype=bool)
@@ -592,11 +592,18 @@ def compute_differential_phase(
                 phase_second_raster = src_sec_h5[second_ifg_path]
                 output_data_raster = src_out_h5[out_ifg_path]
                 if subswath_mask_enabled:
+                    first_pol_path = first_ifg_path.rsplit("/", 1)[0]
+                    second_pol_path = second_ifg_path.rsplit("/", 1)[0]
                     first_mask_raster, first_uses_valid_data_mask = _get_mask_raster(
-                        src_first_h5, first_ifg_path, first_mask_path
+                        src_first_h5,
+                        f"{first_pol_path}/validDataMask",
+                        first_mask_path,
                     )
+
                     second_mask_raster, second_uses_valid_data_mask = _get_mask_raster(
-                        src_sec_h5, second_ifg_path, second_mask_path
+                        src_sec_h5,
+                        f"{second_pol_path}/validDataMask",
+                        second_mask_path,
                     )
                 # Generate block parameters for reading/writing
                 block_params_main = block_param_generator(
@@ -1651,11 +1658,18 @@ def run(cfg: dict, runw_hdf5: str):
 
                     if need_insar_mask:
                         low_valid_image = _read_valid_mask_block(
-                            src_low_h5, dest_pol_path,
-                            subswath_mask_freq_a_path, row_slice)
+                            src_low_h5,
+                            f"{dest_pol_path}/validDataMask",
+                            subswath_mask_freq_a_path,
+                            row_slice,
+                        )
+
                         high_valid_image = _read_valid_mask_block(
-                            src_high_h5, dest_pol_path,
-                            subswath_mask_freq_a_path, row_slice)
+                            src_high_h5,
+                            f"{dest_pol_path}/validDataMask",
+                            subswath_mask_freq_a_path,
+                            row_slice,
+                        )
 
                 if bridge_algorithm_bool:
                     sub_high_image = bridge_unwrapped_phase(
@@ -1811,16 +1825,24 @@ def run(cfg: dict, runw_hdf5: str):
                             np.s_[row_start:row_start + block_rows_data, :])
 
                     if need_insar_mask:
-                        main_valid_image = _read_valid_mask_block(
-                            src_main_h5, dest_pol_path,
-                            subswath_mask_freq_a_path, row_slice)
-
                         valid_mask_b_path = f"{dest_pol_path_b}/validDataMask"
+                        valid_mask_a_path = f"{dest_pol_path}/validDataMask"
+
+                        main_valid_image = _read_valid_mask_block(
+                            src_main_h5,
+                            valid_mask_a_path,
+                            subswath_mask_freq_a_path,
+                            row_slice,
+                        )
+
                         if (valid_mask_b_path in src_side_h5
                                 or subswath_mask_freq_b_path in src_side_h5):
                             side_valid_image = _read_valid_mask_block(
-                                src_side_h5, dest_pol_path_b,
-                                subswath_mask_freq_b_path, row_slice)
+                                src_side_h5,
+                                valid_mask_b_path,
+                                subswath_mask_freq_b_path,
+                                row_slice,
+                            )
                         else:
                             # Preserve the legacy A-to-B fallback only if
                             # neither frequency-B validity source exists.
