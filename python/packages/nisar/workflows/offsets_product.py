@@ -233,7 +233,8 @@ def set_ampcor_params(cfg, ampcor_obj):
     cfg: dict
         Dictionary with user-defined Ampcor parameters
     ampcor_obj: isce3.cuda.matchtemplate.PyCuAmpcor()
-        Ampcor object to set members value
+        Ampcor object to set members value; its window size must be
+        already set to that of the current layer
     '''
 
     error_channel = journal.error('offsets_product.set_ampcor_param')
@@ -242,8 +243,11 @@ def set_ampcor_params(cfg, ampcor_obj):
     ampcor_obj.skipSampleAcross = cfg['skip_range']
     ampcor_obj.skipSampleDown = cfg['skip_azimuth']
 
-    # Set starting pixel and offset shape
-    az_start, rg_start = get_start_pixels(cfg)
+    # Set starting pixel (layer window centered on the common grid)
+    # and offset shape
+    az_start, rg_start = get_start_pixels(cfg,
+                                          ampcor_obj.windowSizeHeight,
+                                          ampcor_obj.windowSizeWidth)
     ampcor_obj.referenceStartPixelAcrossStatic = rg_start
     ampcor_obj.referenceStartPixelDownStatic = az_start
     off_length, off_width = get_offsets_shape(cfg,
@@ -360,13 +364,18 @@ def get_offsets_shape(cfg, slc_lines, slc_cols):
     return off_length, off_width
 
 
-def get_start_pixels(cfg):
+def get_start_pixels(cfg, window_azimuth=None, window_range=None):
     '''
-    Get common start pixel among offset layers
+    Get start pixel among offset layers. All layers share one offsets
+    grid centered at start + (smallest window)//2; if a layer window size
+    is given, the start is shifted to center that window on the grid.
     Parameters
     ----------
     cfg: dict
         Dictionary with user-defined parameters for offsets layers
+    window_azimuth, window_range: int or None
+        Layer window size in azimuth and slant range. If None, return
+        the common start pixel (that of the smallest window)
     Returns
     -------
     az_start, rg_start: int
@@ -388,6 +397,18 @@ def get_start_pixels(cfg):
         az_search = [cfg[key].get('half_search_azimuth', None) for key
                      in cfg if key.startswith('layer')]
         az_start = margin + min(list(filter(None, az_search)))
+
+    # Center the layer window on the common grid (see
+    # helpers.get_offset_radar_grid)
+    if window_range is not None:
+        rg_chip = [cfg[key].get('window_range', None) for key
+                   in cfg if key.startswith('layer')]
+        rg_start += min(list(filter(None, rg_chip))) // 2 - window_range // 2
+
+    if window_azimuth is not None:
+        az_chip = [cfg[key].get('window_azimuth', None) for key
+                   in cfg if key.startswith('layer')]
+        az_start += min(list(filter(None, az_chip))) // 2 - window_azimuth // 2
 
     return az_start, rg_start
 
