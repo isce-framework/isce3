@@ -31,7 +31,8 @@ from nisar.products.insar.product_paths import (CommonPaths, RIFGGroupsPaths,
                                                 RUNWGroupsPaths)
 from nisar.products.readers import SLC
 from nisar.products.utils import (deepcopy_runconfig_and_keep_isce3_obj,
-                                  interpret_subswath_mask)
+                                  interpret_subswath_mask,
+                                  interpret_valid_data_mask)
 from nisar.workflows import (crossmul, filter_interferogram, h5_prep,
                              prepare_insar_hdf5, resample_slc_v2, unwrap)
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
@@ -300,6 +301,39 @@ def update_hdf5_mask_bit24_block(
     dst_mask[row_start:row_start + block_rows, :] = updated_mask
 
 
+def _get_mask_raster(h5_file, ifg_path, fallback_mask_path):
+    """Prefer the polarization-dependent mask over the shared subswath mask."""
+    pol_group_path = ifg_path.rsplit("/", 1)[0]
+    valid_mask_path = f"{pol_group_path}/validDataMask"
+
+    if valid_mask_path in h5_file:
+        return h5_file[valid_mask_path], True
+
+    return h5_file[fallback_mask_path], False
+
+
+def _read_valid_mask_block(
+        src_h5, pol_path, subswath_mask_path, row_slice):
+    """Read a block and decode joint reference/secondary validity.
+
+    This returns Boolean validity only. qFSP input-exception flags must
+    be read separately from the encoded shared mask.
+    """
+    mask_raster, uses_valid_data_mask = _get_mask_raster(
+        src_h5, f"{pol_path}/unwrappedPhase", subswath_mask_path)
+    mask_block = mask_raster[row_slice, :]
+    if uses_valid_data_mask:
+        reference_valid, secondary_valid = interpret_valid_data_mask(
+            mask_block)
+    else:
+        reference_valid, secondary_valid, _ = interpret_subswath_mask(
+            mask_block)
+    return (
+        np.asarray(reference_valid, dtype=bool)
+        & np.asarray(secondary_valid, dtype=bool)
+    )
+
+
 def copy_iono_datasets(iono_insar_cfg,
                        input_runw,
                        output_runw,
@@ -558,8 +592,12 @@ def compute_differential_phase(
                 phase_second_raster = src_sec_h5[second_ifg_path]
                 output_data_raster = src_out_h5[out_ifg_path]
                 if subswath_mask_enabled:
-                    first_mask_raster = src_first_h5[first_mask_path]
-                    second_mask_raster = src_sec_h5[second_mask_path]
+                    first_mask_raster, first_uses_valid_data_mask = _get_mask_raster(
+                        src_first_h5, first_ifg_path, first_mask_path
+                    )
+                    second_mask_raster, second_uses_valid_data_mask = _get_mask_raster(
+                        src_sec_h5, second_ifg_path, second_mask_path
+                    )
                 # Generate block parameters for reading/writing
                 block_params_main = block_param_generator(
                     lines_per_block,
@@ -633,10 +671,19 @@ def compute_differential_phase(
                         # Each mask provides:
                         #   - reference_valid: valid pixels in reference region
                         #   - secondary_valid: valid pixels in secondary region
-                        first_reference_valid, first_secondary_valid, _ = \
-                            interpret_subswath_mask(first_mask_block)
-                        second_reference_valid, second_secondary_valid, _ = \
-                            interpret_subswath_mask(second_mask_block)
+                        if first_uses_valid_data_mask:
+                            first_reference_valid, first_secondary_valid = (
+                                interpret_valid_data_mask(first_mask_block))
+                        else:
+                            first_reference_valid, first_secondary_valid, _ = (
+                                interpret_subswath_mask(first_mask_block))
+
+                        if second_uses_valid_data_mask:
+                            second_reference_valid, second_secondary_valid = (
+                                interpret_valid_data_mask(second_mask_block))
+                        else:
+                            second_reference_valid, second_secondary_valid, _ = (
+                                interpret_subswath_mask(second_mask_block))
                         invalid = (
                             (~first_reference_valid) |
                             (~first_secondary_valid) |
@@ -774,7 +821,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
     if (
         prep_wrapped_phase_cfg["enabled"]
-        and unwrap_mask_type == "subswath_mask"
+        and "subswath_mask" in unwrap_mask_type
     ):
         subswath_mask_enabled = True
 
@@ -1238,6 +1285,8 @@ def run(cfg: dict, runw_hdf5: str):
             info_channel.log(
                 f"Secondary input-data exception flag: {sec_qfsp_flag}"
             )
+    # Read preferred validity masks for filtering and qFSP background support.
+    # qFSP additionally reads shared masks for their input-exception bits.
     need_insar_mask = iono_qfsp_correction_flag or ("subswath_mask" in mask_type)
 
     # set paths for ionosphere and split spectrum
@@ -1511,6 +1560,11 @@ def run(cfg: dict, runw_hdf5: str):
             subswath_mask_image = None
             subswath_mask_main_image = None
             subswath_mask_side_image = None
+            row_slice = slice(row_start, row_start + block_rows_data)
+            main_valid_image = None
+            side_valid_image = None
+            low_valid_image = None
+            high_valid_image = None
 
             if iono_method in iono_method_subbands:
                 # Initialize array for block rasters
@@ -1531,7 +1585,7 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_main],
                         dtype=float)
 
-                if need_insar_mask:
+                if iono_qfsp_correction_flag:
                     subswath_mask_image = np.empty(
                         [block_rows_data, cols_main],
                         dtype=int)
@@ -1589,10 +1643,19 @@ def run(cfg: dict, runw_hdf5: str):
                             sub_high_conn_image,
                             np.s_[row_start:row_start + block_rows_data, :])
 
-                    if need_insar_mask:
+                    if iono_qfsp_correction_flag:
+                        # Input-exception bits are absent from validDataMask.
                         src_low_h5[subswath_mask_freq_a_path].read_direct(
                             subswath_mask_image,
                             np.s_[row_start:row_start + block_rows_data, :])
+
+                    if need_insar_mask:
+                        low_valid_image = _read_valid_mask_block(
+                            src_low_h5, dest_pol_path,
+                            subswath_mask_freq_a_path, row_slice)
+                        high_valid_image = _read_valid_mask_block(
+                            src_high_h5, dest_pol_path,
+                            subswath_mask_freq_a_path, row_slice)
 
                 if bridge_algorithm_bool:
                     sub_high_image = bridge_unwrapped_phase(
@@ -1698,7 +1761,7 @@ def run(cfg: dict, runw_hdf5: str):
                             [block_rows_data, cols_side],
                             dtype=float)
 
-                if need_insar_mask:
+                if iono_qfsp_correction_flag:
                     subswath_mask_main_image = np.empty(
                         [block_rows_data, cols_main],
                         dtype=int)
@@ -1748,6 +1811,25 @@ def run(cfg: dict, runw_hdf5: str):
                             np.s_[row_start:row_start + block_rows_data, :])
 
                     if need_insar_mask:
+                        main_valid_image = _read_valid_mask_block(
+                            src_main_h5, dest_pol_path,
+                            subswath_mask_freq_a_path, row_slice)
+
+                        valid_mask_b_path = f"{dest_pol_path_b}/validDataMask"
+                        if (valid_mask_b_path in src_side_h5
+                                or subswath_mask_freq_b_path in src_side_h5):
+                            side_valid_image = _read_valid_mask_block(
+                                src_side_h5, dest_pol_path_b,
+                                subswath_mask_freq_b_path, row_slice)
+                        else:
+                            # Preserve the legacy A-to-B fallback only if
+                            # neither frequency-B validity source exists.
+                            side_valid_image = decimate_freq_a_array(
+                                main_slant, side_slant,
+                                main_valid_image.astype(np.uint8)).astype(bool)
+
+                    if iono_qfsp_correction_flag:
+                        # Decode anomaly flags only from shared encoded masks.
                         src_main_h5[subswath_mask_freq_a_path].read_direct(
                             subswath_mask_main_image,
                             np.s_[row_start:row_start + block_rows_data, :])
@@ -1872,15 +1954,22 @@ def run(cfg: dict, runw_hdf5: str):
                         slant_side=side_slant)
                     available_mask &= np.array(mask_image, dtype=bool)
 
-                if "subswath_mask" in mask_type:
-                    mask_subswath = iono_phase_obj.get_subswath_mask_array(
-                        main_array=subswath_mask_main_image,
-                        side_array=subswath_mask_side_image,
-                        low_band_array=subswath_mask_image,
-                        high_band_array=subswath_mask_image,
-                        slant_main=main_slant,
-                        slant_side=side_slant)
-                    available_mask &= np.array(mask_subswath, dtype=bool)
+                if need_insar_mask:
+                    # These masks have already been decoded to Boolean validity.
+                    if iono_method in iono_method_sideband:
+                        first_valid = decimate_freq_a_array(
+                            main_slant, side_slant,
+                            main_valid_image.astype(np.uint8)).astype(bool)
+                        second_valid = side_valid_image
+                    else:
+                        first_valid = low_valid_image
+                        second_valid = high_valid_image
+
+                    if first_valid.shape != second_valid.shape:
+                        raise ValueError(
+                            "Validity mask shapes differ after grid alignment: "
+                            f"{first_valid.shape} != {second_valid.shape}")
+                    available_mask &= first_valid & second_valid
 
                 if "water" in mask_type:
                     # Extract preprocessing dictionary and open arrays
