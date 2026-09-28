@@ -244,6 +244,17 @@ def set_ampcor_params(cfg, ampcor_obj):
 
     # Set starting pixel and offset shape
     az_start, rg_start = get_start_pixels(cfg)
+
+    # Centre this layer on the common offsets grid. The published
+    # slantRange/zeroDopplerTime are start + (smallest window)//2
+    # (helpers.get_offset_radar_grid), so a larger window must start
+    # earlier by half the difference in window size.
+    layers = [cfg[k] for k in cfg if k.startswith('layer')]
+    min_wr = min(lay['window_range'] for lay in layers)
+    min_wa = min(lay['window_azimuth'] for lay in layers)
+    rg_start -= (ampcor_obj.windowSizeWidth - min_wr) // 2
+    az_start -= (ampcor_obj.windowSizeHeight - min_wa) // 2
+
     ampcor_obj.referenceStartPixelAcrossStatic = rg_start
     ampcor_obj.referenceStartPixelDownStatic = az_start
     off_length, off_width = get_offsets_shape(cfg,
