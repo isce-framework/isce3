@@ -366,9 +366,12 @@ def get_offsets_shape(cfg, slc_lines, slc_cols):
 
 def get_start_pixels(cfg, window_azimuth=None, window_range=None):
     '''
-    Get start pixel among offset layers. All layers share one offsets
-    grid centered at start + (smallest window)//2; if a layer window size
-    is given, the start is shifted to center that window on the grid.
+    Calculate the starting pixel in the reference RSLC grid for dense offsets computations.
+
+    The returned starting pixel ensures that all output offset layers share a common output
+    grid, where the top-left pixel is centered at: start + (smallest_window // 2).
+    To maintain this alignment, the starting range and azimuth indices of the 
+    input data are adjusted based on the specific window size of the given layer. 
     Parameters
     ----------
     cfg: dict
