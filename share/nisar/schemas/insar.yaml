@@ -364,6 +364,13 @@ dense_offsets_options:
     # Domain (frequency or spatial) where to compute cross-correlation
     cross_correlation_domain: enum('frequency', 'spatial', required=False)
 
+    # Cross-correlation workflow: 'two_pass' (pixel-level offsets estimated
+    # without anti-aliasing oversampling at first, then refined with
+    # oversampling over a smaller search range) or 'one_pass' (anti-aliasing
+    # oversampling over the whole search range, more accurate for noisy
+    # correlation surfaces but slower). Default: 'two_pass'
+    cross_correlation_workflow: enum('two_pass', 'one_pass', required=False)
+
     # Anti-aliasing oversampling factor to apply to reference/secondary SLC
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
@@ -446,6 +453,13 @@ offsets_product_options:
 
     # Domain (frequency or spatial) where to compute cross-correlation
     cross_correlation_domain: enum('frequency', 'spatial', required=False)
+
+    # Cross-correlation workflow: 'two_pass' (pixel-level offsets estimated
+    # without anti-aliasing oversampling at first, then refined with
+    # oversampling over a smaller search range) or 'one_pass' (anti-aliasing
+    # oversampling over the whole search range, more accurate for noisy
+    # correlation surfaces but slower). Default: 'two_pass'
+    cross_correlation_workflow: enum('two_pass', 'one_pass', required=False)
 
     # Anti-aliasing oversampling factor to apply to reference/secondary SLC
     # prior to cross-correlation computation

@@ -459,6 +459,8 @@ runconfig:
                 start_pixel_azimuth:
                 # Domain (frequency or spatial) where to compute cross-correlation
                 cross_correlation_domain: 'frequency'
+                # Cross-correlation workflow: 'two_pass' or 'one_pass'
+                cross_correlation_workflow: 'two_pass'
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
@@ -515,6 +517,8 @@ runconfig:
                 start_pixel_azimuth:
                 # Cross-correlation domain
                 cross_correlation_domain: 'frequency'
+                # Cross-correlation workflow: 'two_pass' or 'one_pass'
+                cross_correlation_workflow: 'two_pass'
                 # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
                 # Deramp data axis prior to FFT: range, azimuth, or both
