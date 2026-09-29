@@ -8,6 +8,7 @@ import time
 import journal
 import numpy as np
 import isce3
+import pycuampcor
 from osgeo import gdal
 from nisar.products.readers import SLC
 from nisar.workflows.helpers import copy_raster, get_cfg_freq_pols
@@ -45,10 +46,10 @@ def run(cfg: dict):
         # Set current CUDA device
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
         isce3.cuda.core.set_device(device)
-        ampcor = isce3.cuda.matchtemplate.PyCuAmpcor()
+        ampcor = pycuampcor.PyCuAmpcor()
         ampcor.deviceID = cfg['worker']['gpu_id']
     else:
-        ampcor = isce3.matchtemplate.PyCPUAmpcor()
+        ampcor = pycuampcor.PyCPUAmpcor()
 
     # Use memory mapping (not exposed to user but reference
     # and secondary raster are memory-mappable)
@@ -101,7 +102,7 @@ def run(cfg: dict):
             ampcor.grossOffsetImageName = str(out_dir / 'gross_offset')
             ampcor.snrImageName = str(out_dir / 'snr')
             ampcor.covImageName = str(out_dir / 'covariance')
-            ampcor.corrImageName = str(out_dir / 'correlation_peak')
+            ampcor.peakValueImageName = str(out_dir / 'correlation_peak')
 
             # Create empty ENVI datasets. PyCuAmpcor will overwrite the
             # binary files. Note, use gdal to pass interleave option
@@ -207,6 +208,9 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
             error_channel.log(err_str)
             raise ValueError(err_str)
 
+    if cfg.get('cross_correlation_workflow') is not None:
+        ampcor_obj.workflow = get_ampcor_workflow(cfg['cross_correlation_workflow'])
+
     if cfg['slc_oversampling_factor'] is not None:
         ampcor_obj.rawDataOversamplingFactor = cfg['slc_oversampling_factor']
 
@@ -280,6 +284,32 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
     ampcor_obj.checkPixelInImageRange()
 
     return ampcor_obj
+
+
+def get_ampcor_workflow(workflow):
+    '''
+    Convert the cross-correlation workflow name to the pycuampcor option
+
+    Parameters
+    ----------
+    workflow: str
+        'two_pass': a first pass without anti-aliasing oversampling to
+        estimate the pixel-level offsets, and a second pass with
+        oversampling over a smaller search range; or
+        'one_pass': a single pass with anti-aliasing oversampling over the
+        whole search range (more accurate for noisy correlation surfaces)
+
+    Returns
+    -------
+    int
+        0 for 'two_pass', 1 for 'one_pass'
+    '''
+    workflows = {'two_pass': 0, 'one_pass': 1}
+    if workflow not in workflows:
+        err_str = f"{workflow} is not a valid cross-correlation workflow"
+        journal.error('dense_offsets.get_ampcor_workflow').log(err_str)
+        raise ValueError(err_str)
+    return workflows[workflow]
 
 
 def create_empty_dataset(filename, width, length,

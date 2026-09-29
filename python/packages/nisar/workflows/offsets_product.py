@@ -4,12 +4,14 @@ import time
 import isce3
 import journal
 import numpy as np
+import pycuampcor
 from isce3.io import HDF5OptimizedReader
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.compute_stats import (compute_stats_real_data,
                                            compute_stats_real_hdf5_dataset)
-from nisar.workflows.dense_offsets import create_empty_dataset
+from nisar.workflows.dense_offsets import (create_empty_dataset,
+                                          get_ampcor_workflow)
 from nisar.workflows.helpers import (copy_raster, get_cfg_freq_pols,
                                      get_ground_track_velocity_product)
 from nisar.workflows.offsets_product_runconfig import OffsetsProductRunConfig
@@ -123,11 +125,13 @@ def run(cfg: dict, output_hdf5: str = None):
                     raise ValueError(err_str)
 
                 for key in layer_keys:
-                    # Create and initialize Ampcor object (only GPU for now)
+                    # Create and initialize Ampcor object
                     if use_gpu:
-                        ampcor = isce3.cuda.matchtemplate.PyCuAmpcor()
+                        ampcor = pycuampcor.PyCuAmpcor()
                         ampcor.deviceID = cfg['worker']['gpu_id']
-                        ampcor.useMmap = 1
+                    else:
+                        ampcor = pycuampcor.PyCPUAmpcor()
+                    ampcor.useMmap = 1
 
                     # Set parameters related to reference/secondary RSLC
                     ampcor.referenceImageName = str(out_dir / 'reference')
@@ -158,7 +162,7 @@ def run(cfg: dict, output_hdf5: str = None):
                             layer_scratch_path / 'gross_offset')
                     ampcor.snrImageName = str(layer_scratch_path / 'snr')
                     ampcor.covImageName = str(layer_scratch_path / 'covariance')
-                    ampcor.corrImageName = str(layer_scratch_path/ 'correlation_peak')
+                    ampcor.peakValueImageName = str(layer_scratch_path / 'correlation_peak')
 
                     create_empty_dataset(str(layer_scratch_path / 'dense_offsets'),
                                          ampcor.numberWindowAcross,
@@ -232,7 +236,7 @@ def set_ampcor_params(cfg, ampcor_obj):
     ----------
     cfg: dict
         Dictionary with user-defined Ampcor parameters
-    ampcor_obj: isce3.cuda.matchtemplate.PyCuAmpcor()
+    ampcor_obj: pycuampcor.PyCuAmpcor or pycuampcor.PyCPUAmpcor
         Ampcor object to set members value; its window size must be
         already set to that of the current layer
     '''
@@ -259,6 +263,8 @@ def set_ampcor_params(cfg, ampcor_obj):
     # Set cross-correlation domain, oversampling factor and deramping
     ampcor_obj.algorithm = 0 if cfg['cross_correlation_domain'] == \
                                 'frequency' else 1
+    if cfg.get('cross_correlation_workflow') is not None:
+        ampcor_obj.workflow = get_ampcor_workflow(cfg['cross_correlation_workflow'])
     ampcor_obj.rawDataOversamplingFactor = cfg['slc_oversampling_factor']
 
     if cfg['deramping_method'] is not None:
