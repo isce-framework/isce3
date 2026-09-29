@@ -10,7 +10,6 @@
 
 #include <isce3/core/Projections.h>
 #include <isce3/io/Raster.h>
-#include <iostream>
 
 /** Set EPSG code for input DEM */
 void isce3::geometry::DEMInterpolator::epsgCode(int epsgcode) {
@@ -39,20 +38,8 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     double geotransform[6];
     demRaster.getGeoTransform(geotransform);
 
-    std::cout << std::setprecision(17);
-
-    std::cout << "55555 (inside loadDEM())" << std::endl;
-    std::cout << "geotransform[0]: " << geotransform[0]<< std::endl;
-    std::cout << "geotransform[1]: " << geotransform[1]<< std::endl;
-    std::cout << "geotransform[2]: " << geotransform[2]<< std::endl;
-    std::cout << "geotransform[3]: " << geotransform[3]<< std::endl;
-    std::cout << "geotransform[4]: " << geotransform[4]<< std::endl;
-    std::cout << "geotransform[5]: " << geotransform[5]<< std::endl;
-
     const double delta_y = geotransform[5];
     const double delta_x = geotransform[1];
-    std::cout << "delta_x: " << delta_x << std::endl;
-    std::cout << "delta_y: " << delta_y << std::endl;
 
     if (delta_x < 0) {
         warning << "The DEM pixel spacing in the X-/longitude direction"
@@ -73,12 +60,6 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     int epsgcode = demRaster.getEPSG();
     _epsgcode = epsgcode;
     _proj = isce3::core::makeProjection(epsgcode);
-
-    std::cout << "55555 (inside loadDEM())" << std::endl;
-    std::cout << "dem_y0: " << dem_y0 << std::endl;
-    std::cout << "dem_x0: " << dem_x0 << std::endl;
-    std::cout << "dem_yf: " << dem_yf << std::endl;
-    std::cout << "dem_xf: " << dem_xf << std::endl;
 
     /* If DEM in geographic coordinates (i.e. EPSG is 4326),
        we need to check for DEM file discontinuity (DFD) around dateline
@@ -108,10 +89,6 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
 
     if (epsgcode == 4326) {
 
-        std::cout << "aaaaaa (inside loadDEM())" << std::endl;
-        std::cout << "min_x: " << min_x << std::endl;
-        std::cout << "max_x: " << max_x << std::endl;
-
         /* For DEM in EPSG 4326 (lat/lon) max longitude range is
         360 + 2 DEM pixels */
         if (max_x - min_x > 360 + 2 * delta_x) {
@@ -124,10 +101,6 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
             max_x = new_max_x;
         }
 
-        std::cout << "bbbbb (inside loadDEM())" << std::endl;
-        std::cout << "min_x: " << min_x << std::endl;
-        std::cout << "max_x: " << max_x << std::endl;
-
         /* Wrap equally `min_x` and `max_x` so that `max_x` is within
         longitudes [-180 - delta_x, 360 + delta_x].
         
@@ -136,28 +109,19 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
         */
         if (((min_x < -180 - delta_x) && (min_x + 360 < dem_xf)) ||
                 max_x < -180 - delta_x || max_x > 360 + delta_x) {
-            std::cout << "************ WRAPPING 1 ************" << std::endl;
             double n_wraps = std::floor(max_x / 360);
             min_x -= n_wraps * 360;
             max_x -= n_wraps * 360;
         }
-        std::cout << "ccccc (inside loadDEM())" << std::endl;
-        std::cout << "min_x: " << min_x << std::endl;
-        std::cout << "max_x: " << max_x << std::endl;
 
         // Shift both coordinates by 360 degrees if needed to make them
         // greater than -180 - delta_x, but only if the shifted range
         // intersects the DEM extent (`dem_xf`).
         if (((min_x < -180 - delta_x) && (min_x + 360 < dem_xf)) ||
                 max_x < -180 - delta_x) {
-            std::cout << "************ WRAPPING 2 ************" << std::endl;
             min_x += 360;
             max_x += 360;
         }
-
-        std::cout << "dddd (inside loadDEM())" << std::endl;
-        std::cout << "min_x: " << min_x << std::endl;
-        std::cout << "max_x: " << max_x << std::endl;
 
         /* If `min_x` and `max_x` positions are given in convention 1 and
         these points cross the dateline (longitude = +/- 180), we wrap
@@ -167,25 +131,11 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
             max_x += 360;
         }
 
-        std::cout << "eeeee (inside loadDEM())" << std::endl;
-        std::cout << "min_x: " << min_x << std::endl;
-        std::cout << "max_x: " << max_x << std::endl;
-
         // Wrap `dem_x0` to longitude range [-180 - delta_x, 360 + delta_x]
         if (dem_x0 > 360 + delta_x || dem_x0 < -180 - delta_x) {
             dem_x0 = std::fmod(dem_x0, 360);
         }
-        std::cout << "ffff (inside loadDEM())" << std::endl;
-        std::cout << "dem_x0: " << dem_x0 << std::endl;
     }
-
-    std::cout << "7777777 (calling loadDEM())" << std::endl;
-    std::cout << "min_x: " << min_x << std::endl;
-    std::cout << "max_x: " << max_x << std::endl;
-
-    std::cout << "888888 (inside loadDEM())" << std::endl;
-    std::cout << "dem_yf: " << dem_yf << std::endl;
-    std::cout << "dem_xf: " << dem_xf << std::endl;
 
     /*
         Next, we make sure that the user-provided and DEM longitudes
