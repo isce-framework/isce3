@@ -2,6 +2,9 @@
 runconfig:
   groups:
     dynamic_ancillary_file_group:
+
+      # [OPTIONAL] One NISAR L1 RSLC formatted HDF5 file
+      input_file_path:
       # [REQUIRED] File path or URL of the input Digital Elevation Model (DEM) raster
       # file.
       # Must be an existing file in a GDAL-compatible raster format that spans the
@@ -16,12 +19,14 @@ runconfig:
       # of 255 represents a no-data (invalid) pixel, and values in 1-200 represent
       # water pixels.
       water_mask_raster_file:
-      # [REQUIRED] Path to the input orbit ephemeris XML file.
+      # [REQUIRED] if `input_file_path` is not provided, otherwise [OPTIONAL].
+      # Path to the input orbit ephemeris XML file.
       # Must be an existing XML file conforming to the NISAR Orbit Ephemeris Product
       # Specification (JPL D-102253) and spanning the desired radar observation time
       # interval.
       orbit_xml_file:
-      # [REQUIRED] Path to the input radar pointing XML file.
+      # [REQUIRED] if `input_file_path` is not provided, otherwise [OPTIONAL].
+      # Path to the input radar pointing XML file.
       # Must be an existing XML file conforming to the NISAR Radar Pointing Product
       # Specification (JPL D-102264) and spanning the desired radar observation time
       # interval.
@@ -263,8 +268,8 @@ runconfig:
           # interval.
           start_time:
           # [OPTIONAL] Azimuth ending UTC date and time of the end of the radar
-          # observation, as a string in ISO 8601. format with up to nanosecond precision.
-          # Must be >= `start_time`.
+          # observation, as a string in ISO 8601. Format with up to nanosecond
+          # precision. Must be >= `start_time`.
           # If not provided, it will be inferred from the specified geographic grid.
           # If provided, must be a valid azimuth time within the observation time
           # interval.
@@ -444,6 +449,10 @@ runconfig:
         extraiter: 10
 
     output:
+      layers:
+        # [OPTIONAL] Whether to save the water mask layer in the output product.
+        # Defaults to true.
+        save_water_mask: true
       dataset:
         # [OPTIONAL] Chunk dimensions of 2-D raster datasets in the output product.
         # Setting `chunk_size` to [-1, -1] will disable chunked storage.

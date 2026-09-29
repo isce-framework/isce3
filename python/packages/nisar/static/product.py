@@ -322,7 +322,7 @@ def populate_grids_group(
     local_incidence_angle: isce3.io.Raster,
     line_of_sight_x: isce3.io.Raster,
     line_of_sight_y: isce3.io.Raster,
-    water_mask: isce3.io.Raster,
+    water_mask: isce3.io.Raster | None,
     rtc_gamma_to_sigma_factor: isce3.io.Raster,
     rtc_gamma_to_beta_factor: isce3.io.Raster,
     geo_grid: isce3.product.GeoGridParameters,
@@ -439,8 +439,11 @@ def populate_grids_group(
     dem_dataset = create_raster_layer_dataset("digitalElevationModel", reprojected_dem)
     dem_dataset.attrs["disclaimer"] = to_bytes(dem_disclaimer)
 
-    water_mask_dataset = create_raster_layer_dataset("waterMask", water_mask)
-    water_mask_dataset.attrs["disclaimer"] = to_bytes(water_mask_disclaimer)
+    if water_mask is not None:
+        water_mask_dataset = create_raster_layer_dataset("waterMask",
+                                                         water_mask)
+        water_mask_dataset.attrs["disclaimer"] = to_bytes(
+            water_mask_disclaimer)
 
     create_raster_layer_dataset("layoverShadowMask", layover_shadow_mask)
     create_raster_layer_dataset("localIncidenceAngle", local_incidence_angle)
