@@ -512,6 +512,8 @@ def _resample_offsets_to_slc(off_path, out_path, off_az_pos, off_rg_pos,
 
     c0, c1, wc = _index_weight(off_rg_pos, width)
     r0, r1, wr = _index_weight(off_az_pos, length)
+    # Reshape column weights to (1, width) for flawless 2D broadcasting
+    wc = wc[None, :]
 
     driver = gdal.GetDriverByName('ENVI')
     ds = driver.Create(out_path, width, length, 1, gdal.GDT_Float64)
@@ -524,6 +526,8 @@ def _resample_offsets_to_slc(off_path, out_path, off_az_pos, off_rg_pos,
         block = off_az[:, c0] * (1 - wc) + off_az[:, c1] * wc
         band.WriteArray(block, 0, start)
     ds.FlushCache()
+    band = None
+    ds = None
 
 def identify_outliers(offsets_dir, rubbersheet_params, mask = None):
     '''
