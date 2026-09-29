@@ -37,7 +37,6 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     // Get original GeoTransform using raster
     double geotransform[6];
     demRaster.getGeoTransform(geotransform);
-
     const double delta_y = geotransform[5];
     const double delta_x = geotransform[1];
 
