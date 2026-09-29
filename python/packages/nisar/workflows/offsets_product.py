@@ -364,26 +364,31 @@ def get_offsets_shape(cfg, slc_lines, slc_cols):
     return off_length, off_width
 
 
-def get_start_pixels(cfg, window_azimuth=None, window_range=None):
+def get_start_pixels(cfg, window_azimuth, window_range):
     '''
     Calculate the starting pixel in the reference RSLC grid for dense offsets computations.
 
     The returned starting pixel ensures that all output offset layers share a common output
     grid, where the top-left pixel is centered at: start + (smallest_window // 2).
-    To maintain this alignment, the starting range and azimuth indices of the 
-    input data are adjusted based on the specific window size of the given layer. 
+    To maintain this alignment, the starting range and azimuth indices of the
+    input data are adjusted based on the specific window size of the given layer.
     Parameters
     ----------
     cfg: dict
         Dictionary with user-defined parameters for offsets layers
-    window_azimuth, window_range: int or None
-        Layer window size in azimuth and slant range. If None, return
-        the common start pixel (that of the smallest window)
+    window_azimuth, window_range: int
+        Layer window size in azimuth and slant range
     Returns
     -------
     az_start, rg_start: int
         Start pixel in ref RSLC in azimuth and slant range directions
     '''
+    if window_azimuth is None or window_range is None:
+        err_str = ("Layer window sizes are required to center the layer "
+                   "on the offsets grid")
+        journal.error('offsets_product.get_start_pixels').log(err_str)
+        raise ValueError(err_str)
+
     # Compute margin around reference RSLC edges
     margin = max(cfg['margin'], np.abs(cfg['gross_offset_range']),
                  np.abs(cfg['gross_offset_azimuth']))
@@ -403,15 +408,13 @@ def get_start_pixels(cfg, window_azimuth=None, window_range=None):
 
     # Center the layer window on the common grid (see
     # helpers.get_offset_radar_grid)
-    if window_range is not None:
-        rg_chip = [cfg[key].get('window_range', None) for key
-                   in cfg if key.startswith('layer')]
-        rg_start += min(list(filter(None, rg_chip))) // 2 - window_range // 2
+    rg_chip = [cfg[key].get('window_range', None) for key
+               in cfg if key.startswith('layer')]
+    rg_start += min(list(filter(None, rg_chip))) // 2 - window_range // 2
 
-    if window_azimuth is not None:
-        az_chip = [cfg[key].get('window_azimuth', None) for key
-                   in cfg if key.startswith('layer')]
-        az_start += min(list(filter(None, az_chip))) // 2 - window_azimuth // 2
+    az_chip = [cfg[key].get('window_azimuth', None) for key
+               in cfg if key.startswith('layer')]
+    az_start += min(list(filter(None, az_chip))) // 2 - window_azimuth // 2
 
     return az_start, rg_start
 
