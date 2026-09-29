@@ -17,6 +17,7 @@ from .util import make_scratch_gtiff
 
 
 def compute_geometry_layers(
+    radar_grid: isce3.product.RadarGridParameters,
     geo_grid: isce3.product.GeoGridParameters,
     dem_raster: Raster,
     orbit: isce3.core.Orbit,
@@ -37,6 +38,9 @@ def compute_geometry_layers(
 
     Parameters
     ----------
+    radar_grid : isce3.product.RadarGridParameters
+        Grid of the SAR data in slant-range, used to ensure that all layers have
+        the same extents (radar grid).
     geo_grid : isce3.product.GeoGridParameters
         The geocoded coordinate grid on which to compute each of the output layers.
     dem_raster : isce3.io.Raster
@@ -132,6 +136,7 @@ def compute_geometry_layers(
         los_unit_vector_x_raster=los_east,
         los_unit_vector_y_raster=los_north,
         local_incidence_angle_raster=local_inc_angle,
+        radar_grid=radar_grid,
     )
 
     return reprojected_dem, los_east, los_north, local_inc_angle
