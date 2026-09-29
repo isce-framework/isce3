@@ -1,6 +1,5 @@
 #include "loadDem.h"
 #include <isce3/except/Error.h>
-#include <iostream>
 
 using isce3::core::Vec3;
 
@@ -142,14 +141,6 @@ isce3::error::ErrorCode loadDemFromProj(
     const int n_edge_samples){
     double min_x, max_x, min_y, max_y;
 
-    std::cout << "x0: " << x0 << std::endl;
-    std::cout << "xf: " << xf << std::endl;
-    std::cout << "y0: " << y0 << std::endl;
-    std::cout << "yf: " << yf << std::endl;
-    std::cout << "dem_margin_x_in_pixels: " << dem_margin_x_in_pixels << std::endl;
-    std::cout << "dem_margin_y_in_pixels: " << dem_margin_y_in_pixels << std::endl;
-    std::cout << "n_edge_samples: " << n_edge_samples << std::endl;
-
     min_y = std::min(y0, yf);
     max_y = std::max(y0, yf);
 
@@ -231,14 +222,6 @@ isce3::error::ErrorCode loadDemFromProj(
         }
     }
 
-    std::cout << std::setprecision(17);
-
-    std::cout << "2222222222222 (before adding margin)" << std::endl;
-    std::cout << "min_x: " << min_x << std::endl;
-    std::cout << "max_x: " << max_x << std::endl;
-    std::cout << "min_y: " << min_y << std::endl;
-    std::cout << "max_y: " << max_y << std::endl;
-
     double margin_y = dem_margin_y_in_pixels * std::abs(dem_raster.dy());
     min_y -= margin_y;
     max_y += margin_y;
@@ -247,25 +230,12 @@ isce3::error::ErrorCode loadDemFromProj(
     min_x -= margin_x;
     max_x += margin_x;
 
-    std::cout << "3333333333 (after adding margin)" << std::endl;
-    std::cout << "min_x: " << min_x << std::endl;
-    std::cout << "max_x: " << max_x << std::endl;
-    std::cout << "min_y: " << min_y << std::endl;
-    std::cout << "max_y: " << max_y << std::endl;
-
     // If DEM coordinates are in geographic, ensure latitude values
     // fall between [-90.0, 90.0] after applying `margin_y`
     if (dem_raster.getEPSG() == 4326) {
         min_y = std::clamp(min_y, -90.0, 90.0);
         max_y = std::clamp(max_y, -90.0, 90.0);
     }
-
-    std::cout << "4444444 (calling loadDEM())" << std::endl;
-    std::cout << "min_x: " << min_x << std::endl;
-    std::cout << "max_x: " << max_x << std::endl;
-    std::cout << "min_y: " << min_y << std::endl;
-    std::cout << "max_y: " << max_y << std::endl;
-
 
     isce3::error::ErrorCode error_code;
     _Pragma("omp critical")
