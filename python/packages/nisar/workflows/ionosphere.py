@@ -1926,7 +1926,7 @@ def run(cfg: dict, runw_hdf5: str):
                             # neither frequency-B validity source exists.
                             side_valid_image = decimate_freq_a_array(
                                 main_slant, side_slant,
-                                main_valid_image.astype(np.uint8)).astype(bool)
+                                main_valid_image)
 
                     if iono_qfsp_correction_flag:
                         # Decode anomaly flags only from shared encoded masks.
