@@ -54,6 +54,8 @@ def run(cfg):
 
     # init parameters shared by frequency A and B
     slc = SLC(hdf5file=input_hdf5)
+    # Get root path - auto-detects LSAR or SSAR
+    root_path = slc.RootPath
 
     dem_raster = isce3.io.Raster(dem_file)
     epsg = dem_raster.get_epsg()
@@ -109,7 +111,7 @@ def run(cfg):
 
         prep_gslc_dataset(cfg, 'GSLC', dst_h5)
         for freq, pol_list in freq_pols.items():
-            root_ds = f'/science/LSAR/GSLC/grids/frequency{freq}'
+            root_ds = f'{root_path}/GSLC/grids/frequency{freq}'
             radar_grid = slc.getRadarGrid(freq)
 
             # load the orbit, if it has not been loaded yet
@@ -127,7 +129,7 @@ def run(cfg):
             srg_correction = az_srg_corrections.slant_range_correction_lut
 
             # write corrections to HDF5
-            proc_info_path = "/science/LSAR/GSLC/metadata/processingInformation"
+            proc_info_path = f"{root_path}/GSLC/metadata/processingInformation"
             proc_info_group = dst_h5.require_group(proc_info_path)
             az_srg_corrections.write_corrections_hdf5(proc_info_group)
 
@@ -237,7 +239,7 @@ def run(cfg):
             length=int(radar_grid_cubes_geogrid.length),
             epsg=radar_grid_cubes_geogrid.epsg)
 
-        cube_group_name = '/science/LSAR/GSLC/metadata/radarGrid'
+        cube_group_name = f'{root_path}/GSLC/metadata/radarGrid'
 
         # if available use frequency A to get radar grid and native doppler
         # else use frequency B

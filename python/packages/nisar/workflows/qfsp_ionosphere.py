@@ -7,6 +7,7 @@ from scipy.ndimage import distance_transform_edt
 from isce3.math.offsets_polyfit import (ncoeffs,
                                         polyfit_offsets,
                                         predict_offsets)
+from nisar.products.readers.Base import get_hdf5_file_root_path
 
 
 def check_qfsp_flag(slc_path):
@@ -33,7 +34,9 @@ def check_qfsp_flag(slc_path):
     RuntimeWarning
         If the input-data exception dataset is absent.
     """
-    qfsp_path = "/science/LSAR/identification/hasInputDataException"
+    # Auto-detect root path (LSAR or SSAR)
+    root_path = get_hdf5_file_root_path(slc_path)
+    qfsp_path = f"{root_path}/identification/hasInputDataException"
 
     with h5py.File(slc_path, "r") as src:
         if qfsp_path not in src:

@@ -12,7 +12,6 @@ from scipy.interpolate import griddata
 
 from isce3.core import crop_external_orbit, interpolate_datacube
 from isce3.io import HDF5OptimizedReader
-from nisar.products.insar.product_paths import CommonPaths
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import h5_prep
@@ -436,7 +435,8 @@ def add_baseline(output_paths,
                  geo2rdr_parameters,
                  use_gpu,
                  baseline_dir_path,
-                 baseline_mode='top_bottom'):
+                 baseline_mode='top_bottom',
+                 root_path='/science/LSAR'):
     """Add perpendicular and parallel components of spatial baseline
     datasets to the metadata cubes of InSAR products.
 
@@ -477,6 +477,7 @@ def add_baseline(output_paths,
                  "range_start",
                  "range_end",
         where metadata_path = /science/LSAR/RIFG/metadata/geolocationGrid
+                           or /science/SSAR/RIFG/metadata/geolocationGrid
 
     geo2rdr_parameters: dict
         A dictionary representing the parameters used in geo2rdr computation.
@@ -491,6 +492,8 @@ def add_baseline(output_paths,
     baseline_mode: str
         'top_bottom' computes baselines at bottom and top heights
         '3D_full' computes baselines at all heights
+    root_path: str
+        Root path to the SAR data ('/science/LSAR' or '/science/SSAR')
     """
     error_channel = journal.error('baseline.run')
 
@@ -510,7 +513,7 @@ def add_baseline(output_paths,
         product_id = next(iter(output_paths))
 
     output_hdf5 = output_paths[product_id]
-    dst_meta_path = f'{CommonPaths.RootPath}/{product_id}/metadata'
+    dst_meta_path = f'{root_path}/{product_id}/metadata'
 
     # read 3d cube size from arbitrary metadata
     if radar_or_geo == 'radar':
@@ -774,6 +777,9 @@ def run(cfg: dict, output_paths):
     ref_slc = SLC(hdf5file=ref_hdf5)
     sec_slc = SLC(hdf5file=sec_hdf5)
 
+    # Get root path from reference SLC (auto-detects LSAR or SSAR)
+    root_path = ref_slc.RootPath
+
     # read radargrid, doppler, orbit
     ref_radargrid, ref_doppler, ref_orbit = \
         _get_rgrid_dopp_orbit(ref_slc, ref_orbit_path)
@@ -783,7 +789,7 @@ def run(cfg: dict, output_paths):
     range_end = range_start + \
         ref_radargrid.width * ref_radargrid.range_pixel_spacing
     geo2rdr_parameters = cfg["processing"]["geo2rdr"]
-    common_path = CommonPaths.RootPath
+    common_path = root_path
 
     radar_products = {dst: output_paths[dst]
                       for dst in output_paths.keys()
@@ -822,7 +828,8 @@ def run(cfg: dict, output_paths):
             geo2rdr_parameters,
             use_gpu,
             baseline_dir_path,
-            baseline_mode)
+            baseline_mode,
+            root_path)
 
     if radar_products:
         product_id = next(iter(radar_products))
@@ -854,7 +861,8 @@ def run(cfg: dict, output_paths):
             geo2rdr_parameters,
             use_gpu,
             baseline_dir_path,
-            baseline_mode)
+            baseline_mode,
+            root_path)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log("successfully ran baseline "
