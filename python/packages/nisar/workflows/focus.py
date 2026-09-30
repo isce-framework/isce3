@@ -1445,8 +1445,11 @@ def get_identification_data_from_runconfig(cfg: Struct) -> dict:
     """
     Populate a dict containing the keys
         {"product_version", "processing_type", "composite_release_id",
-        "mission_id", "processing_center", "track", "frame", "product_doi"}
-    using data from an RSLC runconfig.
+        "orbit_direction", "mission_id", "processing_center", "track", "frame",
+        "product_doi"}
+    using data from an RSLC runconfig.  Note that "orbit_direction" will be
+    omitted if it is missing or null in the runconfig (for backwards
+    compatibility).
     """
     keys = ["product_version", "processing_type", "composite_release_id",
         "mission_id", "processing_center", "product_doi"]
@@ -1454,6 +1457,12 @@ def get_identification_data_from_runconfig(cfg: Struct) -> dict:
     d = {key: exe[key] for key in keys}
     d["track"] = cfg.geometry.relative_orbit_number
     d["frame"] = cfg.geometry.frame_number
+
+    # optional
+    key = "orbit_direction"
+    val = getattr(cfg.geometry, key, None)
+    if val is not None:
+        d[key] = val
     return d
 
 
