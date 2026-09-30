@@ -171,7 +171,7 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
         else margin + ampcor_obj.halfSearchRangeAcross
 
     ampcor_obj.referenceStartPixelDownStatic = cfg[
-        'start_pixel_azimuth'] if cfg['start_pixel_range'] is not None \
+        'start_pixel_azimuth'] if cfg['start_pixel_azimuth'] is not None \
         else margin + ampcor_obj.halfSearchRangeDown
 
     if cfg['offset_width'] is not None:

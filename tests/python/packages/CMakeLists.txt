@@ -84,6 +84,7 @@ nisar/workflows/troposphere.py
 nisar/workflows/solid_earth_tides.py
 nisar/workflows/baseline.py
 nisar/workflows/process_args.py
+nisar/workflows/offsets_product.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/resample_slc_v2.py

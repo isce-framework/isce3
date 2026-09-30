@@ -718,7 +718,8 @@ class SLC(h5py.File):
                             is_full_frame: bool = False,
                             frame_coverage: float = np.nan,
                             coverage_threshold: float = 0.75,
-                            composite_release_id: str = "A10000"):
+                            composite_release_id: str = "A10000",
+                            orbit_direction: Optional[str] = None):
         """
         Populate identification metadata with a combination of copied values
         from L0B and user data.
@@ -727,7 +728,6 @@ class SLC(h5py.File):
             diagnosticModeFlag
             isGeocoded
             lookDirection
-            orbitPassDirection
 
         copied from L0B if associated input argument is None:
             absoluteOrbitNumber
@@ -738,6 +738,7 @@ class SLC(h5py.File):
             isUrgentObservation
             listOfFrequencies
             missionId
+            orbitPassDirection
             plannedDatatakeId
             plannedObservationId
             zeroDopplerEndTime
@@ -830,6 +831,18 @@ class SLC(h5py.File):
             d = g.require_dataset("absoluteOrbitNumber", (), np.uint32)
             d[()] = np.uint32(absolute_orbit_number)
             d.attrs["description"] = np.bytes_("Absolute orbit number")
+
+        # Old behavior: always copy from L0B.  Not ideal since a long L0B
+        # observation may pass over North/South pole, so the label could be
+        # wrong for a shorter RSLC.
+        # New behavior: populate if provided (e.g., via config file) otherwise
+        # fall back to L0B orbit pass direction.
+        if orbit_direction is not None:
+            if orbit_direction not in ("Ascending", "Descending"):
+                raise ValueError(f"unexpected {orbit_direction=}")
+            d = set_string(g, "orbitPassDirection", orbit_direction)
+            d.attrs["description"] = np.bytes_(
+                'Orbit direction, either "Ascending" or "Descending"')
 
         def set_string_list(group, key, values, desc):
             if key in group:
