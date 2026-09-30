@@ -302,7 +302,25 @@ def update_hdf5_mask_bit24_block(
 
 
 def _get_mask_raster(h5_file, valid_mask_path, fallback_mask_path):
-    """Prefer validDataMask; fall back to the shared subswath mask."""
+    """Return the preferred validity mask dataset or a fallback dataset.
+
+    Parameters
+    ----------
+    h5_file : h5py.File
+        Open HDF5 file containing the mask datasets.
+    valid_mask_path : str
+        Path to the preferred validDataMask dataset.
+    fallback_mask_path : str
+        Path to the shared subswath mask dataset, used when validDataMask
+        is absent.
+
+    Returns
+    -------
+    mask_raster : h5py.Dataset
+        Selected mask dataset.
+    uses_valid_data_mask : bool
+        True if validDataMask was selected; False if the fallback was used.
+    """
     if valid_mask_path in h5_file:
         return h5_file[valid_mask_path], True
 
@@ -311,7 +329,30 @@ def _get_mask_raster(h5_file, valid_mask_path, fallback_mask_path):
 
 def _read_valid_mask_block(
         src_h5, valid_mask_path, subswath_mask_path, row_slice):
-    """Read and decode joint reference/secondary validity for a block."""
+    """Read a mask block and identify pixels valid in both acquisitions.
+
+    Prefer validDataMask and decode it with interpret_valid_data_mask.
+    If absent, decode the shared subswath mask with
+    interpret_subswath_mask.
+
+    Parameters
+    ----------
+    src_h5 : h5py.File
+        Open source HDF5 file containing the mask datasets.
+    valid_mask_path : str
+        Path to the preferred validDataMask dataset.
+    subswath_mask_path : str
+        Path to the fallback shared subswath mask dataset.
+    row_slice : slice
+        Rows to read. All columns are included.
+
+    Returns
+    -------
+    numpy.ndarray
+        Two-dimensional boolean array for the selected block. True where
+        both reference and secondary masks indicate a valid pixel;
+        False elsewhere.
+    """
     mask_raster, uses_valid_data_mask = _get_mask_raster(
         src_h5,
         valid_mask_path,
@@ -481,6 +522,9 @@ def compute_differential_phase(
         first_mask_path=None,
         second_mask_path=None,
         invalid_fill_value=0,
+        *,
+        first_valid_mask_paths,
+        second_valid_mask_paths
     ):
     """
     Compute a differential phase by multiplying the first complex phase
@@ -530,6 +574,14 @@ def compute_differential_phase(
         If a list is given, it must have the same length as `second_data_path`.
     invalid_fill_value : scalar, optional
         Value written to output pixels marked invalid by the mask. Default is 0.
+    first_valid_mask_paths : list of str
+        Paths to polarization-dependent validDataMask datasets in
+        `phase_first`, in the same order as `first_data_path`.
+        If a dataset is absent, use `first_mask_path` instead.
+    second_valid_mask_paths : list of str
+        Paths to polarization-dependent validDataMask datasets in
+        `phase_second`, in the same order as `second_data_path`.
+        If a dataset is absent, use `second_mask_path` instead.
 
     Returns
     -------
@@ -584,25 +636,42 @@ def compute_differential_phase(
             resampling_flag = True
 
         try:
-            # Iterate over each polarization in frequency A
-            for [first_ifg_path, second_ifg_path, out_ifg_path] in zip(
-                 first_data_path, second_data_path, output_data_path):
-
+            # - For main_diff_ms_band:
+            #     first  → frequency A
+            #     second → frequency B
+            # - For main_diff_low_high_subband:
+            #     first  → low subband
+            #     second → high subband
+            # Each mask provides:
+            #   - reference_valid: valid pixels in reference region
+            #   - secondary_valid: valid pixels in secondary region
+            for (
+                first_ifg_path,
+                second_ifg_path,
+                out_ifg_path,
+                first_valid_mask_path,
+                second_valid_mask_path,
+            ) in zip(
+                first_data_path,
+                second_data_path,
+                output_data_path,
+                first_valid_mask_paths,
+                second_valid_mask_paths,
+            ):
                 phase_first_raster = src_first_h5[first_ifg_path]
                 phase_second_raster = src_sec_h5[second_ifg_path]
                 output_data_raster = src_out_h5[out_ifg_path]
                 if subswath_mask_enabled:
-                    first_pol_path = first_ifg_path.rsplit("/", 1)[0]
-                    second_pol_path = second_ifg_path.rsplit("/", 1)[0]
+
                     first_mask_raster, first_uses_valid_data_mask = _get_mask_raster(
                         src_first_h5,
-                        f"{first_pol_path}/validDataMask",
+                        first_valid_mask_path,
                         first_mask_path,
                     )
 
                     second_mask_raster, second_uses_valid_data_mask = _get_mask_raster(
                         src_sec_h5,
-                        f"{second_pol_path}/validDataMask",
+                        second_valid_mask_path,
                         second_mask_path,
                     )
                 # Generate block parameters for reading/writing
@@ -1042,6 +1111,8 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             runw_swath_path = RUNWGroupsPaths().SwathsPath
 
             first_data_path = []
+            first_valid_mask_paths = []
+
             for pol_a in pol_list_a:
 
                 dest_freq_path = f"{runw_swath_path}/frequencyA"
@@ -1049,16 +1120,21 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 runw_path_freq = f"{dest_pol_path}/unwrappedPhase"
 
                 first_data_path.append(runw_path_freq)
+                first_valid_mask_paths.append(f"{dest_pol_path}/validDataMask")
+
             first_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             first_mask_path = f"{dest_freq_path}/interferogram/mask"
 
             second_data_path = []
+            second_valid_mask_paths = []
+
             for pol_b in pol_list_b:
                 dest_freq_path = f"{swath_path}/frequencyB"
                 dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
                 rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
 
                 second_data_path.append(rifg_path_freq)
+                second_valid_mask_paths.append(f"{dest_pol_path}/validDataMask")
 
             second_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             second_mask_path = f"{dest_freq_path}/interferogram/mask"
@@ -1075,7 +1151,9 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                        second_slant_path=second_slant_path,
                                        subswath_mask_enabled=subswath_mask_enabled,
                                        first_mask_path=first_mask_path,
-                                       second_mask_path=second_mask_path)
+                                       second_mask_path=second_mask_path,
+                                       first_valid_mask_paths=first_valid_mask_paths,
+                                       second_valid_mask_paths=second_valid_mask_paths,)
 
             # Since main_diff_low_high_subband method does not need to
             # unwrap low and high subband interferogram, but need to
