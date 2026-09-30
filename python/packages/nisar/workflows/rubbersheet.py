@@ -77,6 +77,12 @@ def run_rubbersheet_with_polyfit(cfg: dict, output_hdf5: str = None):
             off_rg_indices = ((off_slant_range - ref_slant_ranges[0])/
                               ref_slant_range_spacing).round().astype(int)
 
+            # Reference RSLC line/column of the offsets grid
+            off_az_pos = ((off_zero_doppler_time - ref_radar_grid.sensing_start) *
+                          ref_radar_grid.prf)
+            off_rg_pos = ((off_slant_range - ref_radar_grid.starting_range) /
+                          ref_slant_range_spacing)
+
             # Produce ground track velocity for the frequency under processing
             ground_track_velocity_file = \
                 get_ground_track_velocity_product(
@@ -228,12 +234,10 @@ def run_rubbersheet_with_polyfit(cfg: dict, output_hdf5: str = None):
                     # Resample offsets to the size of the reference RSLC
                     culled_off_path = str(out_dir / rubber_off)
                     resamp_off_path = culled_off_path.replace('culled', 'resampled')
-                    ds = gdal.Open(culled_off_path, gdal.GA_ReadOnly)
-                    gdal.Translate(resamp_off_path, ds,
-                                width=ref_radar_grid.width,
-                                height=ref_radar_grid.length,
-                                resampleAlg='bilinear',
-                                format='ENVI')
+                    _resample_offsets_to_slc(culled_off_path, resamp_off_path,
+                                             off_az_pos, off_rg_pos,
+                                             ref_radar_grid.length,
+                                             ref_radar_grid.width)
                     # Sum resampled offsets to geometry offsets
                     sum_off_path = str(out_dir / geo_off)
                     sum_gdal_rasters(str(geo_offset_dir / geo_off),
@@ -286,6 +290,12 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
             rubbersheet_dir = scratch_path / 'rubbersheet_offsets' / f'freq{freq}'
             slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
             zero_doppler_time = dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
+
+            # Reference RSLC line/column of the offsets grid
+            off_az_pos = ((zero_doppler_time - ref_radar_grid.sensing_start) *
+                          ref_radar_grid.prf)
+            off_rg_pos = ((slant_range - ref_radar_grid.starting_range) /
+                          ref_slant_range_spacing)
 
             # Produce ground track velocity for the frequency under processing
             ground_track_velocity_file = get_ground_track_velocity_product(ref_slc,
@@ -409,12 +419,10 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
                     # Resample offsets to the size of the reference RSLC
                     culled_off_path = str(out_dir / rubber_off)
                     resamp_off_path = culled_off_path.replace('culled', 'resampled')
-                    ds = gdal.Open(culled_off_path, gdal.GA_ReadOnly)
-                    gdal.Translate(resamp_off_path, ds,
-                                width=ref_radar_grid.width,
-                                height=ref_radar_grid.length,
-                                resampleAlg='bilinear',
-                                format='ENVI')
+                    _resample_offsets_to_slc(culled_off_path, resamp_off_path,
+                                             off_az_pos, off_rg_pos,
+                                             ref_radar_grid.length,
+                                             ref_radar_grid.width)
                     # Sum resampled offsets to geometry offsets
                     sum_off_path = str(out_dir / geo_off)
                     sum_gdal_rasters(str(geo_offset_dir / geo_off),
@@ -469,6 +477,57 @@ def _write_to_disk(outpath, array, format='ENVI',
     ds = driver.Create(outpath, width, length, 1, datatype)
     ds.GetRasterBand(1).WriteArray(array)
     ds.FlushCache()
+
+
+def _resample_offsets_to_slc(off_path, out_path, off_az_pos, off_rg_pos,
+                             length, width, lines_per_block=512):
+    '''
+    Bilinearly resample offsets from the offsets grid to the reference
+    RSLC grid, block by block. Beyond the offsets grid, the edge values
+    are extended.
+
+    Parameters
+    ----------
+    off_path: str
+        Path to the offsets raster on the offsets grid
+    out_path: str
+        Path to the output ENVI raster on the reference RSLC grid
+    off_az_pos, off_rg_pos: numpy.ndarray
+        Reference RSLC line/column (fractional) of each offsets grid
+        row/column
+    length, width: int
+        Number of lines and columns of the reference RSLC
+    lines_per_block: int
+        Number of reference RSLC lines to resample per block
+    '''
+    off = _open_raster(off_path)
+
+    # Fractional offsets grid index and bilinear weight of each
+    # RSLC pixel, clamped to the grid edges
+    def _index_weight(pos, n):
+        idx = np.interp(np.arange(n), pos, np.arange(len(pos)))
+        i0 = np.clip(np.floor(idx).astype(int), 0, max(len(pos) - 2, 0))
+        i1 = np.minimum(i0 + 1, len(pos) - 1)
+        return i0, i1, idx - i0
+
+    c0, c1, wc = _index_weight(off_rg_pos, width)
+    r0, r1, wr = _index_weight(off_az_pos, length)
+    # Reshape column weights to (1, width) for flawless 2D broadcasting
+    wc = wc[None, :]
+
+    driver = gdal.GetDriverByName('ENVI')
+    ds = driver.Create(out_path, width, length, 1, gdal.GDT_Float64)
+    band = ds.GetRasterBand(1)
+    for start in range(0, length, lines_per_block):
+        rows = slice(start, min(start + lines_per_block, length))
+        w = wr[rows, None]
+        # Interpolate along azimuth, then along range
+        off_az = off[r0[rows]] * (1 - w) + off[r1[rows]] * w
+        block = off_az[:, c0] * (1 - wc) + off_az[:, c1] * wc
+        band.WriteArray(block, 0, start)
+    ds.FlushCache()
+    band = None
+    ds = None
 
 def identify_outliers(offsets_dir, rubbersheet_params, mask = None):
     '''

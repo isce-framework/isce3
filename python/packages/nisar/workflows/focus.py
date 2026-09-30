@@ -1445,8 +1445,11 @@ def get_identification_data_from_runconfig(cfg: Struct) -> dict:
     """
     Populate a dict containing the keys
         {"product_version", "processing_type", "composite_release_id",
-        "mission_id", "processing_center", "track", "frame", "product_doi"}
-    using data from an RSLC runconfig.
+        "orbit_direction", "mission_id", "processing_center", "track", "frame",
+        "product_doi"}
+    using data from an RSLC runconfig.  Note that "orbit_direction" will be
+    omitted if it is missing or null in the runconfig (for backwards
+    compatibility).
     """
     keys = ["product_version", "processing_type", "composite_release_id",
         "mission_id", "processing_center", "product_doi"]
@@ -1454,6 +1457,12 @@ def get_identification_data_from_runconfig(cfg: Struct) -> dict:
     d = {key: exe[key] for key in keys}
     d["track"] = cfg.geometry.relative_orbit_number
     d["frame"] = cfg.geometry.frame_number
+
+    # optional
+    key = "orbit_direction"
+    val = getattr(cfg.geometry, key, None)
+    if val is not None:
+        d[key] = val
     return d
 
 
@@ -1913,10 +1922,11 @@ def focus(runconfig, runconfig_path=""):
                 dop[frequency], dem, azres, mask, get_rdr2geo_params(cfg),
                 get_geo2rdr_params(cfg), **vars(cfg.processing.valid_data_mask))
             frac_valid_pix = num_valid_pix / np.prod(og.shape)
-            mask.attrs[f"maskValidPixelFraction{pol}"] = frac_valid_pix
+            attr = f"mask_valid_pixel_fraction_{pol.lower()}"
+            mask.attrs[attr] = frac_valid_pix
             rawfrac = get_valid_pulse_fraction(rawlist, pol_chan, proc_begin,
                 proc_end, og.ref_epoch)
-            mask.attrs[f"rawValidPulseFraction{pol}"] = rawfrac
+            mask.attrs[f"raw_valid_pulse_fraction_{pol.lower()}"] = rawfrac
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
