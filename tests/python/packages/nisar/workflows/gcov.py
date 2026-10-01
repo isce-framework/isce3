@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import shutil
 import h5py
 
 import numpy as np
@@ -223,6 +224,97 @@ def test_run_envisat():
                    ' in the RSLC metadata')
         npt.assert_allclose(diff_noise, mean_noise_power_from_rslc,
                             err_msg=err_msg, rtol=0.1)
+
+
+def test_run_envisat_1d_reference_terrain_height():
+    '''
+    Test that a 1-D (azimuth-only) `referenceTerrainHeight` LUT is geocoded
+    in the GCOV metadata cubes, even though its group also contains
+    `slantRange` (the range axis of the 2-D LUTs stored alongside it).
+
+    The 1-D LUT is filled with values that vary along azimuth, and the
+    result is compared with that of geocoding the same values explicitly
+    replicated along range as a 2-D LUT.
+    '''
+
+    # load text then substitute test directory paths
+    test_yaml_file = Path(iscetest.data) / 'geocode/test_gcov_envisat.yaml'
+    test_yaml = test_yaml_file.read_text().replace('@ISCETEST@', iscetest.data)
+
+    # create CLI input namespace with yaml text instead of file path
+    args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
+
+    # init runconfig object
+    runconfig = GCOVRunConfig(args)
+    runconfig.geocode_common_arg_load()
+    runconfig.cfg['processing']['noise_correction']['apply_correction'] = \
+        False
+
+    lut_group_path = \
+        '/science/LSAR/SLC/metadata/processingInformation/parameters'
+    output_path = ('/science/LSAR/GCOV/metadata/processingInformation/'
+                   'parameters/referenceTerrainHeight')
+
+    geocoded_ref_height = {}
+    for lut_rank in [1, 2]:
+
+        input_file = f'envisat_reference_terrain_height_{lut_rank}d.h5'
+        sas_output_file = \
+            f'gcov_envisat_reference_terrain_height_{lut_rank}d.h5'
+
+        # copy the RSLC and fill its `referenceTerrainHeight` LUT with
+        # values that vary along azimuth, either as a 1-D LUT or
+        # replicated along range as a 2-D LUT
+        shutil.copyfile(os.path.join(iscetest.data, 'envisat.h5'),
+                        input_file)
+        with h5py.File(input_file, 'r+') as input_h5_obj:
+            lut_path = f'{lut_group_path}/referenceTerrainHeight'
+            n_lines = input_h5_obj[lut_path].shape[0]
+            ref_height = np.linspace(-100, 500, n_lines, dtype=np.float32)
+            if lut_rank == 1:
+                input_h5_obj[lut_path][...] = ref_height
+            else:
+                n_samples = input_h5_obj[f'{lut_group_path}/slantRange'].size
+                attrs = dict(input_h5_obj[lut_path].attrs)
+                del input_h5_obj[lut_path]
+                lut_dataset = input_h5_obj.create_dataset(
+                    lut_path,
+                    data=np.repeat(ref_height[:, np.newaxis], n_samples,
+                                   axis=1))
+                for key, value in attrs.items():
+                    lut_dataset.attrs[key] = value
+
+        runconfig.cfg['input_file_group']['input_file_path'] = input_file
+        runconfig.cfg['product_path_group']['sas_output_file'] = \
+            sas_output_file
+
+        # We need to remove existing products because we are bypassing
+        # the part of the GCOV workflow that is responsible for this.
+        if os.path.isfile(sas_output_file):
+            os.remove(sas_output_file)
+
+        gcov.run(runconfig.cfg)
+
+        with GcovWriter(runconfig=runconfig) as gcov_obj:
+            gcov_obj.populate_metadata()
+
+        with h5py.File(sas_output_file, 'r') as output_h5_obj:
+            geocoded_ref_height[lut_rank] = output_h5_obj[output_path][()]
+
+    valid_1d = np.isfinite(geocoded_ref_height[1])
+    valid_2d = np.isfinite(geocoded_ref_height[2])
+
+    # the geocoded 1-D LUT must not be entirely NaN ...
+    assert np.any(valid_1d)
+
+    # ... and must match the geocoded 2-D LUT
+    npt.assert_array_equal(valid_1d, valid_2d)
+    npt.assert_allclose(geocoded_ref_height[1][valid_1d],
+                        geocoded_ref_height[2][valid_2d])
+
+    # the comparison is not trivial: the values vary along azimuth
+    assert (np.nanmax(geocoded_ref_height[1]) >
+            np.nanmin(geocoded_ref_height[1]))
 
 
 def get_raster_geogrid(dataset_reference):
