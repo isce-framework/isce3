@@ -125,7 +125,14 @@ def label_boundary(
         erosion_labels = np.unique(
             label_img[label_erosion_img.astype(bool)]
         )
-
+        if len(erosion_labels) > num_label:
+            raise ValueError(
+                f"Inconsistent component count: erosion retained "
+                f"{len(erosion_labels)} unique component labels, "
+                f"but num_label is {num_label}. The number of surviving "
+                f"components cannot exceed the original component count. "
+                f"Check that num_label matches label_img."
+            )
         for i in range(1, num_label + 1):
             if i not in erosion_labels:
                 label_img[label_img == i] = 0
@@ -246,7 +253,7 @@ class bridgeConnectComponent:
         channel = journal.info(
             "isce3.unwrap.bridge_phase.bridgeConnectComponent")
         self.labelImg, self.num_label = label_conn_comp(
-            self.conncomp, min_num_pixel=min_num_pixel)
+            self.conncomp, min_num_pixel=min_num_pixel, erosion_size=erosion_size)
 
         if self.num_label == 1:
             channel.log(f"Bridge algorithm is not applied because only one component exists.")
