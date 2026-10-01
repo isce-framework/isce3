@@ -8,10 +8,11 @@ from osgeo import gdal
 
 import isce3
 
-from .util import make_scratch_file, make_scratch_gtiff, unary_transform_blockwise
+from .util import make_scratch_file, make_scratch_gtiff, binary_transform_blockwise
 
 
-def binarize_nisar_water_mask(water_distance: ArrayLike) -> np.ndarray:
+def binarize_nisar_water_mask(water_distance: ArrayLike,
+                              reference_fill_value: ArrayLike) -> np.ndarray:
     r"""
     Convert the input water distance map into a binary water mask.
 
@@ -22,12 +23,15 @@ def binarize_nisar_water_mask(water_distance: ArrayLike) -> np.ndarray:
         Product Specification\ [1]_. A value of 0 indicates a not-water pixel. A value
         of 255 represents a no-data (invalid) pixel. Values in 1-200 represent water
         pixels.
+    reference_fill_value : array_like
+        Image to use as a reference for identifying fill pixels and ensuring that the
+        output layer has the same extent.
 
     Returns
     -------
     water_mask : numpy.ndarray
         Binary mask where 1 indicates a water pixel (ocean or inland water), 0
-        indicates a not-water pixel, and 255 represents a no-data (invalid) pixel.
+        indicates a non-water pixel, and 255 represents a no-data (invalid) pixel.
 
     References
     ----------
@@ -37,14 +41,16 @@ def binarize_nisar_water_mask(water_distance: ArrayLike) -> np.ndarray:
 
     # Compute a binary mask where the value 1 represents (ocean or inland) water pixels
     # and the value 0 represents non-water pixels.
-    water = (water_distance >= 1) & (water_distance <= 200)
+    water = ((water_distance >= 1) & (water_distance <= 200)).astype(np.uint8)
 
-    # Get a binary mask of invalid pixels (i.e. pixels whose value is equal to the fill
-    # value of 255).
+    # Set pixels to the fill value if either the water distance or the
+    # reference image contains a fill value.
     fill_value = 255
-    invalid = water_distance == fill_value
+    water[
+        ((water_distance == fill_value) | (reference_fill_value == fill_value))
+    ] = fill_value
 
-    return (water + fill_value * invalid).astype(np.uint8)
+    return water
 
 
 def reproject_raster(
@@ -90,6 +96,7 @@ def binarize_and_reproject_water_mask(
     *,
     scratch_dir: os.PathLike | str | None = None,
     resample_algorithm: str = "near",
+    reference_fill_value: np.ndarray | None = None,
 ) -> isce3.io.Raster:
     """
     Re-project the input water distance map and convert it to a binary mask.
@@ -121,6 +128,10 @@ def binarize_and_reproject_water_mask(
         'mode':
           Mode resampling (selects the value which appears most often among sampled
           points).
+    reference_fill_value : numpy.ndarray, optional
+        Image to use as a reference for `fill_value` to ensure that the layers have
+        the same extents. Pixels where `reference_fill_value` is `255` are considered
+        fill values.
 
     Returns
     -------
@@ -156,6 +167,7 @@ def binarize_and_reproject_water_mask(
     )
 
     # Convert the water distance map to a binary mask.
-    unary_transform_blockwise(binarize_nisar_water_mask, water_distance, water_mask)
+    binary_transform_blockwise(binarize_nisar_water_mask, water_distance,
+                               reference_fill_value, water_mask)
 
     return water_mask
