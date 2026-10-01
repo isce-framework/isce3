@@ -412,10 +412,12 @@ dense_offsets_options:
     cuda_streams: int(required=False)
 
     # Number of offset estimates to process in batch along slant range
-    windows_batch_range: int(min=1, required=False)
+    # (0 or empty: automatic, depending on the GPU or CPU)
+    windows_batch_range: int(min=0, required=False)
 
     # Number of offset estimates to process in batch along azimuth
-    windows_batch_azimuth: int(min=1, required=False)
+    # (0 or empty: automatic, depending on the GPU or CPU)
+    windows_batch_azimuth: int(min=0, required=False)
 
 
 offsets_product_options:
@@ -502,10 +504,12 @@ offsets_product_options:
     cuda_streams: int(required=False)
 
     # Number of offset estimates to process in batch along slant range
-    windows_batch_range: int(min=1, required=False)
+    # (0 or empty: automatic, depending on the GPU or CPU)
+    windows_batch_range: int(min=0, required=False)
 
     # Number of offset estimates to process in batch along azimuth
-    windows_batch_azimuth: int(min=1, required=False)
+    # (0 or empty: automatic, depending on the GPU or CPU)
+    windows_batch_azimuth: int(min=0, required=False)
 
     # Pixel offsets layers
     layer1: include('offset_layer_options', required=False)

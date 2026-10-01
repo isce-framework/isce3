@@ -489,9 +489,11 @@ runconfig:
                 # Number of cuda streams
                 cuda_streams:
                 # Number of offset estimates to process in batch along slant range
-                windows_batch_range: 10
+                # (empty: automatic, depending on the GPU or CPU)
+                windows_batch_range:
                 # Number of offset estimates to process in batch along azimuth
-                windows_batch_azimuth: 1
+                # (empty: automatic, depending on the GPU or CPU)
+                windows_batch_azimuth:
 
             offsets_product:
                 enabled: False
@@ -545,9 +547,11 @@ runconfig:
                 # Number of cuda streams
                 cuda_streams: 2
                 # Number of windows in range to process in batch
-                windows_batch_range: 10
+                # (empty: automatic, depending on the GPU or CPU)
+                windows_batch_range:
                 # Number of windows in azimuth to process in batch
-                windows_batch_azimuth: 5
+                # (empty: automatic, depending on the GPU or CPU)
+                windows_batch_azimuth:
                 # First layer of offsets (same as dense_offsets params)
                 layer1:
                     window_range: 64
