@@ -55,10 +55,6 @@ def run(cfg: dict, output_hdf5: str = None):
     if use_gpu:
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
         isce3.cuda.core.set_device(device)
-    else:
-        err_str = "Currently ISCE3 supports only GPU cross-correlation"
-        error_channel.log(err_str)
-        raise NotImplementedError(err_str)
 
     # Get the slant range and zero doppler time spacing
     ref_radar_grid = ref_slc.getRadarGrid()
@@ -317,9 +313,12 @@ def set_ampcor_params(cfg, ampcor_obj):
         'correlation_surface_oversampling_factor']
     ampcor_obj.corrSurfaceOverSamplingMethod = 0 if \
         cfg['correlation_surface_oversampling_method'] == 'fft' else 1
-    ampcor_obj.numberWindowAcrossInChunk = cfg['windows_batch_range']
-    ampcor_obj.numberWindowDownInChunk = cfg['windows_batch_azimuth']
-    ampcor_obj.nStreams = cfg['cuda_streams']
+    if cfg['windows_batch_range'] is not None:
+        ampcor_obj.numberWindowAcrossInChunk = cfg['windows_batch_range']
+    if cfg['windows_batch_azimuth'] is not None:
+        ampcor_obj.numberWindowDownInChunk = cfg['windows_batch_azimuth']
+    if cfg['cuda_streams'] is not None:
+        ampcor_obj.nStreams = cfg['cuda_streams']
 
     # Setup object parameters and check gross/variable dense offsets
     ampcor_obj.setupParams()
