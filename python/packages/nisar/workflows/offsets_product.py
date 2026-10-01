@@ -124,6 +124,8 @@ def run(cfg: dict, output_hdf5: str = None):
                     error_channel.log(err_str)
                     raise ValueError(err_str)
 
+                # Configure an Ampcor object for each layer
+                layers = []
                 for key in layer_keys:
                     # Create and initialize Ampcor object
                     if use_gpu:
@@ -184,11 +186,14 @@ def run(cfg: dict, output_hdf5: str = None):
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 1,
                                          gdal.GDT_Float32)
+                    layers.append(ampcor)
 
-                    # Run ampcor and delete ampcor object after is done
-                    ampcor.runAmpcor()
-                    del ampcor
+                # Run Ampcor for all layers and delete the objects after
+                run_ampcor_layers(layers)
+                del ampcor, layers
 
+                for key in layer_keys:
+                    layer_scratch_path = out_dir / key
                     pixel_offsets_path = f'{roff_obj.SwathsPath}/frequency{freq}/pixelOffsets'
                     prod_path = f'{pixel_offsets_path}/{pol}/{key}'
 
@@ -228,6 +233,25 @@ def run(cfg: dict, output_hdf5: str = None):
     t_elapsed = time.time() - t_all
     info_channel.log(
         f"successfully ran offsets product in {t_elapsed:.3f} seconds")
+
+def run_ampcor_layers(layers):
+    '''
+    Run Ampcor for several offset layers sharing the images and the
+    offsets grid
+    Parameters
+    ----------
+    layers: list of pycuampcor.PyCuAmpcor or pycuampcor.PyCPUAmpcor
+        Ampcor objects (one per layer) with all parameters set
+    '''
+    ampcor_cls = type(layers[0])
+    if hasattr(ampcor_cls, 'runAmpcorLayers'):
+        # Load each chunk of the images once for all layers
+        ampcor_cls.runAmpcorLayers(layers)
+    else:
+        # Older pycuampcor: run the layers one after another
+        for ampcor in layers:
+            ampcor.runAmpcor()
+
 
 def set_ampcor_params(cfg, ampcor_obj):
     '''
