@@ -17,6 +17,39 @@ from nisar.workflows.dense_offsets_runconfig import \
     DenseOffsetsRunConfig
 
 
+def get_ampcor_slc(hdf5_file, freq, pol, lines_per_block, copy_path):
+    '''
+    Get the RSLC image for Ampcor: the HDF5 dataset if pycuampcor can read it
+    directly, or else a memory mappable (ENVI) copy
+
+    Parameters
+    ----------
+    hdf5_file: str
+        Path to the RSLC HDF5 file
+    freq: str
+        Frequency band ('A' or 'B')
+    pol: str
+        Polarization
+    lines_per_block: int
+        Lines per block to copy the RSLC dataset
+    copy_path: str
+        Path to the memory mappable copy, if needed
+
+    Returns
+    -------
+    str
+        The image name for Ampcor: HDF5:<file>:<dataset>, or copy_path
+    '''
+    slc = SLC(hdf5file=hdf5_file)
+    # pycuampcor reads float32 (complex64) datasets, not float16 (complex32)
+    if getattr(pycuampcor, 'has_hdf5', False) and \
+            not slc.is_dataset_complex32(freq, pol):
+        return f'HDF5:{hdf5_file}:/{slc.slcPath(freq, pol)}'
+    copy_raster(hdf5_file, freq, pol, lines_per_block, copy_path,
+                file_type='ENVI')
+    return copy_path
+
+
 def run(cfg: dict):
     '''
     Run dense offsets
@@ -66,25 +99,23 @@ def run(cfg: dict):
             out_dir = offset_scratch / pol
             out_dir.mkdir(parents=True, exist_ok=True)
 
-            # Create a memory mappable copy of reference SLC
-            copy_raster(ref_hdf5, freq, pol,
-                        offset_params['lines_per_block'],
-                        str(out_dir / 'reference.slc'), file_type='ENVI')
-
+            # Reference SLC: the HDF5 dataset, or a memory mappable copy
             ref_raster_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
             ref_raster = isce3.io.Raster(ref_raster_str)
-            ampcor.referenceImageName = str(out_dir / 'reference.slc')
+            ampcor.referenceImageName = get_ampcor_slc(
+                ref_hdf5, freq, pol, offset_params['lines_per_block'],
+                str(out_dir / 'reference.slc'))
             ampcor.referenceImageHeight = ref_raster.length
             ampcor.referenceImageWidth = ref_raster.width
 
             # If running insar.py, a memory mappable second raster has been
             # created in the previous step (resample slc). If secondary raster
-            # is extracted from HDF5 file, needs to be made memory mappable
+            # is extracted from HDF5 file, read the HDF5 dataset directly or
+            # make a memory mappable copy
             if coregistered_slc_path.is_file():
-                sec_raster_path = str(out_dir / 'secondary.slc')
-                copy_raster(sec_hdf5, freq, pol,
-                            offset_params['lines_per_block'],
-                            sec_raster_path, file_type='ENVI')
+                sec_raster_path = get_ampcor_slc(
+                    sec_hdf5, freq, pol, offset_params['lines_per_block'],
+                    str(out_dir / 'secondary.slc'))
             else:
                  sec_raster_path = str(coregistered_slc_path /
                                        f'coarse_resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')

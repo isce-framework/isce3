@@ -11,8 +11,9 @@ from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.compute_stats import (compute_stats_real_data,
                                            compute_stats_real_hdf5_dataset)
 from nisar.workflows.dense_offsets import (create_empty_dataset,
+                                          get_ampcor_slc,
                                           get_ampcor_workflow)
-from nisar.workflows.helpers import (copy_raster, get_cfg_freq_pols,
+from nisar.workflows.helpers import (get_cfg_freq_pols,
                                      get_ground_track_velocity_product)
 from nisar.workflows.offsets_product_runconfig import OffsetsProductRunConfig
 from nisar.products.insar.product_paths import ROFFGroupsPaths
@@ -93,19 +94,20 @@ def run(cfg: dict, output_hdf5: str = None):
                 out_dir = off_scratch / pol
                 out_dir.mkdir(parents=True, exist_ok=True)
 
-                # Create a memory-mappable (ENVI) version of the ref SLC
-                copy_raster(ref_hdf5, freq, pol,
-                            offs_params['lines_per_block'],
-                            str(out_dir / 'reference'), file_type='ENVI')
+                # Reference SLC: the HDF5 dataset, or a memory-mappable
+                # (ENVI) copy
+                ref_path = get_ampcor_slc(ref_hdf5, freq, pol,
+                                          offs_params['lines_per_block'],
+                                          str(out_dir / 'reference'))
                 ref_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
                 ref_raster = isce3.io.Raster(ref_str)
 
-                # Create a memory mappable version (ENVI) of secondary
+                # Secondary SLC: the HDF5 dataset or a memory mappable copy,
+                # or the coregistered SLC
                 if coreg_slc_path.is_file():
-                    sec_path = str(out_dir / 'secondary')
-                    copy_raster(sec_hdf5, freq, pol,
-                                offs_params['lines_per_block'],
-                                sec_path, file_type='ENVI')
+                    sec_path = get_ampcor_slc(sec_hdf5, freq, pol,
+                                              offs_params['lines_per_block'],
+                                              str(out_dir / 'secondary'))
                 else:
                     sec_path = str(coreg_slc_path /
                                    f'coarse_resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
@@ -132,7 +134,7 @@ def run(cfg: dict, output_hdf5: str = None):
                     ampcor.useMmap = 1
 
                     # Set parameters related to reference/secondary RSLC
-                    ampcor.referenceImageName = str(out_dir / 'reference')
+                    ampcor.referenceImageName = ref_path
                     ampcor.referenceImageHeight = ref_raster.length
                     ampcor.referenceImageWidth = ref_raster.width
                     ampcor.secondaryImageName = sec_path
