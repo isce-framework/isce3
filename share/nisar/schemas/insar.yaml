@@ -369,9 +369,10 @@ dense_offsets_options:
     # oversampling over a smaller search range) or 'one_pass' (anti-aliasing
     # oversampling over the whole search range, more accurate for noisy
     # correlation surfaces but slower). Default: 'two_pass'
-    # The SNR of 'one_pass' is typically 3-5 times that of 'two_pass' with
-    # complex deramping (it is estimated on the anti-aliased correlation
-    # surface); adjust SNR thresholds (e.g., for rubbersheet culling) accordingly
+    # The SNR of 'one_pass' is higher than that of 'two_pass' with complex
+    # deramping (about 1.2-1.8 times on NISAR data; it is estimated on the
+    # anti-aliased correlation surface); adjust SNR thresholds (e.g., for
+    # rubbersheet culling) accordingly
     cross_correlation_workflow: enum('two_pass', 'one_pass', required=False)
 
     # Anti-aliasing oversampling factor to apply to reference/secondary SLC
@@ -464,9 +465,10 @@ offsets_product_options:
     # oversampling over a smaller search range) or 'one_pass' (anti-aliasing
     # oversampling over the whole search range, more accurate for noisy
     # correlation surfaces but slower). Default: 'two_pass'
-    # The SNR of 'one_pass' is typically 3-5 times that of 'two_pass' with
-    # complex deramping (it is estimated on the anti-aliased correlation
-    # surface); adjust SNR thresholds (e.g., for rubbersheet culling) accordingly
+    # The SNR of 'one_pass' is higher than that of 'two_pass' with complex
+    # deramping (about 1.2-1.8 times on NISAR data; it is estimated on the
+    # anti-aliased correlation surface); adjust SNR thresholds (e.g., for
+    # rubbersheet culling) accordingly
     cross_correlation_workflow: enum('two_pass', 'one_pass', required=False)
 
     # Anti-aliasing oversampling factor to apply to reference/secondary SLC

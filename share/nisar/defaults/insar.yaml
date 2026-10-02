@@ -460,7 +460,7 @@ runconfig:
                 # Domain (frequency or spatial) where to compute cross-correlation
                 cross_correlation_domain: 'frequency'
                 # Cross-correlation workflow: 'two_pass' or 'one_pass'
-                # ('one_pass' SNR is typically 3-5x higher; adjust SNR thresholds)
+                # ('one_pass' SNR is higher, about 1.2-1.8x; adjust SNR thresholds)
                 cross_correlation_workflow: 'two_pass'
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
@@ -521,7 +521,7 @@ runconfig:
                 # Cross-correlation domain
                 cross_correlation_domain: 'frequency'
                 # Cross-correlation workflow: 'two_pass' or 'one_pass'
-                # ('one_pass' SNR is typically 3-5x higher; adjust SNR thresholds)
+                # ('one_pass' SNR is higher, about 1.2-1.8x; adjust SNR thresholds)
                 cross_correlation_workflow: 'two_pass'
                 # Deramp data prior to FFT: 'magnitude', 'complex' (linear phase ramp), or 'complex_no_deramp'
                 deramping_method: 'complex'
