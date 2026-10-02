@@ -65,7 +65,8 @@ def run_rubbersheet_with_polyfit(cfg: dict, output_hdf5: str = None):
             ref_slant_ranges = ref_slc.getSlantRange(freq)
             minL, maxL, minP, maxP = 0, len(ref_az_times), 0, len(ref_slant_ranges)
 
-            freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
+            # Use auto-detected RootPath from reference RSLC
+            freq_group_path = f'{RIFGGroupsPaths(RootPath=ref_slc.RootPath).SwathsPath}/frequency{freq}'
             pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
             geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'
             rubbersheet_dir = scratch_path / 'rubbersheet_offsets' / f'freq{freq}'
@@ -280,7 +281,8 @@ def run_rubbersheet_with_interpolation(cfg: dict, output_hdf5: str = None):
             ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
             ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
 
-            freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
+            # Use auto-detected RootPath from reference RSLC
+            freq_group_path = f'{RIFGGroupsPaths(RootPath=ref_slc.RootPath).SwathsPath}/frequency{freq}'
             pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
             geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'
             rubbersheet_dir = scratch_path / 'rubbersheet_offsets' / f'freq{freq}'
