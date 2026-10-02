@@ -26,8 +26,8 @@ class RUNWWriter(L1InSARWriter):
         # HDF5 IO optimizer configuration
         self.hdf5_optimizer_config = hdf5_opt_config
 
-        # group paths are RUNW group paths
-        self.group_paths = RUNWGroupsPaths()
+        # group paths are RUNW group paths - use auto-detected RootPath from reference RSLC
+        self.group_paths = RUNWGroupsPaths(RootPath=self.ref_rslc.RootPath)
 
         # RUNW product information
         self.product_info = InSARProductsInfo.RUNW()
