@@ -22,7 +22,7 @@ dependencies:
   - pyaps3>=0.3
   - pybind11>=2.5
   # amplitude cross-correlation (dense offsets); cpu or cuda variant
-  - pycuampcor>=2.1
+  - pycuampcor>=2.2
   - pyre>=1.12.5
   - pysolid>=0.2
   - pytest
