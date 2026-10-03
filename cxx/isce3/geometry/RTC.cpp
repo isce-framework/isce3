@@ -270,18 +270,16 @@ void _normalizeRtcArea(isce3::core::Matrix<float>& numerator_array,
         pyre::journal::info_t& info)
 {
     info << "normalizing gamma-naught area..." << pyre::journal::endl;
-    _Pragma("omp parallel for schedule(dynamic) collapse(2)") 
-        for (int i = 0; i < numerator_array.length(); ++i) 
+    // Each (i, j) is read and written by exactly one iteration, so no
+    // atomics are required. Row-wise static scheduling avoids per-pixel
+    // dynamic dispatch overhead.
+    _Pragma("omp parallel for")
+        for (int i = 0; i < numerator_array.length(); ++i)
             for (int j = 0; j < numerator_array.width(); ++j) {
                 const float denominator_value = denominator_array(i, j);
-                if (denominator_value == 0) {
-                    _Pragma("omp atomic write")
-                        numerator_array(i, j) =
-                            std::numeric_limits<float>::quiet_NaN();
-                    continue;
-                }
-                _Pragma("omp atomic update") 
-                    numerator_array(i, j) /= denominator_value;
+                numerator_array(i, j) = denominator_value == 0
+                        ? std::numeric_limits<float>::quiet_NaN()
+                        : numerator_array(i, j) / denominator_value;
             }
 }
 
