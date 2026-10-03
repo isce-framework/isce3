@@ -25,19 +25,22 @@ from isce3.signal.interpolate_by_range import (decimate_freq_a_array,
                                                interpolate_freq_b_array)
 from isce3.splitspectrum import splitspectrum
 from isce3.unwrap.bridge_phase import bridge_unwrapped_phase
-from isce3.unwrap.preprocess import project_map_to_radar
+from isce3.unwrap.preprocess import (parse_insar_mask,
+                                     project_map_to_radar)
 from nisar.products.insar.product_paths import (CommonPaths, RIFGGroupsPaths,
                                                 RUNWGroupsPaths)
 from nisar.products.readers import SLC
 from nisar.products.utils import (deepcopy_runconfig_and_keep_isce3_obj,
-                                  interpret_subswath_mask)
+                                  interpret_subswath_mask,
+                                  interpret_valid_data_mask)
 from nisar.workflows import (crossmul, filter_interferogram, h5_prep,
                              prepare_insar_hdf5, resample_slc_v2, unwrap)
 from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
+from nisar.workflows.qfsp_ionosphere import (check_qfsp_flag,
+                                             correct_qfsp_phase_artifact)
 from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
-
 
 def write_disp_block_hdf5(
         hdf5_path,
@@ -298,6 +301,80 @@ def update_hdf5_mask_bit24_block(
     dst_mask[row_start:row_start + block_rows, :] = updated_mask
 
 
+def _get_mask_raster(h5_file, valid_mask_path, fallback_mask_path):
+    """Return the preferred validity mask dataset or a fallback dataset.
+
+    Parameters
+    ----------
+    h5_file : h5py.File
+        Open HDF5 file containing the mask datasets.
+    valid_mask_path : str
+        Path to the preferred validDataMask dataset.
+    fallback_mask_path : str
+        Path to the shared subswath mask dataset, used when validDataMask
+        is absent.
+
+    Returns
+    -------
+    mask_raster : h5py.Dataset
+        Selected mask dataset.
+    uses_valid_data_mask : bool
+        True if validDataMask was selected; False if the fallback was used.
+    """
+    if valid_mask_path in h5_file:
+        return h5_file[valid_mask_path], True
+
+    return h5_file[fallback_mask_path], False
+
+
+def _read_valid_mask_block(
+        src_h5, valid_mask_path, subswath_mask_path, row_slice):
+    """Read a mask block and identify pixels valid in both acquisitions.
+
+    Prefer validDataMask and decode it with interpret_valid_data_mask.
+    If absent, decode the shared subswath mask with
+    interpret_subswath_mask.
+
+    Parameters
+    ----------
+    src_h5 : h5py.File
+        Open source HDF5 file containing the mask datasets.
+    valid_mask_path : str
+        Path to the preferred validDataMask dataset.
+    subswath_mask_path : str
+        Path to the fallback shared subswath mask dataset.
+    row_slice : slice
+        Rows to read. All columns are included.
+
+    Returns
+    -------
+    numpy.ndarray
+        Two-dimensional boolean array for the selected block. True where
+        both reference and secondary masks indicate a valid pixel;
+        False elsewhere.
+    """
+    mask_raster, uses_valid_data_mask = _get_mask_raster(
+        src_h5,
+        valid_mask_path,
+        subswath_mask_path,
+    )
+    mask_block = mask_raster[row_slice, :]
+
+    if uses_valid_data_mask:
+        reference_valid, secondary_valid = interpret_valid_data_mask(
+            mask_block
+        )
+    else:
+        reference_valid, secondary_valid, _ = interpret_subswath_mask(
+            mask_block
+        )
+
+    return (
+        np.asarray(reference_valid, dtype=bool)
+        & np.asarray(secondary_valid, dtype=bool)
+    )
+
+
 def copy_iono_datasets(iono_insar_cfg,
                        input_runw,
                        output_runw,
@@ -337,6 +414,7 @@ def copy_iono_datasets(iono_insar_cfg,
     else:
         freq = 'B'
 
+    iono_layers_for_stats = []
     with HDF5OptimizedReader(name=input_runw, mode='a',
                              libver='latest', swmr=True) as src_h5, \
          HDF5OptimizedReader(name=output_runw, mode='a',
@@ -398,6 +476,7 @@ def copy_iono_datasets(iono_insar_cfg,
 
                 src_iono_paths = [src_iono_path, src_iono_unct_path]
                 dst_iono_paths = [iono_path, iono_unct_path]
+                iono_layers_for_stats += dst_iono_paths
                 for block in range(0, nblocks):
                     row_start = block * blocksize
                     if (row_start + blocksize > rows_main):
@@ -422,9 +501,11 @@ def copy_iono_datasets(iono_insar_cfg,
                             dest_sel=np.s_[
                                     row_start:row_start+block_rows_data, :])
 
-                # Add statistics to ionosphere datasets in RUNW
-                for dst_iono_path in dst_iono_paths:
-                    compute_stats_real_hdf5_dataset(dst_h5[dst_iono_path])
+    # Add statistics to ionosphere datasets in RUNW
+    with HDF5OptimizedReader(name=output_runw, mode='a',
+                             libver='latest', swmr=True) as dst_h5:
+        for dst_iono_path in iono_layers_for_stats:
+            compute_stats_real_hdf5_dataset(dst_h5[dst_iono_path])
 
 
 def compute_differential_phase(
@@ -441,6 +522,9 @@ def compute_differential_phase(
         first_mask_path=None,
         second_mask_path=None,
         invalid_fill_value=0,
+        *,
+        first_valid_mask_paths,
+        second_valid_mask_paths
     ):
     """
     Compute a differential phase by multiplying the first complex phase
@@ -490,6 +574,14 @@ def compute_differential_phase(
         If a list is given, it must have the same length as `second_data_path`.
     invalid_fill_value : scalar, optional
         Value written to output pixels marked invalid by the mask. Default is 0.
+    first_valid_mask_paths : list of str
+        Paths to polarization-dependent validDataMask datasets in
+        `phase_first`, in the same order as `first_data_path`.
+        If a dataset is absent, use `first_mask_path` instead.
+    second_valid_mask_paths : list of str
+        Paths to polarization-dependent validDataMask datasets in
+        `phase_second`, in the same order as `second_data_path`.
+        If a dataset is absent, use `second_mask_path` instead.
 
     Returns
     -------
@@ -544,16 +636,44 @@ def compute_differential_phase(
             resampling_flag = True
 
         try:
-            # Iterate over each polarization in frequency A
-            for [first_ifg_path, second_ifg_path, out_ifg_path] in zip(
-                 first_data_path, second_data_path, output_data_path):
-
+            # - For main_diff_ms_band:
+            #     first  → frequency A
+            #     second → frequency B
+            # - For main_diff_low_high_subband:
+            #     first  → low subband
+            #     second → high subband
+            # Each mask provides:
+            #   - reference_valid: valid pixels in reference region
+            #   - secondary_valid: valid pixels in secondary region
+            for (
+                first_ifg_path,
+                second_ifg_path,
+                out_ifg_path,
+                first_valid_mask_path,
+                second_valid_mask_path,
+            ) in zip(
+                first_data_path,
+                second_data_path,
+                output_data_path,
+                first_valid_mask_paths,
+                second_valid_mask_paths,
+            ):
                 phase_first_raster = src_first_h5[first_ifg_path]
                 phase_second_raster = src_sec_h5[second_ifg_path]
                 output_data_raster = src_out_h5[out_ifg_path]
                 if subswath_mask_enabled:
-                    first_mask_raster = src_first_h5[first_mask_path]
-                    second_mask_raster = src_sec_h5[second_mask_path]
+
+                    first_mask_raster, first_uses_valid_data_mask = _get_mask_raster(
+                        src_first_h5,
+                        first_valid_mask_path,
+                        first_mask_path,
+                    )
+
+                    second_mask_raster, second_uses_valid_data_mask = _get_mask_raster(
+                        src_sec_h5,
+                        second_valid_mask_path,
+                        second_mask_path,
+                    )
                 # Generate block parameters for reading/writing
                 block_params_main = block_param_generator(
                     lines_per_block,
@@ -627,10 +747,19 @@ def compute_differential_phase(
                         # Each mask provides:
                         #   - reference_valid: valid pixels in reference region
                         #   - secondary_valid: valid pixels in secondary region
-                        first_reference_valid, first_secondary_valid, _ = \
-                            interpret_subswath_mask(first_mask_block)
-                        second_reference_valid, second_secondary_valid, _ = \
-                            interpret_subswath_mask(second_mask_block)
+                        if first_uses_valid_data_mask:
+                            first_reference_valid, first_secondary_valid = (
+                                interpret_valid_data_mask(first_mask_block))
+                        else:
+                            first_reference_valid, first_secondary_valid, _ = (
+                                interpret_subswath_mask(first_mask_block))
+
+                        if second_uses_valid_data_mask:
+                            second_reference_valid, second_secondary_valid = (
+                                interpret_valid_data_mask(second_mask_block))
+                        else:
+                            second_reference_valid, second_secondary_valid, _ = (
+                                interpret_subswath_mask(second_mask_block))
                         invalid = (
                             (~first_reference_valid) |
                             (~first_secondary_valid) |
@@ -763,8 +892,13 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
     if unwrap_mask_type == 'water':
         # Either set to a default value or delete the key entirely.
         prep_wrapped_phase_cfg['enabled'] = True
-    if prep_wrapped_phase_cfg['enabled'] is True and \
-       unwrap_mask_type == 'subswath_mask':
+
+    subswath_mask_enabled = False
+
+    if (
+        prep_wrapped_phase_cfg["enabled"]
+        and "subswath_mask" in unwrap_mask_type
+    ):
         subswath_mask_enabled = True
 
     if iono_method in ['split_main_band', 'main_diff_low_high_subband']:
@@ -977,6 +1111,8 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             runw_swath_path = RUNWGroupsPaths().SwathsPath
 
             first_data_path = []
+            first_valid_mask_paths = []
+
             for pol_a in pol_list_a:
 
                 dest_freq_path = f"{runw_swath_path}/frequencyA"
@@ -984,16 +1120,21 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 runw_path_freq = f"{dest_pol_path}/unwrappedPhase"
 
                 first_data_path.append(runw_path_freq)
+                first_valid_mask_paths.append(f"{dest_pol_path}/validDataMask")
+
             first_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             first_mask_path = f"{dest_freq_path}/interferogram/mask"
 
             second_data_path = []
+            second_valid_mask_paths = []
+
             for pol_b in pol_list_b:
                 dest_freq_path = f"{swath_path}/frequencyB"
                 dest_pol_path = f"{dest_freq_path}/interferogram/{pol_b}"
                 rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
 
                 second_data_path.append(rifg_path_freq)
+                second_valid_mask_paths.append(f"{dest_pol_path}/validDataMask")
 
             second_slant_path = f"{dest_freq_path}/interferogram/slantRange"
             second_mask_path = f"{dest_freq_path}/interferogram/mask"
@@ -1010,7 +1151,9 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                        second_slant_path=second_slant_path,
                                        subswath_mask_enabled=subswath_mask_enabled,
                                        first_mask_path=first_mask_path,
-                                       second_mask_path=second_mask_path)
+                                       second_mask_path=second_mask_path,
+                                       first_valid_mask_paths=first_valid_mask_paths,
+                                       second_valid_mask_paths=second_valid_mask_paths,)
 
             # Since main_diff_low_high_subband method does not need to
             # unwrap low and high subband interferogram, but need to
@@ -1146,7 +1289,7 @@ def run(cfg: dict, runw_hdf5: str):
     filling_guide_median_size = filter_cfg['filling_guide_median_size']
     filling_outlier_threshold = filter_cfg['filling_outlier_threshold']
     filling_outlier_min_scale = filter_cfg['filling_outlier_min_scale']
-    filling_outlier_mad_scale_factor = filter_cfg['filling_outlier_mad_scale_factor']    
+    filling_outlier_mad_scale_factor = filter_cfg['filling_outlier_mad_scale_factor']
 
     filter_iterations = filter_cfg['filter_iterations']
     median_filter_size = filter_cfg['median_filter_size']
@@ -1167,9 +1310,69 @@ def run(cfg: dict, runw_hdf5: str):
     unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
     unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
 
+    qfsp_cfg = iono_args.get("qfsp_correction", {})
+
+    iono_qfsp_correction_flag = qfsp_cfg.get("enabled", False)
+    qfsp_debug_flag = qfsp_cfg["debug_flag"]
+
+    qfsp_background_order = qfsp_cfg["background_order"]
+    qfsp_template_smooth_win = qfsp_cfg["template_smooth_win"]
+    qfsp_inner_shrink = qfsp_cfg["inner_shrink"]
+    qfsp_outer_feather = qfsp_cfg["outer_feather"]
+
+    qfsp_background_crit_value = qfsp_cfg["background_crit_value"]
+    qfsp_background_max_iterations = qfsp_cfg["background_max_iterations"]
+    qfsp_background_max_samples = qfsp_cfg["background_max_samples"]
+    qfsp_background_minimum_quality = qfsp_cfg["background_minimum_quality"]
+
     if unwrap_rg_looks != 1 or unwrap_az_looks != 1:
         rg_looks = unwrap_rg_looks
         az_looks = unwrap_az_looks
+
+    if iono_qfsp_correction_flag:
+        ref_qfsp_flag = check_qfsp_flag(
+            cfg["input_file_group"]["reference_rslc_file"]
+        )
+        sec_qfsp_flag = check_qfsp_flag(
+            cfg["input_file_group"]["secondary_rslc_file"]
+        )
+
+        if ref_qfsp_flag == sec_qfsp_flag:
+            # The differential interferometric phase contains no net qFSP artifact
+            # when both RSLCs have the same qFSP status:
+            #   False/False: neither acquisition contains the artifact.
+            #   True/True:   the common artifact cancels during phase differencing.
+            # Correction is needed only when exactly one RSLC contains the artifact.
+            if ref_qfsp_flag:
+                info_channel.log(
+                    "Both reference and secondary RSLCs contain the qFSP artifact. "
+                    "The common artifact is expected to cancel in the differential "
+                    "phase; disabling qFSP correction."
+                )
+            else:
+                info_channel.log(
+                    "Neither reference nor secondary RSLC contains the qFSP artifact; "
+                    "disabling qFSP correction."
+                )
+
+            iono_qfsp_correction_flag = False
+
+        else:
+            # Exactly one RSLC contains the qFSP artifact, so it remains in the
+            # differential phase and must be corrected.
+            info_channel.log(
+                "Only one RSLC contains the qFSP artifact; "
+                "qFSP correction will be applied."
+            )
+            info_channel.log(
+                f"Reference input-data exception flag: {ref_qfsp_flag}"
+            )
+            info_channel.log(
+                f"Secondary input-data exception flag: {sec_qfsp_flag}"
+            )
+    # Read preferred validity masks for filtering and qFSP background support.
+    # qFSP additionally reads shared masks for their input-exception bits.
+    need_insar_mask = iono_qfsp_correction_flag or ("subswath_mask" in mask_type)
 
     # set paths for ionosphere and split spectrum
     iono_path = os.path.join(scratch_path, 'ionosphere')
@@ -1442,6 +1645,11 @@ def run(cfg: dict, runw_hdf5: str):
             subswath_mask_image = None
             subswath_mask_main_image = None
             subswath_mask_side_image = None
+            row_slice = slice(row_start, row_start + block_rows_data)
+            main_valid_image = None
+            side_valid_image = None
+            low_valid_image = None
+            high_valid_image = None
 
             if iono_method in iono_method_subbands:
                 # Initialize array for block rasters
@@ -1462,7 +1670,7 @@ def run(cfg: dict, runw_hdf5: str):
                         [block_rows_data, cols_main],
                         dtype=float)
 
-                if "subswath_mask" in mask_type:
+                if iono_qfsp_correction_flag:
                     subswath_mask_image = np.empty(
                         [block_rows_data, cols_main],
                         dtype=int)
@@ -1520,10 +1728,26 @@ def run(cfg: dict, runw_hdf5: str):
                             sub_high_conn_image,
                             np.s_[row_start:row_start + block_rows_data, :])
 
-                    if "subswath_mask" in mask_type:
+                    if iono_qfsp_correction_flag:
+                        # Input-exception bits are absent from validDataMask.
                         src_low_h5[subswath_mask_freq_a_path].read_direct(
                             subswath_mask_image,
                             np.s_[row_start:row_start + block_rows_data, :])
+
+                    if need_insar_mask:
+                        low_valid_image = _read_valid_mask_block(
+                            src_low_h5,
+                            f"{dest_pol_path}/validDataMask",
+                            subswath_mask_freq_a_path,
+                            row_slice,
+                        )
+
+                        high_valid_image = _read_valid_mask_block(
+                            src_high_h5,
+                            f"{dest_pol_path}/validDataMask",
+                            subswath_mask_freq_a_path,
+                            row_slice,
+                        )
 
                 if bridge_algorithm_bool:
                     sub_high_image = bridge_unwrapped_phase(
@@ -1629,7 +1853,7 @@ def run(cfg: dict, runw_hdf5: str):
                             [block_rows_data, cols_side],
                             dtype=float)
 
-                if "subswath_mask" in mask_type:
+                if iono_qfsp_correction_flag:
                     subswath_mask_main_image = np.empty(
                         [block_rows_data, cols_main],
                         dtype=int)
@@ -1678,7 +1902,34 @@ def run(cfg: dict, runw_hdf5: str):
                             side_conn_image,
                             np.s_[row_start:row_start + block_rows_data, :])
 
-                    if "subswath_mask" in mask_type:
+                    if need_insar_mask:
+                        valid_mask_b_path = f"{dest_pol_path_b}/validDataMask"
+                        valid_mask_a_path = f"{dest_pol_path}/validDataMask"
+
+                        main_valid_image = _read_valid_mask_block(
+                            src_main_h5,
+                            valid_mask_a_path,
+                            subswath_mask_freq_a_path,
+                            row_slice,
+                        )
+
+                        if (valid_mask_b_path in src_side_h5
+                                or subswath_mask_freq_b_path in src_side_h5):
+                            side_valid_image = _read_valid_mask_block(
+                                src_side_h5,
+                                valid_mask_b_path,
+                                subswath_mask_freq_b_path,
+                                row_slice,
+                            )
+                        else:
+                            # Preserve the legacy A-to-B fallback only if
+                            # neither frequency-B validity source exists.
+                            side_valid_image = decimate_freq_a_array(
+                                main_slant, side_slant,
+                                main_valid_image)
+
+                    if iono_qfsp_correction_flag:
+                        # Decode anomaly flags only from shared encoded masks.
                         src_main_h5[subswath_mask_freq_a_path].read_direct(
                             subswath_mask_main_image,
                             np.s_[row_start:row_start + block_rows_data, :])
@@ -1771,6 +2022,251 @@ def run(cfg: dict, runw_hdf5: str):
                             sig_kernel_y=kernel_sigma_azimuth,
                             iterations=filter_iterations,
                             filter_method='convolution')
+
+            if iono_qfsp_correction_flag or filter_bool:
+
+                info_channel.log(f'{mask_type} is used for mask construction')
+
+                available_mask = np.ones([block_rows_data, cols_output], dtype=bool)
+
+                if "coherence" in mask_type:
+                    mask_image = iono_phase_obj.get_coherence_mask_array(
+                        main_array=main_coh_image,
+                        side_array=side_coh_image,
+                        diff_ms_array=diff_ms_coh_image,
+                        low_band_array=sub_low_coh_image,
+                        high_band_array=sub_high_coh_image,
+                        diff_low_high_band_array=diff_coh_image,
+                        slant_main=main_slant,
+                        slant_side=side_slant,
+                        threshold=filter_coh_thresh)
+                    available_mask &= np.array(mask_image, dtype=bool)
+
+                if "connected_components" in mask_type:
+                    mask_image = iono_phase_obj.get_conn_component_mask_array(
+                        main_array=main_conn_image,
+                        side_array=side_conn_image,
+                        diff_ms_array=diff_ms_conn_image,
+                        low_band_array=sub_low_conn_image,
+                        high_band_array=sub_high_conn_image,
+                        diff_low_high_band_array=diff_subband_conn_image,
+                        slant_main=main_slant,
+                        slant_side=side_slant)
+                    available_mask &= np.array(mask_image, dtype=bool)
+
+                if need_insar_mask:
+                    # These masks have already been decoded to Boolean validity.
+                    if iono_method in iono_method_sideband:
+                        first_valid = decimate_freq_a_array(
+                            main_slant, side_slant,
+                            main_valid_image.astype(np.uint8)).astype(bool)
+                        second_valid = side_valid_image
+                    else:
+                        first_valid = low_valid_image
+                        second_valid = high_valid_image
+
+                    if first_valid.shape != second_valid.shape:
+                        raise ValueError(
+                            "Validity mask shapes differ after grid alignment: "
+                            f"{first_valid.shape} != {second_valid.shape}")
+                    available_mask &= first_valid & second_valid
+
+                if "water" in mask_type:
+                    # Extract preprocessing dictionary and open arrays
+                    # water_mask_file is expected to have distance from the
+                    # boundary of the water bodies. The values 0-100 represent
+                    # the distance from the coastline and values from 101-200
+                    # represent the distance from inland water boundaries.
+                    if iono_method in iono_method_sideband:
+                        mask_image = water_mask_b_blk
+                    else:
+                        mask_image = water_mask_a_blk
+                    available_mask &= np.array(mask_image, dtype=bool)
+
+                valid_area = iono_phase_obj.get_valid_area(
+                    main_array=main_image,
+                    side_array=side_image,
+                    low_band_array=sub_low_image,
+                    diff_ms_array=diff_ms_image,
+                    diff_low_high_band_array=diff_subband_image,
+                    high_band_array=sub_high_image,
+                    slant_main=main_slant,
+                    slant_side=side_slant,
+                    invalid_value=0)
+
+                valid_area_coh = iono_phase_obj.get_valid_area(
+                    main_array=main_coh_image,
+                    side_array=side_coh_image,
+                    diff_ms_array=diff_ms_coh_image,
+                    low_band_array=sub_low_coh_image,
+                    high_band_array=sub_high_coh_image,
+                    diff_low_high_band_array=diff_coh_image,
+                    slant_main=main_slant,
+                    slant_side=side_slant,
+                    invalid_value=0)
+                available_mask &= np.array(valid_area & valid_area_coh, dtype=bool)
+
+            # qFSP correction should be applied before ionosphere estimation
+            # so compute_disp_nondisp() uses the corrected differential phase.
+            if iono_qfsp_correction_flag:
+                if iono_method == "main_diff_low_high_subband":
+                    diff_phase = diff_subband_image
+                    insar_mask_block = subswath_mask_image
+                    parsed_mask = parse_insar_mask(insar_mask_block)
+                    sec_has_anomaly = parsed_mask["sec_has_anomaly"]
+                    ref_has_anomaly = parsed_mask["ref_has_anomaly"]
+
+                    # True where either reference or secondary has an input anomaly
+                    mask_anomaly_array = np.asarray(
+                        sec_has_anomaly | ref_has_anomaly, dtype=bool
+                    )
+                elif iono_method == "main_diff_ms_band":
+                    diff_phase = diff_ms_image
+                    insar_mask_block = subswath_mask_side_image
+                    parsed_mask_side = parse_insar_mask(subswath_mask_side_image)
+                    parsed_mask_main = parse_insar_mask(subswath_mask_main_image)
+                    sec_has_anomaly_main = parsed_mask_main["sec_has_anomaly"]
+                    ref_has_anomaly_main = parsed_mask_main["ref_has_anomaly"]
+                    sec_has_anomaly_side = parsed_mask_side["sec_has_anomaly"]
+                    ref_has_anomaly_side = parsed_mask_side["ref_has_anomaly"]
+
+                    sec_has_anomaly_main_deci = np.asarray(
+                        decimate_freq_a_array(
+                            main_slant,
+                            side_slant,
+                            sec_has_anomaly_main.astype(np.uint8),
+                        ),
+                        dtype=bool,
+                    )
+
+                    ref_has_anomaly_main_deci = np.asarray(
+                        decimate_freq_a_array(
+                            main_slant,
+                            side_slant,
+                            ref_has_anomaly_main.astype(np.uint8),
+                        ),
+                        dtype=bool,
+                    )
+                    mask_anomaly_array = (
+                        sec_has_anomaly_main_deci
+                        | ref_has_anomaly_main_deci
+                        | np.asarray(sec_has_anomaly_side, dtype=bool)
+                        | np.asarray(ref_has_anomaly_side, dtype=bool)
+                    )
+                else:
+                    diff_phase = None
+                    insar_mask_block = None
+
+                if diff_phase is not None and insar_mask_block is not None:
+                    diff_phase_original = diff_phase.copy()
+
+                    qfsp_out_dir = os.path.join(
+                        iono_path, iono_method, pol_comb_str)
+                    pathlib.Path(qfsp_out_dir).mkdir(parents=True, exist_ok=True)
+
+                    qfsp_original_path = os.path.join(
+                        qfsp_out_dir, "qFSP_original")
+
+                    qfsp_corrected_path = os.path.join(
+                        qfsp_out_dir, "qFSP_corrected")
+                    write_array(
+                        qfsp_original_path,
+                        diff_phase_original,
+                        data_type=gdal.GDT_Float32,
+                        block_row=row_start,
+                        data_shape=[rows_output, cols_output])
+                    # Use only non-anomaly pixels as background support.
+                    # If mask_array already exists, combine it with non-anomaly pixels.
+                    qfsp_background_mask = (
+                        available_mask
+                    )
+                    valid_background = (
+                        qfsp_background_mask
+                        & ~mask_anomaly_array
+                        & np.isfinite(diff_phase)
+                        & (diff_phase != 0)
+                    )
+                    n_background = np.count_nonzero(valid_background)
+                    n_artifact = np.count_nonzero(mask_anomaly_array)
+
+                    apply_qfsp_correction = True
+                    qfsp_output = None
+
+                    if n_artifact == 0:
+                        info_channel.log(
+                            f"No qFSP anomaly pixels in block {block}; "
+                            "skipping qFSP correction."
+                        )
+                        apply_qfsp_correction = False
+                    elif n_background < max(100, qfsp_background_order + 1):
+                        info_channel.log(
+                            f"Insufficient qFSP background support in block {block}: "
+                            f"{n_background} pixels. Skipping correction."
+                        )
+                        apply_qfsp_correction = False
+                    if apply_qfsp_correction:
+                        qfsp_output = correct_qfsp_phase_artifact(
+                            diff_phase,
+                            fit_background_mask=qfsp_background_mask,
+                            artifact_mask=mask_anomaly_array,
+                            background_order=qfsp_background_order,
+                            background_crit_value=qfsp_background_crit_value,
+                            background_max_iterations=qfsp_background_max_iterations,
+                            background_max_samples=qfsp_background_max_samples,
+                            background_minimum_quality=qfsp_background_minimum_quality,
+                            template_smooth_win=qfsp_template_smooth_win,
+                            inner_shrink=qfsp_inner_shrink,
+                            outer_feather=qfsp_outer_feather,
+                            background_weights=None,
+                            fill_value=np.nan,
+                            debug_flag=qfsp_debug_flag,
+                        )
+
+                        if qfsp_debug_flag:
+                            diff_phase = qfsp_output["corrected_phase"]
+
+                            write_array(
+                                os.path.join(qfsp_out_dir, "qFSP_artifact_2d"),
+                                qfsp_output["artifact_2d"],
+                                data_type=gdal.GDT_Float32,
+                                block_row=row_start,
+                                data_shape=[rows_output, cols_output])
+
+                            write_array(
+                                os.path.join(qfsp_out_dir, "qFSP_background"),
+                                qfsp_output["background"],
+                                data_type=gdal.GDT_Float32,
+                                block_row=row_start,
+                                data_shape=[rows_output, cols_output])
+
+                            write_array(
+                                os.path.join(qfsp_out_dir, "qFSP_background_mask"),
+                                qfsp_background_mask.astype(np.uint8),
+                                data_type=gdal.GDT_Byte,
+                                block_row=row_start,
+                                data_shape=[rows_output, cols_output])
+
+                            write_array(
+                                os.path.join(qfsp_out_dir, "qFSP_anomaly_mask"),
+                                mask_anomaly_array.astype(np.uint8),
+                                data_type=gdal.GDT_Byte,
+                                block_row=row_start,
+                                data_shape=[rows_output, cols_output])
+                        else:
+                            diff_phase = qfsp_output
+
+                    write_array(
+                        qfsp_corrected_path,
+                        diff_phase,
+                        data_type=gdal.GDT_Float32,
+                        block_row=row_start,
+                        data_shape=[rows_output, cols_output])
+
+                    if iono_method == "main_diff_low_high_subband":
+                        diff_subband_image = diff_phase
+
+                    elif iono_method == "main_diff_ms_band":
+                        diff_ms_image = diff_phase
 
             # Estimate dispersive and non-dispersive phase
             dispersive, non_dispersive = iono_phase_obj.compute_disp_nondisp(
@@ -1875,86 +2371,16 @@ def run(cfg: dict, runw_hdf5: str):
                         slant_side=side_slant)
             else:
                 info_channel.log(f'{mask_type} is used for mask construction')
-                mask_array = np.ones([block_rows_data, cols_output],
-                                     dtype=bool)
-                if "coherence" in mask_type:
-                    mask_image = iono_phase_obj.get_coherence_mask_array(
-                        main_array=main_coh_image,
-                        side_array=side_coh_image,
-                        diff_ms_array=diff_ms_coh_image,
-                        low_band_array=sub_low_coh_image,
-                        high_band_array=sub_high_coh_image,
-                        diff_low_high_band_array=diff_coh_image,
-                        slant_main=main_slant,
-                        slant_side=side_slant,
-                        threshold=filter_coh_thresh)
-                    mask_array = mask_array & mask_image
 
-                if "connected_components" in mask_type:
-                    mask_image = iono_phase_obj.get_conn_component_mask_array(
-                        main_array=main_conn_image,
-                        side_array=side_conn_image,
-                        diff_ms_array=diff_ms_conn_image,
-                        low_band_array=sub_low_conn_image,
-                        high_band_array=sub_high_conn_image,
-                        diff_low_high_band_array=diff_subband_conn_image,
-                        slant_main=main_slant,
-                        slant_side=side_slant)
-                    mask_array = mask_array & mask_image
+                final_iono_mask = available_mask.copy()
 
                 if "median_filter" in mask_type:
                     mask_image = iono_phase_obj.get_mask_median_filter(
                         disp=dispersive,
                         looks=number_looks,
                         threshold=median_filter_threshold,
-                        median_filter_size=median_filter_size,
-                        )
-                    mask_array = mask_array & mask_image
-
-                if "subswath_mask" in mask_type:
-                    mask_subswath = iono_phase_obj.get_subswath_mask_array(
-                        main_array=subswath_mask_main_image,
-                        side_array=subswath_mask_side_image,
-                        low_band_array=subswath_mask_image,
-                        high_band_array=subswath_mask_image,
-                        slant_main=main_slant,
-                        slant_side=side_slant)
-                    mask_array &= mask_subswath
-
-                if "water" in mask_type:
-                    # Extract preprocessing dictionary and open arrays
-                    # water_mask_file is expected to have distance from the
-                    # boundary of the water bodies. The values 0-100 represent
-                    # the distance from the coastline and values from 101-200
-                    # represent the distance from inland water boundaries.
-                    if iono_method in iono_method_sideband:
-                        mask_image = water_mask_b_blk
-                    else:
-                        mask_image = water_mask_a_blk
-                    mask_array = mask_array & mask_image
-
-                valid_area = iono_phase_obj.get_valid_area(
-                    main_array=main_image,
-                    side_array=side_image,
-                    low_band_array=sub_low_image,
-                    diff_ms_array=diff_ms_image,
-                    diff_low_high_band_array=diff_subband_image,
-                    high_band_array=sub_high_image,
-                    slant_main=main_slant,
-                    slant_side=side_slant,
-                    invalid_value=0)
-
-                valid_area_coh = iono_phase_obj.get_valid_area(
-                    main_array=main_coh_image,
-                    side_array=side_coh_image,
-                    diff_ms_array=diff_ms_coh_image,
-                    low_band_array=sub_low_coh_image,
-                    high_band_array=sub_high_coh_image,
-                    diff_low_high_band_array=diff_coh_image,
-                    slant_main=main_slant,
-                    slant_side=side_slant,
-                    invalid_value=0)
-                final_iono_mask = mask_array & valid_area & valid_area_coh
+                        median_filter_size=median_filter_size)
+                    final_iono_mask &= mask_image
 
                 mask_path = os.path.join(
                     iono_path, iono_method, pol_comb_str, 'mask_array')
@@ -2127,9 +2553,19 @@ def run(cfg: dict, runw_hdf5: str):
                                 main_image = read_block_array(
                                     src_main_h5[runw_path_freq_a],
                                     block_parm, 0)
-                                diff_subband_image = read_block_array(
-                                    src_diff_h5[runw_path_freq_a],
-                                    block_parm, 0)
+                                if iono_qfsp_correction_flag:
+                                    qfsp_corrected_path = os.path.join(
+                                        iono_path, iono_method, pol_comb_str,
+                                        "qFSP_corrected")
+
+                                    diff_subband_image = read_block_array(
+                                        qfsp_corrected_path,
+                                        block_parm,
+                                        0)
+                                else:
+                                    diff_subband_image = read_block_array(
+                                        src_diff_h5[runw_path_freq_a],
+                                        block_parm, 0)
 
                                 main_image[mask_image == 0] = 0
                                 diff_subband_image[mask_image == 0] = 0
@@ -2189,13 +2625,23 @@ def run(cfg: dict, runw_hdf5: str):
                                 block_parm_side, 0)
 
                         if iono_method == 'main_diff_ms_band':
-                            with HDF5OptimizedReader(name=runw_diff_str,
-                                                     mode='r',
-                                                     libver='latest',
-                                                     swmr=True) as src_diff_h5:
+
+                            if iono_qfsp_correction_flag:
+                                qfsp_corrected_path = os.path.join(
+                                    iono_path, iono_method, pol_comb_str, "qFSP_corrected")
+
                                 diff_ms_image = read_block_array(
-                                    src_diff_h5[runw_path_freq_b],
-                                    block_parm_side, 0)
+                                    qfsp_corrected_path,
+                                    block_parm_side,
+                                    0)
+                            else:
+                                with HDF5OptimizedReader(name=runw_diff_str,
+                                                        mode='r',
+                                                        libver='latest',
+                                                        swmr=True) as src_diff_h5:
+                                    diff_ms_image = read_block_array(
+                                        src_diff_h5[runw_path_freq_b],
+                                        block_parm_side, 0)
 
                         if bridge_algorithm_bool:
                             main_image = bridge_unwrapped_phase(

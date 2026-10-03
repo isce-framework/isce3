@@ -442,7 +442,7 @@ class InSARBaseWriter(h5py.File):
             swath_frequency_group.copy("slantRangeSpacing",
                                        rslc_frequency_group)
             rslc_frequency_group['slantRangeSpacing'].attrs['description'] = \
-                 f"Slant range spacing of {rslc_name} RSLC"
+                 to_bytes(f"Slant range spacing of {rslc_name} RSLC")
             rslc_frequency_group['slantRangeSpacing'].attrs['units'] = to_bytes(Units.meter)
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
@@ -748,7 +748,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "isOffsetsBlendingApplied",
-                str(merge_gross_offset),
+                str(is_roff),
                 (
                     "Flag to indicate if pixel offsets are the results of"
                     " blending multi-resolution layers of pixel offsets"

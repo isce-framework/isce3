@@ -652,6 +652,39 @@ class RawBase(Base, family='nisar.productreader.raw'):
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             return f[path]["txPhase"][()]
 
+    def getValidPulses(self, frequency, polarization):
+        """Get valid pulse mask.
+
+        The mask reflects whether each pulse has any valid data samples.  The
+        result should be equivalent to reading each row of raw data and checking
+        whether all samples in the row are equal to the fill value.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically main science band is 'A'.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}
+            Transmit-Receive polarization.
+
+        Returns
+        -------
+        np.ndarray[bool]
+            Vector of boolean.  Length equal to number of rows in raw data
+            image.  True for rows with at least some valid data.
+        """
+        path_txrx = self._rawGroup(frequency, polarization)
+        name = "pulseHasValidSamples"
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            if name in fid[path_txrx]:
+                return fid[path_txrx][name][()]
+        # Kludge for old data that may lack this field: just return True for
+        # all pulses, which is equivalent to the old assumptions.
+        log.warning(f"L0B lacks dataset={name} so assuming all pulses valid "
+            f"for {frequency=} {polarization=}.  If possible, regenerate L0B "
+            "file with the latest software to get highest fidelity mask.")
+        _, t = self.getPulseTimes(frequency, tx=polarization[0])
+        return np.ones(len(t), bool)
+
     def getCaltone(self, frequency='A', polarization=None):
         """Get complex caltone coefficients for all channels and range lines.
 
@@ -890,7 +923,9 @@ class RawBase(Base, family='nisar.productreader.raw'):
         return swaths
 
 
-    def getSubSwathBboxes(self, frequency, polarization=None, epoch=None, num_ignore=0):
+    def getSubSwathBboxes(self, frequency, polarization=None, epoch=None,
+            num_ignore=0, min_segment_length=2000, max_pulse_gap=1,
+            use_rx_pulse_mask=False):
         """
         Return the bounding box for each sub-swath.
 
@@ -909,6 +944,21 @@ class RawBase(Base, family='nisar.productreader.raw'):
             dithered-PRF one, in which case the gaps in the last few receive
             windows will have irregular spacing due to the dithered pulses in
             the air.
+        min_segment_length : int, optional
+            Segments with fewer than this number of consecutive valid pulses
+            will not be returned.  This helps avoid unnecessary bookkeeping when
+            lots of missing pulses are sprinkled throughout an observation. Must
+            be >= 1 pulse.
+        max_pulse_gap : int, optional
+            Segments (each of which must be at least min_segment_length pulses)
+            separated by max_pulse_gap or fewer invalid pulses will be joined
+            together.  This provides an easy way to ignore isolated gaps of a
+            single invlid pulse, for example.  Set to 0 to disable merging.
+        use_rx_pulse_mask : bool, optional
+            When True read the pulseHasValidSamples metadata to help determine
+            which pulses are valid.  Otherwise only the validSamplesSubSwath
+            metadata will be used, which is not specific to the receive
+            polarization.
 
         Returns
         -------
@@ -916,6 +966,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
             Bounding box in radar coordinates for each sub-swath for each
             segment of constant data window position/length.
         """
+        if min_segment_length < 1:
+            raise ValueError("Need at least one pulse per segment")
+        if max_pulse_gap < 0:
+            raise ValueError("max_pulse_gap must be non-negative")
         if polarization is None:
             polarization = self.polarizations[frequency][0]
         tx = polarization[0]
@@ -960,14 +1014,28 @@ class RawBase(Base, family='nisar.productreader.raw'):
             subswaths = np.vstack((min_starts, max_ends)).transpose().reshape(
                 (1, -1, 2))
 
+        # Find runs of consecutive pulses with valid echo data.
+        rx_mask = (self.getValidPulses(frequency, polarization)
+            if use_rx_pulse_mask else None)
+        segments = find_valid_pulse_intervals(subswaths,
+            min_segment_length=min_segment_length, mask=rx_mask)
+        # Join any that are separated by just one pulse.
+        segments = join_segments(segments, max_gap=max_pulse_gap)
+        # Split segments at DWP change boundaries.  Then we'll have segments
+        # of valid data with constant DWP.
         changes = get_dwp_change_indices(rd, wd, wl)
+        segments = split_segments(segments, changes)
 
         # Append first and last pulses to generate pairs of constant DWP.
-        breaks = np.hstack(([0], changes, [grid.shape[0] - 1]))
         bbox_lists = []
-        for ibreak in range(len(breaks) - 1):
-            ipulse0, ipulse1 = breaks[ibreak], breaks[ibreak + 1]
-            t0, t1 = times[ipulse0], times[ipulse1]  # one past end point
+        for ipulse0, ipulse1 in segments:
+            # Generally we want t1 equal to t0 of previous interval.  But for
+            # last interval we don't know the pulse time after the last pulse
+            # (PRI can vary within and between observations).  So last segment
+            # we'll report last pulse time and worry about mixed-mode case in
+            # higher level code.
+            ipulse1 = min(ipulse1, nt - 1)
+            t0, t1 = times[ipulse0], times[ipulse1]
             bboxes = []
             for iswath, (j0, j1) in enumerate(subswaths[:, ipulse0, :]):
                 # Exclude empty subswaths.
@@ -976,10 +1044,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
                 # If dithered peek ahead in case gap overlaps start or end of
                 # valid swath.  Only need to check one pulse ahead assuming
                 # dither sequence is correctly designed to avoid consecutive
-                # gaps.
-                if is_dithered:
+                # gaps.  Of course, only do this trick if the segment actually
+                # has a second pulse to check.
+                if is_dithered and ipulse1 > (ipulse0 + 1):
                     assert iswath == 0  # due to restructuring above
-                    assert ipulse0 < (nt - 1)  # from construction of breaks
                     j0next = subswaths[iswath, ipulse0 + 1, 0]
                     j1next = subswaths[iswath, ipulse0 + 1, 1]
                     if j1next > j0next:
@@ -1124,6 +1192,154 @@ class LegacyRaw(RawBase, family='nisar.productreader.raw'):
 class Raw(RawBase, family='nisar.productreader.raw'):
     # TODO methods for new telemetry fields.
     pass
+
+
+def get_valid_pulse_mask(subswaths):
+    """
+    Determine which pulses contain any valid (non-gap) echo data.
+
+    Parameters
+    ----------
+    subswaths : np.ndarray
+        Array of [start, end) valid sample indices with shape (ns, nt, 2)
+        where ns is the number of sub-swaths and nt is the number of pulse
+        times, as returned by `RawBase.getSubSwaths`.
+
+    Returns
+    -------
+    np.ndarray(bool)
+        1-D boolean array of length nt that is True for pulses where at
+        least one sub-swath has a non-empty valid interval and False for
+        pulses that are entirely within a transmit gap.
+    """
+    # NOTE Avoid subtraction in case subswaths is unsigned.
+    return np.any(subswaths[..., 1] > subswaths[..., 0], axis=0)
+
+
+def find_valid_pulse_intervals(subswaths, min_segment_length=1, mask=None):
+    """
+    Find runs of consecutive pulses that all contain valid echo data.
+
+    Parameters
+    ----------
+    subswaths : np.ndarray
+        Array of [start, end) valid sample indices with shape (ns, nt, 2)
+        where ns is the number of sub-swaths and nt is the number of pulse
+        times, as returned by `RawBase.getSubSwaths`.
+    min_segment_length : int, optional
+        Minimum number of consecutive valid pulses required for a run to be
+        included in the output.  Shorter runs are dropped.  Defaults to 1.
+    mask : np.ndarray[bool], optional
+        Extra mask array indicating True for each valid pulse.  Will be ANDed
+        into the mask derived from the subswaths array.
+
+    Returns
+    -------
+    list[tuple[int, int]]
+        List of (start, end) pulse index pairs, each describing a half-open
+        interval [start, end) of consecutive pulses with valid echo data.
+    """
+    have_echo = get_valid_pulse_mask(subswaths)
+    if mask is not None:
+        have_echo &= mask
+
+    # Find boundaries where have_echo changes, padded so that the endpoints
+    # are considered properly.
+    x = np.zeros(len(have_echo) + 2, np.int8)
+    x[1:-1] = have_echo
+    dx = np.diff(x)
+
+    # An interval starts when we go from not having data to having data.
+    # Likewise, it ends when we go from having data to not having data.
+    starts = np.where(dx > 0)[0]
+    ends = np.where(dx < 0)[0]
+    assert len(starts) == len(ends)
+
+    return [(start, end) for (start, end) in zip(starts, ends)
+        if (end - start) >= min_segment_length]
+
+
+def split_segments(segments, breaks):
+    """
+    Split segments at the given break points.
+
+    Parameters
+    ----------
+    segments : list[tuple[int, int]]
+        List of (start, end) pulse index pairs, each describing a half-open
+        interval [start, end) of pulses, as returned by
+        `find_valid_pulse_intervals`.
+    breaks : array_like[int]
+        Pulse indices at which any segment spanning that index should be
+        divided into two.  An index i strictly inside a segment (start,
+        end), i.e. start < i < end, splits it into (start, i) and (i, end).
+        Indices equal to a segment boundary or outside all segments have
+        no effect.
+
+    Returns
+    -------
+    list[tuple[int, int]]
+        Updated list of (start, end) segments, with any segments spanning a
+        break point divided accordingly.  Order matches the order of the
+        input segments.
+    """
+    updated_segments = []
+    # NOTE It'd be more efficient to sort segments and breaks, then only
+    # iterate over relevant breaks indices in each segment.  Assume arrays
+    # are small enough we don't care about efficiency.
+    for start, end in segments:
+        for i in breaks:
+            # Don't check equality since that implies there's already a
+            # segment boundary at the desired location.
+            if start < i < end:
+                updated_segments.append((start, i))
+                start = i
+        updated_segments.append((start, end))
+    return updated_segments
+
+
+def join_segments(segments, max_gap=0):
+    """
+    Merge adjacent segments that are separated by only a small gap.
+
+    Parameters
+    ----------
+    segments : list[tuple[int, int]]
+        Sorted, non-overlapping list of (start, end) pulse index pairs, each
+        describing a half-open interval [start, end) of pulses, as returned
+        by `find_valid_pulse_intervals`.
+    max_gap : int, optional
+        Maximum number of pulses between the end of one segment and the
+        start of the next for the two segments to be merged into one.
+        Defaults to 0, meaning only directly adjacent (touching) segments
+        are merged.
+
+    Returns
+    -------
+    list[tuple[int, int]]
+        Updated list of (start, end) segments with gaps of at most max_gap
+        pulses joined together.
+
+    Raises
+    ------
+    ValueError
+        If the input segments are not sorted in increasing, non-overlapping
+        order.
+    """
+    if len(segments) < 2:
+        return segments
+    updated_segments = []
+    prev_start, prev_end = segments[0]
+    for cur_start, cur_end in segments[1:]:
+        if not (cur_start >= prev_end):
+            raise ValueError("expected sorted segments")
+        if cur_start - prev_end > max_gap:
+            updated_segments.append((prev_start, prev_end))
+            prev_start, prev_end = cur_start, cur_end
+        else:
+            prev_end = cur_end
+    updated_segments.append((prev_start, prev_end))
+    return updated_segments
 
 
 def get_dwp_change_indices(rd, wd, wl):

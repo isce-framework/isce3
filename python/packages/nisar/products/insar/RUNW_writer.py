@@ -143,24 +143,24 @@ class RUNWWriter(L1InSARWriter):
         ds_params = [
             DatasetParams(
                 "ionosphereAlgorithm",
-                iono_algorithm,
+                str(iono_algorithm),
                 "Algorithm used to estimate ionosphere phase screen",
             ),
             DatasetParams(
                 "ionosphereFilling",
-                iono_filling,
+                str(iono_filling),
                 "Outliers data filling algorithm"
                 " for ionosphere phase estimation"
                 ,
             ),
             DatasetParams(
                 "ionosphereFiltering",
-                iono_filtering,
+                str(iono_filtering),
                 f"Filtering algorithm for ionosphere phase screen computation",
             ),
             DatasetParams(
                 "ionosphereOutliers",
-                iono_outliers,
+                str(iono_outliers),
                 "Algorithm identifying outliers in unfiltered ionosphere"
                 " phase screen"
                 ,

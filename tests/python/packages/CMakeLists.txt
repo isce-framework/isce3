@@ -32,6 +32,7 @@ isce3/signal/rfi_freq_null.py
 isce3/signal/rfi_process_evd.py
 isce3/signal/rfi_tone_rank.py
 isce3/solid_earth_tides/solid_earth_tides.py
+isce3/unwrap/bridge.py
 nisar/antenna/beamformer.py
 nisar/antenna/pattern.py
 nisar/cal/corner_reflector_slc_func.py
@@ -84,6 +85,7 @@ nisar/workflows/troposphere.py
 nisar/workflows/solid_earth_tides.py
 nisar/workflows/baseline.py
 nisar/workflows/process_args.py
+nisar/workflows/offsets_product.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/resample_slc_v2.py
@@ -95,6 +97,7 @@ nisar/workflows/nisar_l0b_dm2_to_dbf.py
 nisar/workflows/noise_estimator.py
 nisar/workflows/pol_channel_imbalance_from_rslc.py
 nisar/workflows/geocode_corrections.py
+nisar/workflows/qfsp_ionosphere.py
 )
 
 if(WITH_CUDA)

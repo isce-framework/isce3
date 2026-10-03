@@ -65,3 +65,15 @@ def test_valid_regions():
     # This means we don't expect an exact match.
     matching_fraction = np.sum(mask == expected) / np.prod(mask.shape)
     npt.assert_(matching_fraction > 0.99)
+
+    # Same check, but via save_valid_data_mask, which rasterizes the valid
+    # data polygons directly into a full-resolution mask instead of going
+    # through per-pulse start/stop indices.
+    full_mask = np.zeros(grid.shape, dtype=bool)
+    isce3.focus.save_valid_data_mask(raw_bbox_lists, chirp_durations, orbit,
+        doppler, azres, grid, full_mask, dem=dem,
+        rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params)
+
+    mask2 = full_mask[::looks_azimuth, ::looks_range][:mask.shape[0], :mask.shape[1]]
+    matching_fraction = np.sum(mask2 == expected) / np.prod(mask2.shape)
+    npt.assert_(matching_fraction > 0.99)

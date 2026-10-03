@@ -14,6 +14,7 @@ from isce3.geometry import DEMInterpolator
 from isce3.product import get_radar_grid_nominal_ground_spacing
 from nisar.h5 import set_string
 from isce3.core.types import complex32
+from nisar.focus.valid_regions import PolValidMask
 from nisar.mixed_mode import PolChannelSet
 from nisar.products import descriptions
 from nisar.products.granule_id import get_polarization_code, format_datetime
@@ -529,12 +530,16 @@ class SLC(h5py.File):
     def create_anomaly_mask(self, frequency="A", **kw) -> h5py.Dataset:
         log.info("Initializing storage for anomaly mask for "
             f"frequency={frequency} with HDF5 options={kw}")
-        kw.setdefault("dtype", np.uint8)
+        kw.setdefault("dtype", np.uint16)
         dset = self.swath(frequency).create_dataset("inputDataExceptionMask",
             **kw)
+        validity_description = ", ".join(f"{x.value}:{x.name}"
+            for x in PolValidMask)
         dset.attrs["description"] = np.bytes_("Bitwise OR of input data "
             "exception codes for each image pixel (0: no anomaly, 2: NISAR "
-            "LSAR qFSP-H1 sample slip)")
+            "LSAR qFSP-H1 sample slip).  Also includes OR of validity mask "
+            "bits, where each bit is set on for fully-focused data or off for "
+            f"partially focused or missing data ({validity_description})")
         dset.attrs["units"] = np.bytes_("1")
         return dset
 
@@ -702,7 +707,7 @@ class SLC(h5py.File):
                             has_input_data_exception: int = None,
                             is_urgent: Optional[bool] = None,
                             is_joint: Optional[bool] = None,
-                            product_spec_version: str = "1.5.0",
+                            product_spec_version: str = "1.6.0",
                             processing_center: str = "JPL",
                             granule_id: str = "None",
                             product_version: str = "0.1.0",
@@ -713,7 +718,8 @@ class SLC(h5py.File):
                             is_full_frame: bool = False,
                             frame_coverage: float = np.nan,
                             coverage_threshold: float = 0.75,
-                            composite_release_id: str = "A10000"):
+                            composite_release_id: str = "A10000",
+                            orbit_direction: Optional[str] = None):
         """
         Populate identification metadata with a combination of copied values
         from L0B and user data.
@@ -722,7 +728,6 @@ class SLC(h5py.File):
             diagnosticModeFlag
             isGeocoded
             lookDirection
-            orbitPassDirection
 
         copied from L0B if associated input argument is None:
             absoluteOrbitNumber
@@ -733,6 +738,7 @@ class SLC(h5py.File):
             isUrgentObservation
             listOfFrequencies
             missionId
+            orbitPassDirection
             plannedDatatakeId
             plannedObservationId
             zeroDopplerEndTime
@@ -825,6 +831,18 @@ class SLC(h5py.File):
             d = g.require_dataset("absoluteOrbitNumber", (), np.uint32)
             d[()] = np.uint32(absolute_orbit_number)
             d.attrs["description"] = np.bytes_("Absolute orbit number")
+
+        # Old behavior: always copy from L0B.  Not ideal since a long L0B
+        # observation may pass over North/South pole, so the label could be
+        # wrong for a shorter RSLC.
+        # New behavior: populate if provided (e.g., via config file) otherwise
+        # fall back to L0B orbit pass direction.
+        if orbit_direction is not None:
+            if orbit_direction not in ("Ascending", "Descending"):
+                raise ValueError(f"unexpected {orbit_direction=}")
+            d = set_string(g, "orbitPassDirection", orbit_direction)
+            d.attrs["description"] = np.bytes_(
+                'Orbit direction, either "Ascending" or "Descending"')
 
         def set_string_list(group, key, values, desc):
             if key in group:

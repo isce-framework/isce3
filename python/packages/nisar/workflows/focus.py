@@ -21,7 +21,8 @@ from nisar.products.readers.Raw import (
     open_rrsd,
     chirpcorrelator_caltype_from_raw,
     is_raw_quad_pol,
-    first_tx_pol_for_quad
+    first_tx_pol_for_quad,
+    caltone_frequency_from_raw
 )
 from nisar.products.readers.rslc_cal import (RslcCalibration,
     parse_rslc_calibration, get_scale_and_delay, check_cal_validity_dates)
@@ -41,6 +42,8 @@ from isce3.focus.serialization import BackprojectionStageParameters
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import (RadarGridParameters,
     get_radar_grid_nominal_ground_spacing)
+from nisar.focus.valid_regions import (get_focused_sub_swaths,
+    save_valid_data_mask, get_valid_pulse_fraction)
 from nisar.workflows.yaml_argparse import YamlArgparse
 import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
@@ -1436,8 +1439,11 @@ def get_identification_data_from_runconfig(cfg: Struct) -> dict:
     """
     Populate a dict containing the keys
         {"product_version", "processing_type", "composite_release_id",
-        "mission_id", "processing_center", "track", "frame", "product_doi"}
-    using data from an RSLC runconfig.
+        "orbit_direction", "mission_id", "processing_center", "track", "frame",
+        "product_doi"}
+    using data from an RSLC runconfig.  Note that "orbit_direction" will be
+    omitted if it is missing or null in the runconfig (for backwards
+    compatibility).
     """
     keys = ["product_version", "processing_type", "composite_release_id",
         "mission_id", "processing_center", "product_doi"]
@@ -1445,6 +1451,12 @@ def get_identification_data_from_runconfig(cfg: Struct) -> dict:
     d = {key: exe[key] for key in keys}
     d["track"] = cfg.geometry.relative_orbit_number
     d["frame"] = cfg.geometry.frame_number
+
+    # optional
+    key = "orbit_direction"
+    val = getattr(cfg.geometry, key, None)
+    if val is not None:
+        d[key] = val
     return d
 
 
@@ -1577,127 +1589,52 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
     return range_spacings
 
 
-def get_focused_sub_swaths(rawlist, out_chan, grid, orbit, doppler, dem, azres,
-                           rdr2geo_params=dict(), geo2rdr_params=dict(),
-                           ignore_failure=False, polygon_segment_length=50.0,
-                           num_ignore=25, max_observation_gap=0.002):
+def get_caltone_frequency(cfg, raw, pol, freq_lim=(1209e6, 1301e6)):
     """
-    Determine fully-focused regions of the image in a format suitable for
-    populating the validSamplesSubSwathX RSLC datasets.
+    Get Caltone frequency either from RSLC runconfig or from
+    parsing it from raw L0B low-rate telemetry (DRT).
 
     Parameters
     ----------
-    rawlist : list[Raw]
-        List of raw data files (observations) that will be processed.
-    out_chan : PolChannel
-        Desired channel to process (will be matched with available raw data
-        using mixed-mode logic).
-    grid : RadarGridParameters
-        Grid for focused image (zero-Doppler).
-    orbit : Orbit
-        Trajectory of antenna phase center.  Its time span must cover the entire
-        collection of raw data plus any reskew time offset between the native-
-        and zero-Doppler radar coordinate systems.
-    doppler : LUT2d
-        Doppler centroid of raw data, in Hz.
-    dem : DEMInterpolator
-        Digital elevation model.
-    azres : float
-        Processed azimuth resolution, in meters.
-    rdr2geo_params : dict
-        Parameters for rdr2geo_bracket
-    geo2rdr_params : dict
-        Parameters for geo2rdr_bracket
-    ignore_failure : bool
-        If set to True and isce3.focus.get_focused_sub_swaths fails for any
-        reason, then a mask corresponding to all-pixels-valid will be returned.
-        Otherwise an exception will be raised on failures.  This can be useful
-        for datasets where the orbit data covers all the raw data but without
-        enough extra for the reskew to the zero-Doppler image grid.
-    polygon_segment_length : float, optional
-        Length scale over which subswath boundary can be considered linear,
-        in meters.
-    num_ignore : int, optional
-        Number of pulses to ignore when calculating the valid data region at the
-        end of a fixed-PRF observation.  This is relevant when a fixed-PRF
-        observation is immediately followed by a dithered observation, as the
-        dithered pulses in the air will overlap the last few receive windows of
-        the fixed-PRF one.
-    max_observation_gap : float, optional
-        Max allowed time (in seconds) between the last pulse of one observation
-        and the first pulse of the following observation for the two to be
-        considered seamless.  Larger raw data gaps may result in a synthetic
-        aperture being marked invalid in the RSLC.
+    cfg : Struct
+        RSLC runconfig data.
+    raw : nisar.products.readers.raw.Raw
+        NISAR L0B product pareser object
+    pol : str
+        Tx-Rx polarization such as "HH", "HV", etc
+    freq_lim: tuple of (float, float) or None, default=(1209e6, 1301e6)
+        (min ,max) frequency limit (Hz) for the parsed Caltone from L0B.
+        If  not None and Caltone frequency is not provided in config `cfg`,
+        the parsed Caltone from L0B will be checked against
+        this range and if out of range, ValueError exception will be raised.
+        Default limit is based on NISAR L-band instrument!
 
     Returns
     -------
-    swaths : numpy.ndarray[np.uint32]
-        Array of [start, stop) valid data regions, shape = (nswath, npulse, 2)
-        where nswath is the number of valid sub-swaths and npulse is the length
-        of the focused image grid.
+    float
+        Caltone frequency in Hz.
+
     """
-    # Need raw files sorted in time so we can reason about gaps between them.
-    rawlist = sorted(rawlist, key=lambda raw: raw.identification.zdStartTime)
-
-    raw_bbox_lists = []
-    chirp_durations = []
-    for raw in rawlist:
-        raw_chan = find_overlapping_channel(raw, out_chan)
-
-        freq = raw_chan.freq_id
-        bbox_lists = raw.getSubSwathBboxes(freq, epoch=orbit.reference_epoch,
-            num_ignore=num_ignore)
-        raw_bbox_lists.extend(bbox_lists)
-
-        txpol = raw_chan.pol[0]
-        T = raw.getChirpParameters(freq, txpol)[3]
-        chirp_durations.extend(len(bbox_lists) * [T])
-
-    # Force azimuth continuity since Raw.getSubSwathBboxes doesn't know final
-    # PRI so there's a 1-pulse gap between observations.  Note that there
-    # should be no gap between 10-second DWP updates.
-    for i in range(len(raw_bbox_lists) - 1):
-        # Each subswath should have the same start/end time, just different
-        # ranges.
-        t_cur = raw_bbox_lists[i][0].last.time
-        t_next = raw_bbox_lists[i + 1][0].first.time
-        dt = t_next - t_cur
-        if dt <= max_observation_gap:
-            if dt > 0.0:
-                log.info(f"Merging observations separated by {dt * 1e6:.2f} us "
-                    f"at {orbit.reference_epoch + TimeDelta(t_cur)}")
-            elif dt < 0.0:
-                # The time difference should always be positive since there's at
-                # least one PRI between the end of one observation and the start
-                # of the next one.  However, as of 2026-05-04, L0B time stamps
-                # are derived from LRCLK counts using a model that's updated
-                # every downlink pass.  If the observations were downlinked on
-                # separate passes, it's conceivable that time could go backwards
-                # (though this would violate requirements).  If that happens it
-                # seems safe to assume that's a seamless transition, so just log
-                # it and proceed.
-                log.warning("Time decremented between observations.  "
-                    "Assuming seamless transition.")
-            for bbox in raw_bbox_lists[i]:
-                bbox.last.time = max(t_next, t_cur)
-        else:
-            log.warning(f"Gap between observations {dt:7f} s exceeds threshold "
-                f"for seamless observations ({max_observation_gap} s).")
-
-    try:
-        swaths = isce3.focus.get_focused_sub_swaths(raw_bbox_lists,
-            chirp_durations, orbit, doppler, azres, grid, dem=dem,
-            rdr2geo_params=rdr2geo_params, geo2rdr_params=geo2rdr_params,
-            max_segment_length=polygon_segment_length)
-    except Exception as e:
-        if ignore_failure:
-            log.error("Failed to calculate valid subswath masks!  "
-                "The entire radar grid will be assumed valid.")
-            swaths = np.zeros((1, grid.length, 2), dtype=np.uint32)
-            swaths[..., 1] = grid.width
-        else:
-            raise e
-    return swaths
+    caltone_freq = cfg.processing.caltone.frequency
+    caltone_freq_raw = caltone_frequency_from_raw(raw=raw, txrx_pol=pol)
+    if  caltone_freq is None:
+        caltone_freq = caltone_freq_raw
+        name = os.path.basename(raw.filename)
+        log.info(f'Caltone frequency parsed from raw L0B "{name}" '
+                    f'is {caltone_freq * 1e-6} (MHz)')
+        if freq_lim is not None and (
+            caltone_freq < freq_lim[0] or caltone_freq > freq_lim[1]):
+            raise ValueError(
+                f'Caltone frequency {caltone_freq} (Hz) is out of range '
+                f'{freq_lim} (Hz)!'
+            )
+    elif not np.isclose(caltone_freq, caltone_freq_raw, rtol=1e-6):
+        log.warning(
+            'Noticeable mismtach in Caltone frequency between user-provided '
+            f'one {caltone_freq} (Hz) and L0B-parsed one {caltone_freq_raw} '
+            '(Hz)!'
+        )
+    return caltone_freq
 
 
 def get_azcomp_stage_config(cfg: Struct):
@@ -1709,7 +1646,7 @@ def get_azcomp_stage_config(cfg: Struct):
     return [T.from_dict(struct2dict(factor)) for factor in factors]
 
 
-def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
+def get_caltone_algorithm(cfg, fc, fs, n, is_dithered, caltone_freq):
     """Helper for configuring caltone removal.
 
     Parameters
@@ -1724,6 +1661,8 @@ def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
         Number of samples in raw data.
     is_dithered : bool
         Whether we're analyzing a mode with dithered PRI.
+    caltone_freq : float
+        Caltone frequency in Hz.
 
     Returns
     -------
@@ -1746,7 +1685,7 @@ def get_caltone_algorithm(cfg, fc, fs, n, is_dithered):
     elif algorithm == "wavelet":
         log.info("Will remove wavelet caltone estimate from each pulse.")
         wavelets = isce3.focus.ToneRemover(
-            (cfg.processing.caltone.frequency - fc) / fs,
+            (caltone_freq - fc) / fs,
             n, cfg.processing.caltone.wavelet_size)
     else:
         algorithm = "disabled"
@@ -1973,6 +1912,21 @@ def focus(runconfig, runconfig_path=""):
             log.warning("Internal calibration (INT_CAL) file was not provided "
                 "so unable to populate inputDataExceptionMask")
 
+        # Set missing/valid data mask (same dataset).
+        for pol in pols:
+            log.info(f"Getting and saving valid data mask for {frequency}{pol}")
+            pol_chan = [x for x in common_mode
+                if (x.freq_id == frequency and x.pol == pol)][0]
+            num_valid_pix = save_valid_data_mask(rawlist, pol_chan, og, orbit,
+                dop[frequency], dem, azres, mask, get_rdr2geo_params(cfg),
+                get_geo2rdr_params(cfg), **vars(cfg.processing.valid_data_mask))
+            frac_valid_pix = num_valid_pix / np.prod(og.shape)
+            attr = f"mask_valid_pixel_fraction_{pol.lower()}"
+            mask.attrs[attr] = frac_valid_pix
+            rawfrac = get_valid_pulse_fraction(rawlist, pol_chan, proc_begin,
+                proc_end, og.ref_epoch)
+            mask.attrs[f"raw_valid_pulse_fraction_{pol.lower()}"] = rawfrac
+
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
                              epsg=cfg.processing.metadata_cube_epsg, dem=dem,
@@ -2070,9 +2024,11 @@ def focus(runconfig, runconfig_path=""):
                 log.info("Will fill gaps between sub-swaths with zeros.")
 
             fs = raw.getChirpParameters(channel_in.freq_id, pol[0])[1]
+            caltone_freq = get_caltone_frequency(cfg=cfg, raw=raw, pol=pol)
+            log.info(f'Caltone frequency is {caltone_freq * 1e-6} (MHz)')
             caltone_algorithm, wavelets = get_caltone_algorithm(cfg,
                 channel_in.band.center, fs, raw_grid.shape[1],
-                raw.isDithered(channel_in.freq_id))
+                raw.isDithered(channel_in.freq_id), caltone_freq)
 
             for i in range(0, raw_grid.shape[0], na):
                 pulse = i + pulse_begin
@@ -2132,12 +2088,6 @@ def focus(runconfig, runconfig_path=""):
 
             # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
-                # XXX Due to a bug in respective DRT of some L0B products
-                # (CRID=05007), caltone.frequency is extrated from runconfig
-                # otherwise, it shall be set to None to be determined from DRT!
-                # The latter requires RSLC runconfig update to allow caltone
-                # frequency to be parsed directly from L0B product for more
-                # flexible configuration over wide range of L0B products.
                 # XXX the intrument-related delay offset used in DBF process
                 # shall be eventually obtained from instrument INT CAL HDF5
                 # once the respective product spec is updated (delay_ofs_dbf)!
@@ -2146,7 +2096,7 @@ def focus(runconfig, runconfig_path=""):
                                         instparser, orbit, attitude,
                                         el_lut=el_lut,
                                         freq_band=channel_in.freq_id,
-                                        caltone_freq=cfg.processing.caltone.frequency,
+                                        caltone_freq=caltone_freq,
                                         delay_ofs_dbf=-2.1474e-6)
 
                 log.info("Precomputing antenna patterns")
@@ -2381,7 +2331,8 @@ def configure_logging():
     sh.setFormatter(fmt)
     log.addHandler(sh)
     for friend in ("Raw", "SLCWriter", "nisar.antenna.pattern", "rslc_cal",
-                   "isce3.focus.notch", "isce3.focus.azcomp_bp"):
+                   "isce3.focus.notch", "isce3.focus.azcomp_bp",
+                   "isce3.signal.rfi"):
         l = logging.getLogger(friend)
         l.setLevel(log_level)
         l.addHandler(sh)

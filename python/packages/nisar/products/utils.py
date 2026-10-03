@@ -126,6 +126,41 @@ def interpret_subswath_mask(mask, nodata=255):
     return reference_valid, secondary_valid, water
 
 
+def interpret_valid_data_mask(mask, nodata=255):
+    """
+    Interpret a valid data mask by decoding its bits into boolean flags
+    indicating reference and secondary validity.
+
+    Parameters
+    ----------
+    mask : numpy.ndarray
+        A valid data mask where each value packs the per-input validity:
+        - Bit 0 (1s place): Secondary validity.
+            1 indicates valid; 0 indicates invalid.
+        - Bit 1 (2s place): Reference validity.
+            1 indicates valid; 0 indicates invalid.
+    nodata : int, default 255
+        Value flagging samples with no data, which are treated as invalid.
+
+    Returns
+    -------
+    reference_valid : numpy.ndarray of bool
+        True where the reference is valid (bit 1 is set), False otherwise.
+    secondary_valid : numpy.ndarray of bool
+        True where the secondary is valid (bit 0 is set), False otherwise.
+    """
+
+    nd = (mask == nodata)
+
+    secondary_valid = (mask & 0b01) != 0
+    reference_valid = (mask & 0b10) != 0
+
+    secondary_valid = np.where(nd, False, secondary_valid)
+    reference_valid = np.where(nd, False, reference_valid)
+
+    return reference_valid, secondary_valid
+
+
 def deepcopy_runconfig_and_keep_isce3_obj(obj):
     """
     Deep-copy a runconfig while preserving all `isce3.*` objects by reference.

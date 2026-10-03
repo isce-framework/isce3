@@ -59,6 +59,37 @@ def test_validate_rubbersheet():
             npt.assert_allclose(np.abs(offset), 0, atol=1e-6)
 
 
+def test_resample_offsets_to_slc(tmp_path):
+    '''
+    Check that offsets are placed at their offsets grid positions on the
+    reference RSLC grid, with edge values extended beyond the grid
+    '''
+    length, width = 100, 120
+    off_az_pos = 20. + 8. * np.arange(8)
+    off_rg_pos = 30. + 8. * np.arange(9)
+
+    # Linear offsets, reproduced exactly by bilinear interpolation
+    def offset(line, col):
+        return 0.01 * line + 0.02 * col + 1.
+
+    lines, cols = np.meshgrid(off_az_pos, off_rg_pos, indexing='ij')
+    off_path = str(tmp_path / 'culled_offsets')
+    rubbersheet._write_to_disk(off_path, offset(lines, cols))
+
+    lines, cols = np.meshgrid(np.arange(length), np.arange(width),
+                              indexing='ij')
+    expected = offset(np.clip(lines, off_az_pos[0], off_az_pos[-1]),
+                      np.clip(cols, off_rg_pos[0], off_rg_pos[-1]))
+
+    for lines_per_block in [7, length]:
+        out_path = str(tmp_path / f'resampled_offsets_{lines_per_block}')
+        rubbersheet._resample_offsets_to_slc(off_path, out_path,
+                                             off_az_pos, off_rg_pos,
+                                             length, width, lines_per_block)
+        npt.assert_allclose(rubbersheet._open_raster(out_path), expected,
+                            atol=1e-12)
+
+
 if __name__ == "__main__":
     test_run_rubbersheet()
     test_validate_rubbersheet()

@@ -121,25 +121,30 @@ def label_boundary(
             label_img,
             structure=erosion_structure).astype(np.uint8)
 
-        labeled_array, _ = nd_label(label_erosion_img)
-        regions = find_objects(labeled_array)
-
-        if len(regions) < num_label:
-            channel.log(
-                "Regions lost during morphological erosion operation:")
-            erosion_labels = [label_erosion_img[region].max()
-                              for region in regions]
-            for i in range(1, num_label + 1):
-                if i not in erosion_labels:
-                    label_img[label_img == i] = 0
+        # Identify original labels that survived erosion.
+        erosion_labels = np.unique(
+            label_img[label_erosion_img.astype(bool)]
+        )
+        if len(erosion_labels) > num_label:
+            raise ValueError(
+                f"Inconsistent component count: erosion retained "
+                f"{len(erosion_labels)} unique component labels, "
+                f"but num_label is {num_label}. The number of surviving "
+                f"components cannot exceed the original component count. "
+                f"Check that num_label matches label_img."
+            )
+        for i in range(1, num_label + 1):
+            if i not in erosion_labels:
+                label_img[label_img == i] = 0
 
     else:
         label_erosion_img = label_img > 0
     label_img, num_label = nd_label(label_img, structure=np.ones((3, 3)))
     # Create a boundary map using binary dilation and subtracting the original image
-    boundary_img = binary_dilation(label_erosion_img) & ~label_erosion_img
-    label_bound = boundary_img.astype(np.uint8)
-    label_bound *= label_erosion_img
+    # Inner boundary of the eroded regions, carrying component IDs.
+    eroded_mask = label_erosion_img.astype(bool)
+    boundary_img = eroded_mask & ~binary_erosion(eroded_mask)
+    label_bound = np.where(boundary_img, label_img, 0)
 
     return label_img, num_label, label_bound
 
@@ -198,16 +203,14 @@ def label_conn_comp(
             label_img > 0,
             structure=erosion_structure).astype(np.uint8)
 
-        labeled_array, _ = nd_label(label_erosion_img)
-        regions = find_objects(labeled_array)
+        # Identify original labels that survived erosion.
+        erosion_labels = np.unique(
+            label_img[label_erosion_img.astype(bool)]
+        )
 
-        if len(regions) < num_label:
-            channel.log("Regions lost during morphological erosion operation:")
-            erosion_labels = [label_erosion_img[region].max()
-                              for region in regions]
-            for i in range(1, num_label + 1):
-                if i not in erosion_labels:
-                    label_img[label_img == i] = 0
+        for i in range(1, num_label + 1):
+            if i not in erosion_labels:
+                label_img[label_img == i] = 0
 
         # Re-label after erosion
         label_img, num_label = nd_label(label_img, structure=np.ones((3, 3)))
@@ -250,7 +253,7 @@ class bridgeConnectComponent:
         channel = journal.info(
             "isce3.unwrap.bridge_phase.bridgeConnectComponent")
         self.labelImg, self.num_label = label_conn_comp(
-            self.conncomp, min_num_pixel=min_num_pixel)
+            self.conncomp, min_num_pixel=min_num_pixel, erosion_size=erosion_size)
 
         if self.num_label == 1:
             channel.log(f"Bridge algorithm is not applied because only one component exists.")
@@ -572,7 +575,7 @@ def deramp(data,
     del dmean
 
     # 3. for big dataset: uniformally sample the data for ramp estimation
-    mask_sum = np.sum(mask) 
+    mask_sum = np.sum(mask)
     if max_num_sample and mask_sum > max_num_sample:
         step = int(np.ceil(np.sqrt(mask_sum / max_num_sample)))
         if step > 1:
