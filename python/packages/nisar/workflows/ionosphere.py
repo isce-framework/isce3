@@ -689,6 +689,10 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
     runw_hdf5: str
         File path to runw HDF5 product (i.e., RUNW)
     """
+    # Get reference RSLC file path and auto-detect RootPath early
+    ref_rslc_file = original_cfg['input_file_group']['reference_rslc_file']
+    from nisar.products.readers.Base import get_hdf5_file_root_path
+    root_path_for_pair = get_hdf5_file_root_path(ref_rslc_file)
 
     # ionosphere runconfigs
     iono_args = original_cfg['processing']['ionosphere_phase_correction']
@@ -880,7 +884,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
                 pol_list_a = iono_freq_pols['A']
                 # Use auto-detected RootPath from reference RSLC
-                swath_path = RIFGGroupsPaths(RootPath=ref_slc_for_root.RootPath).SwathsPath
+                swath_path = RIFGGroupsPaths(RootPath=root_path_for_pair).SwathsPath
                 first_data_path = []
                 for pol_a in pol_list_a:
 
@@ -990,8 +994,8 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             pol_list_a = iono_freq_pols['A']
             pol_list_b = iono_freq_pols['B']
             # Use auto-detected RootPath from reference RSLC
-            swath_path = RIFGGroupsPaths(RootPath=ref_slc_for_root.RootPath).SwathsPath
-            runw_swath_path = RUNWGroupsPaths(RootPath=ref_slc_for_root.RootPath).SwathsPath
+            swath_path = RIFGGroupsPaths(RootPath=root_path_for_pair).SwathsPath
+            runw_swath_path = RUNWGroupsPaths(RootPath=root_path_for_pair).SwathsPath
 
             first_data_path = []
             for pol_a in pol_list_a:
