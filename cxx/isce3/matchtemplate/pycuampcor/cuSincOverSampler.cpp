@@ -90,8 +90,10 @@ void cuSincInterpolation_kernel(const int nImages,
     // determine the output pixel indices
     int outx = idxX + i_startX + shift.x*factor;
     if (outx >= outNX) outx-=outNX;
+    if (outx < 0) outx += outNX;
     int outy = idxY + i_startY +  shift.y*factor;
     if (outy >= outNY) outy-=outNY;
+    if (outy < 0) outy += outNY;
     // flattened to 1d
     int idxOut = idxImage*outNX*outNY + outx*outNY + outy;
 
