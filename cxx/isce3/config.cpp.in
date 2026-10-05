@@ -1,3 +1,9 @@
 #include "config.h"
 
+#ifdef ISCE3_EXPECT_CXX_STANDARD
+static_assert(__cplusplus == ISCE3_EXPECT_CXX_STANDARD,
+    "isce3 is not being compiled at the C++ standard this build expects "
+    "(a dependency likely raised the effective standard transitively)");
+#endif
+
 std::string isce3::version_string = "@ISCE3_VERSION_FULL@";

@@ -6,6 +6,7 @@ import numpy as np
 from osgeo import gdal
 import pytest
 from scipy import ndimage
+import numpy.testing as npt
 import iscetest
 import isce3.ext.isce3 as isce
 import isce3
@@ -22,14 +23,7 @@ def test_geocode_cov():
     # load parameters shared across all test runs
     # init geocode object and populate members
     rslc = SLC(hdf5file=os.path.join(iscetest.data, "envisat.h5"))
-    geo_obj = isce.geocode.GeocodeFloat64()
-    geo_obj.orbit = rslc.getOrbit()
-    geo_obj.doppler = rslc.getDopplerCentroid()
-    geo_obj.ellipsoid = isce.core.Ellipsoid()
-    geo_obj.threshold_geo2rdr = 1e-9
-    geo_obj.numiter_geo2rdr = 25
-    geo_obj.radar_block_margin = 10
-    geo_obj.data_interpolator = 'biquintic'
+
 
     # prepare geogrid
     geogrid_start_x = -115.65
@@ -43,9 +37,6 @@ def test_geocode_cov():
                           geogrid_spacing_y)
     geo_grid_width = int((geogrid_end_x - geogrid_start_x) / geogrid_spacing_x)
     epsgcode = 4326
-    geo_obj.geogrid(geogrid_start_x, geogrid_start_y, geogrid_spacing_x,
-                    geogrid_spacing_y, geo_grid_width, geo_grid_length,
-                    epsgcode)
 
     # get radar grid from HDF5
     radar_grid = isce.product.RadarGridParameters(os.path.join(iscetest.data,
@@ -74,6 +65,7 @@ def test_geocode_cov():
         sub_swath_array = np.zeros((radar_grid.length, 2), np.int32)
         valid_values = np.logical_and(xy_array > quantile_10_value,
                                       xy_array < quantile_90_value)
+
         if axis == 'x':
             x_quantile_10_value = quantile_10_value
             x_quantile_90_value = quantile_90_value
@@ -123,26 +115,93 @@ def test_geocode_cov():
                 else:
                     sub_swath_str = ''
 
-                output_path = f"{axis}_{key}{sub_swath_str}.geo"
-                print(f'   output file: {output_path}')
-                output_raster = isce.io.Raster(
-                    output_path, geo_grid_width, geo_grid_length, 1,
-                    gdal.GDT_Float64, "ENVI")
 
-                # geocode based on axis and mode
-                geo_obj.geocode(radar_grid,
-                                input_raster,
-                                output_raster,
-                                dem_raster,
-                                value, **sub_swath_kwargs)
+                for dtype in ['cfloat64', 'float64', 'byte', 'uint16']:
+
+                    # Instantiate the GeocodeCov module according to the input
+                    # data type. GeocodeCov currently does not natively support
+                    # integer data types, so integer inputs are geocoded using
+                    # GeocodeFloat32.
+                    if dtype == 'cfloat64':
+                        geo_obj = isce.geocode.GeocodeCFloat64()
+                        gdal_dtype = gdal.GDT_CFloat64
+                        # fill_value is a double parameter
+                        fill_value = np.nan
+                    elif dtype == 'float64':
+                        geo_obj = isce.geocode.GeocodeFloat64()
+                        gdal_dtype = gdal.GDT_Float64
+                        fill_value = np.nan
+                    elif dtype == 'byte':
+                        geo_obj = isce.geocode.GeocodeFloat32()
+                        gdal_dtype = gdal.GDT_Byte
+                        fill_value = 255
+                    else:   # uint16
+                        geo_obj = isce.geocode.GeocodeFloat32()
+                        gdal_dtype = gdal.GDT_UInt16
+                        fill_value = 65535
+
+                    geo_obj.orbit = rslc.getOrbit()
+                    geo_obj.doppler = rslc.getDopplerCentroid()
+                    geo_obj.ellipsoid = isce.core.Ellipsoid()
+                    geo_obj.threshold_geo2rdr = 1e-9
+                    geo_obj.numiter_geo2rdr = 25
+                    geo_obj.radar_block_margin = 10
+                    geo_obj.data_interpolator = 'biquintic'
+                    geo_obj.geogrid(geogrid_start_x, geogrid_start_y, geogrid_spacing_x,
+                                    geogrid_spacing_y, geo_grid_width, geo_grid_length,
+                                    epsgcode)
+                    output_path = f"{axis}_{key}{sub_swath_str}_{dtype}.geo"
+                    print(f'   output file: {output_path}')
+                    output_raster = isce.io.Raster(
+                        output_path, geo_grid_width, geo_grid_length, 1,
+                        gdal_dtype, "ENVI")
+
+                    # geocode based on axis and mode
+                    geo_obj.geocode(radar_grid,
+                                    input_raster,
+                                    output_raster,
+                                    dem_raster,
+                                    value,
+                                    fill_value=fill_value,
+                                    **sub_swath_kwargs)
 
     # flush output layers
     output_raster.close_dataset()
     del geo_obj
 
-    # validate generated data
+    axis = 'x'
+    sub_swath_str = ''
 
+    for geocode_algorithm in geocode_modes.keys():
+        for dtype in ['cfloat64', 'float64', 'byte', 'uint16']:
+            test_raster = \
+                f"{axis}_{geocode_algorithm}{sub_swath_str}_{dtype}.geo"
+            print(f'    file: {test_raster}')
+
+            ds = gdal.Open(test_raster, gdal.GA_ReadOnly)
+            # we know that first pixel is fill_value
+            data_fill_value = ds.GetRasterBand(1).ReadAsArray(0, 0, 1, 1)[0, 0]
+
+            if dtype == 'cfloat64':
+                assert np.issubdtype(data_fill_value.dtype, np.complexfloating)
+                assert np.isnan(data_fill_value.real)
+                assert np.isnan(data_fill_value.imag)
+
+            elif dtype == 'float64':
+                assert np.issubdtype(data_fill_value.dtype, np.floating)
+                assert np.isnan(data_fill_value)
+
+            elif dtype == 'byte':
+                assert np.issubdtype(data_fill_value.dtype, np.integer)
+                assert data_fill_value == 255
+
+            else:  # uint16
+                assert np.issubdtype(data_fill_value.dtype, np.integer)
+                assert data_fill_value == 65535
+
+    # validate generated data
     grid_x = None
+    dtype = 'float64'
 
     # iterate thru axis
     for axis in input_axis:
@@ -163,7 +222,7 @@ def test_geocode_cov():
                 else:
                     sub_swath_str = ''
 
-                test_raster = f"{axis}_{key}{sub_swath_str}.geo"
+                test_raster = f"{axis}_{key}{sub_swath_str}_{dtype}.geo"
                 print(f'    file: {test_raster}')
                 ds = gdal.Open(test_raster, gdal.GA_ReadOnly)
                 geo_arr = ds.GetRasterBand(1).ReadAsArray()

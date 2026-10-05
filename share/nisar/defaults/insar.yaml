@@ -708,7 +708,7 @@ runconfig:
                         # 1) median_filter: compute mask with median absolute deviation thresholding
                         # 2) coherence: compute mask with normalized InSAR coherence thresholding
                         # 3) water: extract water areas from water mask file in dynamic ancillary data
-                        mask_type: coherence
+                        mask_type: ['subswath_mask']
                         # buffer from the land. Unit is [km]. Buffer should be integer.
                         ocean_water_buffer: 1
                         inland_water_buffer: 1
@@ -914,7 +914,7 @@ runconfig:
                 bridge:
                     enabled: True
                     # Maximum radius used when bridging disconnected regions.
-                    bridge_radius: 500
+                    bridge_radius: 300
                     # Size of the structuring element used for erosion
                     # during bridge labeling.
                     bridge_erosion_size: 2
@@ -930,6 +930,14 @@ runconfig:
             correction_luts:
                 # Boolean flag to activate/deactivate model-based solid earth tide corrections
                 solid_earth_tides_enabled: True
+
+            tec_correction:
+                apply_slant_range_correction: True
+                apply_azimuth_correction: True
+                use_total_tec_only: False
+                ignore_invalid_topside_tec: True
+                polyfit_tec_profile: False
+                num_sigma: 1.5
 
             # Set of options to enable compression, choose compression level,
             # chunk size and shuffle filter

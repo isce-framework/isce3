@@ -4,7 +4,9 @@
  */
 
 #include "cuAmpcorParameter.h"
+
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifndef IDIVUP
 #define IDIVUP(i,j) ((i+j-1)/j)

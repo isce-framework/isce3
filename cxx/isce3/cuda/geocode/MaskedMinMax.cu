@@ -26,7 +26,7 @@ typedef thrust::tuple<double, bool> double_mask;
  */
 struct masked_min_compare {
     __host__ __device__ bool operator()(
-            const double_mask lhs, const double_mask rhs)
+            const double_mask lhs, const double_mask rhs) const
     {
         // extract data values from tuples
         auto l_value = thrust::get<0>(lhs);
@@ -61,7 +61,7 @@ struct masked_min_compare {
  */
 struct masked_max_compare {
     __host__ __device__ bool operator()(
-            const double_mask lhs, const double_mask rhs)
+            const double_mask lhs, const double_mask rhs) const
     {
         // extract data values from tuples
         auto l_value = thrust::get<0>(lhs);

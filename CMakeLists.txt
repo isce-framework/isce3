@@ -85,6 +85,32 @@ AssureOutOfSourceBuilds()
 ####Check CXX Version and Standard to C++17
 CheckCXX()
 
+# Opt-in compile-time check that isce3 is actually being compiled at a
+# specific C++ standard (see cxx/isce3/config.cpp.in). CMAKE_CXX_STANDARD
+# above is a lower bound, not a ceiling - a dependency's own compile
+# feature requirements can transitively raise the *effective* standard
+# above it without CMake ever reporting a conflict. This lets a CI lane
+# that intentionally holds such a dependency back verify that isce3 is
+# genuinely compiling at the standard it claims to need, instead of
+# silently testing a higher one again.
+set(ISCE3_EXPECT_CXX_STANDARD "" CACHE STRING
+    "If set (e.g. to 17), fail the build unless isce3 is actually being \
+compiled at that C++ standard.")
+if(ISCE3_EXPECT_CXX_STANDARD)
+    set(_isce3_cplusplus_98 199711L)
+    set(_isce3_cplusplus_11 201103L)
+    set(_isce3_cplusplus_14 201402L)
+    set(_isce3_cplusplus_17 201703L)
+    set(_isce3_cplusplus_20 202002L)
+    set(_isce3_cplusplus_23 202302L)
+    if(NOT DEFINED _isce3_cplusplus_${ISCE3_EXPECT_CXX_STANDARD})
+        message(FATAL_ERROR "Unrecognized ISCE3_EXPECT_CXX_STANDARD="
+                             "${ISCE3_EXPECT_CXX_STANDARD}")
+    endif()
+    add_compile_definitions(
+        ISCE3_EXPECT_CXX_STANDARD=${_isce3_cplusplus_${ISCE3_EXPECT_CXX_STANDARD}})
+endif()
+
 option(ISCE3_WITH_CYTHON "Enable isce3 cython extension" OFF)
 if(ISCE3_WITH_CYTHON)
     message(ERROR "isce3's cython extension has been removed!")
