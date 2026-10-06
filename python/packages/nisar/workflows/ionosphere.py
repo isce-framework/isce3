@@ -1000,14 +1000,18 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 pol_list_a = iono_freq_pols['A']
                 swath_path = RIFGGroupsPaths().SwathsPath
                 first_data_path = []
+                first_valid_mask_paths = []
+
                 for pol_a in pol_list_a:
 
                     dest_freq_path = f"{swath_path}/frequencyA"
                     dest_pol_path = f"{dest_freq_path}/interferogram/{pol_a}"
                     rifg_path_freq = f"{dest_pol_path}/wrappedInterferogram"
 
+                    first_valid_mask_paths.append(f"{dest_pol_path}/validDataMask")
                     first_data_path.append(rifg_path_freq)
                 second_data_path = first_data_path
+                second_valid_mask_paths = first_valid_mask_paths
                 output_data_path = first_data_path
                 compute_differential_phase(phase_first,
                                            phase_second,
@@ -1015,7 +1019,9 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                            first_data_path,
                                            second_data_path,
                                            output_data_path,
-                                           iono_args['lines_per_block'])
+                                           iono_args['lines_per_block'],
+                                           first_valid_mask_paths=first_valid_mask_paths,
+                                           second_valid_mask_paths=second_valid_mask_paths,)
                 # Since main_diff_low_high_subband method does not need to
                 # unwrap low and high subband interferogram, but need to
                 # unwrap the difference between low and high subband
