@@ -43,8 +43,9 @@ def decimate_input_data_exception_mask(src_h5, dst_h5, freq_path,
     carries per-polarization validity bits in its high byte as well.
 
     The dtype, chunk shape (clamped to the narrower grid), compression
-    and attributes of the source mask are preserved. Frequencies with no
-    mask, and masks already on the bandpassed grid, are left alone.
+    and attributes of the source mask are preserved. A frequency with no
+    mask is left alone, and so is a mask already on the bandpassed grid
+    when decimation_factor is 1 and there is nothing to decimate.
 
     Parameters
     ----------
@@ -69,7 +70,10 @@ def decimate_input_data_exception_mask(src_h5, dst_h5, freq_path,
     Raises
     ------
     ValueError
-        If the mask is too narrow to cover the bandpassed range grid
+        If the mask is already as narrow as the bandpassed grid while a
+        decimation is expected, or is too narrow to cover that grid.
+        Either way the mask does not describe the source image pixel for
+        pixel, so there is no sound way to put it on the bandpassed grid
     '''
     mask_path = f"{freq_path}/inputDataExceptionMask"
     if mask_path not in src_h5:
@@ -78,7 +82,13 @@ def decimate_input_data_exception_mask(src_h5, dst_h5, freq_path,
     src_mask = src_h5[mask_path]
     lines, samples = src_mask.shape
     if samples == bandpassed_samples:
-        return
+        if decimation_factor != 1:
+            raise ValueError(
+                f"{mask_path} is already {samples} samples wide, matching "
+                f"the bandpassed grid, but a decimation factor of "
+                f"{decimation_factor} was expected")
+        else:
+            return
 
     # Equals the resample_width_end that bandpass_shift_spectrum trims the
     # SLC to, so the mask drops the same trailing samples as the rasters
@@ -287,6 +297,10 @@ def run(cfg: dict):
             decimation_factor = int(np.round(
                 bandpass_meta['range_spacing'] /
                 target_meta_data.rg_pxl_spacing))
+
+            # Handle the case when the decimation_factor == 0
+            decimation_factor = max(decimation_factor, 1)
+
             subswath_number = src_h5[f"{dest_freq_path}/numberOfSubSwaths"][()]
             for swath_count in range(subswath_number):
                 # Update the validateSamplesSubswaths
