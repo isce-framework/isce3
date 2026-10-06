@@ -1013,7 +1013,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 # Low and high subbands use the same internal dataset paths.
                 first_mask_path = f"{dest_freq_path}/interferogram/mask"
                 second_data_path = first_data_path
-                second_mask_path = f"{dest_freq_path}/interferogram/mask"
+                second_mask_path = first_mask_path
                 second_valid_mask_paths = first_valid_mask_paths
                 output_data_path = first_data_path
 

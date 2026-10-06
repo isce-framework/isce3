@@ -26,7 +26,8 @@ from nisar.workflows.persistence import Persistence
     ],
 )
 def test_ionosphere_run(yaml_name, method, tmp_path, monkeypatch):
-    """Check that each ionosphere method completes."""
+    """Check that each ionosphere method completes.
+    tmp_path and monkeypatch are built-in pytest fixtures."""
     data_dir = os.path.abspath(iscetest.data)
     monkeypatch.chdir(tmp_path)
 
