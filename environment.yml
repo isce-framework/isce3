@@ -1,6 +1,9 @@
 name: isce3
 channels:
   - conda-forge
+  # pycuampcor, until it is available from conda-forge (the same recipe, built for
+  # the conda-forge variants: https://github.com/earthdef/cuAmpcor/tree/main/conda/conda-forge)
+  - lijun99
   - nodefaults
 dependencies:
   - backoff
