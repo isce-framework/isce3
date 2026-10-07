@@ -518,7 +518,8 @@ def analyze_point_target(
     window_parameter: float = 0.0,
     shift_domain: str = "time",
     geo_heading: float | None = None,
-    pixel_spacing: tuple[float, float] = (1.0, 1.0)
+    pixel_spacing: tuple[float, float] = (1.0, 1.0),
+    nchip_clutter: int = 25,
 ) -> tuple[dict, list["matplotlib.figure.Figure"] | None]:
     """
     Measure point-target attributes.
@@ -591,7 +592,7 @@ def analyze_point_target(
 
     chip, chip_min_i, chip_min_j = generate_chip_on_slc(slc, i, j, chipsize=chipsize)
 
-    return analyze_point_target_chip(
+    results = analyze_point_target_chip(
         chip=chip,
         chip_min_i=chip_min_i,
         chip_min_j=chip_min_j,
@@ -609,6 +610,25 @@ def analyze_point_target(
         geo_heading=geo_heading,
         pixel_spacing=pixel_spacing,
     )
+
+    # XXX: The current method of estimating SCR does not work for geolocated products
+    # which may have skewed sidelobes. Doing this would require resampling these
+    # products to acquire a chip usable by the SCR estimator, or else finding some new
+    # means of estimating and masking the locations of the side lobes on the chip.
+    if geo_heading is None:
+        max_i = i + results[0]["azimuth"]["offset"]
+        max_j = j + results[0]["range"]["offset"]
+        
+        clutter_chip = generate_chip_on_slc(slc, max_i, max_j, chipsize=nchip_clutter)
+        
+        scr = estimate_scr(
+            chip=clutter_chip,
+            peak_magnitude=results[0]["magnitude"],
+        )
+
+        results[0]["signal clutter ratio"] = scr
+
+    return results
 
 
 def generate_chip_on_slc(
@@ -846,6 +866,8 @@ def analyze_point_target_chip(
     return_dict = {
         "magnitude": np.abs(chipmax),
         "phase": np.angle(chipmax),
+        "chip magnitude": np.abs(chip).tolist(),
+        "chip phase": np.angle(chip).tolist(),
         "azimuth": {
             "ISLR": azimuth_islr_db,
             "PSLR": azimuth_pslr_db,
@@ -912,6 +934,83 @@ def analyze_point_target_chip(
         ]
         return return_dict, figs
     return return_dict, None
+
+
+def estimate_scr(
+    chip: np.ndarray,
+    peak_magnitude: float | None = None,
+) -> float:
+    """
+    Estimate the signal-to-clutter ratio (SCR), in dB, for a chip of data around a point
+    target.
+
+    Parameters
+    ----------
+    chip : 2D np.ndarray of complex64
+        The data chip. Must be square with an odd number of pixels in each dimension.
+    peak_magnitude : float, optional
+        The identified peak magnitude of the data, or None for a rough estimate.
+        Defaults to None.
+
+    Returns
+    -------
+    float
+        The chip SCR, in dB.
+    """
+    length, width = chip.shape
+    if length != width:
+        raise ValueError(
+            f"estimate_scr: Chip must be square. Shape was given as {length} x {width}."
+        )
+    if length % 2 == 0:
+        raise ValueError(
+            f"estimate_scr: Chip must have an odd number of pixels"
+        )
+    if length < 5:
+        raise ValueError(
+            "estimate_scr: Chip side length must be at least 5. "
+            f"Length given was {length}."
+        )
+    
+    clutter_half_width = width // 2
+
+    # If the peak magnitude was not passed in, estimate it.
+    if peak_magnitude is None:
+        peak_magnitude = np.nanmax(np.abs(chip))
+
+    # Get the location of the peak magnitude.
+    k = np.nanargmax(np.abs(chip))
+    ichip, jchip = np.unravel_index(k, chip.shape)
+
+    # Create an estimation chip that is the column and row of the peak magnitude plus
+    # clutter_half_width pixels in either direction, converted to units of linear power.
+    scr_est_chip = np.abs(
+        chip[
+            ichip - clutter_half_width : ichip + clutter_half_width + 1,
+            jchip - clutter_half_width : jchip + clutter_half_width + 1,
+        ]
+    ) ** 2
+
+    # Set the row and column of peak power, plus one row and column on either side, to
+    # 0. This creates a "+" on the image of zeroed pixels corresponding to the IRF peak
+    # and its side lobes. The remaining nonzero pixels are the clutter region.
+    scr_est_chip[clutter_half_width - 1:clutter_half_width + 2, :] = 0
+    scr_est_chip[:, clutter_half_width - 1:clutter_half_width + 2] = 0
+
+    # Calculate the number of pixels that were not zeroed out, which is four regions
+    # of clutter_half_width -1 pixels squared.
+    sampled_area = (clutter_half_width - 1) ** 2 * 4
+
+    # The clutter power is the total power of the clutter region divided by the total
+    # number of pixels constituting that region.
+    clutter = np.sum(scr_est_chip) / sampled_area
+
+    # Calculate the peak power divided by average clutter power to get signal to clutter
+    # ratio.
+    scr = peak_magnitude ** 2 / clutter
+
+    # Convert to dB and then return.
+    return 10 * np.log10(scr)
 
 
 def sample_geocoded_side_lobe(
@@ -1031,11 +1130,20 @@ def tofloatvals(x):
 
     Modifies the dictionary in-place and returns None.
     """
+    def list2floats(my_list):
+        """
+        Convert a list of any dimensions into a list of floats. The list must either
+        contain only other lists or only values that can be converted into floats.
+        """
+        if all(isinstance(xi, list) for xi in my_list):
+            return [list2floats(xi) for xi in my_list]
+        return [float(xi) for xi in my_list]
+
     for k in x:
         if type(x[k]) == dict:
             tofloatvals(x[k])
         elif type(x[k]) == list:
-            x[k] = [float(xki) for xki in x[k]]
+            x[k] = list2floats(x[k])
         else:
             x[k] = float(x[k])
 
