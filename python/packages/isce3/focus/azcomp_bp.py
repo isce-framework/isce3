@@ -312,7 +312,6 @@ def azcomp_fbp(factors: BackprojectionStageParameters,
         _, img, _ = bp_to_polar_grid(fdata, sr, x, v,
             polar_grid, dem, fc, kernel, "nodelay", rdr2geo_params)
         if debugfile is not None:
-            import h5py
             log.debug(f"Dumping FBP factor with shape = {img.shape} to file.")
             with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
                 g = h5.require_group(f"stage_00/block_{iblock:06d}")
@@ -351,7 +350,6 @@ def azcomp_fbp(factors: BackprojectionStageParameters,
         merge_polar_images(in_grids, in_images, out_grid, out_image,
             fc, dem, rdr2geo_params)
         if debugfile is not None:
-            import h5py
             name = f"stage_{i_stage + 1:02d}/block_{i_block:06d}"
             with h5py.File(debugfile, "w") as h5:  # okay to reopen stream
                 g = h5.require_group(name)
