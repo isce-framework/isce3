@@ -116,7 +116,7 @@ static inline int2 adjustOffset(
     if(start<0)     // if exceeding the limit on the left
     {
         // set start at 0 and record the shift of center
-        shift = -start;
+        shift = start;
         start = 0;
     }
     else if(start > rbound ) // if exceeding the limit on the right
