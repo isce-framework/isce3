@@ -364,6 +364,17 @@ dense_offsets_options:
     # Domain (frequency or spatial) where to compute cross-correlation
     cross_correlation_domain: enum('frequency', 'spatial', required=False)
 
+    # Cross-correlation workflow: 'two_pass' (pixel-level offsets estimated
+    # without anti-aliasing oversampling at first, then refined with
+    # oversampling over a smaller search range) or 'one_pass' (anti-aliasing
+    # oversampling over the whole search range, more accurate for noisy
+    # correlation surfaces but slower). Default: 'two_pass'
+    # The SNR of 'one_pass' is higher than that of 'two_pass' with complex
+    # deramping (about 1.2-1.8 times on NISAR data; it is estimated on the
+    # anti-aliased correlation surface); adjust SNR thresholds (e.g., for
+    # rubbersheet culling) accordingly
+    cross_correlation_workflow: enum('two_pass', 'one_pass', required=False)
+
     # Anti-aliasing oversampling factor to apply to reference/secondary SLC
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
@@ -405,10 +416,12 @@ dense_offsets_options:
     cuda_streams: int(required=False)
 
     # Number of offset estimates to process in batch along slant range
-    windows_batch_range: int(min=1, required=False)
+    # (0 or empty: automatic, depending on the GPU or CPU)
+    windows_batch_range: int(min=0, required=False)
 
     # Number of offset estimates to process in batch along azimuth
-    windows_batch_azimuth: int(min=1, required=False)
+    # (0 or empty: automatic, depending on the GPU or CPU)
+    windows_batch_azimuth: int(min=0, required=False)
 
 
 offsets_product_options:
@@ -446,6 +459,17 @@ offsets_product_options:
 
     # Domain (frequency or spatial) where to compute cross-correlation
     cross_correlation_domain: enum('frequency', 'spatial', required=False)
+
+    # Cross-correlation workflow: 'two_pass' (pixel-level offsets estimated
+    # without anti-aliasing oversampling at first, then refined with
+    # oversampling over a smaller search range) or 'one_pass' (anti-aliasing
+    # oversampling over the whole search range, more accurate for noisy
+    # correlation surfaces but slower). Default: 'two_pass'
+    # The SNR of 'one_pass' is higher than that of 'two_pass' with complex
+    # deramping (about 1.2-1.8 times on NISAR data; it is estimated on the
+    # anti-aliased correlation surface); adjust SNR thresholds (e.g., for
+    # rubbersheet culling) accordingly
+    cross_correlation_workflow: enum('two_pass', 'one_pass', required=False)
 
     # Anti-aliasing oversampling factor to apply to reference/secondary SLC
     # prior to cross-correlation computation
@@ -488,10 +512,12 @@ offsets_product_options:
     cuda_streams: int(required=False)
 
     # Number of offset estimates to process in batch along slant range
-    windows_batch_range: int(min=1, required=False)
+    # (0 or empty: automatic, depending on the GPU or CPU)
+    windows_batch_range: int(min=0, required=False)
 
     # Number of offset estimates to process in batch along azimuth
-    windows_batch_azimuth: int(min=1, required=False)
+    # (0 or empty: automatic, depending on the GPU or CPU)
+    windows_batch_azimuth: int(min=0, required=False)
 
     # Pixel offsets layers
     layer1: include('offset_layer_options', required=False)
