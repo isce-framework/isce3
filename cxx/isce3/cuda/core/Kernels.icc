@@ -49,6 +49,54 @@ CUDA_HOSTDEV inline T KnabKernel<T>::eval(double t) const
     return sinc(x) * detail::samplingWindow(t, Base::halfwidth(), bandwidth());
 }
 
+namespace detail {
+template<typename T>
+inline void calc_nfft_scale_factors(T& b, T& scale, int m, int n, int fft_size)
+{
+    b = M_PI * (2.0 - 1.0 * n / fft_size);
+    scale = 1.0 / (M_PI * isce3::math::bessel_i0(m * b));
+}
+} // namespace detail
+
+template<typename T>
+NFFTKernel<T>::NFFTKernel(int m, int n, int fft_size)
+    : Base(2 * m + 1), m_(m), n_(n), fft_size_(fft_size)
+{
+    if ((m < 1) || (n < 1) || (fft_size < 1)) {
+        throw isce3::except::LengthError(
+                ISCE_SRCINFO(), "NFFT parameters must be positive.");
+    }
+    detail::calc_nfft_scale_factors<T>(b_, scale_, m, n, fft_size);
+}
+
+template<typename T>
+NFFTKernel<T>::NFFTKernel(const isce3::core::NFFTKernel<T>& other)
+    : Base(2 * other.kernel_radius() + 1), m_(other.kernel_radius()),
+      n_(other.data_size()), fft_size_(other.fft_size())
+{
+    detail::calc_nfft_scale_factors<T>(b_, scale_, other.kernel_radius(),
+            other.data_size(), other.fft_size());
+}
+
+template<typename T>
+CUDA_HOSTDEV inline T NFFTKernel<T>::eval(double t) const
+{
+    T x2 = t * t - m_ * m_;
+    // x=0
+    if (std::abs(x2) < std::numeric_limits<double>::epsilon()) {
+        return b_ * scale_;
+    }
+    T out = 1.0;
+    if (x2 < 0.0) {
+        T x = std::sqrt(std::abs(x2));
+        out = std::sinh(b_ * x) / x;
+    } else {
+        T x = std::sqrt(x2);
+        out = std::sin(b_ * x) / x;
+    }
+    return scale_ * out;
+}
+
 template<typename T>
 TabulatedKernelView<T>::TabulatedKernelView(const TabulatedKernel<T>& kernel)
     : Base(kernel.width()), _table(kernel._table.data().get()),

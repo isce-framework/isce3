@@ -13,6 +13,8 @@ core/gpuPoly2d.h
 core/gpuProjections.h
 core/Interp1d.h
 core/Interp1d.icc
+core/Interp2d.h
+core/Interp2d.icc
 core/Kernels.h
 core/Kernels.icc
 core/Orbit.h
@@ -48,4 +50,5 @@ signal/gpuCrossMul.h
 signal/gpuFilter.h
 signal/gpuLooks.h
 signal/gpuSignal.h
+signal/NFFT2d.h
 )

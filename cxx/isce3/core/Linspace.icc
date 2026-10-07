@@ -106,4 +106,13 @@ bool operator!=(const Linspace<T> & lhs, const Linspace<U> & rhs)
     return !(lhs == rhs);
 }
 
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+std::array<T, 2UL> Linspace<T>::bounds() const
+{
+    const T half = spacing() / 2;
+    return std::array<T, 2UL>{first() - half, last() + half};
+}
+
 }}

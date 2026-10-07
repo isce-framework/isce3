@@ -54,6 +54,7 @@ geometry/RTC.cpp
 geometry/metadataCubes.cpp
 geometry/ltpcoordinates.cpp
 geometry/pntintersect.cpp
+geogrid/geogrid_ecef_coords.cpp
 geogrid/getRadarGrid.cpp
 geogrid/relocateRaster.cpp
 geogrid/geogrid.cpp
@@ -83,6 +84,7 @@ signal/CrossMultiply.cpp
 signal/flatten.cpp
 signal/filter2D.cpp
 signal/multilook.cpp
+signal/NFFT2d.cpp
 product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp
@@ -107,7 +109,7 @@ if(WITH_CUDA)
          cuda/geometry/geometry.cpp
          cuda/geometry/geo2rdr.cpp
          cuda/geometry/rdr2geo.cpp
-         cuda/focus/Backproject.cpp
+         cuda/focus/Backproject.cu
          cuda/focus/focus.cpp
          cuda/image/image.cpp
          cuda/image/Resample.cpp
@@ -116,5 +118,6 @@ if(WITH_CUDA)
          cuda/matchtemplate/pycuampcor.cpp
          cuda/signal/signal.cpp
          cuda/signal/Crossmul.cpp
+         cuda/signal/NFFT2d.cu
          )
 endif()
