@@ -126,9 +126,12 @@ def add_solid_earth_to_gunw_hdf5(los_solid_earth_tides,
     gunw_hdf5: str
          GUNW HDF5 file where SET will be written
     '''
+    # Auto-detect RootPath from the GUNW HDF5 file
+    from nisar.products.readers.Base import get_hdf5_file_root_path
+    root_path = get_hdf5_file_root_path(gunw_hdf5)
 
     with HDF5OptimizedReader(name=gunw_hdf5, mode='a', libver='latest', swmr=True) as hdf:
-        radar_grid = hdf.get(GUNWGroupsPaths().RadarGridPath)
+        radar_grid = hdf.get(GUNWGroupsPaths(RootPath=root_path).RadarGridPath)
         radar_grid['slantRangeSolidEarthTidesPhase'][...] = los_solid_earth_tides
 
 
@@ -218,8 +221,12 @@ def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
     err_channel = journal.error(
         "solid_earth_tides._extract_params_from_gunw_hdf5")
 
-    # Instantiate GUNW object to avoid hard-coded paths to GUNW datasets
-    gunw_obj = GUNWGroupsPaths()
+    # Auto-detect RootPath from the GUNW HDF5 file
+    from nisar.products.readers.Base import get_hdf5_file_root_path
+    root_path = get_hdf5_file_root_path(gunw_hdf5_path)
+
+    # Instantiate GUNW object with auto-detected RootPath to avoid hard-coded paths
+    gunw_obj = GUNWGroupsPaths(RootPath=root_path)
     with HDF5OptimizedReader(name=gunw_hdf5_path, mode='r', libver='latest', swmr=True) as h5_obj:
         # Fetch the GUWN Incidence Angle Datacube
         rdr_grid_path = gunw_obj.RadarGridPath
