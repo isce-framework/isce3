@@ -216,10 +216,9 @@ private:
  * @tparam T        Format of real/imag pixel data, typically float or double
  * @param image     Input time-domain image.  A temporary copy will be made if
  *                  it is not row-major with a column stride of one.
- * @param m         Half-length of interpolator along {rows, columns}
- * @param s         Minimum factors (> 1) for frequency-domain zero-padding
- *                  along {rows, columns}.  Actual padding may be larger to
- *                  achieve efficient inverse transform size.
+ * @param params    Parameters for NFFT.  Note that the oversampling factor is
+ *                  treated as a lower bound, and the actual padding may be
+ *                  slightly larger to achieve efficient transform sizes.
  * @param pad_input Whether to also zero-pad input data to an efficient
  *                  forward transform size.  Requires extra memory.
  *
