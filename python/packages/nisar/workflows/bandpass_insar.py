@@ -19,6 +19,104 @@ from nisar.workflows.bandpass_insar_runconfig import BandpassRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
+def decimate_input_data_exception_mask(src_h5, dst_h5, freq_path,
+                                       bandpassed_samples, decimation_factor,
+                                       blocksize):
+    '''
+    Replace a frequency's inputDataExceptionMask with one on the
+    bandpassed range grid.
+
+    cp_h5_meta_data copies the mask verbatim, leaving it on the
+    pre-bandpass grid while the SLC rasters and slantRange are rewritten
+    on the decimated one, which puts the mask out of step with the swath
+    it describes. This brings it back onto that grid.
+
+    Input sample i belongs to output sample i // decimation_factor, the
+    same mapping validSamplesSubSwath{i} is rescaled by, and the trailing
+    input samples that form no whole group are dropped, as
+    SplitSpectrum.bandpass_shift_spectrum drops them from the SLC. Every
+    bit of each group is OR-reduced, so no bit set in any contributing
+    input sample is lost. That is the aggregation the dataset is defined
+    by, a "bitwise OR of input data exception codes ... also includes OR
+    of validity mask bits", and it applies unchanged to the 8-bit mask,
+    which carries anomaly codes alone, and to the 16-bit mask, which
+    carries per-polarization validity bits in its high byte as well.
+
+    The dtype, chunk shape (clamped to the narrower grid), compression
+    and attributes of the source mask are preserved. A frequency with no
+    mask is left alone, and so is a mask already on the bandpassed grid
+    when decimation_factor is 1 and there is nothing to decimate.
+
+    Parameters
+    ----------
+    src_h5 : h5py.File
+        The opened HDF5 file of the RSLC being bandpassed
+    dst_h5 : h5py.File
+        The opened HDF5 file of the bandpassed RSLC, holding the verbatim
+        copy of the mask that this function replaces
+    freq_path : str
+        The HDF5 path of the frequency group, e.g.
+        '/science/LSAR/RSLC/swaths/frequencyA'
+    bandpassed_samples : int
+        Number of range samples of the bandpassed grid, i.e. the width
+        the mask has to end up with. Read from the bandpassed SLC rather
+        than recomputed here, so the mask cannot end up disagreeing with
+        the rasters it describes
+    decimation_factor : int
+        Number of input samples per bandpassed sample, >= 1
+    blocksize : int
+        Number of lines per block read
+
+    Raises
+    ------
+    ValueError
+        If the mask is already as narrow as the bandpassed grid while a
+        decimation is expected, or is too narrow to cover that grid.
+        Either way the mask does not describe the source image pixel for
+        pixel, so there is no sound way to put it on the bandpassed grid
+    '''
+    mask_path = f"{freq_path}/inputDataExceptionMask"
+    if mask_path not in src_h5:
+        return
+
+    src_mask = src_h5[mask_path]
+    lines, samples = src_mask.shape
+    if samples == bandpassed_samples:
+        if decimation_factor != 1:
+            raise ValueError(
+                f"{mask_path} is already {samples} samples wide, matching "
+                f"the bandpassed grid, but a decimation factor of "
+                f"{decimation_factor} was expected")
+        else:
+            return
+
+    # Equals the resample_width_end that bandpass_shift_spectrum trims the
+    # SLC to, so the mask drops the same trailing samples as the rasters
+    samples_used = bandpassed_samples * decimation_factor
+    if samples_used > samples:
+        raise ValueError(
+            f"{mask_path} has {samples} samples, too few to cover "
+            f"{bandpassed_samples} bandpassed samples at a decimation "
+            f"factor of {decimation_factor}")
+
+    attrs = dict(src_mask.attrs)
+    del dst_h5[mask_path]
+    dst_mask = dst_h5.create_dataset(
+        mask_path, (lines, bandpassed_samples), dtype=src_mask.dtype,
+        chunks=tuple(min(c, n) for c, n in zip(src_mask.chunks or (128, 128),
+                                               (lines, bandpassed_samples))),
+        compression=src_mask.compression,
+        compression_opts=src_mask.compression_opts)
+    dst_mask.attrs.update(attrs)
+
+    for row_start in range(0, lines, blocksize):
+        row_stop = min(row_start + blocksize, lines)
+        groups = src_mask[row_start:row_stop, :samples_used].reshape(
+            row_stop - row_start, bandpassed_samples, decimation_factor)
+        dst_mask.write_direct(np.bitwise_or.reduce(groups, axis=2),
+                              dest_sel=np.s_[row_start:row_stop, :])
+
+
 def run(cfg: dict):
     '''
     run bandpass
@@ -183,18 +281,41 @@ def run(cfg: dict):
                     f"Bandpass SLC image ({pol})"
                 dst_h5[dest_pol_path].attrs['units'] = ""
 
-            bandpass_ratio = \
-                target_meta_data.rg_pxl_spacing / bandpass_meta['range_spacing']
+            # Input samples per bandpassed sample, so input sample i maps to
+            # output sample i // decimation_factor. The ratio has to be
+            # rounded to the integer it must be, because the two spacings
+            # are accumulated separately and land ~1e-11 apart: here
+            # 3.1228381041437387 against 6.245676208333333, a ratio of
+            # 0.499999999996329 rather than 0.5. Scaling indices by that
+            # unrounded ratio loses a pixel on every even index, since the
+            # exact i / 2 is a whole number that any downward error drops
+            # below, and int() truncates:
+            #   i=1602 -> 1602 * 0.499999999996329 = 800.9999999941 -> 800,
+            #             one sample low of the correct 801
+            #   i=1601 -> 1601 * 0.499999999996329 = 800.4999999941 -> 800,
+            #             correct, as odd indices land on x.5 and survive
+            decimation_factor = int(np.round(
+                bandpass_meta['range_spacing'] /
+                target_meta_data.rg_pxl_spacing))
+
+            # Handle the case when the decimation_factor == 0
+            decimation_factor = max(decimation_factor, 1)
+
             subswath_number = src_h5[f"{dest_freq_path}/numberOfSubSwaths"][()]
             for swath_count in range(subswath_number):
                 # Update the validateSamplesSubswaths
                 valid_sample_path = \
                 f"{dest_freq_path}/validSamplesSubSwath{swath_count + 1}"
                 valid_samples = src_h5[valid_sample_path][()]
-                valid_samples_bandpass = \
-                    np.array(valid_samples * bandpass_ratio, dtype='int')
                 data = dst_h5[f"{valid_sample_path}"]
-                data[...] = valid_samples_bandpass.astype(int)
+                data[...] = valid_samples // decimation_factor
+
+            # Width taken from a raster already written here, which the
+            # slantRange below is sized from too, so all three agree
+            decimate_input_data_exception_mask(
+                src_h5, dst_h5, dest_freq_path,
+                dst_h5[dest_pol_path].shape[1],
+                decimation_factor, blocksize)
 
             # update meta information for bandpass SLC
             data = dst_h5[f"{dest_freq_path}/processedCenterFrequency"]
