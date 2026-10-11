@@ -166,6 +166,9 @@ def compute_evd_tb(
     eig_val_sort_array = np.zeros([num_cpi, cpi_len], dtype="f4")
     eig_vec_sort_array = np.zeros((num_cpi, cpi_len, cpi_len), dtype="complex64")
 
+    diag_power_array = np.zeros((num_cpi, cpi_len), dtype=np.float32)
+    diag_valid_array = np.zeros((num_cpi, cpi_len), dtype=bool)
+
     tb_is_valid = True
 
     # Compute Eigenvalue and Eigenvector pairs for each CPI
@@ -174,7 +177,7 @@ def compute_evd_tb(
     ):
         data_cpi = raw_data[cpi_slow_time]
         mask_valid_cpi = None if mask_valid is None else mask_valid[cpi_slow_time]
-        eig_val_sort, eig_vec_sort = compute_evd(
+        eig_val_sort, eig_vec_sort, diag_power_cpi, diag_valid_idx = compute_evd(
             data_cpi,
             mask_valid_cpi=mask_valid_cpi,
             off_diag_overlap_ratio=off_diag_overlap_ratio,
@@ -182,17 +185,27 @@ def compute_evd_tb(
         )
 
         # Verify if the eigenvalue of CPI at index defind by min_ev_valid_idx is meaningful
-        eig_val_sort_abs = np.maximum(np.abs(eig_val_sort), 1e-30)
+        eig_val_sort_abs = np.abs(eig_val_sort)
+
+        # If any eigenvalue is NaN/inf OR leading eigenvalue is non-positive → invalid TB
+        if (not np.all(np.isfinite(eig_val_sort_abs))) or (eig_val_sort_abs[0] <= 0):
+            tb_is_valid = False
+            break
+
+        eig_val_sort_abs = np.maximum(eig_val_sort_abs, 1e-30)
         noise_ev_norm_db = 10 * np.log10(eig_val_sort_abs[min_ev_valid_idx] / eig_val_sort_abs[0])
 
-        if -noise_ev_norm_db > rx_dynamic_range_db:
+        if (not np.isfinite(noise_ev_norm_db)) or -noise_ev_norm_db > rx_dynamic_range_db:
             tb_is_valid = False
             break
 
         eig_val_sort_array[idx_cpi] = eig_val_sort
         eig_vec_sort_array[idx_cpi] = eig_vec_sort
 
-    return eig_val_sort_array, eig_vec_sort_array, tb_is_valid
+        diag_power_array[idx_cpi] = diag_power_cpi
+        diag_valid_array[idx_cpi] = diag_valid_idx
+
+    return eig_val_sort_array, eig_vec_sort_array, diag_power_array, diag_valid_array, tb_is_valid
 
 def compute_evd(
     raw_data: np.ndarray,
@@ -234,6 +247,7 @@ def compute_evd(
     # Application in Narrow-Band Interference Suppression for SAR”, IEEE Geoscience 
     # and Remote Sensing Letters, vol. 4, no. 1, pp. 76,2007.
 
+
     if mask_valid_cpi is not None:
         mask_valid_cpi = mask_valid_cpi.astype(bool, copy=False)
 
@@ -242,7 +256,7 @@ def compute_evd(
                 f"Valid CPI mask shape {mask_valid_cpi.shape} != CPI data shape {raw_data.shape}"
             )
 
-        cov_cpi = compute_gap_exclusion_cov(
+        cov_cpi, diag_valid_idx = compute_gap_exclusion_cov(
             raw_data,
             mask_valid_cpi=mask_valid_cpi,
             off_diag_overlap_ratio=off_diag_overlap_ratio,
@@ -251,10 +265,13 @@ def compute_evd(
     else:
         num_rng_samples = raw_data.shape[1]
         cov_cpi = (raw_data @ raw_data.conj().T) / num_rng_samples
+        diag_valid_idx = np.ones(raw_data.shape[0], dtype=bool)
+
+    diag_power_cpi = np.real(np.diag(cov_cpi))
 
     eig_val_sort, eig_vec_sort = eigen_decomp_sort(cov_cpi)
 
-    return eig_val_sort, eig_vec_sort
+    return eig_val_sort, eig_vec_sort, diag_power_cpi, diag_valid_idx
 
 
 def compute_gap_exclusion_cov(
@@ -329,7 +346,7 @@ def compute_gap_exclusion_cov(
     if min_valid_diag < rng_samples_min:
         warnings.warn(f"""
             Minimum number of samples required per pulse to estimate sample covariance matrix
-            is {rng_samples_min}. The number of valid diagonal samples is {min_valid_off_diag}.
+            is {rng_samples_min}. The number of valid diagonal samples is {min_valid_diag}.
         """)
 
     # Zero-out invalid samples
@@ -379,4 +396,30 @@ def compute_gap_exclusion_cov(
     # Ensure Hermitian numerically
     cov = (0.5 * (cov + cov.conj().T)).astype(np.complex64)
 
-    return cov
+    return cov, diag_valid_idx
+
+
+def count_excluded_pulses_per_cpi(diag_valid_array):
+    """Count the number of excluded (invalid) pulses per CPI.
+
+    A pulse is excluded when its diagonal covariance entry (R_ii) does not
+    have sufficient valid samples, as determined by the diag_valid_ratio
+    threshold in compute_gap_exclusion_cov.
+
+    Parameters
+    ----------
+    diag_valid_array : 2D array of bool, shape (num_cpi, cpi_len)
+        Boolean array where True indicates a valid pulse (diagonal covariance
+        entry had sufficient valid samples), False indicates an excluded pulse.
+        This is returned by compute_evd_tb.
+
+    Returns
+    -------
+    excluded_pulse_count : 1D array of int, shape (num_cpi,)
+        Number of excluded pulses for each CPI.
+    """
+    # Count invalid (excluded) pulses per CPI
+    # diag_valid_array is True for valid pulses, so we invert it to count excluded
+    excluded_pulse_count = np.sum(~diag_valid_array, axis=1).astype(np.int16)
+
+    return excluded_pulse_count
