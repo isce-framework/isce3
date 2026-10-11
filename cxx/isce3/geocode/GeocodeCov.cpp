@@ -173,7 +173,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster* out_mask,
         GeocodeMemoryMode geocode_memory_mode,
         const long long min_block_size, const long long max_block_size,
-        isce3::core::dataInterpMethod dem_interp_method)
+        isce3::core::dataInterpMethod dem_interp_method,
+        const bool use_platform_doppler)
 {
     bool flag_complex_to_real = isce3::signal::verifyComplexToRealCasting(
             input_raster, output_raster, exponent);
@@ -231,7 +232,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 input_layover_shadow_mask_raster, sub_swaths,
                 apply_valid_samples_sub_swath_masking, out_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
-                dem_interp_method);
+                dem_interp_method, use_platform_doppler);
     else if (flag_run_geocode_interp &&
              (std::is_same<T, double>::value ||
                      std::is_same<T, std::complex<double>>::value))
@@ -248,7 +249,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 input_layover_shadow_mask_raster, sub_swaths,
                 apply_valid_samples_sub_swath_masking, out_mask, 
                 geocode_memory_mode, min_block_size, max_block_size,
-                dem_interp_method);
+                dem_interp_method, use_platform_doppler);
     else if (flag_run_geocode_interp)
         geocodeInterp<float>(radar_grid, input_raster, output_raster,
                 dem_raster, fill_value,
@@ -263,7 +264,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 input_layover_shadow_mask_raster, sub_swaths,
                 apply_valid_samples_sub_swath_masking, out_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
-                dem_interp_method);
+                dem_interp_method, use_platform_doppler);
     else if (!flag_complex_to_real)
         geocodeAreaProj<T>(radar_grid, input_raster, output_raster, dem_raster,
                 geogrid_upsampling, fill_value,
@@ -279,7 +280,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 input_layover_shadow_mask_raster, sub_swaths,
                 apply_valid_samples_sub_swath_masking, out_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
-                dem_interp_method);
+                dem_interp_method, use_platform_doppler);
     else if (std::is_same<T, double>::value ||
              std::is_same<T, std::complex<double>>::value)
         geocodeAreaProj<double>(radar_grid, input_raster, output_raster,
@@ -293,11 +294,11 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
                 out_geo_rtc_gamma0_to_sigma0, az_time_correction,
                 slant_range_correction, input_rtc,
-                output_rtc,  output_rtc_sigma,
+                output_rtc, output_rtc_sigma,
                 input_layover_shadow_mask_raster, sub_swaths,
                 apply_valid_samples_sub_swath_masking, out_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
-                dem_interp_method);
+                dem_interp_method, use_platform_doppler);
     else
         geocodeAreaProj<float>(radar_grid, input_raster, output_raster,
                 dem_raster, geogrid_upsampling, fill_value,
@@ -314,7 +315,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 input_layover_shadow_mask_raster, sub_swaths,
                 apply_valid_samples_sub_swath_masking, out_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
-                dem_interp_method);
+                dem_interp_method, use_platform_doppler);
 }
 
 template<class T>
@@ -345,7 +346,8 @@ void Geocode<T>::geocodeInterp(
         isce3::io::Raster* out_mask,
         isce3::core::GeocodeMemoryMode geocode_memory_mode, const long long min_block_size,
         const long long max_block_size,
-        isce3::core::dataInterpMethod dem_interp_method)
+        isce3::core::dataInterpMethod dem_interp_method,
+        const bool use_platform_doppler)
 {
     pyre::journal::info_t info("isce.geocode.GeocodeCov.geocodeInterp");
     pyre::journal::warning_t warning("isce.geocode.GeocodeCov.geocodeInterp");
@@ -517,6 +519,15 @@ void Geocode<T>::geocodeInterp(
         info << "input terrain radiometry: " << input_terrain_radiometry_str
              << pyre::journal::newline;
 
+        std::string output_terrain_radiometry_str =
+             get_output_terrain_radiometry_str(output_terrain_radiometry);
+        info << "output terrain radiometry: " << output_terrain_radiometry_str
+              << pyre::journal::newline;
+
+        info << "RTC use platform Doppler (0: false, 1: true): "
+             << std::to_string(use_platform_doppler)
+             << pyre::journal::newline;
+
         if (input_rtc == nullptr) {
 
             info << "calling RTC (from geocode)..." << pyre::journal::newline;
@@ -567,6 +578,7 @@ void Geocode<T>::geocodeInterp(
             isce3::io::Raster* out_geo_grid = nullptr;
 
             computeRtc(demRaster, *rtc_raster, radar_grid, _orbit, _doppler,
+                    use_platform_doppler, _nativeDoppler, 
                     _geoGridStartY, _geoGridSpacingY, _geoGridStartX,
                     _geoGridSpacingX, _geoGridLength, _geoGridWidth, _epsgOut,
                     input_terrain_radiometry, output_terrain_radiometry,
@@ -1971,7 +1983,8 @@ void Geocode<T>::geocodeAreaProj(
         isce3::io::Raster* out_mask,
         GeocodeMemoryMode geocode_memory_mode, const long long min_block_size,
         const long long max_block_size,
-        isce3::core::dataInterpMethod dem_interp_method)
+        isce3::core::dataInterpMethod dem_interp_method,
+        const bool use_platform_doppler)
 {
 
     pyre::journal::info_t info("isce.geocode.GeocodeCov.geocodeAreaProj");
@@ -2005,9 +2018,10 @@ void Geocode<T>::geocodeAreaProj(
                 az_time_correction, slant_range_correction, input_rtc,
                 output_rtc, output_rtc_sigma,
                 input_layover_shadow_mask_raster, sub_swaths,
-                apply_valid_samples_sub_swath_masking, out_mask,
-                geocode_memory_mode, min_block_size, max_block_size,
-                dem_interp_method);
+                apply_valid_samples_sub_swath_masking,
+                out_mask, geocode_memory_mode,
+                min_block_size, max_block_size, dem_interp_method,
+                use_platform_doppler);
         return;
     }
 
@@ -2128,6 +2142,9 @@ void Geocode<T>::geocodeAreaProj(
                 get_output_terrain_radiometry_str(output_terrain_radiometry);
         info << "output terrain radiometry: " << output_terrain_radiometry_str
              << pyre::journal::newline;
+        info << "RTC use platform Doppler (0: false, 1: true): "
+            << std::to_string(use_platform_doppler)
+            << pyre::journal::newline;
 
         if (input_rtc == nullptr) {
 
@@ -2184,7 +2201,8 @@ void Geocode<T>::geocodeAreaProj(
             isce3::io::Raster* out_geo_grid = nullptr;
 
             computeRtc(dem_raster, *rtc_raster, radar_grid_cropped, _orbit,
-                    _doppler, _geoGridStartY, _geoGridSpacingY, _geoGridStartX,
+                    _doppler, use_platform_doppler, _nativeDoppler,
+                    _geoGridStartY, _geoGridSpacingY, _geoGridStartX,
                     _geoGridSpacingX, _geoGridLength, _geoGridWidth, _epsgOut,
                     input_terrain_radiometry, output_terrain_radiometry,
                     rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,

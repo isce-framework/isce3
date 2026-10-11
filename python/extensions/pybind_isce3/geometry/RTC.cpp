@@ -71,8 +71,13 @@ void addbinding(py::enum_<rtcAreaBetaMode> & pyAreaBetaMode)
 void addbinding_apply_rtc(pybind11::module& m)
 {
     m.def("apply_rtc", &isce3::geometry::applyRtc, py::arg("radar_grid"),
-            py::arg("orbit"), py::arg("input_dop"), py::arg("input_raster"),
-            py::arg("dem_raster"), py::arg("output_raster"),
+            py::arg("orbit"),
+            py::arg("grid_doppler"),
+            py::arg("use_platform_doppler"),
+            py::arg("platform_doppler"),
+            py::arg("input_raster"),
+            py::arg("dem_raster"),
+            py::arg("output_raster"),
             py::arg("input_terrain_radiometry") =
                     rtcInputTerrainRadiometry::BETA_NAUGHT,
             py::arg("output_terrain_radiometry") =
@@ -105,8 +110,14 @@ void addbinding_apply_rtc(pybind11::module& m)
                   Radar Grid
               orbit : isce3.core.Orbit
                   Orbit
-              input_dop : isce3.core.LUT2d
-                  Doppler LUT
+              grid_dop : isce3.core.LUT2d
+                  Grid Doppler LUT
+              use_platform_doppler : bool
+                  Flag indicating whether the platform Doppler LUT should be
+                  used to estimate the platform position. If disabled, the
+                  grid Doppler LUT will be used instead
+              platform_dop : isce3.core.LUT2d
+                  Doppler LUT to compute the platform position
               input_raster : isce3.io.Raster
                   Input raster
               dem_raster : isce3.io.Raster
@@ -162,7 +173,8 @@ void addbinding_compute_rtc(pybind11::module& m)
     const isce3::geometry::detail::Geo2RdrParams defaults;
     m.def("compute_rtc",
             py::overload_cast<const isce3::product::RadarGridParameters&,
-                    const isce3::core::Orbit&,
+                    const isce3::core::Orbit&, const isce3::core::LUT2d<double>&,
+                    const bool,
                     const isce3::core::LUT2d<double>&, isce3::io::Raster&,
                     isce3::io::Raster&, rtcInputTerrainRadiometry,
                     rtcOutputTerrainRadiometry, rtcAreaMode,
@@ -174,7 +186,10 @@ void addbinding_compute_rtc(pybind11::module& m)
                     isce3::core::dataInterpMethod, double, int, double,
                     const long long, const long long>(
                     &isce3::geometry::computeRtc),
-            py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
+            py::arg("radar_grid"), py::arg("orbit"),
+            py::arg("grid_doppler"),
+            py::arg("use_platform_doppler"),
+            py::arg("platform_doppler"),
             py::arg("dem"), py::arg("output_raster"),
             py::arg("input_terrain_radiometry") =
                     rtcInputTerrainRadiometry::BETA_NAUGHT,
@@ -212,8 +227,14 @@ void addbinding_compute_rtc(pybind11::module& m)
                  Radar Grid
              orbit : isce3.core.Orbit
                  Orbit
-             input_dop : isce3.core.LUT2d
-                 Doppler LUT
+             grid_dop : isce3.core.LUT2d
+                 Grid Doppler LUT
+             use_platform_doppler : bool
+                 Flag indicating whether the platform Doppler LUT should be
+                 used to estimate the platform position. If disabled, the
+                 grid Doppler LUT will be used instead
+             platform_dop : isce3.core.LUT2d
+                 Doppler LUT to compute the platform position
              dem_raster : isce3.io.Raster
                  Input DEM raster
              output_raster : isce3.io.Raster
@@ -266,6 +287,8 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
             py::overload_cast<isce3::io::Raster&, isce3::io::Raster&,
                     const isce3::product::RadarGridParameters&,
                     const isce3::core::Orbit&,
+                    const isce3::core::LUT2d<double>&,
+                    const bool,
                     const isce3::core::LUT2d<double>&, const double,
                     const double, const double, const double, const int,
                     const int, const int, rtcInputTerrainRadiometry,
@@ -280,7 +303,10 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     const long long, const long long>(
                     &isce3::geometry::computeRtc),
             py::arg("dem_raster"), py::arg("output_raster"),
-            py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
+            py::arg("radar_grid"), py::arg("orbit"),
+            py::arg("grid_doppler"),
+            py::arg("use_platform_doppler"),
+            py::arg("platform_doppler"),
             py::arg("y0"), py::arg("dy"), py::arg("x0"), py::arg("dx"),
             py::arg("geogrid_length"), py::arg("geogrid_width"),
             py::arg("epsg"),
@@ -325,8 +351,14 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                  Radar Grid
              orbit : isce3.core.Orbit
                  Orbit
-             input_dop : isce3.core.LUT2d
-                 Doppler LUT
+             grid_dop : isce3.core.LUT2d
+                 Grid Doppler LUT
+             use_platform_doppler : bool
+                 Flag indicating whether the platform Doppler LUT should be
+                 used to estimate the platform position. If disabled, the
+                 grid Doppler LUT will be used instead
+             platform_dop : isce3.core.LUT2d
+                 Doppler LUT to compute the platform position
              y0 : double
                  Starting northing position
              dy : double

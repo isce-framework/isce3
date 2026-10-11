@@ -61,7 +61,12 @@ enum rtcAreaBetaMode {
  *
  * @param[in]  radarGrid           Radar Grid
  * @param[in]  orbit               Orbit
- * @param[in]  input_dop           Doppler LUT
+ * @param[in]  grid_doppler        Grid Doppler LUT
+ * @param[in]  use_platform_doppler Flag indicating whether the platform
+ * Doppler LUT should be used to estimate the platform position. If disabled,
+ * the grid Doppler LUT will be used instead
+ * @param[in]  platform_doppler    Doppler LUT to compute the platform position
+ * (only applicable if `use_platform_doppler` is `true`)
  * @param[in]  input_raster        Input raster
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
@@ -94,7 +99,10 @@ enum rtcAreaBetaMode {
  * @param[in]  rtc_memory_mode     Select memory mode
  * */
 void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
-        const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& grid_dop,
+        const bool use_platform_doppler,
+        const isce3::core::LUT2d<double>& platform_dop,
         isce3::io::Raster& input_raster, isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster,
         rtcInputTerrainRadiometry input_terrain_radiometry =
@@ -123,7 +131,12 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
  *
  * @param[in]  radarGrid           Radar Grid
  * @param[in]  orbit               Orbit
- * @param[in]  input_dop           Doppler LUT
+ * @param[in]  grid_doppler        Grid Doppler LUT
+ * @param[in]  use_platform_doppler Flag indicating whether the platform
+ * Doppler LUT should be used to estimate the platform position. If disabled,
+ * the grid Doppler LUT will be used instead
+ * @param[in]  platform_doppler    Doppler LUT to compute the platform position
+ * (only applicable if `use_platform_doppler` is `true`)
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
  * @param[in]  input_terrain_radiometry  Input terrain radiometry
@@ -153,7 +166,10 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  max_block_size       Maximum block size (per thread)
  * */
 void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
-        const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& grid_dop,
+        const bool use_platform_doppler,
+        const isce3::core::LUT2d<double>& platform_dop,
         isce3::io::Raster& dem, isce3::io::Raster& output_raster,
         rtcInputTerrainRadiometry inputTerrainRadiometry =
                 rtcInputTerrainRadiometry::BETA_NAUGHT,
@@ -182,7 +198,12 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[out] output_raster       Output raster
  * @param[in]  radarGrid           Radar Grid
  * @param[in]  orbit               Orbit
- * @param[in]  input_dop           Doppler LUT
+ * @param[in]  grid_doppler        Grid Doppler LUT
+ * @param[in]  use_platform_doppler Flag indicating whether the platform
+ * Doppler LUT should be used to estimate the platform position. If disabled,
+ * the grid Doppler LUT will be used instead
+ * @param[in]  platform_doppler    Doppler LUT to compute the platform position
+ * (only applicable if `use_platform_doppler` is `true`)
  * @param[in]  y0                  Starting northing position
  * @param[in]  dy                  Northing step size
  * @param[in]  x0                  Starting easting position
@@ -224,7 +245,10 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * */
 void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         const isce3::product::RadarGridParameters& radarGrid,
-        const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& grid_dop,
+        const bool use_platform_doppler,
+        const isce3::core::LUT2d<double>& platform_dop,
         const double y0, const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width, const int epsg,
         rtcInputTerrainRadiometry inputTerrainRadiometry =
@@ -256,7 +280,12 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
  * @param[out] output_raster       Output raster
  * @param[in]  radarGrid           Radar Grid
  * @param[in]  orbit               Orbit
- * @param[in]  input_dop           Doppler LUT
+ * @param[in]  grid_doppler        Grid Doppler LUT
+ * @param[in]  use_platform_doppler Flag indicating whether the platform
+ * Doppler LUT should be used to estimate the platform position. If disabled,
+ * the grid Doppler LUT will be used instead
+ * @param[in]  platform_doppler    Doppler LUT to compute the platform position
+ * (only applicable if `use_platform_doppler` is `true`)
  * @param[in]  geogrid             Geogrid parameters
  * @param[in]  epsg                Output geographic grid EPSG
  * @param[in]  input_terrain_radiometry  Input terrain radiometry
@@ -280,7 +309,10 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
 void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster,
         const isce3::product::RadarGridParameters& radarGrid,
-        const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& grid_dop,
+        const bool use_platform_doppler,
+        const isce3::core::LUT2d<double>& platform_dop,
         const isce3::product::GeoGridParameters& geogrid,
         rtcInputTerrainRadiometry input_terrain_radiometry =
                 rtcInputTerrainRadiometry::BETA_NAUGHT,
@@ -301,10 +333,12 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * @param[out] output_raster       Output raster
  * @param[in]  radarGrid           Radar Grid
  * @param[in]  orbit               Orbit
- * @param[in]  input_dop           Doppler LUT
- * @param[in]  y0                  Starting easting position
- * @param[in]  dy
- * @param[in]  input_dop           Doppler LUT
+ * @param[in]  grid_doppler        Grid Doppler LUT
+ * @param[in]  use_platform_doppler Flag indicating whether the platform
+ * Doppler LUT should be used to estimate the platform position. If disabled,
+ * the grid Doppler LUT will be used instead
+ * @param[in]  platform_doppler    Doppler LUT to compute the platform position
+ * (only applicable if `use_platform_doppler` is `true`)
  * @param[in]  geogrid             Geogrid parameters
  * @param[in]  input_terrain_radiometry  Input terrain radiometry
  * @param[in]  output_terrain_radiometry Output terrain radiometry
@@ -337,7 +371,10 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
 void computeRtcAreaProj(isce3::io::Raster& dem,
         isce3::io::Raster& output_raster,
         const isce3::product::RadarGridParameters& radarGrid,
-        const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& grid_dop,
+        const bool use_platform_doppler,
+        const isce3::core::LUT2d<double>& platform_dop,
         const isce3::product::GeoGridParameters& geogrid,
         rtcInputTerrainRadiometry input_terrain_radiometry =
                 rtcInputTerrainRadiometry::BETA_NAUGHT,

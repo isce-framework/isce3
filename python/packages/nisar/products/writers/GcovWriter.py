@@ -26,6 +26,7 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
                     frequency, pol_list,
                     radar_grid, input_raster_list,
                     grid_doppler,
+                    platform_doppler,
                     raster_scratch_dir,
                     geogrid, orbit, gcov_terms_file_extension,
                     output_gcov_terms_raster_files_format,
@@ -114,6 +115,7 @@ def run_geocode_cov(cfg, hdf5_obj, root_ds,
     geo.orbit = orbit
     geo.ellipsoid = ellipsoid
     geo.doppler = grid_doppler
+    geo.native_doppler = platform_doppler
     geo.threshold_geo2rdr = threshold
     geo.numiter_geo2rdr = maxiter
 
