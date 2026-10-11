@@ -11,6 +11,16 @@ import iscetest
 import isce3
 from nisar.products.readers import SLC
 
+# CUDA-gated: skip the whole module on CPU-only isce3 builds. The tests below
+# all depend on isce3.cuda.geometry.Rdr2Geo, which only exists when isce3 was
+# configured with CUDA. Without this gate, collection on a CPU-only build
+# would surface as fixture errors rather than a clear skip with a reason.
+pytestmark = pytest.mark.skipif(
+    not hasattr(isce3, "cuda"),
+    reason="isce3 built without CUDA support; skipping isce3.cuda.geometry tests",
+)
+
+
 @pytest.fixture(scope="module")
 def unit_test_params():
     params = types.SimpleNamespace()
@@ -126,6 +136,47 @@ def test_run_raster_layers(unit_test_params):
             ground_to_sat_east_raster,
             ground_to_sat_north_raster,
         ],
+    )
+
+
+def test_run_optional_layers(unit_test_params):
+    '''
+    Exercise the optional-raster path of topo() in the same call shape used
+    by COMPASS s1_rdr2geo.run: kwargs for a subset of output layers, with
+    explicit None for some and others omitted entirely. The C++ class
+    isce3::cuda::geometry::Topo::topo() documents an all-nullptr default
+    contract for the 11 output rasters, mirrored on the CPU sibling
+    binding. Without this test, the binding-layer regression that drops
+    the `= nullptr` defaults is invisible to CI because the existing
+    test_run_raster_layers passes every kwarg explicitly.
+    '''
+    radargrid = unit_test_params.radargrid
+    length, width = radargrid.shape
+
+    # Subset matching COMPASS's typical call: x/y/height + layoverShadow,
+    # plus a few explicit Nones (exercising pybind11's None-to-nullptr
+    # conversion) and the remaining four output rasters omitted entirely
+    # (exercising the kwarg defaults).
+    fnames_dtypes = [
+        ("opt_x", gdal.GDT_Float64),
+        ("opt_y", gdal.GDT_Float64),
+        ("opt_z", gdal.GDT_Float64),
+        ("opt_layoverShadow", gdal.GDT_Byte),
+    ]
+    x_raster, y_raster, height_raster, layover_shadow_raster = [
+        isce3.io.Raster(f"{fname}.rdr", width, length, 1, dtype, "ENVI")
+        for fname, dtype in fnames_dtypes
+    ]
+
+    unit_test_params.rdr2geo_obj.topo(
+        unit_test_params.dem_raster,
+        x_raster=x_raster,
+        y_raster=y_raster,
+        height_raster=height_raster,
+        local_incidence_angle_raster=None,
+        layover_shadow_raster=layover_shadow_raster,
+        ground_to_sat_east_raster=None,
+        ground_to_sat_north_raster=None,
     )
 
 
