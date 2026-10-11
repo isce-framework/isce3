@@ -4,7 +4,8 @@ import os
 from datetime import datetime
 
 from nisar.products.readers.attitude import load_attitude_from_xml
-from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.readers.orbit import load_orbit_from_xml, load_orbit
+from nisar.products.readers import SLC
 
 import isce3
 
@@ -13,10 +14,11 @@ from .util import truncate_datetime_to_integer_seconds
 
 
 def get_cropped_orbit_and_attitude(
-    orbit_xml_file: str | os.PathLike,
-    pointing_xml_file: str | os.PathLike,
-    start_time: str | datetime | None,
-    end_time: str | datetime | None,
+    input_file_path: str | os.PathLike | None = None,
+    orbit_xml_file: str | os.PathLike | None = None,
+    pointing_xml_file: str | os.PathLike | None = None,
+    start_time: str | datetime | None = None,
+    end_time: str | datetime | None = None,
     *,
     padding: float = 0.0,
 ) -> tuple[isce3.core.Orbit, isce3.core.Attitude]:
@@ -31,10 +33,12 @@ def get_cropped_orbit_and_attitude(
 
     Parameters
     ----------
-    orbit_xml_file : path-like
+    input_file_path : str or os.PathLike or None
+        Path to the input NISAR L1 RSLC formatted HDF5 file.
+    orbit_xml_file : path-like or None
         Path to the input orbit ephemeris XML file. Must be an existing XML file
         conforming to the NISAR Orbit Ephemeris Product Specification\ [1]_.
-    pointing_xml_file : path-like
+    pointing_xml_file : path-like or None
         Path to the input radar pointing XML file. Must be an existing XML file
         conforming to the NISAR Radar Pointing Product Specification\ [2]_.
     start_time : str or datetime.datetime or None
@@ -70,16 +74,48 @@ def get_cropped_orbit_and_attitude(
 
     logger = get_logger()
 
-    # Load ephemeris data from input XML files.
-    logger.info(f"Load orbit data from file {orbit_xml_file}")
-    orbit_full = load_orbit_from_xml(orbit_xml_file)
+    if orbit_xml_file is not None:
+        # Load ephemeris data from input XML files.
+        logger.info(f"Load orbit data from file {orbit_xml_file}")
+
+        if input_file_path is not None:
+            # Ensure the orbit is referenced to the RSLC radar grid
+            # reference epoch.
+            rslc_product = SLC(hdf5file=str(input_file_path))
+            rslc_radar_grid = rslc_product.getRadarGrid()
+            orbit_full = load_orbit(rslc_product, orbit_xml_file,
+                                    rslc_radar_grid.ref_epoch)
+        else:
+            orbit_full = load_orbit_from_xml(orbit_xml_file)
+
+    elif input_file_path is not None:
+        # Load ephemeris data from input RSLC HDF5 file.
+        logger.info(f"Load orbit data from RSLC file {input_file_path}")
+        rslc_product = SLC(hdf5file=str(input_file_path))
+        orbit_full = rslc_product.getOrbit()
+    else:
+        raise ValueError(
+            "Either the RSLC HDF5 or the orbit XML file must be provided"
+        )
+
     logger.info(
         "Original orbit data spans time interval"
         f" [{orbit_full.start_datetime, orbit_full.end_datetime}]"
     )
 
-    logger.info(f"Load attitude data from file {pointing_xml_file}")
-    attitude_full = load_attitude_from_xml(pointing_xml_file)
+    if pointing_xml_file is not None:
+        logger.info(f"Load attitude data from file {pointing_xml_file}")
+        attitude_full = load_attitude_from_xml(pointing_xml_file)
+    elif input_file_path is not None:
+        # Load attitude data from input RSLC HDF5 file.
+        logger.info(f"Load attitude data from RSLC file {input_file_path}")
+        rslc_product = SLC(hdf5file=str(input_file_path))
+        attitude_full = rslc_product.getAttitude()
+    else:
+        raise ValueError(
+            "Either the RSLC HDF5 or the pointing XML file must be provided"
+        )
+
     logger.info(
         "Original attitude data spans time interval"
         f" [{attitude_full.start_datetime, attitude_full.end_datetime}]"

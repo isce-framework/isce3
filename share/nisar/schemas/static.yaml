@@ -1,10 +1,11 @@
 runconfig:
   groups:
     dynamic_ancillary_file_group:
+      input_file_path: str(required=False)
       dem_raster_file: str()
       water_mask_raster_file: str()
-      orbit_xml_file: str()
-      pointing_xml_file: str()
+      orbit_xml_file: str(required=False)
+      pointing_xml_file: str(required=False)
     product_path_group: include('product_path_group_options', required=False)
     primary_executable: include('primary_executable_options', required=False)
     geometry: include('geometry_options', required=False)

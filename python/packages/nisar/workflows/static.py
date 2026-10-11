@@ -7,6 +7,7 @@ import os
 from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
+from xmlrpc.client import DateTime
 
 import h5py
 import nisar
@@ -33,6 +34,8 @@ from nisar.static.water_mask import binarize_and_reproject_water_mask
 import isce3
 from isce3.geometry import make_geo_grid_bounding_polygon, load_dem_from_proj
 from isce3.core import normalize_look_side, normalize_data_interp_method
+from nisar.products.readers import SLC
+import numpy as np
 
 
 def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
@@ -62,6 +65,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
     output_params = groups["output"]
 
     # Open the input DEM and water mask raster datasets.
+    input_file_path = dynamic_ancillary_files["input_file_path"]
     dem_raster_file = dynamic_ancillary_files["dem_raster_file"]
     water_mask_raster_file = dynamic_ancillary_files["water_mask_raster_file"]
     logger.info(f"Open DEM raster file {dem_raster_file}")
@@ -86,13 +90,13 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
         geo_grid.end_y,
         geo_grid.start_y,
         normalize_data_interp_method(dem_interp_method),
-        proj,
-    )
+        proj)
 
-    # Parse the orbit and attitude data from the input XML files. Crop the
-    # data to the time interval of interest to avoid possible geo2rdr
-    # convergence errors due to ambiguity between orbit periods.
+    # Load the orbit and attitude data from the input RSLC or XML files.
+    # Crop the data to the time interval of interest to avoid possible
+    # geo2rdr convergence errors due to ambiguity between orbit periods.
     orbit, attitude = get_cropped_orbit_and_attitude(
+        input_file_path=input_file_path,
         orbit_xml_file=dynamic_ancillary_files["orbit_xml_file"],
         pointing_xml_file=dynamic_ancillary_files["pointing_xml_file"],
         **processing_params["ephemeris"],
@@ -131,7 +135,7 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
 
     if rg_spacing is not None and not (rg_spacing > 0.0):
         raise ValueError(f"Runconfig {rg_spacing=}, must be > 0")
-
+        
     bounding_box_params = radar_grid_params["bounding_box"]
     start_datetime_str = bounding_box_params["start_time"]
     end_datetime_str = bounding_box_params["end_time"]
@@ -160,15 +164,52 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
             end_time = isce3.core.DateTime(end_datetime_str)
 
         if start_range is not None:
-            logger.info(f'    start range [m]: {start_range}')
+            logger.info(f'    start range: {start_range}')
 
         if end_range is not None:
-            logger.info(f'    end range [m]: {end_range}')
+            logger.info(f'    end range: {end_range}')
 
     if rg_spacing is not None:
         logger.info(f'    range spacing: {rg_spacing}')
     if az_spacing is not None:
         logger.info(f'    azimuth time interval: {az_spacing}')
+
+    # Load radar grid parameters from RSLC (if provided)
+    if (input_file_path is not None and
+            (start_time is None or end_time is None or
+             start_range is None or end_range is None or
+             rg_spacing is None or az_spacing is None)):
+        logger.info("Load radar grid parameters from input RSLC file:")
+        rslc_product = SLC(hdf5file=str(input_file_path))
+        rslc_radar_grid = rslc_product.getRadarGrid()
+        rslc_orbit = rslc_product.getOrbit()
+
+        if start_time is None:
+            start_time = (rslc_orbit.reference_epoch +
+                          isce3.core.TimeDelta(
+                              rslc_radar_grid.sensing_start))
+            logger.info(f"    start time: {start_time.isoformat()}")
+
+        if end_time is None:
+            end_time = (rslc_orbit.reference_epoch +
+                        isce3.core.TimeDelta(
+                            rslc_radar_grid.sensing_stop))
+            logger.info(f"    end time: {end_time.isoformat()}")
+
+        if start_range is None:
+            start_range = rslc_radar_grid.starting_range
+            logger.info(f"    start range: {start_range}")
+        if end_range is None:
+            end_range = rslc_radar_grid.end_range
+            logger.info(f"    end range: {end_range}")
+
+        if rg_spacing is None:
+            rg_spacing = rslc_radar_grid.range_pixel_spacing
+            logger.info(f"    range spacing: {rg_spacing}")
+
+        if az_spacing is None:
+            az_spacing = 1.0 / rslc_radar_grid.prf
+            logger.info(f"    azimuth time interval: {az_spacing}")
 
     if start_time is not None and az_margin != 0.0:
         start_time -= isce3.core.TimeDelta(az_margin)
