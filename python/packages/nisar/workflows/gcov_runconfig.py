@@ -111,6 +111,16 @@ class GCOVRunConfig(RunConfig):
         rtc_dict['algorithm_type_enum'] = \
             isce3.geometry.normalize_rtc_algorithm(rtc_dict['algorithm_type'])
 
+        if (rtc_dict['input_terrain_radiometry'] is None and
+            (geocode_dict['radiometric_calibration_lut'] == 'beta0' or
+                geocode_dict['radiometric_calibration_lut'] == 'sigma0')):
+            rtc_dict['input_terrain_radiometry'] = \
+                geocode_dict['radiometric_calibration_lut']
+
+        # otherwise, the RTC input terrain radiometry defaults to `beta0`
+        elif rtc_dict['input_terrain_radiometry'] is None:
+            rtc_dict['input_terrain_radiometry'] = 'beta0'
+
         if rtc_dict['input_terrain_radiometry'] == "sigma0":
             rtc_dict['input_terrain_radiometry_enum'] = \
                 isce3.geometry.RtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID
