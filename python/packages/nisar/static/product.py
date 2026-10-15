@@ -204,7 +204,7 @@ def populate_identification_group(
     platform_name : str
         The platform name (e.g. 'NISAR').
     instrument_name : str
-        The instrument name (e.g. 'L-SAR' or 'S-SAR').
+        The instrument name (e.g. 'LSAR' or 'SSAR').
     radar_band : str
         The radar band (e.g. 'L' or 'S').
     processing_center : str

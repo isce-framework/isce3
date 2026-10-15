@@ -914,7 +914,7 @@ runconfig:
                 bridge:
                     enabled: True
                     # Maximum radius used when bridging disconnected regions.
-                    bridge_radius: 500
+                    bridge_radius: 300
                     # Size of the structuring element used for erosion
                     # during bridge labeling.
                     bridge_erosion_size: 2

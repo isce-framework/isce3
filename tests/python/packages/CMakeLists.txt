@@ -32,6 +32,7 @@ isce3/signal/rfi_freq_null.py
 isce3/signal/rfi_process_evd.py
 isce3/signal/rfi_tone_rank.py
 isce3/solid_earth_tides/solid_earth_tides.py
+isce3/unwrap/bridge.py
 nisar/antenna/beamformer.py
 nisar/antenna/pattern.py
 nisar/cal/corner_reflector_slc_func.py
