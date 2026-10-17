@@ -579,6 +579,51 @@ cuAmpcorChunk::cuAmpcorChunk(cuAmpcorParameter *param_, GDALImage *reference_, G
 // destructor
 cuAmpcorChunk::~cuAmpcorChunk()
 {
+    // processors, before the arrays they work on
+    delete corrNormalizerRaw;
+    delete corrNormalizerOverSampled;
+    if(param->oversamplingMethod) {
+        delete corrSincOverSampler;
+    }
+    else {
+        delete corrOverSampler;
+    }
+    if(param->algorithm == 0) {
+        delete cuCorrFreqDomain;
+        delete cuCorrFreqDomain_OverSampled;
+    }
+    delete referenceBatchOverSampler;
+    delete secondaryBatchOverSampler;
+
+    // arrays (the chunk buffers c/r_reference/secondaryChunkRaw are deleted after each load)
+    delete ChunkOffsetDown;
+    delete ChunkOffsetAcross;
+    delete c_referenceBatchRaw;
+    delete c_secondaryBatchRaw;
+    delete r_referenceBatchRaw;
+    delete r_secondaryBatchRaw;
+    delete c_secondaryBatchZoomIn;
+    delete c_referenceBatchOverSampled;
+    delete c_secondaryBatchOverSampled;
+    delete r_referenceBatchOverSampled;
+    delete r_secondaryBatchOverSampled;
+    delete r_corrBatchRaw;
+    delete r_corrBatchZoomIn;
+    delete r_corrBatchZoomInAdjust;
+    delete r_corrBatchZoomInOverSampled;
+    delete offsetInit;
+    delete offsetZoomIn;
+    delete offsetFinal;
+    delete maxLocShift;
+    delete corrMaxValue;
+    delete r_corrBatchRawZoomIn;
+    delete i_corrBatchZoomInValid;
+    delete r_corrBatchSum;
+    delete i_corrBatchValidCount;
+    delete i_maxloc;
+    delete r_maxval;
+    delete r_snrValue;
+    delete r_covValue;
 }
 
 } // namespace

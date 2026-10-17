@@ -50,17 +50,24 @@ __device__ void complexSumReduceBlock(float2& sum, volatile float *shmem)
     if (nthreads >= 512) { if (tid < 256) { addInShared(shmem, tid, 256, nthreads); } __syncthreads(); }
     if (nthreads >= 256) { if (tid < 128) { addInShared(shmem, tid, 128, nthreads); } __syncthreads(); }
     if (nthreads >= 128) { if (tid <  64) { addInShared(shmem, tid,  64, nthreads); } __syncthreads(); }
+    // reduction within a warp; lanes of a warp are not executed in lockstep (since Volta),
+    // __syncwarp separates the reads and writes of each step
     if (tid < 32)
     {
-        addInShared(shmem, tid, 32, nthreads);
-        addInShared(shmem, tid, 16, nthreads);
-        addInShared(shmem, tid,  8, nthreads);
-        addInShared(shmem, tid,  4, nthreads);
-        addInShared(shmem, tid,  2, nthreads);
-        addInShared(shmem, tid,  1, nthreads);
+        float vx = shmem[tid], vy = shmem[tid + nthreads];
+        for (int offset = 32; offset > 0; offset /= 2) {
+            vx += shmem[tid + offset];
+            vy += shmem[tid + offset + nthreads];
+            __syncwarp();
+            shmem[tid] = vx;
+            shmem[tid + nthreads] = vy;
+            __syncwarp();
+        }
     }
     __syncthreads();
     copyFromShared(sum, shmem, 0, nthreads);
+    // all threads have to read the result before shmem is reused (e.g., by another reduction)
+    __syncthreads();
 }
 
 // cuda kernel for cuLinearDeramp with Method 1

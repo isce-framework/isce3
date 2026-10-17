@@ -49,15 +49,24 @@ __device__ void max_reduction(const float* const images,
     if (BLOCKSIZE >=512) { if (tid < 256) { maxPairReduce(shval, shloc, tid, tid + 256); } __syncthreads(); }
     if (BLOCKSIZE >=256) { if (tid < 128) { maxPairReduce(shval, shloc, tid, tid + 128); } __syncthreads(); }
     if (BLOCKSIZE >=128) { if (tid < 64 ) { maxPairReduce(shval, shloc, tid, tid + 64 ); } __syncthreads(); }
-    // reduction within a warp
+    // reduction within a warp; lanes of a warp are not executed in lockstep (since Volta),
+    // __syncwarp separates the reads and writes of each step
     if (tid < 32)
     {
-        maxPairReduce(shval, shloc, tid, tid + 32);
-        maxPairReduce(shval, shloc, tid, tid + 16);
-        maxPairReduce(shval, shloc, tid, tid +  8);
-        maxPairReduce(shval, shloc, tid, tid +  4);
-        maxPairReduce(shval, shloc, tid, tid +  2);
-        maxPairReduce(shval, shloc, tid, tid +  1);
+        float val = shval[tid];
+        int loc = shloc[tid];
+        for (int offset = 32; offset > 0; offset /= 2) {
+            const float other = shval[tid + offset];
+            const int otherLoc = shloc[tid + offset];
+            if (val < other) {
+                val = other;
+                loc = otherLoc;
+            }
+            __syncwarp();
+            shval[tid] = val;
+            shloc[tid] = loc;
+            __syncwarp();
+        }
     }
     __syncthreads();
 }
@@ -211,7 +220,7 @@ static inline __device__ int2 dev_adjustOffset(
     if(start<0)     // if exceeding the limit on the left
     {
         // set start at 0 and record the shift of center
-        shift = -start;
+        shift = start;
         start = 0;
     }
     else if(start > rbound ) // if exceeding the limit on the right
