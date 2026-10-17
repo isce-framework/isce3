@@ -207,8 +207,8 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     # Open reference slc
     ref_slc = SLC(hdf5file=input_hdf5)
 
-    # prelim setup
-    common_path = 'science/LSAR'
+    # prelim setup - auto-detect LSAR or SSAR from input file
+    common_path = ref_slc.RootPath.lstrip('/')
     src_meta_path = ref_slc.MetadataPath
     dst_meta_path = f'{common_path}/{dst}/metadata'
 
@@ -382,9 +382,9 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
 
         # Copy product specifics
         if is_insar:
-            copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path)
+            copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path, common_path)
         else:
-            copy_gslc_gcov_meta(ref_slc.SwathPath, dst, src_h5, dst_h5)
+            copy_gslc_gcov_meta(ref_slc.SwathPath, dst, src_h5, dst_h5, common_path)
             if ref_slc.productType in ref_slc.SwathPath:
                 # Regular case
                 dst_path = ref_slc.SwathPath.replace(ref_slc.productType, dst)
@@ -412,12 +412,12 @@ def copy_zero_doppler_time_spacing(src_h5, swath_path, dst_h5, dst_path):
                      long_name="zero doppler time spacing")
 
 
-def copy_gslc_gcov_meta(src_swath_path, dst, src_h5, dst_h5):
+def copy_gslc_gcov_meta(src_swath_path, dst, src_h5, dst_h5, root_path='science/LSAR'):
     '''
     Copy metadata info for GSLC GCOV workflows
     '''
     # prelim setup
-    common_parent_path = 'science/LSAR'
+    common_parent_path = root_path.lstrip('/')
 
     for freq in ['A', 'B']:
         ds_ref = f'{src_swath_path}/frequency{freq}'
@@ -445,11 +445,11 @@ def copy_gslc_gcov_meta(src_swath_path, dst, src_h5, dst_h5):
                         flag_overwrite=True)
 
 
-def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):
+def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path, root_path='science/LSAR'):
     '''
     Copy metadata specific to INSAR workflow
     '''
-    common_path = 'science/LSAR'
+    common_path = root_path.lstrip('/')
     dst_meta_path = f'{common_path}/{dst}/metadata'
 
     secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file']
@@ -519,8 +519,15 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
     '''
     Prepare datasets for GSLC and GCOV
     '''
-    # unpack info
-    common_parent_path = 'science/LSAR'
+    # unpack info - auto-detect LSAR or SSAR from the HDF5 file
+    # Check if LSAR or SSAR exists in the file
+    if 'science/LSAR' in dst_h5:
+        common_parent_path = 'science/LSAR'
+    elif 'science/SSAR' in dst_h5:
+        common_parent_path = 'science/SSAR'
+    else:
+        # Default to LSAR for backwards compatibility
+        common_parent_path = 'science/LSAR'
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     chunk_size = cfg['output']['chunk_size']
 

@@ -17,6 +17,7 @@ from isce3.core.resample_block_generators import get_blocks
 from isce3.io.gdal.gdal_raster import GDALRaster
 from isce3.product import RadarGridParameters
 from nisar.products.readers import SLC
+from nisar.products.readers.Base import get_hdf5_file_root_path
 from nisar.workflows.get_product_geometry import \
     get_geolocation_grid as compute_geogrid_geometry
 from nisar.workflows.h5_prep import get_off_params
@@ -437,12 +438,14 @@ def check_hdf5_freq_pols(h5_path: str, freq_pols: dict):
 
     # use with to ensure h5_obj closes
     with h5_obj:
-        product_type = h5_obj['/science/LSAR/identification/productType'][()].decode('UTF-8')
+        # Auto-detect root path (LSAR or SSAR)
+        root_path = get_hdf5_file_root_path(h5_path)
+        product_type = h5_obj[f'{root_path}/identification/productType'][()].decode('UTF-8')
         if product_type.startswith('G'):
             grid_type = 'grids'
         else:
             grid_type = 'swaths'
-        grid_path = f'/science/LSAR/{product_type}/{grid_type}'
+        grid_path = f'{root_path}/{product_type}/{grid_type}'
 
         # get swath/grid group from hdf5
         grid_group = h5_obj[grid_path]

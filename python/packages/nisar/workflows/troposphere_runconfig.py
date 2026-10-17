@@ -6,6 +6,7 @@ import os
 import pygrib
 
 from isce3.io import HDF5OptimizedReader
+from nisar.products.readers.Base import get_hdf5_file_root_path
 from nisar.workflows.runconfig import RunConfig
 
 def troposphere_delay_check(cfg):
@@ -56,7 +57,9 @@ def troposphere_delay_check(cfg):
 
             # RSLC start time
             with HDF5OptimizedReader(name=rslc_file, mode='r', libver='latest', swmr=True) as f:
-                rslc_date = f['science/LSAR/identification/zeroDopplerStartTime'][()]\
+                # Auto-detect root path (LSAR or SSAR)
+                root_path = get_hdf5_file_root_path(rslc_file)
+                rslc_date = f[f'{root_path}/identification/zeroDopplerStartTime'][()]\
                         .astype('datetime64[s]').astype(datetime)
 
 

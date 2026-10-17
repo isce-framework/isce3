@@ -26,8 +26,8 @@ class RIFGWriter(L1InSARWriter):
         # HDF5 IO optimizer configuration
         self.hdf5_optimizer_config = hdf5_opt_config
 
-        # RIFG group paths
-        self.group_paths = RIFGGroupsPaths()
+        # RIFG group paths - use auto-detected RootPath from reference RSLC
+        self.group_paths = RIFGGroupsPaths(RootPath=self.ref_rslc.RootPath)
 
         # RIFG product information
         self.product_info = InSARProductsInfo.RIFG()

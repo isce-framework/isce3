@@ -30,7 +30,7 @@ class CommonPaths:
         Parameters group path
     """
     ProductName: str = ""
-    RootPath: str = "/science/LSAR"
+    RootPath: str = "/science/LSAR"  # Default to LSAR; can be set to "/science/SSAR" for S-band
 
     @property
     def IdentificationPath(self):
