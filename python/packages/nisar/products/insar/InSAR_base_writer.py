@@ -935,7 +935,8 @@ class InSARBaseWriter(h5py.File):
         Add the identification group to the product
         """
         warning_channel = journal.warning('InSAR_base_writer.add_identification_to_hdf5')
-        radar_band_name = self._get_band_name()
+        radar_band = self._get_radar_band()
+        instrument_name = self._get_instrument_name()
         primary_exec_cfg = self.cfg["primary_executable"]
 
         processing_center = primary_exec_cfg.get("processing_center")
@@ -1192,7 +1193,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "instrumentName",
-                f"{radar_band_name}-SAR",
+                f"{instrument_name}",
                 (
                     "Name of the instrument used to collect the remote"
                     " sensing data provided in this product"
@@ -1223,7 +1224,7 @@ class InSARBaseWriter(h5py.File):
                 '"Custom": user-initiated processing outside the nominal production system',
             ),
             DatasetParams(
-                "radarBand", radar_band_name,
+                "radarBand", radar_band,
                 'Acquired frequency band, either "L" or "S"'
             ),
              DatasetParams(
@@ -1270,33 +1271,42 @@ class InSARBaseWriter(h5py.File):
         for ds_param in id_ds_names_to_be_created:
             add_dataset_and_attrs(dst_id_group, ds_param)
 
-    def _get_band_name(self):
+
+    def _get_radar_band(self):
         """
-        Get the band name ('L', 'S'), Raises exception if neither is found.
+        Get the acquisition radar band from the input RSLC product.
 
         Returns
         ----------
         str
-            'L', 'S'
+            String representing the band name
         """
-        freq = "A" if "A" in self.freq_pols else "B"
-        swath_frequency_path = f"{self.ref_rslc.SwathPath}/frequency{freq}/"
-        freq_group = self.ref_h5py_file_obj[swath_frequency_path]
+        radar_band_path = "/science/LSAR/identification/radarBand"
+        radar_band = self.ref_h5py_file_obj[radar_band_path][()]
 
-        # Center frequency in GHz
-        center_frequency = freq_group["processedCenterFrequency"][()] / 1e9
+        if isinstance(radar_band, bytes):
+            radar_band = radar_band.decode()
 
-        # L band if the center frequency is between 1GHz and 2 GHz
-        # S band if the center frequency is between 2GHz and 4 GHz
-        # both bands are defined by the IEEE with the reference:
-        # https://en.wikipedia.org/wiki/L_band
-        # https://en.wikipedia.org/wiki/S_band
-        if (center_frequency >= 1.0) and (center_frequency <= 2.0):
-            return "L"
-        elif (center_frequency > 2.0) and (center_frequency <= 4.0):
-            return "S"
-        else:
-            raise ValueError("Unknown frequency encountered. Not L or S band")
+        return radar_band
+
+
+    def _get_instrument_name(self):
+        """
+        Get the acquisition instrument name from the input RSLC product.
+
+        Returns
+        ----------
+        str
+            String representing the instrument name
+        """
+        instrument_name_path = "/science/LSAR/identification/instrumentName"
+        instrument_name = self.ref_h5py_file_obj[instrument_name_path][()]
+
+        if isinstance(instrument_name, bytes):
+            instrument_name = instrument_name.decode()
+
+        return instrument_name
+
 
     def _get_mixed_mode(self):
         """
