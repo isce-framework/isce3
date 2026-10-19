@@ -408,9 +408,13 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max, epsg):
     # range of longitudes rather than the full [-180, 180] deg
     if x_min <= -180.0 and dem_epsg == 4326:
         ds = gdal.Open(outpath, gdal.GA_Update)
+        projection = ds.GetProjection()
         geotransform = list(ds.GetGeoTransform())
         geotransform[0] += 360.0
         ds.SetGeoTransform(tuple(geotransform))
+        # Updating the geotransform of a GeoTIFF tagged
+        # AREA_OR_POINT=Point drops its CRS, so restore it
+        ds.SetProjection(projection)
 
     ds = None
 
