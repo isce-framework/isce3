@@ -70,8 +70,6 @@ io/decode_bfpq_lut.cpp
 io/Raster.cpp
 io/serialization.cpp
 io/io.cpp
-matchtemplate/matchtemplate.cpp
-matchtemplate/pycuampcor.cpp
 math/math.cpp
 math/Stats.cpp
 polsar/symmetrize.cpp
@@ -112,8 +110,6 @@ if(WITH_CUDA)
          cuda/image/image.cpp
          cuda/image/Resample.cpp
          cuda/image/ResampSlc.cpp
-         cuda/matchtemplate/matchtemplate.cpp
-         cuda/matchtemplate/pycuampcor.cpp
          cuda/signal/signal.cpp
          cuda/signal/Crossmul.cpp
          )
