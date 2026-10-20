@@ -103,6 +103,7 @@ signal/Filter.cpp
 signal/flatten.cpp
 signal/Looks.cpp
 signal/NFFT.cpp
+signal/NFFT2d.cpp
 signal/shiftSignal.cpp
 signal/signalUtils.cpp
 signal/Signal.cpp

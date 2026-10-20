@@ -30,6 +30,8 @@ std::string getErrorString(ErrorCode status)
             return "specified tolerance or number of iterations is invalid";
         case ErrorCode::InvalidInterval:
             return "specified interval does not contain a solution";
+        case ErrorCode::InvalidKernelSize:
+            return "kernel size exceeds compile-time limit";
     }
 
     throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unknown error code");

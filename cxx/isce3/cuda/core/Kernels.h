@@ -125,6 +125,60 @@ private:
     double _bandwidth;
 };
 
+/**
+ * NFFT time-domain kernel
+ *
+ * This is called \f$ \phi(x) \f$ in the NFFT papers @cite keiner2009,
+ * specifically the Kaiser-Bessel window function.
+ * The domain is scaled so that usage is the same as other ISCE kernels, e.g.,
+ * for x in [0,n) instead of [-0.5,0.5).
+ */
+template<typename T>
+class NFFTKernel : public Kernel<T, NFFTKernel<T>> {
+    using Base = Kernel<T, NFFTKernel<T>>;
+    friend Base;
+
+public:
+    /** A non-owning kernel view type that can be passed to device code */
+    using view_type = NFFTKernel<T>;
+
+    /**
+     * Construct a new NFFTKernel object.
+     *
+     * \param[in] m         Half kernel size (width = 2*m+1)
+     * \param[in] n         Length of input signal
+     * \param[in] fft_size  FFT transform size (> n)
+     */
+    NFFTKernel(int m, int n, int fft_size);
+
+    /** Construct from corresponding host kernel object */
+    NFFTKernel(const isce3::core::NFFTKernel<T>& other);
+
+    /** Get half kernel size. */
+    int kernel_radius() const { return m_; }
+
+    /** Get length of input signal. */
+    int data_size() const { return n_; }
+
+    /** Get FFT transform size. */
+    int fft_size() const { return fft_size_; }
+
+    explicit operator isce3::core::NFFTKernel<T>() const {
+        return {kernel_radius(), data_size(), fft_size()};
+    }
+
+protected:
+    /** \internal Implementation of \p operator() */
+    CUDA_HOSTDEV T eval(double t) const;
+
+private:
+    int m_;
+    int n_;
+    int fft_size_;
+    T scale_;
+    T b_;
+};
+
 /** A non-owning reference to a TabulatedKernel object */
 template<typename T>
 class TabulatedKernelView : public Kernel<T, TabulatedKernelView<T>> {

@@ -5,6 +5,7 @@ from nisar.workflows import focus
 from nisar.workflows.point_target_analysis import slc_pt_performance
 import nisar
 from pathlib import Path
+import pytest
 import numpy as np
 import numpy.testing as npt
 import os
@@ -33,8 +34,14 @@ def slc_is_baseband(filename: str, tol=2*np.pi/100, frequency="A", polarization=
     return abs(np.angle(dz.sum())) < tol
 
 
-def test_focus():
+direct_bp = [focus.Struct({"size": 1})]
+factorized_bp_64 = [focus.Struct({"size": 64})]
+
+@pytest.mark.parametrize("factorization", (direct_bp, factorized_bp_64))
+def test_focus(factorization):
     cfg = get_test_cfg()
+    cfg.runconfig.groups.processing.azcomp.factorization = factorization
+
     focus.focus(cfg)
     filename = cfg.runconfig.groups.product_path_group.sas_output_file
 
