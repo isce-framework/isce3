@@ -423,6 +423,44 @@ def unary_transform_blockwise(
         dst[subblock] = transform(src[subblock])
 
 
+def binary_transform_blockwise(
+    transform: Callable[[np.ndarray, np.ndarray], np.ndarray],
+    src1: isce3.io.DatasetReader,
+    src2: isce3.io.DatasetReader,
+    dst: isce3.io.DatasetWriter,
+    *,
+    chunks: tuple[int, int] = (512, 512),
+) -> None:
+    """
+    Transform the contents of two datasets by applying a binary function
+    block-by-block.
+
+    Parameters
+    ----------
+    transform : callable
+        The function to apply to each pair of blocks from the input datasets.
+        It should accept two `numpy.ndarray` objects as positional arguments and
+        return a `numpy.ndarray` of the same shape.
+    src1 : isce3.io.DatasetReader
+        The first input dataset.
+    src2 : isce3.io.DatasetReader
+        The second input dataset.
+    dst : isce3.io.DatasetWriter
+        The output dataset to write the result to.
+    chunks : (int, int), optional
+        The shape of a typical block. The last block along each axis may be smaller.
+        Each chunk dimension must be positive-valued. Defaults to (512, 512).
+    """
+    if src1.shape != src2.shape:
+        raise ValueError(f"shape mismatch: {src1.shape=} must be equal to {src2.shape=}")
+
+    if src1.shape != dst.shape:
+        raise ValueError(f"shape mismatch: {src1.shape=} must be equal to {dst.shape=}")
+
+    for subblock in block_iterator(src1.shape, chunks):
+        dst[subblock] = transform(src1[subblock], src2[subblock])
+
+
 def copy_blockwise(
     src: isce3.io.DatasetReader,
     dst: isce3.io.DatasetWriter,
