@@ -1491,6 +1491,16 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             rfi_mitigation_path != '' and
             'disabled' not in rfi_mitigation_path.lower())
 
+        # populate processing information parameters
+        for xy in ['x', 'y']:
+            parameters_group = \
+                '{PRODUCT}/metadata/processingInformation/parameters'
+            self.copy_from_runconfig(
+                f'{parameters_group}/geocoding/snapToGrid{xy.upper()}',
+                f'processing/geocode/{xy}_snap',
+                default=np.nan,
+                format_function=np.float32)
+
         parameters_group = \
             '{PRODUCT}/metadata/processingInformation/parameters'
 
