@@ -1,7 +1,11 @@
+import itertools
+
 import numpy as np
 import pytest
+from scipy.spatial.distance import cdist
 
-from isce3.unwrap.bridge_phase import label_boundary, label_conn_comp
+from isce3.unwrap.bridge_phase import (bridgeConnectComponent, label_boundary,
+                                       label_conn_comp)
 
 
 @pytest.fixture
@@ -78,3 +82,35 @@ def test_label_boundary_inconsistent_count(component_mask):
               r"but num_label is 1",
     ):
         label_boundary(label_img, num_label=1, erosion_size=1)
+
+def test_get_all_bridge_matches_brute_force():
+    # Non-convex, nested and edge-touching regions
+    conncomp = np.zeros((40, 60), dtype=np.uint32)
+    conncomp[2:20, 2:8] = 1
+    conncomp[2:8, 2:30] = 1                # L-shape
+    conncomp[12:30, 14:40] = 1
+    conncomp[16:26, 18:36] = 0             # ring with a hole...
+    conncomp[19:23, 24:30] = 1             # ...and an island inside it
+    conncomp[30:40, 45:60] = 1             # touches the image edge
+    conncomp[0:5, 50:55] = 1
+
+    bridge = bridgeConnectComponent(conncomp)
+    bridge.label(min_num_pixel=1, erosion_size=0)
+    conn, dist_mat = bridge.get_all_bridge()
+    assert bridge.num_label == 5
+
+    # Brute force over every pixel of each region
+    points = [np.argwhere(bridge.labelImg == i + 1)
+              for i in range(bridge.num_label)]
+    for i, j in itertools.combinations(range(bridge.num_label), 2):
+        expected = cdist(points[i], points[j]).min()
+        assert dist_mat[i, j] == pytest.approx(expected)
+        assert dist_mat[j, i] == pytest.approx(expected)
+
+        # Endpoints lie in their regions and realize the distance
+        bridge_ij = conn[f"{i + 1}_{j + 1}"]
+        yx_i = bridge_ij[str(i + 1)].astype(int)
+        yx_j = bridge_ij[str(j + 1)].astype(int)
+        assert bridge.labelImg[tuple(yx_i)] == i + 1
+        assert bridge.labelImg[tuple(yx_j)] == j + 1
+        assert np.hypot(*(yx_i - yx_j)) == pytest.approx(expected)
