@@ -2064,7 +2064,7 @@ def focus(runconfig, runconfig_path=""):
                 # Only write rich HDF5 for tone-rank
                 (rfi_results_h5.require_group(f"raw{raw_times[0]:05.0f}")
                     if using_tone_rank else None),
-                raw.getCenterFrequency(channel_in.freq_id),
+                raw.getCenterFrequency(channel_in.freq_id, tx=pol[0]),
                 fs,
             )
             rfi_results[(frequency, pol)].append(
