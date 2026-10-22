@@ -62,7 +62,7 @@ def cmdLineParse():
                              ' considered valid for latitudes above 70 degrees North and the DEM in' \
                              ' epsg 3031 is considered valid below latitude 70 degrees South.')
     parser.add_argument('-v', '--version', type=str, action='store',
-                        default='1.2', dest='version',
+                        default='1.3', dest='version',
                         help='DEM version in the form of major_number.minor_number')
     return parser.parse_args()
 
@@ -432,7 +432,7 @@ def download_dem(polys, epsg, outfile, version):
         Path to the output DEM file to be staged
     version: str
         DEM version. This is contained in the filepath to
-        the DEM VRTs (e.g., s3://nisar-dem/v1.2/EPSG4326/<EPSG4326_FILES>).
+        the DEM VRTs (e.g., s3://nisar-dem/v1.3/EPSG4326/<EPSG4326_FILES>).
         DEM version is in the form of major_version.minor_version
     """
     # Download DEM for each polygon/epsg
@@ -581,7 +581,7 @@ def get_readme_contents(in_readme_path: str) -> str:
     ----------
     in_readme_path : str
         Path to the README file in the nisar-dem S3 bucket (e.g.
-        '/vsis3/nisar-dem/v1.2/EPSG4326/README.txt').
+        '/vsis3/nisar-dem/v1.3/EPSG4326/README.txt').
 
     Returns
     -------
@@ -613,8 +613,8 @@ def extract_readme_bullet_item(readme_text: str, name: str) -> str:
     key-value pairs, e.g.
 
     ```
-    - Name: Copernicus DEM for NISAR v1.2 (EPSG 4326)
-    - Version: 1.2
+    - Name: Modified Copernicus DEM for NISAR v1.3 (EPSG:4326)
+    - Version: 1.3
     - EPSG code: 4326
     [...]
     ```
@@ -777,7 +777,7 @@ def check_dem_overlap(DEMFilepath, polys):
     return perc_area
 
 
-def check_aws_connection(version='1.2'):
+def check_aws_connection(version='1.3'):
     """Check connection to AWS s3://nisar-dem bucket
        Throw exception if no connection is established
 
