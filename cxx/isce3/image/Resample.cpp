@@ -3,9 +3,9 @@
 #include <isce3/core/Constants.h>
 #include <isce3/core/Interpolator.h>
 #include <isce3/core/LUT2d.h>
+#include <isce3/core/Poly2d.h>
 
 namespace isce3::image::v2 {
-
 
 void resampleToCoords(
     ArrayRef2D<std::complex<float>> resampled_data_block,
