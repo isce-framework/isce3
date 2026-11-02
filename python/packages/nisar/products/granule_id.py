@@ -1,6 +1,7 @@
 from __future__ import annotations
 from collections.abc import Iterable
 from isce3.core import DateTime
+import re
 
 # Mapping between polarizations available in a product and the corresponding
 # two-character abbreviation.
@@ -63,3 +64,23 @@ def format_datetime(time: DateTime) -> str:
     """
     # strip fraction of second and punctuation
     return time.isoformat().split('.')[0].replace('-', '').replace(':', '')
+
+
+# NISAR file naming convention, JPL D-102255B, p.12
+rrsd_pattern = re.compile(r"""
+    (?P<mission> NISAR)_
+    (?P<instrument> [LS])(?P<level> 0)_  # LSAR | SSAR instrument
+    (?P<processing_type> [PU]R)_  # production | urgent response
+    (?P<product_id> RRSD)_
+    (?P<cycle> \d{3})_  # orbit cycle
+    (?P<track> \d{3})_  # orbit ground track number (relative)
+    (?P<orbit_direction> [AD])_   # ascending | descending orbit
+    (?P<radar_config_id> \d{3})(?P<mixed_flag> [SM])_
+    (?P<start_datetime> \d{4}[01]\d[0123]\dT[012]\d[0-6]\d[0-6]\d)_
+    (?P<end_datetime> \d{4}[01]\d[0123]\dT[012]\d[0-6]\d[0-6]\d)_
+    (?P<crid> \w\d{5})_
+    (?P<ephemeris_accuracy> [TPMNF])_  # telemetry | precise | medium | near-realtime | forecast
+    (?P<processing_center> [JN])_  # JPL | NRSC
+    (?P<product_counter> \d{3})
+    """,
+    re.VERBOSE)
