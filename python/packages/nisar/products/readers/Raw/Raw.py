@@ -3,6 +3,7 @@ from .DataDecoder import DataDecoder
 import h5py
 import isce3
 from isce3.focus import RadarPoint, RadarBoundingBox
+from functools import cached_property
 import logging
 from nisar.products.readers import Base
 from nisar.products.granule_id import rrsd_pattern
@@ -1117,13 +1118,13 @@ class RawBase(Base, family='nisar.productreader.raw'):
             return group.get(key, np.ones(naz, np.complex64))[()]
 
 
-    def getRadarConfigID(self) -> int:
+    @cached_property
+    def radar_config_id(self) -> int:
         """
-        Return the radar configuration identifier (RC_ID) that uniquely
-        identifies the active set of radar parameters in the mode table.  Note
-        that the mode table itself may change over time, and this routine
-        returns the RC_ID corresponding to the mode table that was in use during
-        the observation.
+        The radar configuration identifier (RC_ID) that uniquely identifies the
+        active set of radar parameters in the mode table.  Note that the mode
+        table itself may change over time, and this routine returns the RC_ID
+        corresponding to the mode table that was in use during the observation.
         """
         # The RC_ID in the file name is considered the most relaible source
         # since SDS/PCM examines the radar observation sequence table (ROST)
