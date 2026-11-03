@@ -49,6 +49,9 @@ def pybind_resample(
         output_slc,
         input_slc,
         range_indices,
+        # azimuth_indices passed twice because this private interface to the C++
+        # resample code receives both total and geometric offsets.
+        azimuth_indices,
         azimuth_indices,
         input_radar_grid,
         doppler,
