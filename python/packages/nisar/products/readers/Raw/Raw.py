@@ -1126,24 +1126,34 @@ class RawBase(Base, family='nisar.productreader.raw'):
         table itself may change over time, and this routine returns the RC_ID
         corresponding to the mode table that was in use during the observation.
         """
-        # The RC_ID in the file name is considered the most relaible source
-        # since SDS/PCM examines the radar observation sequence table (ROST)
-        # to populate it.  The low-rate telemetry containing the RC_ID may be
-        # corrupted, misaligned, and/or too short to reliably report the RC_ID.
+        # The latest L0Bs should have a dedicated field for RC_ID, populated
+        # based on analysis of the radar observation sequence table (ROST).
+        # That's the most reliable source and is our first preference.
+        path = f"{self.IdentificationPath}/observationModeId"
+        with h5py.File(self.filename, mode='r', swmr=True) as h5:
+            if path in h5:
+                rcid = int(h5[path][()])
+                log.info(f"RC_ID={rcid:03d} determined from identification")
+                return rcid
+
+        # The RC_ID in the file name is populated the same way and is the
+        # preferred source for older L0Bs without the dedicated field.  The
+        # low-rate telemetry containing the RC_ID may be corrupted, misaligned,
+        # and/or too short to reliably report the RC_ID.
         match = rrsd_pattern.search(self.filename)
         if match is not None:
-            rcid = match.group("radar_config_id")
-            log.info(f"RC_ID={rcid} determined from L0B file name")
-            return int(rcid)
+            rcid = int(match.group("radar_config_id"))
+            log.info(f"RC_ID={rcid:03d} determined from L0B file name")
+            return rcid
 
-        log.info("Unable to get RC_ID from file name so using lowRateTemeletry")
         path = f"{self.TelemetryPath}/DRT/IFSW/ST_IFSW_CUR_RCID"
         with h5py.File(self.filename, mode='r', swmr=True) as h5:
             # NOTE this probably doesn't exist in REE simulations
             if path not in h5:
                 raise KeyError("Unable to determine RC_ID because L0B file "
                                f"does not contain dataset={path}")
-            rcid = np.nanmedian(h5[path])
+            rcid = int(np.nanmedian(h5[path]))
+            log.info(f"RC_ID={rcid:03d} determined from lowRateTemeletry")
         return rcid
 
 
