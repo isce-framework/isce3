@@ -840,6 +840,22 @@ def compute_transmit_pattern_weights(tx_trm_info, norm=False):
                             assume_sorted=True, axis=0)
     tx_weights[noise_lines_idx] = func_nearest(noise_lines_idx)
 
+    # Now fill in zero-filled/invalid ones due to bad telemetry or
+    # missing range lines with nearest neighbor for all TX channels.
+    # For the sake of generailty, treat each channel separately.
+    for n in range(active_tx_idx.size):
+        wgt_abs = np.abs(tx_weights[:, n])
+        msk_z = np.isclose(wgt_abs, 0)
+        if np.any(msk_z):
+            msk_nz = ~msk_z
+            idx_nz = np.nonzero(msk_nz)[0]
+            f_nearest = interp1d(
+                idx_nz, tx_weights[idx_nz, n], kind='nearest',
+                fill_value='extrapolate', assume_sorted=True
+            )
+            idx_z = np.nonzero(msk_z)[0]
+            tx_weights[idx_z, n] = f_nearest(idx_z)
+
     # power normalize across channels if requested
     if norm:
         # replace zero-value norms with unity to avoid bad normalization for
