@@ -110,20 +110,33 @@ void resampleToCoords(
 
                 // Azimuth time at the current output pixel
                 // unit: time (seconds)
-                const double az_time =
+                const double az_time_tot =
                     radar_grid.sensingStart() +
                     azimuth_tot_ind /
                     radar_grid.prf();
 
+                // Azimuth time at the current output pixel, geometric
+                // unit: time (seconds)
+                const double az_time_geom =
+                    radar_grid.sensingStart() +
+                    azimuth_geom_ind /
+                    radar_grid.prf();
+
                 // If the doppler LUT doesn't contain this coordinate, fill this pixel
                 // with the given fill_value and skip it.
-                if (not native_doppler_lut.contains(az_time, rg_distance))
+                if (not native_doppler_lut.contains(az_time_tot, rg_distance))
                     continue;
                 
                 // Evaluate doppler at current range and azimuth time
                 // unit: frequency (radians per sample)
-                const double doppler_freq =
-                    native_doppler_lut.eval(az_time, rg_distance) * 2 * M_PI / 
+                const double doppler_freq_tot =
+                    native_doppler_lut.eval(az_time_tot, rg_distance) * 2 * M_PI / 
+                    radar_grid.prf();
+                
+                // Evaluate doppler at current range and azimuth time
+                // unit: frequency (radians per sample)
+                const double doppler_freq_geom =
+                    native_doppler_lut.eval(az_time_geom, rg_distance) * 2 * M_PI / 
                     radar_grid.prf();
 
                 // Read data chip
@@ -134,7 +147,7 @@ void resampleToCoords(
 
                     // Doppler phase at chip pixel
                     // unit: phase (radians)
-                    const double doppler_phase = doppler_freq * (i_chip - chip_half);
+                    const double doppler_phase = doppler_freq_tot * (i_chip - chip_half);
 
                     // Compute doppler phase to be removed from radar data.
                     // (i.e. as a unit vector on the complex plane.)
@@ -159,7 +172,7 @@ void resampleToCoords(
                 // Interpolation performed on data stripped of doppler.
                 // Calculate the doppler shift doppler shift to be reintroduced.
                 const double doppler_resampled_phase =
-                    doppler_freq * azimuth_geom_index_remainder;
+                    doppler_freq_geom * (azimuth_geom_ind - azimuth_tot_ind_int);
                 const std::complex<float> doppler_resampled_phasor(
                     std::cos(doppler_resampled_phase),
                     std::sin(doppler_resampled_phase)

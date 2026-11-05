@@ -113,19 +113,28 @@ void _resampleToCoordsGlobal(
 
     // Azimuth time at the current output pixel
     // unit: time (seconds)
-    const double az_time = sensingStart + azimuth_total_ind * pri;
+    const double az_time_tot = sensingStart + azimuth_total_ind * pri;
+
+    // Azimuth time at the current output pixel, geometric
+    // unit: time (seconds)
+    const double az_time_geom = sensingStart + azimuth_geom_ind * pri;
 
     // If the doppler LUT doesn't contain this coordinate, fill this pixel
     // with the given fill_value and skip it.
-    if (not native_doppler_lut.contains(az_time, rg_distance)) {
+    if (not native_doppler_lut.contains(az_time_tot, rg_distance)) {
         resampled_data_block[pixel_index] = fill_value;
         return;
     }
     
     // Evaluate doppler at current range and azimuth time
     // unit: frequency (radians per sample)
-    const auto doppler_freq =
-        native_doppler_lut.eval(az_time, rg_distance) * 2.0 * M_PI * pri;
+    const auto doppler_freq_tot =
+        native_doppler_lut.eval(az_time_tot, rg_distance) * 2.0 * M_PI * pri;
+    
+    // Evaluate doppler at current range and azimuth time, geometric
+    // unit: frequency (radians per sample)
+    const auto doppler_freq_geom =
+        native_doppler_lut.eval(az_time_geom, rg_distance) * 2.0 * M_PI * pri;
 
     // Read data chip
     for (int chip_az = 0; chip_az < SINC_ONE; ++chip_az){
@@ -135,7 +144,7 @@ void _resampleToCoordsGlobal(
 
         // Compute doppler phase to be removed from radar data.
         // (i.e. as a unit vector on the complex plane.)
-        const double doppler_phase = doppler_freq * (chip_az - SINC_HALF);
+        const double doppler_phase = doppler_freq_tot * (chip_az - SINC_HALF);
         const thrust::complex<float> doppler_phase_conj(
             std::cos(doppler_phase), -std::sin(doppler_phase));
 
@@ -159,7 +168,7 @@ void _resampleToCoordsGlobal(
     // Interpolation performed on data stripped of doppler.
     // Calculate the doppler phase shift to be reintroduced.
     const double doppler_resampled_phase =
-        doppler_freq * azimuth_geom_index_remainder;
+        doppler_freq_geom * (azimuth_geom_ind - azimuth_total_ind_int);
     const thrust::complex<float> doppler_resampled_phasor(
         std::cos(doppler_resampled_phase),
         std::sin(doppler_resampled_phase)
