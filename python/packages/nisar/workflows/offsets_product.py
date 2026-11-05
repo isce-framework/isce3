@@ -4,13 +4,16 @@ import time
 import isce3
 import journal
 import numpy as np
+import pycuampcor
 from isce3.io import HDF5OptimizedReader
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.compute_stats import (compute_stats_real_data,
                                            compute_stats_real_hdf5_dataset)
-from nisar.workflows.dense_offsets import create_empty_dataset
-from nisar.workflows.helpers import (copy_raster, get_cfg_freq_pols,
+from nisar.workflows.dense_offsets import (create_empty_dataset,
+                                          get_ampcor_slc,
+                                          get_ampcor_workflow)
+from nisar.workflows.helpers import (get_cfg_freq_pols,
                                      get_ground_track_velocity_product)
 from nisar.workflows.offsets_product_runconfig import OffsetsProductRunConfig
 from nisar.products.insar.product_paths import ROFFGroupsPaths
@@ -53,10 +56,6 @@ def run(cfg: dict, output_hdf5: str = None):
     if use_gpu:
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
         isce3.cuda.core.set_device(device)
-    else:
-        err_str = "Currently ISCE3 supports only GPU cross-correlation"
-        error_channel.log(err_str)
-        raise NotImplementedError(err_str)
 
     # Get the slant range and zero doppler time spacing
     ref_radar_grid = ref_slc.getRadarGrid()
@@ -95,19 +94,20 @@ def run(cfg: dict, output_hdf5: str = None):
                 out_dir = off_scratch / pol
                 out_dir.mkdir(parents=True, exist_ok=True)
 
-                # Create a memory-mappable (ENVI) version of the ref SLC
-                copy_raster(ref_hdf5, freq, pol,
-                            offs_params['lines_per_block'],
-                            str(out_dir / 'reference'), file_type='ENVI')
+                # Reference SLC: the HDF5 dataset, or a memory-mappable
+                # (ENVI) copy
+                ref_path = get_ampcor_slc(ref_hdf5, freq, pol,
+                                          offs_params['lines_per_block'],
+                                          str(out_dir / 'reference'))
                 ref_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
                 ref_raster = isce3.io.Raster(ref_str)
 
-                # Create a memory mappable version (ENVI) of secondary
+                # Secondary SLC: the HDF5 dataset or a memory mappable copy,
+                # or the coregistered SLC
                 if coreg_slc_path.is_file():
-                    sec_path = str(out_dir / 'secondary')
-                    copy_raster(sec_hdf5, freq, pol,
-                                offs_params['lines_per_block'],
-                                sec_path, file_type='ENVI')
+                    sec_path = get_ampcor_slc(sec_hdf5, freq, pol,
+                                              offs_params['lines_per_block'],
+                                              str(out_dir / 'secondary'))
                 else:
                     sec_path = str(coreg_slc_path /
                                    f'coarse_resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
@@ -122,15 +122,19 @@ def run(cfg: dict, output_hdf5: str = None):
                     error_channel.log(err_str)
                     raise ValueError(err_str)
 
+                # Configure an Ampcor object for each layer
+                layers = []
                 for key in layer_keys:
-                    # Create and initialize Ampcor object (only GPU for now)
+                    # Create and initialize Ampcor object
                     if use_gpu:
-                        ampcor = isce3.cuda.matchtemplate.PyCuAmpcor()
+                        ampcor = pycuampcor.PyCuAmpcor()
                         ampcor.deviceID = cfg['worker']['gpu_id']
-                        ampcor.useMmap = 1
+                    else:
+                        ampcor = pycuampcor.PyCPUAmpcor()
+                    ampcor.useMmap = 1
 
                     # Set parameters related to reference/secondary RSLC
-                    ampcor.referenceImageName = str(out_dir / 'reference')
+                    ampcor.referenceImageName = ref_path
                     ampcor.referenceImageHeight = ref_raster.length
                     ampcor.referenceImageWidth = ref_raster.width
                     ampcor.secondaryImageName = sec_path
@@ -158,7 +162,7 @@ def run(cfg: dict, output_hdf5: str = None):
                             layer_scratch_path / 'gross_offset')
                     ampcor.snrImageName = str(layer_scratch_path / 'snr')
                     ampcor.covImageName = str(layer_scratch_path / 'covariance')
-                    ampcor.corrImageName = str(layer_scratch_path/ 'correlation_peak')
+                    ampcor.peakValueImageName = str(layer_scratch_path / 'correlation_peak')
 
                     create_empty_dataset(str(layer_scratch_path / 'dense_offsets'),
                                          ampcor.numberWindowAcross,
@@ -180,11 +184,14 @@ def run(cfg: dict, output_hdf5: str = None):
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 1,
                                          gdal.GDT_Float32)
+                    layers.append(ampcor)
 
-                    # Run ampcor and delete ampcor object after is done
-                    ampcor.runAmpcor()
-                    del ampcor
+                # Run Ampcor for all layers and delete the objects after
+                run_ampcor_layers(layers)
+                del ampcor, layers
 
+                for key in layer_keys:
+                    layer_scratch_path = out_dir / key
                     pixel_offsets_path = f'{roff_obj.SwathsPath}/frequency{freq}/pixelOffsets'
                     prod_path = f'{pixel_offsets_path}/{pol}/{key}'
 
@@ -225,6 +232,25 @@ def run(cfg: dict, output_hdf5: str = None):
     info_channel.log(
         f"successfully ran offsets product in {t_elapsed:.3f} seconds")
 
+def run_ampcor_layers(layers):
+    '''
+    Run Ampcor for several offset layers sharing the images and the
+    offsets grid
+    Parameters
+    ----------
+    layers: list of pycuampcor.PyCuAmpcor or pycuampcor.PyCPUAmpcor
+        Ampcor objects (one per layer) with all parameters set
+    '''
+    ampcor_cls = type(layers[0])
+    if hasattr(ampcor_cls, 'runAmpcorLayers'):
+        # Load each chunk of the images once for all layers
+        ampcor_cls.runAmpcorLayers(layers)
+    else:
+        # Older pycuampcor: run the layers one after another
+        for ampcor in layers:
+            ampcor.runAmpcor()
+
+
 def set_ampcor_params(cfg, ampcor_obj):
     '''
     Set Ampcor optional object parameters
@@ -232,7 +258,7 @@ def set_ampcor_params(cfg, ampcor_obj):
     ----------
     cfg: dict
         Dictionary with user-defined Ampcor parameters
-    ampcor_obj: isce3.cuda.matchtemplate.PyCuAmpcor()
+    ampcor_obj: pycuampcor.PyCuAmpcor or pycuampcor.PyCPUAmpcor
         Ampcor object to set members value; its window size must be
         already set to that of the current layer
     '''
@@ -259,6 +285,8 @@ def set_ampcor_params(cfg, ampcor_obj):
     # Set cross-correlation domain, oversampling factor and deramping
     ampcor_obj.algorithm = 0 if cfg['cross_correlation_domain'] == \
                                 'frequency' else 1
+    if cfg.get('cross_correlation_workflow') is not None:
+        ampcor_obj.workflow = get_ampcor_workflow(cfg['cross_correlation_workflow'])
     ampcor_obj.rawDataOversamplingFactor = cfg['slc_oversampling_factor']
 
     if cfg['deramping_method'] is not None:
@@ -287,9 +315,12 @@ def set_ampcor_params(cfg, ampcor_obj):
         'correlation_surface_oversampling_factor']
     ampcor_obj.corrSurfaceOverSamplingMethod = 0 if \
         cfg['correlation_surface_oversampling_method'] == 'fft' else 1
-    ampcor_obj.numberWindowAcrossInChunk = cfg['windows_batch_range']
-    ampcor_obj.numberWindowDownInChunk = cfg['windows_batch_azimuth']
-    ampcor_obj.nStreams = cfg['cuda_streams']
+    if cfg['windows_batch_range'] is not None:
+        ampcor_obj.numberWindowAcrossInChunk = cfg['windows_batch_range']
+    if cfg['windows_batch_azimuth'] is not None:
+        ampcor_obj.numberWindowDownInChunk = cfg['windows_batch_azimuth']
+    if cfg['cuda_streams'] is not None:
+        ampcor_obj.nStreams = cfg['cuda_streams']
 
     # Setup object parameters and check gross/variable dense offsets
     ampcor_obj.setupParams()

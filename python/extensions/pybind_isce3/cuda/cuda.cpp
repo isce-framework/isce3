@@ -5,7 +5,6 @@
 #include "geocode/geocode.h"
 #include "geometry/geometry.h"
 #include "image/image.h"
-#include "matchtemplate/matchtemplate.h"
 #include "signal/signal.h"
 
 namespace py = pybind11;
@@ -19,6 +18,5 @@ void addsubmodule_cuda(py::module& m)
     addsubmodule_cuda_geocode(m_cuda);
     addsubmodule_cuda_geometry(m_cuda);
     addsubmodule_cuda_image(m_cuda);
-    addsubmodule_cuda_matchtemplate(m_cuda);
     addsubmodule_cuda_signal(m_cuda);
 }
