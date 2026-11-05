@@ -55,8 +55,12 @@ runconfig:
             # SAS writes output product to the following file. PGE may rename.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
-            # In INSAR mode, GUNW, GOFF, RIFG, ROFF, and RUNW will be prepended
-            # to sas_output_file
+            # The behavior of this field in InSAR is as follows: For any filepath
+            # input here e.g. output/product.h5, the filename given will be prepended
+            # with each product produced, so for a run producing RUNW, RIFG, GUNW:
+            # - output/RIFG_product.h5
+            # - output/RUNW_product.h5
+            # - output/GUNW_product.h5
             sas_output_file: _product.h5
 
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
