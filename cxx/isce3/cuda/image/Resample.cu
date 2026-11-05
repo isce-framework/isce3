@@ -33,7 +33,8 @@ void _resampleToCoordsGlobal(
     const size_t input_block_length,
     thrust::complex<float>* chip,
     const double* range_input_indices,
-    const double* azimuth_input_indices,
+    const double* azimuth_tot_indices,
+    const double* azimuth_geom_indices,
     const double startingRange,
     const double rangePixelSpacing,
     const double sensingStart,
@@ -66,10 +67,12 @@ void _resampleToCoordsGlobal(
     // unit: column pixels on input array (double)
     const auto range_input_ind = range_input_indices[pixel_index];
     // unit: row pixels on input array (double)
-    const auto azimuth_input_ind = azimuth_input_indices[pixel_index];
+    const auto azimuth_total_ind = azimuth_tot_indices[pixel_index];
+    // unit: row pixels on input array (double)
+    const auto azimuth_geom_ind = azimuth_geom_indices[pixel_index];
 
     // Skip if either the azimuth or range input index are NaN.
-    if (std::isnan(azimuth_input_ind) || std::isnan(range_input_ind)) {
+    if (std::isnan(azimuth_total_ind) || std::isnan(range_input_ind)) {
         resampled_data_block[pixel_index] = fill_value;
         return;
     }
@@ -77,7 +80,9 @@ void _resampleToCoordsGlobal(
     // unit: range column indices (int)
     const auto range_input_ind_int = __double2int_rd(range_input_ind);
     // unit: azimuth row indices (int)
-    const auto azimuth_input_ind_int = __double2int_rd(azimuth_input_ind);
+    const auto azimuth_total_ind_int = __double2int_rd(azimuth_total_ind);
+    // unit: azimuth row indices (int)
+    const auto azimuth_geom_ind_int = __double2int_rd(azimuth_geom_ind);
     
     // Check if chip indices could be outside radar grid minus margin to
     // account for sinc chip. Fill with fill_value and skip if chip indices
@@ -85,8 +90,8 @@ void _resampleToCoordsGlobal(
     if (
         (range_input_ind_int < SINC_HALF) ||
         (range_input_ind_int >= (input_block_width - SINC_HALF)) ||
-        (azimuth_input_ind_int < SINC_HALF) ||
-        (azimuth_input_ind_int >= (input_block_length - SINC_HALF))
+        (azimuth_total_ind_int < SINC_HALF) ||
+        (azimuth_total_ind_int >= (input_block_length - SINC_HALF))
     ) {
         resampled_data_block[pixel_index] = fill_value;
         return;
@@ -96,8 +101,11 @@ void _resampleToCoordsGlobal(
     const auto range_input_index_remainder =
         range_input_ind - __int2double_rn(range_input_ind_int);
     // unit: azimuth row indices (double)
-    const auto azimuth_input_index_remainder =
-        azimuth_input_ind - __int2double_rn(azimuth_input_ind_int);
+    const auto azimuth_total_index_remainder =
+        azimuth_total_ind - __int2double_rn(azimuth_total_ind_int);
+    // unit: azimuth row indices (double)
+    const auto azimuth_geom_index_remainder =
+        azimuth_geom_ind - __int2double_rn(azimuth_geom_ind_int);
 
     // Slant Range at the current output pixel
     // unit: distance (meters)
@@ -105,29 +113,38 @@ void _resampleToCoordsGlobal(
 
     // Azimuth time at the current output pixel
     // unit: time (seconds)
-    const double az_time = sensingStart + azimuth_input_ind * pri;
+    const double az_time_tot = sensingStart + azimuth_total_ind * pri;
+
+    // Azimuth time at the current output pixel, geometric
+    // unit: time (seconds)
+    const double az_time_geom = sensingStart + azimuth_geom_ind * pri;
 
     // If the doppler LUT doesn't contain this coordinate, fill this pixel
     // with the given fill_value and skip it.
-    if (not native_doppler_lut.contains(az_time, rg_distance)) {
+    if (not native_doppler_lut.contains(az_time_tot, rg_distance)) {
         resampled_data_block[pixel_index] = fill_value;
         return;
     }
     
     // Evaluate doppler at current range and azimuth time
     // unit: frequency (radians per sample)
-    const auto doppler_freq =
-        native_doppler_lut.eval(az_time, rg_distance) * 2.0 * M_PI * pri;
+    const auto doppler_freq_tot =
+        native_doppler_lut.eval(az_time_tot, rg_distance) * 2.0 * M_PI * pri;
+    
+    // Evaluate doppler at current range and azimuth time, geometric
+    // unit: frequency (radians per sample)
+    const auto doppler_freq_geom =
+        native_doppler_lut.eval(az_time_geom, rg_distance) * 2.0 * M_PI * pri;
 
     // Read data chip
     for (int chip_az = 0; chip_az < SINC_ONE; ++chip_az){
         // Row to read from in Azimuth coordinates
         // unit: azimuth row indices (int)
-        const auto az_chip_idx = azimuth_input_ind_int + chip_az - SINC_HALF;
+        const auto az_chip_idx = azimuth_total_ind_int + chip_az - SINC_HALF;
 
         // Compute doppler phase to be removed from radar data.
         // (i.e. as a unit vector on the complex plane.)
-        const double doppler_phase = doppler_freq * (chip_az - SINC_HALF);
+        const double doppler_phase = doppler_freq_tot * (chip_az - SINC_HALF);
         const thrust::complex<float> doppler_phase_conj(
             std::cos(doppler_phase), -std::sin(doppler_phase));
 
@@ -151,7 +168,7 @@ void _resampleToCoordsGlobal(
     // Interpolation performed on data stripped of doppler.
     // Calculate the doppler phase shift to be reintroduced.
     const double doppler_resampled_phase =
-        doppler_freq * azimuth_input_index_remainder;
+        doppler_freq_geom * (azimuth_geom_ind - azimuth_total_ind_int);
     const thrust::complex<float> doppler_resampled_phasor(
         std::cos(doppler_resampled_phase),
         std::sin(doppler_resampled_phase)
@@ -161,7 +178,7 @@ void _resampleToCoordsGlobal(
     const thrust::complex<float> interpolated_complex_val =
         interp.interpolate(
             SINC_HALF + range_input_index_remainder,
-            SINC_HALF + azimuth_input_index_remainder,
+            SINC_HALF + azimuth_total_index_remainder,
             &chip[chip_start],
             chip_size,
             chip_size
@@ -197,7 +214,8 @@ gpuResampleToCoords(
     ArrayRef2D<std::complex<float>> resampled_data_block,
     const ConstArrayRef2D<std::complex<float>> input_data_block,
     const ConstArrayRef2D<double> range_input_indices,
-    const ConstArrayRef2D<double> azimuth_input_indices,
+    const ConstArrayRef2D<double> azimuth_total_indices,
+    const ConstArrayRef2D<double> azimuth_geometric_indices,
     const isce3::product::RadarGridParameters& radar_grid,
     const isce3::core::LUT2d<double>& native_doppler_lut,
     const std::complex<float> fill_value
@@ -231,7 +249,8 @@ gpuResampleToCoords(
     // Declare device vectors for all input data and copy the input data to them.
     auto d_input_data = _copyToDeviceAs<thrust::complex<float>>(input_data_block);
     auto d_range_indices = _copyToDevice(range_input_indices);
-    auto d_azimuth_indices = _copyToDevice(azimuth_input_indices);
+    auto d_azimuth_tot_indices = _copyToDevice(azimuth_total_indices);
+    auto d_azimuth_geom_indices = _copyToDevice(azimuth_geometric_indices);
 
     gpuLUT2d<double> d_doppler(native_doppler_lut);
 
@@ -262,7 +281,8 @@ gpuResampleToCoords(
         in_length,
         d_chip.data().get(),
         d_range_indices.data().get(),
-        d_azimuth_indices.data().get(),
+        d_azimuth_tot_indices.data().get(),
+        d_azimuth_geom_indices.data().get(),
         radar_grid.startingRange(),
         radar_grid.rangePixelSpacing(),
         radar_grid.sensingStart(),

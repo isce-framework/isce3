@@ -19,8 +19,10 @@ using isce3::image::v2::ConstArrayRef2D;
  * block of SLC data in radar coordinates basebanded in range direction
  * @param[in] range_input_indices
  * range (radar-coordinates x) index of the pixels in input grid
- * @param[in] azimuth_input_indices
- * azimuth (radar-coordinates y) index of the pixels in input grid
+ * @param[in] azimuth_total_indices
+ * azimuth (radar-coordinates y) index of the pixels in input grid for resampling
+ * @param[in] azimuth_geometric_indices
+ * azimuth (radar-coordinates y) index of the pixels in input grid for reramping
  * @param[in] radar_grid
  * RadarGridParameters of input radar data
  * @param[in] native_doppler_lut
@@ -32,7 +34,8 @@ void gpuResampleToCoords(
     ArrayRef2D<std::complex<float>> resampled_data_block,
     const ConstArrayRef2D<std::complex<float>> input_data_block,
     const ConstArrayRef2D<double> range_input_indices,
-    const ConstArrayRef2D<double> azimuth_input_indices,
+    const ConstArrayRef2D<double> azimuth_total_indices,
+    const ConstArrayRef2D<double> azimuth_geometric_indices,
     const isce3::product::RadarGridParameters& radar_grid,
     const isce3::core::LUT2d<double>& native_doppler_lut,
     const std::complex<float> fill_value = std::complex<float>(
