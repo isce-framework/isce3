@@ -1140,7 +1140,8 @@ class RawBase(Base, family='nisar.productreader.raw'):
         # preferred source for older L0Bs without the dedicated field.  The
         # low-rate telemetry containing the RC_ID may be corrupted, misaligned,
         # and/or too short to reliably report the RC_ID.
-        match = rrsd_pattern.search(self.filename)
+        # NOTE Cast to str() in case of pathlib.Path object.
+        match = rrsd_pattern.search(str(self.filename))
         if match is not None:
             rcid = int(match.group("radar_config_id"))
             log.info(f"RC_ID={rcid:03d} determined from L0B file name")
