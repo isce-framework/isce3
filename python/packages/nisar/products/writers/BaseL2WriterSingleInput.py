@@ -842,7 +842,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             list_of_frequencies)
 
         self.copy_from_input(
-            'identification/listOfObservationModes',
+            'identification/listOfObservationModeIds',
+            default=['(NOT SPECIFIED)'])
+
+        self.copy_from_input(
+            'identification/listOfObservationModeNames',
             default=['(NOT SPECIFIED)'])
 
         self.copy_from_input(
@@ -862,8 +866,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
     def populate_ceos_analysis_ready_data_parameters_l2_common(self):
 
         ceos_ard_document_identifier = \
-            ('https://ceos.org/ard/files/PFS/SAR/v1.0/CEOS-ARD_PFS'
-             '_Synthetic_Aperture_Radar_v1.0.pdf')
+            ('https://ceos.org/ard/files/PFS/SAR/v1.3.1/'
+             'CEOS-ARD_PFS_SAR_v1.3.1.pdf')
         self.set_value(
             '{PRODUCT}/metadata/ceosAnalysisReadyData/'
             'ceosAnalysisReadyDataDocumentIdentifier',
