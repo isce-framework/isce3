@@ -170,41 +170,27 @@ rdr2geo(isce3::core::Vec3* llh, const isce3::core::Pixel& pixel,
 
 
 NVCC_HD_WARNING_DISABLE
-template<class Orbit, class DEMInterpolator>
+template<class DEMInterpolator>
 CUDA_HOSTDEV isce3::error::ErrorCode
-rdr2geo_bracket(isce3::core::Vec3* xyz,
-        double aztime, double slantRange, double doppler, const Orbit& orbit,
+polar2geo_bracket(isce3::core::Vec3* xyz, double* lookAngle,
+        const isce3::core::Vec3& origin, const isce3::core::Vec3& axis,
+        const double slantRange, const double sinSquint, const double cosSquint,
         const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
-        double wavelength, isce3::core::LookSide side,
-        const Rdr2GeoBracketParams& params)
+        isce3::core::LookSide side, const Rdr2GeoBracketParams& params)
 {
     using namespace isce3::core;
     using isce3::error::ErrorCode;
 
-    // Interpolate orbit to get radar position and velocity.
-    Vec3 radarXYZ, velocity;
-    const auto errCode = orbit.interpolate(&radarXYZ, &velocity, aztime);
-    if (errCode != ErrorCode::Success) {
-        return errCode;
-    }
-    const double speed = velocity.norm();
-
-    // Construct some useful basis vectors.
+    // Construct some useful basis vectors.  Naming assumes axis is along-track.
     // For simplicity we'll use geocentric nadir (not geodetic),
     // which determines our definition of look angle.
-    const Vec3 alongTrack = velocity / speed;
-    const Vec3 right = alongTrack.cross(radarXYZ).normalized();
-    const Vec3 down = alongTrack.cross(right);
+    const Vec3 right = axis.cross(origin).normalized();
+    const Vec3 down = axis.cross(right);
     const Vec3 horizontal = (side == LookSide::Right) ? right : -right;
 
-    // Convert Doppler into equivalent squint angle.
-    const double sinSquint = doppler * wavelength / (2 * speed);
-    // NOTE squint is in [-90, 90] by definition.
-    const double cosSquint = std::sqrt(1.0 - sinSquint * sinSquint);
-
-    // Doppler cone and range sphere intersect to make a circle with
-    // the following parameters.
-    const Vec3 center = radarXYZ + sinSquint * slantRange * alongTrack;
+    // Axis & angle define a cone, and range defines a sphere.
+    // These intersect to make a circle with the following parameters.
+    const Vec3 center = origin + sinSquint * slantRange * axis;
     const double radius = cosSquint * slantRange;
 
     // Parameterize points on this circle with an angle similar to look angle.
@@ -221,9 +207,9 @@ rdr2geo_bracket(isce3::core::Vec3* xyz,
     // Now we just need to find the angle on this circle where it intersects
     // the DEM.  Create an error function we'll feed to a root finder.
     auto dh = [&](double look) {
-        const Vec3 xyz = getXYZ(look);
+        const Vec3 xyz_ = getXYZ(look);
         Vec3 lonLatH;
-        ellipsoid.xyzToLonLat(xyz, lonLatH);
+        ellipsoid.xyzToLonLat(xyz_, lonLatH);
         return lonLatH[2] - dem.interpolateLonLat(lonLatH[0], lonLatH[1]);
     };
 
@@ -231,14 +217,72 @@ rdr2geo_bracket(isce3::core::Vec3* xyz,
     const double tolLook = params.tol_height / radius;
 
     // Solve.
-    double lookSolution = 0.0;
+    *lookAngle = 0.0;
     const auto err = isce3::math::find_zero_brent(
-            params.look_min, params.look_max, dh, tolLook, &lookSolution);
+            params.look_min, params.look_max, dh, tolLook, lookAngle);
     if (err != ErrorCode::Success) {
         return err;
     }
-    *xyz = getXYZ(lookSolution);
+    *xyz = getXYZ(*lookAngle);
     return ErrorCode::Success;
+
+}
+
+
+NVCC_HD_WARNING_DISABLE
+template<class DEMInterpolator>
+CUDA_HOSTDEV isce3::error::ErrorCode
+polar2polar_bracket(double* outSinSquint, double* outRange,
+        const double inSinSquint, const double inCosSquint,
+        const double inRange,
+        const isce3::core::Vec3& inOrigin, const isce3::core::Vec3& inAxis,
+        const isce3::core::Vec3& outOrigin, const isce3::core::Vec3& outAxis,
+        const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
+        const isce3::core::LookSide& side, const Rdr2GeoBracketParams& params)
+{
+    using isce3::error::ErrorCode;
+    isce3::core::Vec3 xyz;
+    double lookAngle;
+    auto errCode = polar2geo_bracket(&xyz, &lookAngle, inOrigin, inAxis,
+        inRange, inSinSquint, inCosSquint, dem, ellipsoid, side, params);
+    if (errCode != ErrorCode::Success) {
+        return errCode;
+    }
+    // geo2polar
+    const isce3::core::Vec3 lookvec = xyz - outOrigin;
+    *outRange = lookvec.norm();
+    *outSinSquint = lookvec.dot(outAxis) / (*outRange);
+    return ErrorCode::Success;
+}
+
+
+NVCC_HD_WARNING_DISABLE
+template<class Orbit, class DEMInterpolator>
+CUDA_HOSTDEV isce3::error::ErrorCode
+rdr2geo_bracket(isce3::core::Vec3* xyz,
+        double aztime, double slantRange, double doppler, const Orbit& orbit,
+        const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
+        double wavelength, isce3::core::LookSide side,
+        const Rdr2GeoBracketParams& params)
+{
+    using isce3::error::ErrorCode;
+
+    // Interpolate orbit to get radar position and velocity.
+    isce3::core::Vec3 radarXYZ, velocity;
+    const auto errCode = orbit.interpolate(&radarXYZ, &velocity, aztime);
+    if (errCode != ErrorCode::Success) {
+        return errCode;
+    }
+    const auto speed = velocity.norm();
+
+    // Convert Doppler into equivalent squint angle.
+    const double sinSquint = doppler * wavelength / (2 * speed);
+    // NOTE squint is in [-90, 90] by definition.
+    const double cosSquint = std::sqrt(1.0 - sinSquint * sinSquint);
+
+    double lookAngle = 0;
+    return polar2geo_bracket(xyz, &lookAngle, radarXYZ, velocity / speed,
+        slantRange, sinSquint, cosSquint, dem, ellipsoid, side, params);
 }
 
 }}} // namespace isce3::geometry::detail

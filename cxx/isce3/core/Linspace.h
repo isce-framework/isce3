@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.h"
+#include <array>
 
 namespace isce3 { namespace core {
 
@@ -119,6 +120,17 @@ public:
     CUDA_HOSTDEV
     constexpr
     int search(U) const;
+
+    /**
+     * Get the boundaries implied by a Linspace of bin center coordinates.
+     *
+     * \returns The array [leading_edge, trailing_edge] where leading_edge is a
+     * half step ahead of first() and trailing_edge is a half step beyond
+     * last()
+     */
+    CUDA_HOSTDEV
+    constexpr
+    std::array<T, 2> bounds() const;
 
 private:
     T _first = {};

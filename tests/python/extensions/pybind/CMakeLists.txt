@@ -24,6 +24,7 @@ focus/presum.py
 focus/rangecomp.py
 geocode/geocodeCov.py
 geocode/radar_grid_cube.py
+geogrid/geogrid_ecef_coords.py
 geometry/bbox.py
 geometry/dem.py
 geometry/geo2rdr.py
@@ -42,6 +43,7 @@ signal/crossmul.py
 signal/crossmultiply.py
 signal/filter2D.py
 signal/multilook.py
+signal/nfft2d.py
 product/generic_product.py
 product/geogridparameters.py
 product/radargridparameters.py
