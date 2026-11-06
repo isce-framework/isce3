@@ -2,9 +2,11 @@ import bisect
 from abc import ABC, abstractmethod
 import warnings
 import numpy as np
-from scipy.interpolate import interp1d
+import logging
 
-import isce3
+from scipy.interpolate import interp1d
+from scipy.signal import convolve
+
 from isce3.antenna import ant2rgdop, ant2geo
 from isce3.core import Linspace, speed_of_light
 from nisar.antenna import CalPath
@@ -14,6 +16,9 @@ from isce3.geometry import DEMInterpolator
 # Default for number of pulses to skip in geomtery computation from antenna
 # frame to slant range for the sake of speed-up.
 DEFAULT_NUM_PULSE_SKIP = 12
+
+
+logger = logging.getLogger('beamformer')
 
 
 class BadHPACalWarning(Warning):
@@ -482,6 +487,9 @@ class RxDBF(ElevationBeamformer):
         If both this parameter and the `rg_spacing_min` are set to None, all
         input slant range values will be included in the interpolation process
         of the antenna beam formation.
+    pulse_ext: float, optional
+        If not None, it will be convolved with RX patterns prior to forming
+        RX DBF pattern.
 
     Attributes
     ----------
@@ -506,9 +514,11 @@ class RxDBF(ElevationBeamformer):
                  ref_epoch, *, el_lut=None, norm_weight=False,
                  num_pulse_skip=DEFAULT_NUM_PULSE_SKIP,
                  el_ofs_dbf=0.0, rg_spacing_min=None,
-                 el_spacing_min=8.72665e-5):
+                 el_spacing_min=8.72665e-5,
+                 pulse_ext=None):
         self.el_ofs_dbf = el_ofs_dbf
         self.el_spacing_min = el_spacing_min
+        self.pulse_ext = pulse_ext
         super().__init__(orbit, attitude, dem_interp, el_ant_info, trm_info,
                          ref_epoch, el_lut=el_lut, norm_weight=norm_weight,
                          num_pulse_skip=num_pulse_skip,
@@ -532,6 +542,36 @@ class RxDBF(ElevationBeamformer):
                     1.0
                 )
                 self.rg_spacing_min = abs(np.diff(sr)[0])
+        # get slant range spacing corresponding to half DBF angular resolution
+        # at nearest range from the very first channel
+        if pulse_ext is not None:
+            ela_first = trm_info.el_ang_dbf[self.active_channel_idx[0], 0]
+            ela_next = trm_info.el_ang_dbf[self.active_channel_idx[0], 1]
+            azt_mid = np.mean(self.trm_info.time)
+            pos_ecef, vel_ecef = self.orbit.interpolate(azt_mid)
+            q_ant2ecef = self.attitude.interpolate(azt_mid)
+            sr, _, _ = ant2rgdop(
+                    [ela_first, ela_next],
+                    self.el_ant_info.cut_angle,
+                    pos_ecef,
+                    vel_ecef,
+                    q_ant2ecef,
+                    1.0
+            )
+            rg_space_rect = 0.5 * abs(np.diff(sr)[0])
+            dsr_pw_ext = 0.5 * speed_of_light * pulse_ext
+            self._size_rect = max(1, round(dsr_pw_ext / rg_space_rect))
+            self._rg_space_rect = dsr_pw_ext / self._size_rect
+            if self._size_rect < 2:
+                warnings.warn(
+                    f'The size of pulse ext {pulse_ext * 1e6} (us) is '
+                    f'{self._size_rect} less than 2! No pulsewidth in RX DBF!'
+                )
+            logger.info(f'The size of pulse ext {pulse_ext * 1e6} (us) is'
+                        f' {self._size_rect}! Apply pulsewidth to RX DBF!')
+        else:
+            self._size_rect = 0
+            self._rg_space_rect = None
 
     @property
     def slant_range_dbf(self):
@@ -640,6 +680,21 @@ class RxDBF(ElevationBeamformer):
         rx_pat = np.zeros((len(pulse_time), slant_range.size), dtype='complex')
         num_active_chanl = len(self.active_channel_idx)
 
+        # form uniform coarse slant range vector used in pulse ext if any
+        if self._size_rect > 1:
+            # preserve exactly the same coarse spacing in slant range!
+            rg_ext = self._size_rect * self._rg_space_rect
+            sr_first = sr[0] - rg_ext
+            sr_last = sr[-1] + rg_ext
+            size_sr_pw_ext = round(
+                (sr_last - sr_first) / self._rg_space_rect) + 1
+            sr_pw_ext = sr_first + self._rg_space_rect * np.arange(
+                size_sr_pw_ext)
+            ant_pat_el_pw = np.zeros(
+                (num_active_chanl, size_sr_pw_ext), dtype=ant_pat_el.dtype)
+            rect_ext = 1. / self._size_rect * np.ones((1, self._size_rect))
+            slice_ext = np.s_[0:size_sr_pw_ext]
+
         # loop over pulses
         for pp, tm in enumerate(pulse_time):
             # Compute the respective slant range for beamformed antenna pattern
@@ -653,14 +708,44 @@ class RxDBF(ElevationBeamformer):
                 x = 0
                 if self.el_lut is None:
                     sr_ant = self._elaz2slantrange(tm)
+                    # Apply pulse ext if any
+                    if self._size_rect > 1:
+                        for cc in range(num_active_chanl):
+                            ant_pat_el_pw[cc] = np.interp(
+                                sr_pw_ext, sr_ant, ant_pat_el[cc])
+                        # do pulse convolution
+                        ant_pat_el_pw[...] = convolve(
+                            ant_pat_el_pw, rect_ext, mode='full'
+                            )[:, slice_ext]
+                    else:  # no pulse ext
+                        ant_pat_el_pw = ant_pat_el
+                        sr_pw_ext = sr_ant
+                    # form RX DBF pattern
                     for cc in range(num_active_chanl):
                         x += np.interp(
-                            sr, sr_ant, ant_pat_el[cc, :]) * rx_wgt[cc, :]
+                            sr, sr_pw_ext, ant_pat_el_pw[cc, :]
+                            ) * rx_wgt[cc, :]
                 else:
                     sr_angles = self.el_lut.eval(tm, sr)
+                    # Apply pulse ext if any
+                    if self._size_rect > 1:
+                        el_pw_ext = self.el_lut.eval(tm, sr_pw_ext)
+                        for cc in range(num_active_chanl):
+                            ant_pat_el_pw[cc] = np.interp(
+                                el_pw_ext,
+                                self.el_ant_info.angle,
+                                ant_pat_el[cc])
+                        # do pulse convolution
+                        ant_pat_el_pw[...] = convolve(
+                            ant_pat_el_pw, rect_ext, mode='full'
+                            )[:, slice_ext]
+                    else:  # no pulse ext
+                        ant_pat_el_pw = ant_pat_el
+                        el_pw_ext = self.el_ant_info.angle
+                    # form RX DBF pattern
                     for cc in range(num_active_chanl):
-                        x += np.interp(sr_angles, self.el_ant_info.angle,
-                                       ant_pat_el[cc, :]) * rx_wgt[cc, :]
+                        x += np.interp(sr_angles, el_pw_ext,
+                                       ant_pat_el_pw[cc, :]) * rx_wgt[cc, :]
 
                 rx_pat[pp] = x.repeat(nrgb_skip)[:slant_range.size]
 
