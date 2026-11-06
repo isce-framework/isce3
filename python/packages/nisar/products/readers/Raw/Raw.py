@@ -1129,10 +1129,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
         # The latest L0Bs should have a dedicated field for RC_ID, populated
         # based on analysis of the radar observation sequence table (ROST).
         # That's the most reliable source and is our first preference.
-        path = f"{self.IdentificationPath}/observationModeId"
+        rcid_path = f"{self.IdentificationPath}/observationModeId"
         with h5py.File(self.filename, mode='r', swmr=True) as h5:
-            if path in h5:
-                rcid = int(h5[path][()])
+            if rcid_path in h5:
+                rcid = int(h5[rcid_path][()])
                 log.info(f"RC_ID={rcid:03d} determined from identification")
                 return rcid
 
@@ -1147,12 +1147,15 @@ class RawBase(Base, family='nisar.productreader.raw'):
             log.info(f"RC_ID={rcid:03d} determined from L0B file name")
             return rcid
 
-        path = f"{self.TelemetryPath}/DRT/IFSW/ST_IFSW_CUR_RCID"
+        tlm_path = f"{self.TelemetryPath}/DRT/IFSW/ST_IFSW_CUR_RCID"
         with h5py.File(self.filename, mode='r', swmr=True) as h5:
             # NOTE this probably doesn't exist in REE simulations
-            if path not in h5:
+            if tlm_path not in h5:
                 raise KeyError("Unable to determine RC_ID because L0B file "
-                               f"does not contain dataset={path}")
+                    f"does not contain dataset={rcid_path}, its file name does "
+                    "not match the NISAR naming convention, and the file does "
+                    f"not contain dataset={tlm_path}.  One of these conditions "
+                    "must be satisfied.")
             rcid = int(np.nanmedian(h5[path]))
             log.info(f"RC_ID={rcid:03d} determined from lowRateTemeletry")
         return rcid
