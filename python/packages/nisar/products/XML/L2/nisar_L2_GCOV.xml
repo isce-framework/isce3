@@ -2616,6 +2616,21 @@
                             lang="en">Flag to indicate if the source data is upsampled for geocoding</annotation>
         </string>
 
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geocoding/snapToGridX"
+              shape="scalar"
+              width="32">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Snap to the grid along the X direction with the origin set at 0. The X-coordinate of the scene's upper-left corner is a multiple of this value</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geocoding/snapToGridY"
+              shape="scalar"
+              width="32">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Snap to the grid along the Y direction with the origin set at 0. The Y-coordinate of the scene's upper-left corner is a multiple of this value</annotation>
+        </real>
+
         <!-- geo2rdr parameters -->
         <real name="/science/LSAR/GCOV/metadata/processingInformation/parameters/geo2rdr/convergenceThreshold"
               shape="scalar"
