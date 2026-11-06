@@ -35,8 +35,8 @@ def prep_subband_h5(src_rslc_hdf5: str,
     '''
     src_slc = RSLC(hdf5file=src_rslc_hdf5)
 
-    # Instantiate product obj to avoid product hard-coded paths
-    product_obj = CommonPaths()
+    # Instantiate product obj with auto-detected RootPath to avoid product hard-coded paths
+    product_obj = CommonPaths(RootPath=src_slc.RootPath)
 
     with HDF5OptimizedReader(name=src_rslc_hdf5, mode='r',
                              libver='latest', swmr=True) as src_h5, \

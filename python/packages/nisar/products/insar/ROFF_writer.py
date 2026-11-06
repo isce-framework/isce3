@@ -29,8 +29,8 @@ class ROFFWriter(L1InSARWriter):
         # HDF5 IO optimizer configuration
         self.hdf5_optimizer_config = hdf5_opt_config
 
-        # group paths are ROFF group paths
-        self.group_paths = ROFFGroupsPaths()
+        # group paths are ROFF group paths - use auto-detected RootPath from reference RSLC
+        self.group_paths = ROFFGroupsPaths(RootPath=self.ref_rslc.RootPath)
 
         # ROFF product information
         self.product_info = InSARProductsInfo.ROFF()

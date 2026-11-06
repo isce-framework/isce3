@@ -56,9 +56,6 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
     bridge_cfg = unwrap_args["bridge"]
 
-    # Instantiate RIFG obj to avoid hard-coded paths to RIFG datasets
-    rifg_obj = RIFGGroupsPaths()
-
     # Create error and info channels
     error_channel = journal.error("unwrap.run")
     info_channel = journal.info("unwrap.run")
@@ -73,6 +70,9 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
     # Open reference RSLC object
     ref_slc = SLC(hdf5file=ref_slc_hdf5)
+
+    # Instantiate RIFG obj with auto-detected RootPath to avoid hard-coded paths
+    rifg_obj = RIFGGroupsPaths(RootPath=ref_slc.RootPath)
 
     # Start to track time
     t_all = time.time()

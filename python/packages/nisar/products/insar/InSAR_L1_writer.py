@@ -41,8 +41,8 @@ class L1InSARWriter(InSARBaseWriter):
         """
         super().__init__(**kwds)
 
-        # Level 1 product group path
-        self.group_paths = L1GroupsPaths()
+        # Level 1 product group path - use auto-detected RootPath from reference RSLC
+        self.group_paths = L1GroupsPaths(RootPath=self.ref_rslc.RootPath)
 
         # Range and azimuth looks that will be performed on the interfergoram
         self.igram_range_looks = 1

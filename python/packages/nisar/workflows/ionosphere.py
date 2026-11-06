@@ -405,8 +405,12 @@ def copy_iono_datasets(iono_insar_cfg,
     iono_args = iono_insar_cfg['processing']['ionosphere_phase_correction']
     iono_freq_pols = iono_args['list_of_frequencies']
 
-    # Instantiate RUNW object to easily access RUNW datasets
-    runw_obj = RUNWGroupsPaths()
+    # Auto-detect RootPath from the RUNW file
+    from nisar.products.readers.Base import get_hdf5_file_root_path
+    root_path = get_hdf5_file_root_path(input_runw)
+
+    # Instantiate RUNW object with auto-detected RootPath to easily access RUNW datasets
+    runw_obj = RUNWGroupsPaths(RootPath=root_path)
     swath_path = runw_obj.SwathsPath
 
     if oversample_flag:
@@ -808,6 +812,10 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
     runw_hdf5: str
         File path to runw HDF5 product (i.e., RUNW)
     """
+    # Get reference RSLC file path and auto-detect RootPath early
+    ref_rslc_file = original_cfg['input_file_group']['reference_rslc_file']
+    from nisar.products.readers.Base import get_hdf5_file_root_path
+    root_path_for_pair = get_hdf5_file_root_path(ref_rslc_file)
 
     # ionosphere runconfigs
     iono_args = original_cfg['processing']['ionosphere_phase_correction']
@@ -998,7 +1006,8 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                         target_is_directory=True)
 
                 pol_list_a = iono_freq_pols['A']
-                swath_path = RIFGGroupsPaths().SwathsPath
+                # Use auto-detected RootPath from reference RSLC
+                swath_path = RIFGGroupsPaths(RootPath=root_path_for_pair).SwathsPath
                 first_data_path = []
                 first_valid_mask_paths = []
                 dest_freq_path = f"{swath_path}/frequencyA"
@@ -1120,8 +1129,9 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
             pol_list_a = iono_freq_pols['A']
             pol_list_b = iono_freq_pols['B']
-            swath_path = RIFGGroupsPaths().SwathsPath
-            runw_swath_path = RUNWGroupsPaths().SwathsPath
+            # Use auto-detected RootPath from reference RSLC
+            swath_path = RIFGGroupsPaths(RootPath=root_path_for_pair).SwathsPath
+            runw_swath_path = RUNWGroupsPaths(RootPath=root_path_for_pair).SwathsPath
 
             first_data_path = []
             first_valid_mask_paths = []
@@ -1276,12 +1286,16 @@ def run(cfg: dict, runw_hdf5: str):
     info_channel = journal.info("ionosphere_phase_correction.run")
     info_channel.log("starting insar_ionosphere_correction")
 
-    # Instantiate RUNW object to easy access RUNW datasets
-    runw_obj = RUNWGroupsPaths()
-
     # pull parameters from dictionary
     iono_args = cfg['processing']['ionosphere_phase_correction']
     scratch_path = cfg['product_path_group']['scratch_path']
+
+    # Open reference SLC early to get auto-detected RootPath
+    ref_rslc_file = cfg['input_file_group']['reference_rslc_file']
+    ref_slc_for_root = SLC(hdf5file=ref_rslc_file)
+
+    # Instantiate RUNW object with auto-detected RootPath to easy access RUNW datasets
+    runw_obj = RUNWGroupsPaths(RootPath=ref_slc_for_root.RootPath)
 
     # pull parameters for ionosphere phase estimation
     iono_freq_pols = copy.deepcopy(iono_args['list_of_frequencies'])

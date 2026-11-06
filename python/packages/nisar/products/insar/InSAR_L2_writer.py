@@ -26,8 +26,8 @@ class L2InSARWriter(L1InSARWriter):
         """
         super().__init__(**kwds)
 
-        # group paths are Level 2 group paths
-        self.group_paths = L2GroupsPaths()
+        # group paths are Level 2 group paths - use auto-detected RootPath from reference RSLC
+        self.group_paths = L2GroupsPaths(RootPath=self.ref_rslc.RootPath)
 
     def save_to_hdf5(self):
         """
