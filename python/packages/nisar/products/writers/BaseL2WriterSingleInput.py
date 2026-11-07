@@ -1944,16 +1944,22 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             lines += 2 * margin_in_pixels
 
         # The `referenceTerrainHeight` LUT can be either a 1-D LUT (along
-        # azimuth) or a 2-D LUT. So, to determine the type of the LUT to
-        # geocode, check the constant `LUT_1D_AZ_DATASETS`, but also verify if
-        # `slantRange` is present within the LUT group to confirm its
-        # dimensions.
+        # azimuth) or a 2-D LUT. The rank of the dataset itself decides
+        # whether its values need to be replicated along range. The presence
+        # of `slantRange` cannot be used for that purpose, because it is the
+        # range axis shared by the other (2-D) LUTs in the same group and is
+        # therefore present even when this LUT is 1-D.
         slant_range_path = f'{input_h5_group_path}/slantRange'
-        flag_luts_are_1d_az = (all([var in LUT_1D_AZ_DATASETS
-                                   for var in input_ds_name_list]) and
-                               slant_range_path not in self.input_hdf5_obj)
+        flag_luts_are_1d_az = (
+            all([var in LUT_1D_AZ_DATASETS for var in input_ds_name_list]) and
+            all([f'{input_h5_group_path}/{var}' in self.input_hdf5_obj and
+                 self.input_hdf5_obj[f'{input_h5_group_path}/{var}'].ndim == 1
+                 for var in input_ds_name_list]))
 
-        if not flag_luts_are_1d_az:
+        # Use the range axis of the group whenever it is available. 2-D LUTs
+        # require it and are still rejected (or skipped) without it, whereas
+        # 1-D LUTs fall back to a range axis built from the radar grid.
+        if not flag_luts_are_1d_az or slant_range_path in self.input_hdf5_obj:
             slant_range_path = f'{input_h5_group_path}/slantRange'
             try:
                 slant_range_h5_dataset = self.input_hdf5_obj[slant_range_path]
