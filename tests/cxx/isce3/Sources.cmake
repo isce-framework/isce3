@@ -20,6 +20,7 @@ core/projections/cea.cpp
 core/projections/geocent.cpp
 core/projections/polar.cpp
 core/projections/utm.cpp
+core/projections/genericepsg.cpp
 core/serialization/serializeAttitude.cpp
 core/serialization/serializeDoppler.cpp
 core/serialization/serializeOrbit.cpp
