@@ -90,8 +90,10 @@ void cuSincInterpolation_kernel(const int nImages,
     // determine the output pixel indices
     int outx = idxX + i_startX + shift.x*factor;
     if (outx >= outNX) outx-=outNX;
+    if (outx < 0) outx += outNX;
     int outy = idxY + i_startY +  shift.y*factor;
     if (outy >= outNY) outy-=outNY;
+    if (outy < 0) outy += outNY;
     // flattened to 1d
     int idxOut = idxImage*outNX*outNY + outx*outNY + outy;
 
@@ -123,7 +125,7 @@ void cuSincInterpolation_kernel(const int nImages,
         int inx = i_xout - i + i_intplength_/2;
 
         if(inx < 0) inx+= inNX;
-        if(inx >= inNX) inx-= inNY;
+        if(inx >= inNX) inx-= inNX;
 
         float r_xsinc_coef = r_filter_[i*i_decfactor_+i_xfrac];
 

@@ -23,7 +23,7 @@ class cuNormalizeProcessor {
 public:
     // default constructor and destructor
     cuNormalizeProcessor() {}
-    ~cuNormalizeProcessor() {}
+    virtual ~cuNormalizeProcessor() = default;
     // execute interface
     virtual void execute(cuArrays<float> * correlation, cuArrays<float> *reference, cuArrays<float> *secondary, cudaStream_t stream) = 0;
 };
