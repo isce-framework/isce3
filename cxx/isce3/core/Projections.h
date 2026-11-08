@@ -268,11 +268,13 @@ inline void CEA::print() const
  * Interpretation of EPSG code is handed off to GDAL.
  */
 class GenericEPSG : public ProjectionBase {
+    // Each thread gets its own transformers
+    int nthreads;
     // wkt corresponding to the EPSG code
     OGRSpatialReference _srs;
     OGRSpatialReference _srs_llh;
-    OGRCoordinateTransformation * _poct_fwd = nullptr;
-    OGRCoordinateTransformation * _poct_inv = nullptr;
+    OGRCoordinateTransformation ** _poct_fwd = nullptr;
+    OGRCoordinateTransformation ** _poct_inv = nullptr;
 
 public:
     GenericEPSG(int);
@@ -288,12 +290,14 @@ public:
 
     /** Destructor **/
     ~GenericEPSG() {
-        if (_poct_fwd) {
-            delete _poct_fwd;
+        for(int ii=0; ii < nthreads; ii++)
+        {
+            delete _poct_fwd[ii];
+            delete _poct_inv[ii];
         }
-        if (_poct_inv) {
-            delete _poct_inv;
-        }
+        
+        delete[] _poct_fwd;
+        delete[] _poct_inv;
     }
 };
 
