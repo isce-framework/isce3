@@ -3,6 +3,10 @@
 #include <iostream>
 #include <memory>
 
+#ifndef __CUDACC__
+#include "ogr_spatialref.h"
+#endif
+
 #include "Constants.h"
 #include "Ellipsoid.h"
 #include "Vector.h"
@@ -255,6 +259,55 @@ inline void CEA::print() const
     std::cout << "Projection: Cylindrical Equal Area" << std::endl
               << "EPSG: " << code() << std::endl;
 }
+
+//Disable building this when building for CUDA
+#ifndef __CUDACC__
+/**
+ * Generic EPSG code based extension of ProjBase
+ *
+ * Interpretation of EPSG code is handed off to GDAL.
+ */
+class GenericEPSG : public ProjectionBase {
+    // Each thread gets its own transformers
+    int nthreads;
+    // wkt corresponding to the EPSG code
+    OGRSpatialReference _srs;
+    OGRSpatialReference _srs_llh;
+    OGRCoordinateTransformation ** _poct_fwd = nullptr;
+    OGRCoordinateTransformation ** _poct_inv = nullptr;
+
+public:
+    GenericEPSG(int);
+
+    /** @copydoc ProjectionBase::print() */
+    void print() const override;
+
+    /** Transform from llh (rad) to xyz - units depend on EPSG */
+    int forward(const Vec3& llh, Vec3& xyz) const override;
+
+    /** Transform from xyz in EPSG-dependent units to llh (rad) */
+    int inverse(const Vec3& xyz, Vec3& llh) const override;
+
+    /** Destructor **/
+    ~GenericEPSG() {
+        for(int ii=0; ii < nthreads; ii++)
+        {
+            delete _poct_fwd[ii];
+            delete _poct_inv[ii];
+        }
+        
+        delete[] _poct_fwd;
+        delete[] _poct_inv;
+    }
+};
+
+inline void GenericEPSG::print() const
+{
+    std::cout << "Generic EPSG: " <<  code() << std::endl
+              << "WKT: " << _srs.exportToWkt() << std::endl;
+}
+
+#endif // Not for CUDA
 
 // This is to create a projection system from the EPSG code
 ProjectionBase* createProj(int epsg);

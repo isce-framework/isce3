@@ -30,3 +30,19 @@ auto projTest(const ProjectionBase& p, const Vec3& ref_llh, const Vec3& ref_xyz)
         fails += ::testing::Test::HasFailure();                                \
     }                                                                          \
     struct consume_semicolon
+
+
+auto makeProjTest(const int code)
+{
+    ProjectionBase *p = isce3::core::createProj(code);
+    ASSERT_EQ(p->code(), code);
+    delete p;
+}
+
+#define MAKE_PROJ_TEST(testclass, code, name)                                 \
+    TEST_F(testclass, name)                                                   \
+    {                                                                         \
+        makeProjTest(code);                                                   \
+        fails += ::testing::Test::HasFailure();                               \
+    }                                                                         \
+    struct consume_semicolon
