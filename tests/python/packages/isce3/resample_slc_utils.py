@@ -133,20 +133,20 @@ def validate_test_results(
     if not corr > correlation_min:
         fail = True
         fail_strings.append(
-            f"Correlation {corr} of resample output is less than minimum acceptable "
+            f"Correlation {corr} of test output is less than minimum acceptable "
             f"value {correlation_min}"
         )
     if not phase_stdev_degrees < phase_stdev_max:
         fail = True
         fail_strings.append(
-            f"Phase standard deviation between ground-truth and resample output "
+            f"Phase standard deviation between ground-truth and test output "
             f"{phase_stdev_degrees} is greater than maximum acceptable value "
             f"{phase_stdev_max}"
         )
     if not nan_percent < nan_percent_max:
         fail = True
         fail_strings.append(
-            f"percentage of NaNs in resample output: {nan_percent}% is greater than "
+            f"percentage of NaNs in test output: {nan_percent}% is greater than "
             f"maximum acceptable value: {nan_percent_max}%"
         )
 
