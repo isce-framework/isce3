@@ -7,7 +7,9 @@ import numpy as np
 from scipy.ndimage import label as nd_label
 from scipy.ndimage import (binary_erosion,
                            find_objects,
-                           binary_dilation)
+                           binary_dilation,
+                           maximum_filter,
+                           minimum_filter)
 from scipy.sparse import csgraph as csg
 from scipy.spatial import cKDTree
 from typing import Tuple, Dict, Any, List
@@ -313,8 +315,20 @@ class bridgeConnectComponent:
         if self.num_label == 0:
             return self.connDict, self.distMat
 
-        trees = [cKDTree(np.argwhere(self.labelImg == i + 1))
-                 for i in range(self.num_label)]
+        # The closest point of a region to any outside point lies on the
+        # region's boundary, so build the trees from boundary pixels only:
+        # labeled pixels whose 3x3 neighborhood holds more than one value.
+        is_boundary = ((maximum_filter(self.labelImg, size=3)
+                        != minimum_filter(self.labelImg, size=3))
+                       & (self.labelImg > 0))
+        yx = np.argwhere(is_boundary)
+        labels = self.labelImg[is_boundary]
+        # Group boundary pixels by label in one pass (stable sort keeps the
+        # row-major order of np.argwhere within each label).
+        order = np.argsort(labels, kind="stable")
+        counts = np.bincount(labels, minlength=self.num_label + 1)[1:]
+        groups = np.split(yx[order], np.cumsum(counts)[:-1])
+        trees = [cKDTree(points) for points in groups]
 
         for i, j in itertools.combinations(range(self.num_label), 2):
             dist, idx = trees[i].query(trees[j].data)
