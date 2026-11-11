@@ -1945,13 +1945,29 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         # The `referenceTerrainHeight` LUT can be either a 1-D LUT (along
         # azimuth) or a 2-D LUT. So, to determine the type of the LUT to
-        # geocode, check the constant `LUT_1D_AZ_DATASETS`, but also verify if
-        # `slantRange` is present within the LUT group to confirm its
-        # dimensions.
-        slant_range_path = f'{input_h5_group_path}/slantRange'
-        flag_luts_are_1d_az = (all([var in LUT_1D_AZ_DATASETS
-                                   for var in input_ds_name_list]) and
-                               slant_range_path not in self.input_hdf5_obj)
+        # geocode, check the constant `LUT_1D_AZ_DATASETS`, but also verify
+        # the number of dimensions of the datasets in the input HDF5 file.
+        # The flag is True only if all datasets pass both checks.
+        flag_luts_are_1d_az = True
+        for var in input_ds_name_list:
+
+            # Datasets not listed in `LUT_1D_AZ_DATASETS` are always 2-D
+            if var not in LUT_1D_AZ_DATASETS:
+                flag_luts_are_1d_az = False
+                break
+
+            # Datasets not present in the input file are skipped here and
+            # handled later, in the loop that builds the input rasters
+            var_h5_path = f'{input_h5_group_path}/{var}'
+            if var_h5_path not in self.input_hdf5_obj:
+                continue
+
+            # Datasets in `LUT_1D_AZ_DATASETS` (e.g.,
+            # `referenceTerrainHeight`) may be either 1-D or 2-D, so check
+            # the number of dimensions of the dataset in the input file
+            if self.input_hdf5_obj[var_h5_path].ndim != 1:
+                flag_luts_are_1d_az = False
+                break
 
         if not flag_luts_are_1d_az:
             slant_range_path = f'{input_h5_group_path}/slantRange'
