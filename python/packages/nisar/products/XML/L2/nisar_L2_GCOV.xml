@@ -2544,19 +2544,19 @@
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rtc/inputBackscatterNormalizationConvention"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Backscatter normalization convention of the source data</annotation>
+                            lang="en">Backscatter normalization convention of the source data, either "Beta0", "Sigma0", or "Gamma0"</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rtc/outputBackscatterNormalizationConvention"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Backscatter normalization convention of the primary data associated with this product</annotation>
+                            lang="en">Backscatter normalization convention of the primary data associated with this product, either "Beta0", "Sigma0", or "Gamma0"</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rtc/outputBackscatterExpressionConvention"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Backscatter expression convention</annotation>
+                            lang="en">Backscatter expression convention, either "Linear amplitude", "Linear power" or "Decibels (dB)"</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/parameters/rtc/memoryMode"
@@ -2826,6 +2826,18 @@
           <annotation app="conformance"
                       lang="en">Geocoding algorithm</annotation>
         </string>
+        <string length="0"
+              name="/science/LSAR/GCOV/metadata/processingInformation/algorithms/noiseCorrectionAlgorithm"
+              shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Noise correction algorithm</annotation>
+        </string>
+        <string length="0"
+              name="/science/LSAR/GCOV/metadata/processingInformation/algorithms/noiseCorrectionAlgorithmReference"
+              shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Reference to the noise correction algorithm</annotation>
+        </string> 
         <string length="0"
               name="/science/LSAR/GCOV/metadata/processingInformation/algorithms/radiometricTerrainCorrection"
               shape="scalar">
