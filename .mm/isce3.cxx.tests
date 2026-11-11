@@ -23,10 +23,10 @@ isce3.cxx.tests.directories.exclude += cuda/matchtemplate/ampcor
 # compiling, linking, launching
 # c++
 isce3.cxx.tests.c++.defines += TESTDATA_DIR='"${isce3.home}/tests/data/"'
-isce3.cxx.tests.c++.flags += $($(compiler.c++).std.c++17)
+isce3.cxx.tests.c++.flags += $($(compiler.c++).std.c++23)
 # cuda
 isce3.cxx.tests.cuda.defines += TESTDATA_DIR='"${isce3.home}/tests/data/"'
-isce3.cxx.tests.cuda.flags += $($(compiler.cuda).std.c++17) --expt-relaxed-constexpr
+isce3.cxx.tests.cuda.flags += $($(compiler.cuda).std.c++20) --expt-relaxed-constexpr
 
 
 # end of file
