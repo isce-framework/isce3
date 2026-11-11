@@ -2725,112 +2725,112 @@
 
         <!-- Start of noise pattern -->
         <!-- Ideally corresponds to number of available polarizations -->
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/zeroDopplerTime"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/zeroDopplerTime"
               shape="calibrationTimeLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="seconds since YYYY-mm-ddTHH:MM:SS">Vector of zero Doppler azimuth times, measured relative to a UTC epoch, corresponding to source data calibration noiseEquivalentBackscatter records</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/slantRange"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/slantRange"
               shape="calibrationSlantRangeWidth"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="meters">Slant range dimension corresponding to source data calibration noiseEquivalentBackscatter records</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/HH"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/HH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/HV"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/HV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/VH"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/VH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/VV"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/VV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/RH"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/RH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/RV"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyA/noiseEquivalentBackscatter/RV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/HH"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/HH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/zeroDopplerTime"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/zeroDopplerTime"
               shape="calibrationTimeLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="seconds since YYYY-mm-ddTHH:MM:SS">Vector of zero Doppler azimuth times, measured relative to a UTC epoch, corresponding to source data calibration noiseEquivalentBackscatter records</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/slantRange"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/slantRange"
               shape="calibrationSlantRangeWidth"
               width="64">
               <annotation app="conformance"
                           lang="en"
                           units="meters">Slant range dimension corresponding to source data calibration noiseEquivalentBackscatter records</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/HV"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/HV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/VH"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/VH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/VV"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/VV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/RH"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/RH"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
                       units="1">Source Data noise equivalent backscatter in linear scale, expressed in source data units (units of DN^2)</annotation>
         </real>
-        <real name="/science/LSAR/GCOV/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/RV"
+        <real name="/science/LSAR/GSLC/metadata/sourceData/calibrationInformation/frequencyB/noiseEquivalentBackscatter/RV"
               shape="calibrationScaleShape"
               width="32">
           <annotation app="conformance"
