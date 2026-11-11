@@ -81,6 +81,11 @@ DEMInterpolator DEMRasterToInterpolator(
             pixInd.push_back(0);
         }
 
+        // Store DEM X coordinates of the perimeter to unwrap longitudes
+        // if the geogrid crosses the antimeridian
+        std::vector<double> demX;
+        demX.reserve(lineInd.size());
+
         // Loop over the indices
         for (size_t i = 0; i < lineInd.size(); i++) {
             isce3::core::Vec3 outpt = {
@@ -89,6 +94,7 @@ DEMInterpolator DEMRasterToInterpolator(
 
             isce3::core::Vec3 dempt;
             if (!projTransform(proj.get(), demproj.get(), outpt, dempt)) {
+                demX.push_back(dempt[0]);
                 minX = std::min(minX, dempt[0]);
                 maxX = std::max(maxX, dempt[0]);
                 minY = std::min(minY, dempt[1]);
@@ -97,6 +103,21 @@ DEMInterpolator DEMRasterToInterpolator(
                 std::string errmsg = "projection transformation between geogrid and DEM failed";
                 throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
 
+            }
+        }
+
+        // If the DEM is in geographic coordinates (EPSG:4326) and the
+        // longitude range exceeds 180 degrees, it is assumed that the
+        // geogrid crosses the antimeridian and `minX` and `maxX` are
+        // probably wrong. To fix that, unwrap the longitudes to the
+        // [0, 360] domain to avoid coordinate wrapping.
+        if (epsgcode == 4326 && (maxX - minX) > 180.0) {
+            minX = std::numeric_limits<double>::max();
+            maxX = std::numeric_limits<double>::lowest();
+            for (const double lon : demX) {
+                const double lon360 = lon < 0 ? lon + 360.0 : lon;
+                minX = std::min(minX, lon360);
+                maxX = std::max(maxX, lon360);
             }
         }
     } else {
