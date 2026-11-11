@@ -702,7 +702,7 @@ class GcovWriter(BaseL2WriterSingleInput):
                 ('Cross-Polarimetric Channels HV and VH SLCs Average'
                  ' (Coherent Average)')
         else:
-            symmetrization_algorithm = '(NOT PERFORMED)'
+            symmetrization_algorithm = '(NOT APPLIED)'
 
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
@@ -710,7 +710,7 @@ class GcovWriter(BaseL2WriterSingleInput):
             symmetrization_algorithm)
 
         apply_rtc = self.cfg['processing']['geocode']['apply_rtc']
-        rtc_algorithm_reference = '(NOT PERFORMED)'
+        rtc_algorithm_reference = '(NOT APPLIED)'
         if apply_rtc:
             if rtc_algorithm == 'area_projection':
                 rtc_algorithm_reference = \
@@ -777,8 +777,8 @@ class GcovWriter(BaseL2WriterSingleInput):
                  ' Theoretical Basis Document (ATBD)," NASA Jet Propulsion Laboratory,'
                  ' JPL D-95677, Revision A, 2023.')
         else:
-            noise_correction_algorithm  = '(NOT PERFORMED)'
-            noise_correction_algorithm_reference  = '(NOT PERFORMED)'
+            noise_correction_algorithm  = '(NOT APPLIED)'
+            noise_correction_algorithm_reference  = '(NOT APPLIED)'
 
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
