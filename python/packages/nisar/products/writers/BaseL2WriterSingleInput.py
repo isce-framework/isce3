@@ -1328,7 +1328,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             '{PRODUCT}/metadata/sourceData/swaths/zeroDopplerTimeSpacing',
             '{PRODUCT}/swaths/zeroDopplerTimeSpacing')
 
-        for i, (frequency, _) in enumerate(self.freq_pols_dict.items()):
+        for i, (frequency, pol_list) in enumerate(self.freq_pols_dict.items()):
             radar_grid_obj = self.input_product_obj.getRadarGrid(frequency)
 
             output_swaths_freq_path = ('{PRODUCT}/metadata/sourceData/'
@@ -1474,6 +1474,29 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     f'parameters/frequency{frequency}/slantRange',
                     '{PRODUCT}/metadata/processingInformation/parameters/'
                     'slantRange')
+
+            # Copy source data noise equivalent backscatter datasets
+            for pol in pol_list:
+                self.copy_from_input(
+                    '{PRODUCT}/metadata/sourceData/calibrationInformation/'
+                    f'frequency{frequency}/noiseEquivalentBackscatter/{pol}',
+                    '{PRODUCT}/metadata/calibrationInformation/'
+                    f'frequency{frequency}/noiseEquivalentBackscatter/{pol}',
+                    skip_if_not_present=True)
+
+            self.copy_from_input(
+                '{PRODUCT}/metadata/sourceData/calibrationInformation/'
+                f'frequency{frequency}/noiseEquivalentBackscatter/zeroDopplerTime',
+                '{PRODUCT}/metadata/calibrationInformation/'
+                f'frequency{frequency}/noiseEquivalentBackscatter/zeroDopplerTime',
+                    skip_if_not_present=True)
+
+            self.copy_from_input(
+                '{PRODUCT}/metadata/sourceData/calibrationInformation/'
+                f'frequency{frequency}/noiseEquivalentBackscatter/slantRange',
+                '{PRODUCT}/metadata/calibrationInformation/'
+                f'frequency{frequency}/noiseEquivalentBackscatter/slantRange',
+                skip_if_not_present=True)
 
     def populate_processing_information_l2_common(self):
 
