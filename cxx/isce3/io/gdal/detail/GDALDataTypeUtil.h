@@ -5,10 +5,10 @@
 #include <gdal_priv.h>
 #include <type_traits>
 
-// forward declare thrust::complex
-namespace thrust {
-    template<typename> struct complex;
-}
+#if defined(ISCE3_WITH_CUDA)
+#include <thrust/complex.h>
+#endif
+
 
 namespace isce3 { namespace io { namespace gdal { namespace detail {
 
@@ -50,8 +50,10 @@ template<> struct Type2GDALDataType<std::complex<float>>  : public GDT<GDT_CFloa
 template<> struct Type2GDALDataType<std::complex<double>> : public GDT<GDT_CFloat64> {};
 
 // thrust::complex floating point types
+#if defined(ISCE3_WITH_CUDA)
 template<> struct Type2GDALDataType<thrust::complex<float>>  : public GDT<GDT_CFloat32> {};
 template<> struct Type2GDALDataType<thrust::complex<double>> : public GDT<GDT_CFloat64> {};
+#endif
 
 constexpr
 std::size_t getSize(GDALDataType datatype)
