@@ -990,6 +990,6 @@ def estimate_iono_main_diff_low_high(
     z_coeff = - freq_low * freq_high / f0 / (freq_high - freq_low) / 2
 
     dispersive = x_coeff * phi0_main + z_coeff * phi0_diff_low_high
-    non_dispersive = phi0_main / 2 + z_coeff * phi0_diff_low_high
+    non_dispersive = phi0_main / 2 - z_coeff * phi0_diff_low_high
 
     return dispersive, non_dispersive
