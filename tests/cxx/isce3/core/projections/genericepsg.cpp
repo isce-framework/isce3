@@ -2,6 +2,12 @@
 #include <isce3/core/Projections.h>
 #include "projtest.h"
 
+#include <vector>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 isce3::core::GenericEPSG Can(3979);
 isce3::core::GenericEPSG Aus(3577);
 isce3::core::GenericEPSG Kor(5186);
@@ -19,6 +25,7 @@ struct GenericEPSGTest : public ::testing::Test {
 #define epsgTest(...) PROJ_TEST(GenericEPSGTest, __VA_ARGS__)
 #define makeprojTest(...) MAKE_PROJ_TEST(GenericEPSGTest, __VA_ARGS__)
 
+// This is a NAD-83 system so there is a small offset from WGS84
 epsgTest(Can, CanOrigin,
         {-1.6580629422844335, 0.855211480709109, 0.},
         {0., 0., 0.});
@@ -71,6 +78,86 @@ epsgTest(Kor, Kor3,
 makeprojTest(3979, makeCanada);
 makeprojTest(3577, makeAustralia);
 makeprojTest(5176, makeSouthKorea);
+
+// Concurrent forward/inverse calls on a shared object from OpenMP threads
+// must match serial results.
+static int roundTripErrors(const isce3::core::GenericEPSG& proj,
+                           const std::vector<isce3::core::Vec3>& llh,
+                           const std::vector<isce3::core::Vec3>& ref, int i)
+{
+    isce3::core::Vec3 xyz, back;
+    if (proj.forward(llh[i], xyz) != 0 || proj.inverse(xyz, back) != 0 ||
+        (xyz - ref[i]).norm() > 1e-6 ||
+        std::abs(back[0] - llh[i][0]) > 1e-10 ||
+        std::abs(back[1] - llh[i][1]) > 1e-10 ||
+        std::abs(back[2] - llh[i][2]) > 1e-6) {
+        return 1;
+    }
+    return 0;
+}
+
+struct GenericEPSGThreading : public ::testing::Test {
+    const isce3::core::GenericEPSG proj {3979};
+    const int npts = 20000;
+    std::vector<isce3::core::Vec3> llh, ref;
+
+    void SetUp() override
+    {
+        llh.resize(npts);
+        ref.resize(npts);
+        for (int i = 0; i < npts; ++i) {
+            llh[i] = {(-120.0 + 50.0 * i / npts) * M_PI / 180.0,
+                      (45.0 + 15.0 * i / npts) * M_PI / 180.0,
+                      10.0 * i / npts};
+            ASSERT_EQ(proj.forward(llh[i], ref[i]), 0);
+        }
+    }
+};
+
+TEST_F(GenericEPSGThreading, ParallelFor)
+{
+    int errors = 0;
+    #pragma omp parallel for reduction(+:errors)
+    for (int i = 0; i < npts; ++i) {
+        errors += roundTripErrors(proj, llh, ref, i);
+    }
+    EXPECT_EQ(errors, 0);
+}
+
+TEST_F(GenericEPSGThreading, MoreThreadsThanMax)
+{
+    int errors = 0;
+    #ifdef _OPENMP
+    const int nthreads = 2 * omp_get_max_threads() + 1;
+    #else
+    const int nthreads = 1;
+    #endif
+    #pragma omp parallel for num_threads(nthreads) reduction(+:errors)
+    for (int i = 0; i < npts; ++i) {
+        errors += roundTripErrors(proj, llh, ref, i);
+    }
+    EXPECT_EQ(errors, 0);
+}
+
+TEST_F(GenericEPSGThreading, NestedParallel)
+{
+    int errors = 0;
+    #ifdef _OPENMP
+    const int prev_levels = omp_get_max_active_levels();
+    omp_set_max_active_levels(2);
+    #endif
+    #pragma omp parallel for num_threads(4) reduction(+:errors)
+    for (int j = 0; j < 4; ++j) {
+        #pragma omp parallel for num_threads(4) reduction(+:errors)
+        for (int i = j; i < npts; i += 4) {
+            errors += roundTripErrors(proj, llh, ref, i);
+        }
+    }
+    #ifdef _OPENMP
+    omp_set_max_active_levels(prev_levels);
+    #endif
+    EXPECT_EQ(errors, 0);
+}
 
 int main(int argc, char **argv) {
 

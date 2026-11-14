@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
 
 #ifndef __CUDACC__
 #include "ogr_spatialref.h"
@@ -268,15 +269,33 @@ inline void CEA::print() const
  * Interpretation of EPSG code is handed off to GDAL.
  */
 class GenericEPSG : public ProjectionBase {
-    // Each thread gets its own transformers
-    int nthreads;
+    struct CTDeleter {
+        void operator()(OGRCoordinateTransformation* ct) const
+        {
+            OGRCoordinateTransformation::DestroyCT(ct);
+        }
+    };
+    using CTPtr = std::unique_ptr<OGRCoordinateTransformation, CTDeleter>;
+
     // wkt corresponding to the EPSG code
     OGRSpatialReference _srs;
     OGRSpatialReference _srs_llh;
-    OGRCoordinateTransformation ** _poct_fwd = nullptr;
-    OGRCoordinateTransformation ** _poct_inv = nullptr;
+
+    // OGRCoordinateTransformation is not safe for concurrent use, so each
+    // OpenMP thread gets its own transformer, indexed by thread number.
+    // Slots [0, nthreads) are thread-private; the extra last slot is shared
+    // and only used inside an omp critical section, as a fallback when a
+    // unique thread slot cannot be determined (nested active parallelism or
+    // a team larger than omp_get_max_threads() at construction time).
+    int _nthreads = 1;
+    std::vector<CTPtr> _poct_fwd;
+    std::vector<CTPtr> _poct_inv;
+
+    /** Index of this thread's transformer, or -1 to use the shared one */
+    int _threadSlot() const;
 
 public:
+    /** Construct from EPSG code. Must not be called in a parallel region */
     GenericEPSG(int);
 
     /** @copydoc ProjectionBase::print() */
@@ -287,24 +306,11 @@ public:
 
     /** Transform from xyz in EPSG-dependent units to llh (rad) */
     int inverse(const Vec3& xyz, Vec3& llh) const override;
-
-    /** Destructor **/
-    ~GenericEPSG() {
-        for(int ii=0; ii < nthreads; ii++)
-        {
-            delete _poct_fwd[ii];
-            delete _poct_inv[ii];
-        }
-        
-        delete[] _poct_fwd;
-        delete[] _poct_inv;
-    }
 };
 
 inline void GenericEPSG::print() const
 {
-    std::cout << "Generic EPSG: " <<  code() << std::endl
-              << "WKT: " << _srs.exportToWkt() << std::endl;
+    std::cout << "Generic EPSG: " << code() << std::endl;
 }
 
 #endif // Not for CUDA
