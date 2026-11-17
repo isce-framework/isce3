@@ -111,25 +111,16 @@ void _resampleToCoordsGlobal(
     // unit: distance (meters)
     const double rg_distance = startingRange + range_input_ind * rangePixelSpacing;
 
-    // Azimuth time at the current output pixel
-    // unit: time (seconds)
-    const double az_time_tot = sensingStart + azimuth_total_ind * pri;
-
     // Azimuth time at the current output pixel, geometric
     // unit: time (seconds)
     const double az_time_geom = sensingStart + azimuth_geom_ind * pri;
 
     // If the doppler LUT doesn't contain this coordinate, fill this pixel
     // with the given fill_value and skip it.
-    if (not native_doppler_lut.contains(az_time_tot, rg_distance)) {
+    if (not native_doppler_lut.contains(az_time_geom, rg_distance)) {
         resampled_data_block[pixel_index] = fill_value;
         return;
     }
-    
-    // Evaluate doppler at current range and azimuth time
-    // unit: frequency (radians per sample)
-    const auto doppler_freq_tot =
-        native_doppler_lut.eval(az_time_tot, rg_distance) * 2.0 * M_PI * pri;
     
     // Evaluate doppler at current range and azimuth time, geometric
     // unit: frequency (radians per sample)
@@ -144,7 +135,7 @@ void _resampleToCoordsGlobal(
 
         // Compute doppler phase to be removed from radar data.
         // (i.e. as a unit vector on the complex plane.)
-        const double doppler_phase = doppler_freq_tot * (chip_az - SINC_HALF);
+        const double doppler_phase = doppler_freq_geom * (chip_az - SINC_HALF);
         const thrust::complex<float> doppler_phase_conj(
             std::cos(doppler_phase), -std::sin(doppler_phase));
 

@@ -108,13 +108,6 @@ void resampleToCoords(
                     range_input_ind *
                     radar_grid.rangePixelSpacing();
 
-                // Azimuth time at the current output pixel
-                // unit: time (seconds)
-                const double az_time_tot =
-                    radar_grid.sensingStart() +
-                    azimuth_tot_ind /
-                    radar_grid.prf();
-
                 // Azimuth time at the current output pixel, geometric
                 // unit: time (seconds)
                 const double az_time_geom =
@@ -124,14 +117,8 @@ void resampleToCoords(
 
                 // If the doppler LUT doesn't contain this coordinate, fill this pixel
                 // with the given fill_value and skip it.
-                if (not native_doppler_lut.contains(az_time_tot, rg_distance))
+                if (not native_doppler_lut.contains(az_time_geom, rg_distance))
                     continue;
-                
-                // Evaluate doppler at current range and azimuth time
-                // unit: frequency (radians per sample)
-                const double doppler_freq_tot =
-                    native_doppler_lut.eval(az_time_tot, rg_distance) * 2 * M_PI / 
-                    radar_grid.prf();
                 
                 // Evaluate doppler at current range and azimuth time
                 // unit: frequency (radians per sample)
@@ -147,7 +134,7 @@ void resampleToCoords(
 
                     // Doppler phase at chip pixel
                     // unit: phase (radians)
-                    const double doppler_phase = doppler_freq_tot * (i_chip - chip_half);
+                    const double doppler_phase = doppler_freq_geom * (i_chip - chip_half);
 
                     // Compute doppler phase to be removed from radar data.
                     // (i.e. as a unit vector on the complex plane.)
