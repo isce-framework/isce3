@@ -657,7 +657,8 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.copy_from_runconfig(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'demInterpolation',
-            'processing/dem_interpolation_method')
+            'processing/dem_interpolation_method',
+            format_function=str.title)
 
         # Add geocoding algorithm reference
         geocoding_algorithm = self.cfg['processing']['geocode'][
@@ -701,7 +702,7 @@ class GcovWriter(BaseL2WriterSingleInput):
                 ('Cross-Polarimetric Channels HV and VH SLCs Average'
                  ' (Coherent Average)')
         else:
-            symmetrization_algorithm = 'disabled'
+            symmetrization_algorithm = '(NOT APPLIED)'
 
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
@@ -709,7 +710,7 @@ class GcovWriter(BaseL2WriterSingleInput):
             symmetrization_algorithm)
 
         apply_rtc = self.cfg['processing']['geocode']['apply_rtc']
-        rtc_algorithm_reference = '(RTC not applied)'
+        rtc_algorithm_reference = '(NOT APPLIED)'
         if apply_rtc:
             if rtc_algorithm == 'area_projection':
                 rtc_algorithm_reference = \
@@ -765,21 +766,49 @@ class GcovWriter(BaseL2WriterSingleInput):
                 'processing/pre_process/azimuth_looks',
                 format_function=np.uint64)
 
+        # additive noise correction parameters
+        noise_correction_applied = \
+            self.cfg['processing']['noise_correction']['apply_correction']
+        if noise_correction_applied:
+            noise_correction_algorithm = \
+                'NISAR Additive Noise Correction Algorithm'
+            noise_correction_algorithm_reference = \
+                ('NISAR Algorithm Development Team, "NISAR L1 and L2 Algorithm'
+                 ' Theoretical Basis Document (ATBD)," NASA Jet Propulsion Laboratory,'
+                 ' JPL D-95677, Revision A, 2023.')
+        else:
+            noise_correction_algorithm  = '(NOT APPLIED)'
+            noise_correction_algorithm_reference  = '(NOT APPLIED)'
+
+        self.set_value(
+            '{PRODUCT}/metadata/processingInformation/algorithms/'
+            'noiseCorrectionAlgorithm',
+            noise_correction_algorithm)
+        self.set_value(
+            '{PRODUCT}/metadata/processingInformation/algorithms/'
+            'noiseCorrectionAlgorithmReference',
+            noise_correction_algorithm_reference)
+
         # populate rtc parameters
         self.copy_from_runconfig(
             f'{parameters_group}/rtc/inputBackscatterNormalizationConvention',
-            'processing/rtc/input_terrain_radiometry')
+            'processing/rtc/input_terrain_radiometry',
+            format_function=str.title)
 
         if apply_rtc:
             self.copy_from_runconfig(
                 f'{parameters_group}/rtc/'
                 'outputBackscatterNormalizationConvention',
-                'processing/rtc/output_type')
+                'processing/rtc/output_type',
+                format_function=str.title)
         else:
-            self.set_value(
+            # if RTC is disabled, output terrain radiometry is the
+            # same as the input terrain radiometry
+            self.copy_from_runconfig(
                 f'{parameters_group}/rtc/'
                 'outputBackscatterNormalizationConvention',
-                'beta0')
+                'processing/rtc/input_terrain_radiometry',
+                format_function=str.title)
 
         # CEOS ARD convention is 'Linear amplitude' or 'Linear power'.
         self.set_value(
@@ -789,7 +818,8 @@ class GcovWriter(BaseL2WriterSingleInput):
 
         self.copy_from_runconfig(
             f'{parameters_group}/rtc/memoryMode',
-            'processing/geocode/memory_mode')
+            'processing/geocode/memory_mode',
+            format_function=str.title)
 
         self.copy_from_runconfig(
             f'{parameters_group}/rtc/minRtcAreaNormalizationFactorInDB',
@@ -804,7 +834,8 @@ class GcovWriter(BaseL2WriterSingleInput):
         # populate geocoding parameters
         self.copy_from_runconfig(
             f'{parameters_group}/geocoding/memoryMode',
-            'processing/geocode/memory_mode')
+            'processing/geocode/memory_mode',
+            format_function=str.title)
 
         self.copy_from_runconfig(
             f'{parameters_group}/geocoding/geogridUpsampling',
