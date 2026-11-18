@@ -128,10 +128,16 @@
                       lang="en">List of frequency layers available in the product</annotation>
         </string>
         <string length="0"
-                name="/science/LSAR/identification/listOfObservationModes"
+                name="/science/LSAR/identification/listOfObservationModeIds"
                 shape="numberOfObservations">
           <annotation app="conformance"
-                      lang="en">List of observation modes of the L0B granules used to generate the input RSLC (one mode per L0B)</annotation>
+                      lang="en">List of observation mode IDs of the L0B granules used to generate the input RSLC (one mode per L0B)</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/identification/listOfObservationModeNames"
+                shape="numberOfObservations">
+          <annotation app="conformance"
+                      lang="en">List of observation mode names of the L0B granules used to generate the input RSLC (one mode per L0B)</annotation>
         </string>
         <integer name="/science/LSAR/identification/diagnosticModeFlag"
                  shape="scalar"
