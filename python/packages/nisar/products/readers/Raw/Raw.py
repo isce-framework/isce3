@@ -3,8 +3,10 @@ from .DataDecoder import DataDecoder
 import h5py
 import isce3
 from isce3.focus import RadarPoint, RadarBoundingBox
+from functools import cached_property
 import logging
 from nisar.products.readers import Base
+from nisar.products.granule_id import rrsd_pattern
 import numpy as np
 import pyre
 import journal
@@ -1114,6 +1116,49 @@ class RawBase(Base, family='nisar.productreader.raw'):
             group = fid[path_txrx]
             key = "basebandPhaseCorrection"
             return group.get(key, np.ones(naz, np.complex64))[()]
+
+
+    @cached_property
+    def radar_config_id(self) -> int:
+        """
+        The radar configuration identifier (RC_ID) that uniquely identifies the
+        active set of radar parameters in the mode table.  Note that the mode
+        table itself may change over time, and this routine returns the RC_ID
+        corresponding to the mode table that was in use during the observation.
+        """
+        # The latest L0Bs should have a dedicated field for RC_ID, populated
+        # based on analysis of the radar observation sequence table (ROST).
+        # That's the most reliable source and is our first preference.
+        rcid_path = f"{self.IdentificationPath}/observationModeId"
+        with h5py.File(self.filename, mode='r', swmr=True) as h5:
+            if rcid_path in h5:
+                rcid = int(h5[rcid_path][()])
+                log.info(f"RC_ID={rcid:03d} determined from identification")
+                return rcid
+
+        # The RC_ID in the file name is populated the same way and is the
+        # preferred source for older L0Bs without the dedicated field.  The
+        # low-rate telemetry containing the RC_ID may be corrupted, misaligned,
+        # and/or too short to reliably report the RC_ID.
+        # NOTE Cast to str() in case of pathlib.Path object.
+        match = rrsd_pattern.search(str(self.filename))
+        if match is not None:
+            rcid = int(match.group("radar_config_id"))
+            log.info(f"RC_ID={rcid:03d} determined from L0B file name")
+            return rcid
+
+        tlm_path = f"{self.TelemetryPath}/DRT/IFSW/ST_IFSW_CUR_RCID"
+        with h5py.File(self.filename, mode='r', swmr=True) as h5:
+            # NOTE this probably doesn't exist in REE simulations
+            if tlm_path not in h5:
+                raise KeyError("Unable to determine RC_ID because L0B file "
+                    f"does not contain dataset={rcid_path}, its file name does "
+                    "not match the NISAR naming convention, and the file does "
+                    f"not contain dataset={tlm_path}.  One of these conditions "
+                    "must be satisfied.")
+            rcid = int(np.nanmedian(h5[path]))
+            log.info(f"RC_ID={rcid:03d} determined from lowRateTemeletry")
+        return rcid
 
 
 # adapted from ReeUtilPy/REEout/AntPatAnalysis.py:getDCMant2sc

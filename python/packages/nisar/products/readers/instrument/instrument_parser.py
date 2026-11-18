@@ -273,7 +273,8 @@ class InstrumentParser:
 
         return fn_ta, fn_ac
 
-    def channel_adjustment_factors_tx(self, pol, is_second_band=False):
+    def channel_adjustment_factors_tx(self, pol, is_second_band=False,
+                                      radar_config_id=240):
         """
         Get channel adjustment complex factors for all TX channels
         of a polarization.
@@ -292,6 +293,9 @@ class InstrumentParser:
             If the respective dataset does not exist, it will use
             the original dataset for both bands (backward compatibility)
             while raising a warning "MissingInstrumentFieldWarning".
+        radar_config_id : int, optional
+            Radar mode (RC_ID) to use when mode-dependent weights are available.
+            Defaults to RC_ID 240, which is the nominal reference.
 
         Returns
         -------
@@ -316,9 +320,11 @@ class InstrumentParser:
         introduced in v3.0
 
         """
-        return self._channel_adjustment_factors('tx', pol, is_second_band)
+        return self._channel_adjustment_factors('tx', pol, is_second_band,
+                                                radar_config_id)
 
-    def channel_adjustment_factors_rx(self, pol, is_second_band=False):
+    def channel_adjustment_factors_rx(self, pol, is_second_band=False,
+                                      radar_config_id=240):
         """
         Get channel adjustment complex factors for all RX channels
         of a polarization.
@@ -338,6 +344,9 @@ class InstrumentParser:
             If the respective dataset does not exist, it will use
             the original dataset for both bands (backward compatibility)
             while raising a warning "MissingInstrumentFieldWarning".
+        radar_config_id : int, optional
+            Radar mode (RC_ID) to use when mode-dependent weights are available.
+            Defaults to RC_ID 240, which is the nominal reference.
 
         Returns
         -------
@@ -362,9 +371,10 @@ class InstrumentParser:
         introduced in v3.0.
 
         """
-        return self._channel_adjustment_factors('rx', pol, is_second_band)
+        return self._channel_adjustment_factors('rx', pol, is_second_band,
+                                                radar_config_id)
 
-    def _channel_adjustment_factors(self, side, pol, is_second_band):
+    def _channel_adjustment_factors(self, side, pol, is_second_band, rcid):
         """
         Helper function for obtaining TX or RX channel adjustment factors.
 
@@ -380,6 +390,9 @@ class InstrumentParser:
             If the respective dataset does not exist, it will use
             the original dataset for both bands (backward compatibility)
             while raising a warning "MissingInstrumentFieldWarning".
+        rcid : int
+            Radar configuration identifier (RC_ID), used to select adjustment
+            factors when RC_ID-dependent values are available.
 
         Returns
         -------
@@ -430,8 +443,14 @@ class InstrumentParser:
                     # revert to the original dataset
                     # used for all bands!
                     ds = grp[f'{side}/amplitude']
-                return ds[()]
-            return grp[f'{side}/amplitude'][()]
+            else:
+                ds = grp[f'{side}/amplitude']
+
+            # Handle RC_ID-dependent values (added as rows)
+            if ds.ndim == 2:
+                return ds[rcid, :]
+            else:
+                return ds[:]
 
     def get_crosstalk(self):
         """

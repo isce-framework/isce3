@@ -295,7 +295,8 @@ class AntennaPattern:
             # fetch RX channel adjustment complex factors from
             # instrument file per RX pol.
             self.channel_adj_fact_rx[rx_p] = ins.channel_adjustment_factors_rx(
-                rx_p, is_second_band=self._is_second_band)
+                rx_p, is_second_band=self._is_second_band,
+                radar_config_id=raw.radar_config_id)
 
             # get rx el-cut patterns
             self.el_pat_rx[rx_p] = ant.el_cut_all(rx_p)
@@ -361,7 +362,8 @@ class AntennaPattern:
                 # instrument file per TX linear pol.
                 self.channel_adj_fact_tx[tx_lp] = (
                     ins.channel_adjustment_factors_tx(
-                        tx_lp, is_second_band=self._is_second_band)
+                        tx_lp, is_second_band=self._is_second_band,
+                        radar_config_id=raw.radar_config_id)
                 )
 
                 # get tx el-cut patterns
