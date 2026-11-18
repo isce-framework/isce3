@@ -510,6 +510,13 @@ def run_static_layers_workflow(config_file: os.PathLike | str) -> None:
                 runconfig_contents=params,
             )
 
+        # Close the scratch rasters before the scratch directory is removed: files
+        # that are still open can't be removed on some file systems (e.g., NFS).
+        for raster in (reprojected_dem, los_east, los_north, local_inc_angle,
+                       layover_shadow_mask, binary_water_mask,
+                       gamma0_to_beta0_factor, gamma0_to_sigma0_factor):
+            raster.close_dataset()
+
     logger.info("Done")
 
 
