@@ -1078,7 +1078,8 @@ class InSARBaseWriter(h5py.File):
                             "isJointObservation",
                             "plannedObservationId",
                             "plannedDatatakeId",
-                            "listOfObservationModes",
+                            "listOfObservationModeNames",
+                            "listOfObservationModeIds",
                             "hasInputDataException"]
         cap = lambda x: f"{x[0].upper()}{x[1:]}"
 
@@ -1132,18 +1133,22 @@ class InSARBaseWriter(h5py.File):
                     "False",
                     description))
 
-            # Update the description for the listOfObservationModes
-            ds_name = f"{rslc_name}ListOfObservationModes"
-            description = 'List of observation modes of the L0B granules'+\
-                f' used to generate the {rslc_name} RSLC (one mode per L0B)'
-            if ds_name in dst_id_group:
-                ds = dst_id_group[ds_name]
-                ds.attrs['description'] = to_bytes(description)
-            else:
-                add_dataset_and_attrs(dst_id_group, DatasetParams(
-                    ds_name,
-                    to_bytes(['(NOT SPECIFIED)']),
-                    description))
+            # Update the descriptions for the listOfObservationModeNames
+            # and listOfObservationModeIds
+            for mode_field, mode_label in [("Names", "names"),
+                                           ("Ids", "IDs")]:
+                ds_name = f"{rslc_name}ListOfObservationMode{mode_field}"
+                description = f'List of observation mode {mode_label} of the'+\
+                    ' L0B granules used to generate the'+\
+                    f' {rslc_name} RSLC (one mode per L0B)'
+                if ds_name in dst_id_group:
+                    ds = dst_id_group[ds_name]
+                    ds.attrs['description'] = to_bytes(description)
+                else:
+                    add_dataset_and_attrs(dst_id_group, DatasetParams(
+                        ds_name,
+                        to_bytes(['(NOT SPECIFIED)']),
+                        description))
 
             # Update the description for the hasInputDataException
             ds_name = f"{rslc_name}HasInputDataException"
