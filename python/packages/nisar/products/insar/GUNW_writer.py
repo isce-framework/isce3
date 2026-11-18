@@ -31,8 +31,8 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         # HDF5 IO optimizer configuration
         self.hdf5_optimizer_config = hdf5_opt_config
 
-        # group paths are GUNW group paths
-        self.group_paths = GUNWGroupsPaths()
+        # group paths are GUNW group paths - use auto-detected RootPath from reference RSLC
+        self.group_paths = GUNWGroupsPaths(RootPath=self.ref_rslc.RootPath)
 
         # GUNW product information
         self.product_info = InSARProductsInfo.GUNW()

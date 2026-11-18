@@ -98,9 +98,13 @@ def add_valid_pixel_fraction_stats(cfg, output_hdf5, input_product_type, fill_va
     - ROFF -> GOFF: pixelOffsets
     """
     with HDF5OptimizedReader(name=output_hdf5, mode="a") as dst_h5:
-        # Determine destination path object based on product type
-        dst_paths_obj = (GOFFGroupsPaths() if input_product_type is InputProduct.ROFF
-                         else GUNWGroupsPaths())
+        # Auto-detect RootPath from the output HDF5 file
+        from nisar.products.readers.Base import get_hdf5_file_root_path
+        root_path = get_hdf5_file_root_path(output_hdf5)
+
+        # Determine destination path object based on product type with auto-detected RootPath
+        dst_paths_obj = (GOFFGroupsPaths(RootPath=root_path) if input_product_type is InputProduct.ROFF
+                         else GUNWGroupsPaths(RootPath=root_path))
 
         # Iterate over frequencies and polarizations
         for freq, pol_list, _ in get_cfg_freq_pols(cfg):
@@ -378,19 +382,23 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5,
     if water_mask_path is not None:
         water_mask = _project_water_to_geogrid(water_mask_path,
                                                geogrid)
+        # Auto-detect RootPath from the HDF5 file object
+        from nisar.products.readers.Base import get_hdf5_file_root_path
+        root_path = get_hdf5_file_root_path(dst_h5.filename)
+
         mask_datasets = []
         if input_product_type is InputProduct.RUNW:
-            freq_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}'
+            freq_path = f'{GUNWGroupsPaths(RootPath=root_path).GridsPath}/frequency{freq}'
             unwrapped_ifgram_mask_h5_path = f'{freq_path}/unwrappedInterferogram/mask'
             pixel_offsets_mask_h5_path = f'{freq_path}/pixelOffsets/mask'
             mask_datasets = [unwrapped_ifgram_mask_h5_path,
                              pixel_offsets_mask_h5_path]
         if input_product_type is InputProduct.RIFG:
-            freq_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}'
+            freq_path = f'{GUNWGroupsPaths(RootPath=root_path).GridsPath}/frequency{freq}'
             wrapped_ifgram_mask_h5_path = f'{freq_path}/wrappedInterferogram/mask'
             mask_datasets = [wrapped_ifgram_mask_h5_path]
         if input_product_type is InputProduct.ROFF:
-            freq_path = f'{GOFFGroupsPaths().GridsPath}/frequency{freq}'
+            freq_path = f'{GOFFGroupsPaths(RootPath=root_path).GridsPath}/frequency{freq}'
             pixel_offsets_mask_h5_path = f'{freq_path}/pixelOffsets/mask'
             mask_datasets = [pixel_offsets_mask_h5_path]
 
@@ -502,12 +510,17 @@ def get_raster_lists(all_geocoded_dataset_flags,
     invalid_values: list[float]
         List of invalid values to initialize each raster with
     '''
+    # Auto-detect RootPath from the input HDF5 file
+    from nisar.products.readers.Base import get_hdf5_file_root_path
+    root_path = get_hdf5_file_root_path(input_hdf5)
+
     if input_product_type is InputProduct.ROFF:
-        src_paths_obj = ROFFGroupsPaths()
-        dst_paths_obj = GOFFGroupsPaths()
+        src_paths_obj = ROFFGroupsPaths(RootPath=root_path)
+        dst_paths_obj = GOFFGroupsPaths(RootPath=root_path)
     else:
-        src_paths_obj = RIFGGroupsPaths() if input_product_type is InputProduct.RIFG else RUNWGroupsPaths()
-        dst_paths_obj = GUNWGroupsPaths()
+        src_paths_obj = (RIFGGroupsPaths(RootPath=root_path) if input_product_type is InputProduct.RIFG
+                        else RUNWGroupsPaths(RootPath=root_path))
+        dst_paths_obj = GUNWGroupsPaths(RootPath=root_path)
 
     src_freq_path = f"{src_paths_obj.SwathsPath}/frequency{freq}"
     dst_freq_path = f"{dst_paths_obj.GridsPath}/frequency{freq}"

@@ -93,7 +93,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
                 sec_slc.getDopplerCentroid(frequency=freq))
             crossmul.set_dopplers(ref_dopp, sec_dopp)
 
-            freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
+            # Use auto-detected RootPath from reference RSLC
+            freq_group_path = f'{RIFGGroupsPaths(RootPath=ref_slc.RootPath).SwathsPath}/frequency{freq}'
 
             # prepare flattening and range filter parameters
             ref_radar_grid = ref_slc.getRadarGrid(freq)
@@ -196,8 +197,11 @@ def stats_offsets(h5_ds, freq, pol):
     pol: str
        Polarization to process (HH, HV, VH, VV)
     """
+    # Auto-detect RootPath from the HDF5 file
+    from nisar.products.readers.Base import get_hdf5_file_root_path
+    root_path = get_hdf5_file_root_path(h5_ds.filename)
 
-    path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}/pixelOffsets/{pol}/'
+    path = f'{RIFGGroupsPaths(RootPath=root_path).SwathsPath}/frequency{freq}/pixelOffsets/{pol}/'
     offset_layer = ['slantRangeOffset', 'alongTrackOffset']
 
     for layer in offset_layer:
