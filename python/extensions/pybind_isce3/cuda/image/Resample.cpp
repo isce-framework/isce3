@@ -20,7 +20,8 @@ void addbindings_gpu_resamp(py::module & m)
         py::arg("output_data_block"),
         py::arg("input_data_block"),
         py::arg("range_input_indices"),
-        py::arg("azimuth_input_indices"),
+        py::arg("azimuth_total_indices"),
+        py::arg("azimuth_geometric_indices"),
         py::arg("in_radar_grid"),
         py::arg("native_doppler"),
         py::arg("fill_value") =
@@ -38,9 +39,12 @@ void addbindings_gpu_resamp(py::module & m)
         range_input_indices: numpy.ndarray (float64)
             The range (radar-coordinates x) index of the output pixels in the input
             grid.
-        azimuth_input_indices: numpy.ndarray (float64)
+        azimuth_total_indices: numpy.ndarray (float64)
             The azimuth (radar-coordinates y) index of the output pixels in the input
-            grid.
+            grid for resampling.
+        azimuth_geometric_indices: numpy.ndarray (float64)
+            The azimuth (radar-coordinates y) index of the output pixels in the input
+            grid for reramping.
         in_radar_grid: isce3.product.RadarGridParameters
             Radar grid parameters of the input SLC data.
         native_doppler: isce3.core.LUT2d

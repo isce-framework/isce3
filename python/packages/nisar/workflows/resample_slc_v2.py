@@ -60,8 +60,15 @@ def run(cfg: dict, resample_type: str) -> None:
         # Open offsets
         offsets_dir = Path(resamp_args["offsets_dir"])
 
+        geom_offsets_path = offsets_dir / f"geo2rdr/freq{freq}"
         if resample_type == "coarse":
             offsets_path = offsets_dir / f"geo2rdr/freq{freq}"
+            rg_off_path = offsets_path / "range.off"
+            az_off_path = offsets_path / "azimuth.off"
+            # The main offsets are already geometric, pass this optional variable as
+            # None and the coarse offsets will be used for both resampling and
+            # reramping.
+            az_geom_path = None
         elif resample_type == "fine":
             # We checked the existence of HH/VV offsets in resample_slc_runconfig.py
             # Select the first offsets available between HH and VV
@@ -71,13 +78,18 @@ def run(cfg: dict, resample_type: str) -> None:
                 offsets_path = freq_offsets_path / "HH"
             else:
                 offsets_path = freq_offsets_path / "VV"
+            rg_off_path = offsets_path / "range.off"
+            az_off_path = offsets_path / "azimuth.off"
+            # The fine offsets workflow resamples to the rubbersheet offsets (known
+            # in this workflow as "total" offsets) but reramping with these offsets
+            # can introduce phase distortions in data with e.g. high amounts of
+            # ionospheric scintillations. Pass the coarse "geometric" offsets for
+            # reramping.
+            az_geom_path = geom_offsets_path / "azimuth.off"
         else:
             raise ValueError(
                 "resample_type must be 'coarse' or 'fine', instead got "
                 f"{resample_type!r}")
-
-        az_off_path = offsets_path / "azimuth.off"
-        rg_off_path = offsets_path / "range.off"
 
         # Create separate directories for coarse and fine resample
         # Open corresponding range/azimuth offsets
@@ -102,6 +114,7 @@ def run(cfg: dict, resample_type: str) -> None:
             sec_file_path=sec_file_path,
             out_path=resample_slc_scratch_path,
             az_off_file=az_off_path,
+            az_geom_off_file=az_geom_path,
             rg_off_file=rg_off_path,
             freq=freq,
             pols=pol_list,
@@ -128,6 +141,7 @@ def resample_secondary_rslc_onto_reference(
     pols: Iterable[str],
     block_size_az: int,
     block_size_rg: int,
+    az_geom_off_file: str | os.PathLike | None = None,
     with_gpu: bool = False,
 ) -> None:
     """
@@ -157,6 +171,10 @@ def resample_secondary_rslc_onto_reference(
     block_size_rg : int
         The block size along the range axis. Must be 0 or greater. If 0, the block size
         in the range dimension will be the entire line of range values.
+    az_geom_off_file : path-like or None, optional
+        The azimuth geometric offsets GDAL-readable file path, if different from
+        az_off_file, or None if the az_off_file is geometric offsets.
+        Defaults to None.
     with_gpu : bool, optional
         If True, run the GPU resample workflow. If False, run the CPU resample workflow.
         Defaults to False.
@@ -186,6 +204,13 @@ def resample_secondary_rslc_onto_reference(
     )
     rg_off_reader = np.memmap(
         filename=rg_off_file,
+        shape=out_shape,
+        dtype=np.float64,
+        mode='r+',
+    )
+    
+    az_off_geom_reader = None if az_geom_off_file is None else np.memmap(
+        filename=az_geom_off_file,
         shape=out_shape,
         dtype=np.float64,
         mode='r+',
@@ -230,8 +255,9 @@ def resample_secondary_rslc_onto_reference(
         resample_slc_blocks(
             output_resampled_slcs=out_writers,
             input_slcs=sec_readers,
-            az_offsets_dataset=az_off_reader,
             rg_offsets_dataset=rg_off_reader,
+            az_offsets_dataset=az_off_reader,
+            az_geom_off_dataset=az_off_geom_reader,
             input_radar_grid=sec_grid,
             doppler=doppler,
             block_size_az=block_size_az,

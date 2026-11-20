@@ -14,6 +14,7 @@ def gpu_resample_to_coords(
     input_radar_grid: RadarGridParameters,
     native_doppler: LUT2d,
     fill_value: np.complex64 = (np.nan + 1.0j * np.nan),
+    azimuth_geometric_indices: np.ndarray | None = None,
 ) -> np.ndarray:
     """
     Interpolate input SLC block into the index values of the output block.
@@ -27,13 +28,19 @@ def gpu_resample_to_coords(
         grid.
     azimuth_input_indices : numpy.ndarray (float64)
         The azimuth (radar-coordinates y) index of the output pixels in the input
-        grid.
+        grid. These indices are the locations at which the resampled output
+        data will be located. If azimuth_geometric_indices is not passed, the output
+        will also be reramped using these indices.
     input_radar_grid : isce3.product.RadarGridParameters
         Radar grid parameters of the input SLC data.
     native_doppler : isce3.core.LUT2d
         2D LUT describing the native doppler of the input SLC image, in Hz.
     fill_value : complex
         The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+    azimuth_geometric_indices : numpy.ndarray (float64) or None, optional
+        The azimuth (radar-coordinates y) index of the output pixels in the input
+        grid at which to reramp, or None if azimuth_input_indices should be used to
+        reramp the data. Defaults to None.
 
     Returns
     -------
@@ -66,6 +73,12 @@ def gpu_resample_to_coords(
     azimuth_input_indices = np.require(
         azimuth_input_indices, dtype=np.float64, requirements=["C"]
     )
+    if azimuth_geometric_indices is None:
+        azimuth_geometric_indices = azimuth_input_indices
+    else:
+        azimuth_geometric_indices = np.require(
+            azimuth_geometric_indices, dtype=np.float64, requirements=["C"]
+        )
     
     # The shape of the output block is the same as that of the indices shapes.
     output_block = np.full(
@@ -76,7 +89,8 @@ def gpu_resample_to_coords(
         output_data_block=output_block,
         input_data_block=input_data_block,
         range_input_indices=range_input_indices,
-        azimuth_input_indices=azimuth_input_indices,
+        azimuth_total_indices=azimuth_input_indices,
+        azimuth_geometric_indices=azimuth_geometric_indices,
         in_radar_grid=input_radar_grid,
         native_doppler=native_doppler,
         fill_value=fill_value,

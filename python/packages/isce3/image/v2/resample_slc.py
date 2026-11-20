@@ -18,6 +18,7 @@ def resample_slc_blocks(
     az_offsets_dataset: DatasetReader,
     rg_offsets_dataset: DatasetReader,
     input_radar_grid: RadarGridParameters,
+    az_geom_off_dataset: DatasetReader | None = None,
     doppler: LUT2d = LUT2d(),
     block_size_az: int = 1024,
     block_size_rg: int = 1024,
@@ -48,6 +49,12 @@ def resample_slc_blocks(
         corresponding pixel in the input grid.
     input_radar_grid : RadarGridParameters
         The RadarGridParameters for the input data swath.
+    az_geom_off_dataset : DatasetReader or None, optional
+        A dataset containing azimuth geometric offsets, in pixels - used for re-ramping
+        after resampling - or None if az_offsets_dataset should be used for this
+        purpose. Use if az_offsets_datasets contains location corrections or smoothing
+        that should not be reflected in the azimuth phase profile of the resampled data.
+        Defaults to None.
     doppler : LUT2d, optional
         The doppler lookup table, in Hertz, as a function of azimuth and range. Defaults
         to an empty LUT2d.
@@ -67,6 +74,13 @@ def resample_slc_blocks(
     info_channel = journal.info("resample_slc.resample_slc_blocks")
     warning_channel = journal.warning("resample_slc.resample_slc_blocks")
     error_channel = journal.error("resample_slc.resample_slc_blocks")
+    
+    if az_geom_off_dataset is None:
+        az_geom_name = "Azimuth Offsets"
+        az_total_name = "Azimuth Offsets"
+    else:
+        az_geom_name = "Azimuth Geometric Offsets"
+        az_total_name = "Azimuth Total Offsets"
 
     # If the user has opted to use CUDA, use the gpu_resample_to_coords function for
     # interpolation. Otherwise, use the resample_to_coords function.
@@ -114,13 +128,8 @@ def resample_slc_blocks(
     )
 
     output_shape = output_resampled_slcs[0].shape
-
-    # Check to make sure that the overall azimuth and range datasets are the same shape
-    # as the output SLC datasets, which are already confirmed above to be the same
-    # sizes.
-    for name, dataset in zip(
-        ["Azimuth", "Range"], [az_offsets_dataset, rg_offsets_dataset]
-    ):
+    
+    def check_offsets_dataset(name, dataset):
         if dataset.shape != output_shape:
             err_log = (
                 f"{name} offsets dataset given with shape {dataset.shape} - "
@@ -128,6 +137,14 @@ def resample_slc_blocks(
             )
             error_channel.log(err_log)
             raise ValueError(err_log)
+
+    # Check to make sure that the overall azimuth and range datasets are the same shape
+    # as the output SLC datasets, which are already confirmed above to be the same
+    # sizes.
+    check_offsets_dataset(name="Range", dataset=rg_offsets_dataset)
+    check_offsets_dataset(name=az_total_name, dataset=az_offsets_dataset)
+    if az_geom_off_dataset is not None:
+        check_offsets_dataset(name=az_geom_name, dataset=az_geom_off_dataset)
 
     # Initialize the overall runtime timers, denoted in seconds, for benchmarking.
     offsets_read_timer = 0
@@ -152,8 +169,12 @@ def resample_slc_blocks(
 
         # Get the offsets blocks using the slices.
         block_offsets_read_timer -= perf_counter()
-        az_offsets_block = np.array(az_offsets_dataset[out_block_slice], np.float64)
         rg_offsets_block = np.array(rg_offsets_dataset[out_block_slice], np.float64)
+        az_offsets_block = np.array(az_offsets_dataset[out_block_slice], np.float64)
+        az_geom_off_block = (
+            None if az_geom_off_dataset is None
+            else np.array(az_geom_off_dataset[out_block_slice], np.float64)
+        )
         block_offsets_read_timer += perf_counter()
 
         # Interpret extremely low values as NaN
@@ -162,8 +183,10 @@ def resample_slc_blocks(
         # This happens if geo2rdr does not converge - it defaults to very large
         # negative values (namely -1000000.0)
         # TODO: Fix this behavior in geo2rdr?
-        az_offsets_block[az_offsets_block == -1e6] = np.nan
         rg_offsets_block[rg_offsets_block == -1e6] = np.nan
+        az_offsets_block[az_offsets_block == -1e6] = np.nan
+        if az_geom_off_block is not None:
+            az_geom_off_block[az_geom_off_block == -1e6] = np.nan
 
         # Get the shape of the slice to be read on the input raster.
         in_slices = get_blocks_by_offsets(
@@ -202,12 +225,15 @@ def resample_slc_blocks(
 
         # Convert the offset blocks to index blocks that map pixels on the output
         # data block to positions on the input data block.
-        azimuth_index_grid, range_index_grid = offsets_to_indices(
+        az_conv, rg_conv = _get_offset_indices_converters(
             out_block_slice=out_block_slice,
             in_block_slice=in_slices,
-            az_offsets=az_offsets_block,
-            rg_offsets=rg_offsets_block,
         )
+        azimuth_index_grid = az_conv + az_offsets_block
+        azimuth_geom_index_grid = (
+            None if az_geom_off_block is None else az_conv + az_geom_off_block
+        )
+        range_index_grid = rg_conv + rg_offsets_block
 
         # Run the resampling algorithm on the given blocks.
         for i in range(len(input_blocks)):
@@ -226,6 +252,7 @@ def resample_slc_blocks(
                 input_radar_grid[in_slices],
                 doppler,
                 fill_value,
+                azimuth_geom_index_grid,
             )
 
         block_processing_timer += perf_counter()
@@ -291,6 +318,63 @@ def dataset_shapes_consistent(
         raise ValueError(err_log)
 
 
+def _get_offset_indices_converters(
+    out_block_slice: tuple[slice, slice],
+    in_block_slice: tuple[slice, slice],
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Create index blocks that can convert azimuth and range offsets to indices pointing
+    from an output block to an input block.
+
+    Assumes that the output and input block slices are integer-valued rather than None.
+
+    Parameters
+    ----------
+    out_block_slice : tuple[slice, slice]
+        A 2-dimensional slice on an output block.
+    in_block_slice : tuple[slice, slice]
+        A 2-dimensional slice on an input block.
+
+    Returns
+    -------
+    az_indices, rg_indices : np.ndarray
+        Arrays of base indices in azimuth and range which can be converted to a proper
+        index grid by adding an equal-dimension grid of offsets to it.
+    """
+
+    # Get the start indices and lengths of the azimuth and range dimensions on the
+    # output block.
+    out_az_slice, out_rg_slice = out_block_slice
+    az_out_start = out_az_slice.start
+    rg_out_start = out_rg_slice.start
+    out_block_length = out_az_slice.stop - az_out_start
+    out_block_width = out_rg_slice.stop - rg_out_start
+
+    # Get the start indices of the azimuth and range dimensions on the input block.
+    az_in_slice, rg_in_slice = in_block_slice
+    az_in_start = az_in_slice.start
+    rg_in_start = rg_in_slice.start
+
+    # Since the input and output slices don't start at the same pixel on their
+    # respective grids, azimuth and range grid offsets are computed here to correct
+    # the offset between the (0,0) point in the input block and that of the output block
+    # relative to their broader grids.
+    az_grid_offset = az_out_start - az_in_start
+    rg_grid_offset = rg_out_start - rg_in_start
+
+    # Indices can be gotten from the offsets by adding the azimuth or range pixel index
+    # on the output grid to its' respective azimuth or range offset and grid offset.
+    # For each pixel, this converts the displacement from one output pixel to the
+    # absolute position that it points to on the input grid.
+    azimuth_arange = np.arange(out_block_length, dtype=np.float64)
+    range_arange = np.arange(out_block_width, dtype=np.float64)
+    az_indices, rg_indices = np.meshgrid(azimuth_arange, range_arange, indexing="ij")
+    az_indices += az_grid_offset
+    rg_indices += rg_grid_offset
+
+    return az_indices, rg_indices
+
+
 def offsets_to_indices(
     out_block_slice: tuple[slice, slice],
     in_block_slice: tuple[slice, slice],
@@ -324,36 +408,13 @@ def offsets_to_indices(
         Arrays of indices in azimuth and range for a position in the input block
         corresponding to each position on the output block.
     """
-
-    # Get the start indices and lengths of the azimuth and range dimensions on the
-    # output block.
-    out_az_slice, out_rg_slice = out_block_slice
-    az_out_start = out_az_slice.start
-    rg_out_start = out_rg_slice.start
-    out_block_length = out_az_slice.stop - az_out_start
-    out_block_width = out_rg_slice.stop - rg_out_start
-
-    # Get the start indices of the azimuth and range dimensions on the input block.
-    az_in_slice, rg_in_slice = in_block_slice
-    az_in_start = az_in_slice.start
-    rg_in_start = rg_in_slice.start
-
-    # Since the input and output slices don't start at the same pixel on their
-    # respective grids, azimuth and range grid offsets are computed here to correct
-    # the offset between the (0,0) point in the input block and that of the output block
-    # relative to their broader grids.
-    az_grid_offset = az_out_start - az_in_start
-    rg_grid_offset = rg_out_start - rg_in_start
-
-    # Indices can be gotten from the offsets by adding the azimuth or range pixel index
-    # on the output grid to its' respective azimuth or range offset and grid offset.
-    # For each pixel, this converts the displacement from one output pixel to the
-    # absolute position that it points to on the input grid.
-    azimuth_arange = np.arange(out_block_length, dtype=np.float64)
-    range_arange = np.arange(out_block_width, dtype=np.float64)
-    az_indices, rg_indices = np.meshgrid(azimuth_arange, range_arange, indexing="ij")
-    az_indices += az_offsets + az_grid_offset
-    rg_indices += rg_offsets + rg_grid_offset
+    az_indices, rg_indices = _get_offset_indices_converters(
+        out_block_slice=out_block_slice,
+        in_block_slice=in_block_slice,
+    )
+    
+    az_indices += az_offsets
+    rg_indices += rg_offsets
 
     return az_indices, rg_indices
 
@@ -365,6 +426,7 @@ def resample_to_coords(
     input_radar_grid: RadarGridParameters,
     native_doppler: LUT2d,
     fill_value: np.complex64 = (np.nan + 1.0j * np.nan),
+    azimuth_geometric_indices: np.ndarray | None = None,
 ) -> np.ndarray:
     """
     Interpolate input SLC block into the index values of the output block.
@@ -378,13 +440,19 @@ def resample_to_coords(
         grid.
     azimuth_input_indices : numpy.ndarray (float64)
         The azimuth (radar-coordinates y) index of the output pixels in the input
-        grid.
+        grid. These indices are the locations at which the resampled output
+        data will be located. If azimuth_geometric_indices is not passed, the output
+        will also be reramped using these indices.
     input_radar_grid : isce3.product.RadarGridParameters
         Radar grid parameters of the input SLC data.
     native_doppler : isce3.core.LUT2d
         2D LUT describing the native doppler of the input SLC image, in Hz.
     fill_value : complex
         The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+    azimuth_geometric_indices : numpy.ndarray (float64) or None, optional
+        The azimuth (radar-coordinates y) index of the output pixels in the input
+        grid at which to reramp, or None if azimuth_input_indices should be used to
+        reramp the data. Defaults to None.
 
     Returns
     -------
@@ -417,6 +485,12 @@ def resample_to_coords(
     azimuth_input_indices = np.require(
         azimuth_input_indices, dtype=np.float64, requirements=["C"]
     )
+    if azimuth_geometric_indices is None:
+        azimuth_geometric_indices = azimuth_input_indices
+    else:
+        azimuth_geometric_indices = np.require(
+            azimuth_geometric_indices, dtype=np.float64, requirements=["C"]
+        )
     
     # The shape of the output block is the same as that of the indices shapes.
     output_block = np.full(
@@ -427,7 +501,8 @@ def resample_to_coords(
         output_data_block=output_block,
         input_data_block=input_data_block,
         range_input_indices=range_input_indices,
-        azimuth_input_indices=azimuth_input_indices,
+        azimuth_total_indices=azimuth_input_indices,
+        azimuth_geometric_indices=azimuth_geometric_indices,
         in_radar_grid=input_radar_grid,
         native_doppler=native_doppler,
         fill_value=fill_value,
