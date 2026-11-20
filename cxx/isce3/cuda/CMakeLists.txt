@@ -33,6 +33,7 @@ target_link_libraries(${LISCECUDA} PUBLIC
                       ${LISCE}
                       ${CUDART_LIBRARY}
                       ${CUDAFFT_LIBRARY}
+                      OpenMP::OpenMP_CUDA_Optional
                       )
 
 # Specify API version and build version (used to generate name and soname

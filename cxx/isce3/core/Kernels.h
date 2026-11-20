@@ -103,6 +103,10 @@ public:
 
     T operator()(double x) const override;
 
+    int kernel_radius() const { return _m; }
+    int data_size() const { return _n; }
+    int fft_size() const { return _fft_size; }
+
 private:
     int _m;
     int _n;

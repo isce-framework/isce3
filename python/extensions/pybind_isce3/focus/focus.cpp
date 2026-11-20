@@ -15,6 +15,7 @@ void addsubmodule_focus(py::module & m)
     // forward declare bound enums
     py::enum_<isce3::focus::DryTroposphereModel> pyDryTropoModel(m_focus, "DryTroposphereModel");
 
+    py::class_<isce3::focus::PolarGrid> pyPolarGrid(m_focus, "PolarGrid");
     py::class_<isce3::focus::RangeComp> pyRangeComp(m_focus, "RangeComp");
     py::enum_<isce3::focus::RangeComp::Mode> pyMode(pyRangeComp, "Mode");
 
@@ -27,4 +28,5 @@ void addsubmodule_focus(py::module & m)
     addbinding_tsx_delay(m_focus);
     addbindings_presum(m_focus);
     addbinding(pyRangeComp);
+    addbinding(pyPolarGrid);
 }

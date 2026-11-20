@@ -18,6 +18,7 @@ enum class ErrorCode {
     NullDereference,
     InvalidTolerance,
     InvalidInterval,
+    InvalidKernelSize,
 };
 
 /** Return a string describing the error code */

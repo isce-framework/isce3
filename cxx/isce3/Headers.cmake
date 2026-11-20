@@ -175,6 +175,7 @@ signal/Looks.h
 signal/Looks.icc
 signal/multilook.h
 signal/NFFT.h
+signal/NFFT2d.h
 signal/shiftSignal.h
 signal/signalUtils.h
 signal/Signal.h
