@@ -20,6 +20,8 @@ else
   isce3.ext.lib.directories.exclude := cuda
 endif
 
-isce3.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
+# use c++23 for host code
+isce3.ext.lib.c++.flags += $($(compiler.c++).std.c++23)
+
 
 # end of file
