@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 import numpy.testing as npt
 import pytest
 from nisar.workflows import stage_dem
-from osgeo import gdal
+from osgeo import gdal, osr
 
 from shapely import wkt
 
@@ -25,6 +25,40 @@ def test_dateline_crossing():
     polys = stage_dem.check_dateline(polygon)
 
     assert (len(polys) == 2)
+
+
+@pytest.mark.parametrize("area_or_point", ["Area", "Point"])
+def test_translate_dem_dateline_shift_keeps_crs(area_or_point: str):
+    # A crop starting at -180 deg is shifted by +360 deg so that it
+    # mosaics with the tile on the other side of the dateline. The
+    # shifted GeoTIFF must keep its CRS, including for DEMs tagged
+    # AREA_OR_POINT=Point, or gdal.BuildVRT drops it from the mosaic.
+    with TemporaryDirectory() as tmpdir:
+        # Synthetic 1 arcsec EPSG:4326 DEM whose left edge sits half
+        # a pixel west of -180 deg, like the NISAR DEM
+        spacing = 1.0 / 3600.0
+        x0 = -180.0 - spacing / 2
+        y0 = -16.0 + spacing / 2
+        srs = osr.SpatialReference()
+        srs.ImportFromEPSG(4326)
+
+        src = os.path.join(tmpdir, "dem.tif")
+        ds = gdal.GetDriverByName("GTiff").Create(src, 720, 720, 1,
+                                                  gdal.GDT_Float32)
+        ds.SetMetadataItem("AREA_OR_POINT", area_or_point)
+        ds.SetGeoTransform((x0, spacing, 0.0, y0, 0.0, -spacing))
+        ds.SetProjection(srs.ExportToWkt())
+        ds.GetRasterBand(1).Fill(100.0)
+        ds = None
+
+        outpath = os.path.join(tmpdir, "dem_0.tiff")
+        stage_dem.translate_dem(src, outpath, -180.0, -179.9, -16.1, -16.0,
+                                4326)
+
+        ds = gdal.Open(outpath, gdal.GA_ReadOnly)
+        out_srs = osr.SpatialReference(wkt=ds.GetProjection())
+        assert out_srs.GetAuthorityCode(None) == "4326"
+        npt.assert_allclose(ds.GetGeoTransform()[0], x0 + 360.0)
 
 
 def test_point2epsg():
