@@ -3,6 +3,19 @@ import isce3
 import iscetest
 import numpy
 import os
+import pycuampcor
+
+
+def ampcor_implementations():
+    """pycuampcor implementations available: CPU, and GPU if a device is found"""
+    impls = [pycuampcor.PyCPUAmpcor]
+    if pycuampcor.has_cuda:
+        try:
+            pycuampcor.PyCuAmpcor.get_sm_count(0)
+            impls.append(pycuampcor.PyCuAmpcor)
+        except RuntimeError:
+            pass
+    return impls
 
 
 def create_empty_dataset(
@@ -23,15 +36,7 @@ def create_empty_dataset(
 
 
 def test_ampcor():
-    try:
-        impls = (
-            isce3.cuda.matchtemplate.PyCuAmpcor,
-            isce3.matchtemplate.PyCPUAmpcor,
-        )
-    except AttributeError:
-        # Fall back to CPU only if not compiled with CUDA support
-        impls = (isce3.matchtemplate.PyCPUAmpcor,)
-    for impl in impls:
+    for impl in ampcor_implementations():
         for ovs in (0, 1):  # test FFT and sinc oversamplers
             ampcor = impl()
 
@@ -92,7 +97,7 @@ def test_ampcor():
             ampcor.grossOffsetImageName = "gross_offset"
             ampcor.snrImageName = "snr"
             ampcor.covImageName = "covariance"
-            ampcor.corrImageName = "correlation_peak"
+            ampcor.peakValueImageName = "correlation_peak"
 
             ampcor.rawDataOversamplingFactor = 2
             ampcor.corrSurfaceOverSamplingFactor = 64
