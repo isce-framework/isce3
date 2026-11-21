@@ -1,9 +1,14 @@
 #include "Projections.h"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace isce3 { namespace core {
 
@@ -364,6 +369,136 @@ int CEA::inverse(const Vec3& enu, Vec3& llh) const
     return 0;
 }
 
+// Don't build this on CUDA
+# ifndef __CUDACC__
+
+GenericEPSG::GenericEPSG(int epsg) : ProjectionBase(epsg)
+{
+    // Determine number of threads
+#ifdef _OPENMP
+    _nthreads = std::max(omp_get_max_threads(), 1);
+#endif
+
+    // Initiate SRS with given EPSG code
+    if (_srs.importFromEPSG(epsg)) {
+        std::string errstr =
+                "In GenericEPSG::GenericEPSG - Invalid EPSG Code. Received ";
+        errstr += std::to_string(epsg);
+        errstr += ".";
+        throw std::invalid_argument(errstr);
+    }
+    _srs.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+    // Initialize 4979 for latlong on WGS84
+    if (_srs_llh.importFromEPSG(4979)) {
+        std::string errstr =
+            "In GenericEPSG::GenericEPSG - Failed to initialize EPSG:4979.";
+        throw std::invalid_argument(errstr);
+    }
+    _srs_llh.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+    // One transformer per thread plus one shared fallback
+    const int nslots = _nthreads + 1;
+    _poct_fwd.reserve(nslots);
+    _poct_inv.reserve(nslots);
+    for (int ii = 0; ii < nslots; ii++) {
+        _poct_fwd.emplace_back(
+                OGRCreateCoordinateTransformation(&_srs_llh, &_srs));
+        if (!_poct_fwd.back()) {
+            std::string errstr = "In GenericEPSG::GenericEPSG - Failed to "
+                                 "initialize fwd transform. EPSG: ";
+            errstr += std::to_string(epsg);
+            errstr += ".";
+            throw std::invalid_argument(errstr);
+        }
+
+        _poct_inv.emplace_back(
+                OGRCreateCoordinateTransformation(&_srs, &_srs_llh));
+        if (!_poct_inv.back()) {
+            std::string errstr = "In GenericEPSG::GenericEPSG - Failed to "
+                                 "initialize inv transform. EPSG: ";
+            errstr += std::to_string(epsg);
+            errstr += ".";
+            throw std::invalid_argument(errstr);
+        }
+    }
+}
+
+int GenericEPSG::_threadSlot() const
+{
+#ifdef _OPENMP
+    // omp_get_thread_num() is only unique within the innermost team. It is a
+    // unique process-wide index only when at most one enclosing parallel
+    // region has more than one thread; use that region's thread number.
+    const int nactive = omp_get_active_level();
+    if (nactive == 0) {
+        return 0;
+    }
+    if (nactive > 1) {
+        return -1;
+    }
+    for (int level = omp_get_level(); level > 0; level--) {
+        if (omp_get_team_size(level) > 1) {
+            const int tid = omp_get_ancestor_thread_num(level);
+            return (tid < _nthreads) ? tid : -1;
+        }
+    }
+    return -1;
+#else
+    return 0;
+#endif
+}
+
+int GenericEPSG::forward(const Vec3& llh, Vec3& enu) const
+{
+    double x = 180.0 * llh[0] / M_PI;
+    double y = 180.0 * llh[1] / M_PI;
+    double z = llh[2];
+
+    bool ok;
+    const int slot = _threadSlot();
+    if (slot >= 0) {
+        ok = _poct_fwd[slot]->Transform(1, &x, &y, &z);
+    } else {
+        #pragma omp critical(isce3_GenericEPSG_forward)
+        ok = _poct_fwd[_nthreads]->Transform(1, &x, &y, &z);
+    }
+
+    if (ok) {
+        enu[0] = x;
+        enu[1] = y;
+        enu[2] = z;
+        return 0;
+    }
+    return 1;
+}
+
+int GenericEPSG::inverse(const Vec3& enu, Vec3& llh) const
+{
+    double x = enu[0];
+    double y = enu[1];
+    double z = enu[2];
+
+    bool ok;
+    const int slot = _threadSlot();
+    if (slot >= 0) {
+        ok = _poct_inv[slot]->Transform(1, &x, &y, &z);
+    } else {
+        #pragma omp critical(isce3_GenericEPSG_inverse)
+        ok = _poct_inv[_nthreads]->Transform(1, &x, &y, &z);
+    }
+
+    if (ok) {
+        llh[0] = x * M_PI / 180.0;
+        llh[1] = y * M_PI / 180.0;
+        llh[2] = z;
+        return 0;
+    }
+    return 1;
+}
+
+#endif // Not for CUDA
+
 ProjectionBase* createProj(int epsgcode)
 {
     // Check for Lat/Lon
@@ -386,9 +521,17 @@ ProjectionBase* createProj(int epsgcode)
     else if (epsgcode == 6933) {
         return new CEA;
     } else {
-        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-                                          "Unknown EPSG code (in factory): " +
-                                                  std::to_string(epsgcode));
+#ifndef __CUDACC__
+        try {
+                return new GenericEPSG {epsgcode};
+        } catch (std::invalid_argument) {
+#endif
+            throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Unknown EPSG code (in factory): " +
+                std::to_string(epsgcode));
+#ifndef __CUDACC__
+        }
+#endif
     }
 }
 

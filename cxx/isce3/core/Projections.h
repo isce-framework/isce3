@@ -2,6 +2,11 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
+
+#ifndef __CUDACC__
+#include "ogr_spatialref.h"
+#endif
 
 #include "Constants.h"
 #include "Ellipsoid.h"
@@ -255,6 +260,60 @@ inline void CEA::print() const
     std::cout << "Projection: Cylindrical Equal Area" << std::endl
               << "EPSG: " << code() << std::endl;
 }
+
+//Disable building this when building for CUDA
+#ifndef __CUDACC__
+/**
+ * Generic EPSG code based extension of ProjBase
+ *
+ * Interpretation of EPSG code is handed off to GDAL.
+ */
+class GenericEPSG : public ProjectionBase {
+    struct CTDeleter {
+        void operator()(OGRCoordinateTransformation* ct) const
+        {
+            OGRCoordinateTransformation::DestroyCT(ct);
+        }
+    };
+    using CTPtr = std::unique_ptr<OGRCoordinateTransformation, CTDeleter>;
+
+    // wkt corresponding to the EPSG code
+    OGRSpatialReference _srs;
+    OGRSpatialReference _srs_llh;
+
+    // OGRCoordinateTransformation is not safe for concurrent use, so each
+    // OpenMP thread gets its own transformer, indexed by thread number.
+    // Slots [0, nthreads) are thread-private; the extra last slot is shared
+    // and only used inside an omp critical section, as a fallback when a
+    // unique thread slot cannot be determined (nested active parallelism or
+    // a team larger than omp_get_max_threads() at construction time).
+    int _nthreads = 1;
+    std::vector<CTPtr> _poct_fwd;
+    std::vector<CTPtr> _poct_inv;
+
+    /** Index of this thread's transformer, or -1 to use the shared one */
+    int _threadSlot() const;
+
+public:
+    /** Construct from EPSG code. Must not be called in a parallel region */
+    GenericEPSG(int);
+
+    /** @copydoc ProjectionBase::print() */
+    void print() const override;
+
+    /** Transform from llh (rad) to xyz - units depend on EPSG */
+    int forward(const Vec3& llh, Vec3& xyz) const override;
+
+    /** Transform from xyz in EPSG-dependent units to llh (rad) */
+    int inverse(const Vec3& xyz, Vec3& llh) const override;
+};
+
+inline void GenericEPSG::print() const
+{
+    std::cout << "Generic EPSG: " << code() << std::endl;
+}
+
+#endif // Not for CUDA
 
 // This is to create a projection system from the EPSG code
 ProjectionBase* createProj(int epsg);

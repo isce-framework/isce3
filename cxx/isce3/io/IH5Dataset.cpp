@@ -88,7 +88,7 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
     if ( poGDS->eAccess == GA_Update )
     {
         memset(pImage, 0,
-               nBlockXSize * nBlockYSize * GDALGetDataTypeSize(eDataType)/8);
+               nBlockXSize * nBlockYSize * GDALGetDataTypeSizeBytes(eDataType));
         return CE_None;
     }
 
