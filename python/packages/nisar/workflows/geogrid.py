@@ -25,6 +25,56 @@ def _grid_size(stop, start, sz):
     return int(np.round(np.abs((stop-start)/sz)))
 
 
+def snap_coord(val, snap, round_func, tol=1e-10):
+    """
+    Snap a coordinate to a grid defined by a specified interval.
+
+    The coordinate is converted to grid-index space, rounded using the
+    specified rounding function, and converted back to coordinate space.
+    Ratios sufficiently close to an integer are treated as that integer
+    to mitigate floating-point precision errors.
+
+    Parameters
+    ----------
+    val : float
+        Coordinate value to snap.
+    snap : float
+        Positive grid snapping interval in coordinate units.
+    round_func : callable
+        Rounding function to apply to the grid-index ratio, such as
+        numpy.floor or numpy.ceil.
+    tol : float, optional
+        Absolute tolerance for treating a grid-index ratio as an integer.
+        Expressed in units of grid intervals. Defaults to 1e-10.
+
+    Returns
+    -------
+    float
+        Snapped coordinate value.
+
+    Raises
+    ------
+    ValueError
+        If the snapping interval is not positive.
+
+    Notes
+    -----
+    The tolerance is intended to compensate for floating-point errors
+    when a coordinate is expected to align with the snapping grid.
+    """
+    if snap <= 0:
+        raise ValueError("Grid snapping interval must be positive.")
+
+    ratio = float(val) / snap
+    nearest = np.round(ratio)
+
+    if np.isclose(ratio, nearest, rtol=0.0, atol=tol):
+        ratio = nearest
+
+    return round_func(ratio) * snap
+
+
+
 def create(cfg, workflow_name=None, frequency_group=None,
            frequency=None, geocode_dict=None,
            default_spacing_x=None, default_spacing_y=None,
@@ -291,7 +341,6 @@ def create(cfg, workflow_name=None, frequency_group=None,
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        snap_coord = lambda val, snap, round_func: round_func(float(val) / snap) * snap
         geogrid.start_x = snap_coord(geogrid.start_x, x_snap, np.floor)
         geogrid.start_y = snap_coord(geogrid.start_y, y_snap, np.ceil)
         end_x = snap_coord(end_x, x_snap, np.ceil)
